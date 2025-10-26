@@ -102,7 +102,23 @@
       "owns": "besitzt",
       "searchesFor": "sucht nach",
       "banishedFrom": "verbannt aus"
-    }
+    },
+    "details": "Details",
+    "searchNotes": "Notizen durchsuchen",
+    "newNote": "Neue Notiz",
+    "editNote": "Notiz bearbeiten",
+    "noteTitle": "Titel (optional)",
+    "noteTitlePlaceholder": "z.B. Begegnung im Wald",
+    "noteContent": "Inhalt",
+    "noteContentPlaceholder": "Was ist passiert?",
+    "noteContentRequired": "Inhalt ist erforderlich",
+    "noteDate": "Datum",
+    "noteDetails": "Zusätzliche Details (optional)",
+    "noteDetailsPlaceholder": "Weitere wichtige Informationen...",
+    "noNotes": "Keine Notizen",
+    "noNotesText": "Erstelle die erste Notiz für diesen NPC",
+    "deleteNoteTitle": "Notiz löschen",
+    "deleteNoteConfirm": "Möchtest du diese Notiz wirklich löschen?"
   },
   "locations": {
     "title": "Orte",

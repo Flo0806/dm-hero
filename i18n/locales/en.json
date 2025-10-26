@@ -102,7 +102,23 @@
       "owns": "owns",
       "searchesFor": "searches for",
       "banishedFrom": "banished from"
-    }
+    },
+    "details": "Details",
+    "searchNotes": "Search notes",
+    "newNote": "New Note",
+    "editNote": "Edit Note",
+    "noteTitle": "Title (optional)",
+    "noteTitlePlaceholder": "e.g. Encounter in the forest",
+    "noteContent": "Content",
+    "noteContentPlaceholder": "What happened?",
+    "noteContentRequired": "Content is required",
+    "noteDate": "Date",
+    "noteDetails": "Additional Details (optional)",
+    "noteDetailsPlaceholder": "Other important information...",
+    "noNotes": "No Notes",
+    "noNotesText": "Create the first note for this NPC",
+    "deleteNoteTitle": "Delete Note",
+    "deleteNoteConfirm": "Do you really want to delete this note?"
   },
   "locations": {
     "title": "Locations",

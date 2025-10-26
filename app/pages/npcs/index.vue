@@ -112,77 +112,100 @@
     <!-- Create/Edit Dialog -->
     <v-dialog
       v-model="showCreateDialog"
-      max-width="800"
+      max-width="900"
+      scrollable
     >
       <v-card>
         <v-card-title>
           {{ editingNpc ? $t('npcs.edit') : $t('npcs.create') }}
         </v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="npcForm.name"
-            :label="$t('npcs.name')"
-            :rules="[v => !!v || $t('npcs.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
 
-          <v-textarea
-            v-model="npcForm.description"
-            :label="$t('npcs.description')"
-            variant="outlined"
-            rows="4"
-            class="mb-4"
-          />
-
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-combobox
-                v-model="npcForm.metadata.race"
-                :items="races?.map(r => r.name) || []"
-                :label="$t('npcs.race')"
-                variant="outlined"
-                clearable
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-combobox
-                v-model="npcForm.metadata.class"
-                :items="classes?.map(c => c.name) || []"
-                :label="$t('npcs.class')"
-                variant="outlined"
-                clearable
-              />
-            </v-col>
-          </v-row>
-
-          <v-text-field
-            v-model="npcForm.metadata.location"
-            :label="$t('npcs.location')"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-text-field
-            v-model="npcForm.metadata.faction"
-            :label="$t('npcs.faction')"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="npcForm.metadata.relationship"
-            :label="$t('npcs.relationship')"
-            variant="outlined"
-            rows="2"
-            class="mb-4"
-          />
-
-          <!-- Location Relations -->
-          <v-divider class="mb-4" />
-          <h3 class="text-h6 mb-3">
+        <v-tabs v-if="editingNpc" v-model="npcDialogTab" class="mb-4">
+          <v-tab value="details">
+            <v-icon start>
+              mdi-account-details
+            </v-icon>
+            {{ $t('npcs.details') }}
+          </v-tab>
+          <v-tab value="relations">
+            <v-icon start>
+              mdi-map-marker
+            </v-icon>
             {{ $t('npcs.linkedLocations') }}
-          </h3>
+          </v-tab>
+          <v-tab value="notes">
+            <v-icon start>
+              mdi-note-text
+            </v-icon>
+            {{ $t('npcs.notes') }} ({{ npcNotes.length }})
+          </v-tab>
+        </v-tabs>
+
+        <v-card-text style="max-height: 600px">
+          <v-tabs-window v-if="editingNpc" v-model="npcDialogTab">
+            <!-- Details Tab -->
+            <v-tabs-window-item value="details">
+              <v-text-field
+                v-model="npcForm.name"
+                :label="$t('npcs.name')"
+                :rules="[v => !!v || $t('npcs.nameRequired')]"
+                variant="outlined"
+                class="mb-4"
+              />
+
+              <v-textarea
+                v-model="npcForm.description"
+                :label="$t('npcs.description')"
+                variant="outlined"
+                rows="4"
+                class="mb-4"
+              />
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-combobox
+                    v-model="npcForm.metadata.race"
+                    :items="races?.map(r => r.name) || []"
+                    :label="$t('npcs.race')"
+                    variant="outlined"
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-combobox
+                    v-model="npcForm.metadata.class"
+                    :items="classes?.map(c => c.name) || []"
+                    :label="$t('npcs.class')"
+                    variant="outlined"
+                    clearable
+                  />
+                </v-col>
+              </v-row>
+
+              <v-text-field
+                v-model="npcForm.metadata.location"
+                :label="$t('npcs.location')"
+                variant="outlined"
+                class="mb-4"
+              />
+
+              <v-text-field
+                v-model="npcForm.metadata.faction"
+                :label="$t('npcs.faction')"
+                variant="outlined"
+                class="mb-4"
+              />
+
+              <v-textarea
+                v-model="npcForm.metadata.relationship"
+                :label="$t('npcs.relationship')"
+                variant="outlined"
+                rows="2"
+              />
+            </v-tabs-window-item>
+
+            <!-- Relations Tab -->
+            <v-tabs-window-item value="relations">
 
           <v-list v-if="editingNpc && npcRelations.filter(r => r.to_entity_type === 'Location').length > 0" class="mb-3">
             <v-list-item
@@ -272,6 +295,140 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
+            </v-tabs-window-item>
+
+            <!-- Notes Tab -->
+            <v-tabs-window-item value="notes">
+              <div class="d-flex justify-space-between align-center mb-4">
+                <v-text-field
+                  v-model="notesSearch"
+                  :placeholder="$t('npcs.searchNotes')"
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                  hide-details
+                  class="mr-2"
+                />
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-plus"
+                  @click="showNoteDialog = true"
+                >
+                  {{ $t('npcs.newNote') }}
+                </v-btn>
+              </div>
+
+              <v-progress-linear v-if="loadingNotes" indeterminate />
+
+              <v-list v-else-if="filteredNotes.length > 0">
+                <v-list-item
+                  v-for="note in filteredNotes"
+                  :key="note.id"
+                  class="mb-2"
+                  border
+                >
+                  <template #prepend>
+                    <v-icon icon="mdi-note-text" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    <span class="text-caption text-medium-emphasis mr-2">
+                      {{ formatDate(note.date || note.created_at) }}
+                    </span>
+                    <span v-if="note.title" class="font-weight-medium">
+                      {{ note.title }}
+                    </span>
+                  </v-list-item-title>
+                  <v-list-item-subtitle class="mt-1">
+                    {{ truncateText(note.summary, 150) }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-pencil"
+                      variant="text"
+                      size="small"
+                      @click="editNote(note)"
+                    />
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="deleteNote(note)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-empty-state
+                v-else
+                icon="mdi-note-text-outline"
+                :title="$t('npcs.noNotes')"
+                :text="$t('npcs.noNotesText')"
+              />
+            </v-tabs-window-item>
+          </v-tabs-window>
+
+          <!-- Create Form (no tabs) -->
+          <div v-if="!editingNpc">
+            <v-text-field
+              v-model="npcForm.name"
+              :label="$t('npcs.name')"
+              :rules="[v => !!v || $t('npcs.nameRequired')]"
+              variant="outlined"
+              class="mb-4"
+            />
+
+            <v-textarea
+              v-model="npcForm.description"
+              :label="$t('npcs.description')"
+              variant="outlined"
+              rows="4"
+              class="mb-4"
+            />
+
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-combobox
+                  v-model="npcForm.metadata.race"
+                  :items="races?.map(r => r.name) || []"
+                  :label="$t('npcs.race')"
+                  variant="outlined"
+                  clearable
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-combobox
+                  v-model="npcForm.metadata.class"
+                  :items="classes?.map(c => c.name) || []"
+                  :label="$t('npcs.class')"
+                  variant="outlined"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+
+            <v-text-field
+              v-model="npcForm.metadata.location"
+              :label="$t('npcs.location')"
+              variant="outlined"
+              class="mb-4"
+            />
+
+            <v-text-field
+              v-model="npcForm.metadata.faction"
+              :label="$t('npcs.faction')"
+              variant="outlined"
+              class="mb-4"
+            />
+
+            <v-textarea
+              v-model="npcForm.metadata.relationship"
+              :label="$t('npcs.relationship')"
+              variant="outlined"
+              rows="2"
+            />
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -288,6 +445,99 @@
             @click="saveNpc"
           >
             {{ editingNpc ? $t('common.save') : $t('common.create') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Note Create/Edit Dialog -->
+    <v-dialog
+      v-model="showNoteDialog"
+      max-width="700"
+    >
+      <v-card>
+        <v-card-title>
+          {{ editingNote ? $t('npcs.editNote') : $t('npcs.newNote') }}
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="noteForm.title"
+            :label="$t('npcs.noteTitle')"
+            :placeholder="$t('npcs.noteTitlePlaceholder')"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-textarea
+            v-model="noteForm.summary"
+            :label="$t('npcs.noteContent')"
+            :placeholder="$t('npcs.noteContentPlaceholder')"
+            :rules="[v => !!v || $t('npcs.noteContentRequired')]"
+            variant="outlined"
+            rows="6"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="noteForm.date"
+            :label="$t('npcs.noteDate')"
+            type="datetime-local"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-textarea
+            v-model="noteForm.notes"
+            :label="$t('npcs.noteDetails')"
+            :placeholder="$t('npcs.noteDetailsPlaceholder')"
+            variant="outlined"
+            rows="3"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="closeNoteDialog"
+          >
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            :disabled="!noteForm.summary"
+            :loading="savingNote"
+            @click="saveNote"
+          >
+            {{ editingNote ? $t('common.save') : $t('common.create') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Note Confirmation -->
+    <v-dialog
+      v-model="showDeleteNoteDialog"
+      max-width="500"
+    >
+      <v-card>
+        <v-card-title>{{ $t('npcs.deleteNoteTitle') }}</v-card-title>
+        <v-card-text>
+          {{ $t('npcs.deleteNoteConfirm') }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="showDeleteNoteDialog = false"
+          >
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deletingNote"
+            @click="confirmDeleteNote"
+          >
+            {{ $t('common.delete') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -448,6 +698,7 @@ const editingNpc = ref<NPC | null>(null)
 const deletingNpc = ref<NPC | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
+const npcDialogTab = ref('details')
 
 const npcForm = ref({
   name: '',
@@ -500,10 +751,174 @@ const relationTypeSuggestions = computed(() => [
   t('npcs.relationTypes.banishedFrom'),
 ])
 
+// Notes state
+const npcNotes = ref<Array<{
+  id: number
+  title: string | null
+  summary: string
+  date: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}>>([])
+
+const loadingNotes = ref(false)
+const notesSearch = ref('')
+const showNoteDialog = ref(false)
+const showDeleteNoteDialog = ref(false)
+const editingNote = ref<typeof npcNotes.value[0] | null>(null)
+const deletingNote = ref<typeof npcNotes.value[0] | null>(null)
+const savingNote = ref(false)
+const deletingNoteLoading = ref(false)
+
+const noteForm = ref({
+  title: '',
+  summary: '',
+  date: '',
+  notes: '',
+})
+
+const filteredNotes = computed(() => {
+  if (!notesSearch.value)
+    return npcNotes.value
+
+  const query = notesSearch.value.toLowerCase()
+  return npcNotes.value.filter(note =>
+    note.title?.toLowerCase().includes(query)
+    || note.summary?.toLowerCase().includes(query)
+    || note.notes?.toLowerCase().includes(query),
+  )
+})
+
 function truncateText(text: string, length: number) {
   if (text.length <= length)
     return text
   return `${text.substring(0, length)}...`
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('de-DE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+async function loadNotes() {
+  if (!editingNpc.value)
+    return
+
+  loadingNotes.value = true
+  try {
+    const notes = await $fetch<typeof npcNotes.value>(`/api/npcs/${editingNpc.value.id}/notes`, {
+      query: notesSearch.value ? { search: notesSearch.value } : {},
+    })
+    npcNotes.value = notes
+  }
+  catch (error) {
+    console.error('Failed to load notes:', error)
+    npcNotes.value = []
+  }
+  finally {
+    loadingNotes.value = false
+  }
+}
+
+function editNote(note: typeof npcNotes.value[0]) {
+  editingNote.value = note
+  noteForm.value = {
+    title: note.title || '',
+    summary: note.summary,
+    date: note.date ? new Date(note.date).toISOString().slice(0, 16) : '',
+    notes: note.notes || '',
+  }
+  showNoteDialog.value = true
+}
+
+async function saveNote() {
+  if (!editingNpc.value || !activeCampaignId.value)
+    return
+
+  savingNote.value = true
+
+  try {
+    if (editingNote.value) {
+      // Update existing note
+      await $fetch(`/api/sessions/${editingNote.value.id}`, {
+        method: 'PATCH',
+        body: {
+          title: noteForm.value.title || null,
+          summary: noteForm.value.summary,
+          date: noteForm.value.date ? new Date(noteForm.value.date).toISOString() : null,
+          notes: noteForm.value.notes || null,
+        },
+      })
+    }
+    else {
+      // Create new note
+      await $fetch(`/api/npcs/${editingNpc.value.id}/notes`, {
+        method: 'POST',
+        body: {
+          title: noteForm.value.title || null,
+          summary: noteForm.value.summary,
+          date: noteForm.value.date ? new Date(noteForm.value.date).toISOString() : null,
+          notes: noteForm.value.notes || null,
+          campaignId: activeCampaignId.value,
+        },
+      })
+    }
+
+    await loadNotes()
+    closeNoteDialog()
+  }
+  catch (error) {
+    console.error('Failed to save note:', error)
+  }
+  finally {
+    savingNote.value = false
+  }
+}
+
+function deleteNote(note: typeof npcNotes.value[0]) {
+  deletingNote.value = note
+  showDeleteNoteDialog.value = true
+}
+
+async function confirmDeleteNote() {
+  if (!deletingNote.value)
+    return
+
+  deletingNoteLoading.value = true
+
+  try {
+    await $fetch(`/api/sessions/${deletingNote.value.id}`, {
+      method: 'DELETE',
+    })
+
+    await loadNotes()
+    showDeleteNoteDialog.value = false
+    deletingNote.value = null
+  }
+  catch (error) {
+    console.error('Failed to delete note:', error)
+  }
+  finally {
+    deletingNoteLoading.value = false
+  }
+}
+
+function closeNoteDialog() {
+  showNoteDialog.value = false
+  editingNote.value = null
+  noteForm.value = {
+    title: '',
+    summary: '',
+    date: '',
+    notes: '',
+  }
 }
 
 async function editNpc(npc: NPC) {
@@ -530,7 +945,11 @@ async function editNpc(npc: NPC) {
     npcRelations.value = []
   }
 
+  // Load notes
+  await loadNotes()
+
   showCreateDialog.value = true
+  npcDialogTab.value = 'details'
 }
 
 function deleteNpc(npc: NPC) {
@@ -690,6 +1109,9 @@ function closeDialog() {
   showCreateDialog.value = false
   editingNpc.value = null
   npcRelations.value = []
+  npcNotes.value = []
+  notesSearch.value = ''
+  npcDialogTab.value = 'details'
   newRelation.value = {
     locationId: null,
     relationType: '',
