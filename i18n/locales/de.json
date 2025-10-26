@@ -1,0 +1,55 @@
+{
+  "app": {
+    "title": "DM Hero",
+    "welcome": "Willkommen, Dungeon Master",
+    "subtitle": "Behalte den Überblick über deine Kampagne"
+  },
+  "nav": {
+    "search": "Suche",
+    "npcs": "NPCs",
+    "locations": "Orte",
+    "items": "Items",
+    "factions": "Fraktionen",
+    "quests": "Quests",
+    "sessions": "Sessions",
+    "theme": "Theme"
+  },
+  "search": {
+    "placeholder": "Suche nach NPCs, Orten, Items...",
+    "searching": "Suche nach \"{query}\"...",
+    "noResults": "Keine Ergebnisse gefunden",
+    "hint": "Drücke / um zu suchen"
+  },
+  "categories": {
+    "npcs": {
+      "title": "NPCs",
+      "description": "Verwalte alle NPCs deiner Kampagne - von Questgebern bis zu Schurken"
+    },
+    "locations": {
+      "title": "Orte",
+      "description": "Alle Locations, Städte, Dungeons und wichtigen Orte"
+    },
+    "items": {
+      "title": "Items",
+      "description": "Magische Items, Artefakte und wichtige Gegenstände"
+    },
+    "factions": {
+      "title": "Fraktionen",
+      "description": "Gilden, Organisationen und Gruppierungen"
+    },
+    "quests": {
+      "title": "Quests",
+      "description": "Haupt- und Nebenquests im Überblick"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "description": "Session-Logs und Zusammenfassungen"
+    }
+  },
+  "quickstart": {
+    "title": "Schnellstart",
+    "searchHint": "Drücke / um die Schnellsuche zu öffnen",
+    "createHint": "Erstelle NPCs, Orte und mehr über die Sidebar",
+    "linkHint": "Verknüpfe Entitäten miteinander für besseren Überblick"
+  }
+}

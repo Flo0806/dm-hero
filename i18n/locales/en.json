@@ -1,0 +1,55 @@
+{
+  "app": {
+    "title": "DM Hero",
+    "welcome": "Welcome, Dungeon Master",
+    "subtitle": "Keep track of your campaign"
+  },
+  "nav": {
+    "search": "Search",
+    "npcs": "NPCs",
+    "locations": "Locations",
+    "items": "Items",
+    "factions": "Factions",
+    "quests": "Quests",
+    "sessions": "Sessions",
+    "theme": "Theme"
+  },
+  "search": {
+    "placeholder": "Search for NPCs, locations, items...",
+    "searching": "Searching for \"{query}\"...",
+    "noResults": "No results found",
+    "hint": "Press / to search"
+  },
+  "categories": {
+    "npcs": {
+      "title": "NPCs",
+      "description": "Manage all NPCs in your campaign - from quest givers to villains"
+    },
+    "locations": {
+      "title": "Locations",
+      "description": "All locations, cities, dungeons and important places"
+    },
+    "items": {
+      "title": "Items",
+      "description": "Magic items, artifacts and important objects"
+    },
+    "factions": {
+      "title": "Factions",
+      "description": "Guilds, organizations and groups"
+    },
+    "quests": {
+      "title": "Quests",
+      "description": "Main and side quests overview"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "description": "Session logs and summaries"
+    }
+  },
+  "quickstart": {
+    "title": "Quickstart",
+    "searchHint": "Press / to open quick search",
+    "createHint": "Create NPCs, locations and more via the sidebar",
+    "linkHint": "Link entities together for better overview"
+  }
+}

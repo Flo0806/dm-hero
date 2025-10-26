@@ -1,6 +1,215 @@
 <template>
-  <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
-  </div>
+  <v-app>
+    <v-navigation-drawer
+      v-model="drawer"
+      :rail="rail"
+      permanent
+      @click="rail = false"
+    >
+      <v-list-item
+        :prepend-icon="rail ? 'mdi-dice-d20' : 'mdi-dice-d20'"
+        :title="rail ? '' : 'DM Hero'"
+        nav
+      >
+        <template #append>
+          <v-btn
+            :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+            variant="text"
+            @click.stop="rail = !rail"
+          />
+        </template>
+      </v-list-item>
+
+      <v-divider />
+
+      <v-list density="compact" nav>
+        <v-list-item
+          prepend-icon="mdi-magnify"
+          title="Suche"
+          value="search"
+          @click="showSearch = true"
+        />
+        <v-list-item
+          prepend-icon="mdi-account-group"
+          title="NPCs"
+          value="npcs"
+          to="/npcs"
+        />
+        <v-list-item
+          prepend-icon="mdi-map-marker"
+          title="Orte"
+          value="locations"
+          to="/locations"
+        />
+        <v-list-item
+          prepend-icon="mdi-sword"
+          title="Items"
+          value="items"
+          to="/items"
+        />
+        <v-list-item
+          prepend-icon="mdi-shield"
+          title="Fraktionen"
+          value="factions"
+          to="/factions"
+        />
+        <v-list-item
+          prepend-icon="mdi-script-text"
+          title="Quests"
+          value="quests"
+          to="/quests"
+        />
+        <v-list-item
+          prepend-icon="mdi-book-open-page-variant"
+          title="Sessions"
+          value="sessions"
+          to="/sessions"
+        />
+      </v-list>
+
+      <template #append>
+        <v-divider />
+        <v-list density="compact" nav>
+          <v-list-item
+            :prepend-icon="theme.global.name.value === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
+            :title="rail ? '' : 'Theme'"
+            @click="toggleTheme"
+          />
+        </v-list>
+      </template>
+    </v-navigation-drawer>
+
+    <v-app-bar border>
+      <v-app-bar-title>
+        <v-icon icon="mdi-dice-d20" class="mr-2" />
+        DM Hero
+      </v-app-bar-title>
+
+      <v-spacer />
+
+      <v-btn
+        icon="mdi-magnify"
+        @click="showSearch = true"
+      />
+    </v-app-bar>
+
+    <v-main>
+      <v-container fluid>
+        <NuxtPage />
+      </v-container>
+    </v-main>
+
+    <!-- Globale Schnellsuche Dialog -->
+    <v-dialog
+      v-model="showSearch"
+      max-width="800"
+    >
+      <v-card>
+        <v-card-title>
+          <v-text-field
+            v-model="searchQuery"
+            autofocus
+            clearable
+            hide-details
+            placeholder="Suche nach NPCs, Orten, Items..."
+            prepend-inner-icon="mdi-magnify"
+            variant="solo"
+            flat
+          />
+        </v-card-title>
+        <v-divider />
+        <v-card-text style="max-height: 500px; overflow-y: auto;">
+          <div v-if="searchQuery" class="text-caption text-disabled mb-2">
+            Suche nach "{{ searchQuery }}"...
+          </div>
+          <v-list v-if="searchResults.length > 0">
+            <v-list-item
+              v-for="result in searchResults"
+              :key="result.id"
+              @click="navigateToResult(result)"
+            >
+              <template #prepend>
+                <v-icon :icon="result.icon" :color="result.color" />
+              </template>
+              <v-list-item-title>{{ result.name }}</v-list-item-title>
+              <v-list-item-subtitle>{{ result.type }}</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+          <div v-else-if="searchQuery" class="text-center text-disabled py-8">
+            Keine Ergebnisse gefunden
+          </div>
+          <div v-else class="text-center text-disabled py-8">
+            Drücke <kbd>/</kbd> um zu suchen
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-app>
 </template>
+
+<script setup lang="ts">
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
+const drawer = ref(true)
+const rail = ref(false)
+const showSearch = ref(false)
+const searchQuery = ref('')
+const searchResults = ref<Array<{
+  id: number
+  name: string
+  type: string
+  icon: string
+  color: string
+  path: string
+}>>([])
+
+function toggleTheme() {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
+
+function navigateToResult(result: typeof searchResults.value[0]) {
+  navigateTo(result.path)
+  showSearch.value = false
+  searchQuery.value = ''
+}
+
+// Keyboard Shortcuts
+onMounted(() => {
+  const handleKeydown = (e: KeyboardEvent) => {
+    // "/" öffnet Suche
+    if (e.key === '/' && !showSearch.value) {
+      e.preventDefault()
+      showSearch.value = true
+    }
+    // ESC schließt Suche
+    if (e.key === 'Escape' && showSearch.value) {
+      showSearch.value = false
+    }
+  }
+
+  window.addEventListener('keydown', handleKeydown)
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown)
+  })
+})
+
+// TODO: Implement search
+watch(searchQuery, async (query) => {
+  if (!query) {
+    searchResults.value = []
+    return
+  }
+  // API search will be implemented here
+})
+</script>
+
+<style>
+kbd {
+  background-color: rgba(var(--v-theme-on-surface), 0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+</style>
