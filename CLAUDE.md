@@ -58,27 +58,47 @@ pnpm dev
 - **UI text**: i18n (de/en)
 
 ## Database Architecture
-- **campaigns**: Campaign management (name, description, created_at, deleted_at)
-- **entities**: Main table for all entity types (with campaign_id)
-- **entity_types**: NPCs, Locations, Items, Factions, Quests
-- **entity_relations**: Links between entities (lives_in, member_of, owns, etc.)
-- **tags**: Flexible categorization
-- **sessions**: Session logs (with campaign_id)
-- **session_mentions**: Which entities were mentioned in which session
-- **FTS5**: Full-text search index for fuzzy matching
 
-**Multi-Campaign Architecture:**
+### Core Tables
+- **campaigns**: Campaign management (name, description, soft-delete)
+- **entities**: Main table for all entity types (NPCs, Locations, Items, etc.)
+- **entity_types**: Type definitions (NPC, Location, Item, Faction, Quest)
+- **entity_relations**: Links between entities with type and notes
+- **tags**: Flexible categorization
+- **entity_tags**: Many-to-many tag relationships
+- **sessions**: Session logs per campaign
+- **session_mentions**: Which entities were mentioned in which session
+- **entities_fts**: Full-text search index (FTS5) for fuzzy matching
+
+### Reference Data Tables
+- **races**: D&D 5e races (16 pre-seeded: Mensch, Elf, Zwerg, Halbling, etc.)
+- **classes**: D&D 5e classes (12 pre-seeded: Barbar, Barde, Druide, etc.)
+- Both tables support soft-delete and custom entries
+
+### Multi-Campaign Architecture
 - User can create multiple campaigns
 - All entities are scoped to a campaign via `campaign_id`
-- Campaign selection page shows beautiful cards overview
-- Active campaign stored in session/localStorage
+- Campaign selection page shows card overview
+- Active campaign stored in localStorage (activeCampaignId, activeCampaignName)
 - Soft-delete for campaigns (deleted_at timestamp)
+
+### Entity Relations System
+- Bidirectional relationships between entities
+- Relation types: "lebt in", "arbeitet bei", "besucht oft", etc. (i18n)
+- Each relation can have optional notes
+- Relations have unique constraint on (from_entity, to_entity, type)
+- API routes for CRUD operations on relations
 
 ## Migration System
 - Located in `server/utils/migrations.ts`
+- **3 migrations currently:**
+  1. Initial schema (entities, types, relations, tags, sessions, FTS5)
+  2. Campaigns + soft-delete (campaign_id, deleted_at columns)
+  3. Reference data (races & classes with D&D 5e seed data)
 - Auto-backup before each migration run
 - Version tracking in `schema_version` table
 - Backups stored in `data/backups/`
+- Migrations run automatically on server start via plugin
 
 ## Theme Colors
 **Dark Theme (Midnight Tavern)**:
@@ -93,47 +113,136 @@ pnpm dev
 - Secondary: #B8860B (dark goldenrod)
 - Accent: #8B0000 (burgundy)
 
-## Key Features To Implement
-1. ✅ Basic layout with sidebar
-2. ✅ Theme system (light/dark)
-3. ✅ i18n (de/en)
-4. ✅ SQLite + migrations
-5. ⏳ Universal search with fuzzy matching
-6. ⏳ CRUD for NPCs
-7. ⏳ CRUD for Locations
-8. ⏳ Entity linking system
-9. ⏳ Relationship graph visualization
-10. ⏳ Session logs
-11. ⏳ Duplicate detection
+## Implemented Features
+
+### ✅ Campaign Management
+- **Page**: `/campaigns`
+- Create, edit, delete (soft) campaigns
+- Card-based overview with creation date
+- Active campaign indicator in dashboard and sidebar
+- localStorage persistence for active campaign selection
+
+### ✅ NPC Management
+- **Page**: `/npcs`
+- Full CRUD with soft-delete
+- Fields: name, description, race, class, location, faction, relationship
+- Race & class selection with autocomplete (from reference data)
+- Live search/filter on name, description, metadata
+- **Location Relations**:
+  - Link NPCs to locations with relation type
+  - Editable relations with notes
+  - Suggested relation types (i18n): "lebt in", "arbeitet bei", etc.
+  - Edit and delete relations via UI
+
+### ✅ Location Management
+- **Page**: `/locations`
+- Full CRUD with soft-delete
+- Fields: name, description, type, region, notes
+- View dialog shows all connected NPCs with relation types
+- Search functionality
+
+### ✅ Reference Data Management
+- **Page**: `/reference-data`
+- Manage races and classes (D&D 5e pre-seeded)
+- Tab-based interface (Races | Classes)
+- Create custom races/classes
+- Edit existing entries
+- Delete protection: prevents deletion if in use by NPCs
+- 16 races, 12 classes pre-seeded in German
+
+### ✅ UI/UX Features
+- Dark/Light theme toggle (D&D themed colors)
+- i18n support (de/en) with full translations
+- Sidebar navigation with active campaign display
+- Search dialog placeholder (press `/` to open)
+- No elevation design (flat cards)
+- Responsive layout
+
+## API Routes Structure
+```
+server/api/
+├── campaigns/
+│   ├── index.get.ts          # List all campaigns
+│   ├── index.post.ts         # Create campaign
+│   ├── [id].patch.ts         # Update campaign
+│   └── [id].delete.ts        # Soft-delete campaign
+├── npcs/
+│   ├── index.get.ts          # List NPCs (filtered by campaign)
+│   ├── index.post.ts         # Create NPC
+│   ├── [id].patch.ts         # Update NPC
+│   ├── [id].delete.ts        # Soft-delete NPC
+│   └── [id]/
+│       ├── relations.get.ts  # Get NPC relations
+│       └── relations.post.ts # Create NPC relation
+├── locations/
+│   ├── index.get.ts          # List locations
+│   ├── index.post.ts         # Create location
+│   ├── [id].patch.ts         # Update location
+│   ├── [id].delete.ts        # Soft-delete location
+│   └── [id]/
+│       └── npcs.get.ts       # Get connected NPCs
+├── races/
+│   ├── index.get.ts          # List all races
+│   ├── index.post.ts         # Create race
+│   ├── [id].patch.ts         # Update race
+│   └── [id].delete.ts        # Soft-delete with "in use" check
+├── classes/
+│   ├── index.get.ts          # List all classes
+│   ├── index.post.ts         # Create class
+│   ├── [id].patch.ts         # Update class
+│   └── [id].delete.ts        # Soft-delete with "in use" check
+└── entity-relations/
+    ├── index.post.ts         # Create relation
+    ├── [id].patch.ts         # Update relation (type & notes)
+    └── [id].delete.ts        # Delete relation
+```
 
 ## File Structure
 ```
 dm-hero/
+├── .nvmrc                   # Node 22.20.0
 ├── app/
-│   ├── app.vue               # Main layout with sidebar + search
+│   ├── app.vue              # Main layout with sidebar + search
 │   ├── pages/
-│   │   └── index.vue         # Dashboard
-│   └── ...
+│   │   ├── index.vue        # Dashboard
+│   │   ├── campaigns.vue    # Campaign management
+│   │   ├── npcs/
+│   │   │   └── index.vue    # NPC management with relations
+│   │   ├── locations/
+│   │   │   └── index.vue    # Location management
+│   │   └── reference-data.vue # Races & classes management
+│   └── plugins/
+│       └── vuetify.ts       # Vuetify config + themes
 ├── server/
 │   ├── utils/
 │   │   ├── db.ts            # Database connection & backup
-│   │   └── migrations.ts    # Migration system
-│   └── plugins/
-│       └── database.ts      # Auto-run migrations on startup
-├── plugins/
-│   └── vuetify.ts           # Vuetify config + themes
-├── locales/
-│   ├── de.json
-│   └── en.json
+│   │   └── migrations.ts    # Migration system (3 migrations)
+│   ├── plugins/
+│   │   └── database.ts      # Auto-run migrations on startup
+│   └── api/                 # See API Routes Structure above
+├── i18n/
+│   └── locales/
+│       ├── de.json          # German translations
+│       └── en.json          # English translations
 ├── data/                    # .gitignored
-│   ├── dm-hero.db
-│   └── backups/
-└── ...
+│   ├── dm-hero.db           # SQLite database
+│   └── backups/             # Auto-generated backups
+└── CLAUDE.md                # This file
 ```
 
+## TODO / Not Yet Implemented
+- ⏳ Universal fuzzy search (FTS5 index ready, UI pending)
+- ⏳ Items, Factions, Quests pages
+- ⏳ Session logs with entity mentions
+- ⏳ Relationship graph visualization
+- ⏳ Duplicate detection
+- ⏳ Tag system (tables exist, UI pending)
+
 ## Important Notes
-- User wants this to be PRACTICAL, not overengineered
-- Focus on search & entity management first
-- Keep UI clean and functional
-- Always use migrations for DB changes
-- Test with user's real-world data once basic features work
+- **Soft-delete everywhere**: NEVER hard-delete. Always set `deleted_at`
+- **Comments in English**: All code comments must be English
+- **i18n**: All UI text must go through translation files
+- **Node version critical**: 22.20.0+ required for Vite 7
+- **pnpm security**: Must run `pnpm approve-builds` for better-sqlite3
+- **Migrations auto-run**: Database initializes on first start
+- **Campaign required**: App redirects to `/campaigns` if no active campaign
