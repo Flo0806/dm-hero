@@ -22,7 +22,25 @@
 
       <v-divider />
 
+      <!-- Active Campaign Display -->
+      <v-list-item
+        v-if="activeCampaignName && !rail"
+        prepend-icon="mdi-sword-cross"
+        :title="activeCampaignName"
+        subtitle="Aktive Kampagne"
+        class="mb-2"
+        @click="navigateTo('/campaigns')"
+      />
+
+      <v-divider v-if="activeCampaignName" />
+
       <v-list density="compact" nav>
+        <v-list-item
+          prepend-icon="mdi-view-dashboard"
+          title="Dashboard"
+          value="home"
+          to="/"
+        />
         <v-list-item
           prepend-icon="mdi-magnify"
           title="Suche"
@@ -70,6 +88,11 @@
       <template #append>
         <v-divider />
         <v-list density="compact" nav>
+          <v-list-item
+            prepend-icon="mdi-database"
+            :title="rail ? '' : 'Referenzdaten'"
+            to="/reference-data"
+          />
           <v-list-item
             :prepend-icon="theme.global.name.value === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
             :title="rail ? '' : 'Theme'"
@@ -163,6 +186,13 @@ const searchResults = ref<Array<{
   color: string
   path: string
 }>>([])
+
+// Active campaign from localStorage
+const activeCampaignName = ref<string | null>(null)
+
+onMounted(() => {
+  activeCampaignName.value = localStorage.getItem('activeCampaignName')
+})
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'

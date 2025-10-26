@@ -6,7 +6,7 @@ export default defineNitroPlugin(async () => {
 
   const db = getDb()
 
-  // Migrations ausführen
+  // Run migrations
   await runMigrations(db)
 
   console.log('✅ Database ready')

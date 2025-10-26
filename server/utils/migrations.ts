@@ -144,6 +144,134 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 1: Initial schema created')
     },
   },
+  {
+    version: 2,
+    name: 'add_campaigns',
+    up: (db) => {
+      // Campaigns table
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS campaigns (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+
+      // Add campaign_id to entities
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN campaign_id INTEGER REFERENCES campaigns(id) ON DELETE CASCADE
+      `)
+
+      // Add campaign_id to sessions
+      db.exec(`
+        ALTER TABLE sessions ADD COLUMN campaign_id INTEGER REFERENCES campaigns(id) ON DELETE CASCADE
+      `)
+
+      // Add deleted_at to entities for soft-delete
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN deleted_at TEXT
+      `)
+
+      // Add deleted_at to sessions for soft-delete
+      db.exec(`
+        ALTER TABLE sessions ADD COLUMN deleted_at TEXT
+      `)
+
+      // Add deleted_at to tags for soft-delete
+      db.exec(`
+        ALTER TABLE tags ADD COLUMN deleted_at TEXT
+      `)
+
+      // Create a default campaign for existing data
+      const insertCampaign = db.prepare('INSERT INTO campaigns (name, description) VALUES (?, ?)')
+      const result = insertCampaign.run('Meine Kampagne', 'Standard-Kampagne')
+      const defaultCampaignId = result.lastInsertRowid
+
+      // Update existing entities to belong to default campaign
+      db.exec(`UPDATE entities SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
+      db.exec(`UPDATE sessions SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
+
+      console.log('✅ Migration 2: Campaigns and soft-delete added')
+    },
+  },
+  {
+    version: 3,
+    name: 'add_reference_data',
+    up: (db) => {
+      // Reference data for races
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS races (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+
+      // Reference data for classes
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS classes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+
+      // Seed D&D 5e races
+      const insertRace = db.prepare('INSERT INTO races (name, description) VALUES (?, ?)')
+      const races = [
+        ['Mensch', 'Vielseitig und anpassungsfähig'],
+        ['Elf', 'Langlebig, elegant und magisch begabt'],
+        ['Zwerg', 'Zäh, handwerklich begabt und traditionsbewusst'],
+        ['Halbling', 'Klein, wendig und glücklich'],
+        ['Gnom', 'Neugierig, erfinderisch und lebhaft'],
+        ['Halbelf', 'Verbindet menschliche Vielseitigkeit mit elfischer Anmut'],
+        ['Halbork', 'Stark, ausdauernd und entschlossen'],
+        ['Tiefling', 'Infernalisches Erbe, charismatisch und misstrauisch betrachtet'],
+        ['Drachenblütiger', 'Drachenabstammung mit Atemwaffe'],
+        ['Zwergelf (Drow)', 'Dunkelelfen aus der Unterwelt'],
+        ['Waldelf', 'Schnell und im Einklang mit der Natur'],
+        ['Hochelf', 'Intellektuell und magisch begabt'],
+        ['Bergzwerg', 'Robust und widerstandsfähig'],
+        ['Hügelzwerg', 'Scharfsinnig und wahrnehmungsstark'],
+        ['Leichtfuß-Halbling', 'Besonders unauffällig'],
+        ['Robuster Halbling', 'Widerstandsfähig gegen Gift'],
+      ]
+
+      for (const [name, description] of races) {
+        insertRace.run(name, description)
+      }
+
+      // Seed D&D 5e classes
+      const insertClass = db.prepare('INSERT INTO classes (name, description) VALUES (?, ?)')
+      const classes = [
+        ['Barbar', 'Wilder Krieger mit unbändiger Wut'],
+        ['Barde', 'Musiker und Geschichtenerzähler mit Magie'],
+        ['Druide', 'Naturverbundener Zauberwirker und Gestaltwandler'],
+        ['Hexenmeister', 'Erhält Macht durch einen Pakt mit mächtiger Entität'],
+        ['Kämpfer', 'Meister der Waffen und Kampftechniken'],
+        ['Kleriker', 'Göttlicher Zauberwirker und Heiler'],
+        ['Magier', 'Studierter Arkaner Zauberwirker'],
+        ['Mönch', 'Meister der waffenlosen Kampfkunst und Ki-Energie'],
+        ['Paladin', 'Heiliger Krieger mit göttlicher Macht'],
+        ['Schurke', 'Meisterdieb und Schatten-Experte'],
+        ['Waldläufer', 'Jäger und Spurenleser der Wildnis'],
+        ['Zauberer', 'Angeborene magische Begabung'],
+      ]
+
+      for (const [name, description] of classes) {
+        insertClass.run(name, description)
+      }
+
+      console.log('✅ Migration 3: Reference data (races & classes) added')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
@@ -157,7 +285,7 @@ export async function runMigrations(db: Database.Database) {
 
   console.log(`🔄 Running ${pendingMigrations.length} migration(s)...`)
 
-  // Backup vor Migrations
+  // Backup before migrations
   createBackup()
 
   for (const migration of pendingMigrations) {

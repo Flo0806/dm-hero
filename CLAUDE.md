@@ -19,11 +19,29 @@ A local-first web app with:
 - Duplicate detection
 
 ## Tech Stack
-- **Framework**: Nuxt 4
+- **Framework**: Nuxt 4 (new folder structure: app/ for client code)
 - **UI**: Vuetify 3 (no elevation, as configured in plugin)
 - **Database**: SQLite with better-sqlite3
 - **i18n**: German (default) + English
-- **Node**: 22.19.0 (see .nvmrc)
+- **Node**: 22.20.0 (see .nvmrc) - **IMPORTANT: Vite 7 requires Node 22.20+**
+
+## Quick Start (for fresh clone)
+```bash
+# 1. Use correct Node version
+nvm use
+
+# 2. Install dependencies
+pnpm install
+
+# 3. Approve better-sqlite3 build (pnpm security feature)
+pnpm approve-builds
+
+# 4. Start dev server
+pnpm dev
+
+# Database will be auto-created in data/dm-hero.db
+# Migrations run automatically on server start
+```
 
 ## Design Principles
 1. **Functional over fancy** - This is a personal tool, utility is #1 priority

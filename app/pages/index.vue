@@ -1,16 +1,50 @@
 <template>
   <v-container>
-    <v-row>
-      <v-col cols="12">
-        <div class="text-h2 mb-4">
-          <v-icon icon="mdi-dice-d20" size="48" class="mr-3" />
-          Willkommen, Dungeon Master
-        </div>
-        <p class="text-h6 text-medium-emphasis mb-8">
-          Behalte den Überblick über deine Kampagne
-        </p>
-      </v-col>
-    </v-row>
+    <!-- Redirect to campaigns if no campaign selected -->
+    <div v-if="!activeCampaignId" class="text-center py-16">
+      <v-icon icon="mdi-sword-cross" size="64" class="mb-4" color="primary" />
+      <h2 class="text-h4 mb-4">
+        Wähle eine Kampagne
+      </h2>
+      <p class="text-body-1 text-medium-emphasis mb-6">
+        Um loszulegen, wähle eine bestehende Kampagne oder erstelle eine neue.
+      </p>
+      <v-btn
+        color="primary"
+        size="large"
+        to="/campaigns"
+        prepend-icon="mdi-arrow-right"
+      >
+        Zu den Kampagnen
+      </v-btn>
+    </div>
+
+    <div v-else>
+      <v-row>
+        <v-col cols="12">
+          <div class="d-flex align-center justify-space-between mb-4">
+            <div>
+              <div class="text-h2 mb-2">
+                <v-icon icon="mdi-dice-d20" size="48" class="mr-3" />
+                Willkommen, Dungeon Master
+              </div>
+              <p class="text-h6 text-medium-emphasis">
+                Behalte den Überblick über deine Kampagne
+              </p>
+            </div>
+            <v-chip
+              v-if="activeCampaignName"
+              color="primary"
+              size="large"
+              prepend-icon="mdi-sword-cross"
+              @click="navigateTo('/campaigns')"
+              class="cursor-pointer"
+            >
+              {{ activeCampaignName }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
 
     <v-row>
       <v-col
@@ -83,10 +117,19 @@
         </v-card>
       </v-col>
     </v-row>
+    </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
+const activeCampaignId = ref<string | null>(null)
+const activeCampaignName = ref<string | null>(null)
+
+onMounted(() => {
+  activeCampaignId.value = localStorage.getItem('activeCampaignId')
+  activeCampaignName.value = localStorage.getItem('activeCampaignName')
+})
+
 const categories = [
   {
     title: 'NPCs',
