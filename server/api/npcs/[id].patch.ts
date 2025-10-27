@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import type { NpcMetadata } from '../../../types/npc'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
@@ -12,7 +13,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata } = body
+  const { name, description, metadata } = body as {
+    name?: string
+    description?: string
+    metadata?: NpcMetadata
+  }
 
   db.prepare(`
     UPDATE entities

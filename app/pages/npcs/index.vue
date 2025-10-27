@@ -55,6 +55,11 @@
             {{ npc.name }}
           </v-card-title>
           <v-card-text>
+            <div v-if="npc.metadata?.type" class="mb-2">
+              <v-chip :prepend-icon="getNpcTypeIcon(npc.metadata.type)" size="small" color="primary">
+                {{ $t(`npcs.types.${npc.metadata.type}`) }}
+              </v-chip>
+            </div>
             <div v-if="npc.description" class="text-body-2 mb-3">
               {{ truncateText(npc.description, 100) }}
             </div>
@@ -181,6 +186,31 @@
                   />
                 </v-col>
               </v-row>
+
+              <v-select
+                v-model="npcForm.metadata.type"
+                :items="npcTypes"
+                :label="$t('npcs.type')"
+                variant="outlined"
+                clearable
+                class="mb-4"
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #prepend>
+                      <v-icon :icon="getNpcTypeIcon(item.value)" />
+                    </template>
+                  </v-list-item>
+                </template>
+                <template #selection="{ item }">
+                  <v-chip>
+                    <template #prepend>
+                      <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                    </template>
+                    {{ item.title }}
+                  </v-chip>
+                </template>
+              </v-select>
 
               <v-text-field
                 v-model="npcForm.metadata.location"
@@ -627,6 +657,8 @@
 </template>
 
 <script setup lang="ts">
+import { NPC_TYPES, type NpcType } from '~/types/npc'
+
 interface NPC {
   id: number
   name: string
@@ -637,6 +669,7 @@ interface NPC {
     location?: string
     faction?: string
     relationship?: string
+    type?: NpcType
   } | null
   created_at: string
   updated_at: string
@@ -709,8 +742,36 @@ const npcForm = ref({
     location: '',
     faction: '',
     relationship: '',
+    type: undefined as NpcType | undefined,
   },
 })
+
+// NPC Types for select
+const npcTypes = computed(() =>
+  NPC_TYPES.map(type => ({
+    value: type,
+    title: t(`npcs.types.${type}`),
+  })),
+)
+
+// Get icon for NPC type
+function getNpcTypeIcon(type: NpcType): string {
+  const iconMap: Record<NpcType, string> = {
+    ally: 'mdi-handshake',
+    enemy: 'mdi-skull',
+    neutral: 'mdi-account-circle',
+    questgiver: 'mdi-message-question',
+    merchant: 'mdi-storefront',
+    guard: 'mdi-shield-account',
+    noble: 'mdi-crown',
+    commoner: 'mdi-account',
+    villain: 'mdi-skull-crossbones',
+    mentor: 'mdi-book-open-variant',
+    companion: 'mdi-account-heart',
+    informant: 'mdi-information',
+  }
+  return iconMap[type] || 'mdi-account'
+}
 
 // NPC Relations state
 const npcRelations = ref<Array<{

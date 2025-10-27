@@ -1,10 +1,16 @@
 import { getDb } from '../../utils/db'
+import type { NpcMetadata } from '../../../types/npc'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description, metadata, campaignId } = body
+  const { name, description, metadata, campaignId } = body as {
+    name: string
+    description?: string
+    metadata?: NpcMetadata
+    campaignId: number
+  }
 
   if (!name || !campaignId) {
     throw createError({
@@ -14,7 +20,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get NPC entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number } | undefined
+  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('NPC')
 
   if (!entityType) {
     throw createError({
@@ -34,12 +40,31 @@ export default defineEventHandler(async (event) => {
     metadata ? JSON.stringify(metadata) : null,
   )
 
-  const npc = db.prepare(`
+  interface DbEntity {
+    id: number
+    type_id: number
+    campaign_id: number
+    name: string
+    description: string | null
+    metadata: string | null
+    created_at: string
+    updated_at: string
+    deleted_at: string | null
+  }
+
+  const npc = db.prepare<unknown[], DbEntity>(`
     SELECT * FROM entities WHERE id = ?
   `).get(result.lastInsertRowid)
 
+  if (!npc) {
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to create NPC',
+    })
+  }
+
   return {
     ...npc,
-    metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,
+    metadata: npc.metadata ? JSON.parse(npc.metadata) as NpcMetadata : null,
   }
 })
