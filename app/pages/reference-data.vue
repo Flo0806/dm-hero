@@ -237,9 +237,15 @@ interface ReferenceData {
 const { t } = useI18n()
 const tab = ref('races')
 
-// Fetch data
-const { data: races, pending: racesPending, refresh: refreshRaces } = await useFetch<ReferenceData[]>('/api/races')
-const { data: classes, pending: classesPending, refresh: refreshClasses } = await useFetch<ReferenceData[]>('/api/classes')
+// Fetch data with caching (not campaign-specific, can be cached globally)
+const { data: races, pending: racesPending, refresh: refreshRaces } = await useFetch<ReferenceData[]>('/api/races', {
+  key: 'races',
+  getCachedData: key => useNuxtApp().static.data[key],
+})
+const { data: classes, pending: classesPending, refresh: refreshClasses } = await useFetch<ReferenceData[]>('/api/classes', {
+  key: 'classes',
+  getCachedData: key => useNuxtApp().static.data[key],
+})
 
 // Table headers
 const raceHeaders = [

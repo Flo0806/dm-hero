@@ -189,13 +189,29 @@ const searchResults = ref<Array<{
 
 // Active campaign from localStorage
 const activeCampaignName = ref<string | null>(null)
+const activeCampaignId = ref<string | null>(null)
 
 onMounted(() => {
   activeCampaignName.value = localStorage.getItem('activeCampaignName')
+  activeCampaignId.value = localStorage.getItem('activeCampaignId')
 })
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
+
+function getEntityPath(entityType: string, entityId: number): string {
+  // Map entity types to their corresponding routes
+  const typeMap: Record<string, string> = {
+    'NPC': '/npcs',
+    'Location': '/locations',
+    'Item': '/items',
+    'Faction': '/factions',
+    'Quest': '/quests',
+    'Session': '/sessions',
+  }
+  const basePath = typeMap[entityType] || '/npcs'
+  return `${basePath}?id=${entityId}`
 }
 
 function navigateToResult(result: typeof searchResults.value[0]) {
@@ -224,13 +240,41 @@ onMounted(() => {
   })
 })
 
-// TODO: Implement search
+// Search implementation
 watch(searchQuery, async (query) => {
-  if (!query) {
+  if (!query || query.trim().length === 0) {
     searchResults.value = []
     return
   }
-  // API search will be implemented here
+
+  if (!activeCampaignId.value) {
+    return
+  }
+
+  try {
+    const results = await $fetch<Array<{
+      id: number
+      name: string
+      description: string
+      type: string
+      icon: string
+      color: string
+    }>>('/api/search', {
+      query: {
+        q: query.trim(),
+        campaignId: activeCampaignId.value,
+      },
+    })
+
+    searchResults.value = results.map(r => ({
+      ...r,
+      path: getEntityPath(r.type, r.id),
+    }))
+  }
+  catch (error) {
+    console.error('Search failed:', error)
+    searchResults.value = []
+  }
 })
 </script>
 

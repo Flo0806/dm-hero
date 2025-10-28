@@ -12,20 +12,28 @@ export default defineEventHandler((event) => {
     })
   }
 
-  // Get NPC entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number } | undefined
+  // Get Faction entity type ID
+  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('Faction')
 
   if (!entityType) {
     return []
   }
 
-  // Get all NPCs for this campaign
-  const npcs = db.prepare(`
+  interface DbEntity {
+    id: number
+    name: string
+    description: string | null
+    metadata: string | null
+    created_at: string
+    updated_at: string
+  }
+
+  // Get all Factions for this campaign
+  const factions = db.prepare<unknown[], DbEntity>(`
     SELECT
       e.id,
       e.name,
       e.description,
-      e.image_url,
       e.metadata,
       e.created_at,
       e.updated_at
@@ -36,8 +44,8 @@ export default defineEventHandler((event) => {
     ORDER BY e.name ASC
   `).all(entityType.id, campaignId)
 
-  return npcs.map(npc => ({
-    ...npc,
-    metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,
+  return factions.map(faction => ({
+    ...faction,
+    metadata: faction.metadata ? JSON.parse(faction.metadata) : null,
   }))
 })

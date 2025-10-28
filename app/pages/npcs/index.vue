@@ -49,14 +49,36 @@
         md="6"
         lg="4"
       >
-        <v-card hover class="h-100">
-          <v-card-title>
+        <v-card hover class="h-100 d-flex flex-column">
+          <v-card-title class="d-flex align-center">
             <v-icon icon="mdi-account" class="mr-2" color="primary" />
             {{ npc.name }}
+            <v-spacer />
+            <v-chip
+              v-if="npc.metadata?.status"
+              :prepend-icon="getNpcStatusIcon(npc.metadata.status)"
+              :color="getNpcStatusColor(npc.metadata.status)"
+              size="small"
+              variant="flat"
+            >
+              {{ $t(`npcs.statuses.${npc.metadata.status}`) }}
+            </v-chip>
           </v-card-title>
-          <v-card-text>
+          <v-card-text class="flex-grow-1">
+            <v-avatar
+              v-if="npc.image_url"
+              size="80"
+              rounded="lg"
+              class="float-right ml-3 mb-2"
+            >
+              <v-img :src="`/pictures/${npc.image_url}`" cover />
+            </v-avatar>
             <div v-if="npc.metadata?.type" class="mb-2">
-              <v-chip :prepend-icon="getNpcTypeIcon(npc.metadata.type)" size="small" color="primary">
+              <v-chip
+                :prepend-icon="getNpcTypeIcon(npc.metadata.type)"
+                size="small"
+                color="primary"
+              >
                 {{ $t(`npcs.types.${npc.metadata.type}`) }}
               </v-chip>
             </div>
@@ -138,6 +160,18 @@
             </v-icon>
             {{ $t('npcs.linkedLocations') }}
           </v-tab>
+          <v-tab value="memberships">
+            <v-icon start>
+              mdi-account-group
+            </v-icon>
+            {{ $t('npcs.memberships') }}
+          </v-tab>
+          <v-tab value="items">
+            <v-icon start>
+              mdi-sword
+            </v-icon>
+            {{ $t('npcs.items') }}
+          </v-tab>
           <v-tab value="notes">
             <v-icon start>
               mdi-note-text
@@ -150,6 +184,74 @@
           <v-tabs-window v-if="editingNpc" v-model="npcDialogTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
+              <!-- Image Upload Section -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-text>
+                  <div class="d-flex align-center gap-4">
+                    <div style="position: relative;">
+                      <v-avatar
+                        size="120"
+                        rounded="lg"
+                        :color="editingNpc?.image_url ? undefined : 'grey-lighten-2'"
+                      >
+                        <v-img
+                          v-if="editingNpc?.image_url && !uploadingImage"
+                          :src="`/pictures/${editingNpc.image_url}`"
+                          cover
+                        />
+                        <v-icon v-else-if="!uploadingImage" icon="mdi-account" size="64" color="grey" />
+                      </v-avatar>
+                      <v-progress-circular
+                        v-if="uploadingImage"
+                        indeterminate
+                        color="primary"
+                        size="120"
+                        width="8"
+                        style="position: absolute; top: 0; left: 0;"
+                      />
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="d-flex gap-2">
+                        <v-btn
+                          icon="mdi-camera"
+                          color="primary"
+                          size="large"
+                          :disabled="uploadingImage || deletingImage"
+                          @click="triggerImageUpload"
+                        >
+                          <v-icon>mdi-camera</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ editingNpc?.image_url ? $t('npcs.changeImage') : $t('npcs.uploadImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                        <input
+                          ref="fileInputRef"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                          style="display: none"
+                          @change="handleImageUpload"
+                        >
+                        <v-btn
+                          v-if="editingNpc?.image_url"
+                          icon="mdi-delete"
+                          color="error"
+                          variant="tonal"
+                          size="large"
+                          :loading="deletingImage"
+                          :disabled="uploadingImage"
+                          @click="deleteImage"
+                        >
+                          <v-icon>mdi-delete</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ $t('npcs.deleteImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+
               <v-text-field
                 v-model="npcForm.name"
                 :label="$t('npcs.name')"
@@ -187,30 +289,58 @@
                 </v-col>
               </v-row>
 
-              <v-select
-                v-model="npcForm.metadata.type"
-                :items="npcTypes"
-                :label="$t('npcs.type')"
-                variant="outlined"
-                clearable
-                class="mb-4"
-              >
-                <template #item="{ props, item }">
-                  <v-list-item v-bind="props">
-                    <template #prepend>
-                      <v-icon :icon="getNpcTypeIcon(item.value)" />
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="npcForm.metadata.type"
+                    :items="npcTypes"
+                    :label="$t('npcs.type')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props">
+                        <template #prepend>
+                          <v-icon :icon="getNpcTypeIcon(item.value)" />
+                        </template>
+                      </v-list-item>
                     </template>
-                  </v-list-item>
-                </template>
-                <template #selection="{ item }">
-                  <v-chip>
-                    <template #prepend>
-                      <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                    <template #selection="{ item }">
+                      <v-chip>
+                        <template #prepend>
+                          <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                        </template>
+                        {{ item.title }}
+                      </v-chip>
                     </template>
-                    {{ item.title }}
-                  </v-chip>
-                </template>
-              </v-select>
+                  </v-select>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="npcForm.metadata.status"
+                    :items="npcStatuses"
+                    :label="$t('npcs.status')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props">
+                        <template #prepend>
+                          <v-icon :icon="getNpcStatusIcon(item.value)" :color="getNpcStatusColor(item.value)" />
+                        </template>
+                      </v-list-item>
+                    </template>
+                    <template #selection="{ item }">
+                      <v-chip :color="getNpcStatusColor(item.value)">
+                        <template #prepend>
+                          <v-icon :icon="getNpcStatusIcon(item.value)" size="small" class="mr-1" />
+                        </template>
+                        {{ item.title }}
+                      </v-chip>
+                    </template>
+                  </v-select>
+                </v-col>
+              </v-row>
 
               <v-text-field
                 v-model="npcForm.metadata.location"
@@ -325,6 +455,294 @@
               </v-expansion-panel-text>
             </v-expansion-panel>
           </v-expansion-panels>
+            </v-tabs-window-item>
+
+            <!-- Memberships Tab -->
+            <v-tabs-window-item value="memberships">
+              <div class="text-h6 mb-4">
+                {{ $t('npcs.factionMemberships') }}
+              </div>
+
+              <v-list v-if="factionMemberships.length > 0" class="mb-3">
+                <v-list-item
+                  v-for="membership in factionMemberships"
+                  :key="membership.id"
+                  class="mb-2"
+                  border
+                >
+                  <template #prepend>
+                    <v-icon icon="mdi-shield-account" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ membership.to_entity_name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip size="small" class="mr-1">
+                      {{ membership.relation_type }}
+                    </v-chip>
+                    <span v-if="membership.notes?.rank" class="text-caption">
+                      {{ $t('npcs.rank') }}: {{ membership.notes.rank }}
+                    </span>
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-pencil"
+                      variant="text"
+                      size="small"
+                      @click="editMembership(membership)"
+                    />
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeMembership(membership.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-expansion-panels class="mb-4">
+                <v-expansion-panel>
+                  <v-expansion-panel-title>
+                    <v-icon start>
+                      mdi-plus
+                    </v-icon>
+                    {{ $t('npcs.addFactionMembership') }}
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <v-select
+                      v-model="newMembership.factionId"
+                      :items="factions || []"
+                      item-title="name"
+                      item-value="id"
+                      :label="$t('npcs.selectFaction')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-combobox
+                      v-model="newMembership.relationType"
+                      :items="membershipTypeSuggestions"
+                      :label="$t('npcs.membershipType')"
+                      :placeholder="$t('npcs.membershipTypePlaceholder')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-text-field
+                      v-model="newMembership.rank"
+                      :label="$t('npcs.rank')"
+                      :placeholder="$t('npcs.rankPlaceholder')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-link"
+                      :disabled="!newMembership.factionId || !newMembership.relationType"
+                      :loading="addingMembership"
+                      @click="addFactionMembership"
+                    >
+                      {{ $t('npcs.addFactionMembership') }}
+                    </v-btn>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
+
+              <v-divider class="my-6" />
+
+              <div class="text-h6 mb-4">
+                {{ $t('npcs.npcRelations') }}
+              </div>
+
+              <v-list v-if="npcRelationsList.length > 0" class="mb-3">
+                <v-list-item
+                  v-for="relation in npcRelationsList"
+                  :key="relation.id"
+                  class="mb-2"
+                  border
+                >
+                  <template #prepend>
+                    <v-icon icon="mdi-account" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ relation.to_entity_name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip size="small">
+                      {{ relation.relation_type }}
+                    </v-chip>
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-pencil"
+                      variant="text"
+                      size="small"
+                      @click="editNpcRelation(relation)"
+                    />
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeNpcRelation(relation.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-expansion-panels>
+                <v-expansion-panel>
+                  <v-expansion-panel-title>
+                    <v-icon start>
+                      mdi-plus
+                    </v-icon>
+                    {{ $t('npcs.addNpcRelation') }}
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <v-select
+                      v-model="newNpcRelation.npcId"
+                      :items="otherNpcs"
+                      item-title="name"
+                      item-value="id"
+                      :label="$t('npcs.selectNpc')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-combobox
+                      v-model="newNpcRelation.relationType"
+                      :items="npcRelationTypeSuggestions"
+                      :label="$t('npcs.relationType')"
+                      :placeholder="$t('npcs.npcRelationTypePlaceholder')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-link"
+                      :disabled="!newNpcRelation.npcId || !newNpcRelation.relationType"
+                      :loading="addingNpcRelation"
+                      @click="addNpcRelation"
+                    >
+                      {{ $t('npcs.addNpcRelation') }}
+                    </v-btn>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
+            </v-tabs-window-item>
+
+            <!-- Items Tab -->
+            <v-tabs-window-item value="items">
+              <div class="text-h6 mb-4">
+                {{ $t('npcs.itemsList') }}
+              </div>
+
+              <v-list v-if="npcItems.length > 0" class="mb-3">
+                <v-list-item
+                  v-for="item in npcItems"
+                  :key="item.id"
+                  class="mb-2"
+                  border
+                >
+                  <template #prepend>
+                    <v-icon icon="mdi-sword" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ item.item_name }}
+                    <v-chip
+                      v-if="item.notes?.equipped"
+                      size="x-small"
+                      color="success"
+                      class="ml-2"
+                    >
+                      {{ $t('npcs.equipped') }}
+                    </v-chip>
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip size="small" class="mr-1">
+                      {{ $t(`npcs.itemRelationTypes.${item.relation_type}`) }}
+                    </v-chip>
+                    <span v-if="item.notes?.quantity" class="text-caption">
+                      {{ $t('npcs.quantity') }}: {{ item.notes.quantity }}
+                    </span>
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeItem(item.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-expansion-panels>
+                <v-expansion-panel>
+                  <v-expansion-panel-title>
+                    <v-icon start>
+                      mdi-plus
+                    </v-icon>
+                    {{ $t('npcs.addItem') }}
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <v-select
+                      v-model="newItem.itemId"
+                      :items="items || []"
+                      item-title="name"
+                      item-value="id"
+                      :label="$t('npcs.selectItem')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-combobox
+                      v-model="newItem.relationType"
+                      :items="itemRelationTypeSuggestions"
+                      :label="$t('npcs.itemRelationType')"
+                      :placeholder="$t('npcs.itemRelationTypePlaceholder')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-row>
+                      <v-col cols="12" md="6">
+                        <v-text-field
+                          v-model.number="newItem.quantity"
+                          :label="$t('npcs.quantity')"
+                          :placeholder="$t('npcs.quantityPlaceholder')"
+                          variant="outlined"
+                          type="number"
+                          min="1"
+                        />
+                      </v-col>
+                      <v-col cols="12" md="6" class="d-flex align-center">
+                        <v-switch
+                          v-model="newItem.equipped"
+                          :label="$t('npcs.equipped')"
+                          color="primary"
+                          hide-details
+                        />
+                      </v-col>
+                    </v-row>
+
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-link"
+                      :disabled="!newItem.itemId || !newItem.relationType"
+                      :loading="addingItem"
+                      @click="addItemToNpc"
+                    >
+                      {{ $t('npcs.addItem') }}
+                    </v-btn>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
             </v-tabs-window-item>
 
             <!-- Notes Tab -->
@@ -657,52 +1075,52 @@
 </template>
 
 <script setup lang="ts">
-import { NPC_TYPES, type NpcType } from '~/types/npc'
-
-interface NPC {
-  id: number
-  name: string
-  description: string | null
-  metadata: {
-    race?: string
-    class?: string
-    location?: string
-    faction?: string
-    relationship?: string
-    type?: NpcType
-  } | null
-  created_at: string
-  updated_at: string
-}
+import type { NPC, NpcType, NpcStatus } from '../../../types/npc'
+import { NPC_TYPES, NPC_STATUSES } from '../../../types/npc'
 
 const { t } = useI18n()
 const router = useRouter()
 
-// Get active campaign
+// Auto-imported stores
+const entitiesStore = useEntitiesStore()
+
+// Get active campaign from localStorage
 const activeCampaignId = ref<string | null>(null)
 
-onMounted(() => {
+// Check if campaign is selected
+onMounted(async () => {
   activeCampaignId.value = localStorage.getItem('activeCampaignId')
 
   if (!activeCampaignId.value) {
     router.push('/campaigns')
+    return
   }
+
+  // Load entities for this campaign
+  await Promise.all([
+    entitiesStore.fetchNPCs(activeCampaignId.value),
+    entitiesStore.fetchLocations(activeCampaignId.value),
+    entitiesStore.fetchFactions(activeCampaignId.value),
+    entitiesStore.fetchItems(activeCampaignId.value),
+  ])
 })
 
-// Fetch NPCs
-const { data: npcs, pending, refresh } = await useFetch<NPC[]>('/api/npcs', {
-  query: computed(() => ({ campaignId: activeCampaignId.value })),
-  watch: [activeCampaignId],
+// Get data from stores
+const npcs = computed(() => entitiesStore.npcs)
+const pending = computed(() => entitiesStore.npcsLoading)
+const locations = computed(() => entitiesStore.locationsForSelect)
+const factions = computed(() => entitiesStore.factionsForSelect)
+const items = computed(() => entitiesStore.itemsForSelect)
+
+// Fetch races and classes for autocomplete (these are not campaign-specific)
+// Using getCachedData to cache across all pages
+const { data: races } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/races', {
+  key: 'races',
+  getCachedData: key => useNuxtApp().static.data[key],
 })
-
-// Fetch races and classes for autocomplete
-const { data: races } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/races')
-const { data: classes } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/classes')
-
-// Fetch locations for linking
-const { data: locations } = await useFetch<Array<{ id: number, name: string }>>('/api/locations', {
-  query: computed(() => ({ campaignId: activeCampaignId.value })),
-  watch: [activeCampaignId],
+const { data: classes } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/classes', {
+  key: 'classes',
+  getCachedData: key => useNuxtApp().static.data[key],
 })
 
 // Search
@@ -743,14 +1161,95 @@ const npcForm = ref({
     faction: '',
     relationship: '',
     type: undefined as NpcType | undefined,
+    status: undefined as NpcStatus | undefined,
   },
 })
+
+// Image upload state
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const uploadingImage = ref(false)
+const deletingImage = ref(false)
+
+// Trigger native file input
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+// Handle image upload
+async function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || !target.files.length || !editingNpc.value)
+    return
+
+  const file = target.files[0]
+  uploadingImage.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{ success: boolean, imageUrl: string }>(`/api/entities/${editingNpc.value.id}/upload-image`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (response.success) {
+      // Update the editing NPC with new image URL
+      editingNpc.value.image_url = response.imageUrl
+      // Refresh the list
+      await entitiesStore.fetchNPCs(activeCampaignId.value!)
+      // Reset input
+      target.value = ''
+    }
+  }
+  catch (error) {
+    console.error('Failed to upload image:', error)
+    alert(t('npcs.uploadImageError'))
+  }
+  finally {
+    uploadingImage.value = false
+  }
+}
+
+// Delete image function
+async function deleteImage() {
+  if (!editingNpc.value?.image_url)
+    return
+
+  deletingImage.value = true
+
+  try {
+    await $fetch(`/api/entities/${editingNpc.value.id}/delete-image`, {
+      method: 'DELETE',
+    })
+
+    // Update the editing NPC
+    editingNpc.value.image_url = null
+    // Refresh the list
+    await entitiesStore.fetchNPCs(activeCampaignId.value!)
+  }
+  catch (error) {
+    console.error('Failed to delete image:', error)
+    alert(t('npcs.deleteImageError'))
+  }
+  finally {
+    deletingImage.value = false
+  }
+}
 
 // NPC Types for select
 const npcTypes = computed(() =>
   NPC_TYPES.map(type => ({
     value: type,
     title: t(`npcs.types.${type}`),
+  })),
+)
+
+// NPC Statuses for select
+const npcStatuses = computed(() =>
+  NPC_STATUSES.map(status => ({
+    value: status,
+    title: t(`npcs.statuses.${status}`),
   })),
 )
 
@@ -771,6 +1270,30 @@ function getNpcTypeIcon(type: NpcType): string {
     informant: 'mdi-information',
   }
   return iconMap[type] || 'mdi-account'
+}
+
+// Get icon for NPC status
+function getNpcStatusIcon(status: NpcStatus): string {
+  const iconMap: Record<NpcStatus, string> = {
+    alive: 'mdi-heart-pulse',
+    dead: 'mdi-skull',
+    missing: 'mdi-help-circle',
+    imprisoned: 'mdi-lock',
+    unknown: 'mdi-help',
+  }
+  return iconMap[status] || 'mdi-help'
+}
+
+// Get color for NPC status
+function getNpcStatusColor(status: NpcStatus): string {
+  const colorMap: Record<NpcStatus, string> = {
+    alive: 'success',
+    dead: 'grey-darken-2',
+    missing: 'warning',
+    imprisoned: 'error',
+    unknown: 'grey',
+  }
+  return colorMap[status] || 'grey'
 }
 
 // NPC Relations state
@@ -810,6 +1333,107 @@ const relationTypeSuggestions = computed(() => [
   t('npcs.relationTypes.owns'),
   t('npcs.relationTypes.searchesFor'),
   t('npcs.relationTypes.banishedFrom'),
+])
+
+// Memberships state (all relations loaded from API)
+interface Relation {
+  id: number
+  from_entity_id: number
+  to_entity_id: number
+  to_entity_name: string
+  to_entity_type: string
+  relation_type: string
+  notes: Record<string, any> | null
+  created_at: string
+}
+
+const allRelations = ref<Relation[]>([])
+const loadingRelations = ref(false)
+
+// Computed: Filter faction memberships
+const factionMemberships = computed(() =>
+  allRelations.value.filter(rel => rel.to_entity_type === 'Faction'),
+)
+
+// Computed: Filter NPC relations
+const npcRelationsList = computed(() =>
+  allRelations.value.filter(rel => rel.to_entity_type === 'NPC'),
+)
+
+// Computed: Other NPCs (excluding current one)
+const otherNpcs = computed(() => {
+  if (!npcs.value || !editingNpc.value)
+    return []
+  return npcs.value.filter(npc => npc.id !== editingNpc.value?.id)
+})
+
+// New membership state
+const newMembership = ref({
+  factionId: null as number | null,
+  relationType: '',
+  rank: '',
+})
+const addingMembership = ref(false)
+
+// Suggested membership types (i18n)
+const membershipTypeSuggestions = computed(() => [
+  t('npcs.membershipTypes.member'),
+  t('npcs.membershipTypes.leader'),
+  t('npcs.membershipTypes.founder'),
+  t('npcs.membershipTypes.officer'),
+  t('npcs.membershipTypes.recruit'),
+  t('npcs.membershipTypes.veteran'),
+  t('npcs.membershipTypes.exile'),
+])
+
+// New NPC relation state
+const newNpcRelation = ref({
+  npcId: null as number | null,
+  relationType: '',
+})
+const addingNpcRelation = ref(false)
+
+// Suggested NPC relation types (i18n)
+const npcRelationTypeSuggestions = computed(() => [
+  t('npcs.npcRelationTypes.ally'),
+  t('npcs.npcRelationTypes.enemy'),
+  t('npcs.npcRelationTypes.family'),
+  t('npcs.npcRelationTypes.friend'),
+  t('npcs.npcRelationTypes.rival'),
+  t('npcs.npcRelationTypes.mentor'),
+  t('npcs.npcRelationTypes.student'),
+  t('npcs.npcRelationTypes.colleague'),
+])
+
+// Items state
+const npcItems = ref<Array<{
+  id: number
+  to_entity_id: number
+  item_name: string
+  item_description: string | null
+  item_metadata: Record<string, unknown> | null
+  relation_type: string
+  notes: Record<string, unknown> | null
+}>>([])
+
+const newItem = ref({
+  itemId: null as number | null,
+  relationType: '',
+  quantity: 1,
+  equipped: false,
+})
+const addingItem = ref(false)
+
+// Suggested item relation types (i18n)
+const itemRelationTypeSuggestions = computed(() => [
+  t('npcs.itemRelationTypes.owns'),
+  t('npcs.itemRelationTypes.carries'),
+  t('npcs.itemRelationTypes.wields'),
+  t('npcs.itemRelationTypes.wears'),
+  t('npcs.itemRelationTypes.seeks'),
+  t('npcs.itemRelationTypes.guards'),
+  t('npcs.itemRelationTypes.stole'),
+  t('npcs.itemRelationTypes.lost'),
 ])
 
 // Notes state
@@ -971,6 +1595,187 @@ async function confirmDeleteNote() {
   }
 }
 
+// Memberships functions
+async function loadAllRelations() {
+  if (!editingNpc.value)
+    return
+
+  loadingRelations.value = true
+
+  try {
+    const relations = await $fetch<Relation[]>(`/api/npcs/${editingNpc.value.id}/relations`)
+    allRelations.value = relations
+  }
+  catch (error) {
+    console.error('Failed to load relations:', error)
+    allRelations.value = []
+  }
+  finally {
+    loadingRelations.value = false
+  }
+}
+
+async function addFactionMembership() {
+  if (!editingNpc.value || !newMembership.value.factionId || !newMembership.value.relationType)
+    return
+
+  addingMembership.value = true
+
+  try {
+    await $fetch(`/api/npcs/${editingNpc.value.id}/relations`, {
+      method: 'POST',
+      body: {
+        toEntityId: newMembership.value.factionId,
+        relationType: newMembership.value.relationType,
+        notes: newMembership.value.rank ? { rank: newMembership.value.rank } : null,
+      },
+    })
+
+    await loadAllRelations()
+
+    // Reset form
+    newMembership.value = {
+      factionId: null,
+      relationType: '',
+      rank: '',
+    }
+  }
+  catch (error) {
+    console.error('Failed to add faction membership:', error)
+  }
+  finally {
+    addingMembership.value = false
+  }
+}
+
+function editMembership(membership: Relation) {
+  // TODO: Implement edit dialog for membership
+  console.log('Edit membership:', membership)
+}
+
+async function removeMembership(relationId: number) {
+  try {
+    await $fetch(`/api/relations/${relationId}`, {
+      method: 'DELETE',
+    })
+    await loadAllRelations()
+  }
+  catch (error) {
+    console.error('Failed to remove membership:', error)
+  }
+}
+
+async function addNpcRelation() {
+  if (!editingNpc.value || !newNpcRelation.value.npcId || !newNpcRelation.value.relationType)
+    return
+
+  addingNpcRelation.value = true
+
+  try {
+    await $fetch(`/api/npcs/${editingNpc.value.id}/relations`, {
+      method: 'POST',
+      body: {
+        toEntityId: newNpcRelation.value.npcId,
+        relationType: newNpcRelation.value.relationType,
+        notes: null,
+      },
+    })
+
+    await loadAllRelations()
+
+    // Reset form
+    newNpcRelation.value = {
+      npcId: null,
+      relationType: '',
+    }
+  }
+  catch (error) {
+    console.error('Failed to add NPC relation:', error)
+  }
+  finally {
+    addingNpcRelation.value = false
+  }
+}
+
+function editNpcRelation(relation: Relation) {
+  // TODO: Implement edit dialog for NPC relation
+  console.log('Edit NPC relation:', relation)
+}
+
+async function removeNpcRelation(relationId: number) {
+  try {
+    await $fetch(`/api/relations/${relationId}`, {
+      method: 'DELETE',
+    })
+    await loadAllRelations()
+  }
+  catch (error) {
+    console.error('Failed to remove NPC relation:', error)
+  }
+}
+
+// Items functions
+async function loadNpcItems() {
+  if (!editingNpc.value)
+    return
+
+  try {
+    const items = await $fetch<typeof npcItems.value>(`/api/npcs/${editingNpc.value.id}/items`)
+    npcItems.value = items
+  }
+  catch (error) {
+    console.error('Failed to load NPC items:', error)
+    npcItems.value = []
+  }
+}
+
+async function addItemToNpc() {
+  if (!editingNpc.value || !newItem.value.itemId || !newItem.value.relationType)
+    return
+
+  addingItem.value = true
+
+  try {
+    await $fetch(`/api/npcs/${editingNpc.value.id}/items`, {
+      method: 'POST',
+      body: {
+        itemId: newItem.value.itemId,
+        relationType: newItem.value.relationType,
+        quantity: newItem.value.quantity || undefined,
+        equipped: newItem.value.equipped,
+      },
+    })
+
+    await loadNpcItems()
+
+    // Reset form
+    newItem.value = {
+      itemId: null,
+      relationType: '',
+      quantity: 1,
+      equipped: false,
+    }
+  }
+  catch (error) {
+    console.error('Failed to add item to NPC:', error)
+  }
+  finally {
+    addingItem.value = false
+  }
+}
+
+async function removeItem(relationId: number) {
+  try {
+    await $fetch(`/api/relations/${relationId}`, {
+      method: 'DELETE',
+    })
+    await loadNpcItems()
+  }
+  catch (error) {
+    console.error('Failed to remove item:', error)
+  }
+}
+
 function closeNoteDialog() {
   showNoteDialog.value = false
   editingNote.value = null
@@ -1009,6 +1814,12 @@ async function editNpc(npc: NPC) {
   // Load notes
   await loadNotes()
 
+  // Load all relations (memberships + NPC relations)
+  await loadAllRelations()
+
+  // Load items
+  await loadNpcItems()
+
   showCreateDialog.value = true
   npcDialogTab.value = 'details'
 }
@@ -1026,27 +1837,20 @@ async function saveNpc() {
 
   try {
     if (editingNpc.value) {
-      await $fetch(`/api/npcs/${editingNpc.value.id}`, {
-        method: 'PATCH',
-        body: {
-          name: npcForm.value.name,
-          description: npcForm.value.description,
-          metadata: npcForm.value.metadata,
-        },
+      await entitiesStore.updateNPC(editingNpc.value.id, {
+        name: npcForm.value.name,
+        description: npcForm.value.description,
+        metadata: npcForm.value.metadata,
       })
     }
     else {
-      await $fetch('/api/npcs', {
-        method: 'POST',
-        body: {
-          ...npcForm.value,
-          campaignId: activeCampaignId.value,
-        },
-      })
+      await entitiesStore.createNPC(activeCampaignId.value, npcForm.value)
     }
 
-    await refresh()
     closeDialog()
+  }
+  catch (error) {
+    console.error('Failed to save NPC:', error)
   }
   finally {
     saving.value = false
@@ -1060,13 +1864,12 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await $fetch(`/api/npcs/${deletingNpc.value.id}`, {
-      method: 'DELETE',
-    })
-
-    await refresh()
+    await entitiesStore.deleteNPC(deletingNpc.value.id)
     showDeleteDialog.value = false
     deletingNpc.value = null
+  }
+  catch (error) {
+    console.error('Failed to delete NPC:', error)
   }
   finally {
     deleting.value = false
@@ -1173,10 +1976,20 @@ function closeDialog() {
   npcNotes.value = []
   notesSearch.value = ''
   npcDialogTab.value = 'details'
+  allRelations.value = []
   newRelation.value = {
     locationId: null,
     relationType: '',
     notes: '',
+  }
+  newMembership.value = {
+    factionId: null,
+    relationType: '',
+    rank: '',
+  }
+  newNpcRelation.value = {
+    npcId: null,
+    relationType: '',
   }
   npcForm.value = {
     name: '',

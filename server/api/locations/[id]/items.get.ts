@@ -1,0 +1,50 @@
+import { getDb } from '../../../utils/db'
+
+interface DbItem {
+  id: number
+  from_entity_id: number
+  to_entity_id: number
+  relation_type: string
+  notes: string | null
+  created_at: string
+  item_name: string
+  item_description: string | null
+  item_metadata: string | null
+}
+
+export default defineEventHandler(async (event) => {
+  const db = getDb()
+  const locationId = getRouterParam(event, 'id')
+
+  if (!locationId) {
+    throw createError({
+      statusCode: 400,
+      message: 'Location ID is required',
+    })
+  }
+
+  // Get all Items that this Location has a relation TO
+  const items = db.prepare<unknown[], DbItem>(`
+    SELECT
+      er.id,
+      er.from_entity_id,
+      er.to_entity_id,
+      er.relation_type,
+      er.notes,
+      er.created_at,
+      e.name as item_name,
+      e.description as item_description,
+      e.metadata as item_metadata
+    FROM entity_relations er
+    INNER JOIN entities e ON er.to_entity_id = e.id
+    WHERE er.from_entity_id = ?
+      AND e.deleted_at IS NULL
+    ORDER BY e.name ASC
+  `).all(locationId)
+
+  return items.map(item => ({
+    ...item,
+    notes: item.notes ? JSON.parse(item.notes) : null,
+    item_metadata: item.item_metadata ? JSON.parse(item.item_metadata) : null,
+  }))
+})

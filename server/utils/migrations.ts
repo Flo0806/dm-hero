@@ -272,6 +272,52 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 3: Reference data (races & classes) added')
     },
   },
+  {
+    version: 4,
+    name: 'add_image_support',
+    up: (db) => {
+      // Add image_url column to entities
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN image_url TEXT
+      `)
+
+      console.log('✅ Migration 4: Image support added to entities')
+    },
+  },
+  {
+    version: 5,
+    name: 'add_entity_images_table',
+    up: (db) => {
+      // Create entity_images table for multiple images per entity
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS entity_images (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_id INTEGER NOT NULL,
+          image_url TEXT NOT NULL,
+          caption TEXT,
+          is_primary INTEGER NOT NULL DEFAULT 0,
+          display_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Create index for faster lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entity_images_entity_id ON entity_images(entity_id)
+      `)
+
+      // Migrate existing image_url data to entity_images table
+      db.exec(`
+        INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
+        SELECT id, image_url, 1, 0
+        FROM entities
+        WHERE image_url IS NOT NULL
+      `)
+
+      console.log('✅ Migration 5: Entity images table created and data migrated')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

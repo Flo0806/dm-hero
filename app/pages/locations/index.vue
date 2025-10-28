@@ -49,39 +49,49 @@
         md="6"
         lg="4"
       >
-        <v-card hover class="h-100">
-          <v-card-title>
+        <v-card hover class="h-100 d-flex flex-column">
+          <v-card-title class="d-flex align-center">
             <v-icon icon="mdi-map-marker" class="mr-2" color="primary" />
             {{ location.name }}
+            <v-spacer />
+            <v-chip
+              v-if="location.metadata?.type"
+              size="small"
+              color="primary"
+              variant="tonal"
+            >
+              {{ location.metadata.type }}
+            </v-chip>
           </v-card-title>
-          <v-card-text>
-            <div v-if="location.description" class="text-body-2 mb-3">
-              {{ truncateText(location.description, 100) }}
+          <v-card-text class="flex-grow-1">
+            <v-avatar
+              v-if="location.image_url"
+              size="80"
+              rounded="lg"
+              class="float-right ml-3 mb-2"
+            >
+              <v-img :src="`/pictures/${location.image_url}`" cover />
+            </v-avatar>
+            <div v-if="location.metadata?.region" class="mb-2">
+              <v-chip size="small" prepend-icon="mdi-map" variant="outlined">
+                {{ location.metadata.region }}
+              </v-chip>
             </div>
-            <div v-if="location.metadata" class="text-caption">
-              <div v-if="location.metadata.type" class="mb-1">
-                <strong>{{ $t('locations.type') }}:</strong> {{ location.metadata.type }}
-              </div>
-              <div v-if="location.metadata.region" class="mb-1">
-                <strong>{{ $t('locations.region') }}:</strong> {{ location.metadata.region }}
-              </div>
+            <div v-if="location.description" class="text-body-2">
+              {{ truncateText(location.description, 100) }}
             </div>
           </v-card-text>
           <v-card-actions>
             <v-btn
+              icon="mdi-eye"
               variant="text"
-              prepend-icon="mdi-eye"
               @click="viewLocation(location)"
-            >
-              {{ $t('common.view') }}
-            </v-btn>
+            />
             <v-btn
+              icon="mdi-pencil"
               variant="text"
-              prepend-icon="mdi-pencil"
               @click="editLocation(location)"
-            >
-              {{ $t('common.edit') }}
-            </v-btn>
+            />
             <v-spacer />
             <v-btn
               variant="text"
@@ -123,6 +133,108 @@
           {{ editingLocation ? $t('locations.edit') : $t('locations.create') }}
         </v-card-title>
         <v-card-text>
+          <!-- Image Upload Section (only for editing) -->
+          <!-- Image Gallery -->
+          <v-card v-if="editingLocation" variant="outlined" class="mb-4">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-image-multiple" class="mr-2" />
+              Bilder
+              <v-spacer />
+              <v-btn
+                icon="mdi-plus"
+                color="primary"
+                size="small"
+                :disabled="uploadingImage"
+                @click="triggerImageUpload"
+              >
+                <v-icon>mdi-plus</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  Bilder hochladen
+                </v-tooltip>
+              </v-btn>
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                multiple
+                style="display: none"
+                @change="handleImageUpload"
+              >
+            </v-card-title>
+            <v-card-text>
+              <v-progress-linear v-if="loadingImages" indeterminate />
+              <v-list v-else-if="locationImages.length > 0">
+                <v-list-item
+                  v-for="image in locationImages"
+                  :key="image.id"
+                  class="mb-3"
+                >
+                  <template #prepend>
+                    <v-avatar size="80" rounded="lg">
+                      <v-img :src="`/pictures/${image.image_url}`" cover />
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title class="mb-2">
+                    <div class="d-flex align-center gap-2">
+                      <v-chip v-if="image.is_primary" size="small" color="primary">
+                        <v-icon start icon="mdi-star" />
+                        Primär
+                      </v-chip>
+                      <span class="text-caption text-medium-emphasis">
+                        {{ new Date(image.created_at).toLocaleDateString('de-DE') }}
+                      </span>
+                    </div>
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-text-field
+                      :model-value="image.caption || ''"
+                      placeholder="Beschriftung..."
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      @blur="(e) => updateImageCaption(image.id, (e.target as HTMLInputElement).value)"
+                      @keyup.enter="(e) => (e.target as HTMLInputElement).blur()"
+                    />
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <div class="d-flex gap-1">
+                      <v-btn
+                        v-if="!image.is_primary"
+                        icon="mdi-star-outline"
+                        variant="text"
+                        size="small"
+                        @click="setPrimaryImage(image.id)"
+                      >
+                        <v-icon>mdi-star-outline</v-icon>
+                        <v-tooltip activator="parent" location="bottom">
+                          Als Primär setzen
+                        </v-tooltip>
+                      </v-btn>
+                      <v-btn
+                        icon="mdi-delete"
+                        variant="text"
+                        size="small"
+                        color="error"
+                        @click="deleteImageFromGallery(image.id)"
+                      >
+                        <v-icon>mdi-delete</v-icon>
+                        <v-tooltip activator="parent" location="bottom">
+                          Löschen
+                        </v-tooltip>
+                      </v-btn>
+                    </div>
+                  </template>
+                </v-list-item>
+              </v-list>
+              <v-empty-state
+                v-else
+                icon="mdi-image-off"
+                title="Keine Bilder"
+                text="Lade Bilder hoch, um sie hier zu sehen"
+              />
+            </v-card-text>
+          </v-card>
+
           <v-text-field
             v-model="locationForm.name"
             :label="$t('locations.name')"
@@ -253,6 +365,114 @@
           <p v-else class="text-body-2 text-medium-emphasis">
             {{ $t('locations.noConnectedNpcs') }}
           </p>
+
+          <v-divider class="my-4" />
+
+          <div class="d-flex justify-space-between align-center mb-3">
+            <h3 class="text-h6">
+              {{ $t('locations.items') }}
+            </h3>
+            <v-btn
+              size="small"
+              color="primary"
+              prepend-icon="mdi-plus"
+              @click="showAddItemForm = !showAddItemForm"
+            >
+              {{ $t('locations.addItem') }}
+            </v-btn>
+          </div>
+
+          <!-- Add Item Form -->
+          <v-card v-if="showAddItemForm" class="mb-4" elevation="0" border>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12">
+                  <v-select
+                    v-model="newItem.itemId"
+                    :items="items"
+                    :label="$t('locations.selectItem')"
+                    item-title="name"
+                    item-value="id"
+                    variant="outlined"
+                    density="compact"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-combobox
+                    v-model="newItem.relationType"
+                    :items="itemRelationTypeSuggestions"
+                    :label="$t('locations.itemRelationType')"
+                    :placeholder="$t('locations.itemRelationTypePlaceholder')"
+                    variant="outlined"
+                    density="compact"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model.number="newItem.quantity"
+                    :label="$t('locations.quantity')"
+                    :placeholder="$t('locations.quantityPlaceholder')"
+                    type="number"
+                    variant="outlined"
+                    density="compact"
+                  />
+                </v-col>
+              </v-row>
+              <div class="d-flex justify-end gap-2">
+                <v-btn
+                  variant="text"
+                  @click="showAddItemForm = false; resetItemForm()"
+                >
+                  {{ $t('common.cancel') }}
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  :disabled="!newItem.itemId || !newItem.relationType"
+                  :loading="addingItem"
+                  @click="addItemToLocation"
+                >
+                  {{ $t('common.save') }}
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <v-progress-linear v-if="loadingItems" indeterminate />
+          <v-list v-else-if="locationItems && locationItems.length > 0">
+            <v-list-item
+              v-for="item in locationItems"
+              :key="item.id"
+              class="mb-2"
+              border
+            >
+              <template #prepend>
+                <v-icon icon="mdi-sword" color="primary" />
+              </template>
+              <v-list-item-title>
+                {{ item.item_name }}
+              </v-list-item-title>
+              <v-list-item-subtitle>
+                <v-chip size="small" class="mr-1">
+                  {{ $t(`locations.itemRelationTypes.${item.relation_type}`) }}
+                </v-chip>
+                <span v-if="item.notes?.quantity" class="text-caption">
+                  {{ $t('locations.quantity') }}: {{ item.notes.quantity }}
+                </span>
+              </v-list-item-subtitle>
+              <template #append>
+                <v-btn
+                  icon="mdi-delete"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click="removeItem(item.id)"
+                />
+              </template>
+            </v-list-item>
+          </v-list>
+          <p v-else class="text-body-2 text-medium-emphasis">
+            {{ $t('locations.noItems') }}
+          </p>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -303,6 +523,7 @@ interface Location {
   id: number
   name: string
   description: string | null
+  image_url?: string | null
   metadata: {
     type?: string
     region?: string
@@ -321,23 +542,26 @@ interface ConnectedNPC {
 
 const { t } = useI18n()
 const router = useRouter()
+const entitiesStore = useEntitiesStore()
 
 // Get active campaign
 const activeCampaignId = ref<string | null>(null)
 
-onMounted(() => {
+onMounted(async () => {
   activeCampaignId.value = localStorage.getItem('activeCampaignId')
 
   if (!activeCampaignId.value) {
     router.push('/campaigns')
+    return
   }
+
+  // Load locations from store (cached)
+  await entitiesStore.fetchLocations(activeCampaignId.value)
 })
 
-// Fetch Locations
-const { data: locations, pending, refresh } = await useFetch<Location[]>('/api/locations', {
-  query: computed(() => ({ campaignId: activeCampaignId.value })),
-  watch: [activeCampaignId],
-})
+// Use store data
+const locations = computed(() => entitiesStore.locations)
+const pending = computed(() => entitiesStore.locationsLoading)
 
 // Search
 const searchQuery = ref('')
@@ -377,9 +601,167 @@ const locationForm = ref({
   },
 })
 
+// Image gallery state
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const uploadingImage = ref(false)
+const loadingImages = ref(false)
+const locationImages = ref<Array<{
+  id: number
+  entity_id: number
+  image_url: string
+  caption: string | null
+  is_primary: number
+  display_order: number
+  created_at: string
+}>>([])
+
+// Trigger file input click
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+// Load images for location
+async function loadLocationImages() {
+  if (!editingLocation.value)
+    return
+
+  loadingImages.value = true
+  try {
+    const images = await $fetch<typeof locationImages.value>(`/api/entities/${editingLocation.value.id}/images`)
+    locationImages.value = images
+  }
+  catch (error) {
+    console.error('Failed to load images:', error)
+    locationImages.value = []
+  }
+  finally {
+    loadingImages.value = false
+  }
+}
+
+// Handle image upload from native input (multiple files)
+async function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || !target.files.length || !editingLocation.value)
+    return
+
+  uploadingImage.value = true
+
+  try {
+    const formData = new FormData()
+    for (const file of Array.from(target.files)) {
+      formData.append('file', file)
+    }
+
+    await $fetch(`/api/entities/${editingLocation.value.id}/images`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    // Reload images
+    await loadLocationImages()
+    // Refresh the list
+    await entitiesStore.fetchLocations(activeCampaignId.value!)
+    // Clear file input
+    target.value = ''
+  }
+  catch (error) {
+    console.error('Failed to upload images:', error)
+    alert(t('locations.uploadImageError'))
+  }
+  finally {
+    uploadingImage.value = false
+  }
+}
+
+// Delete image from gallery
+async function deleteImageFromGallery(imageId: number) {
+  try {
+    await $fetch(`/api/entity-images/${imageId}`, {
+      method: 'DELETE',
+    })
+
+    // Reload images
+    await loadLocationImages()
+    // Refresh the list
+    await entitiesStore.fetchLocations(activeCampaignId.value!)
+  }
+  catch (error) {
+    console.error('Failed to delete image:', error)
+    alert(t('locations.deleteImageError'))
+  }
+}
+
+// Set image as primary
+async function setPrimaryImage(imageId: number) {
+  try {
+    await $fetch(`/api/entity-images/${imageId}/set-primary`, {
+      method: 'PATCH',
+    })
+
+    // Reload images
+    await loadLocationImages()
+    // Refresh the list
+    await entitiesStore.fetchLocations(activeCampaignId.value!)
+  }
+  catch (error) {
+    console.error('Failed to set primary image:', error)
+  }
+}
+
+// Update image caption
+async function updateImageCaption(imageId: number, caption: string) {
+  try {
+    await $fetch(`/api/entity-images/${imageId}/caption`, {
+      method: 'PATCH',
+      body: { caption },
+    })
+
+    // Update local state
+    const image = locationImages.value.find(img => img.id === imageId)
+    if (image) {
+      image.caption = caption
+    }
+  }
+  catch (error) {
+    console.error('Failed to update caption:', error)
+  }
+}
+
 // Connected NPCs
 const connectedNpcs = ref<ConnectedNPC[]>([])
 const loadingNpcs = ref(false)
+
+// Location Items
+const locationItems = ref<Array<{
+  id: number
+  to_entity_id: number
+  item_name: string
+  item_description: string | null
+  item_metadata: Record<string, unknown> | null
+  relation_type: string
+  notes: Record<string, unknown> | null
+}>>([])
+const loadingItems = ref(false)
+const showAddItemForm = ref(false)
+const addingItem = ref(false)
+
+const newItem = ref({
+  itemId: null as number | null,
+  relationType: '',
+  quantity: 1,
+})
+
+const items = computed(() => entitiesStore.itemsForSelect)
+
+const itemRelationTypeSuggestions = computed(() => [
+  t('locations.itemRelationTypes.contains'),
+  t('locations.itemRelationTypes.hidden'),
+  t('locations.itemRelationTypes.displayed'),
+  t('locations.itemRelationTypes.stored'),
+  t('locations.itemRelationTypes.lost'),
+  t('locations.itemRelationTypes.guarded'),
+])
 
 function truncateText(text: string, length: number) {
   if (text.length <= length)
@@ -400,9 +782,83 @@ async function viewLocation(location: Location) {
   finally {
     loadingNpcs.value = false
   }
+
+  // Load Items
+  await loadLocationItems()
+
+  // Load items for the form if not already loaded
+  if (!entitiesStore.itemsLoaded && activeCampaignId.value) {
+    await entitiesStore.fetchItems(activeCampaignId.value)
+  }
 }
 
-function editLocation(location: Location) {
+async function loadLocationItems() {
+  if (!viewingLocation.value)
+    return
+
+  loadingItems.value = true
+  try {
+    const items = await $fetch<typeof locationItems.value>(`/api/locations/${viewingLocation.value.id}/items`)
+    locationItems.value = items
+  }
+  catch (error) {
+    console.error('Failed to load location items:', error)
+    locationItems.value = []
+  }
+  finally {
+    loadingItems.value = false
+  }
+}
+
+async function addItemToLocation() {
+  if (!viewingLocation.value || !newItem.value.itemId || !newItem.value.relationType)
+    return
+
+  addingItem.value = true
+
+  try {
+    await $fetch(`/api/locations/${viewingLocation.value.id}/items`, {
+      method: 'POST',
+      body: {
+        itemId: newItem.value.itemId,
+        relationType: newItem.value.relationType,
+        quantity: newItem.value.quantity || undefined,
+      },
+    })
+
+    await loadLocationItems()
+    resetItemForm()
+    showAddItemForm.value = false
+  }
+  catch (error) {
+    console.error('Failed to add item to location:', error)
+  }
+  finally {
+    addingItem.value = false
+  }
+}
+
+async function removeItem(relationId: number) {
+  try {
+    await $fetch(`/api/relations/${relationId}`, {
+      method: 'DELETE',
+    })
+    await loadLocationItems()
+  }
+  catch (error) {
+    console.error('Failed to remove item:', error)
+  }
+}
+
+function resetItemForm() {
+  newItem.value = {
+    itemId: null,
+    relationType: '',
+    quantity: 1,
+  }
+}
+
+async function editLocation(location: Location) {
   editingLocation.value = location
   locationForm.value = {
     name: location.name,
@@ -414,6 +870,8 @@ function editLocation(location: Location) {
     },
   }
   showCreateDialog.value = true
+  // Load images for this location
+  await loadLocationImages()
 }
 
 function deleteLocation(location: Location) {
@@ -429,27 +887,24 @@ async function saveLocation() {
 
   try {
     if (editingLocation.value) {
-      await $fetch(`/api/locations/${editingLocation.value.id}`, {
-        method: 'PATCH',
-        body: {
-          name: locationForm.value.name,
-          description: locationForm.value.description,
-          metadata: locationForm.value.metadata,
-        },
+      await entitiesStore.updateLocation(editingLocation.value.id, {
+        name: locationForm.value.name,
+        description: locationForm.value.description,
+        metadata: locationForm.value.metadata,
       })
     }
     else {
-      await $fetch('/api/locations', {
-        method: 'POST',
-        body: {
-          ...locationForm.value,
-          campaignId: activeCampaignId.value,
-        },
+      await entitiesStore.createLocation(activeCampaignId.value, {
+        name: locationForm.value.name,
+        description: locationForm.value.description,
+        metadata: locationForm.value.metadata,
       })
     }
 
-    await refresh()
     closeDialog()
+  }
+  catch (error) {
+    console.error('Failed to save location:', error)
   }
   finally {
     saving.value = false
@@ -463,13 +918,12 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await $fetch(`/api/locations/${deletingLocation.value.id}`, {
-      method: 'DELETE',
-    })
-
-    await refresh()
+    await entitiesStore.deleteLocation(deletingLocation.value.id)
     showDeleteDialog.value = false
     deletingLocation.value = null
+  }
+  catch (error) {
+    console.error('Failed to delete location:', error)
   }
   finally {
     deleting.value = false

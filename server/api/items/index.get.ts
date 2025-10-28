@@ -12,15 +12,15 @@ export default defineEventHandler((event) => {
     })
   }
 
-  // Get NPC entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number } | undefined
+  // Get Item entity type ID
+  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Item') as { id: number } | undefined
 
   if (!entityType) {
     return []
   }
 
-  // Get all NPCs for this campaign
-  const npcs = db.prepare(`
+  // Get all Items for this campaign
+  const items = db.prepare(`
     SELECT
       e.id,
       e.name,
@@ -36,8 +36,8 @@ export default defineEventHandler((event) => {
     ORDER BY e.name ASC
   `).all(entityType.id, campaignId)
 
-  return npcs.map(npc => ({
-    ...npc,
-    metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,
+  return items.map(item => ({
+    ...item,
+    metadata: item.metadata ? JSON.parse(item.metadata as string) : null,
   }))
 })

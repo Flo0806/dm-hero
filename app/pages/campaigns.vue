@@ -184,9 +184,16 @@ interface Campaign {
 
 const { t } = useI18n()
 const router = useRouter()
+const campaignStore = useCampaignStore()
+const entitiesStore = useEntitiesStore()
 
-// Fetch campaigns
-const { data: campaigns, pending, refresh } = await useFetch<Campaign[]>('/api/campaigns')
+// Load campaigns from store
+onMounted(async () => {
+  await campaignStore.loadCampaigns()
+})
+
+const campaigns = computed(() => campaignStore.campaigns)
+const pending = computed(() => campaignStore.loading)
 
 // Form state
 const showCreateDialog = ref(false)
@@ -209,10 +216,12 @@ function formatDate(dateString: string) {
   })
 }
 
-function selectCampaign(campaign: Campaign) {
-  // Store selected campaign in localStorage
-  localStorage.setItem('activeCampaignId', campaign.id.toString())
-  localStorage.setItem('activeCampaignName', campaign.name)
+async function selectCampaign(campaign: Campaign) {
+  // Set active campaign in store
+  campaignStore.setActiveCampaign(campaign.id)
+
+  // Clear old entities when switching campaigns
+  entitiesStore.clearAll()
 
   // Navigate to main app
   router.push('/')
@@ -233,26 +242,25 @@ function deleteCampaign(campaign: Campaign) {
 }
 
 async function saveCampaign() {
+  if (!campaignForm.value.name)
+    return
+
   saving.value = true
 
   try {
     if (editingCampaign.value) {
-      // Update existing campaign
-      await $fetch(`/api/campaigns/${editingCampaign.value.id}`, {
-        method: 'PATCH',
-        body: campaignForm.value,
-      })
+      // Update existing campaign via store
+      await campaignStore.updateCampaign(editingCampaign.value.id, campaignForm.value)
     }
     else {
-      // Create new campaign
-      await $fetch('/api/campaigns', {
-        method: 'POST',
-        body: campaignForm.value,
-      })
+      // Create new campaign via store
+      await campaignStore.createCampaign(campaignForm.value)
     }
 
-    await refresh()
     closeDialog()
+  }
+  catch (error) {
+    console.error('Failed to save campaign:', error)
   }
   finally {
     saving.value = false
@@ -266,13 +274,12 @@ async function confirmDelete() {
   deleting.value = true
 
   try {
-    await $fetch(`/api/campaigns/${deletingCampaign.value.id}`, {
-      method: 'DELETE',
-    })
-
-    await refresh()
+    await campaignStore.deleteCampaign(deletingCampaign.value.id)
     showDeleteDialog.value = false
     deletingCampaign.value = null
+  }
+  catch (error) {
+    console.error('Failed to delete campaign:', error)
   }
   finally {
     deleting.value = false

@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n'],
+  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt'],
 
   css: ['vuetify/styles', '@mdi/font/css/materialdesignicons.css'],
 
@@ -23,6 +23,15 @@ export default defineNuxtConfig({
   vite: {
     ssr: {
       noExternal: ['vuetify'],
+    },
+  },
+
+  nitro: {
+    storage: {
+      pictures: {
+        driver: 'fs',
+        base: './uploads',
+      },
     },
   },
 })

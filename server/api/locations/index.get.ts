@@ -25,13 +25,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const locations = db.prepare(`
-    SELECT * FROM entities
-    WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL
-    ORDER BY name ASC
+    SELECT
+      e.*,
+      ei.image_url as primary_image_url
+    FROM entities e
+    LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
+    WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
+    ORDER BY e.name ASC
   `).all(entityType.id, campaignId)
 
   return locations.map((location: any) => ({
     ...location,
+    image_url: location.primary_image_url || location.image_url, // Fallback to old image_url
     metadata: location.metadata ? JSON.parse(location.metadata) : null,
   }))
 })

@@ -11,19 +11,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  interface DbRelation {
+  interface DbItem {
     id: number
     from_entity_id: number
     to_entity_id: number
     relation_type: string
     notes: string | null
     created_at: string
-    to_entity_name: string
-    to_entity_type: string
+    item_name: string
+    item_description: string | null
+    item_metadata: string | null
   }
 
-  // Get all relations where this NPC is the 'from' entity
-  const relations = db.prepare<unknown[], DbRelation>(`
+  // Get all Items that this NPC has a relation TO
+  const items = db.prepare<unknown[], DbItem>(`
     SELECT
       er.id,
       er.from_entity_id,
@@ -31,18 +32,19 @@ export default defineEventHandler(async (event) => {
       er.relation_type,
       er.notes,
       er.created_at,
-      e.name as to_entity_name,
-      et.name as to_entity_type
+      e.name as item_name,
+      e.description as item_description,
+      e.metadata as item_metadata
     FROM entity_relations er
     INNER JOIN entities e ON er.to_entity_id = e.id
-    INNER JOIN entity_types et ON e.type_id = et.id
     WHERE er.from_entity_id = ?
       AND e.deleted_at IS NULL
-    ORDER BY et.name, e.name
+    ORDER BY e.name ASC
   `).all(npcId)
 
-  return relations.map(rel => ({
-    ...rel,
-    notes: rel.notes ? JSON.parse(rel.notes) : null,
+  return items.map(item => ({
+    ...item,
+    notes: item.notes ? JSON.parse(item.notes) : null,
+    item_metadata: item.item_metadata ? JSON.parse(item.item_metadata) : null,
   }))
 })
