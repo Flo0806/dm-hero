@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer
+      v-if="hasActiveCampaign"
       v-model="drawer"
       :rail="rail"
       permanent
@@ -26,7 +27,7 @@
       <v-list-item
         v-if="activeCampaignName && !rail"
         prepend-icon="mdi-sword-cross"
-        :title="activeCampaignName"
+        :title="activeCampaignName || ''"
         subtitle="Aktive Kampagne"
         class="mb-2"
         @click="navigateTo('/campaigns')"
@@ -187,13 +188,17 @@ const searchResults = ref<Array<{
   path: string
 }>>([])
 
-// Active campaign from localStorage
-const activeCampaignName = ref<string | null>(null)
-const activeCampaignId = ref<string | null>(null)
+// Campaign store
+const campaignStore = useCampaignStore()
 
+// Active campaign from cookies
+const activeCampaignName = useCookie('activeCampaignName')
+const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
+
+// Initialize campaign from cookie on mount
 onMounted(() => {
-  activeCampaignName.value = localStorage.getItem('activeCampaignName')
-  activeCampaignId.value = localStorage.getItem('activeCampaignId')
+  campaignStore.initFromCookie()
 })
 
 function toggleTheme() {
@@ -247,7 +252,7 @@ watch(searchQuery, async (query) => {
     return
   }
 
-  if (!activeCampaignId.value) {
+  if (!campaignStore.activeCampaignId) {
     return
   }
 
@@ -262,7 +267,7 @@ watch(searchQuery, async (query) => {
     }>>('/api/search', {
       query: {
         q: query.trim(),
-        campaignId: activeCampaignId.value,
+        campaignId: campaignStore.activeCampaignId,
       },
     })
 

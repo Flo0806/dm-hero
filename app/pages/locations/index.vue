@@ -94,13 +94,11 @@
             />
             <v-spacer />
             <v-btn
+              icon="mdi-delete"
               variant="text"
               color="error"
-              prepend-icon="mdi-delete"
               @click="deleteLocation(location)"
-            >
-              {{ $t('common.delete') }}
-            </v-btn>
+            />
           </v-card-actions>
         </v-card>
       </v-col>

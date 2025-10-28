@@ -99,21 +99,17 @@
           </v-card-text>
           <v-card-actions>
             <v-btn
+              icon="mdi-pencil"
               variant="text"
-              prepend-icon="mdi-pencil"
               @click="editNpc(npc)"
-            >
-              {{ $t('common.edit') }}
-            </v-btn>
+            />
             <v-spacer />
             <v-btn
+              icon="mdi-delete"
               variant="text"
               color="error"
-              prepend-icon="mdi-delete"
               @click="deleteNpc(npc)"
-            >
-              {{ $t('common.delete') }}
-            </v-btn>
+            />
           </v-card-actions>
         </v-card>
       </v-col>

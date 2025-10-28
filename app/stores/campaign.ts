@@ -10,7 +10,7 @@ interface Campaign {
 
 export const useCampaignStore = defineStore('campaign', {
   state: () => ({
-    activeCampaignId: (import.meta.client ? localStorage.getItem('activeCampaignId') : null) as string | null,
+    activeCampaignId: null as string | null,
     currentCampaign: null as Campaign | null,
     campaigns: [] as Campaign[],
     loading: false,
@@ -22,12 +22,22 @@ export const useCampaignStore = defineStore('campaign', {
   },
 
   actions: {
+    // Initialize from cookie
+    initFromCookie() {
+      const activeCampaignId = useCookie('activeCampaignId')
+      if (activeCampaignId.value) {
+        this.activeCampaignId = activeCampaignId.value
+        this.loadCurrentCampaign()
+      }
+    },
+
     // Set active campaign
     setActiveCampaign(campaignId: number | string) {
       this.activeCampaignId = String(campaignId)
-      if (import.meta.client) {
-        localStorage.setItem('activeCampaignId', String(campaignId))
-      }
+      const activeCampaignId = useCookie('activeCampaignId', {
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+      })
+      activeCampaignId.value = String(campaignId)
       // Load campaign details
       this.loadCurrentCampaign()
     },
@@ -36,10 +46,10 @@ export const useCampaignStore = defineStore('campaign', {
     clearActiveCampaign() {
       this.activeCampaignId = null
       this.currentCampaign = null
-      if (import.meta.client) {
-        localStorage.removeItem('activeCampaignId')
-        localStorage.removeItem('activeCampaignName')
-      }
+      const activeCampaignId = useCookie('activeCampaignId')
+      const activeCampaignName = useCookie('activeCampaignName')
+      activeCampaignId.value = null
+      activeCampaignName.value = null
     },
 
     // Load current campaign details
@@ -50,10 +60,11 @@ export const useCampaignStore = defineStore('campaign', {
       try {
         const campaign = await $fetch<Campaign>(`/api/campaigns/${this.activeCampaignId}`)
         this.currentCampaign = campaign
-        // Also store campaign name in localStorage for app.vue
-        if (import.meta.client) {
-          localStorage.setItem('activeCampaignName', campaign.name)
-        }
+        // Also store campaign name in cookie
+        const activeCampaignName = useCookie('activeCampaignName', {
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        })
+        activeCampaignName.value = campaign.name
       }
       catch (error) {
         console.error('Failed to load current campaign:', error)
