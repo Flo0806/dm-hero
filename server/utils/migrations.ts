@@ -318,6 +318,23 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 5: Entity images table created and data migrated')
     },
   },
+  {
+    version: 6,
+    name: 'add_caption_to_entity_images',
+    up: (db) => {
+      // Check if caption column already exists
+      const tableInfo = db.prepare('PRAGMA table_info(entity_images)').all() as Array<{ name: string }>
+      const hasCaptionColumn = tableInfo.some(col => col.name === 'caption')
+
+      if (!hasCaptionColumn) {
+        db.exec(`ALTER TABLE entity_images ADD COLUMN caption TEXT`)
+        console.log('✅ Migration 6: Caption column added to entity_images')
+      }
+      else {
+        console.log('✅ Migration 6: Caption column already exists, skipping')
+      }
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

@@ -55,6 +55,14 @@
             {{ faction.name }}
           </v-card-title>
           <v-card-text>
+            <v-avatar
+              v-if="faction.image_url"
+              size="80"
+              rounded="lg"
+              class="float-right ml-3 mb-2"
+            >
+              <v-img :src="`/pictures/${faction.image_url}`" cover />
+            </v-avatar>
             <div v-if="faction.description" class="text-body-2 mb-3">
               {{ truncateText(faction.description, 100) }}
             </div>
@@ -144,6 +152,74 @@
           <v-tabs-window v-if="editingFaction" v-model="factionDialogTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
+              <!-- Image Upload Section -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-text>
+                  <div class="d-flex align-center gap-4">
+                    <div style="position: relative;">
+                      <v-avatar
+                        size="120"
+                        rounded="lg"
+                        :color="editingFaction?.image_url ? undefined : 'grey-lighten-2'"
+                      >
+                        <v-img
+                          v-if="editingFaction?.image_url && !uploadingImage"
+                          :src="`/pictures/${editingFaction.image_url}`"
+                          cover
+                        />
+                        <v-icon v-else-if="!uploadingImage" icon="mdi-shield-account" size="64" color="grey" />
+                      </v-avatar>
+                      <v-progress-circular
+                        v-if="uploadingImage"
+                        indeterminate
+                        color="primary"
+                        size="120"
+                        width="8"
+                        style="position: absolute; top: 0; left: 0;"
+                      />
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="d-flex gap-2">
+                        <v-btn
+                          icon="mdi-camera"
+                          color="primary"
+                          size="large"
+                          :disabled="uploadingImage || deletingImage"
+                          @click="triggerImageUpload"
+                        >
+                          <v-icon>mdi-camera</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ editingFaction?.image_url ? $t('factions.changeImage') : $t('factions.uploadImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                        <input
+                          ref="fileInputRef"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                          style="display: none"
+                          @change="handleImageUpload"
+                        >
+                        <v-btn
+                          v-if="editingFaction?.image_url"
+                          icon="mdi-delete"
+                          color="error"
+                          variant="tonal"
+                          size="large"
+                          :loading="deletingImage"
+                          :disabled="uploadingImage"
+                          @click="deleteImage"
+                        >
+                          <v-icon>mdi-delete</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ $t('factions.deleteImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+
           <v-text-field
             v-model="factionForm.name"
             :label="$t('factions.name')"
@@ -516,6 +592,7 @@ interface Faction {
   id: number
   name: string
   description: string | null
+  image_url: string | null
   metadata: {
     type?: string
     leader?: string
@@ -590,7 +667,7 @@ interface FactionMember {
   from_entity_id: number
   to_entity_id: number
   relation_type: string
-  notes: Record<string, any> | null
+  notes: Record<string, unknown> | null
   created_at: string
   npc_name: string
 }
@@ -611,7 +688,7 @@ interface FactionLocation {
   from_entity_id: number
   to_entity_id: number
   relation_type: string
-  notes: Record<string, any> | null
+  notes: Record<string, unknown> | null
   created_at: string
   location_name: string
 }
@@ -855,6 +932,87 @@ async function removeLocation(relationId: number) {
   }
   catch (error) {
     console.error('Failed to remove location:', error)
+  }
+}
+
+// Image upload state
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const uploadingImage = ref(false)
+const deletingImage = ref(false)
+
+// Trigger file input click
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+// Handle image upload from native input
+async function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || !target.files.length || !editingFaction.value)
+    return
+
+  const file = target.files[0]
+  uploadingImage.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{ success: boolean, imageUrl: string }>(`/api/entities/${editingFaction.value.id}/upload-image`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (response.success) {
+      // Update the editing faction with new image URL
+      editingFaction.value.image_url = response.imageUrl
+
+      // Update the faction in the store list directly
+      const factionInList = entitiesStore.factions?.find(f => f.id === editingFaction.value!.id)
+      if (factionInList) {
+        factionInList.image_url = response.imageUrl
+      }
+
+      // Clear file input
+      target.value = ''
+    }
+  }
+  catch (error) {
+    console.error('Failed to upload image:', error)
+    alert(t('factions.uploadImageError'))
+  }
+  finally {
+    uploadingImage.value = false
+  }
+}
+
+// Delete image function
+async function deleteImage() {
+  if (!editingFaction.value?.image_url)
+    return
+
+  deletingImage.value = true
+
+  try {
+    await $fetch(`/api/entities/${editingFaction.value.id}/delete-image`, {
+      method: 'DELETE',
+    })
+
+    // Update the editing faction
+    editingFaction.value.image_url = null
+
+    // Update the faction in the store list directly
+    const factionInList = entitiesStore.factions?.find(f => f.id === editingFaction.value!.id)
+    if (factionInList) {
+      factionInList.image_url = null
+    }
+  }
+  catch (error) {
+    console.error('Failed to delete image:', error)
+    alert(t('factions.deleteImageError'))
+  }
+  finally {
+    deletingImage.value = false
   }
 }
 

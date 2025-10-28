@@ -56,6 +56,14 @@
             </v-chip>
           </v-card-title>
           <v-card-text class="flex-grow-1">
+            <v-avatar
+              v-if="item.image_url"
+              size="80"
+              rounded="lg"
+              class="float-right ml-3 mb-2"
+            >
+              <v-img :src="`/pictures/${item.image_url}`" cover />
+            </v-avatar>
             <v-chip
               v-if="item.metadata?.type"
               size="small"
@@ -161,6 +169,74 @@
           <v-tabs-window v-if="editingItem" v-model="itemDialogTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
+              <!-- Image Upload Section -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-text>
+                  <div class="d-flex align-center gap-4">
+                    <div style="position: relative;">
+                      <v-avatar
+                        size="120"
+                        rounded="lg"
+                        :color="editingItem?.image_url ? undefined : 'grey-lighten-2'"
+                      >
+                        <v-img
+                          v-if="editingItem?.image_url && !uploadingImage"
+                          :src="`/pictures/${editingItem.image_url}`"
+                          cover
+                        />
+                        <v-icon v-else-if="!uploadingImage" icon="mdi-sword" size="64" color="grey" />
+                      </v-avatar>
+                      <v-progress-circular
+                        v-if="uploadingImage"
+                        indeterminate
+                        color="primary"
+                        size="120"
+                        width="8"
+                        style="position: absolute; top: 0; left: 0;"
+                      />
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="d-flex gap-2">
+                        <v-btn
+                          icon="mdi-camera"
+                          color="primary"
+                          size="large"
+                          :disabled="uploadingImage || deletingImage"
+                          @click="triggerImageUpload"
+                        >
+                          <v-icon>mdi-camera</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ editingItem?.image_url ? $t('items.changeImage') : $t('items.uploadImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                        <input
+                          ref="fileInputRef"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                          style="display: none"
+                          @change="handleImageUpload"
+                        >
+                        <v-btn
+                          v-if="editingItem?.image_url"
+                          icon="mdi-delete"
+                          color="error"
+                          variant="tonal"
+                          size="large"
+                          :loading="deletingImage"
+                          :disabled="uploadingImage"
+                          @click="deleteImage"
+                        >
+                          <v-icon>mdi-delete</v-icon>
+                          <v-tooltip activator="parent" location="bottom">
+                            {{ $t('items.deleteImage') }}
+                          </v-tooltip>
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+
           <v-text-field
             v-model="itemForm.name"
             :label="$t('items.name')"
@@ -666,6 +742,87 @@ const itemForm = ref<{
 
 // Dialog tab state
 const itemDialogTab = ref('details')
+
+// Image upload state
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const uploadingImage = ref(false)
+const deletingImage = ref(false)
+
+// Trigger file input click
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+// Handle image upload from native input
+async function handleImageUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files || !target.files.length || !editingItem.value)
+    return
+
+  const file = target.files[0]
+  uploadingImage.value = true
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{ success: boolean, imageUrl: string }>(`/api/entities/${editingItem.value.id}/upload-image`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (response.success) {
+      // Update the editing item with new image URL
+      editingItem.value.image_url = response.imageUrl
+
+      // Update the item in the store list directly
+      const itemInList = entitiesStore.items?.find(i => i.id === editingItem.value!.id)
+      if (itemInList) {
+        itemInList.image_url = response.imageUrl
+      }
+
+      // Clear file input
+      target.value = ''
+    }
+  }
+  catch (error) {
+    console.error('Failed to upload image:', error)
+    alert(t('items.uploadImageError'))
+  }
+  finally {
+    uploadingImage.value = false
+  }
+}
+
+// Delete image function
+async function deleteImage() {
+  if (!editingItem.value?.image_url)
+    return
+
+  deletingImage.value = true
+
+  try {
+    await $fetch(`/api/entities/${editingItem.value.id}/delete-image`, {
+      method: 'DELETE',
+    })
+
+    // Update the editing item
+    editingItem.value.image_url = null
+
+    // Update the item in the store list directly
+    const itemInList = entitiesStore.items?.find(i => i.id === editingItem.value!.id)
+    if (itemInList) {
+      itemInList.image_url = null
+    }
+  }
+  catch (error) {
+    console.error('Failed to delete image:', error)
+    alert(t('items.deleteImageError'))
+  }
+  finally {
+    deletingImage.value = false
+  }
+}
 
 // Owners state
 const itemOwners = ref<Array<{

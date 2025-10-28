@@ -23,6 +23,7 @@ export default defineEventHandler((event) => {
     id: number
     name: string
     description: string | null
+    image_url: string | null
     metadata: string | null
     created_at: string
     updated_at: string
@@ -34,6 +35,7 @@ export default defineEventHandler((event) => {
       e.id,
       e.name,
       e.description,
+      e.image_url,
       e.metadata,
       e.created_at,
       e.updated_at

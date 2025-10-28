@@ -653,15 +653,26 @@ async function handleImageUpload(event: Event) {
       formData.append('file', file)
     }
 
-    await $fetch(`/api/entities/${editingLocation.value.id}/images`, {
+    const response = await $fetch<{ success: boolean, images: Array<{ id: number, imageUrl: string, isPrimary: boolean }> }>(`/api/entities/${editingLocation.value.id}/images`, {
       method: 'POST',
       body: formData,
     })
 
     // Reload images
     await loadLocationImages()
-    // Refresh the list
-    await entitiesStore.fetchLocations(activeCampaignId.value!)
+
+    // If a primary image was uploaded, update the location
+    const primaryImage = response.images.find(img => img.isPrimary)
+    if (primaryImage && editingLocation.value) {
+      editingLocation.value.image_url = primaryImage.imageUrl
+
+      // Update the location in the store list directly
+      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      if (locationInList) {
+        locationInList.image_url = primaryImage.imageUrl
+      }
+    }
+
     // Clear file input
     target.value = ''
   }
@@ -681,10 +692,20 @@ async function deleteImageFromGallery(imageId: number) {
       method: 'DELETE',
     })
 
-    // Reload images
-    await loadLocationImages()
-    // Refresh the list
-    await entitiesStore.fetchLocations(activeCampaignId.value!)
+    // Remove image from local array
+    locationImages.value = locationImages.value.filter(img => img.id !== imageId)
+
+    // Update the editingLocation's image_url with the new primary image (if any)
+    const primaryImage = locationImages.value.find(img => img.is_primary === 1)
+    if (editingLocation.value) {
+      editingLocation.value.image_url = primaryImage?.image_url || null
+
+      // Update the location in the store list directly
+      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      if (locationInList) {
+        locationInList.image_url = primaryImage?.image_url || null
+      }
+    }
   }
   catch (error) {
     console.error('Failed to delete image:', error)
@@ -699,10 +720,22 @@ async function setPrimaryImage(imageId: number) {
       method: 'PATCH',
     })
 
-    // Reload images
-    await loadLocationImages()
-    // Refresh the list
-    await entitiesStore.fetchLocations(activeCampaignId.value!)
+    // Update local image states
+    locationImages.value.forEach((img) => {
+      img.is_primary = img.id === imageId ? 1 : 0
+    })
+
+    // Update the editingLocation's image_url with the new primary image
+    const primaryImage = locationImages.value.find(img => img.id === imageId)
+    if (primaryImage && editingLocation.value) {
+      editingLocation.value.image_url = primaryImage.image_url
+
+      // Update the location in the store list directly
+      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      if (locationInList) {
+        locationInList.image_url = primaryImage.image_url
+      }
+    }
   }
   catch (error) {
     console.error('Failed to set primary image:', error)
