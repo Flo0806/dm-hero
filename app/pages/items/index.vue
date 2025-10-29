@@ -132,7 +132,7 @@
     <!-- Create/Edit Item Dialog -->
     <v-dialog
       v-model="showCreateDialog"
-      max-width="800"
+      max-width="1200"
       scrollable
     >
       <v-card>
@@ -158,6 +158,12 @@
               mdi-map-marker
             </v-icon>
             {{ $t('items.locations') }}
+          </v-tab>
+          <v-tab value="documents">
+            <v-icon start>
+              mdi-file-document
+            </v-icon>
+            {{ $t('documents.title') }}
           </v-tab>
         </v-tabs>
 
@@ -533,6 +539,11 @@
                   </v-expansion-panel-text>
                 </v-expansion-panel>
               </v-expansion-panels>
+            </v-tabs-window-item>
+
+            <!-- Documents Tab -->
+            <v-tabs-window-item value="documents">
+              <EntityDocuments v-if="editingItem" :entity-id="editingItem.id" />
             </v-tabs-window-item>
           </v-tabs-window>
 
@@ -931,16 +942,24 @@ async function saveItem() {
         description: itemForm.value.description || null,
         metadata: itemForm.value.metadata,
       })
+      closeDialog()
     }
     else {
-      await entitiesStore.createItem(activeCampaignId.value, {
+      // Create new item and immediately open edit dialog
+      const newItem = await entitiesStore.createItem(activeCampaignId.value, {
         name: itemForm.value.name,
         description: itemForm.value.description || null,
         metadata: itemForm.value.metadata,
       })
-    }
 
-    closeDialog()
+      // Close create dialog first
+      closeDialog()
+
+      // Open edit dialog with the newly created item
+      // Small delay to ensure smooth transition
+      await nextTick()
+      editItem(newItem)
+    }
   }
   catch (error) {
     console.error('Failed to save item:', error)

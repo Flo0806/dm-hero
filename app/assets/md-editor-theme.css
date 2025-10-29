@@ -1,0 +1,29 @@
+/* assets/md-editor-theme.css */
+.v-theme--light .md-editor {
+  background: var(--v-md-bg);
+  color: var(--v-md-text);
+}
+.v-theme--light .md-editor .md-toolbar-wrapper {
+  background: var(--v-md-surface);
+  border-bottom: 1px solid var(--v-md-border);
+}
+.v-theme--light .md-editor .md-editor-toolbar-item { color: var(--v-md-muted); }
+.v-theme--light .md-editor .md-editor-toolbar-item:hover { color: var(--v-md-primary); }
+.v-theme--light .md-editor .md-editor-content-editor { background: var(--v-md-bg); }
+.v-theme--light .md-editor pre, 
+.v-theme--light .md-editor code { background: var(--v-md-code-bg); }
+
+/* Dark */
+.v-theme--dark .md-editor {
+  background: var(--v-md-bg);
+  color: var(--v-md-text);
+}
+.v-theme--dark .md-editor .md-toolbar-wrapper {
+  background: var(--v-md-surface);
+  border-bottom: 1px solid var(--v-md-border);
+}
+.v-theme--dark .md-editor .md-editor-toolbar-item { color: var(--v-md-muted); }
+.v-theme--dark .md-editor .md-editor-toolbar-item:hover { color: var(--v-md-primary); }
+.v-theme--dark .md-editor .md-editor-content-editor { background: var(--v-md-bg); }
+.v-theme--dark .md-editor pre, 
+.v-theme--dark .md-editor code { background: var(--v-md-code-bg); }

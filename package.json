@@ -17,6 +17,7 @@
     "@pinia/nuxt": "^0.11.2",
     "eslint": "^9.38.0",
     "marked": "^16.4.1",
+    "md-editor-v3": "^6.1.0",
     "nuxt": "^4.2.0",
     "pinia": "^3.0.3",
     "vite-plugin-vuetify": "^2.1.2",

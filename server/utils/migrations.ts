@@ -335,6 +335,37 @@ export const migrations: Migration[] = [
       }
     },
   },
+  {
+    version: 7,
+    name: 'add_entity_documents',
+    up: (db) => {
+      // Create entity_documents table for markdown documents
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS entity_documents (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_id INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          content TEXT NOT NULL DEFAULT '',
+          date TEXT NOT NULL,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Create indexes for faster lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entity_documents_entity_id ON entity_documents(entity_id)
+      `)
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entity_documents_sort_order ON entity_documents(sort_order)
+      `)
+
+      console.log('✅ Migration 7: Entity documents table created')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

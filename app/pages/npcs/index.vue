@@ -174,6 +174,12 @@
             </v-icon>
             {{ $t('npcs.notes') }} ({{ npcNotes.length }})
           </v-tab>
+          <v-tab value="documents">
+            <v-icon start>
+              mdi-file-document
+            </v-icon>
+            {{ $t('documents.title') }}
+          </v-tab>
         </v-tabs>
 
         <v-card-text style="max-height: 600px">
@@ -810,6 +816,11 @@
                 :title="$t('npcs.noNotes')"
                 :text="$t('npcs.noNotesText')"
               />
+            </v-tabs-window-item>
+
+            <!-- Documents Tab -->
+            <v-tabs-window-item value="documents">
+              <EntityDocuments v-if="editingNpc" :entity-id="editingNpc.id" />
             </v-tabs-window-item>
           </v-tabs-window>
 
