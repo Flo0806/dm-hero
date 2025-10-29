@@ -61,14 +61,25 @@
             </v-chip>
           </v-card-title>
           <v-card-text class="flex-grow-1">
-            <v-avatar
+            <div
               v-if="location.image_url"
-              size="80"
-              rounded="lg"
-              class="float-right ml-3 mb-2"
+              class="float-right ml-3 mb-2 position-relative image-container"
+              style="width: 80px; height: 80px;"
             >
-              <v-img :src="`/pictures/${location.image_url}`" cover />
-            </v-avatar>
+              <v-avatar
+                size="80"
+                rounded="lg"
+              >
+                <v-img :src="`/pictures/${location.image_url}`" cover />
+              </v-avatar>
+              <v-btn
+                icon="mdi-download"
+                size="x-small"
+                variant="tonal"
+                class="image-download-btn"
+                @click.stop="downloadImage(`/pictures/${location.image_url}`, location.name)"
+              />
+            </div>
             <div v-if="location.metadata?.region" class="mb-2">
               <v-chip size="small" prepend-icon="mdi-map" variant="outlined">
                 {{ location.metadata.region }}
@@ -165,9 +176,18 @@
                   class="mb-3"
                 >
                   <template #prepend>
-                    <v-avatar size="80" rounded="lg">
-                      <v-img :src="`/pictures/${image.image_url}`" cover />
-                    </v-avatar>
+                    <div class="position-relative image-container">
+                      <v-avatar size="80" rounded="lg">
+                        <v-img :src="`/pictures/${image.image_url}`" cover />
+                      </v-avatar>
+                      <v-btn
+                        icon="mdi-download"
+                        size="x-small"
+                        variant="tonal"
+                        class="image-download-btn"
+                        @click.stop="downloadImage(`/pictures/${image.image_url}`, editingLocation?.name || 'image')"
+                      />
+                    </div>
                   </template>
                   <v-list-item-title class="mb-2">
                     <div class="d-flex align-center gap-2">
@@ -520,6 +540,9 @@ const { t } = useI18n()
 const router = useRouter()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+
+// Use image download composable
+const { downloadImage } = useImageDownload()
 
 // Get active campaign from campaign store
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
@@ -955,3 +978,18 @@ function closeDialog() {
   }
 }
 </script>
+
+<style scoped>
+.image-download-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.image-container:hover .image-download-btn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+</style>

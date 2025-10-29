@@ -64,14 +64,25 @@
             </v-chip>
           </v-card-title>
           <v-card-text class="flex-grow-1">
-            <v-avatar
+            <div
               v-if="item.image_url"
-              size="80"
-              rounded="lg"
-              class="float-right ml-3 mb-2"
+              class="float-right ml-3 mb-2 position-relative image-container"
+              style="width: 80px; height: 80px;"
             >
-              <v-img :src="`/pictures/${item.image_url}`" cover />
-            </v-avatar>
+              <v-img
+                :src="`/pictures/${item.image_url}`"
+                cover
+                rounded="lg"
+                style="width: 100%; height: 100%;"
+              />
+              <v-btn
+                icon="mdi-download"
+                size="x-small"
+                variant="tonal"
+                class="image-download-btn"
+                @click.stop="downloadImage(`/pictures/${item.image_url}`, item.name)"
+              />
+            </div>
             <v-chip
               v-if="item.metadata?.type"
               size="small"
@@ -161,12 +172,21 @@
           <v-row>
             <!-- Image -->
             <v-col v-if="viewingItem.image_url" cols="12" md="4">
-              <v-img
-                :src="`/pictures/${viewingItem.image_url}`"
-                aspect-ratio="1"
-                cover
-                rounded="lg"
-              />
+              <div class="position-relative image-container">
+                <v-img
+                  :src="`/pictures/${viewingItem.image_url}`"
+                  aspect-ratio="1"
+                  cover
+                  rounded="lg"
+                />
+                <v-btn
+                  icon="mdi-download"
+                  size="small"
+                  variant="tonal"
+                  class="image-download-btn"
+                  @click="downloadImage(`/pictures/${viewingItem.image_url}`, viewingItem.name)"
+                />
+              </div>
             </v-col>
 
             <!-- Content -->
@@ -951,6 +971,9 @@ async function deleteImage() {
   }
 }
 
+// Use image download composable
+const { downloadImage } = useImageDownload()
+
 // Owners state
 const itemOwners = ref<Array<{
   id: number
@@ -1247,3 +1270,18 @@ async function removeLocation(relationId: number) {
   }
 }
 </script>
+
+<style scoped>
+.image-download-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.image-container:hover .image-download-btn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+</style>

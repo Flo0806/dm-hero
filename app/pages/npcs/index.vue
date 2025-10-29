@@ -62,14 +62,25 @@
             </v-chip>
           </v-card-title>
           <v-card-text class="flex-grow-1">
-            <v-avatar
+            <div
               v-if="npc.image_url"
-              size="80"
-              rounded="lg"
-              class="float-right ml-3 mb-2"
+              class="float-right ml-3 mb-2 position-relative image-container"
+              style="width: 80px; height: 80px;"
             >
-              <v-img :src="`/pictures/${npc.image_url}`" cover />
-            </v-avatar>
+              <v-avatar
+                size="80"
+                rounded="lg"
+              >
+                <v-img :src="`/pictures/${npc.image_url}`" cover />
+              </v-avatar>
+              <v-btn
+                icon="mdi-download"
+                size="x-small"
+                variant="tonal"
+                class="image-download-btn"
+                @click.stop="downloadImage(`/pictures/${npc.image_url}`, npc.name)"
+              />
+            </div>
             <div v-if="npc.metadata?.type" class="mb-2">
               <v-chip
                 :prepend-icon="getNpcTypeIcon(npc.metadata.type)"
@@ -187,7 +198,7 @@
               <v-card variant="outlined" class="mb-4">
                 <v-card-text>
                   <div class="d-flex align-center gap-4">
-                    <div style="position: relative;">
+                    <div class="position-relative image-container">
                       <v-avatar
                         size="120"
                         rounded="lg"
@@ -200,6 +211,14 @@
                         />
                         <v-icon v-else-if="!uploadingImage" icon="mdi-account" size="64" color="grey" />
                       </v-avatar>
+                      <v-btn
+                        v-if="editingNpc?.image_url && !uploadingImage"
+                        icon="mdi-download"
+                        size="small"
+                        variant="tonal"
+                        class="image-download-btn"
+                        @click="downloadImage(`/pictures/${editingNpc.image_url}`, editingNpc.name)"
+                      />
                       <v-progress-circular
                         v-if="uploadingImage"
                         indeterminate
@@ -1065,6 +1084,9 @@ import { NPC_TYPES, NPC_STATUSES } from '../../../types/npc'
 
 const { t } = useI18n()
 const router = useRouter()
+
+// Use image download composable
+const { downloadImage } = useImageDownload()
 
 // Auto-imported stores
 const entitiesStore = useEntitiesStore()
@@ -1993,3 +2015,18 @@ function closeDialog() {
   }
 }
 </script>
+
+<style scoped>
+.image-download-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.image-container:hover .image-download-btn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+</style>

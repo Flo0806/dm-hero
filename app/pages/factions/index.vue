@@ -52,14 +52,25 @@
             {{ faction.name }}
           </v-card-title>
           <v-card-text>
-            <v-avatar
+            <div
               v-if="faction.image_url"
-              size="80"
-              rounded="lg"
-              class="float-right ml-3 mb-2"
+              class="float-right ml-3 mb-2 position-relative image-container"
+              style="width: 80px; height: 80px;"
             >
-              <v-img :src="`/pictures/${faction.image_url}`" cover />
-            </v-avatar>
+              <v-avatar
+                size="80"
+                rounded="lg"
+              >
+                <v-img :src="`/pictures/${faction.image_url}`" cover />
+              </v-avatar>
+              <v-btn
+                icon="mdi-download"
+                size="x-small"
+                variant="tonal"
+                class="image-download-btn"
+                @click.stop="downloadImage(`/pictures/${faction.image_url}`, faction.name)"
+              />
+            </div>
             <div v-if="faction.description" class="text-body-2 mb-3">
               {{ truncateText(faction.description, 100) }}
             </div>
@@ -149,7 +160,7 @@
               <v-card variant="outlined" class="mb-4">
                 <v-card-text>
                   <div class="d-flex align-center gap-4">
-                    <div style="position: relative;">
+                    <div class="position-relative image-container">
                       <v-avatar
                         size="120"
                         rounded="lg"
@@ -162,6 +173,14 @@
                         />
                         <v-icon v-else-if="!uploadingImage" icon="mdi-shield-account" size="64" color="grey" />
                       </v-avatar>
+                      <v-btn
+                        v-if="editingFaction?.image_url && !uploadingImage"
+                        icon="mdi-download"
+                        size="small"
+                        variant="tonal"
+                        class="image-download-btn"
+                        @click="downloadImage(`/pictures/${editingFaction.image_url}`, editingFaction.name)"
+                      />
                       <v-progress-circular
                         v-if="uploadingImage"
                         indeterminate
@@ -580,6 +599,9 @@ interface Faction {
 }
 
 const router = useRouter()
+
+// Use image download composable
+const { downloadImage } = useImageDownload()
 
 // Auto-imported stores
 const campaignStore = useCampaignStore()
@@ -1012,3 +1034,18 @@ function closeDialog() {
   }
 }
 </script>
+
+<style scoped>
+.image-download-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.image-container:hover .image-download-btn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+</style>
