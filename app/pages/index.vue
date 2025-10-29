@@ -37,8 +37,8 @@
               color="primary"
               size="large"
               prepend-icon="mdi-sword-cross"
-              @click="navigateTo('/campaigns')"
               class="cursor-pointer"
+              @click="navigateTo('/campaigns')"
             >
               {{ activeCampaignName }}
             </v-chip>
@@ -122,12 +122,15 @@
 </template>
 
 <script setup lang="ts">
-const activeCampaignId = ref<string | null>(null)
-const activeCampaignName = ref<string | null>(null)
+const campaignStore = useCampaignStore()
+
+// Get active campaign from campaign store
+const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const activeCampaignName = useCookie('activeCampaignName')
 
 onMounted(() => {
-  activeCampaignId.value = localStorage.getItem('activeCampaignId')
-  activeCampaignName.value = localStorage.getItem('activeCampaignName')
+  // Initialize campaign from cookie
+  campaignStore.initFromCookie()
 })
 
 const categories = [

@@ -1079,13 +1079,15 @@ const router = useRouter()
 
 // Auto-imported stores
 const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
 
-// Get active campaign from localStorage
-const activeCampaignId = ref<string | null>(null)
+// Get active campaign from campaign store
+const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 // Check if campaign is selected
 onMounted(async () => {
-  activeCampaignId.value = localStorage.getItem('activeCampaignId')
+  // Initialize campaign from cookie
+  campaignStore.initFromCookie()
 
   if (!activeCampaignId.value) {
     router.push('/campaigns')
@@ -1339,7 +1341,7 @@ interface Relation {
   to_entity_name: string
   to_entity_type: string
   relation_type: string
-  notes: Record<string, any> | null
+  notes: Record<string, unknown> | null
   created_at: string
 }
 
@@ -1528,7 +1530,7 @@ async function saveNote() {
   try {
     if (editingNote.value) {
       // Update existing note
-      await $fetch(`/api/sessions/${editingNote.value.id}`, {
+      await $fetch(`/api/npcs/${editingNpc.value.id}/notes/${editingNote.value.id}`, {
         method: 'PATCH',
         body: {
           title: noteForm.value.title || null,
@@ -1575,7 +1577,7 @@ async function confirmDeleteNote() {
   deletingNoteLoading.value = true
 
   try {
-    await $fetch(`/api/sessions/${deletingNote.value.id}`, {
+    await $fetch(`/api/npcs/${editingNpc.value!.id}/notes/${deletingNote.value.id}`, {
       method: 'DELETE',
     })
 
@@ -1794,6 +1796,8 @@ async function editNpc(npc: NPC) {
       location: npc.metadata?.location || '',
       faction: npc.metadata?.faction || '',
       relationship: npc.metadata?.relationship || '',
+      type: npc.metadata?.type,
+      status: npc.metadata?.status,
     },
   }
 
@@ -1888,14 +1892,14 @@ async function addLocationRelation() {
       },
     })
 
-    npcRelations.value.push(relation as any)
+    npcRelations.value.push(relation as typeof npcRelations.value[0])
     newRelation.value = {
       locationId: null,
       relationType: '',
       notes: '',
     }
   }
-  catch (error: any) {
+  catch (error) {
     console.error('Failed to add relation:', error)
   }
   finally {
@@ -1930,7 +1934,7 @@ async function saveRelation() {
     // Update in local array
     const index = npcRelations.value.findIndex(r => r.id === editingRelation.value!.id)
     if (index !== -1) {
-      npcRelations.value[index] = updated as any
+      npcRelations.value[index] = updated as typeof npcRelations.value[0]
     }
 
     closeEditRelationDialog()

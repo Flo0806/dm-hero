@@ -44,7 +44,7 @@
           :items="races || []"
           :loading="racesPending"
         >
-          <template #item.actions="{ item }">
+          <template #[`item.actions`]="{ item }">
             <v-btn
               icon="mdi-pencil"
               variant="text"
@@ -79,7 +79,7 @@
           :items="classes || []"
           :loading="classesPending"
         >
-          <template #item.actions="{ item }">
+          <template #[`item.actions`]="{ item }">
             <v-btn
               icon="mdi-pencil"
               variant="text"
@@ -363,8 +363,9 @@ async function saveRace() {
     await refreshRaces()
     closeRaceDialog()
   }
-  catch (error: any) {
-    errorMessage.value = error.data?.message || t('referenceData.saveError')
+  catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
   }
   finally {
@@ -392,8 +393,9 @@ async function saveClass() {
     await refreshClasses()
     closeClassDialog()
   }
-  catch (error: any) {
-    errorMessage.value = error.data?.message || t('referenceData.saveError')
+  catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
   }
   finally {
@@ -440,8 +442,9 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     deletingId.value = null
   }
-  catch (error: any) {
-    errorMessage.value = error.data?.message || t('referenceData.deleteError')
+  catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.deleteError')
     showError.value = true
   }
   finally {

@@ -33,9 +33,9 @@
         @click="navigateTo('/campaigns')"
       />
 
-      <v-divider v-if="activeCampaignName" />
+      <v-divider v-if="activeCampaignName && !rail" />
 
-      <v-list density="compact" nav>
+      <v-list v-if="hasActiveCampaign" density="compact" nav>
         <v-list-item
           prepend-icon="mdi-view-dashboard"
           title="Dashboard"
@@ -111,6 +111,22 @@
 
       <v-spacer />
 
+      <!-- Language Switcher -->
+      <v-btn-toggle
+        :model-value="currentLocale"
+        mandatory
+        density="compact"
+        class="mr-2"
+        @update:model-value="changeLocale"
+      >
+        <v-btn value="de" size="small">
+          asdf
+        </v-btn>
+        <v-btn value="en" size="small">
+          asdf
+        </v-btn>
+      </v-btn-toggle>
+
       <v-btn
         icon="mdi-magnify"
         @click="showSearch = true"
@@ -175,6 +191,7 @@
 import { useTheme } from 'vuetify'
 
 const theme = useTheme()
+const { locale, setLocale } = useI18n()
 const drawer = ref(true)
 const rail = ref(false)
 const showSearch = ref(false)
@@ -193,16 +210,31 @@ const campaignStore = useCampaignStore()
 
 // Active campaign from cookies
 const activeCampaignName = useCookie('activeCampaignName')
-const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
-// Initialize campaign from cookie on mount
+// Language
+const currentLocale = computed(() => locale.value)
+const localeCookie = useCookie('locale', {
+  maxAge: 60 * 60 * 24 * 365, // 1 year
+})
+
+// Initialize campaign and locale from cookie on mount
 onMounted(() => {
   campaignStore.initFromCookie()
+
+  // Initialize locale from cookie
+  if (localeCookie.value) {
+    setLocale(localeCookie.value)
+  }
 })
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+}
+
+function changeLocale(newLocale: string) {
+  setLocale(newLocale)
+  localeCookie.value = newLocale
 }
 
 function getEntityPath(entityType: string, entityId: number): string {

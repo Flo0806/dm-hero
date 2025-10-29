@@ -255,7 +255,12 @@
       "territory": "Territory",
       "safehouse": "Safehouse",
       "baseOfOperations": "Base of Operations"
-    }
+    },
+    "uploadImage": "Upload Image",
+    "changeImage": "Change Image",
+    "deleteImage": "Delete Image",
+    "uploadImageError": "Failed to upload image",
+    "deleteImageError": "Failed to delete image"
   },
   "locations": {
     "title": "Locations",
@@ -322,6 +327,7 @@
     "properties": "Properties",
     "propertiesPlaceholder": "e.g. Finesse, light, magical",
     "requiresAttunement": "Requires Attunement",
+    "attunement": "Attunement",
     "types": {
       "weapon": "Weapon",
       "armor": "Armor",
@@ -401,6 +407,36 @@
     "saveError": "Error saving",
     "deleteError": "Error deleting"
   },
+  "sessions": {
+    "title": "Sessions",
+    "subtitle": "Document your game sessions and important events",
+    "create": "New Session",
+    "edit": "Edit Session",
+    "view": "View Session",
+    "sessionNumber": "Session #",
+    "date": "Date",
+    "summary": "Summary",
+    "summaryPlaceholder": "Brief summary of this session...",
+    "notes": "Notes",
+    "notesMarkdown": "Notes (Markdown)",
+    "notesPlaceholder": "Write your session notes here...\n\nTips:\n- Use **bold** and _italic_ for formatting\n- Create lists with - or 1.\n- Link entities with the buttons above",
+    "preview": "Preview",
+    "details": "Details",
+    "mentions": "Mentions",
+    "linkedEntities": "Linked Entities",
+    "noMentions": "No linked entities. Use the link buttons in the editor to link NPCs, locations, items or factions.",
+    "titleRequired": "Title is required",
+    "noSummary": "No summary",
+    "empty": "No sessions available",
+    "emptyText": "Create your first session to get started",
+    "deleteTitle": "Delete Session",
+    "deleteConfirm": "Do you really want to delete '{title}'? The session will be archived and can be restored.",
+    "linkNpc": "Link NPC",
+    "linkLocation": "Link Location",
+    "linkItem": "Link Item",
+    "linkFaction": "Link Faction",
+    "goToPage": "Go to Page"
+  },
   "common": {
     "edit": "Edit",
     "delete": "Delete",
@@ -410,6 +446,11 @@
     "back": "Back",
     "search": "Search",
     "actions": "Actions",
-    "view": "View"
+    "view": "View",
+    "close": "Close",
+    "noResults": "No results",
+    "notes": "Notes",
+    "yes": "Yes",
+    "no": "No"
   }
 }

@@ -541,12 +541,14 @@ interface ConnectedNPC {
 const { t } = useI18n()
 const router = useRouter()
 const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
 
-// Get active campaign
-const activeCampaignId = ref<string | null>(null)
+// Get active campaign from campaign store
+const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 onMounted(async () => {
-  activeCampaignId.value = localStorage.getItem('activeCampaignId')
+  // Initialize campaign from cookie
+  campaignStore.initFromCookie()
 
   if (!activeCampaignId.value) {
     router.push('/campaigns')

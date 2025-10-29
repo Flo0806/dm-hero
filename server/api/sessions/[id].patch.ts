@@ -12,18 +12,19 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { title, summary, date, notes } = body
+  const { title, session_number, summary, date, notes } = body
 
   db.prepare(`
     UPDATE sessions
     SET
       title = COALESCE(?, title),
-      summary = COALESCE(?, summary),
-      date = COALESCE(?, date),
-      notes = COALESCE(?, notes),
+      session_number = ?,
+      summary = ?,
+      date = ?,
+      notes = ?,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(title, summary, date, notes, id)
+  `).run(title, session_number, summary, date, notes, id)
 
   const session = db.prepare(`
     SELECT * FROM sessions WHERE id = ? AND deleted_at IS NULL

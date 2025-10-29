@@ -255,7 +255,12 @@
       "territory": "Territorium",
       "safehouse": "Unterschlupf",
       "baseOfOperations": "Operationsbasis"
-    }
+    },
+    "uploadImage": "Bild hochladen",
+    "changeImage": "Bild ändern",
+    "deleteImage": "Bild löschen",
+    "uploadImageError": "Fehler beim Hochladen des Bildes",
+    "deleteImageError": "Fehler beim Löschen des Bildes"
   },
   "locations": {
     "title": "Orte",
@@ -322,6 +327,7 @@
     "properties": "Eigenschaften",
     "propertiesPlaceholder": "z.B. Finesse, leicht, magisch",
     "requiresAttunement": "Erfordert Einstimmung",
+    "attunement": "Einstimmung",
     "types": {
       "weapon": "Waffe",
       "armor": "Rüstung",
@@ -401,6 +407,36 @@
     "saveError": "Fehler beim Speichern",
     "deleteError": "Fehler beim Löschen"
   },
+  "sessions": {
+    "title": "Sessions",
+    "subtitle": "Dokumentiere deine Spielabende und wichtige Ereignisse",
+    "create": "Neue Session",
+    "edit": "Session bearbeiten",
+    "view": "Session ansehen",
+    "sessionNumber": "Session #",
+    "date": "Datum",
+    "summary": "Zusammenfassung",
+    "summaryPlaceholder": "Kurze Zusammenfassung dieser Session...",
+    "notes": "Notizen",
+    "notesMarkdown": "Notizen (Markdown)",
+    "notesPlaceholder": "Schreibe deine Session-Notizen hier...\n\nTipps:\n- Nutze **fett** und _kursiv_ für Formatierung\n- Erstelle Listen mit - oder 1.\n- Verlinke Entities mit den Buttons oben",
+    "preview": "Vorschau",
+    "details": "Details",
+    "mentions": "Erwähnungen",
+    "linkedEntities": "Verknüpfte Entities",
+    "noMentions": "Keine verknüpften Entities. Nutze die Link-Buttons im Editor um NPCs, Orte, Items oder Fraktionen zu verlinken.",
+    "titleRequired": "Titel ist erforderlich",
+    "noSummary": "Keine Zusammenfassung",
+    "empty": "Keine Sessions vorhanden",
+    "emptyText": "Erstelle deine erste Session um loszulegen",
+    "deleteTitle": "Session löschen",
+    "deleteConfirm": "Möchtest du '{title}' wirklich löschen? Die Session wird archiviert und kann wiederhergestellt werden.",
+    "linkNpc": "NPC verknüpfen",
+    "linkLocation": "Ort verknüpfen",
+    "linkItem": "Item verknüpfen",
+    "linkFaction": "Fraktion verknüpfen",
+    "goToPage": "Zur Seite"
+  },
   "common": {
     "edit": "Bearbeiten",
     "delete": "Löschen",
@@ -410,6 +446,11 @@
     "back": "Zurück",
     "search": "Suchen",
     "actions": "Aktionen",
-    "view": "Ansehen"
+    "view": "Ansehen",
+    "close": "Schließen",
+    "noResults": "Keine Ergebnisse",
+    "notes": "Notizen",
+    "yes": "Ja",
+    "no": "Nein"
   }
 }
