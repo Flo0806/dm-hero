@@ -387,7 +387,8 @@
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
     "uploadImageError": "Failed to upload image",
-    "deleteImageError": "Failed to delete image"
+    "deleteImageError": "Failed to delete image",
+    "documents": "Documents"
   },
   "referenceData": {
     "title": "Reference Data",

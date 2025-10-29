@@ -387,7 +387,8 @@
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
-    "deleteImageError": "Fehler beim Löschen des Bildes"
+    "deleteImageError": "Fehler beim Löschen des Bildes",
+    "documents": "Dokumente"
   },
   "referenceData": {
     "title": "Referenzdaten",

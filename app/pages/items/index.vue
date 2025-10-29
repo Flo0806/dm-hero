@@ -49,6 +49,7 @@
         <v-card
           hover
           class="h-100 d-flex flex-column"
+          @click="viewItem(item)"
         >
           <v-card-title class="d-flex align-center">
             <v-icon icon="mdi-sword" class="mr-2" color="primary" />
@@ -105,14 +106,14 @@
             <v-btn
               icon="mdi-pencil"
               variant="text"
-              @click="editItem(item)"
+              @click.stop="editItem(item)"
             />
             <v-spacer />
             <v-btn
               icon="mdi-delete"
               variant="text"
               color="error"
-              @click="deleteItem(item)"
+              @click.stop="deleteItem(item)"
             />
           </v-card-actions>
         </v-card>
@@ -135,6 +136,117 @@
         </v-btn>
       </template>
     </v-empty-state>
+
+    <!-- View Item Dialog -->
+    <v-dialog
+      v-model="showViewDialog"
+      max-width="1200"
+      scrollable
+    >
+      <v-card v-if="viewingItem">
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-sword" class="mr-2" color="primary" />
+          {{ viewingItem.name }}
+          <v-chip
+            v-if="viewingItem.metadata?.rarity"
+            :color="getRarityColor(viewingItem.metadata.rarity)"
+            size="small"
+            class="ml-2"
+          >
+            {{ $t(`items.rarities.${viewingItem.metadata.rarity}`) }}
+          </v-chip>
+        </v-card-title>
+
+        <v-card-text style="max-height: 70vh;">
+          <v-row>
+            <!-- Image -->
+            <v-col v-if="viewingItem.image_url" cols="12" md="4">
+              <v-img
+                :src="`/pictures/${viewingItem.image_url}`"
+                aspect-ratio="1"
+                cover
+                rounded="lg"
+              />
+            </v-col>
+
+            <!-- Content -->
+            <v-col :cols="viewingItem.image_url ? 12 : 12" :md="viewingItem.image_url ? 8 : 12">
+              <!-- Type & Attunement -->
+              <div class="mb-4">
+                <v-chip
+                  v-if="viewingItem.metadata?.type"
+                  size="small"
+                  variant="tonal"
+                  class="mr-2"
+                >
+                  {{ $t(`items.types.${viewingItem.metadata.type}`) }}
+                </v-chip>
+                <v-chip
+                  v-if="viewingItem.metadata?.attunement"
+                  size="small"
+                  color="purple"
+                >
+                  {{ $t('items.requiresAttunement') }}
+                </v-chip>
+              </div>
+
+              <!-- Description -->
+              <div v-if="viewingItem.description" class="text-body-1 mb-4">
+                {{ viewingItem.description }}
+              </div>
+              <div v-else class="text-body-2 text-disabled mb-4">
+                {{ $t('items.noDescription') }}
+              </div>
+
+              <v-divider class="my-4" />
+
+              <!-- Metadata -->
+              <v-row dense>
+                <v-col v-if="viewingItem.metadata?.value" cols="12" sm="6">
+                  <div class="text-caption text-medium-emphasis">
+                    {{ $t('items.value') }}
+                  </div>
+                  <div class="text-body-1">
+                    {{ viewingItem.metadata.value }}
+                  </div>
+                </v-col>
+                <v-col v-if="viewingItem.metadata?.weight" cols="12" sm="6">
+                  <div class="text-caption text-medium-emphasis">
+                    {{ $t('items.weight') }}
+                  </div>
+                  <div class="text-body-1">
+                    {{ viewingItem.metadata.weight }}
+                  </div>
+                </v-col>
+              </v-row>
+
+              <!-- Documents -->
+              <div v-if="viewingItem.id" class="mt-4">
+                <v-divider class="mb-4" />
+                <h3 class="text-h6 mb-2">
+                  {{ $t('items.documents') }}
+                </h3>
+                <EntityDocuments :entity-id="viewingItem.id" />
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn
+            variant="text"
+            prepend-icon="mdi-pencil"
+            @click="editItem(viewingItem); showViewDialog = false"
+          >
+            {{ $t('common.edit') }}
+          </v-btn>
+          <v-spacer />
+          <v-btn variant="text" @click="showViewDialog = false">
+            {{ $t('common.close') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Create/Edit Item Dialog -->
     <v-dialog
@@ -737,8 +849,10 @@ const filteredItems = computed(() => {
 
 // Form state
 const showCreateDialog = ref(false)
+const showViewDialog = ref(false)
 const showDeleteDialog = ref(false)
 const editingItem = ref<Item | null>(null)
+const viewingItem = ref<Item | null>(null)
 const deletingItem = ref<Item | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
@@ -902,6 +1016,11 @@ function getRarityColor(rarity: string) {
     artifact: 'red',
   }
   return colors[rarity] || 'grey'
+}
+
+function viewItem(item: Item) {
+  viewingItem.value = item
+  showViewDialog.value = true
 }
 
 async function editItem(item: Item) {
