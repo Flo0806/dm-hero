@@ -1,23 +1,20 @@
 <template>
   <v-container>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h3 mb-2">
-          {{ $t('locations.title') }}
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ $t('locations.subtitle') }}
-        </p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="large"
-        @click="showCreateDialog = true"
-      >
-        {{ $t('locations.create') }}
-      </v-btn>
-    </div>
+    <PageHeader
+      :title="$t('locations.title')"
+      :subtitle="$t('locations.subtitle')"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="showCreateDialog = true"
+        >
+          {{ $t('locations.create') }}
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <!-- Search Bar -->
     <v-text-field
@@ -486,33 +483,14 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
-    <v-dialog
+    <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title>{{ $t('locations.deleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ $t('locations.deleteConfirm', { name: deletingLocation?.name }) }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :title="$t('locations.deleteTitle')"
+      :message="$t('locations.deleteConfirm', { name: deletingLocation?.name })"
+      :loading="deleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </v-container>
 </template>
 

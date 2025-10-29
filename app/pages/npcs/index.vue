@@ -1,23 +1,20 @@
 <template>
   <v-container>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h3 mb-2">
-          {{ $t('npcs.title') }}
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ $t('npcs.subtitle') }}
-        </p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="large"
-        @click="showCreateDialog = true"
-      >
-        {{ $t('npcs.create') }}
-      </v-btn>
-    </div>
+    <PageHeader
+      :title="$t('npcs.title')"
+      :subtitle="$t('npcs.subtitle')"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="showCreateDialog = true"
+        >
+          {{ $t('npcs.create') }}
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <!-- Search Bar -->
     <v-text-field
@@ -1051,33 +1048,14 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
-    <v-dialog
+    <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title>{{ $t('npcs.deleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ $t('npcs.deleteConfirm', { name: deletingNpc?.name }) }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :title="$t('npcs.deleteTitle')"
+      :message="$t('npcs.deleteConfirm', { name: deletingNpc?.name })"
+      :loading="deleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </v-container>
 </template>
 

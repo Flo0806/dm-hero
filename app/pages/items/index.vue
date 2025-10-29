@@ -1,23 +1,30 @@
 <template>
   <v-container>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h3 mb-2">
-          {{ $t('items.title') }}
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ $t('items.subtitle') }}
-        </p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="large"
-        @click="showCreateDialog = true"
-      >
-        {{ $t('items.create') }}
-      </v-btn>
-    </div>
+    <PageHeader
+      :title="$t('items.title')"
+      :subtitle="$t('items.subtitle')"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="showCreateDialog = true"
+        >
+          {{ $t('items.create') }}
+        </v-btn>
+      </template>
+    </PageHeader>
+
+    <!-- Search Bar -->
+    <v-text-field
+      v-model="searchQuery"
+      :placeholder="$t('common.search')"
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      clearable
+      class="mb-4"
+    />
 
     <v-row v-if="pending">
       <v-col
@@ -31,9 +38,9 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="items && items.length > 0">
+    <v-row v-else-if="filteredItems && filteredItems.length > 0">
       <v-col
-        v-for="item in items"
+        v-for="item in filteredItems"
         :key="item.id"
         cols="12"
         md="6"
@@ -671,33 +678,14 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title>{{ $t('items.deleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ $t('items.deleteConfirm', { name: deletingItem?.name }) }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :title="$t('items.deleteTitle')"
+      :message="$t('items.deleteConfirm', { name: deletingItem?.name })"
+      :loading="deleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </v-container>
 </template>
 
@@ -728,6 +716,24 @@ const items = computed(() => entitiesStore.items)
 const pending = computed(() => entitiesStore.itemsLoading)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 const locations = computed(() => entitiesStore.locationsForSelect)
+
+// Search
+const searchQuery = ref('')
+const filteredItems = computed(() => {
+  if (!items.value)
+    return []
+
+  if (!searchQuery.value)
+    return items.value
+
+  const query = searchQuery.value.toLowerCase()
+  return items.value.filter(item =>
+    item.name.toLowerCase().includes(query)
+    || item.description?.toLowerCase().includes(query)
+    || item.metadata?.type?.toLowerCase().includes(query)
+    || item.metadata?.rarity?.toLowerCase().includes(query),
+  )
+})
 
 // Form state
 const showCreateDialog = ref(false)

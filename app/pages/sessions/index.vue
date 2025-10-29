@@ -1,24 +1,21 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h3 mb-2">
-          {{ $t('sessions.title') }}
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ $t('sessions.subtitle') }}
-        </p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="large"
-        @click="showCreateDialog = true"
-      >
-        {{ $t('sessions.create') }}
-      </v-btn>
-    </div>
+    <PageHeader
+      :title="$t('sessions.title')"
+      :subtitle="$t('sessions.subtitle')"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="showCreateDialog = true"
+        >
+          {{ $t('sessions.create') }}
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <v-row v-if="pending">
       <v-col
@@ -489,33 +486,14 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title>{{ $t('sessions.deleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ $t('sessions.deleteConfirm', { title: deletingSession?.title }) }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :title="$t('sessions.deleteTitle')"
+      :message="$t('sessions.deleteConfirm', { title: deletingSession?.title })"
+      :loading="deleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteDialog = false"
+    />
 
     <!-- Entity Quick View Dialog -->
     <v-dialog

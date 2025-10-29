@@ -159,17 +159,14 @@
     </v-dialog>
 
     <!-- DELETE CONFIRM -->
-    <v-dialog v-model="showDeleteDialog" max-width="500">
-      <v-card>
-        <v-card-title>{{ $t('documents.deleteTitle') }}</v-card-title>
-        <v-card-text>{{ $t('documents.deleteConfirm') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showDeleteDialog = false">{{ $t('common.cancel') }}</v-btn>
-          <v-btn color="error" :loading="deleting" @click="deleteDocument">{{ $t('common.delete') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <DeleteConfirmDialog
+      v-model="showDeleteDialog"
+      :title="$t('documents.deleteTitle')"
+      :message="$t('documents.deleteConfirm')"
+      :loading="deleting"
+      @confirm="deleteDocument"
+      @cancel="showDeleteDialog = false"
+    />
   </div>
 </template>
 

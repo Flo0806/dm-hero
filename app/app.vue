@@ -1,137 +1,20 @@
 <template>
   <v-app>
-    <v-navigation-drawer
-      v-if="hasActiveCampaign"
+    <NavigationDrawer
       v-model="drawer"
-      :rail="rail"
-      permanent
-      @click="rail = false"
-    >
-      <v-list-item
-        :prepend-icon="rail ? 'mdi-dice-d20' : 'mdi-dice-d20'"
-        :title="rail ? '' : 'DM Hero'"
-        nav
-      >
-        <template #append>
-          <v-btn
-            :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-            variant="text"
-            @click.stop="rail = !rail"
-          />
-        </template>
-      </v-list-item>
+      v-model:rail="rail"
+      :has-active-campaign="hasActiveCampaign"
+      :active-campaign-name="activeCampaignName"
+      :is-dark="theme.global.current.value.dark"
+      @search-click="showSearch = true"
+      @toggle-theme="toggleTheme"
+    />
 
-      <v-divider />
-
-      <!-- Active Campaign Display -->
-      <v-list-item
-        v-if="activeCampaignName && !rail"
-        prepend-icon="mdi-sword-cross"
-        :title="activeCampaignName || ''"
-        subtitle="Aktive Kampagne"
-        class="mb-2"
-        @click="navigateTo('/campaigns')"
-      />
-
-      <v-divider v-if="activeCampaignName && !rail" />
-
-      <v-list v-if="hasActiveCampaign" density="compact" nav>
-        <v-list-item
-          prepend-icon="mdi-view-dashboard"
-          title="Dashboard"
-          value="home"
-          to="/"
-        />
-        <v-list-item
-          prepend-icon="mdi-magnify"
-          title="Suche"
-          value="search"
-          @click="showSearch = true"
-        />
-        <v-list-item
-          prepend-icon="mdi-account-group"
-          title="NPCs"
-          value="npcs"
-          to="/npcs"
-        />
-        <v-list-item
-          prepend-icon="mdi-map-marker"
-          title="Orte"
-          value="locations"
-          to="/locations"
-        />
-        <v-list-item
-          prepend-icon="mdi-sword"
-          title="Items"
-          value="items"
-          to="/items"
-        />
-        <v-list-item
-          prepend-icon="mdi-shield"
-          title="Fraktionen"
-          value="factions"
-          to="/factions"
-        />
-        <v-list-item
-          prepend-icon="mdi-script-text"
-          title="Quests"
-          value="quests"
-          to="/quests"
-        />
-        <v-list-item
-          prepend-icon="mdi-book-open-page-variant"
-          title="Sessions"
-          value="sessions"
-          to="/sessions"
-        />
-      </v-list>
-
-      <template #append>
-        <v-divider />
-        <v-list density="compact" nav>
-          <v-list-item
-            prepend-icon="mdi-database"
-            :title="rail ? '' : 'Referenzdaten'"
-            to="/reference-data"
-          />
-          <v-list-item
-            :prepend-icon="theme.global.name.value === 'dark' ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-            :title="rail ? '' : 'Theme'"
-            @click="toggleTheme"
-          />
-        </v-list>
-      </template>
-    </v-navigation-drawer>
-
-    <v-app-bar border>
-      <v-app-bar-title>
-        <v-icon icon="mdi-dice-d20" class="mr-2" />
-        DM Hero
-      </v-app-bar-title>
-
-      <v-spacer />
-
-      <!-- Language Switcher -->
-      <v-btn-toggle
-        :model-value="currentLocale"
-        mandatory
-        density="compact"
-        class="mr-2"
-        @update:model-value="changeLocale"
-      >
-        <v-btn value="de" size="small">
-          asdf
-        </v-btn>
-        <v-btn value="en" size="small">
-          asdf
-        </v-btn>
-      </v-btn-toggle>
-
-      <v-btn
-        icon="mdi-magnify"
-        @click="showSearch = true"
-      />
-    </v-app-bar>
+    <AppBar
+      :current-locale="currentLocale"
+      @change-locale="changeLocale"
+      @search-click="showSearch = true"
+    />
 
     <v-main>
       <v-container fluid>
@@ -139,56 +22,20 @@
       </v-container>
     </v-main>
 
-    <!-- Globale Schnellsuche Dialog -->
-    <v-dialog
+    <GlobalSearch
       v-model="showSearch"
-      max-width="800"
-    >
-      <v-card>
-        <v-card-title>
-          <v-text-field
-            v-model="searchQuery"
-            autofocus
-            clearable
-            hide-details
-            placeholder="Suche nach NPCs, Orten, Items..."
-            prepend-inner-icon="mdi-magnify"
-            variant="solo"
-            flat
-          />
-        </v-card-title>
-        <v-divider />
-        <v-card-text style="max-height: 500px; overflow-y: auto;">
-          <div v-if="searchQuery" class="text-caption text-disabled mb-2">
-            Suche nach "{{ searchQuery }}"...
-          </div>
-          <v-list v-if="searchResults.length > 0">
-            <v-list-item
-              v-for="result in searchResults"
-              :key="result.id"
-              @click="navigateToResult(result)"
-            >
-              <template #prepend>
-                <v-icon :icon="result.icon" :color="result.color" />
-              </template>
-              <v-list-item-title>{{ result.name }}</v-list-item-title>
-              <v-list-item-subtitle>{{ result.type }}</v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-          <div v-else-if="searchQuery" class="text-center text-disabled py-8">
-            Keine Ergebnisse gefunden
-          </div>
-          <div v-else class="text-center text-disabled py-8">
-            Drücke <kbd>/</kbd> um zu suchen
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      v-model:search-query="searchQuery"
+      :search-results="searchResults"
+      @select-result="navigateToResult"
+    />
   </v-app>
 </template>
 
 <script setup lang="ts">
 import { useTheme } from 'vuetify'
+import NavigationDrawer from '~/components/layout/NavigationDrawer.vue'
+import AppBar from '~/components/layout/AppBar.vue'
+import GlobalSearch from '~/components/layout/GlobalSearch.vue'
 
 const theme = useTheme()
 const { locale, setLocale } = useI18n()
@@ -314,13 +161,3 @@ watch(searchQuery, async (query) => {
   }
 })
 </script>
-
-<style>
-kbd {
-  background-color: rgba(var(--v-theme-on-surface), 0.1);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: monospace;
-  font-size: 0.9em;
-}
-</style>

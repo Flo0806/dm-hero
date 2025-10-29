@@ -1,23 +1,20 @@
 <template>
   <v-container>
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h3 mb-2">
-          {{ $t('factions.title') }}
-        </h1>
-        <p class="text-body-1 text-medium-emphasis">
-          {{ $t('factions.subtitle') }}
-        </p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="large"
-        @click="showCreateDialog = true"
-      >
-        {{ $t('factions.create') }}
-      </v-btn>
-    </div>
+    <PageHeader
+      :title="$t('factions.title')"
+      :subtitle="$t('factions.subtitle')"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="large"
+          @click="showCreateDialog = true"
+        >
+          {{ $t('factions.create') }}
+        </v-btn>
+      </template>
+    </PageHeader>
 
     <!-- Search Bar -->
     <v-text-field
@@ -553,33 +550,14 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
-    <v-dialog
+    <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      max-width="500"
-    >
-      <v-card>
-        <v-card-title>{{ $t('factions.deleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ $t('factions.deleteConfirm', { name: deletingFaction?.name }) }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :title="$t('factions.deleteTitle')"
+      :message="$t('factions.deleteConfirm', { name: deletingFaction?.name })"
+      :loading="deleting"
+      @confirm="confirmDelete"
+      @cancel="showDeleteDialog = false"
+    />
   </v-container>
 </template>
 
