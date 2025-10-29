@@ -171,68 +171,68 @@
                 class="mb-4"
               />
 
-              <div class="text-h6 mb-2">
+              <div class="text-h6 mb-4">
                 {{ $t('sessions.notes') }}
               </div>
 
-              <!-- Markdown Editor Toolbar -->
-              <v-card variant="outlined" class="mb-2">
-                <v-card-text class="pa-2">
-                  <v-btn-group density="compact" variant="outlined">
-                    <v-btn size="small" @click="insertMarkdown('**', '**')">
-                      <v-icon>mdi-format-bold</v-icon>
-                    </v-btn>
-                    <v-btn size="small" @click="insertMarkdown('_', '_')">
-                      <v-icon>mdi-format-italic</v-icon>
-                    </v-btn>
-                    <v-btn size="small" @click="insertMarkdown('\n- ', '')">
-                      <v-icon>mdi-format-list-bulleted</v-icon>
-                    </v-btn>
-                  </v-btn-group>
-
-                  <v-divider vertical class="mx-2" />
-
-                  <v-btn-group density="compact" variant="outlined">
-                    <v-btn size="small" color="primary" @click="showLinkEntityDialog('npc')">
-                      <v-icon start>mdi-account</v-icon>
-                      NPC
-                    </v-btn>
-                    <v-btn size="small" color="primary" @click="showLinkEntityDialog('location')">
-                      <v-icon start>mdi-map-marker</v-icon>
-                      Ort
-                    </v-btn>
-                    <v-btn size="small" color="primary" @click="showLinkEntityDialog('item')">
-                      <v-icon start>mdi-sword</v-icon>
-                      Item
-                    </v-btn>
-                    <v-btn size="small" color="primary" @click="showLinkEntityDialog('faction')">
-                      <v-icon start>mdi-shield</v-icon>
-                      Fraktion
-                    </v-btn>
-                  </v-btn-group>
-                </v-card-text>
-              </v-card>
-
-              <v-textarea
-                ref="notesTextarea"
-                v-model="sessionForm.notes"
-                :label="$t('sessions.notesMarkdown')"
-                :placeholder="$t('sessions.notesPlaceholder')"
-                variant="outlined"
-                rows="12"
-                class="mb-4 font-monospace"
-                auto-grow
-              />
-
-              <!-- Preview -->
-              <v-card v-if="sessionForm.notes" variant="outlined" class="mb-4">
-                <v-card-title class="text-subtitle-2">
-                  {{ $t('sessions.preview') }}
-                </v-card-title>
-                <v-card-text>
-                  <div class="markdown-content"  @click="handleBadgeClick"  v-html="renderMarkdown(sessionForm.notes)" />
-                </v-card-text>
-              </v-card>
+              <ClientOnly>
+                <MdEditor
+                  ref="editorRef"
+                  v-model="sessionForm.notes"
+                  :language="currentLocale"
+                  :theme="editorTheme"
+                  :placeholder="$t('sessions.notesPlaceholder')"
+                  :toolbars="toolbars"
+                  :sanitize="sanitizeHtml"
+                  style="height: 500px;"
+                  class="mb-4"
+                  @click="handleEditorClick"
+                >
+                  <!-- Custom Entity Link Buttons -->
+                  <template #defToolbars>
+                    <NormalToolbar
+                      :title="$t('sessions.linkNpc')"
+                      @on-click="showLinkEntityDialog('npc')"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
+                    <NormalToolbar
+                      :title="$t('sessions.linkLocation')"
+                      @on-click="showLinkEntityDialog('location')"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
+                    <NormalToolbar
+                      :title="$t('sessions.linkItem')"
+                      @on-click="showLinkEntityDialog('item')"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M6.92,5H5L14,14L15,13.06M19.96,19.12L19.12,19.96C18.73,20.35 18.1,20.35 17.71,19.96L14.59,16.84L11.91,19.5L10.5,18.09L13.16,15.43L11.06,13.33L8.85,15.54L7.44,14.13L9.65,11.92L6.5,8.77L7.91,7.36L11.06,10.5L13.27,8.29L9.12,4.12C8.73,3.73 8.73,3.1 9.12,2.71L9.96,1.87C10.35,1.5 10.98,1.5 11.37,1.87L19.96,10.46C20.35,10.85 20.35,11.5 19.96,11.87L19.12,12.71C18.73,13.1 18.1,13.1 17.71,12.71L15.92,10.92L13.71,13.13L15.81,15.23L18.5,12.54L19.91,13.95L17.22,16.64L19.96,19.38C20.35,19.77 20.35,20.4 19.96,20.79Z" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
+                    <NormalToolbar
+                      :title="$t('sessions.linkFaction')"
+                      @on-click="showLinkEntityDialog('faction')"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
+                  </template>
+                </MdEditor>
+              </ClientOnly>
             </v-tabs-window-item>
 
             <!-- Mentions Tab -->
@@ -301,68 +301,68 @@
               class="mb-4"
             />
 
-            <div class="text-h6 mb-2">
+            <div class="text-h6 mb-4">
               {{ $t('sessions.notes') }}
             </div>
 
-            <!-- Markdown Editor Toolbar -->
-            <v-card variant="outlined" class="mb-2">
-              <v-card-text class="pa-2">
-                <v-btn-group density="compact" variant="outlined">
-                  <v-btn size="small" @click="insertMarkdown('**', '**')">
-                    <v-icon>mdi-format-bold</v-icon>
-                  </v-btn>
-                  <v-btn size="small" @click="insertMarkdown('_', '_')">
-                    <v-icon>mdi-format-italic</v-icon>
-                  </v-btn>
-                  <v-btn size="small" @click="insertMarkdown('\n- ', '')">
-                    <v-icon>mdi-format-list-bulleted</v-icon>
-                  </v-btn>
-                </v-btn-group>
-
-                <v-divider vertical class="mx-2" />
-
-                <v-btn-group density="compact" variant="outlined">
-                  <v-btn size="small" color="primary" @click="showLinkEntityDialog('npc')">
-                    <v-icon start>mdi-account</v-icon>
-                    NPC
-                  </v-btn>
-                  <v-btn size="small" color="primary" @click="showLinkEntityDialog('location')">
-                    <v-icon start>mdi-map-marker</v-icon>
-                    Ort
-                  </v-btn>
-                  <v-btn size="small" color="primary" @click="showLinkEntityDialog('item')">
-                    <v-icon start>mdi-sword</v-icon>
-                    Item
-                  </v-btn>
-                  <v-btn size="small" color="primary" @click="showLinkEntityDialog('faction')">
-                    <v-icon start>mdi-shield</v-icon>
-                    Fraktion
-                  </v-btn>
-                </v-btn-group>
-              </v-card-text>
-            </v-card>
-
-            <v-textarea
-              ref="notesTextarea"
-              v-model="sessionForm.notes"
-              :label="$t('sessions.notesMarkdown')"
-              :placeholder="$t('sessions.notesPlaceholder')"
-              variant="outlined"
-              rows="12"
-              class="mb-4 font-monospace"
-              auto-grow
-            />
-
-            <!-- Preview -->
-            <v-card v-if="sessionForm.notes" variant="outlined" class="mb-4">
-              <v-card-title class="text-subtitle-2">
-                {{ $t('sessions.preview') }}
-              </v-card-title>
-              <v-card-text>
-                <div class="markdown-content" @click="handleBadgeClick" v-html="renderMarkdown(sessionForm.notes)" />
-              </v-card-text>
-            </v-card>
+            <ClientOnly>
+              <MdEditor
+                ref="editorRef"
+                v-model="sessionForm.notes"
+                :language="currentLocale"
+                :theme="editorTheme"
+                :placeholder="$t('sessions.notesPlaceholder')"
+                :toolbars="toolbars"
+                :sanitize="sanitizeHtml"
+                style="height: 500px;"
+                class="mb-4"
+                @click="handleEditorClick"
+              >
+                <!-- Custom Entity Link Buttons -->
+                <template #defToolbars>
+                  <NormalToolbar
+                    :title="$t('sessions.linkNpc')"
+                    @on-click="showLinkEntityDialog('npc')"
+                  >
+                    <template #trigger>
+                      <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
+                      </svg>
+                    </template>
+                  </NormalToolbar>
+                  <NormalToolbar
+                    :title="$t('sessions.linkLocation')"
+                    @on-click="showLinkEntityDialog('location')"
+                  >
+                    <template #trigger>
+                      <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z" />
+                      </svg>
+                    </template>
+                  </NormalToolbar>
+                  <NormalToolbar
+                    :title="$t('sessions.linkItem')"
+                    @on-click="showLinkEntityDialog('item')"
+                  >
+                    <template #trigger>
+                      <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M6.92,5H5L14,14L15,13.06M19.96,19.12L19.12,19.96C18.73,20.35 18.1,20.35 17.71,19.96L14.59,16.84L11.91,19.5L10.5,18.09L13.16,15.43L11.06,13.33L8.85,15.54L7.44,14.13L9.65,11.92L6.5,8.77L7.91,7.36L11.06,10.5L13.27,8.29L9.12,4.12C8.73,3.73 8.73,3.1 9.12,2.71L9.96,1.87C10.35,1.5 10.98,1.5 11.37,1.87L19.96,10.46C20.35,10.85 20.35,11.5 19.96,11.87L19.12,12.71C18.73,13.1 18.1,13.1 17.71,12.71L15.92,10.92L13.71,13.13L15.81,15.23L18.5,12.54L19.91,13.95L17.22,16.64L19.96,19.38C20.35,19.77 20.35,20.4 19.96,20.79Z" />
+                      </svg>
+                    </template>
+                  </NormalToolbar>
+                  <NormalToolbar
+                    :title="$t('sessions.linkFaction')"
+                    @on-click="showLinkEntityDialog('faction')"
+                  >
+                    <template #trigger>
+                      <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z" />
+                      </svg>
+                    </template>
+                  </NormalToolbar>
+                </template>
+              </MdEditor>
+            </ClientOnly>
           </template>
         </v-card-text>
 
@@ -456,11 +456,20 @@
             {{ viewingSession.summary }}
           </div>
 
-          <v-divider class="my-4" />
+          <v-divider v-if="viewingSession.notes" class="my-4" />
 
-          <div v-if="viewingSession.notes" class="markdown-content" @click="handleBadgeClick">
-            <div v-html="renderMarkdown(viewingSession.notes)" />
-          </div>
+          <ClientOnly v-if="viewingSession.notes">
+            <MdPreview
+              :model-value="viewingSession.notes"
+              :language="currentLocale"
+              :theme="editorTheme"
+              :sanitize="sanitizeHtml"
+              preview-only
+              editor-id="session-view-preview"
+              style="height: auto;"
+              @click="handleEditorClick"
+            />
+          </ClientOnly>
         </v-card-text>
 
         <v-card-actions>
@@ -685,6 +694,9 @@
 
 <script setup lang="ts">
 import { marked } from 'marked'
+import { MdEditor, NormalToolbar, MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+import { useTheme } from 'vuetify'
 
 interface Session {
   id: number
@@ -706,8 +718,14 @@ interface EntityMention {
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const theme = useTheme()
+const { locale } = useI18n()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const currentLocale = computed(() => (locale.value === 'de' ? 'de-DE' : 'en-US'))
+const editorTheme = computed<'light' | 'dark'>(() =>
+  theme.global.current.value.dark ? 'dark' : 'light'
+)
 
 onMounted(async () => {
   if (!activeCampaignId.value) {
@@ -788,6 +806,34 @@ const sessionForm = ref({
 const linkEntityType = ref<'npc' | 'location' | 'item' | 'faction'>('npc')
 const entitySearch = ref('')
 const notesTextarea = ref<HTMLTextAreaElement | null>(null)
+const editorRef = ref<InstanceType<typeof MdEditor> | null>(null)
+
+// md-editor Toolbars: 0-3 = Placeholders for custom entity buttons
+const toolbars = [
+  'bold',
+  'italic',
+  'strikeThrough',
+  '-',
+  'title',
+  'quote',
+  'unorderedList',
+  'orderedList',
+  '-',
+  'code',
+  'link',
+  0, // NPC
+  1, // Location
+  2, // Item
+  3, // Faction
+  'table',
+  '-',
+  'revoke',
+  'next',
+  '=',
+  'pageFullscreen',
+  'preview',
+  'catalog',
+] as const
 
 const filteredEntities = computed(() => {
   const query = entitySearch.value?.toLowerCase() || ''
@@ -885,10 +931,20 @@ function renderMarkdown(text: string): string {
   const processedText = text.replace(/\[([^\]]+)\]\((\w+):(\d+)\)/g, (match, name, type, id) => {
     const icon = getEntityIcon(type)
     const color = getEntityColor(type)
-    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px;"><i class="mdi ${icon}"></i>${name}</span>`
+    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${name}</span>`
   })
 
   return marked(processedText) as string
+}
+
+function sanitizeHtml(html: string): string {
+  // This is called by md-editor-v3 to sanitize/transform the HTML
+  // Replace entity link <a> tags with styled badges
+  return html.replace(/<a[^>]*href="(\w+):(\d+)"[^>]*>([^<]+)<\/a>/g, (match, type, id, name) => {
+    const icon = getEntityIcon(type)
+    const color = getEntityColor(type)
+    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${name}</span>`
+  })
 }
 
 function getEntityIcon(type: string): string {
@@ -931,7 +987,19 @@ function showLinkEntityDialog(type: 'npc' | 'location' | 'item' | 'faction') {
 
 function insertEntityLink(entity: { id: number, name: string }) {
   const link = `[${entity.name}](${linkEntityType.value}:${entity.id})`
-  insertMarkdown(link, '')
+
+  // Use md-editor's insert API if available, fallback to textarea method
+  if (editorRef.value) {
+    editorRef.value.insert(() => ({
+      targetValue: link,
+      select: false,
+      deviationStart: 0,
+      deviationEnd: 0,
+    }))
+  } else {
+    insertMarkdown(link, '')
+  }
+
   showEntityLinkDialog.value = false
 }
 
@@ -975,6 +1043,24 @@ async function handleBadgeClick(event: MouseEvent) {
   const badge = target.closest('.entity-badge')
 
   if (badge) {
+    const type = badge.getAttribute('data-type') as 'npc' | 'location' | 'item' | 'faction'
+    const id = badge.getAttribute('data-id')
+
+    if (type && id) {
+      await loadEntityDetails(type, Number.parseInt(id))
+    }
+  }
+}
+
+async function handleEditorClick(event: MouseEvent) {
+  // Handle clicks on entity badges in the editor preview
+  const target = event.target as HTMLElement
+  const badge = target.closest('.entity-badge')
+
+  if (badge) {
+    event.preventDefault()
+    event.stopPropagation()
+
     const type = badge.getAttribute('data-type') as 'npc' | 'location' | 'item' | 'faction'
     const id = badge.getAttribute('data-id')
 

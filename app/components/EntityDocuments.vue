@@ -99,6 +99,7 @@
 
       <ClientOnly>
         <MdEditor
+          ref="editorRef"
           v-model="documentForm.content"
           :language="currentLocale"
           :theme="editorTheme"
@@ -207,6 +208,7 @@ const saving = ref(false)
 const deleting = ref(false)
 const showImageGallery = ref(false)
 const galleryImages = ref<string[]>([])
+const editorRef = ref<InstanceType<typeof MdEditor> | null>(null)
 
 const documentForm = ref({
   title: '',
@@ -371,7 +373,21 @@ async function openImageGallery() {
 
 function insertImageFromGallery(image: string) {
   const src = image.startsWith('/pictures/') ? image : `/pictures/${image}`
-  documentForm.value.content += `\n![](${src})\n`
+  const markdown = `![](${src})`
+
+  // Use md-editor's insert API to insert at cursor position
+  if (editorRef.value) {
+    editorRef.value.insert(() => ({
+      targetValue: markdown,
+      select: false,
+      deviationStart: 0,
+      deviationEnd: 0,
+    }))
+  } else {
+    // Fallback: append at end
+    documentForm.value.content += `\n${markdown}\n`
+  }
+
   showImageGallery.value = false
 }
 
