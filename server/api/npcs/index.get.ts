@@ -1,9 +1,19 @@
 import { getDb } from '../../utils/db'
+import { createLevenshtein } from '../../utils/levenshtein'
+import { parseSearchQuery } from '../../utils/search-query-parser'
+import { getRaceKey, getClassKey, getLocaleFromEvent } from '../../utils/i18n-lookup'
+
+// Initialize Levenshtein function once
+const levenshtein = createLevenshtein()
 
 export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
+  const searchQuery = query.search as string | undefined
+
+  // Get user's locale from request (cookie or Accept-Language header)
+  const locale = getLocaleFromEvent(event)
 
   if (!campaignId) {
     throw createError({
@@ -19,23 +29,434 @@ export default defineEventHandler((event) => {
     return []
   }
 
-  // Get all NPCs for this campaign
-  const npcs = db.prepare(`
-    SELECT
-      e.id,
-      e.name,
-      e.description,
-      e.image_url,
-      e.metadata,
-      e.created_at,
-      e.updated_at
-    FROM entities e
-    WHERE e.type_id = ?
-      AND e.campaign_id = ?
-      AND e.deleted_at IS NULL
-    ORDER BY e.name ASC
-  `).all(entityType.id, campaignId)
+  interface NpcRow {
+    id: number
+    name: string
+    description: string | null
+    image_url: string | null
+    metadata: string | null
+    created_at: string
+    updated_at: string
+    fts_score?: number
+  }
 
+  interface ScoredNpc extends NpcRow {
+    _lev_distance: number
+    _final_score: number
+  }
+
+  let npcs: NpcRow[]
+
+  // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const searchTerm = searchQuery.trim().toLowerCase()
+
+    // Parse query with operators (AND, OR, NOT)
+    const parsedQuery = parseSearchQuery(searchTerm)
+
+    // Expand all terms with race/class key lookups (locale-aware)
+    // E.g., "mensch" (DE) → also search for "human" key
+    // E.g., "mensh" (DE typo) → also search for "human" key (fuzzy match)
+    // E.g., "human" (EN) → also search for "human" key
+    // E.g., "humen" (EN typo) → also search for "human" key (fuzzy match)
+    const expandedTerms = parsedQuery.terms.map(term => {
+      const raceKey = getRaceKey(term, true, locale) // Enable fuzzy matching for typos
+      const classKey = getClassKey(term, true, locale) // Enable fuzzy matching for typos
+
+      // If we found a race/class key, ONLY use the key (not the original term)
+      // This prevents "human" (a key) from matching in DE when it shouldn't
+      if (raceKey) {
+        return { variants: [raceKey], isRaceClassKey: true }
+      }
+      if (classKey) {
+        return { variants: [classKey], isRaceClassKey: true }
+      }
+
+      // No race/class match - use original term (e.g., NPC name search)
+      // But check if term might be a key in OTHER locale (block cross-language matching)
+      const isKeyInOtherLocale = getRaceKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+        || getClassKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+
+      return { variants: [term], isRaceClassKey: false, blockMetadata: isKeyInOtherLocale }
+    })
+
+    // Rebuild FTS query with expanded terms
+    let ftsQuery: string
+    if (parsedQuery.hasOperators) {
+      // For operator queries, expand each term: "bernard AND mensch" → "(bernard*) AND (mensch* OR human*)"
+      const expandedFtsTerms = expandedTerms.map(termObj => {
+        const keys = termObj.variants
+        if (keys.length === 1) {
+          return `${keys[0]}*`
+        }
+        else {
+          return `(${keys.map(k => `${k}*`).join(' OR ')})`
+        }
+      })
+
+      // Reconstruct query with original operators
+      const fts5QueryUpper = parsedQuery.fts5Query.toUpperCase()
+      if (fts5QueryUpper.includes(' AND ')) {
+        ftsQuery = expandedFtsTerms.join(' AND ')
+      }
+      else if (fts5QueryUpper.includes(' OR ')) {
+        ftsQuery = expandedFtsTerms.join(' OR ')
+      }
+      else {
+        ftsQuery = expandedFtsTerms.join(' ')
+      }
+    }
+    else {
+      // Simple query: add all keys as OR
+      const allKeys = expandedTerms.flatMap(termObj => termObj.variants)
+      ftsQuery = allKeys.map(k => `${k}*`).join(' OR ')
+    }
+
+    let useExactMatch = parsedQuery.useExactFirst
+
+    console.log(`[NPC Search] Query: "${searchTerm}", Locale: ${locale}, Expanded FTS: "${ftsQuery}", HasOps: ${parsedQuery.hasOperators}, Campaign: ${campaignId}`)
+
+    try {
+      // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
+      npcs = db.prepare(`
+        SELECT
+          e.id,
+          e.name,
+          e.description,
+          e.image_url,
+          e.metadata,
+          e.created_at,
+          e.updated_at,
+          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+        FROM entities_fts fts
+        INNER JOIN entities e ON fts.rowid = e.id
+        WHERE entities_fts MATCH ?
+          AND e.type_id = ?
+          AND e.campaign_id = ?
+          AND e.deleted_at IS NULL
+        ORDER BY fts_score
+        LIMIT 100
+      `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
+
+      console.log(`[NPC Search] FTS5 found ${npcs.length} candidates (exact match)`)
+
+      // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
+      if (npcs.length === 0 && useExactMatch && !parsedQuery.hasOperators) {
+        ftsQuery = `${searchTerm}*`
+        useExactMatch = false
+        console.log(`[NPC Search] Retrying with prefix wildcard: "${ftsQuery}"`)
+
+        npcs = db.prepare(`
+          SELECT
+            e.id,
+            e.name,
+            e.description,
+            e.image_url,
+            e.metadata,
+            e.created_at,
+            e.updated_at,
+            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+          FROM entities_fts fts
+          INNER JOIN entities e ON fts.rowid = e.id
+          WHERE entities_fts MATCH ?
+            AND e.type_id = ?
+            AND e.campaign_id = ?
+            AND e.deleted_at IS NULL
+          ORDER BY fts_score
+          LIMIT 100
+        `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
+
+        console.log(`[NPC Search] FTS5 found ${npcs.length} candidates (prefix match)`)
+      }
+
+      // FALLBACK 2: Decide based on operator type
+      const hasOrOperator = parsedQuery.fts5Query.toUpperCase().includes(' OR ')
+      const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
+
+      // For operator queries (AND/OR): ALWAYS use Levenshtein fallback
+      // This ensures we catch typos in ALL terms
+      if (parsedQuery.hasOperators) {
+        const operatorType = hasAndOperator ? 'AND' : 'OR'
+        console.log(`[NPC Search] ${operatorType} query detected - loading all NPCs for comprehensive Levenshtein matching`)
+
+        npcs = db.prepare(`
+          SELECT
+            e.id,
+            e.name,
+            e.description,
+            e.image_url,
+            e.metadata,
+            e.created_at,
+            e.updated_at
+          FROM entities e
+          WHERE e.type_id = ?
+            AND e.campaign_id = ?
+            AND e.deleted_at IS NULL
+          ORDER BY e.name ASC
+        `).all(entityType.id, campaignId) as NpcRow[]
+
+        console.log(`[NPC Search] Loaded ${npcs.length} NPCs for ${operatorType} matching`)
+      }
+      // For simple queries with no FTS5 results
+      else if (npcs.length === 0) {
+        console.log(`[NPC Search] FTS5 empty, falling back to Levenshtein on all NPCs`)
+
+        npcs = db.prepare(`
+          SELECT
+            e.id,
+            e.name,
+            e.description,
+            e.image_url,
+            e.metadata,
+            e.created_at,
+            e.updated_at
+          FROM entities e
+          WHERE e.type_id = ?
+            AND e.campaign_id = ?
+            AND e.deleted_at IS NULL
+          ORDER BY e.name ASC
+        `).all(entityType.id, campaignId) as NpcRow[]
+
+        console.log(`[NPC Search] Loaded ${npcs.length} NPCs for Levenshtein matching`)
+      }
+
+      // Step 2: Apply Levenshtein distance for better ranking
+      let scoredNpcs = npcs.map((npc: NpcRow): ScoredNpc => {
+        const nameLower = npc.name.toLowerCase()
+
+        // Smart distance calculation
+        const exactMatch = nameLower === searchTerm
+        const startsWithQuery = nameLower.startsWith(searchTerm)
+        const containsQuery = nameLower.includes(searchTerm)
+
+        // Check if search term appears in metadata or description (FTS5 match but not in name)
+        const metadataLower = npc.metadata?.toLowerCase() || ''
+        const descriptionLower = (npc.description || '').toLowerCase()
+        const isMetadataMatch = metadataLower.includes(searchTerm)
+        const isDescriptionMatch = descriptionLower.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch) && !containsQuery
+
+        let levDistance: number
+
+        if (isNonNameMatch) {
+          // Metadata/Description match: Set distance to 0 (perfect match conceptually)
+          levDistance = 0
+        }
+        else if (startsWithQuery) {
+          // If name starts with query, distance is just the remaining chars
+          // "bern" vs "bernhard" → distance = 4 (remaining: "hard")
+          levDistance = nameLower.length - searchTerm.length
+        }
+        else {
+          // Full Levenshtein distance for non-prefix matches
+          levDistance = levenshtein(searchTerm, nameLower)
+        }
+
+        // Combined score: FTS score + weighted Levenshtein distance
+        const ftsScore = npc.fts_score ?? 0
+        let finalScore = ftsScore + (levDistance * 0.5)
+
+        // Apply bonuses (reduce score = better ranking)
+        if (exactMatch) finalScore -= 1000
+        if (startsWithQuery) finalScore -= 100
+        if (containsQuery) finalScore -= 50
+        if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
+        if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
+
+        return {
+          ...npc,
+          _lev_distance: levDistance,
+          _final_score: finalScore,
+        }
+      })
+
+      // Step 3: Filter by Levenshtein distance
+      if (!parsedQuery.hasOperators) {
+        // Simple query: check if ANY expanded term matches
+        scoredNpcs = scoredNpcs.filter(npc => {
+          const nameLower = npc.name.toLowerCase()
+          const metadataLower = npc.metadata?.toLowerCase() || ''
+          const descriptionLower = (npc.description || '').toLowerCase()
+
+          // Check ALL expanded terms (original + race/class keys)
+          for (const termObj of expandedTerms) {
+            for (const variant of termObj.variants) {
+              // Check metadata ONLY if not blocked (prevents cross-language key matching)
+              const shouldCheckMetadata = !termObj.blockMetadata
+
+              // Exact/substring match in any field
+              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+                return true
+              }
+
+              // Check metadata only if allowed
+              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                return true
+              }
+
+              // Levenshtein match for name
+              const variantLength = variant.length
+              const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
+              const levDist = levenshtein(variant, nameLower)
+
+              if (levDist <= maxDist) {
+                return true
+              }
+
+              // Prefix match
+              if (nameLower.startsWith(variant)) {
+                return true
+              }
+            }
+          }
+
+          return false // No variant matched
+        })
+
+        console.log(`[NPC Search] After distance filter: ${scoredNpcs.length} results`)
+      }
+      else if (hasOrOperator && !hasAndOperator) {
+        // OR query: at least ONE term must match
+        console.log(`[NPC Search] OR query - filtering by term matching`)
+
+        scoredNpcs = scoredNpcs.filter(npc => {
+          const nameLower = npc.name.toLowerCase()
+          const metadataLower = npc.metadata?.toLowerCase() || ''
+          const descriptionLower = (npc.description || '').toLowerCase()
+
+          // Check if at least one term (or its variants) matches
+          for (let i = 0; i < parsedQuery.terms.length; i++) {
+            const termObj = expandedTerms[i]
+            const shouldCheckMetadata = !termObj.blockMetadata
+
+            // Check if ANY variant matches
+            for (const variant of termObj.variants) {
+              // Check if variant appears in any field
+              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+                return true // At least one variant matches
+              }
+
+              // Check metadata only if allowed
+              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                return true
+              }
+
+              // Check Levenshtein for name
+              const variantLength = variant.length
+              const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
+              const levDist = levenshtein(variant, nameLower)
+
+              if (levDist <= maxDist) {
+                return true // Close enough match
+              }
+            }
+          }
+          return false // No term matched
+        })
+
+        console.log(`[NPC Search] After OR filter: ${scoredNpcs.length} results`)
+      }
+      else if (hasAndOperator) {
+        // AND query: ALL terms must match
+        console.log(`[NPC Search] AND query - filtering by ALL terms matching`)
+
+        scoredNpcs = scoredNpcs.filter(npc => {
+          const nameLower = npc.name.toLowerCase()
+          const metadataLower = npc.metadata?.toLowerCase() || ''
+          const descriptionLower = (npc.description || '').toLowerCase()
+
+          // Check if ALL terms (or their expanded keys) match
+          for (let i = 0; i < parsedQuery.terms.length; i++) {
+            const termObj = expandedTerms[i]
+            const shouldCheckMetadata = !termObj.blockMetadata
+            let termMatches = false
+
+            // Check if ANY variant of this term matches
+            for (const variant of termObj.variants) {
+              // Check if variant appears in any field
+              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+                termMatches = true
+                break
+              }
+
+              // Check metadata only if allowed
+              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                termMatches = true
+                break
+              }
+
+              // Check Levenshtein for name
+              const variantLength = variant.length
+              const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
+              const levDist = levenshtein(variant, nameLower)
+
+              if (levDist <= maxDist) {
+                termMatches = true
+                break
+              }
+            }
+
+            // If this term (and none of its variants) doesn't match, reject the NPC
+            if (!termMatches) {
+              return false
+            }
+          }
+
+          // All terms matched!
+          return true
+        })
+
+        console.log(`[NPC Search] After AND filter: ${scoredNpcs.length} results`)
+      }
+      else {
+        console.log(`[NPC Search] No operator-specific filtering needed`)
+      }
+
+      // Step 4: Sort by combined score and take top 50
+      scoredNpcs.sort((a, b) => a._final_score - b._final_score)
+
+      console.log(`[NPC Search] Top 5 results:`)
+      scoredNpcs.slice(0, 5).forEach((npc, idx) => {
+        const nameLower = npc.name.toLowerCase()
+        const metadataLower = npc.metadata?.toLowerCase() || ''
+        const isMetadataMatch = metadataLower.includes(searchTerm)
+        const matchType = isMetadataMatch ? '(metadata)' : nameLower.includes(searchTerm) ? '(name)' : '(desc)'
+        console.log(`  ${idx + 1}. "${npc.name}" ${matchType} - Lev: ${npc._lev_distance}, Score: ${npc._final_score.toFixed(2)}`)
+      })
+
+      scoredNpcs = scoredNpcs.slice(0, 50)
+
+      // Clean up scoring metadata
+      npcs = scoredNpcs.map(({ fts_score, _lev_distance, _final_score, ...npc }) => npc)
+
+      console.log(`[NPC Search] Returning ${npcs.length} results`)
+    }
+    catch (error) {
+      // Fallback: If FTS5 fails, return empty (better than crashing)
+      console.error('[NPC Search] FTS5 search failed:', error)
+      npcs = []
+    }
+  }
+  else {
+    // No search query - return all NPCs for this campaign
+    npcs = db.prepare(`
+      SELECT
+        e.id,
+        e.name,
+        e.description,
+        e.image_url,
+        e.metadata,
+        e.created_at,
+        e.updated_at
+      FROM entities e
+      WHERE e.type_id = ?
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY e.name ASC
+    `).all(entityType.id, campaignId) as NpcRow[]
+  }
+
+  // Parse metadata JSON
   return npcs.map(npc => ({
     ...npc,
     metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,

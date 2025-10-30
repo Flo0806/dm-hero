@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <PageHeader
+    <UiPageHeader
       :title="$t('npcs.title')"
       :subtitle="$t('npcs.subtitle')"
     >
@@ -14,7 +14,7 @@
           {{ $t('npcs.create') }}
         </v-btn>
       </template>
-    </PageHeader>
+    </UiPageHeader>
 
     <!-- Search Bar -->
     <v-text-field
@@ -95,10 +95,10 @@
             </div>
             <div v-if="npc.metadata" class="text-caption">
               <div v-if="npc.metadata.race" class="mb-1">
-                <strong>{{ $t('npcs.race') }}:</strong> {{ npc.metadata.race }}
+                <strong>{{ $t('npcs.race') }}:</strong> {{ $t(`referenceData.raceNames.${npc.metadata.race}`) }}
               </div>
               <div v-if="npc.metadata.class" class="mb-1">
-                <strong>{{ $t('npcs.class') }}:</strong> {{ npc.metadata.class }}
+                <strong>{{ $t('npcs.class') }}:</strong> {{ $t(`referenceData.classNames.${npc.metadata.class}`) }}
               </div>
               <div v-if="npc.metadata.location">
                 <strong>{{ $t('npcs.location') }}:</strong> {{ npc.metadata.location }}
@@ -123,22 +123,39 @@
       </v-col>
     </v-row>
 
-    <v-empty-state
-      v-else
-      icon="mdi-account-group"
-      :title="$t('npcs.empty')"
-      :text="$t('npcs.emptyText')"
-    >
-      <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
+    <div v-else>
+      <ClientOnly>
+        <v-empty-state
+          icon="mdi-account-group"
+          :title="$t('npcs.empty')"
+          :text="$t('npcs.emptyText')"
         >
-          {{ $t('npcs.create') }}
-        </v-btn>
-      </template>
-    </v-empty-state>
+          <template #actions>
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              @click="showCreateDialog = true"
+            >
+              {{ $t('npcs.create') }}
+            </v-btn>
+          </template>
+        </v-empty-state>
+        <template #fallback>
+          <v-container class="text-center py-16">
+            <v-icon icon="mdi-account-group" size="64" color="grey" class="mb-4" />
+            <h2 class="text-h5 mb-2">{{ $t('npcs.empty') }}</h2>
+            <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('npcs.emptyText') }}</p>
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              @click="showCreateDialog = true"
+            >
+              {{ $t('npcs.create') }}
+            </v-btn>
+          </v-container>
+        </template>
+      </ClientOnly>
+    </div>
 
     <!-- Create/Edit Dialog -->
     <v-dialog
@@ -290,7 +307,7 @@
                 <v-col cols="12" md="6">
                   <v-combobox
                     v-model="npcForm.metadata.race"
-                    :items="races?.map(r => r.name) || []"
+                    :items="raceItems"
                     :label="$t('npcs.race')"
                     variant="outlined"
                     clearable
@@ -299,7 +316,7 @@
                 <v-col cols="12" md="6">
                   <v-combobox
                     v-model="npcForm.metadata.class"
-                    :items="classes?.map(c => c.name) || []"
+                    :items="classItems"
                     :label="$t('npcs.class')"
                     variant="outlined"
                     clearable
@@ -862,7 +879,7 @@
               <v-col cols="12" md="6">
                 <v-combobox
                   v-model="npcForm.metadata.race"
-                  :items="races?.map(r => r.name) || []"
+                  :items="raceItems"
                   :label="$t('npcs.race')"
                   variant="outlined"
                   clearable
@@ -871,7 +888,7 @@
               <v-col cols="12" md="6">
                 <v-combobox
                   v-model="npcForm.metadata.class"
-                  :items="classes?.map(c => c.name) || []"
+                  :items="classItems"
                   :label="$t('npcs.class')"
                   variant="outlined"
                   clearable
@@ -1005,7 +1022,7 @@
           </v-btn>
           <v-btn
             color="error"
-            :loading="deletingNote"
+            :loading="deletingNoteLoading"
             @click="confirmDeleteNote"
           >
             {{ $t('common.delete') }}
@@ -1067,7 +1084,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('npcs.deleteTitle')"
       :message="$t('npcs.deleteConfirm', { name: deletingNpc?.name })"
@@ -1082,7 +1099,7 @@
 import type { NPC, NpcType, NpcStatus } from '../../../types/npc'
 import { NPC_TYPES, NPC_STATUSES } from '../../../types/npc'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 
 // Use image download composable
@@ -1114,41 +1131,103 @@ onMounted(async () => {
   ])
 })
 
+// Search with FTS5
+const searchQuery = ref('')
+const searchResults = ref<NPC[]>([])
+const searching = ref(false)
+
 // Get data from stores
 const npcs = computed(() => entitiesStore.npcs)
-const pending = computed(() => entitiesStore.npcsLoading)
+const pending = computed(() => entitiesStore.npcsLoading || searching.value)
 const locations = computed(() => entitiesStore.locationsForSelect)
 const factions = computed(() => entitiesStore.factionsForSelect)
 const items = computed(() => entitiesStore.itemsForSelect)
 
 // Fetch races and classes for autocomplete (these are not campaign-specific)
 // Using getCachedData to cache across all pages
-const { data: races } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/races', {
+const { data: races } = await useFetch<Array<{ id: number, name: string, key: string, description: string }>>('/api/races', {
   key: 'races',
   getCachedData: key => useNuxtApp().static.data[key],
 })
-const { data: classes } = await useFetch<Array<{ id: number, name: string, description: string }>>('/api/classes', {
+const { data: classes } = await useFetch<Array<{ id: number, name: string, key: string, description: string }>>('/api/classes', {
   key: 'classes',
   getCachedData: key => useNuxtApp().static.data[key],
 })
 
-// Search
-const searchQuery = ref('')
+// Translated race/class items for dropdowns
+const raceItems = computed(() => {
+  return races.value?.map(r => ({
+    title: t(`referenceData.raceNames.${r.key}`),
+    value: r.key,
+  })) || []
+})
+const classItems = computed(() => {
+  return classes.value?.map(c => ({
+    title: t(`referenceData.classNames.${c.key}`),
+    value: c.key,
+  })) || []
+})
+
+// Debounced search function
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Search execution function (extracted for reuse)
+async function executeSearch(query: string) {
+  if (!activeCampaignId.value)
+    return
+
+  searching.value = true
+  try {
+    const results = await $fetch<NPC[]>('/api/npcs', {
+      query: {
+        campaignId: activeCampaignId.value,
+        search: query.trim(),
+      },
+      headers: {
+        'Accept-Language': locale.value, // Send current locale to backend
+      },
+    })
+    searchResults.value = results
+  }
+  catch (error) {
+    console.error('Search failed:', error)
+    searchResults.value = []
+  }
+  finally {
+    searching.value = false
+  }
+}
+
+// Watch search query with debounce
+watch(searchQuery, async (query) => {
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  // If empty, show all NPCs from store
+  if (!query || query.trim().length === 0) {
+    searchResults.value = []
+    return
+  }
+
+  // Debounce search by 300ms
+  searchTimeout = setTimeout(() => executeSearch(query), 300)
+})
+
+// Re-trigger search when locale changes (no debounce)
+watch(locale, () => {
+  if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    executeSearch(searchQuery.value)
+  }
+})
+
+// Show search results if searching, otherwise show all NPCs from store
 const filteredNpcs = computed(() => {
-  if (!npcs.value)
-    return []
-
-  if (!searchQuery.value)
-    return npcs.value
-
-  const query = searchQuery.value.toLowerCase()
-  return npcs.value.filter(npc =>
-    npc.name.toLowerCase().includes(query)
-    || npc.description?.toLowerCase().includes(query)
-    || npc.metadata?.race?.toLowerCase().includes(query)
-    || npc.metadata?.class?.toLowerCase().includes(query)
-    || npc.metadata?.location?.toLowerCase().includes(query),
-  )
+  if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    return searchResults.value
+  }
+  return npcs.value || []
 })
 
 // Form state
@@ -1191,6 +1270,8 @@ async function handleImageUpload(event: Event) {
     return
 
   const file = target.files[0]
+  if (!file) return
+
   uploadingImage.value = true
 
   try {
@@ -1229,7 +1310,7 @@ async function deleteImage() {
 
   try {
     await $fetch(`/api/entities/${editingNpc.value.id}/delete-image`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
 
     // Update the editing NPC
@@ -1373,7 +1454,7 @@ const npcRelationsList = computed(() =>
 const otherNpcs = computed(() => {
   if (!npcs.value || !editingNpc.value)
     return []
-  return npcs.value.filter(npc => npc.id !== editingNpc.value?.id)
+  return npcs.value.filter((npc: NPC) => npc.id !== editingNpc.value?.id)
 })
 
 // New membership state
@@ -1589,7 +1670,7 @@ async function confirmDeleteNote() {
 
   try {
     await $fetch(`/api/npcs/${editingNpc.value!.id}/notes/${deletingNote.value.id}`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
 
     await loadNotes()
@@ -1665,7 +1746,7 @@ function editMembership(membership: Relation) {
 async function removeMembership(relationId: number) {
   try {
     await $fetch(`/api/relations/${relationId}`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
     await loadAllRelations()
   }
@@ -1714,7 +1795,7 @@ function editNpcRelation(relation: Relation) {
 async function removeNpcRelation(relationId: number) {
   try {
     await $fetch(`/api/relations/${relationId}`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
     await loadAllRelations()
   }
@@ -1776,7 +1857,7 @@ async function addItemToNpc() {
 async function removeItem(relationId: number) {
   try {
     await $fetch(`/api/relations/${relationId}`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
     await loadNpcItems()
   }
@@ -1935,7 +2016,7 @@ async function saveRelation() {
 
   try {
     const updated = await $fetch(`/api/entity-relations/${editingRelation.value.id}`, {
-      method: 'PATCH',
+      method: 'PATCH' as const,
       body: {
         relationType: relationEditForm.value.relationType,
         notes: relationEditForm.value.notes || null,
@@ -1970,7 +2051,7 @@ function closeEditRelationDialog() {
 async function removeRelation(relationId: number) {
   try {
     await $fetch(`/api/entity-relations/${relationId}`, {
-      method: 'DELETE',
+      method: 'DELETE' as const,
     })
 
     npcRelations.value = npcRelations.value.filter(r => r.id !== relationId)

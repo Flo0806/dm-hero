@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <PageHeader
+    <UiPageHeader
       :title="$t('items.title')"
       :subtitle="$t('items.subtitle')"
     >
@@ -14,7 +14,7 @@
           {{ $t('items.create') }}
         </v-btn>
       </template>
-    </PageHeader>
+    </UiPageHeader>
 
     <!-- Search Bar -->
     <v-text-field
@@ -810,7 +810,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('items.deleteTitle')"
       :message="$t('items.deleteConfirm', { name: deletingItem?.name })"

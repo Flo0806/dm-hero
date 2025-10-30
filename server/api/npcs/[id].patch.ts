@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { convertMetadataToKeys } from '../../utils/i18n-lookup'
 import type { NpcMetadata } from '../../../types/npc'
 
 export default defineEventHandler(async (event) => {
@@ -19,6 +20,9 @@ export default defineEventHandler(async (event) => {
     metadata?: NpcMetadata
   }
 
+  // Convert localized race/class names to keys before saving
+  const metadataWithKeys = metadata ? convertMetadataToKeys(metadata) : null
+
   db.prepare(`
     UPDATE entities
     SET
@@ -30,11 +34,23 @@ export default defineEventHandler(async (event) => {
   `).run(
     name,
     description,
-    metadata ? JSON.stringify(metadata) : null,
+    metadataWithKeys ? JSON.stringify(metadataWithKeys) : null,
     id,
   )
 
-  const npc = db.prepare(`
+  interface DbEntity {
+    id: number
+    type_id: number
+    campaign_id: number
+    name: string
+    description: string | null
+    metadata: string | null
+    created_at: string
+    updated_at: string
+    deleted_at: string | null
+  }
+
+  const npc = db.prepare<unknown[], DbEntity>(`
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
   `).get(id)
 
@@ -47,6 +63,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...npc,
-    metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,
+    metadata: npc.metadata ? JSON.parse(npc.metadata) : null,
   }
 })

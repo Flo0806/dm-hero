@@ -1,9 +1,11 @@
+import { distance } from 'fastest-levenshtein'
 import { getDb } from '../../utils/db'
 
 export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
+  const searchQuery = query.search as string | undefined
 
   if (!campaignId) {
     throw createError({
@@ -29,22 +31,69 @@ export default defineEventHandler((event) => {
     updated_at: string
   }
 
-  // Get all Factions for this campaign
-  const factions = db.prepare<unknown[], DbEntity>(`
-    SELECT
-      e.id,
-      e.name,
-      e.description,
-      e.image_url,
-      e.metadata,
-      e.created_at,
-      e.updated_at
-    FROM entities e
-    WHERE e.type_id = ?
-      AND e.campaign_id = ?
-      AND e.deleted_at IS NULL
-    ORDER BY e.name ASC
-  `).all(entityType.id, campaignId)
+  let factions
+
+  // Use FTS5 if search query provided
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const ftsQuery = `${searchQuery.trim()}*`
+    const searchTerm = searchQuery.trim().toLowerCase()
+
+    // Use FTS5 with BM25 weighted scoring (name=10x, description=1x, metadata=0.5x)
+    factions = db.prepare<unknown[], DbEntity & { fts_score: number }>(`
+      SELECT
+        e.id,
+        e.name,
+        e.description,
+        e.image_url,
+        e.metadata,
+        e.created_at,
+        e.updated_at,
+        bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+      FROM entities_fts fts
+      INNER JOIN entities e ON fts.rowid = e.id
+      WHERE entities_fts MATCH ?
+        AND e.type_id = ?
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY fts_score
+      LIMIT 100
+    `).all(ftsQuery, entityType.id, campaignId)
+
+    // Apply Levenshtein distance ranking for better typo handling
+    factions = factions.map((faction: any) => {
+      const nameDistance = distance(searchTerm, faction.name.toLowerCase())
+      const finalScore = faction.fts_score + nameDistance
+      return {
+        ...faction,
+        _levenshtein_distance: nameDistance,
+        _final_score: finalScore,
+      }
+    })
+
+    // Sort by final score (lower is better)
+    factions.sort((a: any, b: any) => a._final_score - b._final_score)
+
+    // Remove scoring metadata from results
+    factions = factions.map(({ fts_score, _levenshtein_distance, _final_score, ...faction }: any) => faction)
+  }
+  else {
+    // Get all Factions for this campaign (no search)
+    factions = db.prepare<unknown[], DbEntity>(`
+      SELECT
+        e.id,
+        e.name,
+        e.description,
+        e.image_url,
+        e.metadata,
+        e.created_at,
+        e.updated_at
+      FROM entities e
+      WHERE e.type_id = ?
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY e.name ASC
+    `).all(entityType.id, campaignId)
+  }
 
   return factions.map(faction => ({
     ...faction,

@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <PageHeader
+    <UiPageHeader
       :title="$t('referenceData.title')"
       :subtitle="$t('referenceData.subtitle')"
     />
@@ -181,7 +181,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="deleteDialogTitle"
       :message="deleteDialogMessage"

@@ -159,7 +159,7 @@
     </v-dialog>
 
     <!-- DELETE CONFIRM -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('documents.deleteTitle')"
       :message="$t('documents.deleteConfirm')"

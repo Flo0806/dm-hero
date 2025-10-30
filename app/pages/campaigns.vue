@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <PageHeader
+    <UiPageHeader
       :title="$t('campaigns.title')"
       :subtitle="$t('campaigns.subtitle')"
     >
@@ -14,7 +14,7 @@
           {{ $t('campaigns.create') }}
         </v-btn>
       </template>
-    </PageHeader>
+    </UiPageHeader>
 
     <v-row v-if="pending">
       <v-col
@@ -140,7 +140,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('campaigns.deleteTitle')"
       :message="$t('campaigns.deleteConfirm', { name: deletingCampaign?.name })"

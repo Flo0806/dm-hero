@@ -73,12 +73,6 @@
         to="/factions"
       />
       <v-list-item
-        prepend-icon="mdi-script-text"
-        title="Quests"
-        value="quests"
-        to="/quests"
-      />
-      <v-list-item
         prepend-icon="mdi-book-open-page-variant"
         title="Sessions"
         value="sessions"

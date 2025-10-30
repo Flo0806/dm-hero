@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container>
-    <PageHeader
+    <UiPageHeader
       :title="$t('sessions.title')"
       :subtitle="$t('sessions.subtitle')"
     >
@@ -15,7 +15,7 @@
           {{ $t('sessions.create') }}
         </v-btn>
       </template>
-    </PageHeader>
+    </UiPageHeader>
 
     <v-row v-if="pending">
       <v-col
@@ -486,7 +486,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <DeleteConfirmDialog
+    <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('sessions.deleteTitle')"
       :message="$t('sessions.deleteConfirm', { title: deletingSession?.title })"

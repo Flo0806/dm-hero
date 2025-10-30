@@ -407,7 +407,39 @@
     "deleteClassTitle": "Klasse löschen",
     "deleteClassConfirm": "Möchtest du die Klasse '{name}' wirklich löschen?",
     "saveError": "Fehler beim Speichern",
-    "deleteError": "Fehler beim Löschen"
+    "deleteError": "Fehler beim Löschen",
+    "raceNames": {
+      "human": "Mensch",
+      "elf": "Elf",
+      "dwarf": "Zwerg",
+      "halfling": "Halbling",
+      "gnome": "Gnom",
+      "halfelf": "Halbelf",
+      "halforc": "Halbork",
+      "tiefling": "Tiefling",
+      "dragonborn": "Drachenblütiger",
+      "drow": "Drow",
+      "woodelf": "Waldelf",
+      "highelf": "Hochelf",
+      "mountaindwarf": "Bergzwerg",
+      "hilldwarf": "Hügelzwerg",
+      "lightfoothalfling": "Leichtfuß-Halbling",
+      "stouthalfling": "Robuster Halbling"
+    },
+    "classNames": {
+      "barbarian": "Barbar",
+      "bard": "Barde",
+      "druid": "Druide",
+      "warlock": "Hexenmeister",
+      "fighter": "Kämpfer",
+      "cleric": "Kleriker",
+      "wizard": "Magier",
+      "monk": "Mönch",
+      "paladin": "Paladin",
+      "rogue": "Schurke",
+      "ranger": "Waldläufer",
+      "sorcerer": "Zauberer"
+    }
   },
   "sessions": {
     "title": "Sessions",
