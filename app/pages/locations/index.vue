@@ -21,9 +21,12 @@
       v-model="searchQuery"
       :placeholder="$t('common.search')"
       prepend-inner-icon="mdi-magnify"
+      :loading="searching"
       variant="outlined"
       clearable
       class="mb-4"
+      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('locations.searchHint') : ''"
+      persistent-hint
     />
 
     <v-row v-if="pending">
@@ -564,22 +567,60 @@ onMounted(async () => {
 const locations = computed(() => entitiesStore.locations)
 const pending = computed(() => entitiesStore.locationsLoading)
 
-// Search
+// Debounced FTS5 + Levenshtein Search
 const searchQuery = ref('')
+const searchResults = ref<Location[]>([])
+const searching = ref(false)
+
+// Debounce search: wait 300ms after user stops typing before calling API
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, async (query) => {
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  // If search is empty, clear results
+  if (!query || query.trim().length === 0) {
+    searchResults.value = []
+    searching.value = false
+    return
+  }
+
+  // Wait 300ms before searching (debounce)
+  searchTimeout = setTimeout(async () => {
+    if (!activeCampaignId.value)
+      return
+
+    searching.value = true
+    try {
+      const results = await $fetch<Location[]>('/api/locations', {
+        query: {
+          campaignId: activeCampaignId.value,
+          search: query.trim(),
+        },
+      })
+      searchResults.value = results
+    }
+    catch (error) {
+      console.error('Search failed:', error)
+      searchResults.value = []
+    }
+    finally {
+      searching.value = false
+    }
+  }, 300)
+})
+
+// Show search results OR cached locations
 const filteredLocations = computed(() => {
-  if (!locations.value)
-    return []
+  // If user is actively searching, show search results
+  if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    return searchResults.value
+  }
 
-  if (!searchQuery.value)
-    return locations.value
-
-  const query = searchQuery.value.toLowerCase()
-  return locations.value.filter(location =>
-    location.name.toLowerCase().includes(query)
-    || location.description?.toLowerCase().includes(query)
-    || location.metadata?.type?.toLowerCase().includes(query)
-    || location.metadata?.region?.toLowerCase().includes(query),
-  )
+  // Otherwise show all cached locations
+  return locations.value || []
 })
 
 // Form state
