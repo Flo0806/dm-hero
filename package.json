@@ -16,6 +16,7 @@
     "@nuxtjs/i18n": "^10.1.2",
     "@pinia/nuxt": "^0.11.2",
     "eslint": "^9.38.0",
+    "fastest-levenshtein": "^1.0.16",
     "marked": "^16.4.1",
     "md-editor-v3": "^6.1.0",
     "nuxt": "^4.2.0",

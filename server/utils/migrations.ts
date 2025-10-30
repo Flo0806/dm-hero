@@ -201,75 +201,81 @@ export const migrations: Migration[] = [
     version: 3,
     name: 'add_reference_data',
     up: (db) => {
-      // Reference data for races
+      // Reference data for races (with key column from the start)
       db.exec(`
         CREATE TABLE IF NOT EXISTS races (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
+          key TEXT NOT NULL UNIQUE,
           description TEXT,
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           deleted_at TEXT
         )
       `)
 
-      // Reference data for classes
+      // Reference data for classes (with key column from the start)
       db.exec(`
         CREATE TABLE IF NOT EXISTS classes (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
+          key TEXT NOT NULL UNIQUE,
           description TEXT,
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           deleted_at TEXT
         )
       `)
 
-      // Seed D&D 5e races
-      const insertRace = db.prepare('INSERT INTO races (name, description) VALUES (?, ?)')
+      // Create indexes for keys
+      db.exec(`CREATE INDEX idx_races_key ON races(key)`)
+      db.exec(`CREATE INDEX idx_classes_key ON classes(key)`)
+
+      // Seed D&D 5e races (with keys)
+      const insertRace = db.prepare('INSERT INTO races (name, key, description) VALUES (?, ?, ?)')
       const races = [
-        ['Mensch', 'Vielseitig und anpassungsfähig'],
-        ['Elf', 'Langlebig, elegant und magisch begabt'],
-        ['Zwerg', 'Zäh, handwerklich begabt und traditionsbewusst'],
-        ['Halbling', 'Klein, wendig und glücklich'],
-        ['Gnom', 'Neugierig, erfinderisch und lebhaft'],
-        ['Halbelf', 'Verbindet menschliche Vielseitigkeit mit elfischer Anmut'],
-        ['Halbork', 'Stark, ausdauernd und entschlossen'],
-        ['Tiefling', 'Infernalisches Erbe, charismatisch und misstrauisch betrachtet'],
-        ['Drachenblütiger', 'Drachenabstammung mit Atemwaffe'],
-        ['Zwergelf (Drow)', 'Dunkelelfen aus der Unterwelt'],
-        ['Waldelf', 'Schnell und im Einklang mit der Natur'],
-        ['Hochelf', 'Intellektuell und magisch begabt'],
-        ['Bergzwerg', 'Robust und widerstandsfähig'],
-        ['Hügelzwerg', 'Scharfsinnig und wahrnehmungsstark'],
-        ['Leichtfuß-Halbling', 'Besonders unauffällig'],
-        ['Robuster Halbling', 'Widerstandsfähig gegen Gift'],
+        ['Mensch', 'human', 'Vielseitig und anpassungsfähig'],
+        ['Elf', 'elf', 'Langlebig, elegant und magisch begabt'],
+        ['Zwerg', 'dwarf', 'Zäh, handwerklich begabt und traditionsbewusst'],
+        ['Halbling', 'halfling', 'Klein, wendig und glücklich'],
+        ['Gnom', 'gnome', 'Neugierig, erfinderisch und lebhaft'],
+        ['Halbelf', 'halfelf', 'Verbindet menschliche Vielseitigkeit mit elfischer Anmut'],
+        ['Halbork', 'halforc', 'Stark, ausdauernd und entschlossen'],
+        ['Tiefling', 'tiefling', 'Infernalisches Erbe, charismatisch und misstrauisch betrachtet'],
+        ['Drachenblütiger', 'dragonborn', 'Drachenabstammung mit Atemwaffe'],
+        ['Zwergelf (Drow)', 'drow', 'Dunkelelfen aus der Unterwelt'],
+        ['Waldelf', 'woodelf', 'Schnell und im Einklang mit der Natur'],
+        ['Hochelf', 'highelf', 'Intellektuell und magisch begabt'],
+        ['Bergzwerg', 'mountaindwarf', 'Robust und widerstandsfähig'],
+        ['Hügelzwerg', 'hilldwarf', 'Scharfsinnig und wahrnehmungsstark'],
+        ['Leichtfuß-Halbling', 'lightfoothalfling', 'Besonders unauffällig'],
+        ['Robuster Halbling', 'stouthalfling', 'Widerstandsfähig gegen Gift'],
       ]
 
-      for (const [name, description] of races) {
-        insertRace.run(name, description)
+      for (const [name, key, description] of races) {
+        insertRace.run(name, key, description)
       }
 
-      // Seed D&D 5e classes
-      const insertClass = db.prepare('INSERT INTO classes (name, description) VALUES (?, ?)')
+      // Seed D&D 5e classes (with keys)
+      const insertClass = db.prepare('INSERT INTO classes (name, key, description) VALUES (?, ?, ?)')
       const classes = [
-        ['Barbar', 'Wilder Krieger mit unbändiger Wut'],
-        ['Barde', 'Musiker und Geschichtenerzähler mit Magie'],
-        ['Druide', 'Naturverbundener Zauberwirker und Gestaltwandler'],
-        ['Hexenmeister', 'Erhält Macht durch einen Pakt mit mächtiger Entität'],
-        ['Kämpfer', 'Meister der Waffen und Kampftechniken'],
-        ['Kleriker', 'Göttlicher Zauberwirker und Heiler'],
-        ['Magier', 'Studierter Arkaner Zauberwirker'],
-        ['Mönch', 'Meister der waffenlosen Kampfkunst und Ki-Energie'],
-        ['Paladin', 'Heiliger Krieger mit göttlicher Macht'],
-        ['Schurke', 'Meisterdieb und Schatten-Experte'],
-        ['Waldläufer', 'Jäger und Spurenleser der Wildnis'],
-        ['Zauberer', 'Angeborene magische Begabung'],
+        ['Barbar', 'barbarian', 'Wilder Krieger mit unbändiger Wut'],
+        ['Barde', 'bard', 'Musiker und Geschichtenerzähler mit Magie'],
+        ['Druide', 'druid', 'Naturverbundener Zauberwirker und Gestaltwandler'],
+        ['Hexenmeister', 'warlock', 'Erhält Macht durch einen Pakt mit mächtiger Entität'],
+        ['Kämpfer', 'fighter', 'Meister der Waffen und Kampftechniken'],
+        ['Kleriker', 'cleric', 'Göttlicher Zauberwirker und Heiler'],
+        ['Magier', 'wizard', 'Studierter Arkaner Zauberwirker'],
+        ['Mönch', 'monk', 'Meister der waffenlosen Kampfkunst und Ki-Energie'],
+        ['Paladin', 'paladin', 'Heiliger Krieger mit göttlicher Macht'],
+        ['Schurke', 'rogue', 'Meisterdieb und Schatten-Experte'],
+        ['Waldläufer', 'ranger', 'Jäger und Spurenleser der Wildnis'],
+        ['Zauberer', 'sorcerer', 'Angeborene magische Begabung'],
       ]
 
-      for (const [name, description] of classes) {
-        insertClass.run(name, description)
+      for (const [name, key, description] of classes) {
+        insertClass.run(name, key, description)
       }
 
-      console.log('✅ Migration 3: Reference data (races & classes) added')
+      console.log('✅ Migration 3: Reference data (races & classes) added with keys')
     },
   },
   {
@@ -364,6 +370,60 @@ export const migrations: Migration[] = [
       `)
 
       console.log('✅ Migration 7: Entity documents table created')
+    },
+  },
+  {
+    version: 8,
+    name: 'improve_fts5_with_metadata',
+    up: (db) => {
+      // Drop existing FTS table and triggers
+      db.exec(`DROP TRIGGER IF EXISTS entities_ai`)
+      db.exec(`DROP TRIGGER IF EXISTS entities_ad`)
+      db.exec(`DROP TRIGGER IF EXISTS entities_au`)
+      db.exec(`DROP TABLE IF EXISTS entities_fts`)
+
+      // Create improved FTS5 table with metadata column
+      db.exec(`
+        CREATE VIRTUAL TABLE entities_fts USING fts5(
+          name,
+          description,
+          metadata,
+          content='entities',
+          content_rowid='id'
+        )
+      `)
+
+      // New triggers for improved FTS index (includes metadata)
+      db.exec(`
+        CREATE TRIGGER entities_ai AFTER INSERT ON entities BEGIN
+          INSERT INTO entities_fts(rowid, name, description, metadata)
+          VALUES (new.id, new.name, new.description, new.metadata);
+        END;
+      `)
+
+      db.exec(`
+        CREATE TRIGGER entities_ad AFTER DELETE ON entities BEGIN
+          DELETE FROM entities_fts WHERE rowid = old.id;
+        END;
+      `)
+
+      db.exec(`
+        CREATE TRIGGER entities_au AFTER UPDATE ON entities BEGIN
+          UPDATE entities_fts
+          SET name = new.name, description = new.description, metadata = new.metadata
+          WHERE rowid = new.id;
+        END;
+      `)
+
+      // Rebuild FTS index with existing data
+      db.exec(`
+        INSERT INTO entities_fts(rowid, name, description, metadata)
+        SELECT id, name, description, metadata
+        FROM entities
+        WHERE deleted_at IS NULL
+      `)
+
+      console.log('✅ Migration 8: FTS5 improved with metadata search')
     },
   },
 ]
