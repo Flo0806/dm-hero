@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { convertMetadataToKeys } from '../../utils/i18n-lookup'
 import type { ItemMetadata } from '../../../types/item'
 
 export default defineEventHandler(async (event) => {
@@ -19,6 +20,9 @@ export default defineEventHandler(async (event) => {
     metadata?: ItemMetadata
   }
 
+  // Convert localized type/rarity names to keys (e.g., "waffe" → "weapon")
+  const convertedMetadata = metadata ? convertMetadataToKeys(metadata, 'item') : null
+
   db.prepare(`
     UPDATE entities
     SET
@@ -30,7 +34,7 @@ export default defineEventHandler(async (event) => {
   `).run(
     name,
     description,
-    metadata ? JSON.stringify(metadata) : null,
+    convertedMetadata ? JSON.stringify(convertedMetadata) : null,
     id,
   )
 

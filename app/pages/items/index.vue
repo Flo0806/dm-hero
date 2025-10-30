@@ -21,9 +21,12 @@
       v-model="searchQuery"
       :placeholder="$t('common.search')"
       prepend-inner-icon="mdi-magnify"
+      :loading="searching"
       variant="outlined"
       clearable
       class="mb-4"
+      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('items.searchHint') : ''"
+      persistent-hint
     />
 
     <v-row v-if="pending">
@@ -825,7 +828,7 @@
 import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
@@ -850,22 +853,63 @@ const pending = computed(() => entitiesStore.itemsLoading)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 const locations = computed(() => entitiesStore.locationsForSelect)
 
-// Search
+// Debounced FTS5 + Levenshtein Search with i18n
 const searchQuery = ref('')
+const searchResults = ref<Item[]>([])
+const searching = ref(false)
+
+// Debounce search: wait 300ms after user stops typing before calling API
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, async (query) => {
+  // Clear previous timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  // If search is empty, clear results
+  if (!query || query.trim().length === 0) {
+    searchResults.value = []
+    searching.value = false
+    return
+  }
+
+  // Wait 300ms before searching (debounce)
+  searchTimeout = setTimeout(async () => {
+    if (!activeCampaignId.value)
+      return
+
+    searching.value = true
+    try {
+      const results = await $fetch<Item[]>('/api/items', {
+        query: {
+          campaignId: activeCampaignId.value,
+          search: query.trim(),
+        },
+        headers: {
+          'Accept-Language': locale.value, // Send current locale to backend
+        },
+      })
+      searchResults.value = results
+    }
+    catch (error) {
+      console.error('Search failed:', error)
+      searchResults.value = []
+    }
+    finally {
+      searching.value = false
+    }
+  }, 300)
+})
+
+// Show search results OR cached items
 const filteredItems = computed(() => {
-  if (!items.value)
-    return []
+  // If user is actively searching, show search results
+  if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    return searchResults.value
+  }
 
-  if (!searchQuery.value)
-    return items.value
-
-  const query = searchQuery.value.toLowerCase()
-  return items.value.filter(item =>
-    item.name.toLowerCase().includes(query)
-    || item.description?.toLowerCase().includes(query)
-    || item.metadata?.type?.toLowerCase().includes(query)
-    || item.metadata?.rarity?.toLowerCase().includes(query),
-  )
+  // Otherwise show all cached items
+  return items.value || []
 })
 
 // Form state

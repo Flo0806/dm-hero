@@ -539,7 +539,7 @@ interface ConnectedNPC {
   relation_notes: string | null
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
@@ -598,6 +598,9 @@ watch(searchQuery, async (query) => {
         query: {
           campaignId: activeCampaignId.value,
           search: query.trim(),
+        },
+        headers: {
+          'Accept-Language': locale.value, // Send current locale to backend
         },
       })
       searchResults.value = results

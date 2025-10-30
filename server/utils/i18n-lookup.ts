@@ -15,6 +15,11 @@ export interface RaceClassLookup {
   classes: Record<string, string>
 }
 
+export interface ItemLookup {
+  types: Record<string, string>
+  rarities: Record<string, string>
+}
+
 /**
  * Extract locale from H3 event (from cookie or Accept-Language header).
  * Defaults to 'de'.
@@ -230,43 +235,188 @@ function simpleLevenshtein(a: string, b: string): number {
 }
 
 /**
- * Convert metadata object with localized names to keys.
- * Used when creating/updating NPCs.
+ * Create lookup tables for item types and rarities.
+ * Locale-specific for multilingual search support.
  */
-export function convertMetadataToKeys(metadata: any): any {
+export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
+  const typesDE: Record<string, string> = {
+    'waffe': 'weapon',
+    'rüstung': 'armor',
+    'trank': 'potion',
+    'schriftrolle': 'scroll',
+    'ring': 'ring',
+    'amulett': 'amulet',
+    'stab': 'staff',
+    'zauberstab': 'wand',
+    'wundersamer gegenstand': 'wondrous_item',
+    'werkzeug': 'tool',
+    'ausrüstung': 'equipment',
+  }
+
+  const typesEN: Record<string, string> = {
+    'weapon': 'weapon',
+    'armor': 'armor',
+    'potion': 'potion',
+    'scroll': 'scroll',
+    'ring': 'ring',
+    'amulet': 'amulet',
+    'staff': 'staff',
+    'wand': 'wand',
+    'wondrous item': 'wondrous_item',
+    'wondrous_item': 'wondrous_item',
+    'tool': 'tool',
+    'equipment': 'equipment',
+  }
+
+  const raritiesDE: Record<string, string> = {
+    'gewöhnlich': 'common',
+    'ungewöhnlich': 'uncommon',
+    'selten': 'rare',
+    'sehr selten': 'very_rare',
+    'sehr_selten': 'very_rare',
+    'legendär': 'legendary',
+    'artefakt': 'artifact',
+  }
+
+  const raritiesEN: Record<string, string> = {
+    'common': 'common',
+    'uncommon': 'uncommon',
+    'rare': 'rare',
+    'very rare': 'very_rare',
+    'very_rare': 'very_rare',
+    'legendary': 'legendary',
+    'artifact': 'artifact',
+  }
+
+  return {
+    types: locale === 'en' ? typesEN : typesDE,
+    rarities: locale === 'en' ? raritiesEN : raritiesDE,
+  }
+}
+
+/**
+ * Convert item type name (localized) to database key.
+ */
+export function getItemTypeKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): string | null {
+  if (!name) return null
+  const lookup = createItemLookup(locale)
+  const nameLower = name.toLowerCase()
+
+  // Exact match first
+  const exactMatch = lookup.types[nameLower]
+  if (exactMatch) return exactMatch
+
+  // Fuzzy match for typos (more lenient for user input)
+  if (fuzzy) {
+    for (const [localizedName, key] of Object.entries(lookup.types)) {
+      const maxDist = localizedName.length <= 4 ? 1 : localizedName.length <= 7 ? 2 : 3
+      if (simpleLevenshtein(nameLower, localizedName) <= maxDist) {
+        return key
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Convert item rarity name (localized) to database key.
+ */
+export function getItemRarityKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): string | null {
+  if (!name) return null
+  const lookup = createItemLookup(locale)
+  const nameLower = name.toLowerCase()
+
+  // Exact match first
+  const exactMatch = lookup.rarities[nameLower]
+  if (exactMatch) return exactMatch
+
+  // Fuzzy match for typos (more lenient for user input)
+  if (fuzzy) {
+    for (const [localizedName, key] of Object.entries(lookup.rarities)) {
+      const maxDist = localizedName.length <= 5 ? 1 : localizedName.length <= 10 ? 2 : 3
+      if (simpleLevenshtein(nameLower, localizedName) <= maxDist) {
+        return key
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Convert metadata object with localized names to keys.
+ * Used when creating/updating NPCs and Items.
+ */
+export function convertMetadataToKeys(metadata: any, entityType: 'npc' | 'item' = 'npc'): any {
   if (!metadata) return metadata
 
   const converted = { ...metadata }
 
-  // Handle race - could be string or {title, value} object from v-combobox
-  if (converted.race) {
-    const raceValue = typeof converted.race === 'object' && converted.race.value
-      ? converted.race.value
-      : converted.race
+  if (entityType === 'npc') {
+    // Handle race - could be string or {title, value} object from v-combobox
+    if (converted.race) {
+      const raceValue = typeof converted.race === 'object' && converted.race.value
+        ? converted.race.value
+        : converted.race
 
-    // If it's already a key (no uppercase, no spaces), keep it
-    if (typeof raceValue === 'string' && raceValue === raceValue.toLowerCase() && !raceValue.includes(' ')) {
-      converted.race = raceValue
+      // If it's already a key (no uppercase, no spaces), keep it
+      if (typeof raceValue === 'string' && raceValue === raceValue.toLowerCase() && !raceValue.includes(' ')) {
+        converted.race = raceValue
+      }
+      else {
+        const raceKey = getRaceKey(raceValue)
+        if (raceKey) converted.race = raceKey
+      }
     }
-    else {
-      const raceKey = getRaceKey(raceValue)
-      if (raceKey) converted.race = raceKey
+
+    // Handle class - could be string or {title, value} object from v-combobox
+    if (converted.class) {
+      const classValue = typeof converted.class === 'object' && converted.class.value
+        ? converted.class.value
+        : converted.class
+
+      // If it's already a key (no uppercase, no spaces), keep it
+      if (typeof classValue === 'string' && classValue === classValue.toLowerCase() && !classValue.includes(' ')) {
+        converted.class = classValue
+      }
+      else {
+        const classKey = getClassKey(classValue)
+        if (classKey) converted.class = classKey
+      }
     }
   }
+  else if (entityType === 'item') {
+    // Handle type - use fuzzy matching for typos when saving
+    if (converted.type) {
+      const typeValue = typeof converted.type === 'object' && converted.type.value
+        ? converted.type.value
+        : converted.type
 
-  // Handle class - could be string or {title, value} object from v-combobox
-  if (converted.class) {
-    const classValue = typeof converted.class === 'object' && converted.class.value
-      ? converted.class.value
-      : converted.class
-
-    // If it's already a key (no uppercase, no spaces), keep it
-    if (typeof classValue === 'string' && classValue === classValue.toLowerCase() && !classValue.includes(' ')) {
-      converted.class = classValue
+      if (typeof typeValue === 'string' && typeValue === typeValue.toLowerCase() && !typeValue.includes(' ')) {
+        converted.type = typeValue
+      }
+      else {
+        // Try exact match first, then fuzzy
+        const typeKey = getItemTypeKey(typeValue, false) || getItemTypeKey(typeValue, true)
+        if (typeKey) converted.type = typeKey
+      }
     }
-    else {
-      const classKey = getClassKey(classValue)
-      if (classKey) converted.class = classKey
+
+    // Handle rarity - use fuzzy matching for typos when saving
+    if (converted.rarity) {
+      const rarityValue = typeof converted.rarity === 'object' && converted.rarity.value
+        ? converted.rarity.value
+        : converted.rarity
+
+      if (typeof rarityValue === 'string' && rarityValue === rarityValue.toLowerCase() && !rarityValue.includes(' ')) {
+        converted.rarity = rarityValue
+      }
+      else {
+        // Try exact match first, then fuzzy
+        const rarityKey = getItemRarityKey(rarityValue, false) || getItemRarityKey(rarityValue, true)
+        if (rarityKey) converted.rarity = rarityKey
+      }
     }
   }
 
