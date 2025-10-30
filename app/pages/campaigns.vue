@@ -160,7 +160,6 @@ interface Campaign {
   updated_at: string
 }
 
-const { t } = useI18n()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()

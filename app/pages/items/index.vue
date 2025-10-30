@@ -825,6 +825,7 @@
 import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
 
+const { t } = useI18n()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
@@ -907,6 +908,8 @@ async function handleImageUpload(event: Event) {
     return
 
   const file = target.files[0]
+  if (!file) return
+
   uploadingImage.value = true
 
   try {

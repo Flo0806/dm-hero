@@ -172,6 +172,7 @@
 
 <script setup lang="ts">
 import { MdEditor, NormalToolbar } from 'md-editor-v3'
+import type { ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useTheme } from 'vuetify'
 
@@ -205,7 +206,17 @@ const saving = ref(false)
 const deleting = ref(false)
 const showImageGallery = ref(false)
 const galleryImages = ref<string[]>([])
-const editorRef = ref<InstanceType<typeof MdEditor> | null>(null)
+
+type EditorInsertBlock = {
+  targetValue: string
+  select?: boolean
+  deviationStart?: number
+  deviationEnd?: number
+}
+interface MdEditorExpose {
+  insert: (gen: () => EditorInsertBlock) => void
+}
+const editorRef = ref<MdEditorExpose | null>(null)
 
 const documentForm = ref({
   title: '',
@@ -223,7 +234,8 @@ const editorTheme = computed<'light' | 'dark'>(() =>
 )
 
 // md-editor Toolbars: 0 = Platzhalter für Custom-Button via <template #defToolbars>
-const toolbars = [
+type ToolbarOrSlot = ToolbarNames | 0
+const toolbars: ToolbarOrSlot[] = [
   'bold',
   'italic',
   'strikeThrough',
@@ -245,7 +257,7 @@ const toolbars = [
   'pageFullscreen',
   'preview',
   'catalog',
-] as const
+]
 
 const filteredDocuments = computed(() => {
   if (!searchQuery.value) return documents.value

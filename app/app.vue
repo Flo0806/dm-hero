@@ -61,7 +61,7 @@ const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
 // Language
 const currentLocale = computed(() => locale.value)
-const localeCookie = useCookie('locale', {
+const localeCookie = useCookie<'en' | 'de'>('locale', {
   maxAge: 60 * 60 * 24 * 365, // 1 year
 })
 
@@ -70,7 +70,7 @@ onMounted(() => {
   campaignStore.initFromCookie()
 
   // Initialize locale from cookie
-  if (localeCookie.value) {
+  if (localeCookie.value && (localeCookie.value === 'en' || localeCookie.value === 'de')) {
     setLocale(localeCookie.value)
   }
 })
@@ -80,8 +80,10 @@ function toggleTheme() {
 }
 
 function changeLocale(newLocale: string) {
-  setLocale(newLocale)
-  localeCookie.value = newLocale
+  if (newLocale === 'en' || newLocale === 'de') {
+    setLocale(newLocale)
+    localeCookie.value = newLocale
+  }
 }
 
 function getEntityPath(entityType: string, entityId: number): string {

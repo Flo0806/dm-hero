@@ -585,7 +585,7 @@ interface Faction {
   id: number
   name: string
   description: string | null
-  image_url: string | null
+  image_url?: string | null
   metadata: {
     type?: string
     leader?: string
@@ -948,6 +948,8 @@ async function handleImageUpload(event: Event) {
     return
 
   const file = target.files[0]
+  if (!file)
+    return
   uploadingImage.value = true
 
   try {

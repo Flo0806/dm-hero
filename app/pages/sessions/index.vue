@@ -523,14 +523,14 @@
             </div>
             <v-divider class="my-4" />
             <div class="text-body-2">
-              <div v-if="viewingEntity.race" class="mb-2">
-                <strong>{{ $t('npcs.race') }}:</strong> {{ viewingEntity.race }}
+              <div v-if="(viewingEntity as NPCEntity).race" class="mb-2">
+                <strong>{{ $t('npcs.race') }}:</strong> {{ (viewingEntity as NPCEntity).race }}
               </div>
-              <div v-if="viewingEntity.class" class="mb-2">
-                <strong>{{ $t('npcs.class') }}:</strong> {{ viewingEntity.class }}
+              <div v-if="(viewingEntity as NPCEntity).class" class="mb-2">
+                <strong>{{ $t('npcs.class') }}:</strong> {{ (viewingEntity as NPCEntity).class }}
               </div>
-              <div v-if="viewingEntity.faction" class="mb-2">
-                <strong>{{ $t('npcs.faction') }}:</strong> {{ viewingEntity.faction }}
+              <div v-if="(viewingEntity as NPCEntity).faction" class="mb-2">
+                <strong>{{ $t('npcs.faction') }}:</strong> {{ (viewingEntity as NPCEntity).faction }}
               </div>
             </div>
             <div v-if="viewingEntity.notes" class="mt-4">
@@ -556,11 +556,11 @@
             </div>
             <v-divider class="my-4" />
             <div class="text-body-2">
-              <div v-if="viewingEntity.type" class="mb-2">
-                <strong>{{ $t('locations.type') }}:</strong> {{ viewingEntity.type }}
+              <div v-if="(viewingEntity as LocationEntity).type" class="mb-2">
+                <strong>{{ $t('locations.type') }}:</strong> {{ (viewingEntity as LocationEntity).type }}
               </div>
-              <div v-if="viewingEntity.parent_location" class="mb-2">
-                <strong>{{ $t('locations.parentLocation') }}:</strong> {{ viewingEntity.parent_location }}
+              <div v-if="(viewingEntity as LocationEntity).parent_location" class="mb-2">
+                <strong>{{ $t('locations.parentLocation') }}:</strong> {{ (viewingEntity as LocationEntity).parent_location }}
               </div>
             </div>
             <div v-if="viewingEntity.notes" class="mt-4">
@@ -583,12 +583,12 @@
                 cover
               />
               <v-chip
-                v-if="viewingEntity.rarity"
-                :color="getRarityColor(viewingEntity.rarity)"
+                v-if="(viewingEntity as ItemEntity).rarity"
+                :color="getRarityColor((viewingEntity as ItemEntity).rarity!)"
                 class="position-absolute"
                 style="top: 8px; right: 8px;"
               >
-                {{ $t(`items.rarities.${viewingEntity.rarity}`) }}
+                {{ $t(`items.rarities.${(viewingEntity as ItemEntity).rarity}`) }}
               </v-chip>
             </div>
             <div v-if="viewingEntity.description" class="text-body-1 mb-4">
@@ -597,11 +597,11 @@
             <v-divider class="my-4" />
 
             <div class="d-flex flex-wrap gap-2 mb-3">
-              <v-chip v-if="viewingEntity.type" variant="tonal">
+              <v-chip v-if="(viewingEntity as ItemEntity).type" variant="tonal">
                 <v-icon start>mdi-tag</v-icon>
-                {{ $t(`items.types.${viewingEntity.type}`) }}
+                {{ $t(`items.types.${(viewingEntity as ItemEntity).type}`) }}
               </v-chip>
-              <v-chip v-if="viewingEntity.attunement" color="purple" variant="tonal">
+              <v-chip v-if="(viewingEntity as ItemEntity).attunement" color="purple" variant="tonal">
                 <v-icon start>mdi-auto-fix</v-icon>
                 {{ $t('items.requiresAttunement') }}
               </v-chip>
@@ -630,17 +630,17 @@
             </div>
             <v-divider class="my-4" />
             <div class="text-body-2">
-              <div v-if="viewingEntity.leader" class="mb-2">
-                <strong>{{ $t('factions.leader') }}:</strong> {{ viewingEntity.leader }}
+              <div v-if="(viewingEntity as FactionEntity).leader" class="mb-2">
+                <strong>{{ $t('factions.leader') }}:</strong> {{ (viewingEntity as FactionEntity).leader }}
               </div>
-              <div v-if="viewingEntity.alignment" class="mb-2">
-                <strong>{{ $t('factions.alignment') }}:</strong> {{ viewingEntity.alignment }}
+              <div v-if="(viewingEntity as FactionEntity).alignment" class="mb-2">
+                <strong>{{ $t('factions.alignment') }}:</strong> {{ (viewingEntity as FactionEntity).alignment }}
               </div>
             </div>
-            <div v-if="viewingEntity.goals" class="mt-4">
+            <div v-if="(viewingEntity as FactionEntity).goals" class="mt-4">
               <strong>{{ $t('factions.goals') }}:</strong>
               <div class="text-body-2 mt-2">
-                {{ viewingEntity.goals }}
+                {{ (viewingEntity as FactionEntity).goals }}
               </div>
             </div>
             <div v-if="viewingEntity.notes" class="mt-4">
@@ -671,8 +671,8 @@
 </template>
 
 <script setup lang="ts">
-import { marked } from 'marked'
 import { MdEditor, NormalToolbar, MdPreview } from 'md-editor-v3'
+import type { ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useTheme } from 'vuetify'
 
@@ -783,11 +783,22 @@ const sessionForm = ref({
 // Entity linking
 const linkEntityType = ref<'npc' | 'location' | 'item' | 'faction'>('npc')
 const entitySearch = ref('')
-const notesTextarea = ref<HTMLTextAreaElement | null>(null)
-const editorRef = ref<InstanceType<typeof MdEditor> | null>(null)
+const notesTextarea = ref<{ $el: HTMLElement } | null>(null)
+
+type EditorInsertBlock = {
+  targetValue: string
+  select?: boolean
+  deviationStart?: number
+  deviationEnd?: number
+}
+interface MdEditorExpose {
+  insert: (gen: () => EditorInsertBlock) => void
+}
+const editorRef = ref<MdEditorExpose | null>(null)
 
 // md-editor Toolbars: 0-3 = Placeholders for custom entity buttons
-const toolbars = [
+type ToolbarOrSlot = ToolbarNames | 0 | 1 | 2 | 3
+const toolbars: ToolbarOrSlot[] = [
   'bold',
   'italic',
   'strikeThrough',
@@ -811,7 +822,7 @@ const toolbars = [
   'pageFullscreen',
   'preview',
   'catalog',
-] as const
+]
 
 const filteredEntities = computed(() => {
   const query = entitySearch.value?.toLowerCase() || ''
@@ -850,8 +861,8 @@ const extractedMentions = computed(() => {
     const [, name, type, id] = match
     mentions.push({
       type: type as 'npc' | 'location' | 'item' | 'faction',
-      id: Number.parseInt(id),
-      name,
+      id: Number.parseInt(id!),
+      name: name!,
     })
   }
 
@@ -904,21 +915,10 @@ function truncateText(text: string, maxLength: number): string {
   return `${text.substring(0, maxLength)}...`
 }
 
-function renderMarkdown(text: string): string {
-  // Replace entity links with styled badges before rendering
-  const processedText = text.replace(/\[([^\]]+)\]\((\w+):(\d+)\)/g, (match, name, type, id) => {
-    const icon = getEntityIcon(type)
-    const color = getEntityColor(type)
-    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${name}</span>`
-  })
-
-  return marked(processedText) as string
-}
-
 function sanitizeHtml(html: string): string {
   // This is called by md-editor-v3 to sanitize/transform the HTML
   // Replace entity link <a> tags with styled badges
-  return html.replace(/<a[^>]*href="(\w+):(\d+)"[^>]*>([^<]+)<\/a>/g, (match, type, id, name) => {
+  return html.replace(/<a[^>]*href="(\w+):(\d+)"[^>]*>([^<]+)<\/a>/g, (_match, type, id, name) => {
     const icon = getEntityIcon(type)
     const color = getEntityColor(type)
     return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${name}</span>`
@@ -1016,20 +1016,6 @@ function navigateToEntity(mention: EntityMention) {
   router.push(`${paths[mention.type]}?id=${mention.id}`)
 }
 
-async function handleBadgeClick(event: MouseEvent) {
-  const target = event.target as HTMLElement
-  const badge = target.closest('.entity-badge')
-
-  if (badge) {
-    const type = badge.getAttribute('data-type') as 'npc' | 'location' | 'item' | 'faction'
-    const id = badge.getAttribute('data-id')
-
-    if (type && id) {
-      await loadEntityDetails(type, Number.parseInt(id))
-    }
-  }
-}
-
 async function handleEditorClick(event: MouseEvent) {
   // Handle clicks on entity badges in the editor preview
   const target = event.target as HTMLElement
@@ -1060,7 +1046,7 @@ async function loadEntityDetails(type: 'npc' | 'location' | 'item' | 'faction', 
       faction: '/api/factions',
     }
 
-    viewingEntity.value = await $fetch(`${endpoints[type]}/${id}`)
+    viewingEntity.value = await $fetch<ViewingEntity>(`${endpoints[type]}/${id}`)
     showEntityDialog.value = true
   }
   catch (error) {

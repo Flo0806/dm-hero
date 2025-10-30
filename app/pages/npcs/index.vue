@@ -1309,7 +1309,7 @@ async function deleteImage() {
   deletingImage.value = true
 
   try {
-    await $fetch(`/api/entities/${editingNpc.value.id}/delete-image`, {
+    await $fetch<{ success: boolean }>(`/api/entities/${editingNpc.value.id}/delete-image`, {
       method: 'DELETE' as const,
     })
 
@@ -1622,7 +1622,7 @@ async function saveNote() {
   try {
     if (editingNote.value) {
       // Update existing note
-      await $fetch(`/api/npcs/${editingNpc.value.id}/notes/${editingNote.value.id}`, {
+      await $fetch<{ success: boolean }>(`/api/npcs/${editingNpc.value.id}/notes/${editingNote.value.id}`, {
         method: 'PATCH',
         body: {
           title: noteForm.value.title || null,
@@ -1669,7 +1669,7 @@ async function confirmDeleteNote() {
   deletingNoteLoading.value = true
 
   try {
-    await $fetch(`/api/npcs/${editingNpc.value!.id}/notes/${deletingNote.value.id}`, {
+    await $fetch<{ success: boolean }>(`/api/npcs/${editingNpc.value!.id}/notes/${deletingNote.value.id}`, {
       method: 'DELETE' as const,
     })
 
@@ -1745,7 +1745,7 @@ function editMembership(membership: Relation) {
 
 async function removeMembership(relationId: number) {
   try {
-    await $fetch(`/api/relations/${relationId}`, {
+    await $fetch<{ success: boolean }>(`/api/relations/${relationId}`, {
       method: 'DELETE' as const,
     })
     await loadAllRelations()
@@ -1794,7 +1794,7 @@ function editNpcRelation(relation: Relation) {
 
 async function removeNpcRelation(relationId: number) {
   try {
-    await $fetch(`/api/relations/${relationId}`, {
+    await $fetch<{ success: boolean }>(`/api/relations/${relationId}`, {
       method: 'DELETE' as const,
     })
     await loadAllRelations()
@@ -1856,7 +1856,7 @@ async function addItemToNpc() {
 
 async function removeItem(relationId: number) {
   try {
-    await $fetch(`/api/relations/${relationId}`, {
+    await $fetch<{ success: boolean }>(`/api/relations/${relationId}`, {
       method: 'DELETE' as const,
     })
     await loadNpcItems()
@@ -1975,7 +1975,7 @@ async function addLocationRelation() {
   addingRelation.value = true
 
   try {
-    const relation = await $fetch(`/api/npcs/${editingNpc.value.id}/relations`, {
+    const relation = await $fetch<Relation>(`/api/npcs/${editingNpc.value.id}/relations`, {
       method: 'POST',
       body: {
         toEntityId: newRelation.value.locationId,
@@ -1984,7 +1984,14 @@ async function addLocationRelation() {
       },
     })
 
-    npcRelations.value.push(relation as typeof npcRelations.value[0])
+    npcRelations.value.push({
+      id: relation.id,
+      to_entity_id: relation.to_entity_id,
+      to_entity_name: relation.to_entity_name,
+      to_entity_type: relation.to_entity_type,
+      relation_type: relation.relation_type,
+      notes: typeof relation.notes === 'string' ? relation.notes : null,
+    })
     newRelation.value = {
       locationId: null,
       relationType: '',
@@ -2015,7 +2022,7 @@ async function saveRelation() {
   savingRelation.value = true
 
   try {
-    const updated = await $fetch(`/api/entity-relations/${editingRelation.value.id}`, {
+    const updated = await $fetch<Relation>(`/api/entity-relations/${editingRelation.value.id}`, {
       method: 'PATCH' as const,
       body: {
         relationType: relationEditForm.value.relationType,
@@ -2050,7 +2057,7 @@ function closeEditRelationDialog() {
 
 async function removeRelation(relationId: number) {
   try {
-    await $fetch(`/api/entity-relations/${relationId}`, {
+    await $fetch<{ success: boolean }>(`/api/entity-relations/${relationId}`, {
       method: 'DELETE' as const,
     })
 
@@ -2092,6 +2099,8 @@ function closeDialog() {
       location: '',
       faction: '',
       relationship: '',
+      type: undefined,
+      status: undefined,
     },
   }
 }

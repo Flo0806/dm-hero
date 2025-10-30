@@ -114,8 +114,6 @@ export default defineEventHandler((event) => {
 
     let useExactMatch = parsedQuery.useExactFirst
 
-    console.log(`[NPC Search] Query: "${searchTerm}", Locale: ${locale}, Expanded FTS: "${ftsQuery}", HasOps: ${parsedQuery.hasOperators}, Campaign: ${campaignId}`)
-
     try {
       // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
       npcs = db.prepare(`
@@ -138,13 +136,10 @@ export default defineEventHandler((event) => {
         LIMIT 100
       `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
 
-      console.log(`[NPC Search] FTS5 found ${npcs.length} candidates (exact match)`)
-
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
       if (npcs.length === 0 && useExactMatch && !parsedQuery.hasOperators) {
         ftsQuery = `${searchTerm}*`
         useExactMatch = false
-        console.log(`[NPC Search] Retrying with prefix wildcard: "${ftsQuery}"`)
 
         npcs = db.prepare(`
           SELECT
@@ -165,8 +160,6 @@ export default defineEventHandler((event) => {
           ORDER BY fts_score
           LIMIT 100
         `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
-
-        console.log(`[NPC Search] FTS5 found ${npcs.length} candidates (prefix match)`)
       }
 
       // FALLBACK 2: Decide based on operator type
@@ -176,9 +169,6 @@ export default defineEventHandler((event) => {
       // For operator queries (AND/OR): ALWAYS use Levenshtein fallback
       // This ensures we catch typos in ALL terms
       if (parsedQuery.hasOperators) {
-        const operatorType = hasAndOperator ? 'AND' : 'OR'
-        console.log(`[NPC Search] ${operatorType} query detected - loading all NPCs for comprehensive Levenshtein matching`)
-
         npcs = db.prepare(`
           SELECT
             e.id,
@@ -194,13 +184,9 @@ export default defineEventHandler((event) => {
             AND e.deleted_at IS NULL
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as NpcRow[]
-
-        console.log(`[NPC Search] Loaded ${npcs.length} NPCs for ${operatorType} matching`)
       }
       // For simple queries with no FTS5 results
       else if (npcs.length === 0) {
-        console.log(`[NPC Search] FTS5 empty, falling back to Levenshtein on all NPCs`)
-
         npcs = db.prepare(`
           SELECT
             e.id,
@@ -216,8 +202,6 @@ export default defineEventHandler((event) => {
             AND e.deleted_at IS NULL
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as NpcRow[]
-
-        console.log(`[NPC Search] Loaded ${npcs.length} NPCs for Levenshtein matching`)
       }
 
       // Step 2: Apply Levenshtein distance for better ranking
@@ -312,13 +296,9 @@ export default defineEventHandler((event) => {
 
           return false // No variant matched
         })
-
-        console.log(`[NPC Search] After distance filter: ${scoredNpcs.length} results`)
       }
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
-        console.log(`[NPC Search] OR query - filtering by term matching`)
-
         scoredNpcs = scoredNpcs.filter(npc => {
           const nameLower = npc.name.toLowerCase()
           const metadataLower = npc.metadata?.toLowerCase() || ''
@@ -353,13 +333,9 @@ export default defineEventHandler((event) => {
           }
           return false // No term matched
         })
-
-        console.log(`[NPC Search] After OR filter: ${scoredNpcs.length} results`)
       }
       else if (hasAndOperator) {
         // AND query: ALL terms must match
-        console.log(`[NPC Search] AND query - filtering by ALL terms matching`)
-
         scoredNpcs = scoredNpcs.filter(npc => {
           const nameLower = npc.name.toLowerCase()
           const metadataLower = npc.metadata?.toLowerCase() || ''
@@ -405,31 +381,14 @@ export default defineEventHandler((event) => {
           // All terms matched!
           return true
         })
-
-        console.log(`[NPC Search] After AND filter: ${scoredNpcs.length} results`)
-      }
-      else {
-        console.log(`[NPC Search] No operator-specific filtering needed`)
       }
 
       // Step 4: Sort by combined score and take top 50
       scoredNpcs.sort((a, b) => a._final_score - b._final_score)
-
-      console.log(`[NPC Search] Top 5 results:`)
-      scoredNpcs.slice(0, 5).forEach((npc, idx) => {
-        const nameLower = npc.name.toLowerCase()
-        const metadataLower = npc.metadata?.toLowerCase() || ''
-        const isMetadataMatch = metadataLower.includes(searchTerm)
-        const matchType = isMetadataMatch ? '(metadata)' : nameLower.includes(searchTerm) ? '(name)' : '(desc)'
-        console.log(`  ${idx + 1}. "${npc.name}" ${matchType} - Lev: ${npc._lev_distance}, Score: ${npc._final_score.toFixed(2)}`)
-      })
-
       scoredNpcs = scoredNpcs.slice(0, 50)
 
       // Clean up scoring metadata
       npcs = scoredNpcs.map(({ fts_score, _lev_distance, _final_score, ...npc }) => npc)
-
-      console.log(`[NPC Search] Returning ${npcs.length} results`)
     }
     catch (error) {
       // Fallback: If FTS5 fails, return empty (better than crashing)

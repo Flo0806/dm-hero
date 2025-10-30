@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
-import type { NPC } from '../types/npc'
-import type { Item } from '../types/item'
+import type { NPC } from '../../types/npc'
+import type { Item } from '../../types/item'
 
 interface Faction {
   id: number
   name: string
   description: string | null
+  image_url?: string | null
   metadata: {
     type?: string
     leader?: string
@@ -22,6 +23,7 @@ interface Location {
   id: number
   name: string
   description: string | null
+  image_url?: string | null
   metadata: {
     type?: string
     region?: string

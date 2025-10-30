@@ -207,8 +207,8 @@
                       variant="outlined"
                       density="compact"
                       hide-details
-                      @blur="(e) => updateImageCaption(image.id, (e.target as HTMLInputElement).value)"
-                      @keyup.enter="(e) => (e.target as HTMLInputElement).blur()"
+                      @blur="(e: FocusEvent) => updateImageCaption(image.id, (e.target as HTMLInputElement).value)"
+                      @keyup.enter="(e: KeyboardEvent) => (e.target as HTMLInputElement).blur()"
                     />
                   </v-list-item-subtitle>
                   <template #append>

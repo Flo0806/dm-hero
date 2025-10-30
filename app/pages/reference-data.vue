@@ -226,13 +226,13 @@ const { data: classes, pending: classesPending, refresh: refreshClasses } = awai
 const raceHeaders = [
   { title: t('referenceData.name'), key: 'name', sortable: true },
   { title: t('referenceData.description'), key: 'description', sortable: false },
-  { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' },
+  { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' as const },
 ]
 
 const classHeaders = [
   { title: t('referenceData.name'), key: 'name', sortable: true },
   { title: t('referenceData.description'), key: 'description', sortable: false },
-  { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' },
+  { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' as const },
 ]
 
 // Race form state
