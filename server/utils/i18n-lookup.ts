@@ -153,23 +153,65 @@ export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
 /**
  * Convert race/class name (localized) to database key.
  * Case-insensitive lookup with fuzzy matching for typos.
+ *
+ * Checks:
+ * 1. Standard races (i18n lookup) - e.g., "Mensch" → "human"
+ * 2. Custom races (DB lookup) - e.g., "Drachling" → "drachling"
  */
 export function getRaceKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): string | null {
   if (!name) return null
   const lookup = createI18nLookup(locale)
   const nameLower = name.toLowerCase()
 
-  // Exact match first
+  // Step 1: Check standard races in i18n (exact match)
   const exactMatch = lookup.races[nameLower]
   if (exactMatch) return exactMatch
 
-  // Fuzzy match for typos (optional, used in search)
+  // Step 2: Check custom races in DB (name_de / name_en)
+  try {
+    const { getDb } = require('./db')
+    const db = getDb()
+
+    const customRaceExact = db.prepare(`
+      SELECT name FROM races
+      WHERE (LOWER(name_de) = ? OR LOWER(name_en) = ?)
+        AND deleted_at IS NULL
+      LIMIT 1
+    `).get(nameLower, nameLower) as { name: string } | undefined
+
+    if (customRaceExact) return customRaceExact.name
+  } catch (e) {
+    // DB not available or error - continue with i18n only
+  }
+
+  // Step 3: Fuzzy match for typos (optional, used in search)
   if (fuzzy) {
-    // Simple fuzzy: check if any key is very similar (Levenshtein distance <= 2)
+    // Fuzzy match in i18n
     for (const [localizedName, key] of Object.entries(lookup.races)) {
       if (simpleLevenshtein(nameLower, localizedName) <= 2) {
         return key
       }
+    }
+
+    // Fuzzy match in DB custom races
+    try {
+      const { getDb } = require('./db')
+      const db = getDb()
+
+      const allCustomRaces = db.prepare(`
+        SELECT name, name_de, name_en FROM races
+        WHERE name_de IS NOT NULL AND name_en IS NOT NULL
+          AND deleted_at IS NULL
+      `).all() as Array<{ name: string, name_de: string, name_en: string }>
+
+      for (const race of allCustomRaces) {
+        const compareValue = locale === 'de' ? race.name_de : race.name_en
+        if (simpleLevenshtein(nameLower, compareValue.toLowerCase()) <= 2) {
+          return race.name
+        }
+      }
+    } catch (e) {
+      // DB not available or error - continue
     }
   }
 
@@ -181,16 +223,55 @@ export function getClassKey(name: string | undefined | null, fuzzy = false, loca
   const lookup = createI18nLookup(locale)
   const nameLower = name.toLowerCase()
 
-  // Exact match first
+  // Step 1: Check standard classes in i18n (exact match)
   const exactMatch = lookup.classes[nameLower]
   if (exactMatch) return exactMatch
 
-  // Fuzzy match for typos (optional, used in search)
+  // Step 2: Check custom classes in DB (name_de / name_en)
+  try {
+    const { getDb } = require('./db')
+    const db = getDb()
+
+    const customClassExact = db.prepare(`
+      SELECT name FROM classes
+      WHERE (LOWER(name_de) = ? OR LOWER(name_en) = ?)
+        AND deleted_at IS NULL
+      LIMIT 1
+    `).get(nameLower, nameLower) as { name: string } | undefined
+
+    if (customClassExact) return customClassExact.name
+  } catch (e) {
+    // DB not available or error - continue with i18n only
+  }
+
+  // Step 3: Fuzzy match for typos (optional, used in search)
   if (fuzzy) {
+    // Fuzzy match in i18n
     for (const [localizedName, key] of Object.entries(lookup.classes)) {
       if (simpleLevenshtein(nameLower, localizedName) <= 2) {
         return key
       }
+    }
+
+    // Fuzzy match in DB custom classes
+    try {
+      const { getDb } = require('./db')
+      const db = getDb()
+
+      const allCustomClasses = db.prepare(`
+        SELECT name, name_de, name_en FROM classes
+        WHERE name_de IS NOT NULL AND name_en IS NOT NULL
+          AND deleted_at IS NULL
+      `).all() as Array<{ name: string, name_de: string, name_en: string }>
+
+      for (const classData of allCustomClasses) {
+        const compareValue = locale === 'de' ? classData.name_de : classData.name_en
+        if (simpleLevenshtein(nameLower, compareValue.toLowerCase()) <= 2) {
+          return classData.name
+        }
+      }
+    } catch (e) {
+      // DB not available or error - continue
     }
   }
 

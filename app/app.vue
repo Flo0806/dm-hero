@@ -32,12 +32,13 @@
 </template>
 
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
+import { useTheme, useLocale } from 'vuetify'
 import NavigationDrawer from '~/components/layout/NavigationDrawer.vue'
 import AppBar from '~/components/layout/AppBar.vue'
 import GlobalSearch from '~/components/layout/GlobalSearch.vue'
 
 const theme = useTheme()
+const vuetifyLocale = useLocale()
 const { locale, setLocale } = useI18n()
 const drawer = ref(true)
 const rail = ref(false)
@@ -64,6 +65,11 @@ const currentLocale = computed(() => locale.value)
 const localeCookie = useCookie<'en' | 'de'>('locale', {
   maxAge: 60 * 60 * 24 * 365, // 1 year
 })
+
+// Sync Vuetify locale with i18n locale
+watch(locale, (newLocale) => {
+  vuetifyLocale.current.value = newLocale
+}, { immediate: true })
 
 // Initialize campaign and locale from cookie on mount
 onMounted(() => {
@@ -93,7 +99,6 @@ function getEntityPath(entityType: string, entityId: number): string {
     'Location': '/locations',
     'Item': '/items',
     'Faction': '/factions',
-    'Quest': '/quests',
     'Session': '/sessions',
   }
   const basePath = typeMap[entityType] || '/npcs'

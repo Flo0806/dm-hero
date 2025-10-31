@@ -4,10 +4,10 @@
     <div v-if="!activeCampaignId" class="text-center py-16">
       <v-icon icon="mdi-sword-cross" size="64" class="mb-4" color="primary" />
       <h2 class="text-h4 mb-4">
-        Wähle eine Kampagne
+        {{ $t('dashboard.noCampaign.title') }}
       </h2>
       <p class="text-body-1 text-medium-emphasis mb-6">
-        Um loszulegen, wähle eine bestehende Kampagne oder erstelle eine neue.
+        {{ $t('dashboard.noCampaign.description') }}
       </p>
       <v-btn
         color="primary"
@@ -15,7 +15,7 @@
         to="/campaigns"
         prepend-icon="mdi-arrow-right"
       >
-        Zu den Kampagnen
+        {{ $t('dashboard.noCampaign.button') }}
       </v-btn>
     </div>
 
@@ -26,10 +26,10 @@
             <div>
               <div class="text-h2 mb-2">
                 <v-icon icon="mdi-dice-d20" size="48" class="mr-3" />
-                Willkommen, Dungeon Master
+                {{ $t('app.welcome') }}
               </div>
               <p class="text-h6 text-medium-emphasis">
-                Behalte den Überblick über deine Kampagne
+                {{ $t('app.subtitle') }}
               </p>
             </div>
             <v-chip
@@ -84,7 +84,7 @@
         <v-card>
           <v-card-title>
             <v-icon icon="mdi-information" class="mr-2" />
-            Schnellstart
+            {{ $t('quickstart.title') }}
           </v-card-title>
           <v-card-text>
             <v-list>
@@ -93,7 +93,7 @@
                   <v-icon icon="mdi-keyboard" />
                 </template>
                 <v-list-item-title>
-                  Drücke <kbd>/</kbd> um die Schnellsuche zu öffnen
+                  {{ $t('quickstart.searchHint') }}
                 </v-list-item-title>
               </v-list-item>
               <v-list-item>
@@ -101,7 +101,7 @@
                   <v-icon icon="mdi-plus" />
                 </template>
                 <v-list-item-title>
-                  Erstelle NPCs, Orte und mehr über die Sidebar
+                  {{ $t('quickstart.createHint') }}
                 </v-list-item-title>
               </v-list-item>
               <v-list-item>
@@ -109,7 +109,7 @@
                   <v-icon icon="mdi-link-variant" />
                 </template>
                 <v-list-item-title>
-                  Verknüpfe Entitäten miteinander für besseren Überblick
+                  {{ $t('quickstart.linkHint') }}
                 </v-list-item-title>
               </v-list-item>
             </v-list>
@@ -133,48 +133,43 @@ onMounted(() => {
   campaignStore.initFromCookie()
 })
 
-const categories = [
+const { t } = useI18n()
+
+const categories = computed(() => [
   {
-    title: 'NPCs',
+    title: t('categories.npcs.title'),
     icon: 'mdi-account-group',
     color: '#D4A574',
     to: '/npcs',
-    description: 'Verwalte alle NPCs deiner Kampagne - von Questgebern bis zu Schurken',
+    description: t('categories.npcs.description'),
   },
   {
-    title: 'Orte',
+    title: t('categories.locations.title'),
     icon: 'mdi-map-marker',
     color: '#8B7355',
     to: '/locations',
-    description: 'Alle Locations, Städte, Dungeons und wichtigen Orte',
+    description: t('categories.locations.description'),
   },
   {
-    title: 'Items',
+    title: t('categories.items.title'),
     icon: 'mdi-sword',
     color: '#CC8844',
     to: '/items',
-    description: 'Magische Items, Artefakte und wichtige Gegenstände',
+    description: t('categories.items.description'),
   },
   {
-    title: 'Fraktionen',
+    title: t('categories.factions.title'),
     icon: 'mdi-shield',
     color: '#7B92AB',
     to: '/factions',
-    description: 'Gilden, Organisationen und Gruppierungen',
+    description: t('categories.factions.description'),
   },
   {
-    title: 'Quests',
-    icon: 'mdi-script-text',
-    color: '#B8935F',
-    to: '/quests',
-    description: 'Haupt- und Nebenquests im Überblick',
-  },
-  {
-    title: 'Sessions',
+    title: t('categories.sessions.title'),
     icon: 'mdi-book-open-page-variant',
     color: '#D4A574',
     to: '/sessions',
-    description: 'Session-Logs und Zusammenfassungen',
+    description: t('categories.sessions.description'),
   },
-]
+])
 </script>

@@ -52,6 +52,13 @@
     "createHint": "Erstelle NPCs, Orte und mehr über die Sidebar",
     "linkHint": "Verknüpfe Entitäten miteinander für besseren Überblick"
   },
+  "dashboard": {
+    "noCampaign": {
+      "title": "Wähle eine Kampagne",
+      "description": "Um loszulegen, wähle eine bestehende Kampagne oder erstelle eine neue.",
+      "button": "Zu den Kampagnen"
+    }
+  },
   "campaigns": {
     "title": "Kampagnen",
     "subtitle": "Wähle eine Kampagne oder erstelle eine neue",
@@ -140,7 +147,8 @@
       "dead": "Tot",
       "missing": "Vermisst",
       "imprisoned": "Gefangen",
-      "unknown": "Unbekannt"
+      "unknown": "Unbekannt",
+      "undead": "Untot"
     },
     "memberships": "Mitgliedschaften",
     "factionMemberships": "Fraktionszugehörigkeiten",
@@ -278,6 +286,7 @@
     "emptyText": "Erstelle deinen ersten Ort um loszulegen",
     "deleteTitle": "Ort löschen",
     "deleteConfirm": "Möchtest du '{name}' wirklich löschen? Der Ort wird archiviert und kann wiederhergestellt werden.",
+    "searchHint": "Suche nach Name, Typ oder Region...",
     "connectedNpcs": "Verbundene NPCs",
     "noConnectedNpcs": "Keine NPCs mit diesem Ort verbunden",
     "items": "Items",
@@ -338,7 +347,24 @@
       "magical": "Magisch",
       "mundane": "Gewöhnlich",
       "tool": "Werkzeug",
-      "treasure": "Schatz"
+      "treasure": "Schatz",
+      "book": "Buch",
+      "wondrous": "Wundersamer Gegenstand",
+      "cloak": "Umhang",
+      "robe": "Robe",
+      "alchemical": "Alchemistisch",
+      "belt": "Gürtel",
+      "gloves": "Handschuhe",
+      "helmet": "Helm",
+      "shield": "Schild",
+      "instrument": "Instrument",
+      "focus": "Fokus",
+      "ring": "Ring",
+      "amulet": "Amulett",
+      "boots": "Stiefel",
+      "staff": "Stab",
+      "wand": "Zauberstab",
+      "rod": "Rute"
     },
     "rarities": {
       "common": "Gewöhnlich",
@@ -398,6 +424,12 @@
     "name": "Name",
     "description": "Beschreibung",
     "nameRequired": "Name ist erforderlich",
+    "translations": "Übersetzungen",
+    "translationRequired": "Beide Übersetzungen (DE & EN) sind erforderlich",
+    "translationHint": "Standard-Völker (Mensch, Elf, etc.) nutzen eingebaute Übersetzungen. Eigene Völker benötigen deutsche und englische Namen.",
+    "standard": "Standard",
+    "custom": "Eigenes",
+    "standardProtected": "Standard-Einträge können nicht bearbeitet oder gelöscht werden",
     "createRace": "Neues Volk",
     "editRace": "Volk bearbeiten",
     "createClass": "Neue Klasse",

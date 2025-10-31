@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description } = body
+  const { name, name_de, name_en, description } = body
 
   // Check if class exists
   const existing = db.prepare(`
@@ -44,9 +44,11 @@ export default defineEventHandler(async (event) => {
     UPDATE classes
     SET
       name = COALESCE(?, name),
+      name_de = COALESCE(?, name_de),
+      name_en = COALESCE(?, name_en),
       description = COALESCE(?, description)
     WHERE id = ? AND deleted_at IS NULL
-  `).run(name, description, id)
+  `).run(name, name_de, name_en, description, id)
 
   const classData = db.prepare(`
     SELECT * FROM classes WHERE id = ?

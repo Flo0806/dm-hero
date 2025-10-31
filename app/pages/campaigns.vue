@@ -78,22 +78,37 @@
       </v-col>
     </v-row>
 
-    <v-empty-state
-      v-else
-      icon="mdi-sword-cross"
-      :title="$t('campaigns.empty')"
-      :text="$t('campaigns.emptyText')"
-    >
-      <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
-        >
-          {{ $t('campaigns.create') }}
-        </v-btn>
+    <ClientOnly v-else>
+      <v-empty-state
+        icon="mdi-sword-cross"
+        :title="$t('campaigns.empty')"
+        :text="$t('campaigns.emptyText')"
+      >
+        <template #actions>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('campaigns.create') }}
+          </v-btn>
+        </template>
+      </v-empty-state>
+      <template #fallback>
+        <v-container class="text-center py-16">
+          <v-icon icon="mdi-sword-cross" size="64" color="grey" class="mb-4" />
+          <h2 class="text-h5 mb-2">{{ $t('campaigns.empty') }}</h2>
+          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('campaigns.emptyText') }}</p>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('campaigns.create') }}
+          </v-btn>
+        </v-container>
       </template>
-    </v-empty-state>
+    </ClientOnly>
 
     <!-- Create/Edit Campaign Dialog -->
     <v-dialog

@@ -4,12 +4,20 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description } = body
+  const { name, name_de, name_en, description } = body
 
   if (!name) {
     throw createError({
       statusCode: 400,
       message: 'Name is required',
+    })
+  }
+
+  // For custom classes, both translations are required
+  if (!name_de || !name_en) {
+    throw createError({
+      statusCode: 400,
+      message: 'Both German (name_de) and English (name_en) translations are required',
     })
   }
 
@@ -26,9 +34,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = db.prepare(`
-    INSERT INTO classes (name, description)
-    VALUES (?, ?)
-  `).run(name, description || null)
+    INSERT INTO classes (name, name_de, name_en, description)
+    VALUES (?, ?, ?, ?)
+  `).run(name, name_de, name_en, description || null)
 
   const classData = db.prepare(`
     SELECT * FROM classes WHERE id = ?

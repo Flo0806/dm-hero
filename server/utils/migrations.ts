@@ -426,6 +426,64 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 8: FTS5 improved with metadata search')
     },
   },
+  {
+    version: 9,
+    name: 'bilingual_reference_data',
+    up: (db) => {
+      // Remove 'key' column from races/classes and add bilingual name columns
+      // SQLite doesn't support DROP COLUMN, so we need to recreate the tables
+
+      // Step 1: Recreate races table without 'key' column
+      db.prepare(`
+        CREATE TABLE races_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          name_de TEXT NULL,
+          name_en TEXT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `).run()
+
+      // Copy data from old table (existing races don't have name_de/name_en)
+      db.prepare(`
+        INSERT INTO races_new (id, name, description, created_at, deleted_at)
+        SELECT id, name, description, created_at, deleted_at
+        FROM races
+      `).run()
+
+      // Drop old table and rename new one
+      db.prepare(`DROP TABLE races`).run()
+      db.prepare(`ALTER TABLE races_new RENAME TO races`).run()
+
+      // Step 2: Recreate classes table without 'key' column
+      db.prepare(`
+        CREATE TABLE classes_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          name_de TEXT NULL,
+          name_en TEXT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `).run()
+
+      // Copy data from old table
+      db.prepare(`
+        INSERT INTO classes_new (id, name, description, created_at, deleted_at)
+        SELECT id, name, description, created_at, deleted_at
+        FROM classes
+      `).run()
+
+      // Drop old table and rename new one
+      db.prepare(`DROP TABLE classes`).run()
+      db.prepare(`ALTER TABLE classes_new RENAME TO classes`).run()
+
+      console.log('✅ Migration 9: Removed key column and added bilingual reference data support (name_de, name_en)')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

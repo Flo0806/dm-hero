@@ -131,22 +131,37 @@
       </v-row>
     </div>
 
-    <v-empty-state
-      v-else
-      icon="mdi-shield-account-outline"
-      :title="$t('factions.empty')"
-      :text="$t('factions.emptyText')"
-    >
-      <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
-        >
-          {{ $t('factions.create') }}
-        </v-btn>
+    <ClientOnly v-else>
+      <v-empty-state
+        icon="mdi-shield-account-outline"
+        :title="$t('factions.empty')"
+        :text="$t('factions.emptyText')"
+      >
+        <template #actions>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('factions.create') }}
+          </v-btn>
+        </template>
+      </v-empty-state>
+      <template #fallback>
+        <v-container class="text-center py-16">
+          <v-icon icon="mdi-shield-account-outline" size="64" color="grey" class="mb-4" />
+          <h2 class="text-h5 mb-2">{{ $t('factions.empty') }}</h2>
+          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('factions.emptyText') }}</p>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('factions.create') }}
+          </v-btn>
+        </v-container>
       </template>
-    </v-empty-state>
+    </ClientOnly>
 
     <!-- Create/Edit Dialog -->
     <v-dialog
@@ -699,9 +714,9 @@ async function executeSearch(query: string) {
       signal: abortController.signal,
     })
     searchResults.value = results
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Ignore abort errors
-    if (error.name === 'AbortError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Faction search failed:', error)
@@ -901,7 +916,7 @@ async function saveFaction() {
     if (editingFaction.value && editingFaction.value.leader_id) {
       try {
         // Find and delete the old leader relation
-        const members = await $fetch<any[]>(`/api/factions/${factionId}/members`)
+        const members = await $fetch<FactionMember[]>(`/api/factions/${factionId}/members`)
         const leaderRelation = members.find(m => m.relation_type === 'Anführer')
         if (leaderRelation) {
           await $fetch(`/api/relations/${leaderRelation.id}`, { method: 'DELETE' })

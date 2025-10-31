@@ -140,22 +140,37 @@
       </v-row>
     </div>
 
-    <v-empty-state
-      v-else
-      icon="mdi-map-marker-multiple"
-      :title="$t('locations.empty')"
-      :text="$t('locations.emptyText')"
-    >
-      <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
-        >
-          {{ $t('locations.create') }}
-        </v-btn>
+    <ClientOnly v-else>
+      <v-empty-state
+        icon="mdi-map-marker-multiple"
+        :title="$t('locations.empty')"
+        :text="$t('locations.emptyText')"
+      >
+        <template #actions>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('locations.create') }}
+          </v-btn>
+        </template>
+      </v-empty-state>
+      <template #fallback>
+        <v-container class="text-center py-16">
+          <v-icon icon="mdi-map-marker-multiple" size="64" color="grey" class="mb-4" />
+          <h2 class="text-h5 mb-2">{{ $t('locations.empty') }}</h2>
+          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('locations.create') }}
+          </v-btn>
+        </v-container>
       </template>
-    </v-empty-state>
+    </ClientOnly>
 
     <!-- Create/Edit Dialog -->
     <v-dialog
@@ -628,9 +643,9 @@ async function executeSearch(query: string) {
     })
     searchResults.value = results
   }
-  catch (error: any) {
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
-    if (error.name === 'AbortError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)

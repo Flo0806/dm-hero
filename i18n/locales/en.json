@@ -52,6 +52,13 @@
     "createHint": "Create NPCs, locations and more via the sidebar",
     "linkHint": "Link entities together for better overview"
   },
+  "dashboard": {
+    "noCampaign": {
+      "title": "Select a Campaign",
+      "description": "To get started, select an existing campaign or create a new one.",
+      "button": "Go to Campaigns"
+    }
+  },
   "campaigns": {
     "title": "Campaigns",
     "subtitle": "Select a campaign or create a new one",
@@ -140,7 +147,8 @@
       "dead": "Dead",
       "missing": "Missing",
       "imprisoned": "Imprisoned",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "undead": "Undead"
     },
     "memberships": "Memberships",
     "factionMemberships": "Faction Memberships",
@@ -278,6 +286,7 @@
     "emptyText": "Create your first location to get started",
     "deleteTitle": "Delete Location",
     "deleteConfirm": "Do you really want to delete '{name}'? The location will be archived and can be restored.",
+    "searchHint": "Search by name, type, or region...",
     "connectedNpcs": "Connected NPCs",
     "noConnectedNpcs": "No NPCs connected to this location",
     "items": "Items",
@@ -338,7 +347,24 @@
       "magical": "Magical",
       "mundane": "Mundane",
       "tool": "Tool",
-      "treasure": "Treasure"
+      "treasure": "Treasure",
+      "book": "Book",
+      "wondrous": "Wondrous Item",
+      "cloak": "Cloak",
+      "robe": "Robe",
+      "alchemical": "Alchemical",
+      "belt": "Belt",
+      "gloves": "Gloves",
+      "helmet": "Helmet",
+      "shield": "Shield",
+      "instrument": "Instrument",
+      "focus": "Focus",
+      "ring": "Ring",
+      "amulet": "Amulet",
+      "boots": "Boots",
+      "staff": "Staff",
+      "wand": "Wand",
+      "rod": "Rod"
     },
     "rarities": {
       "common": "Common",
@@ -398,6 +424,12 @@
     "name": "Name",
     "description": "Description",
     "nameRequired": "Name is required",
+    "translations": "Translations",
+    "translationRequired": "Both translations (DE & EN) are required",
+    "translationHint": "Standard races (Human, Elf, etc.) use built-in translations. Custom races need both German and English names.",
+    "standard": "Standard",
+    "custom": "Custom",
+    "standardProtected": "Standard entries cannot be edited or deleted",
     "createRace": "New Race",
     "editRace": "Edit Race",
     "createClass": "New Class",

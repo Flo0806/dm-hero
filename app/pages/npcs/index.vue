@@ -120,10 +120,10 @@
             </div>
             <div v-if="npc.metadata" class="text-caption">
               <div v-if="npc.metadata.race" class="mb-1">
-                <strong>{{ $t('npcs.race') }}:</strong> {{ $t(`referenceData.raceNames.${npc.metadata.race}`) }}
+                <strong>{{ $t('npcs.race') }}:</strong> {{ useRaceName(npc.metadata.race) }}
               </div>
               <div v-if="npc.metadata.class" class="mb-1">
-                <strong>{{ $t('npcs.class') }}:</strong> {{ $t(`referenceData.classNames.${npc.metadata.class}`) }}
+                <strong>{{ $t('npcs.class') }}:</strong> {{ useClassName(npc.metadata.class) }}
               </div>
               <div v-if="npc.metadata.location">
                 <strong>{{ $t('npcs.location') }}:</strong> {{ npc.metadata.location }}
@@ -331,21 +331,27 @@
 
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-combobox
+                  <v-select
+                    :key="`race-${locale}`"
                     v-model="npcForm.metadata.race"
                     :items="raceItems"
                     :label="$t('npcs.race')"
                     variant="outlined"
                     clearable
+                    item-title="title"
+                    item-value="value"
                   />
                 </v-col>
                 <v-col cols="12" md="6">
-                  <v-combobox
+                  <v-select
+                    :key="`class-${locale}`"
                     v-model="npcForm.metadata.class"
                     :items="classItems"
                     :label="$t('npcs.class')"
                     variant="outlined"
                     clearable
+                    item-title="title"
+                    item-value="value"
                   />
                 </v-col>
               </v-row>
@@ -903,21 +909,27 @@
 
             <v-row>
               <v-col cols="12" md="6">
-                <v-combobox
+                <v-select
+                  :key="`race-${locale}`"
                   v-model="npcForm.metadata.race"
                   :items="raceItems"
                   :label="$t('npcs.race')"
                   variant="outlined"
                   clearable
+                  item-title="title"
+                  item-value="value"
                 />
               </v-col>
               <v-col cols="12" md="6">
-                <v-combobox
+                <v-select
+                  :key="`class-${locale}`"
                   v-model="npcForm.metadata.class"
                   :items="classItems"
                   :label="$t('npcs.class')"
                   variant="outlined"
                   clearable
+                  item-title="title"
+                  item-value="value"
                 />
               </v-col>
             </v-row>
@@ -1170,26 +1182,26 @@ const items = computed(() => entitiesStore.itemsForSelect)
 
 // Fetch races and classes for autocomplete (these are not campaign-specific)
 // Using getCachedData to cache across all pages
-const { data: races } = await useFetch<Array<{ id: number, name: string, key: string, description: string }>>('/api/races', {
+const { data: races } = await useFetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/races', {
   key: 'races',
   getCachedData: key => useNuxtApp().static.data[key],
 })
-const { data: classes } = await useFetch<Array<{ id: number, name: string, key: string, description: string }>>('/api/classes', {
+const { data: classes } = await useFetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/classes', {
   key: 'classes',
   getCachedData: key => useNuxtApp().static.data[key],
 })
 
-// Translated race/class items for dropdowns
+// Translated race/class items for dropdowns (uses DB translations or i18n fallback)
 const raceItems = computed(() => {
   return races.value?.map(r => ({
-    title: t(`referenceData.raceNames.${r.key}`),
-    value: r.key,
+    title: useRaceName(r),
+    value: r.name,
   })) || []
 })
 const classItems = computed(() => {
   return classes.value?.map(c => ({
-    title: t(`referenceData.classNames.${c.key}`),
-    value: c.key,
+    title: useClassName(c),
+    value: c.name,
   })) || []
 })
 
@@ -1224,9 +1236,9 @@ async function executeSearch(query: string) {
     })
     searchResults.value = results
   }
-  catch (error: any) {
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
-    if (error.name === 'AbortError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       console.log('Search aborted (new search started)')
       return
     }

@@ -38,20 +38,57 @@
           :items="races || []"
           :loading="racesPending"
         >
+          <template #[`item.name`]="{ item }">
+            <div class="d-flex align-center gap-2">
+              <span>{{ item.name }}</span>
+              <v-chip
+                v-if="!item.name_de && !item.name_en"
+                size="x-small"
+                color="primary"
+                variant="tonal"
+              >
+                {{ $t('referenceData.standard') }}
+              </v-chip>
+              <v-chip
+                v-else
+                size="x-small"
+                color="success"
+                variant="tonal"
+              >
+                {{ $t('referenceData.custom') }}
+              </v-chip>
+            </div>
+          </template>
           <template #[`item.actions`]="{ item }">
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              size="small"
-              @click="openRaceDialog(item)"
-            />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              size="small"
-              color="error"
-              @click="deleteRace(item)"
-            />
+            <!-- Standard races (no name_de/name_en) cannot be edited/deleted -->
+            <template v-if="item.name_de && item.name_en">
+              <v-btn
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                @click="openRaceDialog(item)"
+              />
+              <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                color="error"
+                @click="deleteRace(item)"
+              />
+            </template>
+            <template v-else>
+              <v-tooltip location="top">
+                <template #activator="{ props }">
+                  <v-icon
+                    v-bind="props"
+                    icon="mdi-lock"
+                    size="small"
+                    color="grey"
+                  />
+                </template>
+                {{ $t('referenceData.standardProtected') }}
+              </v-tooltip>
+            </template>
           </template>
         </v-data-table>
       </v-tabs-window-item>
@@ -73,20 +110,57 @@
           :items="classes || []"
           :loading="classesPending"
         >
+          <template #[`item.name`]="{ item }">
+            <div class="d-flex align-center gap-2">
+              <span>{{ item.name }}</span>
+              <v-chip
+                v-if="!item.name_de && !item.name_en"
+                size="x-small"
+                color="primary"
+                variant="tonal"
+              >
+                {{ $t('referenceData.standard') }}
+              </v-chip>
+              <v-chip
+                v-else
+                size="x-small"
+                color="success"
+                variant="tonal"
+              >
+                {{ $t('referenceData.custom') }}
+              </v-chip>
+            </div>
+          </template>
           <template #[`item.actions`]="{ item }">
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              size="small"
-              @click="openClassDialog(item)"
-            />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              size="small"
-              color="error"
-              @click="deleteClass(item)"
-            />
+            <!-- Standard classes (no name_de/name_en) cannot be edited/deleted -->
+            <template v-if="item.name_de && item.name_en">
+              <v-btn
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                @click="openClassDialog(item)"
+              />
+              <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                color="error"
+                @click="deleteClass(item)"
+              />
+            </template>
+            <template v-else>
+              <v-tooltip location="top">
+                <template #activator="{ props }">
+                  <v-icon
+                    v-bind="props"
+                    icon="mdi-lock"
+                    size="small"
+                    color="grey"
+                  />
+                </template>
+                {{ $t('referenceData.standardProtected') }}
+              </v-tooltip>
+            </template>
           </template>
         </v-data-table>
       </v-tabs-window-item>
@@ -107,8 +181,35 @@
             :label="$t('referenceData.name')"
             :rules="[v => !!v || $t('referenceData.nameRequired')]"
             variant="outlined"
+            hint="Internal key (e.g., 'drachling') - lowercase, no spaces"
+            persistent-hint
             class="mb-4"
           />
+
+          <v-divider class="my-4" />
+          <div class="text-subtitle-2 mb-2">
+            {{ $t('referenceData.translations') }}
+          </div>
+
+          <v-text-field
+            v-model="raceForm.name_de"
+            label="Name (Deutsch)"
+            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            variant="outlined"
+            class="mb-4"
+          />
+          <v-text-field
+            v-model="raceForm.name_en"
+            label="Name (English)"
+            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-alert type="info" density="compact" class="mb-4">
+            {{ $t('referenceData.translationHint') }}
+          </v-alert>
+
           <v-textarea
             v-model="raceForm.description"
             :label="$t('referenceData.description')"
@@ -151,8 +252,41 @@
             :label="$t('referenceData.name')"
             :rules="[v => !!v || $t('referenceData.nameRequired')]"
             variant="outlined"
+            hint="Internal key (e.g., 'battlemage') - lowercase, no spaces"
+            persistent-hint
             class="mb-4"
           />
+
+          <v-divider class="my-4" />
+          <div class="text-subtitle-2 mb-2">
+            {{ $t('referenceData.translations') }}
+          </div>
+
+          <v-text-field
+            v-model="classForm.name_de"
+            label="German (DE)"
+            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            variant="outlined"
+            class="mb-2"
+          />
+
+          <v-text-field
+            v-model="classForm.name_en"
+            label="English (EN)"
+            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-alert
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
+          >
+            {{ $t('referenceData.translationHint') }}
+          </v-alert>
+
           <v-textarea
             v-model="classForm.description"
             :label="$t('referenceData.description')"
@@ -190,6 +324,15 @@
       @cancel="showDeleteDialog = false"
     />
 
+    <!-- Success Snackbar -->
+    <v-snackbar
+      v-model="showSuccess"
+      color="success"
+      :timeout="3000"
+    >
+      {{ successMessage }}
+    </v-snackbar>
+
     <!-- Error Snackbar -->
     <v-snackbar
       v-model="showError"
@@ -205,6 +348,8 @@
 interface ReferenceData {
   id: number
   name: string
+  name_de?: string | null
+  name_en?: string | null
   description: string | null
   created_at: string
 }
@@ -241,6 +386,8 @@ const editingRace = ref<ReferenceData | null>(null)
 const saving = ref(false)
 const raceForm = ref({
   name: '',
+  name_de: '',
+  name_en: '',
   description: '',
 })
 
@@ -249,6 +396,8 @@ const showClassDialog = ref(false)
 const editingClass = ref<ReferenceData | null>(null)
 const classForm = ref({
   name: '',
+  name_de: '',
+  name_en: '',
   description: '',
 })
 
@@ -260,6 +409,10 @@ const deleteDialogMessage = ref('')
 const deleteType = ref<'race' | 'class'>('race')
 const deletingId = ref<number | null>(null)
 
+// Success handling
+const showSuccess = ref(false)
+const successMessage = ref('')
+
 // Error handling
 const showError = ref(false)
 const errorMessage = ref('')
@@ -269,6 +422,8 @@ function openRaceDialog(race?: ReferenceData) {
     editingRace.value = race
     raceForm.value = {
       name: race.name,
+      name_de: race.name_de || '',
+      name_en: race.name_en || '',
       description: race.description || '',
     }
   }
@@ -276,6 +431,8 @@ function openRaceDialog(race?: ReferenceData) {
     editingRace.value = null
     raceForm.value = {
       name: '',
+      name_de: '',
+      name_en: '',
       description: '',
     }
   }
@@ -287,6 +444,8 @@ function closeRaceDialog() {
   editingRace.value = null
   raceForm.value = {
     name: '',
+    name_de: '',
+    name_en: '',
     description: '',
   }
 }
@@ -296,6 +455,8 @@ function openClassDialog(classData?: ReferenceData) {
     editingClass.value = classData
     classForm.value = {
       name: classData.name,
+      name_de: classData.name_de || '',
+      name_en: classData.name_en || '',
       description: classData.description || '',
     }
   }
@@ -303,6 +464,8 @@ function openClassDialog(classData?: ReferenceData) {
     editingClass.value = null
     classForm.value = {
       name: '',
+      name_de: '',
+      name_en: '',
       description: '',
     }
   }
@@ -314,6 +477,8 @@ function closeClassDialog() {
   editingClass.value = null
   classForm.value = {
     name: '',
+    name_de: '',
+    name_en: '',
     description: '',
   }
 }
@@ -327,16 +492,19 @@ async function saveRace() {
         method: 'PATCH',
         body: raceForm.value,
       })
+      successMessage.value = t('referenceData.races') + ' ' + t('common.save').toLowerCase()
     }
     else {
       await $fetch('/api/races', {
         method: 'POST',
         body: raceForm.value,
       })
+      successMessage.value = t('referenceData.races') + ' ' + t('common.create').toLowerCase()
     }
 
     await refreshRaces()
     closeRaceDialog()
+    showSuccess.value = true
   }
   catch (error) {
     const err = error as { data?: { message?: string } }
@@ -357,16 +525,19 @@ async function saveClass() {
         method: 'PATCH',
         body: classForm.value,
       })
+      successMessage.value = t('referenceData.classes') + ' ' + t('common.save').toLowerCase()
     }
     else {
       await $fetch('/api/classes', {
         method: 'POST',
         body: classForm.value,
       })
+      successMessage.value = t('referenceData.classes') + ' ' + t('common.create').toLowerCase()
     }
 
     await refreshClasses()
     closeClassDialog()
+    showSuccess.value = true
   }
   catch (error) {
     const err = error as { data?: { message?: string } }

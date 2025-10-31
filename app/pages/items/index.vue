@@ -160,22 +160,37 @@
       </v-row>
     </div>
 
-    <v-empty-state
-      v-else
-      icon="mdi-sword"
-      :title="$t('items.empty')"
-      :text="$t('items.emptyText')"
-    >
-      <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
-        >
-          {{ $t('items.create') }}
-        </v-btn>
+    <ClientOnly v-else>
+      <v-empty-state
+        icon="mdi-sword"
+        :title="$t('items.empty')"
+        :text="$t('items.emptyText')"
+      >
+        <template #actions>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('items.create') }}
+          </v-btn>
+        </template>
+      </v-empty-state>
+      <template #fallback>
+        <v-container class="text-center py-16">
+          <v-icon icon="mdi-sword" size="64" color="grey" class="mb-4" />
+          <h2 class="text-h5 mb-2">{{ $t('items.empty') }}</h2>
+          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('items.emptyText') }}</p>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            {{ $t('items.create') }}
+          </v-btn>
+        </v-container>
       </template>
-    </v-empty-state>
+    </ClientOnly>
 
     <!-- View Item Dialog -->
     <v-dialog
@@ -915,9 +930,9 @@ async function executeSearch(query: string) {
     })
     searchResults.value = results
   }
-  catch (error: any) {
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
-    if (error.name === 'AbortError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)

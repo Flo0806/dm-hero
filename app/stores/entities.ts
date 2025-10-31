@@ -15,6 +15,8 @@ interface Faction {
     goals?: string
     notes?: string
   } | null
+  leader_id?: number | null
+  leader_name?: string | null
   created_at: string
   updated_at: string
 }
