@@ -39,7 +39,32 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="filteredFactions && filteredFactions.length > 0">
+    <!-- Faction Cards with Search Overlay -->
+    <div v-else-if="filteredFactions && filteredFactions.length > 0" class="position-relative">
+      <!-- Search Loading Overlay -->
+      <v-overlay
+        :model-value="searching"
+        contained
+        persistent
+        class="align-center justify-center"
+        scrim="surface"
+        opacity="0.8"
+      >
+        <div class="text-center">
+          <v-progress-circular
+            indeterminate
+            size="64"
+            color="primary"
+            class="mb-4"
+          />
+          <div class="text-h6">
+            {{ $t('common.searching') }}
+          </div>
+        </div>
+      </v-overlay>
+
+      <!-- Faction Cards -->
+      <v-row>
       <v-col
         v-for="faction in filteredFactions"
         :key="faction.id"
@@ -103,7 +128,8 @@
           </v-card-actions>
         </v-card>
       </v-col>
-    </v-row>
+      </v-row>
+    </div>
 
     <v-empty-state
       v-else
@@ -639,48 +665,83 @@ onMounted(async () => {
 const factions = computed(() => entitiesStore.factions)
 const pending = computed(() => entitiesStore.factionsLoading)
 
-// Search state
+// Search state with AbortController
 const searchQuery = ref('')
 const searchResults = ref<Faction[]>([])
 const searching = ref(false)
 
-// Debounced search: wait 300ms after user stops typing
+// Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let abortController: AbortController | null = null
+
+// Search execution function
+async function executeSearch(query: string) {
+  if (!activeCampaignId.value) return
+
+  // Abort previous search if still running
+  if (abortController) {
+    abortController.abort()
+  }
+
+  // Create new abort controller for this search
+  abortController = new AbortController()
+
+  searching.value = true
+  try {
+    const results = await $fetch<Faction[]>('/api/factions', {
+      query: {
+        campaignId: activeCampaignId.value,
+        search: query.trim(),
+      },
+      headers: {
+        'Accept-Language': locale.value,
+      },
+      signal: abortController.signal,
+    })
+    searchResults.value = results
+  } catch (error: any) {
+    // Ignore abort errors
+    if (error.name === 'AbortError') {
+      return
+    }
+    console.error('Faction search failed:', error)
+    searchResults.value = []
+  } finally {
+    searching.value = false
+    abortController = null
+  }
+}
+
+// Watch search query with debounce
 watch(searchQuery, async (query) => {
   if (searchTimeout) clearTimeout(searchTimeout)
 
+  // Abort any running search immediately
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+
   if (!query || query.trim().length === 0) {
     searchResults.value = []
+    searching.value = false
     return
   }
 
-  searchTimeout = setTimeout(async () => {
-    if (!activeCampaignId.value) return
+  // Show loading state immediately
+  searching.value = true
 
-    searching.value = true
-    try {
-      const results = await $fetch<Faction[]>('/api/factions', {
-        query: {
-          campaignId: activeCampaignId.value,
-          search: query.trim(),
-        },
-        headers: {
-          'Accept-Language': locale.value,
-        },
-      })
-      searchResults.value = results
-    } catch (error) {
-      console.error('Faction search failed:', error)
-      searchResults.value = []
-    } finally {
-      searching.value = false
-    }
-  }, 300)
+  // Debounce search by 300ms
+  searchTimeout = setTimeout(() => executeSearch(query), 300)
 })
 
 // Show search results OR cached factions
 const filteredFactions = computed(() => {
+  // If user is typing but search hasn't returned yet, show cached factions
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    if (searching.value && searchResults.value.length === 0) {
+      return factions.value || []
+    }
     return searchResults.value
   }
   return factions.value || []

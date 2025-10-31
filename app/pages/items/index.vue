@@ -41,7 +41,32 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="filteredItems && filteredItems.length > 0">
+    <!-- Item Cards with Search Overlay -->
+    <div v-else-if="filteredItems && filteredItems.length > 0" class="position-relative">
+      <!-- Search Loading Overlay -->
+      <v-overlay
+        :model-value="searching"
+        contained
+        persistent
+        class="align-center justify-center"
+        scrim="surface"
+        opacity="0.8"
+      >
+        <div class="text-center">
+          <v-progress-circular
+            indeterminate
+            size="64"
+            color="primary"
+            class="mb-4"
+          />
+          <div class="text-h6">
+            {{ $t('common.searching') }}
+          </div>
+        </div>
+      </v-overlay>
+
+      <!-- Item Cards -->
+      <v-row>
       <v-col
         v-for="item in filteredItems"
         :key="item.id"
@@ -132,7 +157,8 @@
           </v-card-actions>
         </v-card>
       </v-col>
-    </v-row>
+      </v-row>
+    </div>
 
     <v-empty-state
       v-else
@@ -853,62 +879,93 @@ const pending = computed(() => entitiesStore.itemsLoading)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 const locations = computed(() => entitiesStore.locationsForSelect)
 
-// Debounced FTS5 + Levenshtein Search with i18n
+// Debounced FTS5 + Levenshtein Search with i18n and AbortController
 const searchQuery = ref('')
 const searchResults = ref<Item[]>([])
 const searching = ref(false)
 
-// Debounce search: wait 300ms after user stops typing before calling API
+// Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let abortController: AbortController | null = null
+
+// Search execution function
+async function executeSearch(query: string) {
+  if (!activeCampaignId.value)
+    return
+
+  // Abort previous search if still running
+  if (abortController) {
+    abortController.abort()
+  }
+
+  // Create new abort controller for this search
+  abortController = new AbortController()
+
+  searching.value = true
+  try {
+    const results = await $fetch<Item[]>('/api/items', {
+      query: {
+        campaignId: activeCampaignId.value,
+        search: query.trim(),
+      },
+      headers: {
+        'Accept-Language': locale.value, // Send current locale to backend
+      },
+      signal: abortController.signal, // Pass abort signal to fetch
+    })
+    searchResults.value = results
+  }
+  catch (error: any) {
+    // Ignore abort errors (expected when user types fast)
+    if (error.name === 'AbortError') {
+      return
+    }
+    console.error('Search failed:', error)
+    searchResults.value = []
+  }
+  finally {
+    searching.value = false
+    abortController = null
+  }
+}
+
+// Watch search query with debounce
 watch(searchQuery, async (query) => {
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
 
-  // If search is empty, clear results
+  // Abort any running search immediately
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+
+  // If empty, show all items from store
   if (!query || query.trim().length === 0) {
     searchResults.value = []
     searching.value = false
     return
   }
 
-  // Wait 300ms before searching (debounce)
-  searchTimeout = setTimeout(async () => {
-    if (!activeCampaignId.value)
-      return
+  // Show loading state immediately (user sees overlay during debounce)
+  searching.value = true
 
-    searching.value = true
-    try {
-      const results = await $fetch<Item[]>('/api/items', {
-        query: {
-          campaignId: activeCampaignId.value,
-          search: query.trim(),
-        },
-        headers: {
-          'Accept-Language': locale.value, // Send current locale to backend
-        },
-      })
-      searchResults.value = results
-    }
-    catch (error) {
-      console.error('Search failed:', error)
-      searchResults.value = []
-    }
-    finally {
-      searching.value = false
-    }
-  }, 300)
+  // Debounce search by 300ms
+  searchTimeout = setTimeout(() => executeSearch(query), 300)
 })
 
 // Show search results OR cached items
 const filteredItems = computed(() => {
-  // If user is actively searching, show search results
+  // If user is typing but search hasn't returned yet, show cached items (prevents "empty" flash)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    // If search is running but no results yet, keep showing cached items
+    if (searching.value && searchResults.value.length === 0) {
+      return items.value || []
+    }
     return searchResults.value
   }
-
-  // Otherwise show all cached items
   return items.value || []
 })
 

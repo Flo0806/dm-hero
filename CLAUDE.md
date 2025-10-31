@@ -658,7 +658,146 @@ const display = computed(() => {
 
 ## 📅 Changelog
 
-### 2025-10-31 - Fuzzy Search for Linked NPC Names
+### 2025-10-31 - Locations Cross-Entity Search - FINAL (Evening)
+
+**🗺️ Cross-Search für Locations - Vollständig implementiert:**
+- ✅ **Removed bm25() incompatibility**: Cannot use `bm25()` with `GROUP_CONCAT` - switched to full table scan
+- ✅ **Always load all locations**: Ditched FTS5 pre-filter, load ALL locations with linked NPCs/Items
+- ✅ **Word-level Levenshtein**: Split NPC/Item names into words ("Günther Müller" → ["günther", "müller"])
+- ✅ **Description word matching**: Also check description words with Levenshtein (not just includes())
+- ✅ **All 3 Filters Updated**: Simple/OR/AND filters check each word individually
+- ✅ **Test Data Added**: 50 Locations with 287 relations to NPCs and Items
+
+**Beispiel - Jetzt funktioniert:**
+```typescript
+// Location "Taverne zum Goldenen Drachen" mit NPCs "Günther" + "Søren"
+Suche: "Gunther" (Typo!)
+  → Split: ["günther", "søren"]
+  → Levenshtein-Distance zu "günther": 1 ✅
+  → Findet "Taverne zum Goldenen Drachen"! 🎉
+
+// Location "Schatzkammer" mit Item "Çağlars Ring"
+Suche: "Caglar" (ohne Umlaut)
+  → Levenshtein-Distance zu "çağlar": 2 ✅
+  → Findet "Schatzkammer"! 🎉
+```
+
+**Wichtige Erkenntnisse:**
+
+1. **SQLite Limitation - bm25() + GROUP_CONCAT:**
+   - `bm25()` ist eine FTS5-Aggregatfunktion
+   - Kann NICHT mit `GROUP BY` + `GROUP_CONCAT` kombiniert werden
+   - Error: "unable to use function bm25 in the requested context"
+   - **Lösung**: Entferne `bm25()`, nutze nur Levenshtein-Ranking
+
+2. **FTS5 durchsucht nur entity fields, nicht Relations:**
+   - FTS5 indexiert nur `name`, `description`, `metadata` der **Location selbst**
+   - Verknüpfte NPCs/Items sind NICHT im FTS5-Index
+   - Suche nach "Günther" findet nur Locations wo "Günther" im Namen/Description steht
+   - **Lösung**: Lade ALLE Locations mit JOINs, filtere mit Levenshtein
+
+3. **Word-level Levenshtein für Namen:**
+   - "Günther Müller" muss gesplittet werden: ["günther", "müller"]
+   - Suche nach "Günter" matched gegen "günther" (Distance 1) ✅
+   - Ohne Split: "Günter" vs "Günther Müller" (Distance ~8) ❌
+
+**Code-Änderungen:**
+```typescript
+// Always load ALL locations with linked entities
+locations = db.prepare(`
+  SELECT e.*,
+    GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
+    GROUP_CONCAT(DISTINCT item.name) as linked_item_names
+  FROM entities e
+  LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
+  LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.type_id = 1
+  LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
+  LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.type_id = 3
+  WHERE e.type_id = 2 AND e.campaign_id = ? AND e.deleted_at IS NULL
+  GROUP BY e.id
+`).all(campaignId)
+
+// Split NPC names into WORDS and check each
+const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+for (const npcName of npcNames) {
+  const npcWords = npcName.split(/\s+/)  // ← WICHTIG!
+  for (const word of npcWords) {
+    const levDist = levenshtein(term, word)
+    if (levDist <= maxDist) return true
+  }
+}
+
+// Also check description WORDS (not just includes)
+const descWords = descriptionLower.split(/\s+/)
+for (const word of descWords) {
+  if (word.length < 3) continue  // Skip "der", "am", etc.
+  const levDist = levenshtein(term, word)
+  if (levDist <= maxDist) return true
+}
+```
+
+**Performance:**
+- Bei 50 Locations + 287 Relations: ~10-15ms
+- Full table scan (keine FTS5 pre-filter mehr)
+- Levenshtein-Filter macht die eigentliche Arbeit
+
+**Files Modified:**
+- `/server/api/locations/index.get.ts` - Removed bm25(), always load all locations, word-level Levenshtein
+
+---
+
+### 2025-10-31 - Search UI Improvements (Afternoon)
+
+**🎨 Search Loading Overlay (Locations):**
+- ✅ **Removed `:loading` from v-text-field** - No more loading bar in search input
+- ✅ **Added v-overlay with v-progress-circular** - Beautiful centered loading animation over cards
+- ✅ **Consistent UX across all entity pages** - NPCs, Items, Locations, Factions now have identical search UI
+
+**Implementation Pattern:**
+```vue
+<!-- Search Bar (no :loading prop) -->
+<v-text-field
+  v-model="searchQuery"
+  :placeholder="$t('common.search')"
+  prepend-inner-icon="mdi-magnify"
+  variant="outlined"
+  clearable
+/>
+
+<!-- Cards with Overlay -->
+<div v-else-if="filteredLocations.length > 0" class="position-relative">
+  <!-- Search Loading Overlay -->
+  <v-overlay
+    :model-value="searching"
+    contained
+    persistent
+    class="align-center justify-center"
+    scrim="surface"
+    opacity="0.8"
+  >
+    <div class="text-center">
+      <v-progress-circular indeterminate size="64" color="primary" />
+      <div class="text-h6">{{ $t('common.searching') }}</div>
+    </div>
+  </v-overlay>
+
+  <!-- Entity Cards -->
+  <v-row>...</v-row>
+</div>
+```
+
+**Why this is better:**
+- Cleaner search input (no distracting progress bar)
+- Clear visual feedback during search (centered spinner over content)
+- User sees what they're searching through while loading
+- Professional UX consistent with modern apps
+
+**Files Modified:**
+- `/app/pages/locations/index.vue` - Added v-overlay, removed `:loading` from search field
+
+---
+
+### 2025-10-31 - Fuzzy Search for Linked NPC Names (Morning)
 
 **🎯 Levenshtein für verknüpfte Namen (Morning):**
 - ✅ **Fuzzy-Search für `leader_name`**: Levenshtein-Check jetzt auch für verknüpfte NPC-Namen

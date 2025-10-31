@@ -35,6 +35,8 @@ export default defineEventHandler((event) => {
     created_at: string
     updated_at: string
     fts_score?: number
+    linked_npc_names?: string | null
+    linked_item_names?: string | null
   }
 
   interface ScoredLocation extends LocationRow {
@@ -77,6 +79,7 @@ export default defineEventHandler((event) => {
 
     try {
       // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
+      // Note: Cannot use bm25() with GROUP_CONCAT in same query
       locations = db.prepare(`
         SELECT
           e.id,
@@ -87,16 +90,22 @@ export default defineEventHandler((event) => {
           e.created_at,
           e.updated_at,
           ei.image_url as primary_image_url,
-          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+          GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
+          GROUP_CONCAT(DISTINCT item.name) as linked_item_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
+        LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
+        LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+        LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
+        LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
-        ORDER BY fts_score
-        LIMIT 100
+        GROUP BY e.id
+        ORDER BY e.name ASC
+        LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as LocationRow[]
 
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
@@ -114,42 +123,55 @@ export default defineEventHandler((event) => {
             e.created_at,
             e.updated_at,
             ei.image_url as primary_image_url,
-            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+            GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
+            GROUP_CONCAT(DISTINCT item.name) as linked_item_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
+          LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
+          LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
+          LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
-          ORDER BY fts_score
-          LIMIT 100
+          GROUP BY e.id
+          ORDER BY e.name ASC
+          LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as LocationRow[]
       }
 
-      // FALLBACK 2: For operator queries or when FTS5 returns nothing, use full table scan with Levenshtein
+      // Step 1.5: Always load all locations with linked entities
+      // FTS5 only searches entity fields (name, description, metadata),
+      // but we need linked NPC/Item names for cross-entity search
       const hasOrOperator = parsedQuery.fts5Query.toUpperCase().includes(' OR ')
       const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
 
-      if (parsedQuery.hasOperators || locations.length === 0) {
-        locations = db.prepare(`
-          SELECT
-            e.id,
-            e.name,
-            e.description,
-            e.image_url,
-            e.metadata,
-            e.created_at,
-            e.updated_at,
-            ei.image_url as primary_image_url
-          FROM entities e
-          LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
-          WHERE e.type_id = ?
-            AND e.campaign_id = ?
-            AND e.deleted_at IS NULL
-          ORDER BY e.name ASC
-        `).all(entityType.id, campaignId) as LocationRow[]
-      }
+      locations = db.prepare(`
+        SELECT
+          e.id,
+          e.name,
+          e.description,
+          e.image_url,
+          e.metadata,
+          e.created_at,
+          e.updated_at,
+          ei.image_url as primary_image_url,
+          GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
+          GROUP_CONCAT(DISTINCT item.name) as linked_item_names
+        FROM entities e
+        LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
+        LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
+        LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+        LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
+        LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
+        WHERE e.type_id = ?
+          AND e.campaign_id = ?
+          AND e.deleted_at IS NULL
+        GROUP BY e.id
+        ORDER BY e.name ASC
+      `).all(entityType.id, campaignId) as LocationRow[]
 
       // Step 2: Apply Levenshtein distance for better ranking
       let scoredLocations = locations.map((location: LocationRow): ScoredLocation => {
@@ -160,12 +182,16 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameLower.startsWith(searchTerm)
         const containsQuery = nameLower.includes(searchTerm)
 
-        // Check if search term appears in metadata or description (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, or linked entities (FTS5 match but not in name)
         const metadataLower = location.metadata?.toLowerCase() || ''
         const descriptionLower = (location.description || '').toLowerCase()
+        const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
+        const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
         const isMetadataMatch = metadataLower.includes(searchTerm)
         const isDescriptionMatch = descriptionLower.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch) && !containsQuery
+        const isNpcMatch = linkedNpcNamesLower.includes(searchTerm)
+        const isItemMatch = linkedItemNamesLower.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch) && !containsQuery
 
         let levDistance: number
 
@@ -190,6 +216,8 @@ export default defineEventHandler((event) => {
         if (exactMatch) finalScore -= 1000
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
+        if (isNpcMatch) finalScore -= 30 // NPC matches are very good
+        if (isItemMatch) finalScore -= 30 // Item matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
 
@@ -207,11 +235,13 @@ export default defineEventHandler((event) => {
           const nameLower = location.name.toLowerCase()
           const metadataLower = location.metadata?.toLowerCase() || ''
           const descriptionLower = (location.description || '').toLowerCase()
+          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
+          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
 
           // Check ALL terms
           for (const term of parsedQuery.terms) {
             // Exact/substring match in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
               return true
             }
 
@@ -220,13 +250,64 @@ export default defineEventHandler((event) => {
               return true
             }
 
-            // Levenshtein match for name
+            // Levenshtein match for name and description (check against each word)
             const termLength = term.length
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-            const levDist = levenshtein(term, nameLower)
 
-            if (levDist <= maxDist) {
-              return true
+            // Split name into words and check each
+            const nameWords = nameLower.split(/\s+/)
+            for (const word of nameWords) {
+              if (word.length === 0) continue
+              const levDist = levenshtein(term, word)
+              if (levDist <= maxDist) {
+                return true
+              }
+            }
+
+            // Also check description words for fuzzy matching
+            if (descriptionLower.length > 0) {
+              const descWords = descriptionLower.split(/\s+/)
+              for (const word of descWords) {
+                if (word.length < 3) continue // Skip very short words
+                const levDist = levenshtein(term, word)
+                if (levDist <= maxDist) {
+                  return true
+                }
+              }
+            }
+
+            // Levenshtein match for linked NPC names (split by comma, then by words)
+            if (linkedNpcNamesLower.length > 0) {
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                // Split each NPC name into words (e.g., "Günther Müller" → ["günther", "müller"])
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
+
+            // Levenshtein match for linked Item names (split by comma, then by words)
+            if (linkedItemNamesLower.length > 0) {
+              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+              for (const itemName of itemNames) {
+                if (itemName.length === 0) continue
+                // Split each item name into words
+                const itemWords = itemName.split(/\s+/)
+                for (const word of itemWords) {
+                  if (word.length === 0) continue
+                  const itemLevDist = levenshtein(term, word)
+                  if (itemLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
             }
           }
 
@@ -239,11 +320,13 @@ export default defineEventHandler((event) => {
           const nameLower = location.name.toLowerCase()
           const metadataLower = location.metadata?.toLowerCase() || ''
           const descriptionLower = (location.description || '').toLowerCase()
+          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
+          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
 
           // Check if at least one term matches
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
               return true
             }
 
@@ -252,13 +335,64 @@ export default defineEventHandler((event) => {
               return true
             }
 
-            // Check Levenshtein for name
+            // Check Levenshtein for name and description (check against each word)
             const termLength = term.length
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-            const levDist = levenshtein(term, nameLower)
 
-            if (levDist <= maxDist) {
-              return true // Close enough match
+            // Split name into words and check each
+            const nameWords = nameLower.split(/\s+/)
+            for (const word of nameWords) {
+              if (word.length === 0) continue
+              const levDist = levenshtein(term, word)
+              if (levDist <= maxDist) {
+                return true // Close enough match
+              }
+            }
+
+            // Also check description words for fuzzy matching
+            if (descriptionLower.length > 0) {
+              const descWords = descriptionLower.split(/\s+/)
+              for (const word of descWords) {
+                if (word.length < 3) continue // Skip very short words
+                const levDist = levenshtein(term, word)
+                if (levDist <= maxDist) {
+                  return true
+                }
+              }
+            }
+
+            // Check Levenshtein for linked NPC names (split by comma, then by words)
+            if (linkedNpcNamesLower.length > 0) {
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                // Split each NPC name into words
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
+
+            // Check Levenshtein for linked Item names (split by comma, then by words)
+            if (linkedItemNamesLower.length > 0) {
+              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+              for (const itemName of itemNames) {
+                if (itemName.length === 0) continue
+                // Split each item name into words
+                const itemWords = itemName.split(/\s+/)
+                for (const word of itemWords) {
+                  if (word.length === 0) continue
+                  const itemLevDist = levenshtein(term, word)
+                  if (itemLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
             }
           }
           return false // No term matched
@@ -270,13 +404,15 @@ export default defineEventHandler((event) => {
           const nameLower = location.name.toLowerCase()
           const metadataLower = location.metadata?.toLowerCase() || ''
           const descriptionLower = (location.description || '').toLowerCase()
+          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
+          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
 
           // Check if ALL terms match
           for (const term of parsedQuery.terms) {
             let termMatches = false
 
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
               termMatches = true
             }
 
@@ -285,14 +421,77 @@ export default defineEventHandler((event) => {
               termMatches = true
             }
 
-            // Check Levenshtein for name
+            // Check Levenshtein for name and description (check against each word)
             if (!termMatches) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const levDist = levenshtein(term, nameLower)
 
-              if (levDist <= maxDist) {
-                termMatches = true
+              // Split name into words and check each
+              const nameWords = nameLower.split(/\s+/)
+              for (const word of nameWords) {
+                if (word.length === 0) continue
+                const levDist = levenshtein(term, word)
+                if (levDist <= maxDist) {
+                  termMatches = true
+                  break
+                }
+              }
+
+              // Also check description words for fuzzy matching
+              if (!termMatches && descriptionLower.length > 0) {
+                const descWords = descriptionLower.split(/\s+/)
+                for (const word of descWords) {
+                  if (word.length < 3) continue // Skip very short words
+                  const levDist = levenshtein(term, word)
+                  if (levDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+              }
+            }
+
+            // Check Levenshtein for linked NPC names (split by comma, then by words)
+            if (!termMatches && linkedNpcNamesLower.length > 0) {
+              const termLength = term.length
+              const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                // Split each NPC name into words
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
+              }
+            }
+
+            // Check Levenshtein for linked Item names (split by comma, then by words)
+            if (!termMatches && linkedItemNamesLower.length > 0) {
+              const termLength = term.length
+              const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+
+              for (const itemName of itemNames) {
+                if (itemName.length === 0) continue
+                // Split each item name into words
+                const itemWords = itemName.split(/\s+/)
+                for (const word of itemWords) {
+                  if (word.length === 0) continue
+                  const itemLevDist = levenshtein(term, word)
+                  if (itemLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
               }
             }
 
@@ -331,12 +530,19 @@ export default defineEventHandler((event) => {
         e.metadata,
         e.created_at,
         e.updated_at,
-        ei.image_url as primary_image_url
+        ei.image_url as primary_image_url,
+        GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
+        GROUP_CONCAT(DISTINCT item.name) as linked_item_names
       FROM entities e
       LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
+      LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
+      LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+      LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
+      LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
+      GROUP BY e.id
       ORDER BY e.name ASC
     `).all(entityType.id, campaignId) as LocationRow[]
   }

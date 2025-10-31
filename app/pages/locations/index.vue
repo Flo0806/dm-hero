@@ -21,7 +21,6 @@
       v-model="searchQuery"
       :placeholder="$t('common.search')"
       prepend-inner-icon="mdi-magnify"
-      :loading="searching"
       variant="outlined"
       clearable
       class="mb-4"
@@ -41,7 +40,32 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="filteredLocations && filteredLocations.length > 0">
+    <!-- Location Cards with Search Overlay -->
+    <div v-else-if="filteredLocations && filteredLocations.length > 0" class="position-relative">
+      <!-- Search Loading Overlay -->
+      <v-overlay
+        :model-value="searching"
+        contained
+        persistent
+        class="align-center justify-center"
+        scrim="surface"
+        opacity="0.8"
+      >
+        <div class="text-center">
+          <v-progress-circular
+            indeterminate
+            size="64"
+            color="primary"
+            class="mb-4"
+          />
+          <div class="text-h6">
+            {{ $t('common.searching') }}
+          </div>
+        </div>
+      </v-overlay>
+
+      <!-- Location Cards -->
+      <v-row>
       <v-col
         v-for="location in filteredLocations"
         :key="location.id"
@@ -113,7 +137,8 @@
           </v-card-actions>
         </v-card>
       </v-col>
-    </v-row>
+      </v-row>
+    </div>
 
     <v-empty-state
       v-else
@@ -567,52 +592,81 @@ onMounted(async () => {
 const locations = computed(() => entitiesStore.locations)
 const pending = computed(() => entitiesStore.locationsLoading)
 
-// Debounced FTS5 + Levenshtein Search
+// Debounced FTS5 + Levenshtein Search with AbortController
 const searchQuery = ref('')
 const searchResults = ref<Location[]>([])
 const searching = ref(false)
 
-// Debounce search: wait 300ms after user stops typing before calling API
+// Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let abortController: AbortController | null = null
+
+// Search execution function
+async function executeSearch(query: string) {
+  if (!activeCampaignId.value)
+    return
+
+  // Abort previous search if still running
+  if (abortController) {
+    abortController.abort()
+  }
+
+  // Create new abort controller for this search
+  abortController = new AbortController()
+
+  searching.value = true
+  try {
+    const results = await $fetch<Location[]>('/api/locations', {
+      query: {
+        campaignId: activeCampaignId.value,
+        search: query.trim(),
+      },
+      headers: {
+        'Accept-Language': locale.value, // Send current locale to backend
+      },
+      signal: abortController.signal, // Pass abort signal to fetch
+    })
+    searchResults.value = results
+  }
+  catch (error: any) {
+    // Ignore abort errors (expected when user types fast)
+    if (error.name === 'AbortError') {
+      return
+    }
+    console.error('Search failed:', error)
+    searchResults.value = []
+  }
+  finally {
+    searching.value = false
+    abortController = null
+  }
+}
+
+// Watch search query with debounce
 watch(searchQuery, async (query) => {
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
 
-  // If search is empty, clear results
+  // Abort any running search immediately
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+
+  // If empty, show all locations from store
   if (!query || query.trim().length === 0) {
     searchResults.value = []
     searching.value = false
     return
   }
 
-  // Wait 300ms before searching (debounce)
-  searchTimeout = setTimeout(async () => {
-    if (!activeCampaignId.value)
-      return
+  // Show loading state immediately (user sees overlay during debounce)
+  searching.value = true
 
-    searching.value = true
-    try {
-      const results = await $fetch<Location[]>('/api/locations', {
-        query: {
-          campaignId: activeCampaignId.value,
-          search: query.trim(),
-        },
-        headers: {
-          'Accept-Language': locale.value, // Send current locale to backend
-        },
-      })
-      searchResults.value = results
-    }
-    catch (error) {
-      console.error('Search failed:', error)
-      searchResults.value = []
-    }
-    finally {
-      searching.value = false
-    }
-  }, 300)
+  // Debounce search by 300ms
+  searchTimeout = setTimeout(() => executeSearch(query), 300)
 })
 
 // Show search results OR cached locations

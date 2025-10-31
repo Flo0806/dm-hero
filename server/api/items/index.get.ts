@@ -38,6 +38,7 @@ export default defineEventHandler((event) => {
     created_at: string
     updated_at: string
     fts_score?: number
+    owner_names?: string | null
   }
 
   interface ScoredItem extends ItemRow {
@@ -126,15 +127,19 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
-          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
+          GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
+        LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+        LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
+        GROUP BY e.id
         ORDER BY fts_score
-        LIMIT 100
+        LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
 
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
@@ -151,15 +156,19 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
+            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
+          LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+          LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
+          GROUP BY e.id
           ORDER BY fts_score
-          LIMIT 100
+          LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
       }
 
@@ -176,11 +185,15 @@ export default defineEventHandler((event) => {
             e.image_url,
             e.metadata,
             e.created_at,
-            e.updated_at
+            e.updated_at,
+            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
           FROM entities e
+          LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+          LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
+          GROUP BY e.id
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as ItemRow[]
       }
@@ -194,12 +207,14 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameLower.startsWith(searchTerm)
         const containsQuery = nameLower.includes(searchTerm)
 
-        // Check if search term appears in metadata or description (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, or owner names (FTS5 match but not in name)
         const metadataLower = item.metadata?.toLowerCase() || ''
         const descriptionLower = (item.description || '').toLowerCase()
+        const ownerNamesLower = (item.owner_names || '').toLowerCase()
         const isMetadataMatch = metadataLower.includes(searchTerm)
         const isDescriptionMatch = descriptionLower.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch) && !containsQuery
+        const isOwnerMatch = ownerNamesLower.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isOwnerMatch) && !containsQuery
 
         let levDistance: number
 
@@ -224,6 +239,7 @@ export default defineEventHandler((event) => {
         if (exactMatch) finalScore -= 1000
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
+        if (isOwnerMatch) finalScore -= 30 // Owner matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
 
@@ -241,6 +257,7 @@ export default defineEventHandler((event) => {
           const nameLower = item.name.toLowerCase()
           const metadataLower = item.metadata?.toLowerCase() || ''
           const descriptionLower = (item.description || '').toLowerCase()
+          const ownerNamesLower = (item.owner_names || '').toLowerCase()
 
           // Check ALL expanded terms (original + type/rarity keys)
           for (const termObj of expandedTerms) {
@@ -249,7 +266,7 @@ export default defineEventHandler((event) => {
               const shouldCheckMetadata = !termObj.blockMetadata
 
               // Exact/substring match in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
                 return true
               }
 
@@ -271,6 +288,18 @@ export default defineEventHandler((event) => {
               if (levDist <= maxDist) {
                 return true
               }
+
+              // Levenshtein match for owner names (split by comma, check each name)
+              if (ownerNamesLower.length > 0) {
+                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+                for (const ownerName of ownerNames) {
+                  if (ownerName.length === 0) continue
+                  const ownerLevDist = levenshtein(variant, ownerName)
+                  if (ownerLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
             }
           }
 
@@ -283,6 +312,7 @@ export default defineEventHandler((event) => {
           const nameLower = item.name.toLowerCase()
           const metadataLower = item.metadata?.toLowerCase() || ''
           const descriptionLower = (item.description || '').toLowerCase()
+          const ownerNamesLower = (item.owner_names || '').toLowerCase()
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -292,7 +322,7 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
                 return true // At least one variant matches
               }
 
@@ -314,6 +344,18 @@ export default defineEventHandler((event) => {
               if (levDist <= maxDist) {
                 return true // Close enough match
               }
+
+              // Levenshtein match for owner names (split by comma, check each name)
+              if (ownerNamesLower.length > 0) {
+                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+                for (const ownerName of ownerNames) {
+                  if (ownerName.length === 0) continue
+                  const ownerLevDist = levenshtein(variant, ownerName)
+                  if (ownerLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
             }
           }
           return false // No term matched
@@ -325,6 +367,7 @@ export default defineEventHandler((event) => {
           const nameLower = item.name.toLowerCase()
           const metadataLower = item.metadata?.toLowerCase() || ''
           const descriptionLower = (item.description || '').toLowerCase()
+          const ownerNamesLower = (item.owner_names || '').toLowerCase()
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -335,7 +378,7 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
                 termMatches = true
                 break
               }
@@ -360,6 +403,20 @@ export default defineEventHandler((event) => {
               if (levDist <= maxDist) {
                 termMatches = true
                 break
+              }
+
+              // Levenshtein match for owner names (split by comma, check each name)
+              if (!termMatches && ownerNamesLower.length > 0) {
+                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+                for (const ownerName of ownerNames) {
+                  if (ownerName.length === 0) continue
+                  const ownerLevDist = levenshtein(variant, ownerName)
+                  if (ownerLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
               }
             }
 
@@ -397,11 +454,15 @@ export default defineEventHandler((event) => {
         e.image_url,
         e.metadata,
         e.created_at,
-        e.updated_at
+        e.updated_at,
+        GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
       FROM entities e
+      LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+      LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
+      GROUP BY e.id
       ORDER BY e.name ASC
     `).all(entityType.id, campaignId) as ItemRow[]
   }
