@@ -60,8 +60,11 @@ export default defineEventHandler((event) => {
     // E.g., "human" (EN) → also search for "human" key
     // E.g., "humen" (EN typo) → also search for "human" key (fuzzy match)
     const expandedTerms = parsedQuery.terms.map(term => {
-      const raceKey = getRaceKey(term, true, locale) // Enable fuzzy matching for typos
-      const classKey = getClassKey(term, true, locale) // Enable fuzzy matching for typos
+      // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
+      // e.g., "bern" should NOT match "barde" (class), but "hexen" should match "hexenmeister"
+      const enableFuzzy = term.length >= 5
+      const raceKey = getRaceKey(term, enableFuzzy, locale)
+      const classKey = getClassKey(term, enableFuzzy, locale)
 
       // If we found a race/class key, ONLY use the key (not the original term)
       // This prevents "human" (a key) from matching in DE when it shouldn't
@@ -135,6 +138,7 @@ export default defineEventHandler((event) => {
         ORDER BY fts_score
         LIMIT 100
       `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
+      console.log('[NPC Search] FTS5 returned:', npcs.length, 'candidates')
 
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
       if (npcs.length === 0 && useExactMatch && !parsedQuery.hasOperators) {
@@ -278,17 +282,17 @@ export default defineEventHandler((event) => {
                 return true
               }
 
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
+                return true
+              }
+
               // Levenshtein match for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
               const levDist = levenshtein(variant, nameLower)
 
               if (levDist <= maxDist) {
-                return true
-              }
-
-              // Prefix match
-              if (nameLower.startsWith(variant)) {
                 return true
               }
             }
@@ -318,6 +322,11 @@ export default defineEventHandler((event) => {
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                return true
+              }
+
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
                 return true
               }
 
@@ -357,6 +366,12 @@ export default defineEventHandler((event) => {
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                termMatches = true
+                break
+              }
+
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
                 termMatches = true
                 break
               }

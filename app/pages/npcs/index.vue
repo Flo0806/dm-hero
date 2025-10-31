@@ -26,7 +26,7 @@
       class="mb-4"
     />
 
-    <v-row v-if="pending">
+    <v-row v-if="entitiesStore.npcsLoading">
       <v-col
         v-for="i in 6"
         :key="i"
@@ -38,7 +38,32 @@
       </v-col>
     </v-row>
 
-    <v-row v-else-if="filteredNpcs && filteredNpcs.length > 0">
+    <!-- NPC Cards with Search Overlay -->
+    <div v-else-if="filteredNpcs && filteredNpcs.length > 0" class="position-relative">
+      <!-- Search Loading Overlay -->
+      <v-overlay
+        :model-value="searching"
+        contained
+        persistent
+        class="align-center justify-center"
+        scrim="surface"
+        opacity="0.8"
+      >
+        <div class="text-center">
+          <v-progress-circular
+            indeterminate
+            size="64"
+            color="primary"
+            class="mb-4"
+          />
+          <div class="text-h6">
+            {{ $t('common.searching') }}
+          </div>
+        </div>
+      </v-overlay>
+
+      <!-- NPC Cards -->
+      <v-row>
       <v-col
         v-for="npc in filteredNpcs"
         :key="npc.id"
@@ -121,7 +146,8 @@
           </v-card-actions>
         </v-card>
       </v-col>
-    </v-row>
+      </v-row>
+    </div>
 
     <div v-else>
       <ClientOnly>
@@ -1138,7 +1164,6 @@ const searching = ref(false)
 
 // Get data from stores
 const npcs = computed(() => entitiesStore.npcs)
-const pending = computed(() => entitiesStore.npcsLoading || searching.value)
 const locations = computed(() => entitiesStore.locationsForSelect)
 const factions = computed(() => entitiesStore.factionsForSelect)
 const items = computed(() => entitiesStore.itemsForSelect)
@@ -1168,13 +1193,22 @@ const classItems = computed(() => {
   })) || []
 })
 
-// Debounced search function
+// Debounced search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let abortController: AbortController | null = null
 
 // Search execution function (extracted for reuse)
 async function executeSearch(query: string) {
   if (!activeCampaignId.value)
     return
+
+  // Abort previous search if still running
+  if (abortController) {
+    abortController.abort()
+  }
+
+  // Create new abort controller for this search
+  abortController = new AbortController()
 
   searching.value = true
   try {
@@ -1186,15 +1220,22 @@ async function executeSearch(query: string) {
       headers: {
         'Accept-Language': locale.value, // Send current locale to backend
       },
+      signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
   }
-  catch (error) {
+  catch (error: any) {
+    // Ignore abort errors (expected when user types fast)
+    if (error.name === 'AbortError') {
+      console.log('Search aborted (new search started)')
+      return
+    }
     console.error('Search failed:', error)
     searchResults.value = []
   }
   finally {
     searching.value = false
+    abortController = null
   }
 }
 
@@ -1205,11 +1246,21 @@ watch(searchQuery, async (query) => {
     clearTimeout(searchTimeout)
   }
 
+  // Abort any running search immediately
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+
   // If empty, show all NPCs from store
   if (!query || query.trim().length === 0) {
     searchResults.value = []
+    searching.value = false
     return
   }
+
+  // Show loading state immediately (user sees overlay during debounce)
+  searching.value = true
 
   // Debounce search by 300ms
   searchTimeout = setTimeout(() => executeSearch(query), 300)
@@ -1224,7 +1275,12 @@ watch(locale, () => {
 
 // Show search results if searching, otherwise show all NPCs from store
 const filteredNpcs = computed(() => {
+  // If user is typing but search hasn't returned yet, show cached NPCs (prevents "empty" flash)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    // If search is running but no results yet, keep showing cached NPCs
+    if (searching.value && searchResults.value.length === 0) {
+      return npcs.value || []
+    }
     return searchResults.value
   }
   return npcs.value || []

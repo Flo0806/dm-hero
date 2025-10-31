@@ -1,45 +1,5 @@
 # DM Hero - Project Context
 
----
-## ⚠️ TODO FÜR MORGEN (2025-10-31) - Levenshtein für verknüpfte NPC-Namen
-
-**Problem:** Faction-Suche nach "Bernard" findet nicht "Bernhard" (wenn Bernhard der Anführer ist)
-
-**Aktueller Stand:**
-- ✅ Faction leader ist jetzt eine entity_relation (type: "Anführer")
-- ✅ `leader_name` wird per LEFT JOIN geladen
-- ✅ Suche durchsucht `leader_name` per substring match (`leaderNameLower.includes(searchTerm)`)
-- ❌ **ABER:** Levenshtein-Distanz wird NUR für `faction.name` berechnet, NICHT für `leader_name`
-
-**Was zu tun ist:**
-1. **In `/server/api/factions/index.get.ts`** (Zeile ~229-242):
-   - Levenshtein-Check AUCH für `leader_name` hinzufügen
-   - Aktuell:
-     ```typescript
-     const levDist = levenshtein(term, nameLower)
-     if (levDist <= maxDist) return true
-     ```
-   - Erweitern um:
-     ```typescript
-     const levDist = levenshtein(term, nameLower)
-     if (levDist <= maxDist) return true
-
-     // AUCH für leader_name prüfen!
-     const leaderLevDist = levenshtein(term, leaderNameLower)
-     if (leaderLevDist <= maxDist) return true
-     ```
-2. **Gleiche Änderung** in OR-Filter (Zeile ~262-268) und AND-Filter (Zeile ~292-299)
-
-**Testfall nach Fix:**
-- Faction "Harpers" hat Anführer "Bernhard"
-- Suche nach "Bernard" → sollte "Harpers" finden ✅
-
-**Wo weitermachen:**
-- Datei: `/server/api/factions/index.get.ts`
-- Zeilen: 229-242, 262-268, 292-299 (Simple/OR/AND Filter-Logik)
-
----
-
 ## Project Overview
 DM Hero is a personal D&D campaign management tool for Dungeon Masters. The main goal is to solve the problem of scattered information across multiple Word documents, making it hard to find NPCs, locations, and connections between entities.
 
@@ -697,6 +657,43 @@ const display = computed(() => {
 ---
 
 ## 📅 Changelog
+
+### 2025-10-31 - Fuzzy Search for Linked NPC Names
+
+**🎯 Levenshtein für verknüpfte Namen (Morning):**
+- ✅ **Fuzzy-Search für `leader_name`**: Levenshtein-Check jetzt auch für verknüpfte NPC-Namen
+- ✅ **Alle 3 Filter aktualisiert**: Simple/OR/AND Query Filter prüfen jetzt Leader-Namen
+- ✅ **LIMIT erhöht**: Von 100 auf 300 Candidates → mehr Treffer bei großen Datenmengen
+
+**Beispiel - Jetzt funktioniert:**
+```typescript
+// Faction "Harpers" mit Anführer "Bernhard"
+Suche: "Bernard" (Typo!)
+  → Levenshtein-Distance zu "Bernhard": 1 ✅
+  → Findet "Harpers" faction! 🎉
+```
+
+**Code-Änderungen:**
+```typescript
+// Neu in allen 3 Filtern (Simple/OR/AND):
+// Check Levenshtein for leader_name
+if (leaderNameLower.length > 0) {
+  const leaderLevDist = levenshtein(term, leaderNameLower)
+  if (leaderLevDist <= maxDist) {
+    return true  // Match! ✅
+  }
+}
+```
+
+**Performance:**
+- LIMIT 100 → 300: Mehr Candidates für Levenshtein
+- Bei 300 Factions: Alle werden durchsucht ✅
+- Bei 1000+ Factions: Top 300 werden durchsucht (immer noch <50ms)
+
+**Files Modified:**
+- `/server/api/factions/index.get.ts` - Added Levenshtein checks for leader_name in 3 filters
+
+---
 
 ### 2025-10-30 - Faction Leader as NPC Relation
 

@@ -215,17 +215,17 @@ export default defineEventHandler((event) => {
               return true
             }
 
+            // Prefix match (before Levenshtein for performance)
+            if (nameLower.startsWith(term)) {
+              return true
+            }
+
             // Levenshtein match for name
             const termLength = term.length
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
             const levDist = levenshtein(term, nameLower)
 
             if (levDist <= maxDist) {
-              return true
-            }
-
-            // Prefix match
-            if (nameLower.startsWith(term)) {
               return true
             }
           }
@@ -244,6 +244,11 @@ export default defineEventHandler((event) => {
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
             if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term)) {
+              return true
+            }
+
+            // Prefix match (before Levenshtein for performance)
+            if (nameLower.startsWith(term)) {
               return true
             }
 
@@ -272,6 +277,11 @@ export default defineEventHandler((event) => {
 
             // Check if term appears in any field
             if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term)) {
+              termMatches = true
+            }
+
+            // Prefix match (before Levenshtein for performance)
+            if (!termMatches && nameLower.startsWith(term)) {
               termMatches = true
             }
 

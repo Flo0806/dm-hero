@@ -99,7 +99,7 @@ export default defineEventHandler((event) => {
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
         ORDER BY fts_score
-        LIMIT 100
+        LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as FactionRow[]
 
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
@@ -128,7 +128,7 @@ export default defineEventHandler((event) => {
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
           ORDER BY fts_score
-          LIMIT 100
+          LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as FactionRow[]
       }
 
@@ -226,6 +226,11 @@ export default defineEventHandler((event) => {
               return true
             }
 
+            // Prefix match (before Levenshtein for performance)
+            if (nameLower.startsWith(term)) {
+              return true
+            }
+
             // Levenshtein match for name
             const termLength = term.length
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
@@ -235,9 +240,12 @@ export default defineEventHandler((event) => {
               return true
             }
 
-            // Prefix match
-            if (nameLower.startsWith(term)) {
-              return true
+            // Levenshtein match for leader_name
+            if (leaderNameLower.length > 0) {
+              const leaderLevDist = levenshtein(term, leaderNameLower)
+              if (leaderLevDist <= maxDist) {
+                return true
+              }
             }
           }
 
@@ -259,6 +267,11 @@ export default defineEventHandler((event) => {
               return true
             }
 
+            // Prefix match (before Levenshtein for performance)
+            if (nameLower.startsWith(term)) {
+              return true
+            }
+
             // Check Levenshtein for name
             const termLength = term.length
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
@@ -266,6 +279,14 @@ export default defineEventHandler((event) => {
 
             if (levDist <= maxDist) {
               return true // Close enough match
+            }
+
+            // Check Levenshtein for leader_name
+            if (leaderNameLower.length > 0) {
+              const leaderLevDist = levenshtein(term, leaderNameLower)
+              if (leaderLevDist <= maxDist) {
+                return true // Close enough match
+              }
             }
           }
           return false // No term matched
@@ -288,6 +309,11 @@ export default defineEventHandler((event) => {
               termMatches = true
             }
 
+            // Prefix match (before Levenshtein for performance)
+            if (!termMatches && nameLower.startsWith(term)) {
+              termMatches = true
+            }
+
             // Check Levenshtein for name
             if (!termMatches) {
               const termLength = term.length
@@ -295,6 +321,17 @@ export default defineEventHandler((event) => {
               const levDist = levenshtein(term, nameLower)
 
               if (levDist <= maxDist) {
+                termMatches = true
+              }
+            }
+
+            // Check Levenshtein for leader_name
+            if (!termMatches && leaderNameLower.length > 0) {
+              const termLength = term.length
+              const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+              const leaderLevDist = levenshtein(term, leaderNameLower)
+
+              if (leaderLevDist <= maxDist) {
                 termMatches = true
               }
             }

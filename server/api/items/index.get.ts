@@ -59,8 +59,10 @@ export default defineEventHandler((event) => {
     // E.g., "weapon" (EN) → also search for "weapon" key
     // E.g., "legendär" (DE) → also search for "legendary" key
     const expandedTerms = parsedQuery.terms.map(term => {
-      const typeKey = getItemTypeKey(term, true, locale) // Enable fuzzy matching for typos
-      const rarityKey = getItemRarityKey(term, true, locale) // Enable fuzzy matching for typos
+      // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
+      const enableFuzzy = term.length >= 5
+      const typeKey = getItemTypeKey(term, enableFuzzy, locale)
+      const rarityKey = getItemRarityKey(term, enableFuzzy, locale)
 
       // If we found a type/rarity key, ONLY use the key (not the original term)
       // This prevents "weapon" (a key) from matching in DE when it shouldn't
@@ -256,17 +258,17 @@ export default defineEventHandler((event) => {
                 return true
               }
 
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
+                return true
+              }
+
               // Levenshtein match for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
               const levDist = levenshtein(variant, nameLower)
 
               if (levDist <= maxDist) {
-                return true
-              }
-
-              // Prefix match
-              if (nameLower.startsWith(variant)) {
                 return true
               }
             }
@@ -296,6 +298,11 @@ export default defineEventHandler((event) => {
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                return true
+              }
+
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
                 return true
               }
 
@@ -335,6 +342,12 @@ export default defineEventHandler((event) => {
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataLower.includes(variant)) {
+                termMatches = true
+                break
+              }
+
+              // Prefix match (before Levenshtein for performance)
+              if (nameLower.startsWith(variant)) {
                 termMatches = true
                 break
               }
