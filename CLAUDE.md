@@ -1,5 +1,45 @@
 # DM Hero - Project Context
 
+---
+## ⚠️ TODO FÜR MORGEN (2025-10-31) - Levenshtein für verknüpfte NPC-Namen
+
+**Problem:** Faction-Suche nach "Bernard" findet nicht "Bernhard" (wenn Bernhard der Anführer ist)
+
+**Aktueller Stand:**
+- ✅ Faction leader ist jetzt eine entity_relation (type: "Anführer")
+- ✅ `leader_name` wird per LEFT JOIN geladen
+- ✅ Suche durchsucht `leader_name` per substring match (`leaderNameLower.includes(searchTerm)`)
+- ❌ **ABER:** Levenshtein-Distanz wird NUR für `faction.name` berechnet, NICHT für `leader_name`
+
+**Was zu tun ist:**
+1. **In `/server/api/factions/index.get.ts`** (Zeile ~229-242):
+   - Levenshtein-Check AUCH für `leader_name` hinzufügen
+   - Aktuell:
+     ```typescript
+     const levDist = levenshtein(term, nameLower)
+     if (levDist <= maxDist) return true
+     ```
+   - Erweitern um:
+     ```typescript
+     const levDist = levenshtein(term, nameLower)
+     if (levDist <= maxDist) return true
+
+     // AUCH für leader_name prüfen!
+     const leaderLevDist = levenshtein(term, leaderNameLower)
+     if (leaderLevDist <= maxDist) return true
+     ```
+2. **Gleiche Änderung** in OR-Filter (Zeile ~262-268) und AND-Filter (Zeile ~292-299)
+
+**Testfall nach Fix:**
+- Faction "Harpers" hat Anführer "Bernhard"
+- Suche nach "Bernard" → sollte "Harpers" finden ✅
+
+**Wo weitermachen:**
+- Datei: `/server/api/factions/index.get.ts`
+- Zeilen: 229-242, 262-268, 292-299 (Simple/OR/AND Filter-Logik)
+
+---
+
 ## Project Overview
 DM Hero is a personal D&D campaign management tool for Dungeon Masters. The main goal is to solve the problem of scattered information across multiple Word documents, making it hard to find NPCs, locations, and connections between entities.
 
@@ -657,6 +697,38 @@ const display = computed(() => {
 ---
 
 ## 📅 Changelog
+
+### 2025-10-30 - Faction Leader as NPC Relation
+
+**🔗 Faction Leader Verknüpfung (Evening):**
+- ✅ **Backend**: Faction leader now stored as entity_relation (type: "Anführer") instead of metadata.leader
+- ✅ **SQL Queries**: All faction queries extended with LEFT JOIN for leader NPC
+  ```sql
+  LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
+  LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id
+  ```
+- ✅ **Search Enhancement**: Faction search now includes linked leader NPC name
+  - Leader name match gets -30 point bonus (high relevance)
+  - All filters (Simple/OR/AND) search through leader_name
+- ✅ **Frontend**: Leader field changed from text input to NPC dropdown (v-select)
+- ✅ **Save Logic**: Automatically manages leader relation on faction save/update
+
+**Why This Is Better:**
+- **Consistency**: Leader is now a real entity relation (like "Mitglieder")
+- **Searchable**: Can find factions by searching for leader NPC name
+- **Type-safe**: Dropdown prevents typos, ensures valid NPC references
+- **Flexible**: Leader can be changed easily, relation is tracked in database
+
+**Example:**
+- Faction "Harpers" has leader NPC "Remallia Haventree"
+- Search for "Remallia" → finds "Harpers" faction ✅
+- Future: Will support fuzzy search ("Remalja" → "Remallia")
+
+**Files Modified:**
+- `/server/api/factions/index.get.ts` - Added leader JOIN to all queries, search logic
+- `/app/pages/factions/index.vue` - UI changed to NPC dropdown, save logic updated
+
+---
 
 ### 2025-10-29 - FTS5 Search Implementation
 

@@ -21,6 +21,7 @@
       v-model="searchQuery"
       :placeholder="$t('common.search')"
       prepend-inner-icon="mdi-magnify"
+      :loading="searching"
       variant="outlined"
       clearable
       class="mb-4"
@@ -74,14 +75,14 @@
             <div v-if="faction.description" class="text-body-2 mb-3">
               {{ truncateText(faction.description, 100) }}
             </div>
-            <div v-if="faction.metadata" class="text-caption">
-              <div v-if="faction.metadata.type" class="mb-1">
+            <div class="text-caption">
+              <div v-if="faction.metadata?.type" class="mb-1">
                 <strong>{{ $t('factions.type') }}:</strong> {{ faction.metadata.type }}
               </div>
-              <div v-if="faction.metadata.leader" class="mb-1">
-                <strong>{{ $t('factions.leader') }}:</strong> {{ faction.metadata.leader }}
+              <div v-if="faction.leader_name" class="mb-1">
+                <strong>{{ $t('factions.leader') }}:</strong> {{ faction.leader_name }}
               </div>
-              <div v-if="faction.metadata.alignment" class="mb-1">
+              <div v-if="faction.metadata?.alignment" class="mb-1">
                 <strong>{{ $t('factions.alignment') }}:</strong> {{ faction.metadata.alignment }}
               </div>
             </div>
@@ -258,10 +259,14 @@
               />
             </v-col>
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="factionForm.metadata.leader"
+              <v-select
+                v-model="factionForm.leaderId"
+                :items="npcs || []"
+                item-title="name"
+                item-value="id"
                 :label="$t('factions.leader')"
                 variant="outlined"
+                clearable
                 :placeholder="$t('factions.leaderPlaceholder')"
               />
             </v-col>
@@ -504,10 +509,14 @@
                 />
               </v-col>
               <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="factionForm.metadata.leader"
+                <v-select
+                  v-model="factionForm.leaderId"
+                  :items="npcs || []"
+                  item-title="name"
+                  item-value="id"
                   :label="$t('factions.leader')"
                   variant="outlined"
+                  clearable
                   :placeholder="$t('factions.leaderPlaceholder')"
                 />
               </v-col>
@@ -588,12 +597,13 @@ interface Faction {
   image_url?: string | null
   metadata: {
     type?: string
-    leader?: string
     alignment?: string
     headquarters?: string
     goals?: string
     notes?: string
   } | null
+  leader_id?: number | null
+  leader_name?: string | null
   created_at: string
   updated_at: string
 }
@@ -629,23 +639,51 @@ onMounted(async () => {
 const factions = computed(() => entitiesStore.factions)
 const pending = computed(() => entitiesStore.factionsLoading)
 
-// Search
+// Search state
 const searchQuery = ref('')
+const searchResults = ref<Faction[]>([])
+const searching = ref(false)
+
+// Debounced search: wait 300ms after user stops typing
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(searchQuery, async (query) => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+
+  if (!query || query.trim().length === 0) {
+    searchResults.value = []
+    return
+  }
+
+  searchTimeout = setTimeout(async () => {
+    if (!activeCampaignId.value) return
+
+    searching.value = true
+    try {
+      const results = await $fetch<Faction[]>('/api/factions', {
+        query: {
+          campaignId: activeCampaignId.value,
+          search: query.trim(),
+        },
+        headers: {
+          'Accept-Language': locale.value,
+        },
+      })
+      searchResults.value = results
+    } catch (error) {
+      console.error('Faction search failed:', error)
+      searchResults.value = []
+    } finally {
+      searching.value = false
+    }
+  }, 300)
+})
+
+// Show search results OR cached factions
 const filteredFactions = computed(() => {
-  if (!factions.value)
-    return []
-
-  if (!searchQuery.value)
-    return factions.value
-
-  const query = searchQuery.value.toLowerCase()
-  return factions.value.filter(faction =>
-    faction.name.toLowerCase().includes(query)
-    || faction.description?.toLowerCase().includes(query)
-    || faction.metadata?.type?.toLowerCase().includes(query)
-    || faction.metadata?.leader?.toLowerCase().includes(query)
-    || faction.metadata?.alignment?.toLowerCase().includes(query),
-  )
+  if (searchQuery.value && searchQuery.value.trim().length > 0) {
+    return searchResults.value
+  }
+  return factions.value || []
 })
 
 // Form state
@@ -702,7 +740,7 @@ const addingLocation = ref(false)
 const locations = computed(() => entitiesStore.locationsForSelect)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const locationRelationTypeSuggestions = computed(() => [
   t('factions.locationTypes.headquarters'),
   t('factions.locationTypes.hideout'),
@@ -725,9 +763,9 @@ const membershipTypeSuggestions = computed(() => [
 const factionForm = ref({
   name: '',
   description: '',
+  leaderId: null as number | null,
   metadata: {
     type: '',
-    leader: '',
     alignment: '',
     headquarters: '',
     goals: '',
@@ -747,9 +785,9 @@ async function editFaction(faction: Faction) {
   factionForm.value = {
     name: faction.name,
     description: faction.description || '',
+    leaderId: faction.leader_id || null,
     metadata: {
       type: faction.metadata?.type || '',
-      leader: faction.metadata?.leader || '',
       alignment: faction.metadata?.alignment || '',
       headquarters: faction.metadata?.headquarters || '',
       goals: faction.metadata?.goals || '',
@@ -776,6 +814,8 @@ async function saveFaction() {
   saving.value = true
 
   try {
+    let factionId: number
+
     if (editingFaction.value) {
       // Update existing faction via store
       await entitiesStore.updateFaction(editingFaction.value.id, {
@@ -783,14 +823,46 @@ async function saveFaction() {
         description: factionForm.value.description || null,
         metadata: factionForm.value.metadata,
       })
+      factionId = editingFaction.value.id
     }
     else {
       // Create new faction via store
-      await entitiesStore.createFaction(activeCampaignId.value, {
+      const newFaction = await entitiesStore.createFaction(activeCampaignId.value, {
         name: factionForm.value.name,
         description: factionForm.value.description || null,
         metadata: factionForm.value.metadata,
       })
+      factionId = newFaction.id
+    }
+
+    // Manage leader relation
+    // Step 1: Delete old "Anführer" relation if exists
+    if (editingFaction.value && editingFaction.value.leader_id) {
+      try {
+        // Find and delete the old leader relation
+        const members = await $fetch<any[]>(`/api/factions/${factionId}/members`)
+        const leaderRelation = members.find(m => m.relation_type === 'Anführer')
+        if (leaderRelation) {
+          await $fetch(`/api/relations/${leaderRelation.id}`, { method: 'DELETE' })
+        }
+      } catch (error) {
+        console.error('Failed to delete old leader relation:', error)
+      }
+    }
+
+    // Step 2: Create new "Anführer" relation if leaderId is set
+    if (factionForm.value.leaderId) {
+      try {
+        await $fetch(`/api/factions/${factionId}/members`, {
+          method: 'POST',
+          body: {
+            npcId: factionForm.value.leaderId,
+            membershipType: 'Anführer',
+          },
+        })
+      } catch (error) {
+        console.error('Failed to create leader relation:', error)
+      }
     }
 
     closeDialog()
@@ -1025,9 +1097,9 @@ function closeDialog() {
   factionForm.value = {
     name: '',
     description: '',
+    leaderId: null,
     metadata: {
       type: '',
-      leader: '',
       alignment: '',
       headquarters: '',
       goals: '',
