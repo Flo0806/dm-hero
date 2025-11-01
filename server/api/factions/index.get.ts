@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
@@ -36,6 +37,7 @@ export default defineEventHandler((event) => {
     fts_score?: number
     leader_id?: number | null
     leader_name?: string | null
+    linked_npc_names?: string | null
   }
 
   interface ScoredFaction extends FactionRow {
@@ -47,7 +49,7 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = searchQuery.trim().toLowerCase()
+    const searchTerm = normalizeText(searchQuery.trim())
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -78,6 +80,7 @@ export default defineEventHandler((event) => {
 
     try {
       // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
+      // Note: Cannot use bm25() with GROUP_CONCAT in same query - incompatible aggregations
       factions = db.prepare(`
         SELECT
           e.id,
@@ -87,18 +90,21 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
-          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
           leader_rel.from_entity_id as leader_id,
-          leader_npc.name as leader_name
+          leader_npc.name as leader_name,
+          GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
         LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
+        LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
+        LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
-        ORDER BY fts_score
+        GROUP BY e.id
+        ORDER BY e.name ASC
         LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as FactionRow[]
 
@@ -116,18 +122,21 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
             leader_rel.from_entity_id as leader_id,
-            leader_npc.name as leader_name
+            leader_npc.name as leader_name,
+            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
+          LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
+          LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
-          ORDER BY fts_score
+          GROUP BY e.id
+          ORDER BY e.name ASC
           LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as FactionRow[]
       }
@@ -147,34 +156,40 @@ export default defineEventHandler((event) => {
             e.created_at,
             e.updated_at,
             leader_rel.from_entity_id as leader_id,
-            leader_npc.name as leader_name
+            leader_npc.name as leader_name,
+            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
           FROM entities e
           LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
+          LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
+          LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
+          GROUP BY e.id
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as FactionRow[]
       }
 
       // Step 2: Apply Levenshtein distance for better ranking
       let scoredFactions = factions.map((faction: FactionRow): ScoredFaction => {
-        const nameLower = faction.name.toLowerCase()
+        const nameLower = normalizeText(faction.name)
 
         // Smart distance calculation
         const exactMatch = nameLower === searchTerm
         const startsWithQuery = nameLower.startsWith(searchTerm)
         const containsQuery = nameLower.includes(searchTerm)
 
-        // Check if search term appears in metadata, description, or leader name (FTS5 match but not in name)
-        const metadataLower = faction.metadata?.toLowerCase() || ''
-        const descriptionLower = (faction.description || '').toLowerCase()
-        const leaderNameLower = (faction.leader_name || '').toLowerCase()
+        // Check if search term appears in metadata, description, leader name, or linked NPCs (FTS5 match but not in name)
+        const metadataLower = normalizeText(faction.metadata || '')
+        const descriptionLower = normalizeText(faction.description || '')
+        const leaderNameLower = normalizeText(faction.leader_name || '')
+        const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
         const isMetadataMatch = metadataLower.includes(searchTerm)
         const isDescriptionMatch = descriptionLower.includes(searchTerm)
         const isLeaderMatch = leaderNameLower.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isLeaderMatch) && !containsQuery
+        const isNpcMatch = linkedNpcNamesLower.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isLeaderMatch || isNpcMatch) && !containsQuery
 
         let levDistance: number
 
@@ -199,6 +214,7 @@ export default defineEventHandler((event) => {
         if (exactMatch) finalScore -= 1000
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
+        if (isNpcMatch) finalScore -= 30 // NPC matches are very good
         if (isLeaderMatch) finalScore -= 30 // Leader name matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
@@ -214,15 +230,16 @@ export default defineEventHandler((event) => {
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches
         scoredFactions = scoredFactions.filter(faction => {
-          const nameLower = faction.name.toLowerCase()
-          const metadataLower = faction.metadata?.toLowerCase() || ''
-          const descriptionLower = (faction.description || '').toLowerCase()
-          const leaderNameLower = (faction.leader_name || '').toLowerCase()
+          const nameLower = normalizeText(faction.name)
+          const metadataLower = normalizeText(faction.metadata || '')
+          const descriptionLower = normalizeText(faction.description || '')
+          const leaderNameLower = normalizeText(faction.leader_name || '')
+          const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
 
           // Check ALL terms
           for (const term of parsedQuery.terms) {
             // Exact/substring match in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term) || linkedNpcNamesLower.includes(term)) {
               return true
             }
 
@@ -247,6 +264,23 @@ export default defineEventHandler((event) => {
                 return true
               }
             }
+
+            // Levenshtein match for linked NPC names (split by comma, then by words)
+            if (linkedNpcNamesLower.length > 0) {
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                // Split each NPC name into words (e.g., "andré müller" → ["andré", "müller"])
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
 
           return false // No term matched
@@ -255,15 +289,16 @@ export default defineEventHandler((event) => {
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredFactions = scoredFactions.filter(faction => {
-          const nameLower = faction.name.toLowerCase()
-          const metadataLower = faction.metadata?.toLowerCase() || ''
-          const descriptionLower = (faction.description || '').toLowerCase()
-          const leaderNameLower = (faction.leader_name || '').toLowerCase()
+          const nameLower = normalizeText(faction.name)
+          const metadataLower = normalizeText(faction.metadata || '')
+          const descriptionLower = normalizeText(faction.description || '')
+          const leaderNameLower = normalizeText(faction.leader_name || '')
+          const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
 
           // Check if at least one term matches
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term) || linkedNpcNamesLower.includes(term)) {
               return true
             }
 
@@ -288,6 +323,22 @@ export default defineEventHandler((event) => {
                 return true // Close enough match
               }
             }
+
+            // Levenshtein match for linked NPC names (split by comma, then by words)
+            if (linkedNpcNamesLower.length > 0) {
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
           return false // No term matched
         })
@@ -295,17 +346,18 @@ export default defineEventHandler((event) => {
       else if (hasAndOperator) {
         // AND query: ALL terms must match
         scoredFactions = scoredFactions.filter(faction => {
-          const nameLower = faction.name.toLowerCase()
-          const metadataLower = faction.metadata?.toLowerCase() || ''
-          const descriptionLower = (faction.description || '').toLowerCase()
-          const leaderNameLower = (faction.leader_name || '').toLowerCase()
+          const nameLower = normalizeText(faction.name)
+          const metadataLower = normalizeText(faction.metadata || '')
+          const descriptionLower = normalizeText(faction.description || '')
+          const leaderNameLower = normalizeText(faction.leader_name || '')
+          const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
 
           // Check if ALL terms match
           for (const term of parsedQuery.terms) {
             let termMatches = false
 
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term)) {
+            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || leaderNameLower.includes(term) || linkedNpcNamesLower.includes(term)) {
               termMatches = true
             }
 
@@ -333,6 +385,27 @@ export default defineEventHandler((event) => {
 
               if (leaderLevDist <= maxDist) {
                 termMatches = true
+              }
+            }
+
+            // Check Levenshtein for linked NPC names (split by comma, then by words)
+            if (!termMatches && linkedNpcNamesLower.length > 0) {
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              for (const npcName of npcNames) {
+                if (npcName.length === 0) continue
+                // Split each NPC name into words (e.g., "andré müller" → ["andré", "müller"])
+                const npcWords = npcName.split(/\s+/)
+                for (const word of npcWords) {
+                  if (word.length === 0) continue
+                  const termLength = term.length
+                  const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+                  const npcLevDist = levenshtein(term, word)
+                  if (npcLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
               }
             }
 
@@ -372,13 +445,17 @@ export default defineEventHandler((event) => {
         e.created_at,
         e.updated_at,
         leader_rel.from_entity_id as leader_id,
-        leader_npc.name as leader_name
+        leader_npc.name as leader_name,
+        GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
       FROM entities e
       LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
       LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
+      LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
+      LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
+      GROUP BY e.id
       ORDER BY e.name ASC
     `).all(entityType.id, campaignId) as FactionRow[]
   }

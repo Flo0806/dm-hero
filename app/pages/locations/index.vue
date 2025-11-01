@@ -183,6 +183,7 @@
     <v-dialog
       v-model="showCreateDialog"
       max-width="800"
+      :persistent="saving || uploadingImage || generatingImage"
     >
       <v-card>
         <v-card-title>
@@ -197,10 +198,24 @@
               Bilder
               <v-spacer />
               <v-btn
+                icon="mdi-creation"
+                color="primary"
+                size="small"
+                class="mr-2"
+                :disabled="!locationForm.name || !hasApiKey || generatingImage || uploadingImage"
+                :loading="generatingImage"
+                @click="generateImage"
+              >
+                <v-icon>mdi-creation</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ $t('locations.generateImage') }}
+                </v-tooltip>
+              </v-btn>
+              <v-btn
                 icon="mdi-plus"
                 color="primary"
                 size="small"
-                :disabled="uploadingImage"
+                :disabled="uploadingImage || generatingImage"
                 @click="triggerImageUpload"
               >
                 <v-icon>mdi-plus</v-icon>
@@ -226,16 +241,21 @@
                   class="mb-3"
                 >
                   <template #prepend>
-                    <div class="position-relative image-container">
-                      <v-avatar size="80" rounded="lg">
-                        <v-img :src="`/pictures/${image.image_url}`" cover />
+                    <div class="position-relative image-container mr-3">
+                      <v-avatar
+                        size="80"
+                        rounded="lg"
+                        style="cursor: pointer;"
+                        @click="openImagePreview(`/uploads/${image.image_url}`, editingLocation?.name || 'Location Image')"
+                      >
+                        <v-img :src="`/uploads/${image.image_url}`" cover />
                       </v-avatar>
                       <v-btn
                         icon="mdi-download"
                         size="x-small"
                         variant="tonal"
                         class="image-download-btn"
-                        @click.stop="downloadImage(`/pictures/${image.image_url}`, editingLocation?.name || 'image')"
+                        @click.stop="downloadImage(`/uploads/${image.image_url}`, editingLocation?.name || 'image')"
                       />
                     </div>
                   </template>
@@ -345,13 +365,14 @@
           <v-spacer />
           <v-btn
             variant="text"
+            :disabled="saving || uploadingImage || generatingImage"
             @click="closeDialog"
           >
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!locationForm.name"
+            :disabled="!locationForm.name || uploadingImage || generatingImage"
             :loading="saving"
             @click="saveLocation"
           >
@@ -561,6 +582,14 @@
       @confirm="confirmDelete"
       @cancel="showDeleteDialog = false"
     />
+
+    <!-- Image Preview Dialog -->
+    <ImagePreviewDialog
+      v-model="showImagePreview"
+      :image-url="previewImageUrl"
+      :title="previewImageTitle"
+      :download-file-name="previewImageTitle"
+    />
   </v-container>
 </template>
 
@@ -643,6 +672,15 @@ onMounted(async () => {
 
   // Initialize from query params
   initializeFromQuery()
+
+  // Check API key
+  try {
+    const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
+    hasApiKey.value = response.hasKey
+  }
+  catch {
+    hasApiKey.value = false
+  }
 })
 
 // Watch for route changes (same-page navigation)
@@ -765,6 +803,11 @@ const deletingLocation = ref<Location | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
 
+// Image preview state
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+
 const locationForm = ref({
   name: '',
   description: '',
@@ -778,7 +821,9 @@ const locationForm = ref({
 // Image gallery state
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadingImage = ref(false)
+const generatingImage = ref(false)
 const loadingImages = ref(false)
+const hasApiKey = ref(false)
 const locationImages = ref<Array<{
   id: number
   entity_id: number
@@ -859,6 +904,81 @@ async function handleImageUpload(event: Event) {
   }
 }
 
+// AI Image Generation
+async function generateImage() {
+  if (!editingLocation.value || !locationForm.value.name) return
+
+  generatingImage.value = true
+
+  try {
+    // Build detailed prompt from all available location data
+    const details = []
+
+    // Type (tavern, dungeon, forest, etc.)
+    if (locationForm.value.metadata.type) {
+      details.push(locationForm.value.metadata.type)
+    }
+
+    // Region (adds geographical context)
+    if (locationForm.value.metadata.region) {
+      details.push(`in ${locationForm.value.metadata.region}`)
+    }
+
+    // Name (required)
+    details.push(locationForm.value.name)
+
+    // Description (free-form details)
+    if (locationForm.value.description) {
+      details.push(locationForm.value.description)
+    }
+
+    // Notes (additional context)
+    if (locationForm.value.metadata.notes) {
+      details.push(locationForm.value.metadata.notes)
+    }
+
+    const prompt = details.filter(d => d).join(', ')
+
+    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
+      method: 'POST',
+      body: {
+        prompt,
+        entityName: locationForm.value.name,
+        entityType: 'Location',
+        style: 'fantasy-art',
+      },
+    })
+
+    if (result.imageUrl && editingLocation.value) {
+      // Add the generated image directly to the gallery (no re-upload needed)
+      const filename = result.imageUrl.replace('/uploads/', '')
+
+      await $fetch(`/api/entities/${editingLocation.value.id}/add-generated-image`, {
+        method: 'POST',
+        body: {
+          imageUrl: filename,
+        },
+      })
+
+      // Reload images
+      await loadLocationImages()
+
+      // Refresh locations to update the list
+      if (activeCampaignId.value) {
+        await entitiesStore.fetchLocations(activeCampaignId.value)
+      }
+    }
+  }
+  catch (error: unknown) {
+    console.error('[Location] Failed to generate image:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
+    alert(errorMessage)
+  }
+  finally {
+    generatingImage.value = false
+  }
+}
+
 // Delete image from gallery
 async function deleteImageFromGallery(imageId: number) {
   try {
@@ -933,6 +1053,13 @@ async function updateImageCaption(imageId: number, caption: string) {
   catch (error) {
     console.error('Failed to update caption:', error)
   }
+}
+
+// Open image preview dialog
+function openImagePreview(imageUrl: string, title: string) {
+  previewImageUrl.value = imageUrl
+  previewImageTitle.value = title
+  showImagePreview.value = true
 }
 
 // Connected NPCs

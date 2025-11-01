@@ -1188,14 +1188,37 @@ async function generateImage() {
   generatingImage.value = true
 
   try {
-    // Build prompt from item data
-    let prompt = itemForm.value.name
-    if (itemForm.value.description) {
-      prompt += `, ${itemForm.value.description}`
-    }
+    // Build detailed prompt from all available item data
+    const details = []
+
+    // Type (most important - weapon, armor, potion, etc.)
     if (itemForm.value.metadata.type) {
-      prompt = `${itemForm.value.metadata.type}: ${prompt}`
+      details.push(itemForm.value.metadata.type)
     }
+
+    // Rarity (affects visual quality and details)
+    if (itemForm.value.metadata.rarity) {
+      const rarityDescriptions: Record<string, string> = {
+        'common': 'simple',
+        'uncommon': 'well-crafted',
+        'rare': 'ornate and detailed',
+        'very_rare': 'exquisitely decorated',
+        'legendary': 'legendary artifact with glowing runes',
+        'artifact': 'ancient powerful artifact radiating magic',
+      }
+      const rarityDesc = rarityDescriptions[itemForm.value.metadata.rarity] || itemForm.value.metadata.rarity
+      details.push(rarityDesc)
+    }
+
+    // Name (required)
+    details.push(itemForm.value.name)
+
+    // Description (free-form details)
+    if (itemForm.value.description) {
+      details.push(itemForm.value.description)
+    }
+
+    const prompt = details.filter(d => d).join(', ')
 
     const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
       method: 'POST',

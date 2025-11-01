@@ -103,14 +103,14 @@
                 size="80"
                 rounded="lg"
               >
-                <v-img :src="`/pictures/${npc.image_url}`" cover />
+                <v-img :src="`/uploads/${npc.image_url}`" cover />
               </v-avatar>
               <v-btn
                 icon="mdi-download"
                 size="x-small"
                 variant="tonal"
                 class="image-download-btn"
-                @click.stop="downloadImage(`/pictures/${npc.image_url}`, npc.name)"
+                @click.stop="downloadImage(`/uploads/${npc.image_url}`, npc.name)"
               />
             </div>
             <div v-if="npc.metadata?.type" class="mb-2">
@@ -248,72 +248,104 @@
               <v-card variant="outlined" class="mb-4">
                 <v-card-text>
                   <div class="d-flex align-center gap-4">
-                    <div class="position-relative image-container">
+                    <!-- Image Preview -->
+                    <div style="position: relative;">
                       <v-avatar
-                        size="120"
+                        size="160"
                         rounded="lg"
                         :color="editingNpc?.image_url ? undefined : 'grey-lighten-2'"
+                        :style="editingNpc?.image_url ? 'cursor: pointer;' : ''"
+                        @click="editingNpc?.image_url ? openImagePreview(`/uploads/${editingNpc.image_url}`, npcForm.name) : null"
                       >
                         <v-img
-                          v-if="editingNpc?.image_url && !uploadingImage"
-                          :src="`/pictures/${editingNpc.image_url}`"
+                          v-if="editingNpc?.image_url"
+                          :src="`/uploads/${editingNpc.image_url}`"
                           cover
+                          :class="{ 'blur-image': uploadingImage || generatingImage }"
                         />
-                        <v-icon v-else-if="!uploadingImage" icon="mdi-account" size="64" color="grey" />
+                        <v-icon v-else-if="!uploadingImage && !generatingImage" icon="mdi-account" size="80" color="grey" />
                       </v-avatar>
-                      <v-btn
-                        v-if="editingNpc?.image_url && !uploadingImage"
-                        icon="mdi-download"
-                        size="small"
-                        variant="tonal"
-                        class="image-download-btn"
-                        @click="downloadImage(`/pictures/${editingNpc.image_url}`, editingNpc.name)"
-                      />
                       <v-progress-circular
-                        v-if="uploadingImage"
+                        v-if="uploadingImage || generatingImage"
                         indeterminate
                         color="primary"
-                        size="120"
-                        width="8"
-                        style="position: absolute; top: 0; left: 0;"
+                        size="64"
+                        width="6"
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
                       />
                     </div>
-                    <div class="flex-grow-1">
-                      <div class="d-flex gap-2">
-                        <v-btn
-                          icon="mdi-camera"
-                          color="primary"
-                          size="large"
-                          :disabled="uploadingImage || deletingImage"
-                          @click="triggerImageUpload"
-                        >
-                          <v-icon>mdi-camera</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ editingNpc?.image_url ? $t('npcs.changeImage') : $t('npcs.uploadImage') }}
-                          </v-tooltip>
-                        </v-btn>
-                        <input
-                          ref="fileInputRef"
-                          type="file"
-                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                          style="display: none"
-                          @change="handleImageUpload"
-                        >
-                        <v-btn
-                          v-if="editingNpc?.image_url"
-                          icon="mdi-delete"
-                          color="error"
-                          variant="tonal"
-                          size="large"
-                          :loading="deletingImage"
-                          :disabled="uploadingImage"
-                          @click="deleteImage"
-                        >
-                          <v-icon>mdi-delete</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ $t('npcs.deleteImage') }}
-                          </v-tooltip>
-                        </v-btn>
+
+                    <!-- Image Actions -->
+                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px;">
+                      <!-- Upload Button -->
+                      <v-btn
+                        prepend-icon="mdi-camera"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || deletingImage || generatingImage"
+                        @click="triggerImageUpload"
+                      >
+                        {{ editingNpc?.image_url ? $t('npcs.changeImage') : $t('npcs.uploadImage') }}
+                      </v-btn>
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                        style="display: none"
+                        @change="handleImageUpload"
+                      >
+
+                      <!-- AI Generate Button -->
+                      <v-btn
+                        prepend-icon="mdi-creation"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mb-2"
+                        :loading="generatingImage"
+                        :disabled="generateButtonDisabled"
+                        @click="generateImage"
+                      >
+                        {{ $t('npcs.generateImage') }}
+                      </v-btn>
+
+                      <!-- Download Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingNpc?.image_url"
+                        prepend-icon="mdi-download"
+                        variant="outlined"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="downloadImage(`/uploads/${editingNpc.image_url}`, npcForm.name)"
+                      >
+                        Download
+                      </v-btn>
+
+                      <!-- Delete Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingNpc?.image_url"
+                        prepend-icon="mdi-delete"
+                        color="error"
+                        variant="outlined"
+                        block
+                        :loading="deletingImage"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="deleteImage"
+                      >
+                        {{ $t('npcs.deleteImage') }}
+                      </v-btn>
+
+                      <!-- AI Hint -->
+                      <div v-if="!hasApiKey" class="text-caption text-medium-emphasis mt-3">
+                        <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                        KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
+                      </div>
+                      <div v-else-if="!npcForm.name" class="text-caption text-medium-emphasis mt-3">
+                        <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                        KI-Generierung: Bitte zuerst einen Namen eingeben
                       </div>
                     </div>
                   </div>
@@ -330,7 +362,7 @@
                 <template #append-inner>
                   <v-btn
                     :loading="generatingName"
-                    icon="mdi-sparkles"
+                    icon="mdi-auto-fix"
                     variant="text"
                     size="small"
                     color="primary"
@@ -915,7 +947,18 @@
               :rules="[v => !!v || $t('npcs.nameRequired')]"
               variant="outlined"
               class="mb-4"
-            />
+            >
+              <template #append-inner>
+                <v-btn
+                  :loading="generatingName"
+                  icon="mdi-auto-fix"
+                  variant="text"
+                  size="small"
+                  color="primary"
+                  @click="generateName"
+                />
+              </template>
+            </v-text-field>
 
             <v-textarea
               v-model="npcForm.description"
@@ -978,13 +1021,14 @@
           <v-spacer />
           <v-btn
             variant="text"
+            :disabled="saving || uploadingImage || deletingImage || generatingImage"
             @click="closeDialog"
           >
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!npcForm.name"
+            :disabled="!npcForm.name || uploadingImage || deletingImage || generatingImage"
             :loading="saving"
             @click="saveNpc"
           >
@@ -1140,6 +1184,13 @@
     </v-dialog>
 
     <!-- Delete Confirmation -->
+    <ImagePreviewDialog
+      v-model="showImagePreview"
+      :image-url="previewImageUrl"
+      :title="previewImageTitle"
+      :download-file-name="previewImageTitle"
+    />
+
     <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
       :title="$t('npcs.deleteTitle')"
@@ -1160,6 +1211,17 @@ const router = useRouter()
 
 // Use image download composable
 const { downloadImage } = useImageDownload()
+
+// Image Preview
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+
+function openImagePreview(imageUrl: string, title: string) {
+  previewImageUrl.value = imageUrl
+  previewImageTitle.value = title
+  showImagePreview.value = true
+}
 
 // Auto-imported stores
 const entitiesStore = useEntitiesStore()
@@ -1409,10 +1471,36 @@ const npcForm = ref({
   },
 })
 
+// Note: Unsaved changes tracking removed for simplicity
+// User can generate images anytime as long as they have a name and API key
+
+// Check if API key is configured
+const hasApiKey = ref(false)
+
+// Check API key on mount
+onMounted(async () => {
+  try {
+    const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
+    hasApiKey.value = response.hasKey
+    console.log('[NPC] API Key check result:', response.hasKey)
+  }
+  catch (error) {
+    console.error('[NPC] API Key check failed:', error)
+    hasApiKey.value = false
+  }
+})
+
+// Computed for generate button disabled state
+const generateButtonDisabled = computed(() => {
+  const isDisabled = uploadingImage.value || deletingImage.value || !npcForm.value.name || !hasApiKey.value
+  return isDisabled
+})
+
 // Image upload state
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadingImage = ref(false)
 const deletingImage = ref(false)
+const generatingImage = ref(false)
 
 // Trigger native file input
 function triggerImageUpload() {
@@ -1458,6 +1546,109 @@ async function handleImageUpload(event: Event) {
 }
 
 // Delete image function
+// AI Image Generation
+async function generateImage() {
+  if (!editingNpc.value || !npcForm.value.name) return
+
+  generatingImage.value = true
+
+  try {
+    // Build detailed prompt from all available NPC data
+    const details = []
+
+    // Race and Class (most important for visual appearance)
+    if (npcForm.value.metadata.race) {
+      details.push(npcForm.value.metadata.race)
+    }
+    if (npcForm.value.metadata.class) {
+      details.push(npcForm.value.metadata.class)
+    }
+
+    // Name (required)
+    details.push(npcForm.value.name)
+
+    // Description (free-form details)
+    if (npcForm.value.description) {
+      details.push(npcForm.value.description)
+    }
+
+    // Type (ally, enemy, neutral, etc.) - adds context
+    if (npcForm.value.metadata.type) {
+      const typeTranslations: Record<string, string> = {
+        'ally': 'friendly ally',
+        'enemy': 'menacing enemy',
+        'neutral': 'neutral character',
+        'questgiver': 'wise quest giver',
+        'merchant': 'merchant',
+        'guard': 'guard',
+        'noble': 'noble',
+        'commoner': 'commoner',
+        'villain': 'villainous',
+        'mentor': 'wise mentor',
+        'companion': 'loyal companion',
+        'informant': 'secretive informant',
+      }
+      const typeDesc = typeTranslations[npcForm.value.metadata.type] || npcForm.value.metadata.type
+      details.push(typeDesc)
+    }
+
+    // Status (alive, undead, etc.) - affects appearance
+    if (npcForm.value.metadata.status) {
+      const statusTranslations: Record<string, string> = {
+        'alive': '',
+        'dead': '',
+        'missing': '',
+        'imprisoned': 'wearing chains',
+        'unknown': '',
+        'undead': 'undead, pale skin, glowing eyes',
+      }
+      const statusDesc = statusTranslations[npcForm.value.metadata.status]
+      if (statusDesc) {
+        details.push(statusDesc)
+      }
+    }
+
+    const prompt = details.filter(d => d).join(', ')
+
+    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
+      method: 'POST',
+      body: {
+        prompt,
+        entityName: npcForm.value.name,
+        entityType: 'NPC',
+        style: 'fantasy-art',
+      },
+    })
+
+    if (result.imageUrl && editingNpc.value) {
+      // Update the NPC with the generated image
+      const response = await $fetch<{ success: boolean }>(`/api/entities/${editingNpc.value.id}/set-image`, {
+        method: 'POST',
+        body: {
+          imageUrl: result.imageUrl.replace('/uploads/', ''), // Remove /uploads/ prefix
+        },
+      })
+
+      if (response.success) {
+        // Update local NPC
+        editingNpc.value.image_url = result.imageUrl.replace('/uploads/', '')
+        // Refresh NPCs to update the list
+        if (activeCampaignId.value) {
+          await entitiesStore.fetchNPCs(activeCampaignId.value)
+        }
+      }
+    }
+  }
+  catch (error: unknown) {
+    console.error('[NPC] Failed to generate image:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
+    alert(errorMessage)
+  }
+  finally {
+    generatingImage.value = false
+  }
+}
+
 async function deleteImage() {
   if (!editingNpc.value?.image_url)
     return
@@ -2044,8 +2235,8 @@ async function editNpc(npc: NPC) {
       location: npc.metadata?.location || '',
       faction: npc.metadata?.faction || '',
       relationship: npc.metadata?.relationship || '',
-      type: npc.metadata?.type,
-      status: npc.metadata?.status,
+      type: npc.metadata?.type || undefined,
+      status: npc.metadata?.status || undefined,
     },
   }
 
@@ -2314,6 +2505,13 @@ function closeDialog() {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Blur image during upload/generation */
+.blur-image {
+  filter: blur(8px);
+  opacity: 0.6;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
 /* Highlighted card animation */

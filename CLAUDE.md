@@ -1010,6 +1010,310 @@ if (leaderNameLower.length > 0) {
 
 ---
 
+### 2025-11-01 - AI Image Generation for Locations & Factions
+
+**🎨 DALL-E 3 Integration mit Entity-spezifischen Prompts:**
+
+Die AI-Bildgenerierung nutzt einen **zweistufigen Prozess**:
+1. **GPT-4o-mini** optimiert den User-Prompt für DALL-E
+2. **DALL-E 3** generiert das Bild basierend auf optimiertem Prompt
+
+**Backend-Architektur (`/server/api/ai/generate-image.post.ts`):**
+
+```typescript
+// Entity-spezifische System-Prompts für GPT-4o-mini
+if (entityType === 'NPC') {
+  // → Character portraits, waist-up, personality visible
+  systemPrompt = "...fantasy character portraits..."
+}
+else if (entityType === 'Location') {
+  // → Environment art, establishing shots, atmospheric
+  systemPrompt = "...fantasy location and environment art..."
+}
+else if (entityType === 'Faction') {
+  // → Heraldic symbols, emblems, guild crests
+  systemPrompt = "...heraldic symbols and faction logos..."
+}
+else if (entityType === 'Item') {
+  // → Isolated object renders, product photography
+  systemPrompt = "...clean, isolated object renders..."
+}
+
+// Schritt 1: GPT-4o-mini optimiert den Prompt
+const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  model: 'gpt-4o-mini',  // Günstiger als gpt-4
+  messages: [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: objectDescription }
+  ]
+})
+
+// Schritt 2: DALL-E 3 generiert Bild
+const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+  model: 'dall-e-3',
+  prompt: enhancedPrompt,
+  size: '1024x1024',
+  quality: 'standard',
+  style: 'natural'  // Minimiert kreatives Umschreiben
+})
+```
+
+**WICHTIG: Endpoint-Unterschied beim Speichern:**
+
+❌ **FALSCH** (führt zu Timestamp-Prefix):
+```typescript
+// Problem: /upload-image erwartet FormData mit File
+await $fetch(`/api/entities/${id}/upload-image`, {
+  method: 'POST',
+  body: { imageUrl: filename }  // ← 400 Error!
+})
+// Resultat: 1762022415398-uuid.png (mit Timestamp!)
+```
+
+✅ **RICHTIG** (nutzt neuen Endpoint):
+```typescript
+// Lösung: /add-generated-image nimmt String-Pfad
+await $fetch(`/api/entities/${id}/add-generated-image`, {
+  method: 'POST',
+  body: { imageUrl: filename }  // ← String ohne /uploads/
+})
+// Resultat: uuid.png (ohne Timestamp!)
+```
+
+**Endpoint-Implementierung (`/server/api/entities/[id]/add-generated-image.post.ts`):**
+
+```typescript
+export default defineEventHandler(async (event) => {
+  const entityId = getRouterParam(event, 'id')
+  const body = await readBody<{ imageUrl: string }>(event)
+
+  const db = getDb()
+
+  // Zähle existierende Bilder
+  const count = db.prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
+    .get(Number(entityId)) as { count: number }
+
+  // Füge Bild direkt ein (KEIN Upload!)
+  db.prepare(`
+    INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
+    VALUES (?, ?, ?, ?)
+  `).run(
+    Number(entityId),
+    body.imageUrl,  // Nur Filename, kein /uploads/
+    count.count === 0 ? 1 : 0,  // Erstes Bild = Primary
+    count.count
+  )
+
+  // Update entity.image_url wenn erstes Bild
+  if (count.count === 0) {
+    db.prepare('UPDATE entities SET image_url = ? WHERE id = ?')
+      .run(body.imageUrl, Number(entityId))
+  }
+})
+```
+
+**Frontend Button-Layout Pattern (NPCs, Locations, Factions, Items):**
+
+```vue
+<div class="d-flex align-start gap-4">
+  <!-- Avatar Preview (links) -->
+  <div class="position-relative" style="min-width: 120px;">
+    <v-avatar
+      size="120"
+      rounded="lg"
+      style="cursor: pointer;"
+      @click="openImagePreview(...)"
+    >
+      <v-img :src="`/uploads/${entity.image_url}`" />
+    </v-avatar>
+    <v-progress-circular
+      v-if="uploadingImage || generatingImage"
+      indeterminate
+      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
+    />
+  </div>
+
+  <!-- Action Buttons (rechts) -->
+  <div style="max-width: 280px; margin-left: 16px;">
+    <!-- Upload Button -->
+    <v-btn
+      prepend-icon="mdi-camera"
+      variant="tonal"
+      block
+      class="mb-2"
+      :disabled="uploadingImage || deletingImage || generatingImage"
+      @click="triggerImageUpload"
+    >
+      {{ $t('entity.uploadImage') }}
+    </v-btn>
+
+    <!-- AI Generate Button -->
+    <v-btn
+      prepend-icon="mdi-creation"
+      variant="tonal"
+      block
+      class="mb-2"
+      :loading="generatingImage"
+      :disabled="generateButtonDisabled"
+      @click="generateImage"
+    >
+      {{ $t('entity.generateImage') }}
+    </v-btn>
+
+    <!-- Download Button (nur wenn Bild existiert) -->
+    <v-btn
+      v-if="entity.image_url"
+      prepend-icon="mdi-download"
+      variant="outlined"
+      block
+      class="mb-2"
+      :disabled="uploadingImage || generatingImage"
+      @click="downloadImage(...)"
+    >
+      Download
+    </v-btn>
+
+    <!-- Delete Button (nur wenn Bild existiert) -->
+    <v-btn
+      v-if="entity.image_url"
+      prepend-icon="mdi-delete"
+      color="error"
+      variant="outlined"
+      block
+      :loading="deletingImage"
+      :disabled="uploadingImage || generatingImage"
+      @click="deleteImage"
+    >
+      {{ $t('entity.deleteImage') }}
+    </v-btn>
+
+    <!-- AI Hint (nur wenn kein API Key) -->
+    <div v-if="!hasApiKey" class="text-caption text-medium-emphasis mt-3">
+      <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+      KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
+    </div>
+  </div>
+</div>
+```
+
+**Computed Property für Button-Disabled State:**
+
+```typescript
+const generateButtonDisabled = computed(() => {
+  return uploadingImage.value
+    || deletingImage.value
+    || !entityForm.value.name  // Name ist Pflichtfeld
+    || !hasApiKey.value
+})
+```
+
+**Dialog Persistence während Operations:**
+
+```vue
+<v-dialog
+  v-model="showCreateDialog"
+  max-width="800"
+  :persistent="saving || uploadingImage || generatingImage"
+>
+  <!-- Dialog kann nicht geschlossen werden während Upload/Generation läuft -->
+</v-dialog>
+```
+
+**Detaillierte Prompt-Generierung (Beispiel Factions):**
+
+```typescript
+async function generateImage() {
+  const details = []
+
+  // Type (guild, government, criminal, etc.)
+  if (factionForm.value.metadata.type) {
+    details.push(factionForm.value.metadata.type)
+  }
+
+  // Name (Pflichtfeld)
+  details.push(factionForm.value.name)
+
+  // Description
+  if (factionForm.value.description) {
+    details.push(factionForm.value.description)
+  }
+
+  // Goals (was will die Fraktion?)
+  if (factionForm.value.metadata.goals) {
+    details.push(factionForm.value.metadata.goals)
+  }
+
+  // Alignment (lawful, chaotic, etc.)
+  if (factionForm.value.metadata.alignment) {
+    details.push(factionForm.value.metadata.alignment)
+  }
+
+  // Notes (zusätzlicher Kontext)
+  if (factionForm.value.metadata.notes) {
+    details.push(factionForm.value.metadata.notes)
+  }
+
+  const prompt = details.filter(d => d).join(', ')
+
+  // API Call
+  const result = await $fetch('/api/ai/generate-image', {
+    method: 'POST',
+    body: {
+      prompt,
+      entityName: factionForm.value.name,
+      entityType: 'Faction',
+      style: 'fantasy-art'
+    }
+  })
+
+  // Speichern mit korrektem Endpoint
+  await $fetch(`/api/entities/${editingFaction.value.id}/add-generated-image`, {
+    method: 'POST',
+    body: { imageUrl: result.imageUrl.replace('/uploads/', '') }
+  })
+}
+```
+
+**Kosten-Beispiel (OpenAI Pricing):**
+- GPT-4o-mini Prompt-Optimierung: ~$0.0002 pro Bild
+- DALL-E 3 (1024x1024, standard): $0.040 pro Bild
+- **Gesamt: ~$0.04 pro generiertes Bild**
+
+**Wichtige Lessons Learned:**
+
+1. **Endpoint-Unterschied beachten:**
+   - `/upload-image` = FormData Upload → Timestamp-Prefix
+   - `/add-generated-image` = String-Pfad → Kein Timestamp
+
+2. **Button-Layout Konsistenz:**
+   - Block-Buttons (volle Breite) statt Icon-Buttons
+   - Avatar links, Buttons rechts
+   - Progress-Indicator zentriert über Avatar
+
+3. **Entity-spezifische Prompts:**
+   - NPCs → Character Portraits
+   - Locations → Environment Art
+   - Factions → Heraldic Emblems
+   - Items → Object Renders
+
+4. **Dialog Persistence:**
+   - `:persistent` verhindert Schließen während Operations
+   - Alle Buttons disabled während Upload/Generation
+
+5. **API Key Check:**
+   - Prüfung in `onMounted` via `/api/settings/check-api-key`
+   - Hint anzeigen wenn kein Key vorhanden
+
+**Files Implemented:**
+- ✅ `/server/api/ai/generate-image.post.ts` - Location & Faction prompts
+- ✅ `/server/api/entities/[id]/add-generated-image.post.ts` - Neuer Endpoint
+- ✅ `/app/pages/locations/index.vue` - Vollständige Implementation
+- ✅ `/app/pages/factions/index.vue` - Vollständige Implementation
+- ✅ `/app/pages/npcs/index.vue` - Bereits existierend (Referenz)
+- ✅ `/app/pages/items/index.vue` - Bereits existierend (Referenz)
+
+---
+
 ### 2025-10-29 - FTS5 Search Implementation
 
 **🔍 Search System (Morning):**

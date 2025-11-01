@@ -42,7 +42,7 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   try {
     apiKey = decrypt(setting.value)
   }
-  catch (error) {
+  catch  {
     throw createError({
       statusCode: 500,
       message: 'Failed to decrypt API key',
@@ -66,18 +66,77 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
 
   // Step 1: Use GPT-4 to optimize the prompt for DALL-E
   console.log('[AI] Optimizing prompt with GPT-4...')
-  const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini', // Cheaper and faster than gpt-4
-      messages: [
-        {
-          role: 'system',
-          content: `You are a DALL-E 3 prompt expert specializing in clean, isolated object renders.
+
+  // Choose system prompt based on entity type
+  const entityType = body.entityType || 'Item'
+  let systemPrompt: string
+
+  if (entityType === 'NPC') {
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy character portraits.
+
+YOUR GOAL: Generate prompts that produce detailed character portraits - full body or waist-up shots with personality and atmosphere.
+
+CRITICAL RULES:
+1. Describe the character's appearance (race, age, clothing, equipment, facial features, posture)
+2. Art style: ${styleMap[style]}
+3. Include environment hints (tavern, forest clearing, castle hall) but keep background slightly blurred
+4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
+5. Keep under 100 words
+6. Emphasize: character portrait, personality visible, atmospheric lighting
+7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "profile picture"
+8. Think: fantasy art character commission, D&D character portrait
+
+EXAMPLE:
+Bad: "An elf warrior character icon with no frame"
+Good: "A wise elven ranger with long silver hair and weathered leather armor, holding a wooden longbow, standing in a misty forest clearing, determined expression, warm afternoon light filtering through trees, waist-up portrait"
+
+Output ONLY the optimized prompt.`
+  }
+  else if (entityType === 'Location') {
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy location and environment art.
+
+YOUR GOAL: Generate prompts that produce immersive fantasy locations - landscapes, buildings, interiors with rich atmosphere.
+
+CRITICAL RULES:
+1. Describe the location's key features (architecture, terrain, natural elements, mood)
+2. Art style: ${styleMap[style]}
+3. Include atmospheric details (weather, lighting, time of day, ambient effects)
+4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
+5. Keep under 100 words
+6. Emphasize: establishing shot, cinematic composition, depth and scale
+7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "map marker"
+8. Think: fantasy concept art, environment matte painting, D&D setting illustration
+
+EXAMPLE:
+Bad: "A tavern location icon with no frame"
+Good: "Cozy medieval tavern interior, warm firelight casting dancing shadows on wooden beams, stone fireplace with crackling fire, round tables with adventurers, barrels and bottles on shelves, comfortable atmosphere, golden hour light streaming through small windows"
+
+Output ONLY the optimized prompt.`
+  }
+  else if (entityType === 'Faction') {
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in heraldic symbols, emblems, and faction logos.
+
+YOUR GOAL: Generate prompts that produce iconic faction symbols - crests, emblems, banners, or logos with strong visual identity.
+
+CRITICAL RULES:
+1. Describe the symbol/emblem design (central icon, surrounding elements, colors, symbolism)
+2. Art style: ${styleMap[style]}
+3. Include heraldic elements (shields, banners, scrolls) but keep focus on the symbol itself
+4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
+5. Keep under 100 words
+6. Emphasize: clean heraldic design, symbolic representation, faction identity
+7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "label", "game asset", "profile picture"
+8. Think: medieval heraldry, guild emblem, fantasy faction crest
+
+EXAMPLE:
+Bad: "A guild icon with no frame or text"
+Good: "Heraldic emblem featuring crossed golden swords behind a silver shield, dark blue and gold color scheme, laurel wreath border, majestic and noble appearance, fantasy guild crest, detailed metalwork"
+
+Output ONLY the optimized prompt.`
+  }
+  else {
+    // For Items, etc. - keep the object-focused prompt
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in clean, isolated object renders.
 
 YOUR GOAL: Generate prompts that produce ONLY the object itself - no frames, no text, no UI elements, no decorations.
 
@@ -95,7 +154,21 @@ EXAMPLE:
 Bad: "A sword with no text or frame, game inventory icon style"
 Good: "An ornate longsword with silver crossguard and leather-wrapped grip, centered on neutral grey background, studio lighting, detailed metalwork visible"
 
-Output ONLY the optimized prompt.`,
+Output ONLY the optimized prompt.`
+  }
+
+  const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini', // Cheaper and faster than gpt-4
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
         },
         {
           role: 'user',

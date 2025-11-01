@@ -93,15 +93,17 @@
               <v-avatar
                 size="80"
                 rounded="lg"
+                style="cursor: pointer;"
+                @click.stop="openImagePreview(`/uploads/${faction.image_url}`, faction.name)"
               >
-                <v-img :src="`/pictures/${faction.image_url}`" cover />
+                <v-img :src="`/uploads/${faction.image_url}`" cover />
               </v-avatar>
               <v-btn
                 icon="mdi-download"
                 size="x-small"
                 variant="tonal"
                 class="image-download-btn"
-                @click.stop="downloadImage(`/pictures/${faction.image_url}`, faction.name)"
+                @click.stop="downloadImage(`/uploads/${faction.image_url}`, faction.name)"
               />
             </div>
             <div v-if="faction.description" class="text-body-2 mb-3">
@@ -174,6 +176,7 @@
     <v-dialog
       v-model="showCreateDialog"
       max-width="800"
+      :persistent="saving || uploadingImage || generatingImage"
     >
       <v-card>
         <v-card-title>
@@ -208,73 +211,101 @@
               <!-- Image Upload Section -->
               <v-card variant="outlined" class="mb-4">
                 <v-card-text>
-                  <div class="d-flex align-center gap-4">
-                    <div class="position-relative image-container">
+                  <div class="d-flex align-start gap-4">
+                    <!-- Image Preview -->
+                    <div style="position: relative;">
                       <v-avatar
-                        size="120"
+                        size="160"
                         rounded="lg"
                         :color="editingFaction?.image_url ? undefined : 'grey-lighten-2'"
+                        :style="editingFaction?.image_url ? 'cursor: pointer;' : ''"
+                        @click="editingFaction?.image_url ? openImagePreview(`/uploads/${editingFaction.image_url}`, factionForm.name) : null"
                       >
                         <v-img
-                          v-if="editingFaction?.image_url && !uploadingImage"
-                          :src="`/pictures/${editingFaction.image_url}`"
+                          v-if="editingFaction?.image_url"
+                          :src="`/uploads/${editingFaction.image_url}`"
                           cover
+                          :class="{ 'blur-image': uploadingImage || generatingImage }"
                         />
-                        <v-icon v-else-if="!uploadingImage" icon="mdi-shield-account" size="64" color="grey" />
+                        <v-icon v-else-if="!uploadingImage && !generatingImage" icon="mdi-shield-account" size="80" color="grey" />
                       </v-avatar>
-                      <v-btn
-                        v-if="editingFaction?.image_url && !uploadingImage"
-                        icon="mdi-download"
-                        size="small"
-                        variant="tonal"
-                        class="image-download-btn"
-                        @click="downloadImage(`/pictures/${editingFaction.image_url}`, editingFaction.name)"
-                      />
                       <v-progress-circular
-                        v-if="uploadingImage"
+                        v-if="uploadingImage || generatingImage"
                         indeterminate
                         color="primary"
-                        size="120"
-                        width="8"
-                        style="position: absolute; top: 0; left: 0;"
+                        size="64"
+                        width="6"
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
                       />
                     </div>
-                    <div class="flex-grow-1">
-                      <div class="d-flex gap-2">
-                        <v-btn
-                          icon="mdi-camera"
-                          color="primary"
-                          size="large"
-                          :disabled="uploadingImage || deletingImage"
-                          @click="triggerImageUpload"
-                        >
-                          <v-icon>mdi-camera</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ editingFaction?.image_url ? $t('factions.changeImage') : $t('factions.uploadImage') }}
-                          </v-tooltip>
-                        </v-btn>
-                        <input
-                          ref="fileInputRef"
-                          type="file"
-                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                          style="display: none"
-                          @change="handleImageUpload"
-                        >
-                        <v-btn
-                          v-if="editingFaction?.image_url"
-                          icon="mdi-delete"
-                          color="error"
-                          variant="tonal"
-                          size="large"
-                          :loading="deletingImage"
-                          :disabled="uploadingImage"
-                          @click="deleteImage"
-                        >
-                          <v-icon>mdi-delete</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ $t('factions.deleteImage') }}
-                          </v-tooltip>
-                        </v-btn>
+
+                    <!-- Image Actions -->
+                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px;">
+                      <!-- Upload Button -->
+                      <v-btn
+                        prepend-icon="mdi-camera"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || deletingImage || generatingImage"
+                        @click="triggerImageUpload"
+                      >
+                        {{ editingFaction?.image_url ? $t('factions.changeImage') : $t('factions.uploadImage') }}
+                      </v-btn>
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                        style="display: none"
+                        @change="handleImageUpload"
+                      >
+
+                      <!-- AI Generate Button -->
+                      <v-btn
+                        prepend-icon="mdi-creation"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mb-2"
+                        :loading="generatingImage"
+                        :disabled="generateButtonDisabled"
+                        @click="generateImage"
+                      >
+                        {{ $t('factions.generateImage') }}
+                      </v-btn>
+
+                      <!-- Download Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingFaction?.image_url"
+                        prepend-icon="mdi-download"
+                        variant="outlined"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="downloadImage(`/uploads/${editingFaction.image_url}`, factionForm.name)"
+                      >
+                        Download
+                      </v-btn>
+
+                      <!-- Delete Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingFaction?.image_url"
+                        prepend-icon="mdi-delete"
+                        color="error"
+                        variant="outlined"
+                        block
+                        :loading="deletingImage"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="deleteImage"
+                      >
+                        {{ $t('factions.deleteImage') }}
+                      </v-btn>
+
+                      <!-- AI Hint -->
+                      <div v-if="!hasApiKey" class="text-caption text-medium-emphasis mt-3">
+                        <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                        KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
                       </div>
                     </div>
                   </div>
@@ -609,13 +640,14 @@
           <v-spacer />
           <v-btn
             variant="text"
+            :disabled="saving || uploadingImage || generatingImage"
             @click="closeDialog"
           >
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!factionForm.name"
+            :disabled="!factionForm.name || uploadingImage || generatingImage"
             :loading="saving"
             @click="saveFaction"
           >
@@ -633,6 +665,14 @@
       :loading="deleting"
       @confirm="confirmDelete"
       @cancel="showDeleteDialog = false"
+    />
+
+    <!-- Image Preview Dialog -->
+    <ImagePreviewDialog
+      v-model="showImagePreview"
+      :image-url="previewImageUrl"
+      :title="previewImageTitle"
+      :download-file-name="previewImageTitle"
     />
   </v-container>
 </template>
@@ -714,6 +754,15 @@ onMounted(async () => {
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchNPCs(activeCampaignId.value),
   ])
+
+  // Check API key
+  try {
+    const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
+    hasApiKey.value = response.hasKey
+  }
+  catch {
+    hasApiKey.value = false
+  }
 
   // Initialize from query params
   initializeFromQuery()
@@ -1139,14 +1188,113 @@ async function removeLocation(relationId: number) {
   }
 }
 
+// Generate button disabled state
+const generateButtonDisabled = computed(() => {
+  const isDisabled = uploadingImage.value || deletingImage.value || !factionForm.value.name || !hasApiKey.value
+  return isDisabled
+})
+
 // Image upload state
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadingImage = ref(false)
 const deletingImage = ref(false)
+const generatingImage = ref(false)
+const hasApiKey = ref(false)
+
+// Image preview state
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+
+// Image preview function
+function openImagePreview(imageUrl: string, title: string) {
+  previewImageUrl.value = imageUrl
+  previewImageTitle.value = title
+  showImagePreview.value = true
+}
 
 // Trigger file input click
 function triggerImageUpload() {
   fileInputRef.value?.click()
+}
+
+// AI Generate Image function
+async function generateImage() {
+  if (!editingFaction.value || !factionForm.value.name) return
+
+  generatingImage.value = true
+
+  try {
+    const details = []
+
+    // Type (guild, government, criminal, religious, etc.)
+    if (factionForm.value.metadata.type) {
+      details.push(factionForm.value.metadata.type)
+    }
+
+    // Name (required)
+    details.push(factionForm.value.name)
+
+    // Description (free-form details)
+    if (factionForm.value.description) {
+      details.push(factionForm.value.description)
+    }
+
+    // Goals (what the faction wants)
+    if (factionForm.value.metadata.goals) {
+      details.push(factionForm.value.metadata.goals)
+    }
+
+    // Alignment (lawful, chaotic, neutral, etc.)
+    if (factionForm.value.metadata.alignment) {
+      details.push(factionForm.value.metadata.alignment)
+    }
+
+    // Notes (additional context)
+    if (factionForm.value.metadata.notes) {
+      details.push(factionForm.value.metadata.notes)
+    }
+
+    const prompt = details.filter(d => d).join(', ')
+
+    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
+      method: 'POST',
+      body: {
+        prompt,
+        entityName: factionForm.value.name,
+        entityType: 'Faction',
+        style: 'fantasy-art',
+      },
+    })
+
+    if (result.imageUrl && editingFaction.value) {
+      // Add the generated image directly to the entity (no re-upload needed)
+      const filename = result.imageUrl.replace('/uploads/', '')
+
+      await $fetch(`/api/entities/${editingFaction.value.id}/add-generated-image`, {
+        method: 'POST',
+        body: {
+          imageUrl: filename,
+        },
+      })
+
+      // Update local state
+      editingFaction.value.image_url = filename
+
+      // Reload factions from server to get updated data
+      if (activeCampaignId.value) {
+        await entitiesStore.fetchFactions(activeCampaignId.value)
+      }
+    }
+  }
+  catch (error: unknown) {
+    console.error('[Faction] Failed to generate image:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
+    alert(errorMessage)
+  }
+  finally {
+    generatingImage.value = false
+  }
 }
 
 // Handle image upload from native input
@@ -1257,6 +1405,13 @@ function closeDialog() {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Blur effect during image upload/generation */
+.blur-image {
+  filter: blur(8px);
+  opacity: 0.6;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
 /* Highlight animation for factions from global search */

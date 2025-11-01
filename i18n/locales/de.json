@@ -209,7 +209,8 @@
     "deleteImage": "Bild löschen",
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
-    "deleteImageError": "Fehler beim Löschen des Bildes"
+    "deleteImageError": "Fehler beim Löschen des Bildes",
+    "saveBeforeGenerating": "Details geändert - erst speichern"
   },
   "factions": {
     "title": "Fraktionen",

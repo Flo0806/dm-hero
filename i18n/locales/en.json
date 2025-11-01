@@ -209,7 +209,8 @@
     "deleteImage": "Delete Image",
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
-    "deleteImageError": "Failed to delete image"
+    "deleteImageError": "Failed to delete image",
+    "saveBeforeGenerating": "Details changed - save first"
   },
   "factions": {
     "title": "Factions",

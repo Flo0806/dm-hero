@@ -39,6 +39,7 @@ export default defineEventHandler((event) => {
     created_at: string
     updated_at: string
     fts_score?: number
+    linked_faction_names?: string | null
   }
 
   interface ScoredNpc extends NpcRow {
@@ -120,6 +121,7 @@ export default defineEventHandler((event) => {
 
     try {
       // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
+      // Note: Cannot use bm25() with GROUP_CONCAT in same query - incompatible aggregations
       npcs = db.prepare(`
         SELECT
           e.id,
@@ -129,15 +131,18 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
-          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+          GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
+        LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
+        LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
-        ORDER BY fts_score
-        LIMIT 100
+        GROUP BY e.id
+        ORDER BY e.name ASC
+        LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
       console.log('[NPC Search] FTS5 returned:', npcs.length, 'candidates')
 
@@ -155,15 +160,18 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
+          LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
+          LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
-          ORDER BY fts_score
-          LIMIT 100
+          GROUP BY e.id
+          ORDER BY e.name ASC
+          LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as NpcRow[]
       }
 
@@ -182,11 +190,15 @@ export default defineEventHandler((event) => {
             e.image_url,
             e.metadata,
             e.created_at,
-            e.updated_at
+            e.updated_at,
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
           FROM entities e
+          LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
+          LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
+          GROUP BY e.id
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as NpcRow[]
       }
@@ -200,11 +212,15 @@ export default defineEventHandler((event) => {
             e.image_url,
             e.metadata,
             e.created_at,
-            e.updated_at
+            e.updated_at,
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
           FROM entities e
+          LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
+          LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
+          GROUP BY e.id
           ORDER BY e.name ASC
         `).all(entityType.id, campaignId) as NpcRow[]
       }
@@ -218,12 +234,14 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameNormalized.startsWith(searchTerm)
         const containsQuery = nameNormalized.includes(searchTerm)
 
-        // Check if search term appears in metadata or description (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, or linked factions (FTS5 match but not in name)
         const metadataNormalized = normalizeText(npc.metadata || '')
         const descriptionNormalized = normalizeText(npc.description || '')
+        const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch) && !containsQuery
+        const isFactionMatch = linkedFactionNamesNormalized.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isFactionMatch) && !containsQuery
 
         let levDistance: number
 
@@ -249,6 +267,7 @@ export default defineEventHandler((event) => {
         if (exactMatch) finalScore -= 1000
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
+        if (isFactionMatch) finalScore -= 30 // Faction matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
 
@@ -266,6 +285,7 @@ export default defineEventHandler((event) => {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
+          const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
 
           // Check ALL expanded terms (original + race/class keys)
           for (const termObj of expandedTerms) {
@@ -274,7 +294,7 @@ export default defineEventHandler((event) => {
               const shouldCheckMetadata = !termObj.blockMetadata
 
               // Exact/substring match in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
                 return true
               }
 
@@ -296,6 +316,23 @@ export default defineEventHandler((event) => {
               if (levDist <= maxDist) {
                 return true
               }
+
+              // Levenshtein match for linked Faction names (split by comma, then by words)
+              if (linkedFactionNamesNormalized.length > 0) {
+                const factionNames = linkedFactionNamesNormalized.split(',').map(n => n.trim())
+                for (const factionName of factionNames) {
+                  if (factionName.length === 0) continue
+                  // Split each faction name into words (e.g., "Die Harpers" → ["die", "harpers"])
+                  const factionWords = factionName.split(/\s+/)
+                  for (const word of factionWords) {
+                    if (word.length === 0) continue
+                    const factionLevDist = levenshtein(variant, word)
+                    if (factionLevDist <= maxDist) {
+                      return true
+                    }
+                  }
+                }
+              }
             }
           }
 
@@ -308,6 +345,7 @@ export default defineEventHandler((event) => {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
+          const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -317,7 +355,7 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
                 return true // At least one variant matches
               }
 
@@ -339,6 +377,22 @@ export default defineEventHandler((event) => {
               if (levDist <= maxDist) {
                 return true // Close enough match
               }
+
+              // Levenshtein match for linked Faction names (split by comma, then by words)
+              if (linkedFactionNamesNormalized.length > 0) {
+                const factionNames = linkedFactionNamesNormalized.split(',').map(n => n.trim())
+                for (const factionName of factionNames) {
+                  if (factionName.length === 0) continue
+                  const factionWords = factionName.split(/\s+/)
+                  for (const word of factionWords) {
+                    if (word.length === 0) continue
+                    const factionLevDist = levenshtein(variant, word)
+                    if (factionLevDist <= maxDist) {
+                      return true
+                    }
+                  }
+                }
+              }
             }
           }
           return false // No term matched
@@ -350,6 +404,7 @@ export default defineEventHandler((event) => {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
+          const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -360,7 +415,7 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
@@ -386,6 +441,26 @@ export default defineEventHandler((event) => {
                 termMatches = true
                 break
               }
+
+              // Levenshtein match for linked Faction names (split by comma, then by words)
+              if (linkedFactionNamesNormalized.length > 0) {
+                const factionNames = linkedFactionNamesNormalized.split(',').map(n => n.trim())
+                for (const factionName of factionNames) {
+                  if (factionName.length === 0) continue
+                  const factionWords = factionName.split(/\s+/)
+                  for (const word of factionWords) {
+                    if (word.length === 0) continue
+                    const factionLevDist = levenshtein(variant, word)
+                    if (factionLevDist <= maxDist) {
+                      termMatches = true
+                      break
+                    }
+                  }
+                  if (termMatches) break
+                }
+              }
+
+              if (termMatches) break
             }
 
             // If this term (and none of its variants) doesn't match, reject the NPC
