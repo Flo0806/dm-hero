@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
@@ -48,7 +49,7 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = searchQuery.trim().toLowerCase()
+    const searchTerm = normalizeText(searchQuery.trim())
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -175,22 +176,22 @@ export default defineEventHandler((event) => {
 
       // Step 2: Apply Levenshtein distance for better ranking
       let scoredLocations = locations.map((location: LocationRow): ScoredLocation => {
-        const nameLower = location.name.toLowerCase()
+        const nameNormalized = normalizeText(location.name)
 
         // Smart distance calculation
-        const exactMatch = nameLower === searchTerm
-        const startsWithQuery = nameLower.startsWith(searchTerm)
-        const containsQuery = nameLower.includes(searchTerm)
+        const exactMatch = nameNormalized === searchTerm
+        const startsWithQuery = nameNormalized.startsWith(searchTerm)
+        const containsQuery = nameNormalized.includes(searchTerm)
 
         // Check if search term appears in metadata, description, or linked entities (FTS5 match but not in name)
-        const metadataLower = location.metadata?.toLowerCase() || ''
-        const descriptionLower = (location.description || '').toLowerCase()
-        const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
-        const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
-        const isMetadataMatch = metadataLower.includes(searchTerm)
-        const isDescriptionMatch = descriptionLower.includes(searchTerm)
-        const isNpcMatch = linkedNpcNamesLower.includes(searchTerm)
-        const isItemMatch = linkedItemNamesLower.includes(searchTerm)
+        const metadataNormalized = normalizeText(location.metadata || '')
+        const descriptionNormalized = normalizeText(location.description || '')
+        const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
+        const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
+        const isMetadataMatch = metadataNormalized.includes(searchTerm)
+        const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
+        const isNpcMatch = linkedNpcNamesNormalized.includes(searchTerm)
+        const isItemMatch = linkedItemNamesNormalized.includes(searchTerm)
         const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch) && !containsQuery
 
         let levDistance: number
@@ -201,11 +202,11 @@ export default defineEventHandler((event) => {
         }
         else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
-          levDistance = nameLower.length - searchTerm.length
+          levDistance = nameNormalized.length - searchTerm.length
         }
         else {
           // Full Levenshtein distance for non-prefix matches
-          levDistance = levenshtein(searchTerm, nameLower)
+          levDistance = levenshtein(searchTerm, nameNormalized)
         }
 
         // Combined score: FTS score + weighted Levenshtein distance
@@ -232,21 +233,21 @@ export default defineEventHandler((event) => {
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches
         scoredLocations = scoredLocations.filter(location => {
-          const nameLower = location.name.toLowerCase()
-          const metadataLower = location.metadata?.toLowerCase() || ''
-          const descriptionLower = (location.description || '').toLowerCase()
-          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
-          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
+          const nameNormalized = normalizeText(location.name)
+          const metadataNormalized = normalizeText(location.metadata || '')
+          const descriptionNormalized = normalizeText(location.description || '')
+          const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
+          const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
 
           // Check ALL terms
           for (const term of parsedQuery.terms) {
             // Exact/substring match in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
+            if (nameNormalized.includes(term) || descriptionNormalized.includes(term) || metadataNormalized.includes(term) || linkedNpcNamesNormalized.includes(term) || linkedItemNamesNormalized.includes(term)) {
               return true
             }
 
             // Prefix match (before Levenshtein for performance)
-            if (nameLower.startsWith(term)) {
+            if (nameNormalized.startsWith(term)) {
               return true
             }
 
@@ -255,7 +256,7 @@ export default defineEventHandler((event) => {
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
 
             // Split name into words and check each
-            const nameWords = nameLower.split(/\s+/)
+            const nameWords = nameNormalized.split(/\s+/)
             for (const word of nameWords) {
               if (word.length === 0) continue
               const levDist = levenshtein(term, word)
@@ -265,8 +266,8 @@ export default defineEventHandler((event) => {
             }
 
             // Also check description words for fuzzy matching
-            if (descriptionLower.length > 0) {
-              const descWords = descriptionLower.split(/\s+/)
+            if (descriptionNormalized.length > 0) {
+              const descWords = descriptionNormalized.split(/\s+/)
               for (const word of descWords) {
                 if (word.length < 3) continue // Skip very short words
                 const levDist = levenshtein(term, word)
@@ -277,8 +278,8 @@ export default defineEventHandler((event) => {
             }
 
             // Levenshtein match for linked NPC names (split by comma, then by words)
-            if (linkedNpcNamesLower.length > 0) {
-              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+            if (linkedNpcNamesNormalized.length > 0) {
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words (e.g., "Günther Müller" → ["günther", "müller"])
@@ -294,8 +295,8 @@ export default defineEventHandler((event) => {
             }
 
             // Levenshtein match for linked Item names (split by comma, then by words)
-            if (linkedItemNamesLower.length > 0) {
-              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+            if (linkedItemNamesNormalized.length > 0) {
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue
                 // Split each item name into words
@@ -317,21 +318,21 @@ export default defineEventHandler((event) => {
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredLocations = scoredLocations.filter(location => {
-          const nameLower = location.name.toLowerCase()
-          const metadataLower = location.metadata?.toLowerCase() || ''
-          const descriptionLower = (location.description || '').toLowerCase()
-          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
-          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
+          const nameNormalized = normalizeText(location.name)
+          const metadataNormalized = normalizeText(location.metadata || '')
+          const descriptionNormalized = normalizeText(location.description || '')
+          const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
+          const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
 
           // Check if at least one term matches
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
+            if (nameNormalized.includes(term) || descriptionNormalized.includes(term) || metadataNormalized.includes(term) || linkedNpcNamesNormalized.includes(term) || linkedItemNamesNormalized.includes(term)) {
               return true
             }
 
             // Prefix match (before Levenshtein for performance)
-            if (nameLower.startsWith(term)) {
+            if (nameNormalized.startsWith(term)) {
               return true
             }
 
@@ -340,7 +341,7 @@ export default defineEventHandler((event) => {
             const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
 
             // Split name into words and check each
-            const nameWords = nameLower.split(/\s+/)
+            const nameWords = nameNormalized.split(/\s+/)
             for (const word of nameWords) {
               if (word.length === 0) continue
               const levDist = levenshtein(term, word)
@@ -350,8 +351,8 @@ export default defineEventHandler((event) => {
             }
 
             // Also check description words for fuzzy matching
-            if (descriptionLower.length > 0) {
-              const descWords = descriptionLower.split(/\s+/)
+            if (descriptionNormalized.length > 0) {
+              const descWords = descriptionNormalized.split(/\s+/)
               for (const word of descWords) {
                 if (word.length < 3) continue // Skip very short words
                 const levDist = levenshtein(term, word)
@@ -362,8 +363,8 @@ export default defineEventHandler((event) => {
             }
 
             // Check Levenshtein for linked NPC names (split by comma, then by words)
-            if (linkedNpcNamesLower.length > 0) {
-              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+            if (linkedNpcNamesNormalized.length > 0) {
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words
@@ -379,8 +380,8 @@ export default defineEventHandler((event) => {
             }
 
             // Check Levenshtein for linked Item names (split by comma, then by words)
-            if (linkedItemNamesLower.length > 0) {
-              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+            if (linkedItemNamesNormalized.length > 0) {
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue
                 // Split each item name into words
@@ -401,23 +402,23 @@ export default defineEventHandler((event) => {
       else if (hasAndOperator) {
         // AND query: ALL terms must match
         scoredLocations = scoredLocations.filter(location => {
-          const nameLower = location.name.toLowerCase()
-          const metadataLower = location.metadata?.toLowerCase() || ''
-          const descriptionLower = (location.description || '').toLowerCase()
-          const linkedNpcNamesLower = (location.linked_npc_names || '').toLowerCase()
-          const linkedItemNamesLower = (location.linked_item_names || '').toLowerCase()
+          const nameNormalized = normalizeText(location.name)
+          const metadataNormalized = normalizeText(location.metadata || '')
+          const descriptionNormalized = normalizeText(location.description || '')
+          const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
+          const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
 
           // Check if ALL terms match
           for (const term of parsedQuery.terms) {
             let termMatches = false
 
             // Check if term appears in any field
-            if (nameLower.includes(term) || descriptionLower.includes(term) || metadataLower.includes(term) || linkedNpcNamesLower.includes(term) || linkedItemNamesLower.includes(term)) {
+            if (nameNormalized.includes(term) || descriptionNormalized.includes(term) || metadataNormalized.includes(term) || linkedNpcNamesNormalized.includes(term) || linkedItemNamesNormalized.includes(term)) {
               termMatches = true
             }
 
             // Prefix match (before Levenshtein for performance)
-            if (!termMatches && nameLower.startsWith(term)) {
+            if (!termMatches && nameNormalized.startsWith(term)) {
               termMatches = true
             }
 
@@ -427,7 +428,7 @@ export default defineEventHandler((event) => {
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
 
               // Split name into words and check each
-              const nameWords = nameLower.split(/\s+/)
+              const nameWords = nameNormalized.split(/\s+/)
               for (const word of nameWords) {
                 if (word.length === 0) continue
                 const levDist = levenshtein(term, word)
@@ -438,8 +439,8 @@ export default defineEventHandler((event) => {
               }
 
               // Also check description words for fuzzy matching
-              if (!termMatches && descriptionLower.length > 0) {
-                const descWords = descriptionLower.split(/\s+/)
+              if (!termMatches && descriptionNormalized.length > 0) {
+                const descWords = descriptionNormalized.split(/\s+/)
                 for (const word of descWords) {
                   if (word.length < 3) continue // Skip very short words
                   const levDist = levenshtein(term, word)
@@ -452,10 +453,10 @@ export default defineEventHandler((event) => {
             }
 
             // Check Levenshtein for linked NPC names (split by comma, then by words)
-            if (!termMatches && linkedNpcNamesLower.length > 0) {
+            if (!termMatches && linkedNpcNamesNormalized.length > 0) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
 
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
@@ -474,10 +475,10 @@ export default defineEventHandler((event) => {
             }
 
             // Check Levenshtein for linked Item names (split by comma, then by words)
-            if (!termMatches && linkedItemNamesLower.length > 0) {
+            if (!termMatches && linkedItemNamesNormalized.length > 0) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const itemNames = linkedItemNamesLower.split(',').map(n => n.trim())
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
 
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue

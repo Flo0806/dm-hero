@@ -92,7 +92,7 @@ function changeLocale(newLocale: string) {
   }
 }
 
-function getEntityPath(entityType: string, entityId: number): string {
+function getEntityPath(entityType: string, entityId: number, entityName: string): string {
   // Map entity types to their corresponding routes
   const typeMap: Record<string, string> = {
     'NPC': '/npcs',
@@ -102,11 +102,15 @@ function getEntityPath(entityType: string, entityId: number): string {
     'Session': '/sessions',
   }
   const basePath = typeMap[entityType] || '/npcs'
-  return `${basePath}?id=${entityId}`
+  const query = new URLSearchParams()
+  query.set('highlight', entityId.toString())
+  query.set('search', entityName) // Pass the entity name, not the search query
+  return `${basePath}?${query.toString()}`
 }
 
 function navigateToResult(result: typeof searchResults.value[0]) {
-  navigateTo(result.path)
+  const path = getEntityPath(result.type, result.id, result.name)
+  navigateTo(path, { replace: false }) // Force navigation even if on same page
   showSearch.value = false
   searchQuery.value = ''
 }
@@ -159,7 +163,7 @@ watch(searchQuery, async (query) => {
 
     searchResults.value = results.map(r => ({
       ...r,
-      path: getEntityPath(r.type, r.id),
+      path: getEntityPath(r.type, r.id, r.name),
     }))
   }
   catch (error) {

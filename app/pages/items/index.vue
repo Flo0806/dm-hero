@@ -75,8 +75,12 @@
         lg="4"
       >
         <v-card
+          :id="`item-${item.id}`"
+          :class="[
+            'h-100 d-flex flex-column',
+            { 'highlighted-card': highlightedId === item.id }
+          ]"
           hover
-          class="h-100 d-flex flex-column"
           @click="viewItem(item)"
         >
           <v-card-title class="d-flex align-center">
@@ -869,12 +873,44 @@
 import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
 
+// Debounced FTS5 + Levenshtein Search (must be declared early for template)
+const searchQuery = ref('')
+const searchResults = ref<Item[]>([])
+const searching = ref(false)
+
 const { t, locale } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+
+// Highlighted item (from global search)
+const highlightedId = ref<number | null>(null)
+const isFromGlobalSearch = ref(false)
+
+// Initialize from query params (global search)
+function initializeFromQuery() {
+  const highlightParam = route.query.highlight
+  const searchParam = route.query.search
+
+  if (highlightParam && searchParam) {
+    highlightedId.value = Number(highlightParam)
+    searchQuery.value = String(searchParam)
+    isFromGlobalSearch.value = true
+
+    // Scroll to highlighted item after a short delay
+    nextTick(() => {
+      setTimeout(() => {
+        const element = document.getElementById(`item-${highlightedId.value}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    })
+  }
+}
 
 onMounted(async () => {
   if (!activeCampaignId.value) {
@@ -887,17 +923,38 @@ onMounted(async () => {
     entitiesStore.fetchNPCs(activeCampaignId.value),
     entitiesStore.fetchLocations(activeCampaignId.value),
   ])
+
+  // Initialize from query params
+  initializeFromQuery()
+})
+
+// Watch for route changes (same-page navigation)
+watch(() => route.query, () => {
+  highlightedId.value = null
+  isFromGlobalSearch.value = false
+  // Re-initialize from new query
+  initializeFromQuery()
+}, { deep: true })
+
+// Clear highlight when user manually searches
+watch(searchQuery, () => {
+  if (isFromGlobalSearch.value) {
+    // First change after global search, keep highlight
+    isFromGlobalSearch.value = false
+  } else {
+    // Manual search by user, clear highlight
+    highlightedId.value = null
+    // Remove query params from URL
+    if (route.query.highlight || route.query.search) {
+      router.replace({ query: {} })
+    }
+  }
 })
 
 const items = computed(() => entitiesStore.items)
 const pending = computed(() => entitiesStore.itemsLoading)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 const locations = computed(() => entitiesStore.locationsForSelect)
-
-// Debounced FTS5 + Levenshtein Search with i18n and AbortController
-const searchQuery = ref('')
-const searchResults = ref<Item[]>([])
-const searching = ref(false)
 
 // Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -1402,5 +1459,20 @@ async function removeLocation(relationId: number) {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Highlight animation for items from global search */
+.highlighted-card {
+  animation: highlight-pulse 2s ease-in-out;
+  box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
+  }
 }
 </style>

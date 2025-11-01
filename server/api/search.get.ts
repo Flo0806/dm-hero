@@ -7,7 +7,7 @@ interface EntityResult {
   id: number
   name: string
   description: string | null
-  entity_type: string
+  type: string
   icon: string
   color: string
   linked_entities?: string | null
@@ -44,7 +44,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
-          ? as entity_type,
+          ? as type,
           ? as icon,
           ? as color,
           GROUP_CONCAT(DISTINCT npc.name || '|' || item.name) as linked_entities
@@ -70,7 +70,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
-          ? as entity_type,
+          ? as type,
           ? as icon,
           ? as color,
           GROUP_CONCAT(DISTINCT loc.name) as linked_entities
@@ -92,7 +92,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
-          ? as entity_type,
+          ? as type,
           ? as icon,
           ? as color,
           GROUP_CONCAT(DISTINCT npc.name || '|' || loc.name) as linked_entities
@@ -118,7 +118,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
-          ? as entity_type,
+          ? as type,
           ? as icon,
           ? as color,
           NULL as linked_entities

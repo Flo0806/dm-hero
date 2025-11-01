@@ -72,7 +72,14 @@
         md="6"
         lg="4"
       >
-        <v-card hover class="h-100">
+        <v-card
+          :id="`faction-${faction.id}`"
+          :class="[
+            'h-100',
+            { 'highlighted-card': highlightedId === faction.id }
+          ]"
+          hover
+        >
           <v-card-title>
             <v-icon icon="mdi-shield-account" class="mr-2" color="primary" />
             {{ faction.name }}
@@ -649,7 +656,14 @@ interface Faction {
   updated_at: string
 }
 
+// Search state (must be declared early for template)
+const searchQuery = ref('')
+const searchResults = ref<Faction[]>([])
+const searching = ref(false)
+
+const { t, locale } = useI18n()
 const router = useRouter()
+const route = useRoute()
 
 // Use image download composable
 const { downloadImage } = useImageDownload()
@@ -660,6 +674,32 @@ const entitiesStore = useEntitiesStore()
 
 // Get active campaign
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+
+// Highlighted faction (from global search)
+const highlightedId = ref<number | null>(null)
+const isFromGlobalSearch = ref(false)
+
+// Initialize from query params (global search)
+function initializeFromQuery() {
+  const highlightParam = route.query.highlight
+  const searchParam = route.query.search
+
+  if (highlightParam && searchParam) {
+    highlightedId.value = Number(highlightParam)
+    searchQuery.value = String(searchParam)
+    isFromGlobalSearch.value = true
+
+    // Scroll to highlighted faction after a short delay
+    nextTick(() => {
+      setTimeout(() => {
+        const element = document.getElementById(`faction-${highlightedId.value}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    })
+  }
+}
 
 // Check if campaign is selected
 onMounted(async () => {
@@ -674,16 +714,37 @@ onMounted(async () => {
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchNPCs(activeCampaignId.value),
   ])
+
+  // Initialize from query params
+  initializeFromQuery()
+})
+
+// Watch for route changes (same-page navigation)
+watch(() => route.query, () => {
+  highlightedId.value = null
+  isFromGlobalSearch.value = false
+  // Re-initialize from new query
+  initializeFromQuery()
+}, { deep: true })
+
+// Clear highlight when user manually searches
+watch(searchQuery, () => {
+  if (isFromGlobalSearch.value) {
+    // First change after global search, keep highlight
+    isFromGlobalSearch.value = false
+  } else {
+    // Manual search by user, clear highlight
+    highlightedId.value = null
+    // Remove query params from URL
+    if (route.query.highlight || route.query.search) {
+      router.replace({ query: {} })
+    }
+  }
 })
 
 // Get factions from store
 const factions = computed(() => entitiesStore.factions)
 const pending = computed(() => entitiesStore.factionsLoading)
-
-// Search state with AbortController
-const searchQuery = ref('')
-const searchResults = ref<Faction[]>([])
-const searching = ref(false)
 
 // Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -816,7 +877,6 @@ const addingLocation = ref(false)
 const locations = computed(() => entitiesStore.locationsForSelect)
 const npcs = computed(() => entitiesStore.npcsForSelect)
 
-const { t, locale } = useI18n()
 const locationRelationTypeSuggestions = computed(() => [
   t('factions.locationTypes.headquarters'),
   t('factions.locationTypes.hideout'),
@@ -1197,5 +1257,20 @@ function closeDialog() {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Highlight animation for factions from global search */
+.highlighted-card {
+  animation: highlight-pulse 2s ease-in-out;
+  box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
+  }
 }
 </style>

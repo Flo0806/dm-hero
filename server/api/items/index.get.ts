@@ -2,6 +2,7 @@ import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
 import { getItemTypeKey, getItemRarityKey, getLocaleFromEvent } from '../../utils/i18n-lookup'
+import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
@@ -50,7 +51,7 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = searchQuery.trim().toLowerCase()
+    const searchTerm = normalizeText(searchQuery.trim())
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -117,8 +118,8 @@ export default defineEventHandler((event) => {
     let useExactMatch = parsedQuery.useExactFirst
 
     try {
-      // Step 1: FTS5 pre-filter (fast, gets ~100 candidates)
-      items = db.prepare(`
+      // Step 1a: FTS5 pre-filter (fast, gets ~300 candidates) - WITHOUT bm25 to avoid JOIN issues
+      const ftsResults = db.prepare(`
         SELECT
           e.id,
           e.name,
@@ -126,28 +127,50 @@ export default defineEventHandler((event) => {
           e.image_url,
           e.metadata,
           e.created_at,
-          e.updated_at,
-          bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
-          GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+          e.updated_at
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
-        LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
-        LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
-        GROUP BY e.id
-        ORDER BY fts_score
         LIMIT 300
       `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
+
+      // Step 1b: Get owner names for filtered items
+      if (ftsResults.length > 0) {
+        const itemIds = ftsResults.map(item => item.id)
+        const placeholders = itemIds.map(() => '?').join(',')
+
+        const ownerData = db.prepare(`
+          SELECT
+            e.id,
+            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+          FROM entities e
+          LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+          LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id
+            AND owner_npc.deleted_at IS NULL
+            AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          WHERE e.id IN (${placeholders})
+          GROUP BY e.id
+        `).all(...itemIds) as Array<{ id: number, owner_names: string | null }>
+
+        const ownerMap = new Map(ownerData.map(row => [row.id, row.owner_names]))
+        items = ftsResults.map(item => ({
+          ...item,
+          owner_names: ownerMap.get(item.id) || null,
+        }))
+      }
+      else {
+        items = []
+      }
 
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
       if (items.length === 0 && useExactMatch && !parsedQuery.hasOperators) {
         ftsQuery = `${searchTerm}*`
         useExactMatch = false
 
-        items = db.prepare(`
+        const ftsResults2 = db.prepare(`
           SELECT
             e.id,
             e.name,
@@ -155,21 +178,39 @@ export default defineEventHandler((event) => {
             e.image_url,
             e.metadata,
             e.created_at,
-            e.updated_at,
-            bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score,
-            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+            e.updated_at
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
-          LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
-          LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
-          GROUP BY e.id
-          ORDER BY fts_score
           LIMIT 300
         `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
+
+        if (ftsResults2.length > 0) {
+          const itemIds = ftsResults2.map(item => item.id)
+          const placeholders = itemIds.map(() => '?').join(',')
+
+          const ownerData = db.prepare(`
+            SELECT
+              e.id,
+              GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+            FROM entities e
+            LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
+            LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id
+              AND owner_npc.deleted_at IS NULL
+              AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+            WHERE e.id IN (${placeholders})
+            GROUP BY e.id
+          `).all(...itemIds) as Array<{ id: number, owner_names: string | null }>
+
+          const ownerMap = new Map(ownerData.map(row => [row.id, row.owner_names]))
+          items = ftsResults2.map(item => ({
+            ...item,
+            owner_names: ownerMap.get(item.id) || null,
+          }))
+        }
       }
 
       // FALLBACK 2: For operator queries or when FTS5 returns nothing, use full table scan with Levenshtein
@@ -200,20 +241,20 @@ export default defineEventHandler((event) => {
 
       // Step 2: Apply Levenshtein distance for better ranking
       let scoredItems = items.map((item: ItemRow): ScoredItem => {
-        const nameLower = item.name.toLowerCase()
+        const nameNormalized = normalizeText(item.name)
 
         // Smart distance calculation
-        const exactMatch = nameLower === searchTerm
-        const startsWithQuery = nameLower.startsWith(searchTerm)
-        const containsQuery = nameLower.includes(searchTerm)
+        const exactMatch = nameNormalized === searchTerm
+        const startsWithQuery = nameNormalized.startsWith(searchTerm)
+        const containsQuery = nameNormalized.includes(searchTerm)
 
         // Check if search term appears in metadata, description, or owner names (FTS5 match but not in name)
-        const metadataLower = item.metadata?.toLowerCase() || ''
-        const descriptionLower = (item.description || '').toLowerCase()
-        const ownerNamesLower = (item.owner_names || '').toLowerCase()
-        const isMetadataMatch = metadataLower.includes(searchTerm)
-        const isDescriptionMatch = descriptionLower.includes(searchTerm)
-        const isOwnerMatch = ownerNamesLower.includes(searchTerm)
+        const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
+        const descriptionNormalized = item.description ? normalizeText(item.description) : ''
+        const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+        const isMetadataMatch = metadataNormalized.includes(searchTerm)
+        const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
+        const isOwnerMatch = ownerNamesNormalized.includes(searchTerm)
         const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isOwnerMatch) && !containsQuery
 
         let levDistance: number
@@ -224,11 +265,11 @@ export default defineEventHandler((event) => {
         }
         else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
-          levDistance = nameLower.length - searchTerm.length
+          levDistance = nameNormalized.length - searchTerm.length
         }
         else {
           // Full Levenshtein distance for non-prefix matches
-          levDistance = levenshtein(searchTerm, nameLower)
+          levDistance = levenshtein(searchTerm, nameNormalized)
         }
 
         // Combined score: FTS score + weighted Levenshtein distance
@@ -254,10 +295,10 @@ export default defineEventHandler((event) => {
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
         scoredItems = scoredItems.filter(item => {
-          const nameLower = item.name.toLowerCase()
-          const metadataLower = item.metadata?.toLowerCase() || ''
-          const descriptionLower = (item.description || '').toLowerCase()
-          const ownerNamesLower = (item.owner_names || '').toLowerCase()
+          const nameNormalized = normalizeText(item.name)
+          const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
+          const descriptionNormalized = item.description ? normalizeText(item.description) : ''
+          const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
 
           // Check ALL expanded terms (original + type/rarity keys)
           for (const termObj of expandedTerms) {
@@ -266,32 +307,32 @@ export default defineEventHandler((event) => {
               const shouldCheckMetadata = !termObj.blockMetadata
 
               // Exact/substring match in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
                 return true
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 return true
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 return true
               }
 
               // Levenshtein match for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 return true
               }
 
               // Levenshtein match for owner names (split by comma, check each name)
-              if (ownerNamesLower.length > 0) {
-                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+              if (ownerNamesNormalized.length > 0) {
+                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)
@@ -309,10 +350,10 @@ export default defineEventHandler((event) => {
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredItems = scoredItems.filter(item => {
-          const nameLower = item.name.toLowerCase()
-          const metadataLower = item.metadata?.toLowerCase() || ''
-          const descriptionLower = (item.description || '').toLowerCase()
-          const ownerNamesLower = (item.owner_names || '').toLowerCase()
+          const nameNormalized = normalizeText(item.name)
+          const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
+          const descriptionNormalized = item.description ? normalizeText(item.description) : ''
+          const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -322,32 +363,32 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
                 return true // At least one variant matches
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 return true
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 return true
               }
 
               // Check Levenshtein for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 return true // Close enough match
               }
 
               // Levenshtein match for owner names (split by comma, check each name)
-              if (ownerNamesLower.length > 0) {
-                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+              if (ownerNamesNormalized.length > 0) {
+                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)
@@ -364,10 +405,10 @@ export default defineEventHandler((event) => {
       else if (hasAndOperator) {
         // AND query: ALL terms must match
         scoredItems = scoredItems.filter(item => {
-          const nameLower = item.name.toLowerCase()
-          const metadataLower = item.metadata?.toLowerCase() || ''
-          const descriptionLower = (item.description || '').toLowerCase()
-          const ownerNamesLower = (item.owner_names || '').toLowerCase()
+          const nameNormalized = normalizeText(item.name)
+          const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
+          const descriptionNormalized = item.description ? normalizeText(item.description) : ''
+          const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -378,19 +419,19 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant) || ownerNamesLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 termMatches = true
                 break
               }
@@ -398,7 +439,7 @@ export default defineEventHandler((event) => {
               // Check Levenshtein for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 termMatches = true
@@ -406,8 +447,8 @@ export default defineEventHandler((event) => {
               }
 
               // Levenshtein match for owner names (split by comma, check each name)
-              if (!termMatches && ownerNamesLower.length > 0) {
-                const ownerNames = ownerNamesLower.split(',').map(n => n.trim())
+              if (!termMatches && ownerNamesNormalized.length > 0) {
+                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)

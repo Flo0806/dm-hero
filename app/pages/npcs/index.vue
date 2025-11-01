@@ -71,7 +71,14 @@
         md="6"
         lg="4"
       >
-        <v-card hover class="h-100 d-flex flex-column">
+        <v-card
+          :id="`npc-${npc.id}`"
+          hover
+          :class="[
+            'h-100 d-flex flex-column',
+            { 'highlighted-card': highlightedId === npc.id }
+          ]"
+        >
           <v-card-title class="d-flex align-center">
             <v-icon icon="mdi-account" class="mr-2" color="primary" />
             {{ npc.name }}
@@ -120,10 +127,10 @@
             </div>
             <div v-if="npc.metadata" class="text-caption">
               <div v-if="npc.metadata.race" class="mb-1">
-                <strong>{{ $t('npcs.race') }}:</strong> {{ useRaceName(npc.metadata.race) }}
+                <strong>{{ $t('npcs.race') }}:</strong> {{ getRaceDisplayName(npc.metadata.race) }}
               </div>
               <div v-if="npc.metadata.class" class="mb-1">
-                <strong>{{ $t('npcs.class') }}:</strong> {{ useClassName(npc.metadata.class) }}
+                <strong>{{ $t('npcs.class') }}:</strong> {{ getClassDisplayName(npc.metadata.class) }}
               </div>
               <div v-if="npc.metadata.location">
                 <strong>{{ $t('npcs.location') }}:</strong> {{ npc.metadata.location }}
@@ -1167,12 +1174,66 @@ onMounted(async () => {
     entitiesStore.fetchFactions(activeCampaignId.value),
     entitiesStore.fetchItems(activeCampaignId.value),
   ])
+
+  // Load races and classes for dropdowns
+  await loadReferenceData()
 })
 
 // Search with FTS5
+const route = useRoute()
 const searchQuery = ref('')
 const searchResults = ref<NPC[]>([])
 const searching = ref(false)
+
+// Highlighted NPC (from global search)
+const highlightedId = ref<number | null>(null)
+const isFromGlobalSearch = ref(false)
+
+// Initialize from URL query parameters
+function initializeFromQuery() {
+  if (route.query.search && typeof route.query.search === 'string') {
+    searchQuery.value = route.query.search
+    isFromGlobalSearch.value = true
+  }
+  if (route.query.highlight && typeof route.query.highlight === 'string') {
+    highlightedId.value = parseInt(route.query.highlight, 10)
+    // Auto-scroll to highlighted card after a short delay
+    setTimeout(() => {
+      const element = document.getElementById(`npc-${highlightedId.value}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 500)
+  }
+}
+
+onMounted(() => {
+  initializeFromQuery()
+})
+
+// Watch for route changes (same-page navigation)
+watch(() => route.query, () => {
+  // Clear previous highlight
+  highlightedId.value = null
+  isFromGlobalSearch.value = false
+  // Re-initialize from new query
+  initializeFromQuery()
+}, { deep: true })
+
+// Clear highlight when user manually searches
+watch(searchQuery, () => {
+  if (isFromGlobalSearch.value) {
+    // First change after global search, keep highlight
+    isFromGlobalSearch.value = false
+  } else {
+    // Manual search by user, clear highlight
+    highlightedId.value = null
+    // Remove query params from URL
+    if (route.query.highlight || route.query.search) {
+      router.replace({ query: {} })
+    }
+  }
+})
 
 // Get data from stores
 const npcs = computed(() => entitiesStore.npcs)
@@ -1180,29 +1241,45 @@ const locations = computed(() => entitiesStore.locationsForSelect)
 const factions = computed(() => entitiesStore.factionsForSelect)
 const items = computed(() => entitiesStore.itemsForSelect)
 
-// Fetch races and classes for autocomplete (these are not campaign-specific)
-// Using getCachedData to cache across all pages
-const { data: races } = await useFetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/races', {
-  key: 'races',
-  getCachedData: key => useNuxtApp().static.data[key],
-})
-const { data: classes } = await useFetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/classes', {
-  key: 'classes',
-  getCachedData: key => useNuxtApp().static.data[key],
-})
+// Reference data for dropdowns
+const races = ref<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>([])
+const classes = ref<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>([])
+
+// Load reference data
+async function loadReferenceData() {
+  const [racesData, classesData] = await Promise.all([
+    $fetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/races'),
+    $fetch<Array<{ id: number, name: string, name_de?: string | null, name_en?: string | null, key: string, description: string }>>('/api/classes'),
+  ])
+  races.value = racesData
+  classes.value = classesData
+}
+
+// Helper functions to get race/class display name from string key
+function getRaceDisplayName(raceName: string | undefined): string {
+  if (!raceName) return ''
+  const race = races.value.find(r => r.name === raceName)
+  return race ? useRaceName(race) : raceName
+}
+
+function getClassDisplayName(className: string | undefined): string {
+  if (!className) return ''
+  const classData = classes.value.find(c => c.name === className)
+  return classData ? useClassName(classData) : className
+}
 
 // Translated race/class items for dropdowns (uses DB translations or i18n fallback)
 const raceItems = computed(() => {
-  return races.value?.map(r => ({
+  return races.value.map(r => ({
     title: useRaceName(r),
     value: r.name,
-  })) || []
+  }))
 })
 const classItems = computed(() => {
-  return classes.value?.map(c => ({
+  return classes.value.map(c => ({
     title: useClassName(c),
     value: c.name,
-  })) || []
+  }))
 })
 
 // Debounced search with abort controller
@@ -2186,5 +2263,20 @@ function closeDialog() {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Highlighted card animation */
+.highlighted-card {
+  animation: highlight-pulse 2s ease-in-out;
+  box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
+  }
 }
 </style>

@@ -2,6 +2,7 @@ import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
 import { getRaceKey, getClassKey, getLocaleFromEvent } from '../../utils/i18n-lookup'
+import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
@@ -49,7 +50,7 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = searchQuery.trim().toLowerCase()
+    const searchTerm = normalizeText(searchQuery.trim())
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -210,18 +211,18 @@ export default defineEventHandler((event) => {
 
       // Step 2: Apply Levenshtein distance for better ranking
       let scoredNpcs = npcs.map((npc: NpcRow): ScoredNpc => {
-        const nameLower = npc.name.toLowerCase()
+        const nameNormalized = normalizeText(npc.name)
 
         // Smart distance calculation
-        const exactMatch = nameLower === searchTerm
-        const startsWithQuery = nameLower.startsWith(searchTerm)
-        const containsQuery = nameLower.includes(searchTerm)
+        const exactMatch = nameNormalized === searchTerm
+        const startsWithQuery = nameNormalized.startsWith(searchTerm)
+        const containsQuery = nameNormalized.includes(searchTerm)
 
         // Check if search term appears in metadata or description (FTS5 match but not in name)
-        const metadataLower = npc.metadata?.toLowerCase() || ''
-        const descriptionLower = (npc.description || '').toLowerCase()
-        const isMetadataMatch = metadataLower.includes(searchTerm)
-        const isDescriptionMatch = descriptionLower.includes(searchTerm)
+        const metadataNormalized = normalizeText(npc.metadata || '')
+        const descriptionNormalized = normalizeText(npc.description || '')
+        const isMetadataMatch = metadataNormalized.includes(searchTerm)
+        const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isNonNameMatch = (isMetadataMatch || isDescriptionMatch) && !containsQuery
 
         let levDistance: number
@@ -233,11 +234,11 @@ export default defineEventHandler((event) => {
         else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
           // "bern" vs "bernhard" → distance = 4 (remaining: "hard")
-          levDistance = nameLower.length - searchTerm.length
+          levDistance = nameNormalized.length - searchTerm.length
         }
         else {
           // Full Levenshtein distance for non-prefix matches
-          levDistance = levenshtein(searchTerm, nameLower)
+          levDistance = levenshtein(searchTerm, nameNormalized)
         }
 
         // Combined score: FTS score + weighted Levenshtein distance
@@ -262,9 +263,9 @@ export default defineEventHandler((event) => {
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
         scoredNpcs = scoredNpcs.filter(npc => {
-          const nameLower = npc.name.toLowerCase()
-          const metadataLower = npc.metadata?.toLowerCase() || ''
-          const descriptionLower = (npc.description || '').toLowerCase()
+          const nameNormalized = normalizeText(npc.name)
+          const metadataNormalized = normalizeText(npc.metadata || '')
+          const descriptionNormalized = normalizeText(npc.description || '')
 
           // Check ALL expanded terms (original + race/class keys)
           for (const termObj of expandedTerms) {
@@ -273,24 +274,24 @@ export default defineEventHandler((event) => {
               const shouldCheckMetadata = !termObj.blockMetadata
 
               // Exact/substring match in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
                 return true
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 return true
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 return true
               }
 
               // Levenshtein match for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 return true
@@ -304,9 +305,9 @@ export default defineEventHandler((event) => {
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredNpcs = scoredNpcs.filter(npc => {
-          const nameLower = npc.name.toLowerCase()
-          const metadataLower = npc.metadata?.toLowerCase() || ''
-          const descriptionLower = (npc.description || '').toLowerCase()
+          const nameNormalized = normalizeText(npc.name)
+          const metadataNormalized = normalizeText(npc.metadata || '')
+          const descriptionNormalized = normalizeText(npc.description || '')
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -316,24 +317,24 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
                 return true // At least one variant matches
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 return true
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 return true
               }
 
               // Check Levenshtein for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 return true // Close enough match
@@ -346,9 +347,9 @@ export default defineEventHandler((event) => {
       else if (hasAndOperator) {
         // AND query: ALL terms must match
         scoredNpcs = scoredNpcs.filter(npc => {
-          const nameLower = npc.name.toLowerCase()
-          const metadataLower = npc.metadata?.toLowerCase() || ''
-          const descriptionLower = (npc.description || '').toLowerCase()
+          const nameNormalized = normalizeText(npc.name)
+          const metadataNormalized = normalizeText(npc.metadata || '')
+          const descriptionNormalized = normalizeText(npc.description || '')
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -359,19 +360,19 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameLower.includes(variant) || descriptionLower.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
 
               // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataLower.includes(variant)) {
+              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
 
               // Prefix match (before Levenshtein for performance)
-              if (nameLower.startsWith(variant)) {
+              if (nameNormalized.startsWith(variant)) {
                 termMatches = true
                 break
               }
@@ -379,7 +380,7 @@ export default defineEventHandler((event) => {
               // Check Levenshtein for name
               const variantLength = variant.length
               const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameLower)
+              const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
                 termMatches = true

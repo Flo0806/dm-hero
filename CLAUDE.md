@@ -658,6 +658,150 @@ const display = computed(() => {
 
 ## 📅 Changelog
 
+### 2025-10-31 (Late Evening) - Unicode Normalization & Global Search UX
+
+**🔤 Unicode Normalization für Akzent-Suche:**
+- ✅ **Problem**: "andre" findet "andré" nicht, weil é ≠ e
+- ✅ **Lösung**: `normalizeText()` Utility-Funktion erstellt
+  - Verwendet `String.normalize('NFD')` - zerlegt Zeichen (é → e + Akzent)
+  - Entfernt Akzent-Marks mit Regex `/[\u0300-\u036f]/g`
+  - Macht `.toLowerCase()` für Case-Insensitivity
+- ✅ **Implementiert in**:
+  - `/server/utils/normalize.ts` - Neue Utility-Funktion
+  - `/server/api/npcs/index.get.ts` - Alle `.toLowerCase()` → `normalizeText()`
+  - `/server/api/locations/index.get.ts` - Alle `.toLowerCase()` → `normalizeText()`
+- ✅ **Beispiele die jetzt funktionieren**:
+  - "andre" findet "André"
+  - "muller" findet "Müller"
+  - "sao paulo" findet "São Paulo"
+
+**🔍 Global Search UX Improvements:**
+- ✅ **Fixed entity type bug**: `/server/api/search.get.ts` gab `entity_type` zurück, Frontend erwartete `type`
+- ✅ **Locations Highlight Feature** (analog zu NPCs):
+  - Query params: `?highlight=123&search=EntityName`
+  - Suchbegriff wird in Searchbar eingetragen
+  - Entity wird hervorgehoben mit Animation
+  - Auto-scroll zur highlighted Entity
+  - Highlight wird bei manueller Suche entfernt
+  - CSS Animation: `highlight-pulse` mit box-shadow
+
+**🐛 Critical Bugfixes:**
+- ✅ **Nuxt 4 useFetch Warning**: `useFetch` in Composables führte zu "Component already mounted" Warnings
+  - **Problem**: `useRaceName()`/`useClassName()` Composables verwendeten `useFetch` intern
+  - **Root Cause**: Composables wurden in `computed()` aufgerufen → `useFetch` nach Component-Mount
+  - **Lösung**: Composables refactored - erwarten jetzt Objekt statt String
+  - **Pattern**: NPCs laden races/classes mit `$fetch` in `onMounted`, dann an Composables übergeben
+- ✅ **Vue Variable Declaration Order**:
+  - **Problem**: `searchQuery` wurde im Template verwendet bevor deklariert
+  - **Root Cause**: Template wird evaluiert wenn Component mounted, aber Variable kam erst später im Script
+  - **Lösung**: `searchQuery` GANZ OBEN im `<script setup>` deklarieren (direkt nach Interfaces)
+  - **WICHTIG**: In `<script setup>` müssen Template-gebundene refs VOR allen anderen Code-Blöcken stehen!
+
+**📝 Composables Pattern Update:**
+
+**VORHER (funktioniert nicht in Nuxt 4):**
+```typescript
+// ❌ BAD: useFetch in Composable
+export function useRaceName(race: string) {
+  const { data: races } = useFetch('/api/races') // Problem!
+  const raceData = races.value?.find(r => r.name === race)
+  return raceData?.name_de || race
+}
+
+// Verwendung in computed
+const raceItems = computed(() => {
+  return races.value.map(r => ({
+    title: useRaceName(r.name), // Ruft useFetch in computed auf!
+    value: r.name
+  }))
+})
+```
+
+**NACHHER (Nuxt 4 kompatibel):**
+```typescript
+// ✅ GOOD: Composable erwartet Daten
+export function useRaceName(race: ReferenceData) {
+  const { locale } = useI18n()
+  if (race.name_de && race.name_en) {
+    return locale.value === 'de' ? race.name_de : race.name_en
+  }
+  return race.name
+}
+
+// Daten laden in onMounted mit $fetch
+onMounted(async () => {
+  const racesData = await $fetch('/api/races')
+  races.value = racesData
+})
+
+// Verwendung in computed mit geladenen Daten
+const raceItems = computed(() => {
+  return races.value.map(r => ({
+    title: useRaceName(r), // Kein useFetch, nur Daten-Transformation
+    value: r.name
+  }))
+})
+```
+
+**🎯 Vue 3 Script Setup Order Pattern (WICHTIG!):**
+
+```vue
+<script setup lang="ts">
+// 1. TypeScript Interfaces (optional)
+interface MyData {
+  id: number
+  name: string
+}
+
+// 2. Template-gebundene Refs (WICHTIG: VOR allem anderen!)
+const searchQuery = ref('')
+const items = ref<MyData[]>([])
+
+// 3. Composables & Stores
+const { t } = useI18n()
+const router = useRouter()
+const store = useMyStore()
+
+// 4. Computed Properties
+const filteredItems = computed(() => {
+  return items.value.filter(i => i.name.includes(searchQuery.value))
+})
+
+// 5. Functions
+function doSomething() {
+  // ...
+}
+
+// 6. Lifecycle Hooks
+onMounted(() => {
+  // ...
+})
+
+// 7. Watchers
+watch(searchQuery, () => {
+  // ...
+})
+</script>
+```
+
+**💡 Eselsbrücken für morgen:**
+1. **Unicode-Suche**: "André" wird "andre" → `normalize('NFD')` + Regex entfernt Akzente
+2. **Composables**: NIEMALS `useFetch` in Composables → immer Daten als Parameter übergeben
+3. **Script Order**: Template-refs müssen ZUERST kommen, sonst "Cannot access before initialization"
+4. **Global Search**: `type` nicht `entity_type` (API ↔ Frontend Mapping!)
+
+**Files Modified:**
+- `/server/utils/normalize.ts` - NEW: Unicode normalization utility
+- `/server/api/npcs/index.get.ts` - Added normalizeText for accent-insensitive search
+- `/server/api/locations/index.get.ts` - Added normalizeText for accent-insensitive search
+- `/server/api/search.get.ts` - Fixed `entity_type` → `type` mapping
+- `/app/composables/useReferenceData.ts` - Removed internal useFetch, now expects data objects
+- `/app/pages/npcs/index.vue` - Load races/classes with $fetch, pass to composables
+- `/app/pages/locations/index.vue` - Added highlight feature, fixed variable order
+- `/app/app.vue` - Fixed getEntityPath for all entity types
+
+---
+
 ### 2025-10-31 - Locations Cross-Entity Search - FINAL (Evening)
 
 **🗺️ Cross-Search für Locations - Vollständig implementiert:**
@@ -1097,13 +1241,15 @@ Claude:
 - ✅ NPC, Item, Location, Faction CRUD
 - ✅ Image galleries for all entity types
 - ✅ Markdown documents for all entity types
-- ✅ FTS5 search backend (all entities)
-- ✅ FTS5 search frontend (NPCs only)
+- ✅ FTS5 search backend (all entities with Unicode normalization)
+- ✅ FTS5 search frontend with highlight (NPCs, Locations)
 - ✅ Reference data management (races, classes)
 - ✅ Entity relations (bidirectional with types)
+- ✅ Global search with entity type routing
+- ✅ Unicode normalization (akzent-insensitive Suche)
 
 **Partially Implemented:**
-- ⏳ FTS5 search frontend (Items, Locations, Factions pending)
+- ⏳ FTS5 search frontend (Items, Factions pending)
 - ⏳ Universal search dialog (backend ready, UI pending)
 
 **Not Yet Implemented:**
@@ -1113,14 +1259,18 @@ Claude:
 - ❌ Duplicate detection
 - ❌ Tag system UI
 
-**Next Priority:**
-1. Apply FTS5 search to Items, Locations, Factions pages (copy NPCs pattern)
-2. Build universal search dialog with `/` keyboard shortcut
-3. Quests page implementation
+**Next Priority (für morgen!):**
+1. **Items page**: Apply same highlight + search pattern as NPCs/Locations
+   - Copy pattern from locations/index.vue
+   - Add highlight CSS
+   - Query params handling
+   - Unicode search already works (backend ready!)
+2. **Factions page**: Same as Items
+3. Build universal search dialog with `/` keyboard shortcut
 
 ---
 
-**Last Updated:** 2025-10-29
+**Last Updated:** 2025-10-31
 **Database Version:** 8 (FTS5 with metadata search)
 **Node Version:** 22.20.0
 **Framework:** Nuxt 4
