@@ -5,6 +5,7 @@
     "subtitle": "Keep track of your campaign"
   },
   "nav": {
+    "dashboard": "Dashboard",
     "search": "Search",
     "npcs": "NPCs",
     "locations": "Locations",
@@ -12,7 +13,10 @@
     "factions": "Factions",
     "quests": "Quests",
     "sessions": "Sessions",
-    "theme": "Theme"
+    "referenceData": "Reference Data",
+    "settings": "Settings",
+    "theme": "Theme",
+    "activeCampaign": "Active Campaign"
   },
   "search": {
     "placeholder": "Search for NPCs, locations, items...",
@@ -203,6 +207,7 @@
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
+    "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image"
   },
@@ -267,6 +272,7 @@
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
+    "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image"
   },
@@ -308,6 +314,7 @@
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
+    "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image"
   },
@@ -412,15 +419,19 @@
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
+    "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
+    "saveBeforeGenerating": "Details changed - save first",
     "documents": "Documents"
   },
   "referenceData": {
     "title": "Reference Data",
-    "subtitle": "Manage races and classes for your campaign",
+    "subtitle": "Manage races, classes, item types and rarities for your campaign",
     "races": "Races",
     "classes": "Classes",
+    "itemTypes": "Item Types",
+    "itemRarities": "Item Rarities",
     "name": "Name",
     "description": "Description",
     "nameRequired": "Name is required",
@@ -547,5 +558,30 @@
     "notes": "Notes",
     "yes": "Yes",
     "no": "No"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure API keys and preferences",
+    "sections": {
+      "openai": "OpenAI Integration",
+      "preferences": "Preferences"
+    },
+    "openai": {
+      "apiKey": "OpenAI API Key",
+      "apiKeyPlaceholder": "sk-proj-...",
+      "apiKeyHint": "Your OpenAI API key will be stored encrypted",
+      "model": "Model",
+      "modelHint": "Default: gpt-4o-mini",
+      "testConnection": "Test Connection",
+      "testing": "Testing connection...",
+      "testSuccess": "Connection successful!",
+      "testFailed": "Connection failed",
+      "showKey": "Show",
+      "hideKey": "Hide",
+      "getApiKey": "Get API Key",
+      "howToGetKey": "Go to platform.openai.com, create an account and generate an API key"
+    },
+    "saved": "Settings saved",
+    "saveFailed": "Failed to save settings"
   }
 }

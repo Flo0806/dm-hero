@@ -18,6 +18,18 @@
         </v-icon>
         {{ $t('referenceData.classes') }}
       </v-tab>
+      <v-tab value="item-types">
+        <v-icon start>
+          mdi-package-variant
+        </v-icon>
+        {{ $t('referenceData.itemTypes') }}
+      </v-tab>
+      <v-tab value="item-rarities">
+        <v-icon start>
+          mdi-star
+        </v-icon>
+        {{ $t('referenceData.itemRarities') }}
+      </v-tab>
     </v-tabs>
 
     <v-tabs-window v-model="tab">

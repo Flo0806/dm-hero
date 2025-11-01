@@ -5,6 +5,7 @@
     "subtitle": "Behalte den Überblick über deine Kampagne"
   },
   "nav": {
+    "dashboard": "Dashboard",
     "search": "Suche",
     "npcs": "NPCs",
     "locations": "Orte",
@@ -12,7 +13,10 @@
     "factions": "Fraktionen",
     "quests": "Quests",
     "sessions": "Sessions",
-    "theme": "Theme"
+    "referenceData": "Referenzdaten",
+    "settings": "Einstellungen",
+    "theme": "Theme",
+    "activeCampaign": "Aktive Kampagne"
   },
   "search": {
     "placeholder": "Suche nach NPCs, Orten, Items...",
@@ -203,6 +207,7 @@
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
+    "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes"
   },
@@ -267,6 +272,7 @@
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
+    "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes"
   },
@@ -308,6 +314,7 @@
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
+    "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes"
   },
@@ -412,15 +419,19 @@
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
+    "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes",
+    "saveBeforeGenerating": "Details geändert - erst speichern",
     "documents": "Dokumente"
   },
   "referenceData": {
     "title": "Referenzdaten",
-    "subtitle": "Verwalte Völker und Klassen für deine Kampagne",
+    "subtitle": "Verwalte Völker, Klassen, Item-Typen und Seltenheiten für deine Kampagne",
     "races": "Völker",
     "classes": "Klassen",
+    "itemTypes": "Item-Typen",
+    "itemRarities": "Seltenheiten",
     "name": "Name",
     "description": "Beschreibung",
     "nameRequired": "Name ist erforderlich",
@@ -547,5 +558,30 @@
     "notes": "Notizen",
     "yes": "Ja",
     "no": "Nein"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Konfiguriere API-Keys und Präferenzen",
+    "sections": {
+      "openai": "OpenAI Integration",
+      "preferences": "Präferenzen"
+    },
+    "openai": {
+      "apiKey": "OpenAI API-Key",
+      "apiKeyPlaceholder": "sk-proj-...",
+      "apiKeyHint": "Dein OpenAI API-Key wird verschlüsselt gespeichert",
+      "model": "Modell",
+      "modelHint": "Standard: gpt-4o-mini",
+      "testConnection": "Verbindung testen",
+      "testing": "Teste Verbindung...",
+      "testSuccess": "Verbindung erfolgreich!",
+      "testFailed": "Verbindung fehlgeschlagen",
+      "showKey": "Zeigen",
+      "hideKey": "Verbergen",
+      "getApiKey": "API-Key erhalten",
+      "howToGetKey": "Gehe zu platform.openai.com, erstelle einen Account und generiere einen API-Key"
+    },
+    "saved": "Einstellungen gespeichert",
+    "saveFailed": "Fehler beim Speichern"
   }
 }

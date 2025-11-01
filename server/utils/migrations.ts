@@ -484,6 +484,105 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 9: Removed key column and added bilingual reference data support (name_de, name_en)')
     },
   },
+  {
+    version: 10,
+    name: 'settings_table',
+    up: (db) => {
+      // Settings table for storing application configuration (API keys, preferences, etc.)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+
+      // Create index for faster lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key)
+      `)
+
+      console.log('✅ Migration 10: Created settings table for API keys and preferences')
+    },
+  },
+  {
+    version: 11,
+    name: 'item_types_and_rarities',
+    up: (db) => {
+      // Item Types table (like races/classes - bilingual with i18n support)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS item_types (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          name_de TEXT,
+          name_en TEXT,
+          is_standard BOOLEAN DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+
+      // Item Rarities table (D&D 5e standard rarities)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS item_rarities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          name_de TEXT,
+          name_en TEXT,
+          is_standard BOOLEAN DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+
+      // Seed standard Item Types (D&D 5e + common types)
+      const itemTypes = [
+        { name: 'weapon', name_de: 'Waffe', name_en: 'Weapon', is_standard: 1 },
+        { name: 'armor', name_de: 'Rüstung', name_en: 'Armor', is_standard: 1 },
+        { name: 'potion', name_de: 'Trank', name_en: 'Potion', is_standard: 1 },
+        { name: 'scroll', name_de: 'Schriftrolle', name_en: 'Scroll', is_standard: 1 },
+        { name: 'wand', name_de: 'Zauberstab', name_en: 'Wand', is_standard: 1 },
+        { name: 'ring', name_de: 'Ring', name_en: 'Ring', is_standard: 1 },
+        { name: 'amulet', name_de: 'Amulett', name_en: 'Amulet', is_standard: 1 },
+        { name: 'wondrous', name_de: 'Wundersam', name_en: 'Wondrous Item', is_standard: 1 },
+        { name: 'tool', name_de: 'Werkzeug', name_en: 'Tool', is_standard: 1 },
+        { name: 'treasure', name_de: 'Schatz', name_en: 'Treasure', is_standard: 1 },
+        { name: 'consumable', name_de: 'Verbrauchsgegenstand', name_en: 'Consumable', is_standard: 1 },
+        { name: 'quest_item', name_de: 'Quest-Item', name_en: 'Quest Item', is_standard: 1 },
+      ]
+
+      const insertType = db.prepare(`
+        INSERT INTO item_types (name, name_de, name_en, is_standard)
+        VALUES (?, ?, ?, ?)
+      `)
+
+      for (const type of itemTypes) {
+        insertType.run(type.name, type.name_de, type.name_en, type.is_standard)
+      }
+
+      // Seed standard Item Rarities (D&D 5e)
+      const itemRarities = [
+        { name: 'common', name_de: 'Gewöhnlich', name_en: 'Common', is_standard: 1 },
+        { name: 'uncommon', name_de: 'Ungewöhnlich', name_en: 'Uncommon', is_standard: 1 },
+        { name: 'rare', name_de: 'Selten', name_en: 'Rare', is_standard: 1 },
+        { name: 'very_rare', name_de: 'Sehr selten', name_en: 'Very Rare', is_standard: 1 },
+        { name: 'legendary', name_de: 'Legendär', name_en: 'Legendary', is_standard: 1 },
+        { name: 'artifact', name_de: 'Artefakt', name_en: 'Artifact', is_standard: 1 },
+      ]
+
+      const insertRarity = db.prepare(`
+        INSERT INTO item_rarities (name, name_de, name_en, is_standard)
+        VALUES (?, ?, ?, ?)
+      `)
+
+      for (const rarity of itemRarities) {
+        insertRarity.run(rarity.name, rarity.name_de, rarity.name_en, rarity.is_standard)
+      }
+
+      console.log('✅ Migration 11: Created item_types and item_rarities tables with bilingual seed data')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

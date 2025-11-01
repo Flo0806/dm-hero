@@ -326,7 +326,18 @@
                 :rules="[v => !!v || $t('npcs.nameRequired')]"
                 variant="outlined"
                 class="mb-4"
-              />
+              >
+                <template #append-inner>
+                  <v-btn
+                    :loading="generatingName"
+                    icon="mdi-sparkles"
+                    variant="text"
+                    size="small"
+                    color="primary"
+                    @click="generateName"
+                  />
+                </template>
+              </v-text-field>
 
               <v-textarea
                 v-model="npcForm.description"
@@ -2064,6 +2075,46 @@ async function editNpc(npc: NPC) {
 function deleteNpc(npc: NPC) {
   deletingNpc.value = npc
   showDeleteDialog.value = true
+}
+
+// AI Name Generation
+const generatingName = ref(false)
+
+async function generateName() {
+  generatingName.value = true
+
+  try {
+    // Build context from current form data
+    const context = []
+    if (npcForm.value.metadata.race) {
+      context.push(npcForm.value.metadata.race)
+    }
+    if (npcForm.value.metadata.class) {
+      context.push(npcForm.value.metadata.class)
+    }
+
+    const contextString = context.length > 0 ? context.join(', ') : undefined
+
+    const result = await $fetch<{ name: string }>('/api/ai/generate-name', {
+      method: 'POST',
+      body: {
+        entityType: 'NPC',
+        context: contextString,
+        language: locale.value as 'de' | 'en',
+      },
+    })
+
+    if (result.name) {
+      npcForm.value.name = result.name
+    }
+  }
+  catch (error: any) {
+    console.error('[NPC] Failed to generate name:', error)
+    alert(error.data?.message || 'Failed to generate name')
+  }
+  finally {
+    generatingName.value = false
+  }
 }
 
 async function saveNpc() {

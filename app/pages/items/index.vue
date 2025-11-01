@@ -99,10 +99,11 @@
             <div
               v-if="item.image_url"
               class="float-right ml-3 mb-2 position-relative image-container"
-              style="width: 80px; height: 80px;"
+              style="width: 80px; height: 80px; cursor: pointer;"
+              @click.stop="openImagePreview(`/uploads/${item.image_url}`, item.name)"
             >
               <v-img
-                :src="`/pictures/${item.image_url}`"
+                :src="`/uploads/${item.image_url}`"
                 cover
                 rounded="lg"
                 style="width: 100%; height: 100%;"
@@ -112,7 +113,7 @@
                 size="x-small"
                 variant="tonal"
                 class="image-download-btn"
-                @click.stop="downloadImage(`/pictures/${item.image_url}`, item.name)"
+                @click.stop="downloadImage(`/uploads/${item.image_url}`, item.name)"
               />
             </div>
             <v-chip
@@ -222,7 +223,7 @@
             <v-col v-if="viewingItem.image_url" cols="12" md="4">
               <div class="position-relative image-container">
                 <v-img
-                  :src="`/pictures/${viewingItem.image_url}`"
+                  :src="`/uploads/${viewingItem.image_url}`"
                   aspect-ratio="1"
                   cover
                   rounded="lg"
@@ -232,7 +233,7 @@
                   size="small"
                   variant="tonal"
                   class="image-download-btn"
-                  @click="downloadImage(`/pictures/${viewingItem.image_url}`, viewingItem.name)"
+                  @click="downloadImage(`/uploads/${viewingItem.image_url}`, viewingItem.name)"
                 />
               </div>
             </v-col>
@@ -321,6 +322,7 @@
       v-model="showCreateDialog"
       max-width="1200"
       scrollable
+      :persistent="generatingImage || uploadingImage"
     >
       <v-card>
         <v-card-title>
@@ -362,64 +364,118 @@
               <v-card variant="outlined" class="mb-4">
                 <v-card-text>
                   <div class="d-flex align-center gap-4">
+                    <!-- Image Preview -->
                     <div style="position: relative;">
                       <v-avatar
-                        size="120"
+                        size="160"
                         rounded="lg"
                         :color="editingItem?.image_url ? undefined : 'grey-lighten-2'"
+                        :style="editingItem?.image_url ? 'cursor: pointer;' : ''"
+                        @click="editingItem?.image_url ? openImagePreview(`/uploads/${editingItem.image_url}`, itemForm.name) : null"
                       >
                         <v-img
-                          v-if="editingItem?.image_url && !uploadingImage"
-                          :src="`/pictures/${editingItem.image_url}`"
+                          v-if="editingItem?.image_url"
+                          :src="`/uploads/${editingItem.image_url}`"
                           cover
+                          :class="{ 'blur-image': uploadingImage || generatingImage }"
                         />
-                        <v-icon v-else-if="!uploadingImage" icon="mdi-sword" size="64" color="grey" />
+                        <v-icon v-else-if="!uploadingImage && !generatingImage" icon="mdi-sword" size="80" color="grey" />
                       </v-avatar>
                       <v-progress-circular
-                        v-if="uploadingImage"
+                        v-if="uploadingImage || generatingImage"
                         indeterminate
                         color="primary"
-                        size="120"
-                        width="8"
-                        style="position: absolute; top: 0; left: 0;"
+                        size="64"
+                        width="6"
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
                       />
                     </div>
-                    <div class="flex-grow-1">
-                      <div class="d-flex gap-2">
+
+                    <!-- Image Actions -->
+                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px;">
+                      <!-- Upload Button -->
+                      <v-btn
+                        prepend-icon="mdi-camera"
+                        color="primary"
+                        variant="tonal"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || deletingImage || generatingImage"
+                        @click="triggerImageUpload"
+                      >
+                        {{ editingItem?.image_url ? $t('items.changeImage') : $t('items.uploadImage') }}
+                      </v-btn>
+                      <input
+                        ref="fileInputRef"
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                        style="display: none"
+                        @change="handleImageUpload"
+                      >
+
+                      <!-- AI Generate Button -->
+                      <div class="d-flex align-center gap-2">
                         <v-btn
-                          icon="mdi-camera"
+                          prepend-icon="mdi-creation"
                           color="primary"
-                          size="large"
-                          :disabled="uploadingImage || deletingImage"
-                          @click="triggerImageUpload"
-                        >
-                          <v-icon>mdi-camera</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ editingItem?.image_url ? $t('items.changeImage') : $t('items.uploadImage') }}
-                          </v-tooltip>
-                        </v-btn>
-                        <input
-                          ref="fileInputRef"
-                          type="file"
-                          accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                          style="display: none"
-                          @change="handleImageUpload"
-                        >
-                        <v-btn
-                          v-if="editingItem?.image_url"
-                          icon="mdi-delete"
-                          color="error"
                           variant="tonal"
-                          size="large"
-                          :loading="deletingImage"
-                          :disabled="uploadingImage"
-                          @click="deleteImage"
+                          block
+                          class="mb-2"
+                          :loading="generatingImage"
+                          :disabled="uploadingImage || deletingImage || !itemForm.name || !hasApiKey || hasUnsavedChanges"
+                          @click="generateImage"
                         >
-                          <v-icon>mdi-delete</v-icon>
-                          <v-tooltip activator="parent" location="bottom">
-                            {{ $t('items.deleteImage') }}
-                          </v-tooltip>
+                          {{ $t('items.generateImage') }}
                         </v-btn>
+                        <v-tooltip v-if="hasUnsavedChanges" location="top">
+                          <template #activator="{ props }">
+                            <v-icon
+                              v-bind="props"
+                              icon="mdi-information-outline"
+                              color="warning"
+                              size="small"
+                              class="mb-2"
+                            />
+                          </template>
+                          <span>{{ $t('items.saveBeforeGenerating') }}</span>
+                        </v-tooltip>
+                      </div>
+
+                      <!-- Download Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingItem?.image_url"
+                        prepend-icon="mdi-download"
+                        variant="outlined"
+                        block
+                        class="mb-2"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="downloadImage(`/uploads/${editingItem.image_url}`, itemForm.name)"
+                      >
+                        Download
+                      </v-btn>
+
+                      <!-- Delete Button (only if image exists) -->
+                      <v-btn
+                        v-if="editingItem?.image_url"
+                        prepend-icon="mdi-delete"
+                        color="error"
+                        variant="outlined"
+                        block
+                        :loading="deletingImage"
+                        :disabled="uploadingImage || generatingImage"
+                        @click="deleteImage"
+                      >
+                        {{ $t('items.deleteImage') }}
+                      </v-btn>
+
+                      <!-- AI Hint -->
+                      <div v-if="!hasApiKey" class="text-caption text-medium-emphasis mt-3">
+                        <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                        KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
+                      </div>
+                      <div v-else-if="!itemForm.name" class="text-caption text-medium-emphasis mt-3">
+                        <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
+                        KI-Generierung: Bitte zuerst einen Namen eingeben
                       </div>
                     </div>
                   </div>
@@ -841,13 +897,14 @@
           <v-spacer />
           <v-btn
             variant="text"
+            :disabled="generatingImage || uploadingImage"
             @click="closeDialog"
           >
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!itemForm.name"
+            :disabled="!itemForm.name || generatingImage || uploadingImage"
             :loading="saving"
             @click="saveItem"
           >
@@ -856,6 +913,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Image Preview Dialog -->
+    <ImagePreviewDialog
+      v-model="showImagePreview"
+      :image-url="previewImageUrl"
+      :title="previewImageTitle"
+      :download-file-name="previewImageTitle"
+    />
 
     <!-- Delete Confirmation Dialog -->
     <UiDeleteConfirmDialog
@@ -872,6 +937,20 @@
 <script setup lang="ts">
 import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
+
+// Check if OpenAI API key is configured
+const hasApiKey = ref(false)
+
+// Image Preview
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
+
+function openImagePreview(imageUrl: string, title: string) {
+  previewImageUrl.value = imageUrl
+  previewImageTitle.value = title
+  showImagePreview.value = true
+}
 
 // Debounced FTS5 + Levenshtein Search (must be declared early for template)
 const searchQuery = ref('')
@@ -923,6 +1002,15 @@ onMounted(async () => {
     entitiesStore.fetchNPCs(activeCampaignId.value),
     entitiesStore.fetchLocations(activeCampaignId.value),
   ])
+
+  // Check if API key is configured
+  try {
+    const settings = await $fetch<Record<string, any>>('/api/settings')
+    hasApiKey.value = !!settings.openai_api_key_full
+  }
+  catch (error) {
+    hasApiKey.value = false
+  }
 
   // Initialize from query params
   initializeFromQuery()
@@ -1061,6 +1149,24 @@ const itemForm = ref<{
   metadata: {},
 })
 
+// Track original item data to detect unsaved changes
+const originalItemData = ref<{
+  name: string
+  description: string
+  metadata: ItemMetadata
+} | null>(null)
+
+// Check if form has unsaved changes
+const hasUnsavedChanges = computed(() => {
+  if (!originalItemData.value) return false
+
+  return (
+    itemForm.value.name !== originalItemData.value.name ||
+    itemForm.value.description !== originalItemData.value.description ||
+    JSON.stringify(itemForm.value.metadata) !== JSON.stringify(originalItemData.value.metadata)
+  )
+})
+
 // Dialog tab state
 const itemDialogTab = ref('details')
 
@@ -1068,10 +1174,65 @@ const itemDialogTab = ref('details')
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadingImage = ref(false)
 const deletingImage = ref(false)
+const generatingImage = ref(false)
 
 // Trigger file input click
 function triggerImageUpload() {
   fileInputRef.value?.click()
+}
+
+// AI Image Generation
+async function generateImage() {
+  if (!editingItem.value || !itemForm.value.name) return
+
+  generatingImage.value = true
+
+  try {
+    // Build prompt from item data
+    let prompt = itemForm.value.name
+    if (itemForm.value.description) {
+      prompt += `, ${itemForm.value.description}`
+    }
+    if (itemForm.value.metadata.type) {
+      prompt = `${itemForm.value.metadata.type}: ${prompt}`
+    }
+
+    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
+      method: 'POST',
+      body: {
+        prompt,
+        entityName: itemForm.value.name,
+        entityType: 'Item',
+        style: 'fantasy-art',
+      },
+    })
+
+    if (result.imageUrl && editingItem.value) {
+      // Update the item with the generated image
+      const response = await $fetch<{ success: boolean }>(`/api/entities/${editingItem.value.id}/set-image`, {
+        method: 'POST',
+        body: {
+          imageUrl: result.imageUrl.replace('/uploads/', ''), // Remove /uploads/ prefix
+        },
+      })
+
+      if (response.success) {
+        // Update local item
+        editingItem.value.image_url = result.imageUrl.replace('/uploads/', '')
+        // Refresh NPCs to update the list
+        if (activeCampaignId.value) {
+          await entitiesStore.fetchItems(activeCampaignId.value)
+        }
+      }
+    }
+  }
+  catch (error: any) {
+    console.error('[Item] Failed to generate image:', error)
+    alert(error.data?.message || 'Failed to generate image')
+  }
+  finally {
+    generatingImage.value = false
+  }
 }
 
 // Handle image upload from native input
@@ -1238,6 +1399,9 @@ async function editItem(item: Item) {
     },
   }
 
+  // Store original data to track changes
+  originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
+
   // Load owners and locations
   await Promise.all([
     loadItemOwners(),
@@ -1266,6 +1430,10 @@ async function saveItem() {
         description: itemForm.value.description || null,
         metadata: itemForm.value.metadata,
       })
+
+      // Update original data after successful save
+      originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
+
       closeDialog()
     }
     else {
@@ -1459,6 +1627,13 @@ async function removeLocation(relationId: number) {
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Blur image during upload/generation */
+.blur-image {
+  filter: blur(8px);
+  opacity: 0.6;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
 /* Highlight animation for items from global search */

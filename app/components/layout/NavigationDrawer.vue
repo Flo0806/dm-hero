@@ -28,7 +28,7 @@
       v-if="activeCampaignName && !rail"
       prepend-icon="mdi-sword-cross"
       :title="activeCampaignName || ''"
-      subtitle="Aktive Kampagne"
+      :subtitle="$t('nav.activeCampaign')"
       class="mb-2"
       @click="navigateTo('/campaigns')"
     />
@@ -38,43 +38,43 @@
     <v-list density="compact" nav>
       <v-list-item
         prepend-icon="mdi-view-dashboard"
-        title="Dashboard"
+        :title="$t('nav.dashboard')"
         value="home"
         to="/"
       />
       <v-list-item
         prepend-icon="mdi-magnify"
-        title="Suche"
+        :title="$t('nav.search')"
         value="search"
         @click="$emit('search-click')"
       />
       <v-list-item
         prepend-icon="mdi-account-group"
-        title="NPCs"
+        :title="$t('nav.npcs')"
         value="npcs"
         to="/npcs"
       />
       <v-list-item
         prepend-icon="mdi-map-marker"
-        title="Orte"
+        :title="$t('nav.locations')"
         value="locations"
         to="/locations"
       />
       <v-list-item
         prepend-icon="mdi-sword"
-        title="Items"
+        :title="$t('nav.items')"
         value="items"
         to="/items"
       />
       <v-list-item
         prepend-icon="mdi-shield"
-        title="Fraktionen"
+        :title="$t('nav.factions')"
         value="factions"
         to="/factions"
       />
       <v-list-item
         prepend-icon="mdi-book-open-page-variant"
-        title="Sessions"
+        :title="$t('nav.sessions')"
         value="sessions"
         to="/sessions"
       />
@@ -85,12 +85,17 @@
       <v-list density="compact" nav>
         <v-list-item
           prepend-icon="mdi-database"
-          :title="rail ? '' : 'Referenzdaten'"
+          :title="rail ? '' : $t('nav.referenceData')"
           to="/reference-data"
         />
         <v-list-item
+          prepend-icon="mdi-cog"
+          :title="rail ? '' : $t('nav.settings')"
+          to="/settings"
+        />
+        <v-list-item
           :prepend-icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-          :title="rail ? '' : 'Theme'"
+          :title="rail ? '' : $t('nav.theme')"
           @click="$emit('toggle-theme')"
         />
       </v-list>
