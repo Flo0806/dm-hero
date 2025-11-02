@@ -130,7 +130,7 @@
           <v-tabs-window v-if="editingSession" v-model="sessionDialogTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
-              <v-row>
+              <v-row class="mt-2">
                 <v-col cols="12" md="8">
                   <v-text-field
                     v-model="sessionForm.title"
@@ -172,18 +172,35 @@
                 {{ $t('sessions.notes') }}
               </div>
 
-              <ClientOnly>
-                <MdEditor
+              <div class="position-relative">
+                <v-overlay
+                  :model-value="uploadingImage"
+                  contained
+                  persistent
+                  class="align-center justify-center"
+                  scrim="surface"
+                  opacity="0.9"
+                >
+                  <div class="text-center">
+                    <v-progress-circular indeterminate size="64" color="primary" />
+                    <div class="text-h6 mt-4">{{ $t('common.uploading') }}</div>
+                  </div>
+                </v-overlay>
+
+                <ClientOnly>
+                  <MdEditor
                   ref="editorRef"
                   v-model="sessionForm.notes"
                   :language="currentLocale"
                   :theme="editorTheme"
                   :placeholder="$t('sessions.notesPlaceholder')"
+                  :on-upload-img="handleImageUpload"
                   :toolbars="toolbars"
                   :sanitize="sanitizeHtml"
                   style="height: 500px;"
                   class="mb-4"
                   @click="handleEditorClick"
+                  @cancel.stop.prevent
                 >
                   <!-- Custom Entity Link Buttons -->
                   <template #defToolbars>
@@ -227,9 +244,20 @@
                         </svg>
                       </template>
                     </NormalToolbar>
+                    <NormalToolbar
+                      :title="$t('documents.imageGallery')"
+                      @on-click="openImageGallery"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
                   </template>
                 </MdEditor>
               </ClientOnly>
+              </div>
             </v-tabs-window-item>
 
             <!-- Mentions Tab -->
@@ -302,18 +330,35 @@
               {{ $t('sessions.notes') }}
             </div>
 
-            <ClientOnly>
-              <MdEditor
+            <div class="position-relative">
+              <v-overlay
+                :model-value="uploadingImage"
+                contained
+                persistent
+                class="align-center justify-center"
+                scrim="surface"
+                opacity="0.9"
+              >
+                <div class="text-center">
+                  <v-progress-circular indeterminate size="64" color="primary" />
+                  <div class="text-h6 mt-4">{{ $t('common.uploading') }}</div>
+                </div>
+              </v-overlay>
+
+              <ClientOnly>
+                <MdEditor
                 ref="editorRef"
                 v-model="sessionForm.notes"
                 :language="currentLocale"
                 :theme="editorTheme"
                 :placeholder="$t('sessions.notesPlaceholder')"
+                :on-upload-img="handleImageUpload"
                 :toolbars="toolbars"
                 :sanitize="sanitizeHtml"
                 style="height: 500px;"
                 class="mb-4"
                 @click="handleEditorClick"
+                @cancel.stop.prevent
               >
                 <!-- Custom Entity Link Buttons -->
                 <template #defToolbars>
@@ -357,9 +402,20 @@
                       </svg>
                     </template>
                   </NormalToolbar>
+                  <NormalToolbar
+                    :title="$t('documents.imageGallery')"
+                    @on-click="openImageGallery"
+                  >
+                    <template #trigger>
+                      <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6" />
+                      </svg>
+                    </template>
+                  </NormalToolbar>
                 </template>
               </MdEditor>
             </ClientOnly>
+            </div>
           </template>
         </v-card-text>
 
@@ -494,6 +550,30 @@
       @confirm="confirmDelete"
       @cancel="showDeleteDialog = false"
     />
+
+    <!-- Image Gallery Dialog -->
+    <v-dialog v-model="showImageGallery" max-width="1200" scrollable>
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-image-multiple" class="mr-2" />
+          {{ $t('documents.imageGallery') }}
+        </v-card-title>
+        <v-card-text style="max-height: 600px">
+          <v-row v-if="galleryImages.length > 0">
+            <v-col v-for="image in galleryImages" :key="image" cols="6" sm="4" md="3">
+              <v-card hover class="image-card" @click="insertImageFromGallery(image)">
+                <v-img :src="`/pictures/${image}`" aspect-ratio="1" cover class="cursor-pointer" />
+              </v-card>
+            </v-col>
+          </v-row>
+          <v-empty-state v-else icon="mdi-image-off" :title="$t('documents.noImages')" :text="$t('documents.noImagesText')" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showImageGallery = false">{{ $t('common.close') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Entity Quick View Dialog -->
     <v-dialog
@@ -763,6 +843,8 @@ const showViewDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showEntityLinkDialog = ref(false)
 const showEntityDialog = ref(false)
+const showImageGallery = ref(false)
+const galleryImages = ref<string[]>([])
 const editingSession = ref<Session | null>(null)
 const viewingSession = ref<Session | null>(null)
 const deletingSession = ref<Session | null>(null)
@@ -770,6 +852,7 @@ const viewingEntity = ref<ViewingEntity | null>(null)
 const viewingEntityType = ref<'npc' | 'location' | 'item' | 'faction'>('npc')
 const saving = ref(false)
 const deleting = ref(false)
+const uploadingImage = ref(false)
 const sessionDialogTab = ref('details')
 
 const sessionForm = ref({
@@ -796,8 +879,8 @@ interface MdEditorExpose {
 }
 const editorRef = ref<MdEditorExpose | null>(null)
 
-// md-editor Toolbars: 0-3 = Placeholders for custom entity buttons
-type ToolbarOrSlot = ToolbarNames | 0 | 1 | 2 | 3
+// md-editor Toolbars: 0-4 = Placeholders for custom buttons
+type ToolbarOrSlot = ToolbarNames | 0 | 1 | 2 | 3 | 4
 const toolbars: ToolbarOrSlot[] = [
   'bold',
   'italic',
@@ -810,18 +893,20 @@ const toolbars: ToolbarOrSlot[] = [
   '-',
   'code',
   'link',
+  'image',
   0, // NPC
   1, // Location
   2, // Item
   3, // Faction
+  4, // Gallery
   'table',
   '-',
   'revoke',
   'next',
   '=',
-  'pageFullscreen',
-  'preview',
-  'catalog',
+  // 'pageFullscreen',
+   'preview',
+  // 'catalog',
 ]
 
 const filteredEntities = computed(() => {
@@ -1145,6 +1230,58 @@ async function confirmDelete() {
   }
 }
 
+async function handleImageUpload(files: File[], callback: (urls: string[]) => void) {
+  uploadingImage.value = true
+  const uploaded: string[] = []
+  try {
+    for (const file of files) {
+      try {
+        const formData = new FormData()
+        formData.append('image', file)
+        const res = await $fetch<{ image_url: string }>(`/api/documents/upload-image`, { method: 'POST', body: formData })
+        uploaded.push(res.image_url)
+      } catch (e) {
+        console.error('Failed to upload image:', e)
+      }
+    }
+    // md-editor expects final URLs
+    callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
+  } finally {
+    uploadingImage.value = false
+  }
+}
+
+async function openImageGallery() {
+  showImageGallery.value = true
+  try {
+    const images = await $fetch<string[]>('/api/documents/images')
+    galleryImages.value = images ?? []
+  } catch (e) {
+    console.error('Failed to load images:', e)
+    galleryImages.value = []
+  }
+}
+
+function insertImageFromGallery(image: string) {
+  const src = image.startsWith('/pictures/') ? image : `/pictures/${image}`
+  const markdown = `![](${src})`
+
+  // Use md-editor's insert API to insert at cursor position
+  if (editorRef.value) {
+    editorRef.value.insert(() => ({
+      targetValue: markdown,
+      select: false,
+      deviationStart: 0,
+      deviationEnd: 0,
+    }))
+  } else {
+    // Fallback: append at end
+    sessionForm.value.notes += `\n${markdown}\n`
+  }
+
+  showImageGallery.value = false
+}
+
 function closeDialog() {
   showCreateDialog.value = false
   editingSession.value = null
@@ -1200,5 +1337,9 @@ function closeDialog() {
 
 .font-monospace {
   font-family: 'Courier New', Courier, monospace;
+}
+
+.image-card {
+  cursor: pointer;
 }
 </style>

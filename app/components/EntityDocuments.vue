@@ -97,8 +97,23 @@
         class="mb-4"
       />
 
-      <ClientOnly>
-        <MdEditor
+      <div class="position-relative">
+        <v-overlay
+          :model-value="uploadingImage"
+          contained
+          persistent
+          class="align-center justify-center"
+          scrim="surface"
+          opacity="0.9"
+        >
+          <div class="text-center">
+            <v-progress-circular indeterminate size="64" color="primary" />
+            <div class="text-h6 mt-4">{{ $t('common.uploading') }}</div>
+          </div>
+        </v-overlay>
+
+        <ClientOnly>
+          <MdEditor
           ref="editorRef"
           v-model="documentForm.content"
           :language="currentLocale"
@@ -107,6 +122,7 @@
           :on-upload-img="handleImageUpload"
           :toolbars="toolbars"
           style="height: 420px;"
+          @cancel.stop.prevent
         >
           <!-- Custom Toolbar Button (Galerie) -->
           <template #defToolbars>
@@ -123,6 +139,7 @@
           </template>
         </MdEditor>
       </ClientOnly>
+      </div>
 
       <div class="d-flex justify-end gap-2 mt-4">
         <v-btn variant="text" @click="cancelEditing">
@@ -204,6 +221,7 @@ const showDeleteDialog = ref(false)
 const deletingDocument = ref<Document | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
+const uploadingImage = ref(false)
 const showImageGallery = ref(false)
 const galleryImages = ref<string[]>([])
 
@@ -354,19 +372,24 @@ function formatDate(dateString: string) {
 }
 
 async function handleImageUpload(files: File[], callback: (urls: string[]) => void) {
+  uploadingImage.value = true
   const uploaded: string[] = []
-  for (const file of files) {
-    try {
-      const formData = new FormData()
-      formData.append('image', file)
-      const res = await $fetch<{ image_url: string }>(`/api/documents/upload-image`, { method: 'POST', body: formData })
-      uploaded.push(res.image_url)
-    } catch (e) {
-      console.error('Failed to upload image:', e)
+  try {
+    for (const file of files) {
+      try {
+        const formData = new FormData()
+        formData.append('image', file)
+        const res = await $fetch<{ image_url: string }>(`/api/documents/upload-image`, { method: 'POST', body: formData })
+        uploaded.push(res.image_url)
+      } catch (e) {
+        console.error('Failed to upload image:', e)
+      }
     }
+    // md-editor erwartet endgültige URLs
+    callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
+  } finally {
+    uploadingImage.value = false
   }
-  // md-editor erwartet endgültige URLs
-  callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
 }
 
 async function openImageGallery() {

@@ -566,6 +566,8 @@
     "lastUpdated": "Zuletzt aktualisiert",
     "created": "Erstellt",
     "imageGallery": "Bild-Galerie",
+    "noImages": "Keine Bilder",
+    "noImagesText": "Es wurden noch keine Bilder hochgeladen",
     "noContent": "Kein Inhalt",
     "sortOrder": "Reihenfolge",
     "moveUp": "Nach oben",
@@ -586,7 +588,8 @@
     "noResults": "Keine Ergebnisse",
     "notes": "Notizen",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "uploading": "Wird hochgeladen..."
   },
   "settings": {
     "title": "Einstellungen",
