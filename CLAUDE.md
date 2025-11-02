@@ -658,6 +658,164 @@ const display = computed(() => {
 
 ## 📅 Changelog
 
+### 2025-11-02 - Lore-NPC Linking & TypeScript Fixes
+
+**✅ Lore Linking in NPC Dialog - Fully Implemented!**
+
+1. **New "Lore" Tab in NPC Dialog**
+   - Autocomplete dropdown to select Lore entries
+   - "Link" button to add relations
+   - List of all linked Lore entries with images and descriptions
+   - Delete button per linked Lore entry
+   - Empty state when no Lore is linked
+
+2. **Backend Endpoints Created:**
+   - `/api/npcs/[id]/lore` (GET) - Loads all Lore entries linked to an NPC
+   - `/api/entity-relations/find` (GET) - Finds specific relation between two entities
+   - Uses existing `/api/entity-relations` (POST/DELETE) for CRUD
+
+3. **Frontend Logic:**
+   - `entitiesStore.fetchLore()` now called when loading NPCs page
+   - `loreForSelect` computed property from Entities Store
+   - `loadLinkedLore()` - Loads linked Lore when opening dialog (watch on editingNpc.id)
+   - `addLoreRelation()` - Creates new relation with type "kennt" (knows)
+   - `removeLoreRelation()` - Finds relation via `/find` endpoint and deletes it
+
+4. **i18n Translations Added:**
+   - German: `selectLore`, `selectLorePlaceholder`, `addRelation`, `noLinkedLore`, `noLinkedLoreText`
+   - English: Corresponding translations
+
+5. **Entity Images Bug Fix:**
+   - Problem: `/api/entity-images/[imageId]/set-primary` returned 404
+   - Root Cause: Nitro route conflict between `[imageId].delete.ts` and `[imageId]/set-primary.patch.ts`
+   - Solution: Moved `[imageId].delete.ts` → `[imageId]/index.delete.ts` (into subdirectory)
+   - Fixed import paths: `../../utils/db` → `../../../utils/db`
+   - Now working: GET /[entityId], DELETE /[imageId], PATCH /[imageId]/set-primary, PATCH /[imageId]/caption
+
+6. **TypeScript Errors Fixed:**
+   - Lore page: `(v: string)` for validation rules, `(isGenerating: boolean)` for event handler
+   - NPCs page: All implicit `any` types fixed
+     - Validation rules: `[(v: string) => ...]`
+     - Map functions: `(r: typeof races.value[0])`, `(c: typeof classes.value[0])`
+     - Constants: `(type: typeof NPC_TYPES[number])`, `(status: typeof NPC_STATUSES[number])`
+     - Filters: `(r: typeof npcRelations[0])`
+     - Lore: `(lore: { id: number, name: string })`
+
+**How Lore Linking Works:**
+1. Open NPC in edit mode
+2. Go to "Wissen" (Lore) tab (last tab)
+3. Select Lore entry from dropdown
+4. Click "Verknüpfen" (Link)
+5. Lore appears in list with image, name, description
+6. Relation stored in `entity_relations` with `relation_type = "kennt"`
+
+**Files Modified:**
+- `/app/pages/npcs/index.vue` - Added Lore tab, fetchLore() in onMounted, TypeScript fixes
+- `/app/pages/lore/index.vue` - TypeScript fixes
+- `/server/api/npcs/[id]/lore.get.ts` - NEW: Loads linked Lore for NPC
+- `/server/api/entity-relations/find.get.ts` - NEW: Finds specific relation
+- `/server/api/entity-images/[imageId]/index.delete.ts` - Moved (fix routing conflict)
+- `/server/api/entity-images/[imageId]/set-primary.patch.ts` - Fixed import path
+- `/server/api/entity-images/[imageId]/caption.patch.ts` - Fixed import path
+- `/app/components/EntityImageGallery.vue` - Fixed set-primary endpoint URL
+- `/i18n/locales/de.json` - Lore linking texts
+- `/i18n/locales/en.json` - Lore linking texts
+
+---
+
+## 🚀 NEXT STEPS (for next session)
+
+### 1. **Lore → NPCs Tab (Reverse Direction)**
+**Goal:** In Lore dialog, show which NPCs know this Lore
+
+**To Do:**
+- New "NPCs" tab in `/app/pages/lore/index.vue` (similar to Lore tab in NPCs)
+- Create endpoint `/api/lore/[id]/npcs.get.ts` (GET: Load all NPCs that know this Lore)
+- Same UI as Lore tab: Autocomplete + list with images
+- Relations are bidirectional → same `entity_relations` table
+- Query: `WHERE to_entity_id = loreId AND from_entity.type = 'NPC'`
+
+**Estimated Time:** 30-45 minutes
+
+### 2. **NPC Cross-Search via Linked Lore Names**
+**Goal:** Find NPCs through linked Lore names
+
+**Example:**
+- Lore "Ring of Power" is linked to NPC "Gandalf"
+- Search for "Ring" → finds "Gandalf" (because he knows the Lore)
+
+**To Do:**
+- Extend `/server/api/npcs/index.get.ts`:
+  - JOIN with `entity_relations` + `entities` (type=Lore)
+  - `GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names`
+  - Levenshtein check also for `linked_lore_names` (similar to Locations cross-search)
+  - Word-level splitting: "Ring of Power" → ["ring", "of", "power"]
+- All 3 filters (Simple/OR/AND) must check Lore names
+- Lore name match → Score bonus (e.g. -20 points)
+
+**Reference Implementation:**
+- See `/server/api/locations/index.get.ts` (Lines ~180-280)
+- Pattern: Load ALL with JOINs → Filter with Levenshtein → Sort by score
+- Unicode normalization via `normalizeText()` already available
+
+**Estimated Time:** 1-2 hours
+
+### 3. **Add Lore to Global Search**
+**To Do:**
+- Extend `/server/api/search.get.ts`
+- Add Lore type to entity type mapping
+- Route: `/lore?highlight={id}&search={query}`
+- Icon: `mdi-book-open-variant`
+
+**Estimated Time:** 15-30 minutes
+
+---
+
+## 💡 Important Patterns for Next Session
+
+### Cross-Search Pattern (for NPC → Lore names):
+```typescript
+// 1. Load ALL NPCs with JOINs (no FTS5 pre-filter!)
+const npcs = db.prepare(`
+  SELECT e.*,
+    GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
+  FROM entities e
+  LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+  LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id
+    AND lore.type_id = ? AND lore.deleted_at IS NULL
+  WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
+  GROUP BY e.id
+`).all(loreTypeId, npcTypeId, campaignId)
+
+// 2. Filter with Levenshtein (word-level!)
+const loreNames = linkedLoreNamesLower.split(',').map(n => n.trim())
+for (const loreName of loreNames) {
+  const loreWords = loreName.split(/\s+/)  // ← IMPORTANT!
+  for (const word of loreWords) {
+    if (word.length < 3) continue
+    const levDist = levenshtein(normalizeText(term), normalizeText(word))
+    if (levDist <= maxDist) return true
+  }
+}
+
+// 3. Score bonus for Lore match
+if (matchedViaLore) score -= 20
+```
+
+### Bidirectional Relations Pattern:
+```typescript
+// NPC → Lore: from_entity_id = NPC, to_entity_id = Lore
+// Lore → NPCs: Same table, just queried in reverse!
+
+// Query for Lore → NPCs:
+SELECT npc.*
+FROM entity_relations er
+INNER JOIN entities npc ON npc.id = er.from_entity_id
+WHERE er.to_entity_id = ? AND npc.type_id = ?
+```
+
+---
+
 ### 2025-10-31 (Late Evening) - Unicode Normalization & Global Search UX
 
 **🔤 Unicode Normalization für Akzent-Suche:**
