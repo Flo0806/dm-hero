@@ -1,4 +1,4 @@
-import { getDb } from '../../utils/db'
+import { getDb } from '../../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()

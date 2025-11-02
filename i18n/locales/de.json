@@ -325,7 +325,12 @@
     "deleteImage": "Bild löschen",
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
-    "deleteImageError": "Fehler beim Löschen des Bildes"
+    "deleteImageError": "Fehler beim Löschen des Bildes",
+    "selectLore": "Wissen auswählen",
+    "selectLorePlaceholder": "Wähle einen Wissenseintrag",
+    "addRelation": "Verknüpfen",
+    "noLinkedLore": "Kein verknüpftes Wissen",
+    "noLinkedLoreText": "Dieser NPC ist noch mit keinem Wissen verknüpft."
   },
   "locations": {
     "title": "Orte",

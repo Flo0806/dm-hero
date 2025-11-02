@@ -325,7 +325,12 @@
     "deleteImage": "Delete Image",
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
-    "deleteImageError": "Failed to delete image"
+    "deleteImageError": "Failed to delete image",
+    "selectLore": "Select Lore",
+    "selectLorePlaceholder": "Choose a lore entry",
+    "addRelation": "Link",
+    "noLinkedLore": "No linked lore",
+    "noLinkedLoreText": "This NPC has no linked lore entries yet."
   },
   "locations": {
     "title": "Locations",

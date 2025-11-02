@@ -135,7 +135,7 @@
                   <v-text-field
                     v-model="sessionForm.title"
                     :label="$t('sessions.title')"
-                    :rules="[v => !!v || $t('sessions.titleRequired')]"
+                    :rules="[(v: string) => !!v || $t('sessions.titleRequired')]"
                     variant="outlined"
                     class="mb-4"
                   />
@@ -303,7 +303,7 @@
                 <v-text-field
                   v-model="sessionForm.title"
                   :label="$t('sessions.title')"
-                  :rules="[v => !!v || $t('sessions.titleRequired')]"
+                  :rules="[(v: string) => !!v || $t('sessions.titleRequired')]"
                   variant="outlined"
                   class="mb-4"
                 />

@@ -238,6 +238,12 @@
             </v-icon>
             {{ $t('documents.title') }}
           </v-tab>
+          <v-tab value="lore">
+            <v-icon start>
+              mdi-book-open-variant
+            </v-icon>
+            {{ $t('lore.title') }}
+          </v-tab>
         </v-tabs>
 
         <v-card-text style="max-height: 600px">
@@ -355,7 +361,7 @@
               <v-text-field
                 v-model="npcForm.name"
                 :label="$t('npcs.name')"
-                :rules="[v => !!v || $t('npcs.nameRequired')]"
+                :rules="[(v: string) => !!v || $t('npcs.nameRequired')]"
                 variant="outlined"
                 class="mb-4"
               >
@@ -488,9 +494,9 @@
             <!-- Relations Tab -->
             <v-tabs-window-item value="relations">
 
-          <v-list v-if="editingNpc && npcRelations.filter(r => r.to_entity_type === 'Location').length > 0" class="mb-3">
+          <v-list v-if="editingNpc && npcRelations.filter((r: typeof npcRelations[0]) => r.to_entity_type === 'Location').length > 0" class="mb-3">
             <v-list-item
-              v-for="relation in npcRelations.filter(r => r.to_entity_type === 'Location')"
+              v-for="relation in npcRelations.filter((r: typeof npcRelations[0]) => r.to_entity_type === 'Location')"
               :key="relation.id"
               class="mb-2"
               border
@@ -941,6 +947,75 @@
             <v-tabs-window-item value="documents">
               <EntityDocuments v-if="editingNpc" :entity-id="editingNpc.id" />
             </v-tabs-window-item>
+
+            <!-- Lore Tab -->
+            <v-tabs-window-item value="lore">
+              <div v-if="editingNpc">
+                <!-- Add Lore Relation -->
+                <v-card variant="outlined" class="mb-4">
+                  <v-card-text>
+                    <v-autocomplete
+                      v-model="selectedLoreId"
+                      :items="loreItems"
+                      :label="$t('lore.selectLore')"
+                      :placeholder="$t('lore.selectLorePlaceholder')"
+                      variant="outlined"
+                      clearable
+                      :loading="loadingLore"
+                      class="mb-2"
+                    />
+                    <v-btn
+                      color="primary"
+                      :disabled="!selectedLoreId"
+                      @click="addLoreRelation"
+                    >
+                      <v-icon start>
+                        mdi-link-plus
+                      </v-icon>
+                      {{ $t('lore.addRelation') }}
+                    </v-btn>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Linked Lore List -->
+                <v-list v-if="linkedLore.length > 0">
+                  <v-list-item
+                    v-for="lore in linkedLore"
+                    :key="lore.id"
+                    class="mb-2"
+                  >
+                    <template #prepend>
+                      <v-avatar v-if="lore.image_url" size="56" rounded="lg" class="mr-3">
+                        <v-img :src="`/uploads/${lore.image_url}`" />
+                      </v-avatar>
+                      <v-avatar v-else size="56" rounded="lg" class="mr-3" color="surface-variant">
+                        <v-icon icon="mdi-book-open-variant" />
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title>{{ lore.name }}</v-list-item-title>
+                    <v-list-item-subtitle v-if="lore.description">
+                      {{ lore.description.substring(0, 100) }}{{ lore.description.length > 100 ? '...' : '' }}
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        icon="mdi-delete"
+                        variant="text"
+                        color="error"
+                        size="small"
+                        @click="removeLoreRelation(lore.id)"
+                      />
+                    </template>
+                  </v-list-item>
+                </v-list>
+
+                <v-empty-state
+                  v-else
+                  icon="mdi-book-open-variant"
+                  :title="$t('lore.noLinkedLore')"
+                  :text="$t('lore.noLinkedLoreText')"
+                />
+              </div>
+            </v-tabs-window-item>
           </v-tabs-window>
 
           <!-- Create Form (no tabs) -->
@@ -948,7 +1023,7 @@
             <v-text-field
               v-model="npcForm.name"
               :label="$t('npcs.name')"
-              :rules="[v => !!v || $t('npcs.nameRequired')]"
+              :rules="[(v: string) => !!v || $t('npcs.nameRequired')]"
               variant="outlined"
               class="mb-4"
             >
@@ -1121,7 +1196,7 @@
             v-model="noteForm.summary"
             :label="$t('npcs.noteContent')"
             :placeholder="$t('npcs.noteContentPlaceholder')"
-            :rules="[v => !!v || $t('npcs.noteContentRequired')]"
+            :rules="[(v: string) => !!v || $t('npcs.noteContentRequired')]"
             variant="outlined"
             rows="6"
             class="mb-4"
@@ -1307,6 +1382,7 @@ onMounted(async () => {
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchFactions(activeCampaignId.value),
     entitiesStore.fetchItems(activeCampaignId.value),
+    entitiesStore.fetchLore(activeCampaignId.value),
   ])
 
   // Load races and classes for dropdowns
@@ -1404,13 +1480,13 @@ function getClassDisplayName(className: string | undefined): string {
 
 // Translated race/class items for dropdowns (uses DB translations or i18n fallback)
 const raceItems = computed(() => {
-  return races.value.map(r => ({
+  return races.value.map((r: typeof races.value[0]) => ({
     title: useRaceName(r),
     value: r.name,
   }))
 })
 const classItems = computed(() => {
-  return classes.value.map(c => ({
+  return classes.value.map((c: typeof classes.value[0]) => ({
     title: useClassName(c),
     value: c.name,
   }))
@@ -1525,6 +1601,11 @@ const deletingNpc = ref<NPC | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
 const npcDialogTab = ref('details')
+
+// Lore linking
+const linkedLore = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
+const selectedLoreId = ref<number | null>(null)
+const loadingLore = ref(false)
 
 const npcForm = ref({
   name: '',
@@ -1744,7 +1825,7 @@ async function deleteImage() {
 
 // NPC Types for select
 const npcTypes = computed(() =>
-  NPC_TYPES.map(type => ({
+  NPC_TYPES.map((type: typeof NPC_TYPES[number]) => ({
     value: type,
     title: t(`npcs.types.${type}`),
   })),
@@ -1752,7 +1833,7 @@ const npcTypes = computed(() =>
 
 // NPC Statuses for select
 const npcStatuses = computed(() =>
-  NPC_STATUSES.map(status => ({
+  NPC_STATUSES.map((status: typeof NPC_STATUSES[number]) => ({
     value: status,
     title: t(`npcs.statuses.${status}`),
   })),
@@ -2558,6 +2639,88 @@ function closeDialog() {
       age: undefined,
       gender: undefined,
     },
+  }
+}
+
+// Lore items for autocomplete
+const loreItems = computed(() => {
+  return entitiesStore.loreForSelect.map((lore: { id: number, name: string }) => ({
+    title: lore.name,
+    value: lore.id,
+  }))
+})
+
+// Load linked lore when editing NPC
+watch(() => editingNpc.value?.id, async (npcId) => {
+  if (npcId) {
+    await loadLinkedLore(npcId)
+  }
+  else {
+    linkedLore.value = []
+  }
+})
+
+// Load linked lore entries
+async function loadLinkedLore(npcId: number) {
+  loadingLore.value = true
+  try {
+    const relations = await $fetch<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>(`/api/npcs/${npcId}/lore`)
+    linkedLore.value = relations
+  }
+  catch (error) {
+    console.error('Failed to load linked lore:', error)
+    linkedLore.value = []
+  }
+  finally {
+    loadingLore.value = false
+  }
+}
+
+// Add lore relation
+async function addLoreRelation() {
+  if (!editingNpc.value || !selectedLoreId.value) return
+
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: editingNpc.value.id,
+        toEntityId: selectedLoreId.value,
+        relationType: 'kennt',
+      },
+    })
+
+    await loadLinkedLore(editingNpc.value.id)
+    selectedLoreId.value = null
+  }
+  catch (error) {
+    console.error('Failed to add lore relation:', error)
+  }
+}
+
+// Remove lore relation
+async function removeLoreRelation(loreId: number) {
+  if (!editingNpc.value) return
+
+  try {
+    // Find the relation ID
+    const relation = await $fetch<{ id: number } | null>(`/api/entity-relations/find`, {
+      query: {
+        from_entity_id: editingNpc.value.id,
+        to_entity_id: loreId,
+      },
+    })
+
+    if (relation?.id) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+
+      await loadLinkedLore(editingNpc.value.id)
+    }
+  }
+  catch (error) {
+    console.error('Failed to remove lore relation:', error)
   }
 }
 </script>

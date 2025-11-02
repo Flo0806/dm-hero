@@ -202,7 +202,7 @@
                 <v-text-field
                   v-model="formData.name"
                   :label="$t('lore.name')"
-                  :rules="[v => !!v || $t('lore.nameRequired')]"
+                  :rules="[(v: string) => !!v || $t('lore.nameRequired')]"
                   variant="outlined"
                   class="mb-4"
                 />
@@ -244,7 +244,7 @@
                 :entity-name="editingLore.name"
                 :entity-description="editingLore.description || undefined"
                 @preview-image="openImagePreview"
-                @generating="(isGenerating) => imageGenerating = isGenerating"
+                @generating="(isGenerating: boolean) => imageGenerating = isGenerating"
               />
             </v-tabs-window-item>
 
@@ -263,7 +263,7 @@
             <v-text-field
               v-model="formData.name"
               :label="$t('lore.name')"
-              :rules="[v => !!v || $t('lore.nameRequired')]"
+              :rules="[(v: string) => !!v || $t('lore.nameRequired')]"
               variant="outlined"
               class="mb-4"
             />
