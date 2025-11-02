@@ -33,6 +33,8 @@ export interface NpcMetadata {
   relationship?: string
   type?: NpcType
   status?: NpcStatus
+  age?: number
+  gender?: string
 }
 
 export interface NPC {
@@ -48,6 +50,8 @@ export interface NPC {
     relationship?: string
     type?: NpcType
     status?: NpcStatus
+    age?: number
+    gender?: string
   } | null
   created_at: string
   updated_at: string

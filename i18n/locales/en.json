@@ -96,6 +96,8 @@
     "location": "Location",
     "faction": "Faction",
     "relationship": "Relationship to Party",
+    "age": "Age",
+    "gender": "Gender",
     "linkedLocations": "Linked Locations",
     "selectLocation": "Select Location",
     "relationType": "Relation Type",
@@ -153,6 +155,13 @@
       "imprisoned": "Imprisoned",
       "unknown": "Unknown",
       "undead": "Undead"
+    },
+    "genders": {
+      "male": "Male",
+      "female": "Female",
+      "nonbinary": "Non-binary",
+      "other": "Other",
+      "unknown": "Unknown"
     },
     "memberships": "Memberships",
     "factionMemberships": "Faction Memberships",

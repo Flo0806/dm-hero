@@ -379,6 +379,7 @@
                 class="mb-4"
               />
 
+              <!-- Race & Class -->
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -406,6 +407,30 @@
                 </v-col>
               </v-row>
 
+              <!-- Age & Gender -->
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model.number="npcForm.metadata.age"
+                    :label="$t('npcs.age')"
+                    variant="outlined"
+                    type="number"
+                    min="0"
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="npcForm.metadata.gender"
+                    :label="$t('npcs.gender')"
+                    :items="genderItems"
+                    variant="outlined"
+                    clearable
+                  />
+                </v-col>
+              </v-row>
+
+              <!-- Type & Status -->
               <v-row>
                 <v-col cols="12" md="6">
                   <v-select
@@ -458,27 +483,6 @@
                   </v-select>
                 </v-col>
               </v-row>
-
-              <v-text-field
-                v-model="npcForm.metadata.location"
-                :label="$t('npcs.location')"
-                variant="outlined"
-                class="mb-4"
-              />
-
-              <v-text-field
-                v-model="npcForm.metadata.faction"
-                :label="$t('npcs.faction')"
-                variant="outlined"
-                class="mb-4"
-              />
-
-              <v-textarea
-                v-model="npcForm.metadata.relationship"
-                :label="$t('npcs.relationship')"
-                variant="outlined"
-                rows="2"
-              />
             </v-tabs-window-item>
 
             <!-- Relations Tab -->
@@ -968,6 +972,7 @@
               class="mb-4"
             />
 
+            <!-- Race & Class -->
             <v-row>
               <v-col cols="12" md="6">
                 <v-select
@@ -995,26 +1000,82 @@
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="npcForm.metadata.location"
-              :label="$t('npcs.location')"
-              variant="outlined"
-              class="mb-4"
-            />
+            <!-- Age & Gender -->
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model.number="npcForm.metadata.age"
+                  :label="$t('npcs.age')"
+                  variant="outlined"
+                  type="number"
+                  min="0"
+                  clearable
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="npcForm.metadata.gender"
+                  :label="$t('npcs.gender')"
+                  :items="genderItems"
+                  variant="outlined"
+                  clearable
+                />
+              </v-col>
+            </v-row>
 
-            <v-text-field
-              v-model="npcForm.metadata.faction"
-              :label="$t('npcs.faction')"
-              variant="outlined"
-              class="mb-4"
-            />
-
-            <v-textarea
-              v-model="npcForm.metadata.relationship"
-              :label="$t('npcs.relationship')"
-              variant="outlined"
-              rows="2"
-            />
+            <!-- Type & Status -->
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="npcForm.metadata.type"
+                  :items="npcTypes"
+                  :label="$t('npcs.type')"
+                  variant="outlined"
+                  clearable
+                >
+                  <template #item="{ props, item }">
+                    <v-list-item v-bind="props">
+                      <template #prepend>
+                        <v-icon :icon="getNpcTypeIcon(item.value)" />
+                      </template>
+                    </v-list-item>
+                  </template>
+                  <template #selection="{ item }">
+                    <v-chip>
+                      <template #prepend>
+                        <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                      </template>
+                      {{ item.title }}
+                    </v-chip>
+                  </template>
+                </v-select>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="npcForm.metadata.status"
+                  :items="npcStatuses"
+                  :label="$t('npcs.status')"
+                  variant="outlined"
+                  clearable
+                >
+                  <template #item="{ props, item }">
+                    <v-list-item v-bind="props">
+                      <template #prepend>
+                        <v-icon :icon="getNpcStatusIcon(item.value)" :color="getNpcStatusColor(item.value)" />
+                      </template>
+                    </v-list-item>
+                  </template>
+                  <template #selection="{ item }">
+                    <v-chip :color="getNpcStatusColor(item.value)">
+                      <template #prepend>
+                        <v-icon :icon="getNpcStatusIcon(item.value)" size="small" class="mr-1" />
+                      </template>
+                      {{ item.title }}
+                    </v-chip>
+                  </template>
+                </v-select>
+              </v-col>
+            </v-row>
           </div>
         </v-card-text>
         <v-card-actions>
@@ -1355,6 +1416,16 @@ const classItems = computed(() => {
   }))
 })
 
+const genderItems = computed(() => {
+  return [
+    { title: t('npcs.genders.male'), value: 'male' },
+    { title: t('npcs.genders.female'), value: 'female' },
+    { title: t('npcs.genders.nonbinary'), value: 'nonbinary' },
+    { title: t('npcs.genders.other'), value: 'other' },
+    { title: t('npcs.genders.unknown'), value: 'unknown' },
+  ]
+})
+
 // Debounced search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 let abortController: AbortController | null = null
@@ -1461,11 +1532,10 @@ const npcForm = ref({
   metadata: {
     race: '',
     class: '',
-    location: '',
-    faction: '',
-    relationship: '',
     type: undefined as NpcType | undefined,
     status: undefined as NpcStatus | undefined,
+    age: undefined as number | undefined,
+    gender: undefined as string | undefined,
   },
 })
 
@@ -2230,11 +2300,10 @@ async function editNpc(npc: NPC) {
     metadata: {
       race: npc.metadata?.race || '',
       class: npc.metadata?.class || '',
-      location: npc.metadata?.location || '',
-      faction: npc.metadata?.faction || '',
-      relationship: npc.metadata?.relationship || '',
       type: npc.metadata?.type || undefined,
       status: npc.metadata?.status || undefined,
+      age: npc.metadata?.age || undefined,
+      gender: npc.metadata?.gender || undefined,
     },
   }
 
@@ -2484,11 +2553,10 @@ function closeDialog() {
     metadata: {
       race: '',
       class: '',
-      location: '',
-      faction: '',
-      relationship: '',
       type: undefined,
       status: undefined,
+      age: undefined,
+      gender: undefined,
     },
   }
 }

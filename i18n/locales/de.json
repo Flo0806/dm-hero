@@ -96,6 +96,8 @@
     "location": "Aufenthaltsort",
     "faction": "Fraktion",
     "relationship": "Beziehung zu Gruppe",
+    "age": "Alter",
+    "gender": "Geschlecht",
     "linkedLocations": "Verknüpfte Orte",
     "selectLocation": "Ort auswählen",
     "relationType": "Beziehungstyp",
@@ -153,6 +155,13 @@
       "imprisoned": "Gefangen",
       "unknown": "Unbekannt",
       "undead": "Untot"
+    },
+    "genders": {
+      "male": "Männlich",
+      "female": "Weiblich",
+      "nonbinary": "Nicht-binär",
+      "other": "Andere",
+      "unknown": "Unbekannt"
     },
     "memberships": "Mitgliedschaften",
     "factionMemberships": "Fraktionszugehörigkeiten",

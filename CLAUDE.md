@@ -1578,4 +1578,3 @@ Claude:
 **Database Version:** 8 (FTS5 with metadata search)
 **Node Version:** 22.20.0
 **Framework:** Nuxt 4
-- Für dieses Projekt, solltest du mal was ausführen müssen, immer `nvm use 22` nutzen

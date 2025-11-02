@@ -15,6 +15,8 @@ export interface NpcMetadata {
   location?: string
   faction?: string
   relationship?: string
+  age?: number
+  gender?: string
   [key: string]: unknown // Allow additional custom properties
 }
 
