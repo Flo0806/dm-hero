@@ -4,7 +4,7 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description, metadata, campaignId } = body
+  const { name, description, metadata, campaignId, parentLocationId } = body
 
   if (!name || !campaignId) {
     throw createError({
@@ -26,22 +26,40 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = db.prepare(`
-    INSERT INTO entities (type_id, name, description, metadata, campaign_id)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO entities (type_id, name, description, metadata, campaign_id, parent_entity_id)
+    VALUES (?, ?, ?, ?, ?, ?)
   `).run(
     entityType.id,
     name,
     description || null,
     metadata ? JSON.stringify(metadata) : null,
     campaignId,
+    parentLocationId || null,
   )
 
-  const location = db.prepare(`
+  interface LocationRow {
+    id: number
+    name: string
+    description: string | null
+    metadata: string | null
+    parent_entity_id: number | null
+    created_at: string
+    updated_at: string
+  }
+
+  const location = db.prepare<unknown[], LocationRow>(`
     SELECT * FROM entities WHERE id = ?
   `).get(result.lastInsertRowid)
 
+  if (!location) {
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to create location',
+    })
+  }
+
   return {
     ...location,
-    metadata: location.metadata ? JSON.parse(location.metadata as string) : null,
+    metadata: location.metadata ? JSON.parse(location.metadata) : null,
   }
 })

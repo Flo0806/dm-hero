@@ -1435,16 +1435,14 @@ watch(locale, () => {
   }
 })
 
-// Show search results if searching, otherwise show all NPCs from store
+// Show search results OR cached NPCs
 const filteredNpcs = computed(() => {
-  // If user is typing but search hasn't returned yet, show cached NPCs (prevents "empty" flash)
+  // If user is actively searching, show search results
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    // If search is running but no results yet, keep showing cached NPCs
-    if (searching.value && searchResults.value.length === 0) {
-      return npcs.value || []
-    }
     return searchResults.value
   }
+
+  // Otherwise show all cached NPCs
   return npcs.value || []
 })
 
@@ -2299,9 +2297,12 @@ async function generateName() {
       npcForm.value.name = result.name
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('[NPC] Failed to generate name:', error)
-    alert(error.data?.message || 'Failed to generate name')
+    const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+      ? String(error.data.message)
+      : 'Failed to generate name'
+    alert(errorMessage)
   }
   finally {
     generatingName.value = false

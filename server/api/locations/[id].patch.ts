@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata } = body
+  const { name, description, metadata, parentLocationId } = body
 
   db.prepare(`
     UPDATE entities
@@ -20,16 +20,28 @@ export default defineEventHandler(async (event) => {
       name = COALESCE(?, name),
       description = COALESCE(?, description),
       metadata = COALESCE(?, metadata),
+      parent_entity_id = ?,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
   `).run(
     name,
     description,
     metadata ? JSON.stringify(metadata) : null,
+    parentLocationId !== undefined ? parentLocationId : null,
     id,
   )
 
-  const location = db.prepare(`
+  interface LocationRow {
+    id: number
+    name: string
+    description: string | null
+    metadata: string | null
+    parent_entity_id: number | null
+    created_at: string
+    updated_at: string
+  }
+
+  const location = db.prepare<unknown[], LocationRow>(`
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
   `).get(id)
 
@@ -42,6 +54,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...location,
-    metadata: location.metadata ? JSON.parse(location.metadata as string) : null,
+    metadata: location.metadata ? JSON.parse(location.metadata) : null,
   }
 })

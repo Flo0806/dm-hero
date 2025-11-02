@@ -1,13 +1,14 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
-import { getRaceKey, getClassKey, getLocaleFromEvent } from '../../utils/i18n-lookup'
+import { getRaceKey, getClassKey, getRaceSearchVariants, getClassSearchVariants, getLocaleFromEvent } from '../../utils/i18n-lookup'
 import { normalizeText } from '../../utils/normalize'
+import type { NpcMetadata } from '../../types/metadata'
 
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
@@ -40,6 +41,7 @@ export default defineEventHandler((event) => {
     updated_at: string
     fts_score?: number
     linked_faction_names?: string | null
+    linked_location_names?: string | null
   }
 
   interface ScoredNpc extends NpcRow {
@@ -51,39 +53,62 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = normalizeText(searchQuery.trim())
+    const originalSearchTerm = searchQuery.trim()
+    const searchTerm = normalizeText(originalSearchTerm)
 
-    // Parse query with operators (AND, OR, NOT)
-    const parsedQuery = parseSearchQuery(searchTerm)
+    // Parse query with operators (AND, OR, NOT) using ORIGINAL term (preserves hyphens for race/class names)
+    const parsedQuery = parseSearchQuery(originalSearchTerm)
 
     // Expand all terms with race/class key lookups (locale-aware)
+    // IMPORTANT: Use ORIGINAL terms (with hyphens) for race/class lookup, e.g., "en-bruddi" not "enbruddi"
     // E.g., "mensch" (DE) → also search for "human" key
     // E.g., "mensh" (DE typo) → also search for "human" key (fuzzy match)
     // E.g., "human" (EN) → also search for "human" key
     // E.g., "humen" (EN typo) → also search for "human" key (fuzzy match)
-    const expandedTerms = parsedQuery.terms.map(term => {
+    const expandedTerms = await Promise.all(parsedQuery.terms.map(async term => {
       // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
       // e.g., "bern" should NOT match "barde" (class), but "hexen" should match "hexenmeister"
       const enableFuzzy = term.length >= 5
-      const raceKey = getRaceKey(term, enableFuzzy, locale)
-      const classKey = getClassKey(term, enableFuzzy, locale)
+      const raceKey = await getRaceKey(term, enableFuzzy, locale)
+      const classKey = await getClassKey(term, enableFuzzy, locale)
 
-      // If we found a race/class key, ONLY use the key (not the original term)
-      // This prevents "human" (a key) from matching in DE when it shouldn't
+      console.log(`[NPC Search] Term: "${term}", fuzzy=${enableFuzzy}, locale=${locale}`)
+      console.log(`[NPC Search] - raceKey:`, raceKey)
+      console.log(`[NPC Search] - classKey:`, classKey)
+
+      // If we found a race/class key, use ALL search variants (key + localized names)
+      // This allows FTS5 to find NPCs by both the key in metadata AND localized names in FTS
       if (raceKey) {
-        return { variants: [raceKey], isRaceClassKey: true }
+        const variants = await getRaceSearchVariants(term, locale)
+        console.log(`[NPC Search] - Race variants:`, variants)
+        return { variants, isRaceClassKey: true }
       }
       if (classKey) {
-        return { variants: [classKey], isRaceClassKey: true }
+        const variants = await getClassSearchVariants(term, locale)
+        console.log(`[NPC Search] - Class variants:`, variants)
+        return { variants, isRaceClassKey: true }
       }
 
       // No race/class match - use original term (e.g., NPC name search)
       // But check if term might be a key in OTHER locale (block cross-language matching)
-      const isKeyInOtherLocale = getRaceKey(term, false, locale === 'de' ? 'en' : 'de') !== null
-        || getClassKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+      const isKeyInOtherLocale = await getRaceKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+        || await getClassKey(term, false, locale === 'de' ? 'en' : 'de') !== null
 
-      return { variants: [term], isRaceClassKey: false, blockMetadata: isKeyInOtherLocale }
-    })
+      // IMPORTANT: Normalize term for case-insensitive matching ("Bernhard" → "bernhard")
+      return { variants: [normalizeText(term)], isRaceClassKey: false, blockMetadata: isKeyInOtherLocale }
+    }))
+
+    // Helper function to quote FTS5 terms that contain special characters
+    function quoteFts5Term(term: string): string {
+      // FTS5 special chars that need quoting: - (column separator), () [] {}
+      // Quote terms that contain hyphens or other special characters
+      if (term.includes('-') || term.includes('(') || term.includes(')') || term.includes('[') || term.includes(']')) {
+        // Escape any double quotes in the term first
+        const escaped = term.replace(/"/g, '""')
+        return `"${escaped}"`
+      }
+      return term
+    }
 
     // Rebuild FTS query with expanded terms
     let ftsQuery: string
@@ -92,10 +117,10 @@ export default defineEventHandler((event) => {
       const expandedFtsTerms = expandedTerms.map(termObj => {
         const keys = termObj.variants
         if (keys.length === 1) {
-          return `${keys[0]}*`
+          return `${quoteFts5Term(keys[0])}*`
         }
         else {
-          return `(${keys.map(k => `${k}*`).join(' OR ')})`
+          return `(${keys.map(k => `${quoteFts5Term(k)}*`).join(' OR ')})`
         }
       })
 
@@ -114,7 +139,7 @@ export default defineEventHandler((event) => {
     else {
       // Simple query: add all keys as OR
       const allKeys = expandedTerms.flatMap(termObj => termObj.variants)
-      ftsQuery = allKeys.map(k => `${k}*`).join(' OR ')
+      ftsQuery = allKeys.map(k => `${quoteFts5Term(k)}*`).join(' OR ')
     }
 
     let useExactMatch = parsedQuery.useExactFirst
@@ -131,11 +156,14 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
-          GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
+          GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
+          GROUP_CONCAT(DISTINCT location.name) as linked_location_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
         LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
+        LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
+        LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
@@ -160,11 +188,14 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
+            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
+          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
+          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
@@ -191,10 +222,13 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
+            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
           FROM entities e
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
+          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
+          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
@@ -213,10 +247,13 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names
+            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
+            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
           FROM entities e
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
+          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
+          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
@@ -234,14 +271,16 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameNormalized.startsWith(searchTerm)
         const containsQuery = nameNormalized.includes(searchTerm)
 
-        // Check if search term appears in metadata, description, or linked factions (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, linked factions, or linked locations (FTS5 match but not in name)
         const metadataNormalized = normalizeText(npc.metadata || '')
         const descriptionNormalized = normalizeText(npc.description || '')
         const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+        const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isFactionMatch = linkedFactionNamesNormalized.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isFactionMatch) && !containsQuery
+        const isLocationMatch = linkedLocationNamesNormalized.includes(searchTerm)
+        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isFactionMatch || isLocationMatch) && !containsQuery
 
         let levDistance: number
 
@@ -268,8 +307,20 @@ export default defineEventHandler((event) => {
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
         if (isFactionMatch) finalScore -= 30 // Faction matches are very good
+        if (isLocationMatch) finalScore -= 30 // Location matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
+
+        // SPECIAL: Multi-word faction match bonus (e.g., "die grauen jäger")
+        // Check if ALL terms from parsedQuery appear in this NPC's faction names
+        if (parsedQuery.terms.length > 1 && linkedFactionNamesNormalized.length > 0) {
+          const allTermsInThisFaction = parsedQuery.terms.every(term =>
+            linkedFactionNamesNormalized.includes(normalizeText(term))
+          )
+          if (allTermsInThisFaction) {
+            finalScore -= 500 // HUGE bonus - these should be at the top!
+          }
+        }
 
         return {
           ...npc,
@@ -278,74 +329,205 @@ export default defineEventHandler((event) => {
         }
       })
 
+      // Pre-fetch all race/class variants for faster lookup
+      const raceVariantsCache = new Map<string, string[]>()
+      const classVariantsCache = new Map<string, string[]>()
+
+      // Helper function to check if a variant matches an NPC's race/class (including localized names)
+      async function variantMatchesRaceOrClass(variant: string, metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null, termObj: { isRaceClassKey?: boolean, variants: string[], blockMetadata?: boolean }): Promise<boolean> {
+        if (!termObj.isRaceClassKey || !metadataObj) return false
+
+        const raceKey = metadataObj.race
+        const classKey = metadataObj.class
+
+        // Check if the variant matches the race/class key directly
+        if (raceKey && normalizeText(raceKey).includes(variant)) {
+          return true
+        }
+        if (classKey && normalizeText(classKey).includes(variant)) {
+          return true
+        }
+
+        // Also check if this variant is a localized name for the same race/class
+        // E.g., variant="brudi" and raceKey="TEst" → check if "brudi" is a localized name for "TEst"
+        if (raceKey) {
+          if (!raceVariantsCache.has(raceKey)) {
+            raceVariantsCache.set(raceKey, await getRaceSearchVariants(raceKey, locale))
+          }
+          const raceVariants = raceVariantsCache.get(raceKey)!
+          if (raceVariants.some(v => normalizeText(v).includes(variant))) {
+            return true
+          }
+        }
+        if (classKey) {
+          if (!classVariantsCache.has(classKey)) {
+            classVariantsCache.set(classKey, await getClassSearchVariants(classKey, locale))
+          }
+          const classVariants = classVariantsCache.get(classKey)!
+          if (classVariants.some(v => normalizeText(v).includes(variant))) {
+            return true
+          }
+        }
+
+        return false
+      }
+
       // Step 3: Filter by Levenshtein distance
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
-        scoredNpcs = scoredNpcs.filter(npc => {
+        const filtered: ScoredNpc[] = []
+        for (const npc of scoredNpcs) {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+          const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
 
-          // Check ALL expanded terms (original + race/class keys)
-          for (const termObj of expandedTerms) {
-            for (const variant of termObj.variants) {
-              // Check metadata ONLY if not blocked (prevents cross-language key matching)
-              const shouldCheckMetadata = !termObj.blockMetadata
+          // Parse metadata to check race/class with localized names
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          try {
+            metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
+          } catch {
+            // Invalid JSON - fallback to string search
+          }
 
-              // Exact/substring match in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
-                return true
+          let shouldInclude = false
+
+          // Special case: Multi-word search (e.g., "die grauen jäger" or "Bernhard von")
+          // If ALL search terms appear in ANY field (name, description, or faction), it's a match
+          if (expandedTerms.length > 1) {
+            // Check if all terms appear in name
+            const allTermsInName = expandedTerms.every(termObj =>
+              termObj.variants.some(variant => nameNormalized.includes(variant))
+            )
+            if (allTermsInName) {
+              shouldInclude = true
+            }
+
+            // Check if all terms appear in faction names
+            if (!shouldInclude && linkedFactionNamesNormalized.length > 0) {
+              const allTermsInFaction = expandedTerms.every(termObj =>
+                termObj.variants.some(variant => linkedFactionNamesNormalized.includes(variant))
+              )
+              if (allTermsInFaction) {
+                shouldInclude = true
               }
+            }
 
-              // Check metadata only if allowed
-              if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
-                return true
+            // Check if all terms appear in location names
+            if (!shouldInclude && linkedLocationNamesNormalized.length > 0) {
+              const allTermsInLocation = expandedTerms.every(termObj =>
+                termObj.variants.some(variant => linkedLocationNamesNormalized.includes(variant))
+              )
+              if (allTermsInLocation) {
+                shouldInclude = true
               }
+            }
 
-              // Prefix match (before Levenshtein for performance)
-              if (nameNormalized.startsWith(variant)) {
-                return true
-              }
-
-              // Levenshtein match for name
-              const variantLength = variant.length
-              const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
-              const levDist = levenshtein(variant, nameNormalized)
-
-              if (levDist <= maxDist) {
-                return true
-              }
-
-              // Levenshtein match for linked Faction names (split by comma, then by words)
-              if (linkedFactionNamesNormalized.length > 0) {
-                const factionNames = linkedFactionNamesNormalized.split(',').map(n => n.trim())
-                for (const factionName of factionNames) {
-                  if (factionName.length === 0) continue
-                  // Split each faction name into words (e.g., "Die Harpers" → ["die", "harpers"])
-                  const factionWords = factionName.split(/\s+/)
-                  for (const word of factionWords) {
-                    if (word.length === 0) continue
-                    const factionLevDist = levenshtein(variant, word)
-                    if (factionLevDist <= maxDist) {
-                      return true
-                    }
-                  }
-                }
+            // Check if all terms appear in description
+            if (!shouldInclude && descriptionNormalized.length > 0) {
+              const allTermsInDescription = expandedTerms.every(termObj =>
+                termObj.variants.some(variant => descriptionNormalized.includes(variant))
+              )
+              if (allTermsInDescription) {
+                shouldInclude = true
               }
             }
           }
 
-          return false // No variant matched
-        })
+          // For single-word OR if multi-word didn't match, check individual terms
+          if (!shouldInclude) {
+            // Check ALL expanded terms (original + race/class keys)
+            for (const termObj of expandedTerms) {
+              for (const variant of termObj.variants) {
+                // Check metadata ONLY if not blocked (prevents cross-language key matching)
+                const shouldCheckMetadata = !termObj.blockMetadata
+
+                // Exact/substring match in any field
+                if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant) || linkedLocationNamesNormalized.includes(variant)) {
+                  shouldInclude = true
+                  break
+                }
+
+                // Check metadata only if allowed
+                if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
+                  shouldInclude = true
+                  break
+                }
+
+                // For race/class terms: Check if metadata.race or metadata.class matches (including localized names)
+                if (await variantMatchesRaceOrClass(variant, metadataObj, termObj)) {
+                  shouldInclude = true
+                  break
+                }
+
+                // Prefix match (before Levenshtein for performance)
+                if (nameNormalized.startsWith(variant)) {
+                  shouldInclude = true
+                  break
+                }
+
+                // Levenshtein match for name
+                const variantLength = variant.length
+                const maxDist = variantLength <= 3 ? 2 : variantLength <= 6 ? 3 : 4
+                const levDist = levenshtein(variant, nameNormalized)
+
+                if (levDist <= maxDist) {
+                  shouldInclude = true
+                  break
+                }
+
+                // Levenshtein match for linked Faction names (split by comma, then by words)
+                if (linkedFactionNamesNormalized.length > 0) {
+                  const factionNames = linkedFactionNamesNormalized.split(',').map(n => n.trim())
+                  for (const factionName of factionNames) {
+                    if (factionName.length === 0) continue
+                    // Split each faction name into words (e.g., "Die Harpers" → ["die", "harpers"])
+                    const factionWords = factionName.split(/\s+/)
+                    for (const word of factionWords) {
+                      if (word.length === 0) continue
+                      const factionLevDist = levenshtein(variant, word)
+                      if (factionLevDist <= maxDist) {
+                        shouldInclude = true
+                        break
+                      }
+                    }
+                    if (shouldInclude) break
+                  }
+                }
+
+                if (shouldInclude) break
+              }
+
+              if (shouldInclude) break
+            }
+          }
+
+          if (shouldInclude) {
+            filtered.push(npc)
+          }
+        }
+        scoredNpcs = filtered
       }
       else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
-        scoredNpcs = scoredNpcs.filter(npc => {
+        const filtered: ScoredNpc[] = []
+        for (const npc of scoredNpcs) {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+          const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+
+          // Parse metadata to check race/class with localized names
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          try {
+            metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
+          } catch {
+            // Invalid JSON - fallback to string search
+          }
+
+          let shouldInclude = false
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -355,18 +537,27 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
-                return true // At least one variant matches
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant) || linkedLocationNamesNormalized.includes(variant)) {
+                shouldInclude = true
+                break
               }
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
-                return true
+                shouldInclude = true
+                break
+              }
+
+              // For race/class terms: Check if metadata.race or metadata.class matches (including localized names)
+              if (await variantMatchesRaceOrClass(variant, metadataObj, termObj)) {
+                shouldInclude = true
+                break
               }
 
               // Prefix match (before Levenshtein for performance)
               if (nameNormalized.startsWith(variant)) {
-                return true
+                shouldInclude = true
+                break
               }
 
               // Check Levenshtein for name
@@ -375,7 +566,8 @@ export default defineEventHandler((event) => {
               const levDist = levenshtein(variant, nameNormalized)
 
               if (levDist <= maxDist) {
-                return true // Close enough match
+                shouldInclude = true
+                break
               }
 
               // Levenshtein match for linked Faction names (split by comma, then by words)
@@ -388,23 +580,63 @@ export default defineEventHandler((event) => {
                     if (word.length === 0) continue
                     const factionLevDist = levenshtein(variant, word)
                     if (factionLevDist <= maxDist) {
-                      return true
+                      shouldInclude = true
+                      break
                     }
                   }
+                  if (shouldInclude) break
                 }
               }
+
+              // Levenshtein match for linked Location names (split by comma, then by words)
+              if (!shouldInclude && linkedLocationNamesNormalized.length > 0) {
+                const locationNames = linkedLocationNamesNormalized.split(',').map(n => n.trim())
+                for (const locationName of locationNames) {
+                  if (locationName.length === 0) continue
+                  const locationWords = locationName.split(/\s+/)
+                  for (const word of locationWords) {
+                    if (word.length === 0) continue
+                    const locationLevDist = levenshtein(variant, word)
+                    if (locationLevDist <= maxDist) {
+                      shouldInclude = true
+                      break
+                    }
+                  }
+                  if (shouldInclude) break
+                }
+              }
+
+              if (shouldInclude) break
             }
+
+            if (shouldInclude) break
           }
-          return false // No term matched
-        })
+
+          if (shouldInclude) {
+            filtered.push(npc)
+          }
+        }
+        scoredNpcs = filtered
       }
       else if (hasAndOperator) {
         // AND query: ALL terms must match
-        scoredNpcs = scoredNpcs.filter(npc => {
+        const filtered: ScoredNpc[] = []
+        for (const npc of scoredNpcs) {
           const nameNormalized = normalizeText(npc.name)
           const metadataNormalized = normalizeText(npc.metadata || '')
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+          const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+
+          // Parse metadata to check race/class with localized names
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          try {
+            metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
+          } catch {
+            // Invalid JSON - fallback to string search
+          }
+
+          let shouldInclude = true
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -415,13 +647,19 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant)) {
+              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || linkedFactionNamesNormalized.includes(variant) || linkedLocationNamesNormalized.includes(variant)) {
                 termMatches = true
                 break
               }
 
               // Check metadata only if allowed
               if (shouldCheckMetadata && metadataNormalized.includes(variant)) {
+                termMatches = true
+                break
+              }
+
+              // For race/class terms: Check if metadata.race or metadata.class matches (including localized names)
+              if (await variantMatchesRaceOrClass(variant, metadataObj, termObj)) {
                 termMatches = true
                 break
               }
@@ -460,18 +698,39 @@ export default defineEventHandler((event) => {
                 }
               }
 
+              // Levenshtein match for linked Location names (split by comma, then by words)
+              if (!termMatches && linkedLocationNamesNormalized.length > 0) {
+                const locationNames = linkedLocationNamesNormalized.split(',').map(n => n.trim())
+                for (const locationName of locationNames) {
+                  if (locationName.length === 0) continue
+                  const locationWords = locationName.split(/\s+/)
+                  for (const word of locationWords) {
+                    if (word.length === 0) continue
+                    const locationLevDist = levenshtein(variant, word)
+                    if (locationLevDist <= maxDist) {
+                      termMatches = true
+                      break
+                    }
+                  }
+                  if (termMatches) break
+                }
+              }
+
               if (termMatches) break
             }
 
             // If this term (and none of its variants) doesn't match, reject the NPC
             if (!termMatches) {
-              return false
+              shouldInclude = false
+              break
             }
           }
 
-          // All terms matched!
-          return true
-        })
+          if (shouldInclude) {
+            filtered.push(npc)
+          }
+        }
+        scoredNpcs = filtered
       }
 
       // Step 4: Sort by combined score and take top 50

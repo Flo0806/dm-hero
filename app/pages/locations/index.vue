@@ -64,87 +64,66 @@
         </div>
       </v-overlay>
 
-      <!-- Location Cards -->
-      <v-row>
-      <v-col
-        v-for="location in filteredLocations"
-        :key="location.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <v-card
-          :id="`location-${location.id}`"
-          :class="[
-            'h-100 d-flex flex-column',
-            { 'highlighted-card': highlightedId === location.id }
-          ]"
-          hover
+      <!-- Tree View -->
+      <v-card>
+        <v-treeview
+          :items="treeItems"
+          item-value="id"
+          item-title="title"
+          density="comfortable"
+          open-all
         >
-          <v-card-title class="d-flex align-center">
-            <v-icon icon="mdi-map-marker" class="mr-2" color="primary" />
-            {{ location.name }}
-            <v-spacer />
-            <v-chip
-              v-if="location.metadata?.type"
-              size="small"
-              color="primary"
-              variant="tonal"
-            >
-              {{ location.metadata.type }}
-            </v-chip>
-          </v-card-title>
-          <v-card-text class="flex-grow-1">
-            <div
-              v-if="location.image_url"
-              class="float-right ml-3 mb-2 position-relative image-container"
-              style="width: 80px; height: 80px;"
-            >
-              <v-avatar
-                size="80"
-                rounded="lg"
-              >
-                <v-img :src="`/pictures/${location.image_url}`" cover />
-              </v-avatar>
-              <v-btn
-                icon="mdi-download"
+          <!-- Custom item slot for icons and actions -->
+          <template #prepend="{ item }">
+            <v-icon :color="getNodeColor(item)">
+              {{ getNodeIcon(item) }}
+            </v-icon>
+          </template>
+
+          <!-- Custom title to highlight search results -->
+          <template #title="{ item }">
+            <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
+              {{ item.title }}
+            </span>
+          </template>
+
+          <template #append="{ item }">
+            <div class="d-flex align-center ga-1">
+              <!-- Type chip -->
+              <v-chip
+                v-if="item.raw.metadata?.type"
                 size="x-small"
+                color="primary"
                 variant="tonal"
-                class="image-download-btn"
-                @click.stop="downloadImage(`/pictures/${location.image_url}`, location.name)"
+                class="mr-2"
+              >
+                {{ item.raw.metadata.type }}
+              </v-chip>
+
+              <!-- Actions -->
+              <v-btn
+                icon="mdi-eye"
+                size="x-small"
+                variant="text"
+                @click.stop="viewLocation(item.raw)"
+              />
+              <v-btn
+                icon="mdi-pencil"
+                size="x-small"
+                variant="text"
+                @click.stop="editLocation(item.raw)"
+              />
+              <v-btn
+                icon="mdi-delete"
+                size="x-small"
+                variant="text"
+                color="error"
+                @click.stop="deleteLocation(item.raw)"
               />
             </div>
-            <div v-if="location.metadata?.region" class="mb-2">
-              <v-chip size="small" prepend-icon="mdi-map" variant="outlined">
-                {{ location.metadata.region }}
-              </v-chip>
-            </div>
-            <div v-if="location.description" class="text-body-2">
-              {{ truncateText(location.description, 100) }}
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              icon="mdi-eye"
-              variant="text"
-              @click="viewLocation(location)"
-            />
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              @click="editLocation(location)"
-            />
-            <v-spacer />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              color="error"
-              @click="deleteLocation(location)"
-            />
-          </v-card-actions>
-        </v-card>
-      </v-col>
-      </v-row>
+          </template>
+        </v-treeview>
+      </v-card>
     </div>
 
     <ClientOnly v-else>
@@ -336,6 +315,20 @@
             class="mb-4"
           />
 
+          <!-- Parent Location Dropdown -->
+          <v-select
+            v-model="locationForm.parentLocationId"
+            :label="$t('locations.parentLocation')"
+            :items="availableParentLocations"
+            item-title="name"
+            item-value="id"
+            variant="outlined"
+            clearable
+            :hint="$t('locations.parentLocationHint')"
+            persistent-hint
+            class="mb-4"
+          />
+
           <v-row>
             <v-col cols="12" md="6">
               <v-text-field
@@ -400,6 +393,13 @@
         </v-card-title>
         <v-divider />
         <v-card-text>
+          <!-- Breadcrumb Path -->
+          <LocationBreadcrumb
+            v-if="viewingLocation.parent_entity_id"
+            :location-id="viewingLocation.id"
+            class="mb-4"
+          />
+
           <div v-if="viewingLocation.description" class="mb-4">
             <h3 class="text-h6 mb-2">
               {{ $t('locations.description') }}
@@ -599,6 +599,7 @@ interface Location {
   name: string
   description: string | null
   image_url?: string | null
+  parent_entity_id?: number | null
   metadata: {
     type?: string
     region?: string
@@ -793,6 +794,136 @@ const filteredLocations = computed(() => {
   return locations.value || []
 })
 
+// Build tree structure from flat location list
+interface TreeNode {
+  id: number
+  title: string
+  children?: TreeNode[]
+  raw: Location
+  isSearchResult?: boolean  // Mark if this is an actual search result
+}
+
+// Helper: Get all parent IDs for a location
+function getParentIds(locationId: number, allLocations: Location[]): number[] {
+  const location = allLocations.find(l => l.id === locationId)
+  if (!location || !location.parent_entity_id) return []
+
+  return [location.parent_entity_id, ...getParentIds(location.parent_entity_id, allLocations)]
+}
+
+const treeItems = computed(() => {
+  const searchResults = filteredLocations.value
+  const allLocations = locations.value || []
+
+  if (!searchResults || searchResults.length === 0) return []
+
+  // If searching, we need to include parents of search results
+  const isSearching = searchQuery.value && searchQuery.value.trim().length > 0
+
+  let locationsToShow: Location[] = []
+  const searchResultIds = new Set<number>()
+
+  if (isSearching) {
+    // Searching: Include search results + all their parents
+    searchResults.forEach(result => {
+      searchResultIds.add(result.id)
+      locationsToShow.push(result)
+
+      // Add all parents
+      const parentIds = getParentIds(result.id, allLocations)
+      parentIds.forEach(parentId => {
+        const parent = allLocations.find(l => l.id === parentId)
+        if (parent && !locationsToShow.find(l => l.id === parent.id)) {
+          locationsToShow.push(parent)
+        }
+      })
+    })
+  } else {
+    // Not searching: Show all locations
+    locationsToShow = searchResults
+  }
+
+  // Build tree from filtered locations
+  const locationMap = new Map<number, TreeNode>()
+  const rootNodes: TreeNode[] = []
+
+  // First pass: create all nodes
+  locationsToShow.forEach((location) => {
+    locationMap.set(location.id, {
+      id: location.id,
+      title: location.name,
+      children: [],
+      raw: location,
+      isSearchResult: searchResultIds.has(location.id),
+    })
+  })
+
+  // Second pass: build hierarchy
+  locationsToShow.forEach((location) => {
+    const node = locationMap.get(location.id)!
+
+    if (location.parent_entity_id) {
+      // Has parent - add to parent's children
+      const parent = locationMap.get(location.parent_entity_id)
+      if (parent) {
+        parent.children!.push(node)
+      }
+      else {
+        // Parent not found (not in locationsToShow) - treat as root
+        rootNodes.push(node)
+      }
+    }
+    else {
+      // No parent - is a root node
+      rootNodes.push(node)
+    }
+  })
+
+  return rootNodes
+})
+
+// Get icon based on location type
+function getNodeIcon(item: any) {
+  const type = item.raw?.metadata?.type?.toLowerCase()
+  if (!type) return 'mdi-map-marker'
+
+  const iconMap: Record<string, string> = {
+    'city': 'mdi-city',
+    'stadt': 'mdi-city',
+    'district': 'mdi-map-marker-radius',
+    'viertel': 'mdi-map-marker-radius',
+    'building': 'mdi-home',
+    'gebäude': 'mdi-home',
+    'tavern': 'mdi-beer',
+    'taverne': 'mdi-beer',
+    'shop': 'mdi-store',
+    'laden': 'mdi-store',
+    'temple': 'mdi-church',
+    'tempel': 'mdi-church',
+    'dungeon': 'mdi-gate',
+    'verlies': 'mdi-gate',
+  }
+
+  return iconMap[type] || 'mdi-map-marker'
+}
+
+// Get color based on location type
+function getNodeColor(item: any) {
+  const type = item.raw?.metadata?.type?.toLowerCase()
+  if (!type) return 'primary'
+
+  const colorMap: Record<string, string> = {
+    'city': 'purple',
+    'stadt': 'purple',
+    'district': 'blue',
+    'viertel': 'blue',
+    'building': 'grey',
+    'gebäude': 'grey',
+  }
+
+  return colorMap[type] || 'primary'
+}
+
 // Form state
 const showCreateDialog = ref(false)
 const showViewDialog = ref(false)
@@ -811,6 +942,7 @@ const previewImageTitle = ref('')
 const locationForm = ref({
   name: '',
   description: '',
+  parentLocationId: null as number | null,
   metadata: {
     type: '',
     region: '',
@@ -1097,11 +1229,18 @@ const itemRelationTypeSuggestions = computed(() => [
   t('locations.itemRelationTypes.guarded'),
 ])
 
-function truncateText(text: string, length: number) {
-  if (text.length <= length)
-    return text
-  return `${text.substring(0, length)}...`
-}
+// Available parent locations (exclude current location to prevent circular references)
+const availableParentLocations = computed(() => {
+  if (!locations.value) return []
+
+  // When editing, exclude the current location and its children
+  if (editingLocation.value) {
+    return locations.value.filter(loc => loc.id !== editingLocation.value?.id)
+  }
+
+  // When creating, show all locations
+  return locations.value
+})
 
 async function viewLocation(location: Location) {
   viewingLocation.value = location
@@ -1197,6 +1336,7 @@ async function editLocation(location: Location) {
   locationForm.value = {
     name: location.name,
     description: location.description || '',
+    parentLocationId: (location as any).parent_entity_id || null,
     metadata: {
       type: location.metadata?.type || '',
       region: location.metadata?.region || '',
@@ -1221,18 +1361,31 @@ async function saveLocation() {
 
   try {
     if (editingLocation.value) {
-      await entitiesStore.updateLocation(editingLocation.value.id, {
-        name: locationForm.value.name,
-        description: locationForm.value.description,
-        metadata: locationForm.value.metadata,
+      await $fetch(`/api/locations/${editingLocation.value.id}`, {
+        method: 'PATCH',
+        body: {
+          name: locationForm.value.name,
+          description: locationForm.value.description,
+          metadata: locationForm.value.metadata,
+          parentLocationId: locationForm.value.parentLocationId,
+        },
       })
+      // Reload locations to get updated data
+      await entitiesStore.fetchLocations(activeCampaignId.value)
     }
     else {
-      await entitiesStore.createLocation(activeCampaignId.value, {
-        name: locationForm.value.name,
-        description: locationForm.value.description,
-        metadata: locationForm.value.metadata,
+      await $fetch('/api/locations', {
+        method: 'POST',
+        body: {
+          name: locationForm.value.name,
+          description: locationForm.value.description,
+          metadata: locationForm.value.metadata,
+          campaignId: activeCampaignId.value,
+          parentLocationId: locationForm.value.parentLocationId,
+        },
       })
+      // Reload locations to get new data
+      await entitiesStore.fetchLocations(activeCampaignId.value)
     }
 
     closeDialog()
@@ -1270,6 +1423,7 @@ function closeDialog() {
   locationForm.value = {
     name: '',
     description: '',
+    parentLocationId: null,
     metadata: {
       type: '',
       region: '',

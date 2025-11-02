@@ -32,8 +32,9 @@ if (!campaign) {
 const npcType = db.prepare("SELECT id FROM entity_types WHERE name = 'NPC'").get()
 const itemType = db.prepare("SELECT id FROM entity_types WHERE name = 'Item'").get()
 const locationType = db.prepare("SELECT id FROM entity_types WHERE name = 'Location'").get()
+const factionType = db.prepare("SELECT id FROM entity_types WHERE name = 'Faction'").get()
 
-if (!npcType || !itemType || !locationType) {
+if (!npcType || !itemType || !locationType || !factionType) {
   console.error('❌ Entity types not found!')
   process.exit(1)
 }
@@ -42,37 +43,42 @@ const campaignId = campaign.id
 const npcTypeId = npcType.id
 const itemTypeId = itemType.id
 const locationTypeId = locationType.id
+const factionTypeId = factionType.id
 
 console.log(`📋 Using campaign ID: ${campaignId}`)
 console.log(`📋 NPC type ID: ${npcTypeId}`)
 console.log(`📋 Item type ID: ${itemTypeId}`)
 console.log(`📋 Location type ID: ${locationTypeId}`)
+console.log(`📋 Faction type ID: ${factionTypeId}`)
 
 // ============================================================================
-// STEP 1: CLEANUP - Delete existing NPCs and Items
+// STEP 1: CLEANUP - Delete ALL test data (NPCs, Items, Locations, Factions)
 // ============================================================================
-console.log('\n🧹 Cleaning up existing test data...')
+console.log('\n🧹 Cleaning up ALL existing test data...')
 
 const cleanup = db.transaction(() => {
   // Delete from FTS first
-  db.prepare(`DELETE FROM entities_fts WHERE rowid IN (SELECT id FROM entities WHERE type_id IN (?, ?))`).run(npcTypeId, itemTypeId)
+  db.prepare(`DELETE FROM entities_fts WHERE rowid IN (SELECT id FROM entities WHERE type_id IN (?, ?, ?, ?))`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
 
-  // Delete entity relations
-  db.prepare(`DELETE FROM entity_relations WHERE from_entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?))`).run(npcTypeId, itemTypeId)
-  db.prepare(`DELETE FROM entity_relations WHERE to_entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?))`).run(npcTypeId, itemTypeId)
+  // Delete entity relations (all relations involving these entities)
+  db.prepare(`DELETE FROM entity_relations WHERE from_entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?, ?, ?))`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
+  db.prepare(`DELETE FROM entity_relations WHERE to_entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?, ?, ?))`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
 
   // Delete entity images
-  db.prepare(`DELETE FROM entity_images WHERE entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?))`).run(npcTypeId, itemTypeId)
+  db.prepare(`DELETE FROM entity_images WHERE entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?, ?, ?))`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
 
-  // Delete entities
-  const result = db.prepare(`DELETE FROM entities WHERE type_id IN (?, ?)`).run(npcTypeId, itemTypeId)
+  // Delete entity documents
+  db.prepare(`DELETE FROM entity_documents WHERE entity_id IN (SELECT id FROM entities WHERE type_id IN (?, ?, ?, ?))`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
+
+  // Delete entities (NPCs, Items, Locations, Factions)
+  const result = db.prepare(`DELETE FROM entities WHERE type_id IN (?, ?, ?, ?)`).run(npcTypeId, itemTypeId, locationTypeId, factionTypeId)
 
   return result.changes
 })
 
 try {
   const deleted = cleanup()
-  console.log(`✅ Deleted ${deleted} existing NPCs and Items`)
+  console.log(`✅ Deleted ${deleted} existing NPCs, Items, Locations, and Factions`)
 } catch (error) {
   console.error('❌ Error during cleanup:', error.message)
   process.exit(1)
@@ -543,7 +549,219 @@ try {
 }
 
 // ============================================================================
-// STEP 6: CREATE LOCATION RELATIONS (NPCs → Locations, Items → Locations)
+// STEP 5.5: CREATE HIERARCHICAL LOCATION STRUCTURE (parent_entity_id)
+// ============================================================================
+console.log('\n🏛️  Creating hierarchical location structure...')
+
+const updateParentLocation = db.prepare(`
+  UPDATE entities
+  SET parent_entity_id = ?
+  WHERE id = ?
+`)
+
+const createHierarchy = db.transaction(() => {
+  let hierarchyCount = 0
+
+  // Example hierarchies:
+  // 1. Taverne "Zum Goldenen Drachen" (index 0) → Hafenviertel (create parent)
+  // 2. Schmiede des Brün Eisenfaust (index 1) → Handwerkerviertel (create parent)
+  // 3. Multiple locations under "Stadtzentrum"
+
+  // Create parent regions first (not in locations array yet)
+  const hafenviertelResult = insertEntity.run('Hafenviertel', 'Das geschäftige Hafenviertel der Stadt mit Docks, Tavernen und Handelsplätzen.', locationTypeId, campaignId, '{"type":"district"}')
+  const hafenviertelId = hafenviertelResult.lastInsertRowid
+  insertFts.run(hafenviertelId, 'Hafenviertel', 'Das geschäftige Hafenviertel der Stadt', '{"type":"district"}')
+  locationIds.push({ id: hafenviertelId, name: 'Hafenviertel' })
+
+  const handwerkerviertelResult = insertEntity.run('Handwerkerviertel', 'Viertel der Handwerker, Schmiede und Werkstätten.', locationTypeId, campaignId, '{"type":"district"}')
+  const handwerkerviertelId = handwerkerviertelResult.lastInsertRowid
+  insertFts.run(handwerkerviertelId, 'Handwerkerviertel', 'Viertel der Handwerker', '{"type":"district"}')
+  locationIds.push({ id: handwerkerviertelId, name: 'Handwerkerviertel' })
+
+  const stadtzentrumResult = insertEntity.run('Stadtzentrum', 'Das pulsierende Herz der Stadt mit Marktplatz und Rathaus.', locationTypeId, campaignId, '{"type":"district"}')
+  const stadtzentrumId = stadtzentrumResult.lastInsertRowid
+  insertFts.run(stadtzentrumId, 'Stadtzentrum', 'Das pulsierende Herz der Stadt', '{"type":"district"}')
+  locationIds.push({ id: stadtzentrumId, name: 'Stadtzentrum' })
+
+  const stadtResult = insertEntity.run('Falkenpfeil', 'Die große Handelsstadt Falkenpfeil, Zentrum der Region.', locationTypeId, campaignId, '{"type":"city"}')
+  const stadtId = stadtResult.lastInsertRowid
+  insertFts.run(stadtId, 'Falkenpfeil', 'Die große Handelsstadt', '{"type":"city"}')
+  locationIds.push({ id: stadtId, name: 'Falkenpfeil' })
+
+  // Now create hierarchy: Viertel → Stadt
+  updateParentLocation.run(stadtId, hafenviertelId)
+  updateParentLocation.run(stadtId, handwerkerviertelId)
+  updateParentLocation.run(stadtId, stadtzentrumId)
+  hierarchyCount += 3
+
+  // Assign existing locations to their districts
+  // Taverne "Zum Goldenen Drachen" (index 0) → Hafenviertel
+  if (locationIds[0]) {
+    updateParentLocation.run(hafenviertelId, locationIds[0].id)
+    hierarchyCount++
+  }
+
+  // Schmiede des Brün Eisenfaust (index 1) → Handwerkerviertel
+  if (locationIds[1]) {
+    updateParentLocation.run(handwerkerviertelId, locationIds[1].id)
+    hierarchyCount++
+  }
+
+  // Marktplatz am Brunnen (index 5) → Stadtzentrum
+  if (locationIds[5]) {
+    updateParentLocation.run(stadtzentrumId, locationIds[5].id)
+    hierarchyCount++
+  }
+
+  // Gasthaus "Goldene Harfe" (index 15) → Stadtzentrum
+  if (locationIds[15]) {
+    updateParentLocation.run(stadtzentrumId, locationIds[15].id)
+    hierarchyCount++
+  }
+
+  // Königspalast (index 10) → Stadtzentrum
+  if (locationIds[10]) {
+    updateParentLocation.run(stadtzentrumId, locationIds[10].id)
+    hierarchyCount++
+  }
+
+  // Waffenkammer (index 16) → Handwerkerviertel
+  if (locationIds[16]) {
+    updateParentLocation.run(handwerkerviertelId, locationIds[16].id)
+    hierarchyCount++
+  }
+
+  // Hafen der Sturmsegler (index 8) → Hafenviertel
+  if (locationIds[8]) {
+    updateParentLocation.run(hafenviertelId, locationIds[8].id)
+    hierarchyCount++
+  }
+
+  // Alchemisten-Laden (index 17) → Handwerkerviertel
+  if (locationIds[17]) {
+    updateParentLocation.run(handwerkerviertelId, locationIds[17].id)
+    hierarchyCount++
+  }
+
+  return hierarchyCount
+})
+
+try {
+  const hierarchyLinks = createHierarchy()
+  console.log(`✅ Created ${hierarchyLinks} hierarchical location links!`)
+  console.log(`   Structure: Falkenpfeil (Stadt) → Viertel → Gebäude`)
+} catch (error) {
+  console.error('❌ Error creating hierarchy:', error.message)
+  process.exit(1)
+}
+
+// ============================================================================
+// STEP 6: INSERT FACTIONS (20 factions)
+// ============================================================================
+console.log('\n⚔️  Inserting 20 test factions...')
+
+const factions = [
+  // Fully filled factions (10)
+  { name: 'Die Harpers', description: 'Eine geheime Organisation von Barden, Waldläufern und Magiern, die sich dem Schutz der Unschuldigen verschrieben hat. Sie arbeiten im Verborgenen und bekämpfen Tyrannei.', metadata: '{"type":"guild","alignment":"Chaotisch Gut","headquarters":"Verstecktes Netzwerk","goals":"Freiheit und Gerechtigkeit"}' },
+  { name: 'Die Zhentarim', description: 'Ein skrupelloses Netzwerk von Händlern, Schmugglern und Assassinen. Sie streben nach Macht und Reichtum durch jeden Mittel.', metadata: '{"type":"criminal","alignment":"Neutral Böse","headquarters":"Schwarzes Netzwerk","goals":"Macht und Gold"}' },
+  { name: 'Der Orden der Faust', description: 'Ein militärischer Orden von Paladinen und Klerikern, die mit eiserner Hand für Ordnung sorgen. Sie dulden keine Abweichung vom Gesetz.', metadata: '{"type":"military","alignment":"Rechtschaffen Neutral","headquarters":"Festung Eisenhand","goals":"Absolutes Gesetz und Ordnung"}' },
+  { name: 'Die Smaragdenklave', description: 'Druiden und Waldläufer, die die Natur beschützen. Sie kämpfen gegen die Zivilisation, wenn diese die Wildnis bedroht.', metadata: '{"type":"druidic","alignment":"Neutral","headquarters":"Heiliger Hain","goals":"Naturschutz um jeden Preis"}' },
+  { name: 'Gilde der Alchemisten', description: 'Eine Gilde von Gelehrten, Alchemisten und Erfindern. Sie suchen nach vergessenen Wissen und magischen Artefakten.', metadata: '{"type":"guild","alignment":"Neutral","headquarters":"Die Große Bibliothek","goals":"Wissen sammeln und bewahren"}' },
+  { name: 'Die Rote Hand', description: 'Eine Bande von Söldnern und Kriegern, die für den Höchstbietenden kämpfen. Ihre roten Handschuhe sind ihr Markenzeichen.', metadata: '{"type":"mercenary","alignment":"Neutral","headquarters":"Söldnerlager","goals":"Gold verdienen durch Gewalt"}' },
+  { name: 'Kult des Drachengotts', description: 'Ein fanatischer Kult, der Tiamat anbetet. Sie wollen die Rückkehr der Drachenkönigin erzwingen.', metadata: '{"type":"cult","alignment":"Chaotisch Böse","headquarters":"Versteckte Tempel","goals":"Rückkehr von Tiamat"}' },
+  { name: 'Händlervereinigung Waterdeep', description: 'Eine mächtige Gilde von Kaufleuten und Händlern. Sie kontrollieren den Handel in der gesamten Region.', metadata: '{"type":"trade","alignment":"Rechtschaffen Neutral","headquarters":"Handelshaus Waterdeep","goals":"Handelsmonopol"}' },
+  { name: 'Schattenzirkel', description: 'Eine Geheimorganisation von Nekromanten und dunklen Magiern. Sie forschen nach verbotenen Zaubersprüchen.', metadata: '{"type":"magical","alignment":"Neutral Böse","headquarters":"Verborgene Labore","goals":"Nekromantie perfektionieren"}' },
+  { name: 'Bruderschaft der Klinge', description: 'Ein Assassinenorden mit strengem Ehrenkodex. Sie töten nur aus gerechten Gründen - für den richtigen Preis.', metadata: '{"type":"assassins","alignment":"Rechtschaffen Böse","headquarters":"Schattenturm","goals":"Eliminierung durch Auftrag"}' },
+
+  // Medium filled factions (6)
+  { name: 'Magistrat von Neverwinter', description: 'Die regierende Stadtregierung mit Bürokr aten und Wachen.', metadata: '{"type":"government","alignment":"Rechtschaffen Neutral"}' },
+  { name: 'Freie Händler von Baldur\'s Gate', description: 'Unabhängige Kaufleute außerhalb der großen Gilden.', metadata: '{"type":"trade","alignment":"Neutral"}' },
+  { name: 'Die Grauen Jäger', description: 'Monster-Jäger Gilde, spezialisiert auf Untote.', metadata: '{"type":"guild","alignment":"Neutral Gut"}' },
+  { name: 'Feueranbeter-Kult', description: 'Fanatische Elementar-Anbeter des Feuers.', metadata: '{"type":"cult","alignment":"Chaotisch Neutral"}' },
+  { name: 'Lords\' Alliance', description: 'Politisches Bündnis der Stadtherrn.', metadata: '{"type":"political","alignment":"Rechtschaffen Neutral"}' },
+  { name: 'Piratenbund "Rote Segel"', description: 'Zusammenschluss von Seeräubern und Freibeutern.', metadata: '{"type":"pirates","alignment":"Chaotisch Neutral"}' },
+
+  // Minimal filled factions (4)
+  { name: 'Stadtwache', description: 'Lokale Ordnungshüter.', metadata: '{"type":"military"}' },
+  { name: 'Diebesgilde', description: 'Vereinigung von Dieben.', metadata: '{"type":"criminal"}' },
+  { name: 'Händlergilde', description: 'Lokale Kaufleute.', metadata: '{"type":"trade"}' },
+  { name: 'Abenteurergilde', description: 'Söldner und Schatzjäger.', metadata: '{"type":"guild"}' },
+]
+
+const insertAllFactions = db.transaction(() => {
+  const factionIds = []
+
+  // Insert Factions
+  for (const faction of factions) {
+    const result = insertEntity.run(faction.name, faction.description, factionTypeId, campaignId, faction.metadata)
+    const entityId = result.lastInsertRowid
+    insertFts.run(entityId, faction.name, faction.description, faction.metadata)
+    factionIds.push({ id: entityId, name: faction.name })
+  }
+
+  return factionIds
+})
+
+let factionIds
+
+try {
+  factionIds = insertAllFactions()
+  console.log(`✅ Inserted ${factionIds.length} Factions successfully!`)
+} catch (error) {
+  console.error('❌ Error inserting factions:', error.message)
+  process.exit(1)
+}
+
+// ============================================================================
+// STEP 7: CREATE FACTION RELATIONS (NPCs → Factions with leader)
+// ============================================================================
+console.log('\n🔗 Creating faction relations...')
+
+const createFactionRelations = db.transaction(() => {
+  let relationCount = 0
+
+  // Strategy:
+  // - Each faction gets 1 leader (Anführer relation)
+  // - Each faction gets 3-10 members (Mitglied relation)
+
+  const memberTypes = ['Mitglied', 'Gründungsmitglied', 'Ehrenmitglied', 'Rekrut']
+
+  for (const faction of factionIds) {
+    // Pick a random NPC as leader
+    const leader = npcIds[Math.floor(Math.random() * npcIds.length)]
+    insertRelation.run(leader.id, faction.id, 'Anführer', null)
+    relationCount++
+
+    // Pick 3-10 random NPCs as members
+    const numMembers = 3 + Math.floor(Math.random() * 8) // 3-10
+    const usedNpcs = new Set([leader.id]) // Don't add leader again
+
+    for (let i = 0; i < numMembers; i++) {
+      let npc
+      do {
+        npc = npcIds[Math.floor(Math.random() * npcIds.length)]
+      } while (usedNpcs.has(npc.id))
+      usedNpcs.add(npc.id)
+
+      const memberType = memberTypes[Math.floor(Math.random() * memberTypes.length)]
+      insertRelation.run(npc.id, faction.id, memberType, null)
+      relationCount++
+    }
+  }
+
+  return relationCount
+})
+
+try {
+  const factionRelations = createFactionRelations()
+  console.log(`✅ Created ${factionRelations} faction relations!`)
+} catch (error) {
+  console.error('❌ Error creating faction relations:', error.message)
+  process.exit(1)
+}
+
+// ============================================================================
+// STEP 8: CREATE LOCATION RELATIONS (NPCs → Locations, Items → Locations)
 // ============================================================================
 console.log('\n🔗 Creating location relations...')
 
@@ -674,16 +892,28 @@ try {
   console.log(`\n📊 Final Summary:`)
   console.log(`   - 100 NPCs total`)
   console.log(`   - 100 Items total`)
-  console.log(`   - 50 Locations total`)
+  console.log(`   - 54 Locations total (50 + 4 parent districts)`)
+  console.log(`   - 20 Factions total`)
   console.log(`\n   Relations:`)
-  console.log(`   - NPCs ↔ Items: Already created`)
+  console.log(`   - NPCs ↔ Items: Created`)
   console.log(`   - NPCs → Locations: Created`)
   console.log(`   - Items → Locations: Created`)
-  console.log(`\n🎮 Ready to test cross-entity search!`)
-  console.log(`💡 Examples:`)
+  console.log(`   - NPCs → Factions: Created (leaders + members)`)
+  console.log(`\n   Hierarchical Locations:`)
+  console.log(`   - Falkenpfeil (Stadt)`)
+  console.log(`     ├─ Hafenviertel → Taverne zum Goldenen Drachen, Hafen`)
+  console.log(`     ├─ Handwerkerviertel → Schmiede, Waffenkammer, Alchemist`)
+  console.log(`     └─ Stadtzentrum → Marktplatz, Gasthaus, Königspalast`)
+  console.log(`\n🎮 Ready to test!`)
+  console.log(`💡 Cross-Entity Search Examples:`)
   console.log(`   - Items page → Search "Çağlar" → Find items owned by Çağlar`)
   console.log(`   - Locations page → Search "Günther" → Find locations where Günther lives/works`)
   console.log(`   - Locations page → Search "Schwert" → Find locations containing swords`)
+  console.log(`   - Factions page → Search "André" → Find factions with member André`)
+  console.log(`   - NPCs page → Search "Harpers" → Find NPCs in Harpers faction`)
+  console.log(`\n💡 Hierarchical Locations:`)
+  console.log(`   - Create location with parent "Hafenviertel"`)
+  console.log(`   - View location → See breadcrumb: "Taverne → Hafenviertel → Falkenpfeil"`)
 } catch (error) {
   console.error('❌ Error creating location relations:', error.message)
   process.exit(1)

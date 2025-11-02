@@ -583,6 +583,24 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 11: Created item_types and item_rarities tables with bilingual seed data')
     },
   },
+  {
+    version: 12,
+    name: 'hierarchical_locations',
+    up: (db) => {
+      // Add parent_entity_id column to entities table for hierarchical locations
+      // This allows locations to have parent locations (e.g., Tavern -> District -> City -> Region)
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN parent_entity_id INTEGER REFERENCES entities(id) ON DELETE SET NULL
+      `)
+
+      // Create index for faster parent lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entities_parent ON entities(parent_entity_id)
+      `)
+
+      console.log('✅ Migration 12: Added parent_entity_id for hierarchical locations')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

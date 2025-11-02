@@ -1005,10 +1005,10 @@ onMounted(async () => {
 
   // Check if API key is configured
   try {
-    const settings = await $fetch<Record<string, any>>('/api/settings')
+    const settings = await $fetch<{ openai_api_key_full?: string }>('/api/settings')
     hasApiKey.value = !!settings.openai_api_key_full
   }
-  catch (error) {
+  catch {
     hasApiKey.value = false
   }
 
@@ -1118,14 +1118,12 @@ watch(searchQuery, async (query) => {
 
 // Show search results OR cached items
 const filteredItems = computed(() => {
-  // If user is typing but search hasn't returned yet, show cached items (prevents "empty" flash)
+  // If user is actively searching, show search results
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    // If search is running but no results yet, keep showing cached items
-    if (searching.value && searchResults.value.length === 0) {
-      return items.value || []
-    }
     return searchResults.value
   }
+
+  // Otherwise show all cached items
   return items.value || []
 })
 
@@ -1249,9 +1247,12 @@ async function generateImage() {
       }
     }
   }
-  catch (error: any) {
+  catch (error: unknown) {
     console.error('[Item] Failed to generate image:', error)
-    alert(error.data?.message || 'Failed to generate image')
+    const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
+      ? String(error.data.message)
+      : 'Failed to generate image'
+    alert(errorMessage)
   }
   finally {
     generatingImage.value = false

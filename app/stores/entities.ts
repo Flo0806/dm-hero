@@ -26,6 +26,7 @@ interface Location {
   name: string
   description: string | null
   image_url?: string | null
+  parent_entity_id?: number | null
   metadata: {
     type?: string
     region?: string

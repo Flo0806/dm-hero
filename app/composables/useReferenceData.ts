@@ -5,6 +5,7 @@
 
 interface ReferenceData {
   name: string
+  key?: string // i18n key (e.g., "human", "elf")
   name_de?: string | null
   name_en?: string | null
 }
@@ -17,12 +18,19 @@ export function useRaceName(race: ReferenceData) {
     return locale.value === 'de' ? race.name_de : race.name_en
   }
 
-  // Standard race: Use i18n
-  const i18nKey = `referenceData.raceNames.${race.name}`
-  const translated = t(i18nKey)
+  // Standard race: Use i18n with KEY field (e.g., "human" not "Mensch")
+  if (race.key) {
+    const i18nKey = `referenceData.raceNames.${race.key}`
+    const translated = t(i18nKey)
 
-  // Fallback to raw name if i18n key missing
-  return translated === i18nKey ? race.name : translated
+    // Return translated if found, otherwise fallback to name
+    if (translated !== i18nKey) {
+      return translated
+    }
+  }
+
+  // Fallback to raw name
+  return race.name
 }
 
 export function useClassName(classData: ReferenceData) {
@@ -33,10 +41,17 @@ export function useClassName(classData: ReferenceData) {
     return locale.value === 'de' ? classData.name_de : classData.name_en
   }
 
-  // Standard class: Use i18n
-  const i18nKey = `referenceData.classNames.${classData.name}`
-  const translated = t(i18nKey)
+  // Standard class: Use i18n with KEY field (e.g., "barbarian" not "Barbar")
+  if (classData.key) {
+    const i18nKey = `referenceData.classNames.${classData.key}`
+    const translated = t(i18nKey)
 
-  // Fallback to raw name if i18n key missing
-  return translated === i18nKey ? classData.name : translated
+    // Return translated if found, otherwise fallback to name
+    if (translated !== i18nKey) {
+      return translated
+    }
+  }
+
+  // Fallback to raw name
+  return classData.name
 }

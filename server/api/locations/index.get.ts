@@ -32,6 +32,7 @@ export default defineEventHandler((event) => {
     description: string | null
     image_url: string | null
     primary_image_url?: string | null
+    parent_entity_id: number | null
     metadata: string | null
     created_at: string
     updated_at: string
@@ -87,6 +88,7 @@ export default defineEventHandler((event) => {
           e.name,
           e.description,
           e.image_url,
+          e.parent_entity_id,
           e.metadata,
           e.created_at,
           e.updated_at,
@@ -120,6 +122,7 @@ export default defineEventHandler((event) => {
             e.name,
             e.description,
             e.image_url,
+            e.parent_entity_id,
             e.metadata,
             e.created_at,
             e.updated_at,
@@ -155,6 +158,7 @@ export default defineEventHandler((event) => {
           e.name,
           e.description,
           e.image_url,
+          e.parent_entity_id,
           e.metadata,
           e.created_at,
           e.updated_at,
@@ -528,6 +532,7 @@ export default defineEventHandler((event) => {
         e.name,
         e.description,
         e.image_url,
+        e.parent_entity_id,
         e.metadata,
         e.created_at,
         e.updated_at,

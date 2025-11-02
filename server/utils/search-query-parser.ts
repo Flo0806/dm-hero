@@ -29,18 +29,36 @@ export function parseSearchQuery(query: string): ParsedQuery {
   // Check for operators
   const hasAnd = trimmed.includes('+')
   const hasOr = trimmed.includes('|')
-  const hasNot = trimmed.includes('-')
+  // NOT operator: only if '-' is surrounded by spaces (not inside words like "en-bruddi")
+  const hasNot = /\s-\s/.test(trimmed) || trimmed.startsWith('- ')
   const hasQuotes = trimmed.includes('"')
 
   const hasOperators = hasAnd || hasOr || hasNot || hasQuotes
 
   if (!hasOperators) {
-    // Simple query: try exact match first
+    // Simple query WITHOUT quotes: split into words for multi-word matching
+    // (e.g., "die grauen jäger" → ["die", "grauen", "jäger"])
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0)
+
     return {
       fts5Query: trimmed,
-      terms: [trimmed],
+      terms: words,
       hasOperators: false,
       useExactFirst: true,
+    }
+  }
+
+  // Special case: Quoted phrase only (e.g., "die grauen jäger")
+  if (hasQuotes && !hasAnd && !hasOr && !hasNot) {
+    const quoteMatch = trimmed.match(/"([^"]+)"/)
+    if (quoteMatch) {
+      const phrase = quoteMatch[1]
+      return {
+        fts5Query: `"${phrase}"`,
+        terms: [phrase], // Keep as ONE term (phrase search)
+        hasOperators: true,
+        useExactFirst: true,
+      }
     }
   }
 
@@ -52,7 +70,7 @@ export function parseSearchQuery(query: string): ParsedQuery {
   const tokens = trimmed.match(/(?:[^\s"]+|"[^"]*")+/g) || []
 
   for (let i = 0; i < tokens.length; i++) {
-    let token = tokens[i].trim()
+    const token = tokens[i].trim()
 
     if (!token) continue
 
