@@ -118,8 +118,14 @@ function navigateToResult(result: typeof searchResults.value[0]) {
 // Keyboard Shortcuts
 onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {
-    // "/" öffnet Suche
-    if (e.key === '/' && !showSearch.value) {
+    // Check if user is typing in an input field
+    const target = e.target as HTMLElement
+    const isTyping = target.tagName === 'INPUT' ||
+                     target.tagName === 'TEXTAREA' ||
+                     target.isContentEditable
+
+    // "/" öffnet Suche (nur wenn NICHT in Eingabefeld)
+    if (e.key === '/' && !showSearch.value && !isTyping) {
       e.preventDefault()
       showSearch.value = true
     }
