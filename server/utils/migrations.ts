@@ -601,6 +601,17 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 12: Added parent_entity_id for hierarchical locations')
     },
   },
+  {
+    version: 13,
+    name: 'add_lore_entity_type',
+    up: (db) => {
+      // Add Lore entity type for general campaign knowledge/encyclopedia entries
+      const insertType = db.prepare('INSERT INTO entity_types (name, icon, color) VALUES (?, ?, ?)')
+      insertType.run('Lore', 'mdi-book-open-variant', '#9C6B98')
+
+      console.log('✅ Migration 13: Added Lore entity type for campaign knowledge')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

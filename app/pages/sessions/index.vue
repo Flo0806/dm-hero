@@ -245,6 +245,16 @@
                       </template>
                     </NormalToolbar>
                     <NormalToolbar
+                      :title="$t('sessions.linkLore')"
+                      @on-click="showLinkEntityDialog('lore')"
+                    >
+                      <template #trigger>
+                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M21,4H7A2,2 0 0,0 5,6V17H21V16L23,14V6C23,4.89 22.1,4 21,4M21,14H7V6H21M3,19V8H1V19A2,2 0 0,0 3,21H19V19" />
+                        </svg>
+                      </template>
+                    </NormalToolbar>
+                    <NormalToolbar
                       :title="$t('documents.imageGallery')"
                       @on-click="openImageGallery"
                     >
@@ -768,7 +778,7 @@ interface Session {
 }
 
 interface EntityMention {
-  type: 'npc' | 'location' | 'item' | 'faction'
+  type: 'npc' | 'location' | 'item' | 'faction' | 'lore'
   id: number
   name: string
 }
@@ -797,6 +807,7 @@ onMounted(async () => {
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchItems(activeCampaignId.value),
     entitiesStore.fetchFactions(activeCampaignId.value),
+    entitiesStore.fetchLore(activeCampaignId.value),
   ])
 })
 
@@ -864,7 +875,7 @@ const sessionForm = ref({
 })
 
 // Entity linking
-const linkEntityType = ref<'npc' | 'location' | 'item' | 'faction'>('npc')
+const linkEntityType = ref<'npc' | 'location' | 'item' | 'faction' | 'lore'>('npc')
 const entitySearch = ref('')
 const notesTextarea = ref<{ $el: HTMLElement } | null>(null)
 
@@ -926,6 +937,9 @@ const filteredEntities = computed(() => {
     case 'faction':
       entities = entitiesStore.factions || []
       break
+    case 'lore':
+      entities = entitiesStore.loreForSelect || []
+      break
   }
 
   if (!query)
@@ -945,7 +959,7 @@ const extractedMentions = computed(() => {
   while ((match = linkRegex.exec(text)) !== null) {
     const [, name, type, id] = match
     mentions.push({
-      type: type as 'npc' | 'location' | 'item' | 'faction',
+      type: type as 'npc' | 'location' | 'item' | 'faction' | 'lore',
       id: Number.parseInt(id!),
       name: name!,
     })
@@ -1016,6 +1030,7 @@ function getEntityIcon(type: string): string {
     location: 'mdi-map-marker',
     item: 'mdi-sword',
     faction: 'mdi-shield',
+    lore: 'mdi-book-open-variant',
   }
   return icons[type] || 'mdi-link'
 }
@@ -1026,6 +1041,7 @@ function getEntityColor(type: string): string {
     location: '#8B7355',
     item: '#CC8844',
     faction: '#7B92AB',
+    lore: '#9C6B98',
   }
   return colors[type] || '#888888'
 }
@@ -1042,7 +1058,7 @@ function getRarityColor(rarity: string): string {
   return colors[rarity] || 'grey'
 }
 
-function showLinkEntityDialog(type: 'npc' | 'location' | 'item' | 'faction') {
+function showLinkEntityDialog(type: 'npc' | 'location' | 'item' | 'faction' | 'lore') {
   linkEntityType.value = type
   entitySearch.value = ''
   showEntityLinkDialog.value = true

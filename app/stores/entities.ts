@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { NPC } from '../../types/npc'
 import type { Item } from '../../types/item'
+import type { Lore } from '../../types/lore'
 
 interface Faction {
   id: number
@@ -57,6 +58,11 @@ export const useEntitiesStore = defineStore('entities', {
     items: [] as Item[],
     itemsLoaded: false,
     itemsLoading: false,
+
+    // Lore
+    lore: [] as Lore[],
+    loreLoaded: false,
+    loreLoading: false,
   }),
 
   getters: {
@@ -75,6 +81,10 @@ export const useEntitiesStore = defineStore('entities', {
     // Items
     getItemById: state => (id: number) => state.items.find(i => i.id === id),
     itemsForSelect: state => state.items.map(i => ({ id: i.id, name: i.name })),
+
+    // Lore
+    getLoreById: state => (id: number) => state.lore.find(l => l.id === id),
+    loreForSelect: state => state.lore.map(l => ({ id: l.id, name: l.name })),
   },
 
   actions: {
@@ -295,6 +305,60 @@ export const useEntitiesStore = defineStore('entities', {
       this.items = this.items.filter(i => i.id !== id)
     },
 
+    // ==================== Lore ====================
+
+    async fetchLore(campaignId: string | number, force = false) {
+      if (this.loreLoaded && !force)
+        return
+
+      this.loreLoading = true
+      try {
+        const lore = await $fetch<Lore[]>('/api/lore', {
+          query: { campaignId },
+        })
+        this.lore = lore
+        this.loreLoaded = true
+      }
+      catch (error) {
+        console.error('Failed to fetch lore:', error)
+        this.lore = []
+      }
+      finally {
+        this.loreLoading = false
+      }
+    },
+
+    async createLore(campaignId: string | number, data: Partial<Lore>) {
+      const lore = await $fetch<Lore>('/api/lore', {
+        method: 'POST',
+        body: {
+          ...data,
+          campaignId,
+        },
+      })
+      this.lore.push(lore)
+      return lore
+    },
+
+    async updateLore(id: number, data: Partial<Lore>) {
+      const lore = await $fetch<Lore>(`/api/lore/${id}`, {
+        method: 'PATCH',
+        body: data,
+      })
+      const index = this.lore.findIndex(l => l.id === id)
+      if (index !== -1) {
+        this.lore[index] = lore
+      }
+      return lore
+    },
+
+    async deleteLore(id: number) {
+      await $fetch(`/api/lore/${id}`, {
+        method: 'DELETE',
+      })
+      this.lore = this.lore.filter(l => l.id !== id)
+    },
+
     // ==================== Utility ====================
 
     // Refresh all entities for current campaign
@@ -304,6 +368,7 @@ export const useEntitiesStore = defineStore('entities', {
         this.fetchFactions(campaignId, true),
         this.fetchLocations(campaignId, true),
         this.fetchItems(campaignId, true),
+        this.fetchLore(campaignId, true),
       ])
     },
 
@@ -317,6 +382,8 @@ export const useEntitiesStore = defineStore('entities', {
       this.locationsLoaded = false
       this.items = []
       this.itemsLoaded = false
+      this.lore = []
+      this.loreLoaded = false
     },
   },
 })

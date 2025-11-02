@@ -99,6 +99,7 @@ function getEntityPath(entityType: string, entityId: number, entityName: string)
     'Location': '/locations',
     'Item': '/items',
     'Faction': '/factions',
+    'Lore': '/lore',
     'Session': '/sessions',
   }
   const basePath = typeMap[entityType] || '/npcs'

@@ -73,6 +73,12 @@
         to="/factions"
       />
       <v-list-item
+        prepend-icon="mdi-book-open-variant"
+        :title="$t('nav.lore')"
+        value="lore"
+        to="/lore"
+      />
+      <v-list-item
         prepend-icon="mdi-book-open-page-variant"
         :title="$t('nav.sessions')"
         value="sessions"

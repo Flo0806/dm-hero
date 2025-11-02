@@ -58,7 +58,17 @@ export interface FactionMetadata {
 }
 
 /**
+ * Lore Metadata
+ * Stored in entities.metadata for Lore entries (campaign knowledge/encyclopedia)
+ */
+export interface LoreMetadata {
+  type?: string // Object, Plant, Place, Event, Creature, Concept, Magic, Religion
+  date?: string // Optional date for historical events
+  [key: string]: unknown
+}
+
+/**
  * Generic entity metadata union type
  * Use when parsing metadata without knowing the specific entity type
  */
-export type EntityMetadata = NpcMetadata | ItemMetadata | LocationMetadata | FactionMetadata
+export type EntityMetadata = NpcMetadata | ItemMetadata | LocationMetadata | FactionMetadata | LoreMetadata
