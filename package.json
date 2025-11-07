@@ -1,7 +1,34 @@
 {
   "name": "dm-hero",
+  "version": "1.0.0",
+  "description": "A personal D&D campaign management tool for Dungeon Masters with fuzzy search, entity management, and session tracking",
+  "author": "Florian Heuberger",
+  "license": "MIT",
   "type": "module",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Flo0806/dm-hero.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Flo0806/dm-hero/issues"
+  },
+  "homepage": "https://github.com/Flo0806/dm-hero#readme",
+  "keywords": [
+    "dnd",
+    "dungeons-and-dragons",
+    "campaign-management",
+    "dungeon-master",
+    "dm-tools",
+    "rpg",
+    "ttrpg",
+    "nuxt",
+    "vue",
+    "vuetify",
+    "sqlite",
+    "fuzzy-search",
+    "entity-management"
+  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
