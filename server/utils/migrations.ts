@@ -185,14 +185,24 @@ export const migrations: Migration[] = [
         ALTER TABLE tags ADD COLUMN deleted_at TEXT
       `)
 
-      // Create a default campaign for existing data
-      const insertCampaign = db.prepare('INSERT INTO campaigns (name, description) VALUES (?, ?)')
-      const result = insertCampaign.run('Meine Kampagne', 'Standard-Kampagne')
-      const defaultCampaignId = result.lastInsertRowid
+      // Create a default campaign ONLY if there are orphaned entities or sessions
+      const orphanedEntities = db
+        .prepare('SELECT COUNT(*) as count FROM entities WHERE campaign_id IS NULL')
+        .get() as { count: number }
 
-      // Update existing entities to belong to default campaign
-      db.exec(`UPDATE entities SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
-      db.exec(`UPDATE sessions SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
+      const orphanedSessions = db
+        .prepare('SELECT COUNT(*) as count FROM sessions WHERE campaign_id IS NULL')
+        .get() as { count: number }
+
+      if (orphanedEntities.count > 0 || orphanedSessions.count > 0) {
+        const insertCampaign = db.prepare('INSERT INTO campaigns (name, description) VALUES (?, ?)')
+        const result = insertCampaign.run('Meine Kampagne', 'Standard-Kampagne')
+        const defaultCampaignId = result.lastInsertRowid
+
+        // Update existing entities to belong to default campaign
+        db.exec(`UPDATE entities SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
+        db.exec(`UPDATE sessions SET campaign_id = ${defaultCampaignId} WHERE campaign_id IS NULL`)
+      }
 
       console.log('✅ Migration 2: Campaigns and soft-delete added')
     },

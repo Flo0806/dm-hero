@@ -65,6 +65,15 @@ pnpm dev
 - **Variable names**: English
 - **UI text**: i18n (de/en)
 
+## Documentation Policy
+
+**IMPORTANT:** When making significant changes to the project, ALWAYS update:
+1. **README.md** - Keep the feature list, tech stack, and quick start guide current
+2. **CLAUDE.md** - Document architectural changes, new patterns, and lessons learned
+3. **DEPLOYMENT.md** - Update if deployment process changes
+
+This ensures new contributors (and future you) can understand the project quickly.
+
 ## Database Architecture
 
 ### Core Tables
@@ -2004,7 +2013,103 @@ Claude:
 
 ---
 
+### 2025-11-07 (Evening) - Docker Deployment with GitHub Actions
+
+**🐳 Docker Setup - Production-Ready Deployment:**
+
+**Files Created:**
+- ✅ `Dockerfile` - Multi-stage build (Builder + Runner)
+- ✅ `.dockerignore` - Excludes `data/`, `node_modules/`, dev files
+- ✅ `docker-compose.yml` - Local development (Port 4444)
+- ✅ `.github/workflows/docker-build.yml` - Automated builds on push to main
+- ✅ `DEPLOYMENT.md` - Comprehensive deployment guide
+- ✅ `README.md` - Professional project documentation with badges
+
+**Key Challenge: better-sqlite3 Native Bindings**
+
+**Problem:** better-sqlite3 requires compiled `.node` binaries for the target platform. Alpine Linux in Docker needs different binaries than your dev machine.
+
+**Solution (Multi-step):**
+1. **Move to dependencies**: better-sqlite3 was in `devDependencies` → moved to `dependencies` (needed at runtime!)
+2. **nuxt.config.ts**: Added `rollupConfig.external: ['better-sqlite3']` to prevent bundling
+3. **Dockerfile Runner Stage**:
+   ```dockerfile
+   # Install build tools for native compilation
+   RUN apk add --no-cache python3 make g++
+
+   # Install production deps
+   WORKDIR /app/.output/server
+   RUN pnpm install --prod --frozen-lockfile
+
+   # CRITICAL: Compile bindings for Alpine Linux
+   RUN cd node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3 && \
+       npm run build-release
+   ```
+
+4. **Directory Structure**: Must use `.output/` structure (not flat `/app/server/`)
+   - Nuxt builds to `.output/server/index.mjs`
+   - CMD: `node .output/server/index.mjs`
+
+**GitHub Actions Workflow:**
+- Triggers: Push to `main`, tags (`v*`), manual dispatch
+- Builds Docker image with GitHub Actions cache
+- Pushes to GitHub Container Registry: `ghcr.io/flo0806/dm-hero:latest`
+- No secrets needed! Uses automatic `GITHUB_TOKEN`
+- Image tags: `latest`, `v1.0.0`, `main-abc1234` (SHA)
+
+**Server Deployment Pattern:**
+1. Create PAT with `read:packages` scope
+2. `docker login ghcr.io`
+3. Create `docker-compose.yml` on server (with correct username)
+4. `docker-compose pull && docker-compose up -d`
+5. Optional: Cron job runs `update-app.sh` every 10 minutes
+
+**Data Persistence:**
+- `./data:/app/data` - SQLite database
+- `./uploads:/app/.output/public/uploads` - Uploaded images
+- Logs via `docker logs dm-hero`
+
+**Testing:**
+- Local build: `docker build -t dm-hero:test .`
+- Test run: `docker run -d -p 4445:3000 dm-hero:test`
+- Verified: ✅ Database initializes, ✅ better-sqlite3 works, ✅ Migrations run
+
+**package.json Metadata:**
+- Added version, description, author, license (MIT)
+- Repository URL: https://github.com/Flo0806/dm-hero
+- Keywords: dnd, campaign-management, rpg, nuxt, sqlite, fuzzy-search
+
+**Important Lessons Learned:**
+
+1. **better-sqlite3 in Docker:**
+   - MUST compile in runner stage (not just copy from builder)
+   - Needs build tools: `python3 make g++`
+   - pnpm install alone doesn't build → need `npm run build-release`
+
+2. **Nuxt .output/ Structure:**
+   - Don't copy `.output/` contents to `/app/` - keep as `.output/`
+   - Server expects `node_modules` in `.output/server/node_modules/`
+   - CMD must reference `.output/server/index.mjs`
+
+3. **GitHub Actions Tokens:**
+   - `GITHUB_TOKEN` is automatic - no manual setup needed!
+   - Just set `permissions: { packages: write }` in workflow
+
+4. **Documentation Policy:**
+   - Always update README.md for significant changes
+   - Keep CLAUDE.md changelog current
+   - DEPLOYMENT.md for ops-specific docs
+
+**Files Modified:**
+- `/package.json` - better-sqlite3 to dependencies, added metadata
+- `/nuxt.config.ts` - Added rollupConfig.external for better-sqlite3
+- `/README.md` - Complete rewrite with professional structure
+- `/CLAUDE.md` - Added Documentation Policy section
+
+---
+
 **Last Updated:** 2025-11-07
-**Database Version:** 8 (FTS5 with metadata search)
+**Database Version:** 13
 **Node Version:** 22.20.0
 **Framework:** Nuxt 4.2.1
+**Docker:** ✅ Production Ready
