@@ -726,7 +726,7 @@ const display = computed(() => {
 
 ## 📅 Changelog
 
-### 2025-11-04 - ESLint & Prettier Setup
+### 2025-11-07 - ESLint & Prettier Setup + Bugfixes + Package Updates
 
 **🎨 Code Quality & Formatting Standards:**
 
@@ -743,7 +743,8 @@ We added a complete linting and formatting setup to prepare the project for comm
 
 1. **`eslint.config.mjs`** - ESLint Rules
    - Single quotes, no semicolons, trailing commas
-   - Max 3 attributes per line in Vue templates
+   - **Vue HTML rules DISABLED** - Prettier handles ALL template formatting
+   - **Self-closing tags allowed**: `<input />`, `<br />`, `<v-btn />`
    - TypeScript: No implicit `any` enforced
    - 2 spaces indentation
 
@@ -1954,7 +1955,56 @@ Claude:
 
 ---
 
-**Last Updated:** 2025-10-31
+## 💡 Important Lessons Learned (2025-11-07)
+
+### ESLint + Prettier Conflicts
+
+**Problem:** ESLint's Vue HTML rules (`vue/max-attributes-per-line`, `vue/html-indent`) conflicted with Prettier.
+
+**Solution:** Disable ALL Vue HTML formatting rules in ESLint - let Prettier handle template formatting exclusively:
+```javascript
+'vue/max-attributes-per-line': 'off',
+'vue/html-indent': 'off',
+'vue/html-closing-bracket-newline': 'off',
+```
+
+**Why:** ESLint checks logic, Prettier formats code. Separating concerns eliminates race conditions.
+
+### Vue Template Multiline Expressions
+
+**Problem:** Prettier reformatted multiline `@click` handlers, creating invalid Vue expressions:
+```vue
+<!-- INVALID -->
+<v-btn @click="
+  doSomething()
+  closeDialog()
+">
+```
+
+**Root Cause:** Vue compiler parses attribute values as JavaScript expressions. Two statements without semicolons = syntax error.
+
+**Solutions:**
+1. **Helper function** (preferred):
+   ```typescript
+   function doSomethingAndClose() {
+     doSomething()
+     closeDialog()
+   }
+   ```
+2. **Arrow function** (if needed inline):
+   ```vue
+   @click="() => { doSomething(); closeDialog() }"
+   ```
+3. **Ternary** (for conditional):
+   ```vue
+   @click="condition ? doThis() : doThat()"
+   ```
+
+**Pattern:** Always extract multi-statement handlers into named functions. Improves readability and avoids syntax errors.
+
+---
+
+**Last Updated:** 2025-11-07
 **Database Version:** 8 (FTS5 with metadata search)
 **Node Version:** 22.20.0
-**Framework:** Nuxt 4
+**Framework:** Nuxt 4.2.1

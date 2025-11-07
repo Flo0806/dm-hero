@@ -33,6 +33,10 @@ export default defineNuxtConfig({
         base: './uploads',
       },
     },
+    // Mark better-sqlite3 as external to preserve native bindings
+    rollupConfig: {
+      external: ['better-sqlite3'],
+    },
   },
   hooks: {
     'vite:extendConfig': extendViteConfig,

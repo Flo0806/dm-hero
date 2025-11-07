@@ -1,0 +1,52 @@
+# Node modules
+node_modules
+.pnpm-store
+
+# Build outputs
+.output
+.nuxt
+dist
+
+# Database and uploads (will be mounted as volumes)
+data
+public/uploads
+
+# Development files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test
+*.test.ts
+*.spec.ts
+vitest.config.ts
+
+# Documentation
+*.md
+!README.md
+
+# Docker files (don't copy into image)
+Dockerfile
+docker-compose.yml
+.dockerignore

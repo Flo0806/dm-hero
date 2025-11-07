@@ -1,0 +1,26 @@
+services:
+  dm-hero:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dm-hero:latest
+    container_name: dm-hero
+    ports:
+      - '4444:3000'
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+      # Persist uploaded images (note: .output/public/ path in container)
+      - ./public/uploads:/app/.output/public/uploads
+    environment:
+      # Nuxt runtime config
+      NODE_ENV: production
+      NITRO_PORT: 3000
+      NITRO_HOST: 0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
