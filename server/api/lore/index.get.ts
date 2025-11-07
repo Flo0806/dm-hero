@@ -14,7 +14,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get Lore entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as { id: number } | undefined
+  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as
+    | { id: number }
+    | undefined
 
   if (!entityType) {
     return []
@@ -36,7 +38,9 @@ export default defineEventHandler((event) => {
   if (searchQuery && searchQuery.trim().length > 0) {
     const searchTerm = searchQuery.trim().toLowerCase()
 
-    loreEntries = db.prepare<unknown[], LoreRow>(`
+    loreEntries = db
+      .prepare<unknown[], LoreRow>(
+        `
       SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
              ei.image_url
       FROM entities e
@@ -53,16 +57,14 @@ export default defineEventHandler((event) => {
           OR LOWER(e.description) LIKE ?
         )
       ORDER BY e.updated_at DESC
-    `).all(
-      entityType.id,
-      campaignId,
-      `%${searchTerm}%`,
-      `%${searchTerm}%`,
-    )
-  }
-  else {
+    `,
+      )
+      .all(entityType.id, campaignId, `%${searchTerm}%`, `%${searchTerm}%`)
+  } else {
     // No search - return all lore entries
-    loreEntries = db.prepare<unknown[], LoreRow>(`
+    loreEntries = db
+      .prepare<unknown[], LoreRow>(
+        `
       SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
              ei.image_url
       FROM entities e
@@ -75,11 +77,13 @@ export default defineEventHandler((event) => {
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
       ORDER BY e.updated_at DESC
-    `).all(entityType.id, campaignId)
+    `,
+      )
+      .all(entityType.id, campaignId)
   }
 
   // Parse metadata JSON
-  return loreEntries.map(lore => ({
+  return loreEntries.map((lore) => ({
     ...lore,
     metadata: lore.metadata ? JSON.parse(lore.metadata) : null,
   }))

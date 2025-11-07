@@ -12,9 +12,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Delete the relation
-  db.prepare(`
+  db.prepare(
+    `
     DELETE FROM entity_relations WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

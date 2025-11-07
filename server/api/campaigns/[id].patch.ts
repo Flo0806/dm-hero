@@ -14,18 +14,24 @@ export default defineEventHandler(async (event) => {
 
   const { name, description } = body
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE campaigns
     SET
       name = COALESCE(?, name),
       description = COALESCE(?, description),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(name, description, id)
+  `,
+  ).run(name, description, id)
 
-  const campaign = db.prepare(`
+  const campaign = db
+    .prepare(
+      `
     SELECT * FROM campaigns WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!campaign) {
     throw createError({

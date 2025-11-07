@@ -12,11 +12,13 @@ export default defineEventHandler((event) => {
   }
 
   // Soft-delete: set deleted_at timestamp
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE campaigns
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

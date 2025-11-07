@@ -226,8 +226,8 @@ export const migrations: Migration[] = [
       `)
 
       // Create indexes for keys
-      db.exec(`CREATE INDEX idx_races_key ON races(key)`)
-      db.exec(`CREATE INDEX idx_classes_key ON classes(key)`)
+      db.exec('CREATE INDEX idx_races_key ON races(key)')
+      db.exec('CREATE INDEX idx_classes_key ON classes(key)')
 
       // Seed D&D 5e races (with keys)
       const insertRace = db.prepare('INSERT INTO races (name, key, description) VALUES (?, ?, ?)')
@@ -255,7 +255,9 @@ export const migrations: Migration[] = [
       }
 
       // Seed D&D 5e classes (with keys)
-      const insertClass = db.prepare('INSERT INTO classes (name, key, description) VALUES (?, ?, ?)')
+      const insertClass = db.prepare(
+        'INSERT INTO classes (name, key, description) VALUES (?, ?, ?)',
+      )
       const classes = [
         ['Barbar', 'barbarian', 'Wilder Krieger mit unbändiger Wut'],
         ['Barde', 'bard', 'Musiker und Geschichtenerzähler mit Magie'],
@@ -329,14 +331,15 @@ export const migrations: Migration[] = [
     name: 'add_caption_to_entity_images',
     up: (db) => {
       // Check if caption column already exists
-      const tableInfo = db.prepare('PRAGMA table_info(entity_images)').all() as Array<{ name: string }>
-      const hasCaptionColumn = tableInfo.some(col => col.name === 'caption')
+      const tableInfo = db.prepare('PRAGMA table_info(entity_images)').all() as Array<{
+        name: string
+      }>
+      const hasCaptionColumn = tableInfo.some((col) => col.name === 'caption')
 
       if (!hasCaptionColumn) {
-        db.exec(`ALTER TABLE entity_images ADD COLUMN caption TEXT`)
+        db.exec('ALTER TABLE entity_images ADD COLUMN caption TEXT')
         console.log('✅ Migration 6: Caption column added to entity_images')
-      }
-      else {
+      } else {
         console.log('✅ Migration 6: Caption column already exists, skipping')
       }
     },
@@ -377,10 +380,10 @@ export const migrations: Migration[] = [
     name: 'improve_fts5_with_metadata',
     up: (db) => {
       // Drop existing FTS table and triggers
-      db.exec(`DROP TRIGGER IF EXISTS entities_ai`)
-      db.exec(`DROP TRIGGER IF EXISTS entities_ad`)
-      db.exec(`DROP TRIGGER IF EXISTS entities_au`)
-      db.exec(`DROP TABLE IF EXISTS entities_fts`)
+      db.exec('DROP TRIGGER IF EXISTS entities_ai')
+      db.exec('DROP TRIGGER IF EXISTS entities_ad')
+      db.exec('DROP TRIGGER IF EXISTS entities_au')
+      db.exec('DROP TABLE IF EXISTS entities_fts')
 
       // Create improved FTS5 table with metadata column
       db.exec(`
@@ -434,7 +437,8 @@ export const migrations: Migration[] = [
       // SQLite doesn't support DROP COLUMN, so we need to recreate the tables
 
       // Step 1: Recreate races table without 'key' column
-      db.prepare(`
+      db.prepare(
+        `
         CREATE TABLE races_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
@@ -444,21 +448,25 @@ export const migrations: Migration[] = [
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           deleted_at TEXT
         )
-      `).run()
+      `,
+      ).run()
 
       // Copy data from old table (existing races don't have name_de/name_en)
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO races_new (id, name, description, created_at, deleted_at)
         SELECT id, name, description, created_at, deleted_at
         FROM races
-      `).run()
+      `,
+      ).run()
 
       // Drop old table and rename new one
-      db.prepare(`DROP TABLE races`).run()
-      db.prepare(`ALTER TABLE races_new RENAME TO races`).run()
+      db.prepare('DROP TABLE races').run()
+      db.prepare('ALTER TABLE races_new RENAME TO races').run()
 
       // Step 2: Recreate classes table without 'key' column
-      db.prepare(`
+      db.prepare(
+        `
         CREATE TABLE classes_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
@@ -468,20 +476,25 @@ export const migrations: Migration[] = [
           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
           deleted_at TEXT
         )
-      `).run()
+      `,
+      ).run()
 
       // Copy data from old table
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO classes_new (id, name, description, created_at, deleted_at)
         SELECT id, name, description, created_at, deleted_at
         FROM classes
-      `).run()
+      `,
+      ).run()
 
       // Drop old table and rename new one
-      db.prepare(`DROP TABLE classes`).run()
-      db.prepare(`ALTER TABLE classes_new RENAME TO classes`).run()
+      db.prepare('DROP TABLE classes').run()
+      db.prepare('ALTER TABLE classes_new RENAME TO classes').run()
 
-      console.log('✅ Migration 9: Removed key column and added bilingual reference data support (name_de, name_en)')
+      console.log(
+        '✅ Migration 9: Removed key column and added bilingual reference data support (name_de, name_en)',
+      )
     },
   },
   {
@@ -548,7 +561,12 @@ export const migrations: Migration[] = [
         { name: 'wondrous', name_de: 'Wundersam', name_en: 'Wondrous Item', is_standard: 1 },
         { name: 'tool', name_de: 'Werkzeug', name_en: 'Tool', is_standard: 1 },
         { name: 'treasure', name_de: 'Schatz', name_en: 'Treasure', is_standard: 1 },
-        { name: 'consumable', name_de: 'Verbrauchsgegenstand', name_en: 'Consumable', is_standard: 1 },
+        {
+          name: 'consumable',
+          name_de: 'Verbrauchsgegenstand',
+          name_en: 'Consumable',
+          is_standard: 1,
+        },
         { name: 'quest_item', name_de: 'Quest-Item', name_en: 'Quest Item', is_standard: 1 },
       ]
 
@@ -580,7 +598,9 @@ export const migrations: Migration[] = [
         insertRarity.run(rarity.name, rarity.name_de, rarity.name_en, rarity.is_standard)
       }
 
-      console.log('✅ Migration 11: Created item_types and item_rarities tables with bilingual seed data')
+      console.log(
+        '✅ Migration 11: Created item_types and item_rarities tables with bilingual seed data',
+      )
     },
   },
   {
@@ -616,7 +636,7 @@ export const migrations: Migration[] = [
 
 export async function runMigrations(db: Database.Database) {
   const currentVersion = getCurrentVersion(db)
-  const pendingMigrations = migrations.filter(m => m.version > currentVersion)
+  const pendingMigrations = migrations.filter((m) => m.version > currentVersion)
 
   if (pendingMigrations.length === 0) {
     console.log('✅ Database is up to date (version:', currentVersion, ')')
@@ -637,8 +657,7 @@ export async function runMigrations(db: Database.Database) {
       setVersion(db, migration.version)
       db.exec('COMMIT')
       console.log(`  ✅ Migration ${migration.version} applied successfully`)
-    }
-    catch (error) {
+    } catch (error) {
       db.exec('ROLLBACK')
       console.error(`  ❌ Migration ${migration.version} failed:`, error)
       throw error

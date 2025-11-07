@@ -24,7 +24,9 @@ export interface ItemLookup {
  * Extract locale from H3 event (from cookie or Accept-Language header).
  * Defaults to 'de'.
  */
-export function getLocaleFromEvent(event: { node: { req: { headers: { 'accept-language'?: string, cookie?: string } } } }): 'de' | 'en' {
+export function getLocaleFromEvent(event: {
+  node: { req: { headers: { 'accept-language'?: string; cookie?: string } } }
+}): 'de' | 'en' {
   // Priority 1: Accept-Language header (set by frontend with current locale)
   const acceptLanguage = event.node.req.headers['accept-language']
   if (acceptLanguage) {
@@ -63,21 +65,21 @@ export function getLocaleFromEvent(event: { node: { req: { headers: { 'accept-la
  */
 export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
   const racesDE: Record<string, string> = {
-    'mensch': 'human',
-    'elf': 'elf',
-    'zwerg': 'dwarf',
-    'halbling': 'halfling',
-    'gnom': 'gnome',
-    'halbelf': 'halfelf',
-    'halbork': 'halforc',
-    'tiefling': 'tiefling',
-    'drachenblütiger': 'dragonborn',
+    mensch: 'human',
+    elf: 'elf',
+    zwerg: 'dwarf',
+    halbling: 'halfling',
+    gnom: 'gnome',
+    halbelf: 'halfelf',
+    halbork: 'halforc',
+    tiefling: 'tiefling',
+    drachenblütiger: 'dragonborn',
     'zwergelf (drow)': 'drow',
-    'drow': 'drow',
-    'waldelf': 'woodelf',
-    'hochelf': 'highelf',
-    'bergzwerg': 'mountaindwarf',
-    'hügelzwerg': 'hilldwarf',
+    drow: 'drow',
+    waldelf: 'woodelf',
+    hochelf: 'highelf',
+    bergzwerg: 'mountaindwarf',
+    hügelzwerg: 'hilldwarf',
     'leichtfuß-halbling': 'lightfoothalfling',
     'robuster halbling': 'stouthalfling',
   }
@@ -85,63 +87,63 @@ export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
   const racesEN: Record<string, string> = {
     // English names (NOT keys - keys are language-neutral and should not be directly searchable)
     // If user searches "human" in EN, we want to find it. But NOT in DE.
-    'human': 'human',
-    'elf': 'elf',
-    'dwarf': 'dwarf',
-    'halfling': 'halfling',
-    'gnome': 'gnome',
+    human: 'human',
+    elf: 'elf',
+    dwarf: 'dwarf',
+    halfling: 'halfling',
+    gnome: 'gnome',
     'half-elf': 'halfelf',
     'half elf': 'halfelf',
-    'halfelf': 'halfelf',
+    halfelf: 'halfelf',
     'half-orc': 'halforc',
     'half orc': 'halforc',
-    'halforc': 'halforc',
-    'tiefling': 'tiefling',
-    'dragonborn': 'dragonborn',
-    'drow': 'drow',
+    halforc: 'halforc',
+    tiefling: 'tiefling',
+    dragonborn: 'dragonborn',
+    drow: 'drow',
     'wood elf': 'woodelf',
-    'woodelf': 'woodelf',
+    woodelf: 'woodelf',
     'high elf': 'highelf',
-    'highelf': 'highelf',
+    highelf: 'highelf',
     'mountain dwarf': 'mountaindwarf',
-    'mountaindwarf': 'mountaindwarf',
+    mountaindwarf: 'mountaindwarf',
     'hill dwarf': 'hilldwarf',
-    'hilldwarf': 'hilldwarf',
+    hilldwarf: 'hilldwarf',
     'lightfoot halfling': 'lightfoothalfling',
-    'lightfoothalfling': 'lightfoothalfling',
+    lightfoothalfling: 'lightfoothalfling',
     'stout halfling': 'stouthalfling',
-    'stouthalfling': 'stouthalfling',
+    stouthalfling: 'stouthalfling',
   }
 
   const classesDE: Record<string, string> = {
-    'barbar': 'barbarian',
-    'barde': 'bard',
-    'druide': 'druid',
-    'hexenmeister': 'warlock',
-    'kämpfer': 'fighter',
-    'kleriker': 'cleric',
-    'magier': 'wizard',
-    'mönch': 'monk',
-    'paladin': 'paladin',
-    'schurke': 'rogue',
-    'waldläufer': 'ranger',
-    'zauberer': 'sorcerer',
+    barbar: 'barbarian',
+    barde: 'bard',
+    druide: 'druid',
+    hexenmeister: 'warlock',
+    kämpfer: 'fighter',
+    kleriker: 'cleric',
+    magier: 'wizard',
+    mönch: 'monk',
+    paladin: 'paladin',
+    schurke: 'rogue',
+    waldläufer: 'ranger',
+    zauberer: 'sorcerer',
   }
 
   const classesEN: Record<string, string> = {
     // English names (keys happen to match English names for classes)
-    'barbarian': 'barbarian',
-    'bard': 'bard',
-    'druid': 'druid',
-    'warlock': 'warlock',
-    'fighter': 'fighter',
-    'cleric': 'cleric',
-    'wizard': 'wizard',
-    'monk': 'monk',
-    'paladin': 'paladin',
-    'rogue': 'rogue',
-    'ranger': 'ranger',
-    'sorcerer': 'sorcerer',
+    barbarian: 'barbarian',
+    bard: 'bard',
+    druid: 'druid',
+    warlock: 'warlock',
+    fighter: 'fighter',
+    cleric: 'cleric',
+    wizard: 'wizard',
+    monk: 'monk',
+    paladin: 'paladin',
+    rogue: 'rogue',
+    ranger: 'ranger',
+    sorcerer: 'sorcerer',
   }
 
   return {
@@ -160,7 +162,11 @@ export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
  *
  * @returns Array of possible keys/names to search for [key, localized_name]
  */
-export async function getRaceKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): Promise<string | null> {
+export async function getRaceKey(
+  name: string | undefined | null,
+  fuzzy = false,
+  locale: 'de' | 'en' = 'de',
+): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
   const nameLower = name.toLowerCase()
@@ -175,12 +181,16 @@ export async function getRaceKey(name: string | undefined | null, fuzzy = false,
     const dbModule = await import('./db')
     const db = dbModule.getDb()
 
-    const customRaceExact = db.prepare(`
+    const customRaceExact = db
+      .prepare(
+        `
       SELECT name FROM races
       WHERE (LOWER(name_de) = ? OR LOWER(name_en) = ? OR LOWER(name) = ?)
         AND deleted_at IS NULL
       LIMIT 1
-    `).get(nameLower, nameLower, nameLower) as { name: string } | undefined
+    `,
+      )
+      .get(nameLower, nameLower, nameLower) as { name: string } | undefined
 
     console.log('[getRaceKey] Custom race lookup for:', nameLower, '→', customRaceExact)
 
@@ -204,11 +214,15 @@ export async function getRaceKey(name: string | undefined | null, fuzzy = false,
       const dbModule = await import('./db')
       const db = dbModule.getDb()
 
-      const allCustomRaces = db.prepare(`
+      const allCustomRaces = db
+        .prepare(
+          `
         SELECT name, name_de, name_en FROM races
         WHERE name_de IS NOT NULL AND name_en IS NOT NULL
           AND deleted_at IS NULL
-      `).all() as Array<{ name: string, name_de: string, name_en: string }>
+      `,
+        )
+        .all() as Array<{ name: string; name_de: string; name_en: string }>
 
       for (const race of allCustomRaces) {
         const compareValue = locale === 'de' ? race.name_de : race.name_en
@@ -216,7 +230,7 @@ export async function getRaceKey(name: string | undefined | null, fuzzy = false,
           return race.name
         }
       }
-    } catch  {
+    } catch {
       // DB not available or error - continue
     }
   }
@@ -231,7 +245,10 @@ export async function getRaceKey(name: string | undefined | null, fuzzy = false,
  * Example: "Drachling" → ["drachling", "drachling", "dragonkin"]
  * (key in metadata + localized names for matching)
  */
-export async function getRaceSearchVariants(name: string | undefined | null, locale: 'de' | 'en' = 'de'): Promise<string[]> {
+export async function getRaceSearchVariants(
+  name: string | undefined | null,
+  locale: 'de' | 'en' = 'de',
+): Promise<string[]> {
   if (!name) return []
 
   const key = await getRaceKey(name, true, locale)
@@ -243,19 +260,23 @@ export async function getRaceSearchVariants(name: string | undefined | null, loc
       const dbModule = await import('./db')
       const db = dbModule.getDb()
 
-      const raceByKey = db.prepare(`
+      const raceByKey = db
+        .prepare(
+          `
         SELECT name FROM races
         WHERE LOWER(name) = LOWER(?)
           AND deleted_at IS NULL
         LIMIT 1
-      `).get(name) as { name: string } | undefined
+      `,
+        )
+        .get(name) as { name: string } | undefined
 
       if (raceByKey) {
         actualKey = raceByKey.name
       } else {
         return [name.toLowerCase()]
       }
-    } catch  {
+    } catch {
       return [name.toLowerCase()]
     }
   } else {
@@ -269,12 +290,16 @@ export async function getRaceSearchVariants(name: string | undefined | null, loc
     const dbModule = await import('./db')
     const db = dbModule.getDb()
 
-    const customRace = db.prepare(`
+    const customRace = db
+      .prepare(
+        `
       SELECT name_de, name_en FROM races
       WHERE LOWER(name) = LOWER(?)
         AND deleted_at IS NULL
       LIMIT 1
-    `).get(actualKey) as { name_de: string, name_en: string } | undefined
+    `,
+      )
+      .get(actualKey) as { name_de: string; name_en: string } | undefined
 
     if (customRace) {
       if (customRace.name_de) variants.push(customRace.name_de.toLowerCase())
@@ -288,7 +313,11 @@ export async function getRaceSearchVariants(name: string | undefined | null, loc
   return [...new Set(variants)]
 }
 
-export async function getClassKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): Promise<string | null> {
+export async function getClassKey(
+  name: string | undefined | null,
+  fuzzy = false,
+  locale: 'de' | 'en' = 'de',
+): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
   const nameLower = name.toLowerCase()
@@ -302,12 +331,16 @@ export async function getClassKey(name: string | undefined | null, fuzzy = false
     const dbModule = await import('./db')
     const db = dbModule.getDb()
 
-    const customClassExact = db.prepare(`
+    const customClassExact = db
+      .prepare(
+        `
       SELECT name FROM classes
       WHERE (LOWER(name_de) = ? OR LOWER(name_en) = ? OR LOWER(name) = ?)
         AND deleted_at IS NULL
       LIMIT 1
-    `).get(nameLower, nameLower, nameLower) as { name: string } | undefined
+    `,
+      )
+      .get(nameLower, nameLower, nameLower) as { name: string } | undefined
 
     if (customClassExact) return customClassExact.name
   } catch {
@@ -328,11 +361,15 @@ export async function getClassKey(name: string | undefined | null, fuzzy = false
       const dbModule = await import('./db')
       const db = dbModule.getDb()
 
-      const allCustomClasses = db.prepare(`
+      const allCustomClasses = db
+        .prepare(
+          `
         SELECT name, name_de, name_en FROM classes
         WHERE name_de IS NOT NULL AND name_en IS NOT NULL
           AND deleted_at IS NULL
-      `).all() as Array<{ name: string, name_de: string, name_en: string }>
+      `,
+        )
+        .all() as Array<{ name: string; name_de: string; name_en: string }>
 
       for (const classData of allCustomClasses) {
         const compareValue = locale === 'de' ? classData.name_de : classData.name_en
@@ -352,7 +389,10 @@ export async function getClassKey(name: string | undefined | null, fuzzy = false
  * Get ALL possible search variants for a class name (key + localized names).
  * Used for expanding FTS5 search queries.
  */
-export async function getClassSearchVariants(name: string | undefined | null, locale: 'de' | 'en' = 'de'): Promise<string[]> {
+export async function getClassSearchVariants(
+  name: string | undefined | null,
+  locale: 'de' | 'en' = 'de',
+): Promise<string[]> {
   if (!name) return []
 
   const key = await getClassKey(name, true, locale)
@@ -364,12 +404,16 @@ export async function getClassSearchVariants(name: string | undefined | null, lo
       const dbModule = await import('./db')
       const db = dbModule.getDb()
 
-      const classByKey = db.prepare(`
+      const classByKey = db
+        .prepare(
+          `
         SELECT name FROM classes
         WHERE LOWER(name) = LOWER(?)
           AND deleted_at IS NULL
         LIMIT 1
-      `).get(name) as { name: string } | undefined
+      `,
+        )
+        .get(name) as { name: string } | undefined
 
       if (classByKey) {
         actualKey = classByKey.name
@@ -390,12 +434,16 @@ export async function getClassSearchVariants(name: string | undefined | null, lo
     const dbModule = await import('./db')
     const db = dbModule.getDb()
 
-    const customClass = db.prepare(`
+    const customClass = db
+      .prepare(
+        `
       SELECT name_de, name_en FROM classes
       WHERE LOWER(name) = LOWER(?)
         AND deleted_at IS NULL
       LIMIT 1
-    `).get(actualKey) as { name_de: string, name_en: string } | undefined
+    `,
+      )
+      .get(actualKey) as { name_de: string; name_en: string } | undefined
 
     if (customClass) {
       if (customClass.name_de) variants.push(customClass.name_de.toLowerCase())
@@ -432,8 +480,7 @@ function simpleLevenshtein(a: string, b: string): number {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
         matrix[i][j] = matrix[i - 1][j - 1]
-      }
-      else {
+      } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1,
           matrix[i][j - 1] + 1,
@@ -452,52 +499,52 @@ function simpleLevenshtein(a: string, b: string): number {
  */
 export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
   const typesDE: Record<string, string> = {
-    'waffe': 'weapon',
-    'rüstung': 'armor',
-    'trank': 'potion',
-    'schriftrolle': 'scroll',
-    'ring': 'ring',
-    'amulett': 'amulet',
-    'stab': 'staff',
-    'zauberstab': 'wand',
+    waffe: 'weapon',
+    rüstung: 'armor',
+    trank: 'potion',
+    schriftrolle: 'scroll',
+    ring: 'ring',
+    amulett: 'amulet',
+    stab: 'staff',
+    zauberstab: 'wand',
     'wundersamer gegenstand': 'wondrous_item',
-    'werkzeug': 'tool',
-    'ausrüstung': 'equipment',
+    werkzeug: 'tool',
+    ausrüstung: 'equipment',
   }
 
   const typesEN: Record<string, string> = {
-    'weapon': 'weapon',
-    'armor': 'armor',
-    'potion': 'potion',
-    'scroll': 'scroll',
-    'ring': 'ring',
-    'amulet': 'amulet',
-    'staff': 'staff',
-    'wand': 'wand',
+    weapon: 'weapon',
+    armor: 'armor',
+    potion: 'potion',
+    scroll: 'scroll',
+    ring: 'ring',
+    amulet: 'amulet',
+    staff: 'staff',
+    wand: 'wand',
     'wondrous item': 'wondrous_item',
-    'wondrous_item': 'wondrous_item',
-    'tool': 'tool',
-    'equipment': 'equipment',
+    wondrous_item: 'wondrous_item',
+    tool: 'tool',
+    equipment: 'equipment',
   }
 
   const raritiesDE: Record<string, string> = {
-    'gewöhnlich': 'common',
-    'ungewöhnlich': 'uncommon',
-    'selten': 'rare',
+    gewöhnlich: 'common',
+    ungewöhnlich: 'uncommon',
+    selten: 'rare',
     'sehr selten': 'very_rare',
-    'sehr_selten': 'very_rare',
-    'legendär': 'legendary',
-    'artefakt': 'artifact',
+    sehr_selten: 'very_rare',
+    legendär: 'legendary',
+    artefakt: 'artifact',
   }
 
   const raritiesEN: Record<string, string> = {
-    'common': 'common',
-    'uncommon': 'uncommon',
-    'rare': 'rare',
+    common: 'common',
+    uncommon: 'uncommon',
+    rare: 'rare',
     'very rare': 'very_rare',
-    'very_rare': 'very_rare',
-    'legendary': 'legendary',
-    'artifact': 'artifact',
+    very_rare: 'very_rare',
+    legendary: 'legendary',
+    artifact: 'artifact',
   }
 
   return {
@@ -509,7 +556,11 @@ export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
 /**
  * Convert item type name (localized) to database key.
  */
-export function getItemTypeKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): Promise<string | null> {
+export function getItemTypeKey(
+  name: string | undefined | null,
+  fuzzy = false,
+  locale: 'de' | 'en' = 'de',
+): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
   const nameLower = name.toLowerCase()
@@ -534,7 +585,11 @@ export function getItemTypeKey(name: string | undefined | null, fuzzy = false, l
 /**
  * Convert item rarity name (localized) to database key.
  */
-export function getItemRarityKey(name: string | undefined | null, fuzzy = false, locale: 'de' | 'en' = 'de'): Promise<string | null> {
+export function getItemRarityKey(
+  name: string | undefined | null,
+  fuzzy = false,
+  locale: 'de' | 'en' = 'de',
+): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
   const nameLower = name.toLowerCase()
@@ -560,7 +615,10 @@ export function getItemRarityKey(name: string | undefined | null, fuzzy = false,
  * Convert metadata object with localized names to keys.
  * Used when creating/updating NPCs and Items.
  */
-export async function convertMetadataToKeys(metadata: Record<string, unknown> | null | undefined, entityType: 'npc' | 'item' = 'npc'): Promise<Record<string, unknown> | null | undefined> {
+export async function convertMetadataToKeys(
+  metadata: Record<string, unknown> | null | undefined,
+  entityType: 'npc' | 'item' = 'npc',
+): Promise<Record<string, unknown> | null | undefined> {
   if (!metadata) return metadata
 
   const converted = { ...metadata }
@@ -568,15 +626,19 @@ export async function convertMetadataToKeys(metadata: Record<string, unknown> | 
   if (entityType === 'npc') {
     // Handle race - could be string or {title, value} object from v-combobox
     if (converted.race) {
-      const raceValue = typeof converted.race === 'object' && converted.race !== null && 'value' in converted.race
-        ? converted.race.value
-        : converted.race
+      const raceValue =
+        typeof converted.race === 'object' && converted.race !== null && 'value' in converted.race
+          ? converted.race.value
+          : converted.race
 
       // If it's already a key (no uppercase, no spaces), keep it
-      if (typeof raceValue === 'string' && raceValue === raceValue.toLowerCase() && !raceValue.includes(' ')) {
+      if (
+        typeof raceValue === 'string' &&
+        raceValue === raceValue.toLowerCase() &&
+        !raceValue.includes(' ')
+      ) {
         converted.race = raceValue
-      }
-      else if (typeof raceValue === 'string') {
+      } else if (typeof raceValue === 'string') {
         const raceKey = await getRaceKey(raceValue)
         if (raceKey) converted.race = raceKey
       }
@@ -584,49 +646,67 @@ export async function convertMetadataToKeys(metadata: Record<string, unknown> | 
 
     // Handle class - could be string or {title, value} object from v-combobox
     if (converted.class) {
-      const classValue = typeof converted.class === 'object' && converted.class !== null && 'value' in converted.class
-        ? converted.class.value
-        : converted.class
+      const classValue =
+        typeof converted.class === 'object' &&
+        converted.class !== null &&
+        'value' in converted.class
+          ? converted.class.value
+          : converted.class
 
       // If it's already a key (no uppercase, no spaces), keep it
-      if (typeof classValue === 'string' && classValue === classValue.toLowerCase() && !classValue.includes(' ')) {
+      if (
+        typeof classValue === 'string' &&
+        classValue === classValue.toLowerCase() &&
+        !classValue.includes(' ')
+      ) {
         converted.class = classValue
-      }
-      else if (typeof classValue === 'string') {
+      } else if (typeof classValue === 'string') {
         const classKey = await getClassKey(classValue)
         if (classKey) converted.class = classKey
       }
     }
-  }
-  else if (entityType === 'item') {
+  } else if (entityType === 'item') {
     // Handle type - use fuzzy matching for typos when saving
     if (converted.type) {
-      const typeValue = typeof converted.type === 'object' && converted.type !== null && 'value' in converted.type
-        ? converted.type.value
-        : converted.type
+      const typeValue =
+        typeof converted.type === 'object' && converted.type !== null && 'value' in converted.type
+          ? converted.type.value
+          : converted.type
 
-      if (typeof typeValue === 'string' && typeValue === typeValue.toLowerCase() && !typeValue.includes(' ')) {
+      if (
+        typeof typeValue === 'string' &&
+        typeValue === typeValue.toLowerCase() &&
+        !typeValue.includes(' ')
+      ) {
         converted.type = typeValue
-      }
-      else if (typeof typeValue === 'string') {
+      } else if (typeof typeValue === 'string') {
         // Try exact match first, then fuzzy
-        const typeKey = await getItemTypeKey(typeValue, false) || await getItemTypeKey(typeValue, true)
+        const typeKey =
+          (await getItemTypeKey(typeValue, false)) || (await getItemTypeKey(typeValue, true))
         if (typeKey) converted.type = typeKey
       }
     }
 
     // Handle rarity - use fuzzy matching for typos when saving
     if (converted.rarity) {
-      const rarityValue = typeof converted.rarity === 'object' && converted.rarity !== null && 'value' in converted.rarity
-        ? converted.rarity.value
-        : converted.rarity
+      const rarityValue =
+        typeof converted.rarity === 'object' &&
+        converted.rarity !== null &&
+        'value' in converted.rarity
+          ? converted.rarity.value
+          : converted.rarity
 
-      if (typeof rarityValue === 'string' && rarityValue === rarityValue.toLowerCase() && !rarityValue.includes(' ')) {
+      if (
+        typeof rarityValue === 'string' &&
+        rarityValue === rarityValue.toLowerCase() &&
+        !rarityValue.includes(' ')
+      ) {
         converted.rarity = rarityValue
-      }
-      else if (typeof rarityValue === 'string') {
+      } else if (typeof rarityValue === 'string') {
         // Try exact match first, then fuzzy
-        const rarityKey = await getItemRarityKey(rarityValue, false) || await getItemRarityKey(rarityValue, true)
+        const rarityKey =
+          (await getItemRarityKey(rarityValue, false)) ||
+          (await getItemRarityKey(rarityValue, true))
         if (rarityKey) converted.rarity = rarityKey
       }
     }

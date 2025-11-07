@@ -4,7 +4,10 @@ export function useImageDownload() {
     const link = document.createElement('a')
     link.href = imageUrl
     // Sanitize filename: remove special chars, replace spaces with underscores, lowercase
-    const sanitizedName = fileName.replace(/[^a-z0-9\s]/gi, '').replace(/\s+/g, '_').toLowerCase()
+    const sanitizedName = fileName
+      .replace(/[^a-z0-9\s]/gi, '')
+      .replace(/\s+/g, '_')
+      .toLowerCase()
     link.download = `${sanitizedName}.jpg`
     document.body.appendChild(link)
     link.click()

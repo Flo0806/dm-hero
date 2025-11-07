@@ -29,7 +29,9 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
 
   // Get API key from database
   const db = getDb()
-  const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('openai_api_key') as { value: string } | undefined
+  const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('openai_api_key') as
+    | { value: string }
+    | undefined
 
   if (!setting) {
     throw createError({
@@ -41,8 +43,7 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   let apiKey: string
   try {
     apiKey = decrypt(setting.value)
-  }
-  catch  {
+  } catch {
     throw createError({
       statusCode: 500,
       message: 'Failed to decrypt API key',
@@ -58,9 +59,9 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   // Style definitions for GPT-4 to use
   const style = body.style || 'fantasy-art'
   const styleMap: Record<string, string> = {
-    'realistic': 'photorealistic with studio lighting',
+    realistic: 'photorealistic with studio lighting',
     'fantasy-art': 'fantasy digital illustration',
-    'sketch': 'pencil sketch',
+    sketch: 'pencil sketch',
     'oil-painting': 'oil painting',
   }
 
@@ -91,8 +92,7 @@ Bad: "An elf warrior character icon with no frame"
 Good: "A wise elven ranger with long silver hair and weathered leather armor, holding a wooden longbow, standing in a misty forest clearing, determined expression, warm afternoon light filtering through trees, waist-up portrait"
 
 Output ONLY the optimized prompt.`
-  }
-  else if (entityType === 'Location') {
+  } else if (entityType === 'Location') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy location and environment art.
 
 YOUR GOAL: Generate prompts that produce immersive fantasy locations - landscapes, buildings, interiors with rich atmosphere.
@@ -112,8 +112,7 @@ Bad: "A tavern location icon with no frame"
 Good: "Cozy medieval tavern interior, warm firelight casting dancing shadows on wooden beams, stone fireplace with crackling fire, round tables with adventurers, barrels and bottles on shelves, comfortable atmosphere, golden hour light streaming through small windows"
 
 Output ONLY the optimized prompt.`
-  }
-  else if (entityType === 'Faction') {
+  } else if (entityType === 'Faction') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in heraldic symbols, emblems, and faction logos.
 
 YOUR GOAL: Generate prompts that produce iconic faction symbols - crests, emblems, banners, or logos with strong visual identity.
@@ -133,8 +132,7 @@ Bad: "A guild icon with no frame or text"
 Good: "Heraldic emblem featuring crossed golden swords behind a silver shield, dark blue and gold color scheme, laurel wreath border, majestic and noble appearance, fantasy guild crest, detailed metalwork"
 
 Output ONLY the optimized prompt.`
-  }
-  else {
+  } else {
     // For Items, etc. - keep the object-focused prompt
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in clean, isolated object renders.
 
@@ -160,7 +158,7 @@ Output ONLY the optimized prompt.`
   const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -185,10 +183,11 @@ Output ONLY the optimized prompt.`
     console.error('[AI] GPT-4 optimization failed, using fallback prompt')
     // Fallback to simple prompt if GPT-4 fails
     enhancedPrompt = `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
-  }
-  else {
+  } else {
     const gptData = await gptResponse.json()
-    enhancedPrompt = gptData.choices?.[0]?.message?.content?.trim() || `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
+    enhancedPrompt =
+      gptData.choices?.[0]?.message?.content?.trim() ||
+      `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
     console.log('[AI] GPT-4 optimized prompt:', enhancedPrompt)
   }
 
@@ -197,7 +196,7 @@ Output ONLY the optimized prompt.`
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -260,8 +259,7 @@ Output ONLY the optimized prompt.`
       imageUrl: `/uploads/${filename}`,
       revisedPrompt,
     }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error('[AI Generate Image] Error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
     throw createError({

@@ -13,19 +13,18 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO sessions (campaign_id, session_number, title, date, summary, notes)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(
-    campaignId,
-    session_number || null,
-    title,
-    date || null,
-    summary || null,
-    notes || null,
-  )
+  `,
+    )
+    .run(campaignId, session_number || null, title, date || null, summary || null, notes || null)
 
-  const session = db.prepare(`
+  const session = db
+    .prepare(
+      `
     SELECT
       id,
       session_number,
@@ -37,7 +36,9 @@ export default defineEventHandler(async (event) => {
       updated_at
     FROM sessions
     WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   return session
 })

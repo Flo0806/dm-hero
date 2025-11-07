@@ -71,4 +71,9 @@ export interface LoreMetadata {
  * Generic entity metadata union type
  * Use when parsing metadata without knowing the specific entity type
  */
-export type EntityMetadata = NpcMetadata | ItemMetadata | LocationMetadata | FactionMetadata | LoreMetadata
+export type EntityMetadata =
+  | NpcMetadata
+  | ItemMetadata
+  | LocationMetadata
+  | FactionMetadata
+  | LoreMetadata

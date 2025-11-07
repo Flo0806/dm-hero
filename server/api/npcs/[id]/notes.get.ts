@@ -28,16 +28,16 @@ export default defineEventHandler(async (event) => {
       AND s.deleted_at IS NULL
   `
 
-  const params: any[] = [npcId]
+  const params: (string | number)[] = [npcId]
 
   // Add search filter if provided
   if (search) {
-    sql += ` AND (s.title LIKE ? OR s.summary LIKE ? OR s.notes LIKE ?)`
+    sql += ' AND (s.title LIKE ? OR s.summary LIKE ? OR s.notes LIKE ?)'
     const searchPattern = `%${search}%`
     params.push(searchPattern, searchPattern, searchPattern)
   }
 
-  sql += ` ORDER BY s.date DESC, s.created_at DESC`
+  sql += ' ORDER BY s.date DESC, s.created_at DESC'
 
   const notes = db.prepare(sql).all(...params)
 

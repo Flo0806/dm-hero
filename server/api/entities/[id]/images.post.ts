@@ -14,7 +14,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if entity exists
-  const entity = db.prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL').get(entityId)
+  const entity = db
+    .prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL')
+    .get(entityId)
 
   if (!entity) {
     throw createError({
@@ -35,21 +37,26 @@ export default defineEventHandler(async (event) => {
 
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
   const maxSize = 8 * 1024 * 1024 // 8MB
-  const uploadedImages: Array<{ id: number, imageUrl: string, isPrimary: boolean }> = []
+  const uploadedImages: Array<{ id: number; imageUrl: string; isPrimary: boolean }> = []
 
   const storage = useStorage('pictures')
 
   // Check if this is the first image - if so, make it primary
-  const existingImages = db.prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?').get(entityId) as { count: number }
+  const existingImages = db
+    .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
+    .get(entityId) as { count: number }
   const shouldBePrimary = existingImages.count === 0
 
   // Get max display order
-  const maxOrderResult = db.prepare('SELECT COALESCE(MAX(display_order), -1) as max_order FROM entity_images WHERE entity_id = ?').get(entityId) as { max_order: number }
+  const maxOrderResult = db
+    .prepare(
+      'SELECT COALESCE(MAX(display_order), -1) as max_order FROM entity_images WHERE entity_id = ?',
+    )
+    .get(entityId) as { max_order: number }
   let displayOrder = maxOrderResult.max_order + 1
 
   for (const file of files) {
-    if (!file.data || file.data.length === 0)
-      continue
+    if (!file.data || file.data.length === 0) continue
 
     // Validate file type
     const ext = extname(file.filename || '').toLowerCase()
@@ -72,10 +79,19 @@ export default defineEventHandler(async (event) => {
     await storage.setItemRaw(uniqueName, file.data)
 
     // Insert into database
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
       VALUES (?, ?, ?, ?)
-    `).run(entityId, uniqueName, shouldBePrimary && uploadedImages.length === 0 ? 1 : 0, displayOrder++)
+    `,
+      )
+      .run(
+        entityId,
+        uniqueName,
+        shouldBePrimary && uploadedImages.length === 0 ? 1 : 0,
+        displayOrder++,
+      )
 
     uploadedImages.push({
       id: result.lastInsertRowid as number,
@@ -85,8 +101,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // Update entity's updated_at
-  db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?')
-    .run(new Date().toISOString(), entityId)
+  db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(
+    new Date().toISOString(),
+    entityId,
+  )
 
   return {
     success: true,

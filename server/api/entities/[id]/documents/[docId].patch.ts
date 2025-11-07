@@ -49,16 +49,22 @@ export default defineEventHandler(async (event) => {
   updates.push('updated_at = CURRENT_TIMESTAMP')
   params.push(docId, entityId)
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entity_documents
     SET ${updates.join(', ')}
     WHERE id = ? AND entity_id = ?
-  `).run(...params)
+  `,
+  ).run(...params)
 
   // Return updated document
-  const document = db.prepare(`
+  const document = db
+    .prepare(
+      `
     SELECT * FROM entity_documents WHERE id = ?
-  `).get(docId)
+  `,
+    )
+    .get(docId)
 
   return document
 })

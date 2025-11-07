@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
   // Convert localized race/class names to keys before saving
   const metadataWithKeys = metadata ? convertMetadataToKeys(metadata) : null
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET
       name = COALESCE(?, name),
@@ -31,12 +32,8 @@ export default defineEventHandler(async (event) => {
       metadata = COALESCE(?, metadata),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(
-    name,
-    description,
-    metadataWithKeys ? JSON.stringify(metadataWithKeys) : null,
-    id,
-  )
+  `,
+  ).run(name, description, metadataWithKeys ? JSON.stringify(metadataWithKeys) : null, id)
 
   interface DbEntity {
     id: number
@@ -50,9 +47,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const npc = db.prepare<unknown[], DbEntity>(`
+  const npc = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!npc) {
     throw createError({

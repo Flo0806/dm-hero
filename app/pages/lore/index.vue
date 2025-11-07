@@ -1,9 +1,6 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('lore.title')"
-      :subtitle="$t('lore.subtitle')"
-    >
+    <UiPageHeader :title="$t('lore.title')" :subtitle="$t('lore.subtitle')">
       <template #actions>
         <v-btn
           color="primary"
@@ -27,13 +24,7 @@
     />
 
     <v-row v-if="pending">
-      <v-col
-        v-for="i in 6"
-        :key="i"
-        cols="12"
-        md="6"
-        lg="4"
-      >
+      <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -50,12 +41,7 @@
         opacity="0.8"
       >
         <div class="text-center">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
+          <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
           <div class="text-h6">
             {{ $t('common.searching') }}
           </div>
@@ -64,19 +50,13 @@
 
       <!-- Lore Cards -->
       <v-row>
-        <v-col
-          v-for="loreEntry in filteredLore"
-          :key="loreEntry.id"
-          cols="12"
-          md="6"
-          lg="4"
-        >
+        <v-col v-for="loreEntry in filteredLore" :key="loreEntry.id" cols="12" md="6" lg="4">
           <v-card
             :id="`lore-${loreEntry.id}`"
             hover
             :class="[
               'h-100 d-flex flex-column',
-              { 'highlighted-card': highlightedId === loreEntry.id }
+              { 'highlighted-card': highlightedId === loreEntry.id },
             ]"
           >
             <v-card-title class="d-flex align-center">
@@ -95,12 +75,9 @@
               <div
                 v-if="loreEntry.image_url"
                 class="float-right ml-3 mb-2 position-relative image-container"
-                style="width: 80px; height: 80px;"
+                style="width: 80px; height: 80px"
               >
-                <v-avatar
-                  size="80"
-                  rounded="lg"
-                >
+                <v-avatar size="80" rounded="lg">
                   <v-img :src="`/uploads/${loreEntry.image_url}`" cover />
                 </v-avatar>
                 <v-btn
@@ -115,19 +92,12 @@
                 <v-icon icon="mdi-calendar" size="small" class="mr-1" />
                 {{ loreEntry.metadata.date }}
               </div>
-              <div
-                v-if="loreEntry.description"
-                class="text-body-2 mb-3"
-              >
+              <div v-if="loreEntry.description" class="text-body-2 mb-3">
                 {{ truncateText(loreEntry.description, 100) }}
               </div>
             </v-card-text>
             <v-card-actions>
-              <v-btn
-                icon="mdi-pencil"
-                variant="text"
-                @click="editLore(loreEntry)"
-              />
+              <v-btn icon="mdi-pencil" variant="text" @click="editLore(loreEntry)" />
               <v-spacer />
               <v-btn
                 icon="mdi-delete"
@@ -151,23 +121,14 @@
         <div class="text-body-2 text-medium-emphasis mb-4">
           {{ $t('lore.emptyText') }}
         </div>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="showCreateDialog = true"
-        >
+        <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
           {{ $t('lore.create') }}
         </v-btn>
       </v-card-text>
     </v-card>
 
     <!-- Create/Edit Dialog -->
-    <v-dialog
-      v-model="showCreateDialog"
-      max-width="900"
-      scrollable
-      persistent
-    >
+    <v-dialog v-model="showCreateDialog" max-width="900" scrollable persistent>
       <v-card>
         <v-card-title>
           {{ editingLore ? $t('lore.edit') : $t('lore.create') }}
@@ -175,21 +136,15 @@
 
         <v-tabs v-if="editingLore" v-model="loreDialogTab" class="mb-4">
           <v-tab value="details">
-            <v-icon start>
-              mdi-book-open-variant
-            </v-icon>
+            <v-icon start> mdi-book-open-variant </v-icon>
             {{ $t('common.details') }}
           </v-tab>
           <v-tab value="images">
-            <v-icon start>
-              mdi-image-multiple
-            </v-icon>
+            <v-icon start> mdi-image-multiple </v-icon>
             {{ $t('common.images') }}
           </v-tab>
           <v-tab value="documents">
-            <v-icon start>
-              mdi-file-document
-            </v-icon>
+            <v-icon start> mdi-file-document </v-icon>
             {{ $t('documents.title') }}
           </v-tab>
         </v-tabs>
@@ -244,17 +199,13 @@
                 :entity-name="editingLore.name"
                 :entity-description="editingLore.description || undefined"
                 @preview-image="openImagePreview"
-                @generating="(isGenerating: boolean) => imageGenerating = isGenerating"
+                @generating="(isGenerating: boolean) => (imageGenerating = isGenerating)"
               />
             </v-tabs-window-item>
 
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
-              <EntityDocuments
-                v-if="editingLore"
-                :entity-id="editingLore.id"
-                entity-type="Lore"
-              />
+              <EntityDocuments v-if="editingLore" :entity-id="editingLore.id" entity-type="Lore" />
             </v-tabs-window-item>
           </v-tabs-window>
 
@@ -297,19 +248,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            :disabled="saving || imageGenerating"
-            @click="closeCreateDialog"
-          >
+          <v-btn variant="text" :disabled="saving || imageGenerating" @click="closeCreateDialog">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="primary"
-            :loading="saving"
-            :disabled="imageGenerating"
-            @click="saveLore"
-          >
+          <v-btn color="primary" :loading="saving" :disabled="imageGenerating" @click="saveLore">
             {{ $t('common.save') }}
           </v-btn>
         </v-card-actions>
@@ -317,11 +259,7 @@
     </v-dialog>
 
     <!-- View Dialog -->
-    <v-dialog
-      v-model="showViewDialog"
-      max-width="1200"
-      scrollable
-    >
+    <v-dialog v-model="showViewDialog" max-width="1200" scrollable>
       <v-card v-if="selectedLore">
         <v-card-title class="d-flex align-center">
           <v-icon icon="mdi-book-open-variant" class="mr-2" />
@@ -335,11 +273,7 @@
             {{ $t(`lore.types.${selectedLore.metadata.type}`) }}
           </v-chip>
           <v-spacer />
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            @click="showViewDialog = false"
-          />
+          <v-btn icon="mdi-close" variant="text" @click="showViewDialog = false" />
         </v-card-title>
         <v-divider />
         <v-card-text class="pa-6">
@@ -382,18 +316,11 @@
         </v-card-text>
         <v-divider />
         <v-card-actions>
-          <v-btn
-            color="primary"
-            variant="text"
-            @click="editLore(selectedLore)"
-          >
+          <v-btn color="primary" variant="text" @click="editLore(selectedLore)">
             {{ $t('common.edit') }}
           </v-btn>
           <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showViewDialog = false"
-          >
+          <v-btn variant="text" @click="showViewDialog = false">
             {{ $t('common.close') }}
           </v-btn>
         </v-card-actions>
@@ -401,10 +328,7 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
-      v-model="showDeleteDialog"
-      max-width="500"
-    >
+    <v-dialog v-model="showDeleteDialog" max-width="500">
       <v-card>
         <v-card-title>
           <span class="text-h5">{{ $t('lore.deleteTitle') }}</span>
@@ -414,17 +338,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
+          <v-btn variant="text" @click="showDeleteDialog = false">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="error"
-            :loading="deleting"
-            @click="deleteLore"
-          >
+          <v-btn color="error" :loading="deleting" @click="deleteLore">
             {{ $t('common.delete') }}
           </v-btn>
         </v-card-actions>
@@ -514,7 +431,11 @@ onMounted(() => {
 })
 
 // Fetch lore entries
-const { data: lore, pending, refresh } = await useFetch<Lore[]>('/api/lore', {
+const {
+  data: lore,
+  pending,
+  refresh,
+} = await useFetch<Lore[]>('/api/lore', {
   query: {
     campaignId: activeCampaignId,
   },
@@ -547,8 +468,7 @@ watch(searchQuery, async (query) => {
         },
       })
       searchResults.value = results
-    }
-    finally {
+    } finally {
       searching.value = false
     }
   }, 300)
@@ -564,7 +484,7 @@ const filteredLore = computed(() => {
 
 // Lore type items for dropdown
 const loreTypeItems = computed(() => {
-  return LORE_TYPES.map(type => ({
+  return LORE_TYPES.map((type) => ({
     title: t(`lore.types.${type}`),
     value: type,
   }))
@@ -645,8 +565,7 @@ async function saveLore() {
           metadata: Object.keys(metadata).length > 0 ? metadata : null,
         },
       })
-    }
-    else {
+    } else {
       // Create new lore
       await $fetch('/api/lore', {
         method: 'POST',
@@ -661,11 +580,9 @@ async function saveLore() {
 
     await refresh()
     closeCreateDialog()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to save lore:', error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
@@ -689,11 +606,9 @@ async function deleteLore() {
     await refresh()
     showDeleteDialog.value = false
     loreToDelete.value = null
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete lore:', error)
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }
@@ -722,7 +637,8 @@ async function deleteLore() {
 }
 
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0);
   }
   50% {

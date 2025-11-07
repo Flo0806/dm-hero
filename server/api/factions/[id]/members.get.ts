@@ -22,7 +22,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all NPCs that have a relation TO this faction
-  const members = db.prepare<unknown[], DbMember>(`
+  const members = db
+    .prepare<unknown[], DbMember>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -36,9 +38,11 @@ export default defineEventHandler(async (event) => {
     WHERE er.to_entity_id = ?
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(factionId)
+  `,
+    )
+    .all(factionId)
 
-  return members.map(member => ({
+  return members.map((member) => ({
     ...member,
     notes: member.notes ? JSON.parse(member.notes) : null,
   }))

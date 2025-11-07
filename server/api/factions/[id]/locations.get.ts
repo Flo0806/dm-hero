@@ -22,7 +22,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all locations that have a relation FROM this faction
-  const locations = db.prepare<unknown[], DbLocation>(`
+  const locations = db
+    .prepare<unknown[], DbLocation>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -36,9 +38,11 @@ export default defineEventHandler(async (event) => {
     WHERE er.from_entity_id = ?
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(factionId)
+  `,
+    )
+    .all(factionId)
 
-  return locations.map(location => ({
+  return locations.map((location) => ({
     ...location,
     notes: location.notes ? JSON.parse(location.notes) : null,
   }))

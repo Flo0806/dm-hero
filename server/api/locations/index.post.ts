@@ -14,9 +14,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get Location entity type
-  const entityType = db.prepare(`
+  const entityType = db
+    .prepare(
+      `
     SELECT id FROM entity_types WHERE name = 'Location'
-  `).get() as { id: number } | undefined
+  `,
+    )
+    .get() as { id: number } | undefined
 
   if (!entityType) {
     throw createError({
@@ -25,17 +29,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entities (type_id, name, description, metadata, campaign_id, parent_entity_id)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(
-    entityType.id,
-    name,
-    description || null,
-    metadata ? JSON.stringify(metadata) : null,
-    campaignId,
-    parentLocationId || null,
-  )
+  `,
+    )
+    .run(
+      entityType.id,
+      name,
+      description || null,
+      metadata ? JSON.stringify(metadata) : null,
+      campaignId,
+      parentLocationId || null,
+    )
 
   interface LocationRow {
     id: number
@@ -47,9 +55,13 @@ export default defineEventHandler(async (event) => {
     updated_at: string
   }
 
-  const location = db.prepare<unknown[], LocationRow>(`
+  const location = db
+    .prepare<unknown[], LocationRow>(
+      `
     SELECT * FROM entities WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   if (!location) {
     throw createError({

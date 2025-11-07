@@ -11,17 +11,8 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          @click="$emit('cancel')"
-        />
-        <v-btn
-          icon="mdi-delete"
-          color="error"
-          :loading="loading"
-          @click="$emit('confirm')"
-        />
+        <v-btn icon="mdi-close" variant="text" @click="$emit('cancel')" />
+        <v-btn icon="mdi-delete" color="error" :loading="loading" @click="$emit('confirm')" />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -41,7 +32,7 @@ withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   'update:model-value': [value: boolean]
-  'confirm': []
-  'cancel': []
+  confirm: []
+  cancel: []
 }>()
 </script>

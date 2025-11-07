@@ -38,23 +38,21 @@
         multiple
         style="display: none"
         @change="handleImageUpload"
-      >
+      />
     </v-card-title>
     <v-card-text>
       <v-progress-linear v-if="loadingImages" indeterminate />
       <v-list v-else-if="images.length > 0">
-        <v-list-item
-          v-for="image in images"
-          :key="image.id"
-          class="mb-3"
-        >
+        <v-list-item v-for="image in images" :key="image.id" class="mb-3">
           <template #prepend>
             <div class="position-relative image-container mr-3">
               <v-avatar
                 size="80"
                 rounded="lg"
-                style="cursor: pointer;"
-                @click="$emit('preview-image', `/uploads/${image.image_url}`, entityName || 'Image')"
+                style="cursor: pointer"
+                @click="
+                  $emit('preview-image', `/uploads/${image.image_url}`, entityName || 'Image')
+                "
               >
                 <v-img :src="`/uploads/${image.image_url}`" cover />
               </v-avatar>
@@ -85,7 +83,10 @@
               variant="outlined"
               density="compact"
               hide-details
-              @blur="(e: FocusEvent) => updateImageCaption(image.id, (e.target as HTMLInputElement).value)"
+              @blur="
+                (e: FocusEvent) =>
+                  updateImageCaption(image.id, (e.target as HTMLInputElement).value)
+              "
               @keyup.enter="(e: KeyboardEvent) => (e.target as HTMLInputElement).blur()"
             />
           </v-list-item-subtitle>
@@ -159,7 +160,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'preview-image': [url: string, name: string]
   'images-updated': []
-  'generating': [isGenerating: boolean]
+  generating: [isGenerating: boolean]
 }>()
 
 const { t } = useI18n()
@@ -178,8 +179,7 @@ onMounted(async () => {
   try {
     const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
     hasApiKey.value = result.hasKey
-  }
-  catch {
+  } catch {
     hasApiKey.value = false
   }
 
@@ -194,11 +194,9 @@ async function loadImages() {
   try {
     const result = await $fetch<EntityImage[]>(`/api/entity-images/${props.entityId}`)
     images.value = result
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load images:', error)
-  }
-  finally {
+  } finally {
     loadingImages.value = false
   }
 }
@@ -237,12 +235,10 @@ async function handleImageUpload(event: Event) {
     }
 
     await loadImages()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to upload images:', error)
     alert(t('common.uploadImageError'))
-  }
-  finally {
+  } finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -262,7 +258,7 @@ async function generateImage() {
     }
     details.push(props.entityName)
 
-    const prompt = details.filter(d => d).join(', ')
+    const prompt = details.filter((d) => d).join(', ')
 
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
@@ -288,12 +284,10 @@ async function generateImage() {
 
       await loadImages()
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to generate image:', error)
     alert(t('common.generateImageError'))
-  }
-  finally {
+  } finally {
     generatingImage.value = false
     emit('generating', false)
   }
@@ -307,12 +301,11 @@ async function updateImageCaption(imageId: number, caption: string) {
       body: { caption },
     })
 
-    const image = images.value.find(img => img.id === imageId)
+    const image = images.value.find((img) => img.id === imageId)
     if (image) {
       image.caption = caption
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to update caption:', error)
   }
 }
@@ -328,8 +321,7 @@ async function setPrimaryImage(imageId: number) {
     images.value.forEach((img) => {
       img.is_primary = img.id === imageId ? 1 : 0
     })
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to set primary image:', error)
   }
 }
@@ -341,20 +333,22 @@ async function deleteImage(imageId: number) {
       method: 'DELETE',
     })
 
-    images.value = images.value.filter(img => img.id !== imageId)
-  }
-  catch (error) {
+    images.value = images.value.filter((img) => img.id !== imageId)
+  } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('common.deleteImageError'))
   }
 }
 
 // Watch for entity ID changes
-watch(() => props.entityId, () => {
-  if (props.entityId) {
-    loadImages()
-  }
-})
+watch(
+  () => props.entityId,
+  () => {
+    if (props.entityId) {
+      loadImages()
+    }
+  },
+)
 </script>
 
 <style scoped>

@@ -24,7 +24,9 @@ export default defineEventHandler((event) => {
 
   // Recursive CTE to get full path from root to current location
   // Max depth limited to 10 to prevent infinite loops
-  const path = db.prepare(`
+  const path = db
+    .prepare(
+      `
     WITH RECURSIVE location_path AS (
       -- Base case: Start with the requested location
       SELECT
@@ -50,7 +52,9 @@ export default defineEventHandler((event) => {
     SELECT id, name, depth
     FROM location_path
     ORDER BY depth DESC
-  `).all(Number(locationId)) as PathItem[]
+  `,
+    )
+    .all(Number(locationId)) as PathItem[]
 
   return path
 })

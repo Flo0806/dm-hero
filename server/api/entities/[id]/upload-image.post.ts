@@ -16,7 +16,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if entity exists
-  const entity = db.prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL').get(entityId)
+  const entity = db
+    .prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL')
+    .get(entityId)
   console.log('Entity found:', entity)
 
   if (!entity) {
@@ -30,12 +32,15 @@ export default defineEventHandler(async (event) => {
   console.log('Reading multipart form data...')
   const files = await readMultipartFormData(event)
   console.log('Files received:', files?.length || 0)
-  console.log('Files details:', files?.map(f => ({
-    name: f.name,
-    filename: f.filename,
-    type: f.type,
-    dataLength: f.data?.length || 0,
-  })))
+  console.log(
+    'Files details:',
+    files?.map((f) => ({
+      name: f.name,
+      filename: f.filename,
+      type: f.type,
+      dataLength: f.data?.length || 0,
+    })),
+  )
 
   if (!files || files.length === 0) {
     console.error('No files received in request')
@@ -46,13 +51,18 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find the file field (it could be named 'file' or something else)
-  const file = files.find(f => f.data && f.data.length > 0)
-  console.log('Selected file:', file ? {
-    name: file.name,
-    filename: file.filename,
-    type: file.type,
-    dataLength: file.data.length,
-  } : 'none')
+  const file = files.find((f) => f.data && f.data.length > 0)
+  console.log(
+    'Selected file:',
+    file
+      ? {
+          name: file.name,
+          filename: file.filename,
+          type: file.type,
+          dataLength: file.data.length,
+        }
+      : 'none',
+  )
 
   if (!file || !file.data) {
     console.error('No valid file data found')
@@ -90,18 +100,22 @@ export default defineEventHandler(async (event) => {
   await storage.setItemRaw(uniqueName, file.data)
 
   // Get old image URL to delete it later
-  const oldEntity = db.prepare('SELECT image_url FROM entities WHERE id = ?').get(entityId) as { image_url: string | null } | undefined
+  const oldEntity = db.prepare('SELECT image_url FROM entities WHERE id = ?').get(entityId) as
+    | { image_url: string | null }
+    | undefined
 
   // Update entity with new image URL
-  db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?')
-    .run(uniqueName, new Date().toISOString(), entityId)
+  db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?').run(
+    uniqueName,
+    new Date().toISOString(),
+    entityId,
+  )
 
   // Delete old image if exists
   if (oldEntity?.image_url) {
     try {
       await storage.removeItem(oldEntity.image_url)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Failed to delete old image:', error)
       // Continue anyway, don't fail the upload
     }

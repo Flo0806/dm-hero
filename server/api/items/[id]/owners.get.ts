@@ -22,7 +22,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all NPCs that have a relation TO this item
-  const owners = db.prepare<unknown[], DbOwner>(`
+  const owners = db
+    .prepare<unknown[], DbOwner>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -36,9 +38,11 @@ export default defineEventHandler(async (event) => {
     WHERE er.to_entity_id = ?
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(itemId)
+  `,
+    )
+    .all(itemId)
 
-  return owners.map(owner => ({
+  return owners.map((owner) => ({
     ...owner,
     notes: owner.notes ? JSON.parse(owner.notes) : null,
   }))

@@ -44,14 +44,16 @@ const drawer = ref(true)
 const rail = ref(false)
 const showSearch = ref(false)
 const searchQuery = ref('')
-const searchResults = ref<Array<{
-  id: number
-  name: string
-  type: string
-  icon: string
-  color: string
-  path: string
-}>>([])
+const searchResults = ref<
+  Array<{
+    id: number
+    name: string
+    type: string
+    icon: string
+    color: string
+    path: string
+  }>
+>([])
 
 // Campaign store
 const campaignStore = useCampaignStore()
@@ -67,9 +69,13 @@ const localeCookie = useCookie<'en' | 'de'>('locale', {
 })
 
 // Sync Vuetify locale with i18n locale
-watch(locale, (newLocale) => {
-  vuetifyLocale.current.value = newLocale
-}, { immediate: true })
+watch(
+  locale,
+  (newLocale) => {
+    vuetifyLocale.current.value = newLocale
+  },
+  { immediate: true },
+)
 
 // Initialize campaign and locale from cookie on mount
 onMounted(() => {
@@ -95,12 +101,12 @@ function changeLocale(newLocale: string) {
 function getEntityPath(entityType: string, entityId: number, entityName: string): string {
   // Map entity types to their corresponding routes
   const typeMap: Record<string, string> = {
-    'NPC': '/npcs',
-    'Location': '/locations',
-    'Item': '/items',
-    'Faction': '/factions',
-    'Lore': '/lore',
-    'Session': '/sessions',
+    NPC: '/npcs',
+    Location: '/locations',
+    Item: '/items',
+    Faction: '/factions',
+    Lore: '/lore',
+    Session: '/sessions',
   }
   const basePath = typeMap[entityType] || '/npcs'
   const query = new URLSearchParams()
@@ -109,7 +115,7 @@ function getEntityPath(entityType: string, entityId: number, entityName: string)
   return `${basePath}?${query.toString()}`
 }
 
-function navigateToResult(result: typeof searchResults.value[0]) {
+function navigateToResult(result: (typeof searchResults.value)[0]) {
   const path = getEntityPath(result.type, result.id, result.name)
   navigateTo(path, { replace: false }) // Force navigation even if on same page
   showSearch.value = false
@@ -121,9 +127,8 @@ onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {
     // Check if user is typing in an input field
     const target = e.target as HTMLElement
-    const isTyping = target.tagName === 'INPUT' ||
-                     target.tagName === 'TEXTAREA' ||
-                     target.isContentEditable
+    const isTyping =
+      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
 
     // "/" öffnet Suche (nur wenn NICHT in Eingabefeld)
     if (e.key === '/' && !showSearch.value && !isTyping) {
@@ -154,26 +159,27 @@ watch(searchQuery, async (query) => {
   }
 
   try {
-    const results = await $fetch<Array<{
-      id: number
-      name: string
-      description: string
-      type: string
-      icon: string
-      color: string
-    }>>('/api/search', {
+    const results = await $fetch<
+      Array<{
+        id: number
+        name: string
+        description: string
+        type: string
+        icon: string
+        color: string
+      }>
+    >('/api/search', {
       query: {
         q: query.trim(),
         campaignId: campaignStore.activeCampaignId,
       },
     })
 
-    searchResults.value = results.map(r => ({
+    searchResults.value = results.map((r) => ({
       ...r,
       path: getEntityPath(r.type, r.id, r.name),
     }))
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Search failed:', error)
     searchResults.value = []
   }

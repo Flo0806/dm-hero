@@ -23,7 +23,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all relations where this NPC is the 'from' entity
-  const relations = db.prepare<unknown[], DbRelation>(`
+  const relations = db
+    .prepare<unknown[], DbRelation>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -39,9 +41,11 @@ export default defineEventHandler(async (event) => {
     WHERE er.from_entity_id = ?
       AND e.deleted_at IS NULL
     ORDER BY et.name, e.name
-  `).all(npcId)
+  `,
+    )
+    .all(npcId)
 
-  return relations.map(rel => ({
+  return relations.map((rel) => ({
     ...rel,
     notes: rel.notes ? JSON.parse(rel.notes) : null,
   }))

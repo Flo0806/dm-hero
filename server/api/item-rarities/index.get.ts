@@ -3,7 +3,9 @@ import { getDb } from '../../utils/db'
 export default defineEventHandler(async () => {
   const db = getDb()
 
-  const itemRarities = db.prepare(`
+  const itemRarities = db
+    .prepare(
+      `
     SELECT * FROM item_rarities
     WHERE deleted_at IS NULL
     ORDER BY
@@ -16,7 +18,9 @@ export default defineEventHandler(async () => {
         WHEN 'artifact' THEN 6
         ELSE 99
       END ASC
-  `).all()
+  `,
+    )
+    .all()
 
   return itemRarities
 })

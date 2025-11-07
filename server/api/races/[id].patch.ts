@@ -15,9 +15,13 @@ export default defineEventHandler(async (event) => {
   const { name, name_de, name_en, description } = body
 
   // Check if race exists
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT id FROM races WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!existing) {
     throw createError({
@@ -28,9 +32,13 @@ export default defineEventHandler(async (event) => {
 
   // Check if name conflicts with another race
   if (name) {
-    const conflict = db.prepare(`
+    const conflict = db
+      .prepare(
+        `
       SELECT id FROM races WHERE name = ? AND id != ? AND deleted_at IS NULL
-    `).get(name, id)
+    `,
+      )
+      .get(name, id)
 
     if (conflict) {
       throw createError({
@@ -40,7 +48,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE races
     SET
       name = COALESCE(?, name),
@@ -48,11 +57,16 @@ export default defineEventHandler(async (event) => {
       name_en = COALESCE(?, name_en),
       description = COALESCE(?, description)
     WHERE id = ? AND deleted_at IS NULL
-  `).run(name, name_de, name_en, description, id)
+  `,
+  ).run(name, name_de, name_en, description, id)
 
-  const race = db.prepare(`
+  const race = db
+    .prepare(
+      `
     SELECT * FROM races WHERE id = ?
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   return race
 })

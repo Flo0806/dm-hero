@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find the file field
-  const file = files.find(f => f.data && f.data.length > 0)
+  const file = files.find((f) => f.data && f.data.length > 0)
 
   if (!file || !file.data) {
     throw createError({

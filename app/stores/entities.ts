@@ -67,24 +67,24 @@ export const useEntitiesStore = defineStore('entities', {
 
   getters: {
     // NPCs
-    getNpcById: state => (id: number) => state.npcs.find(npc => npc.id === id),
-    npcsForSelect: state => state.npcs.map(npc => ({ id: npc.id, name: npc.name })),
+    getNpcById: (state) => (id: number) => state.npcs.find((npc) => npc.id === id),
+    npcsForSelect: (state) => state.npcs.map((npc) => ({ id: npc.id, name: npc.name })),
 
     // Factions
-    getFactionById: state => (id: number) => state.factions.find(f => f.id === id),
-    factionsForSelect: state => state.factions.map(f => ({ id: f.id, name: f.name })),
+    getFactionById: (state) => (id: number) => state.factions.find((f) => f.id === id),
+    factionsForSelect: (state) => state.factions.map((f) => ({ id: f.id, name: f.name })),
 
     // Locations
-    getLocationById: state => (id: number) => state.locations.find(l => l.id === id),
-    locationsForSelect: state => state.locations.map(l => ({ id: l.id, name: l.name })),
+    getLocationById: (state) => (id: number) => state.locations.find((l) => l.id === id),
+    locationsForSelect: (state) => state.locations.map((l) => ({ id: l.id, name: l.name })),
 
     // Items
-    getItemById: state => (id: number) => state.items.find(i => i.id === id),
-    itemsForSelect: state => state.items.map(i => ({ id: i.id, name: i.name })),
+    getItemById: (state) => (id: number) => state.items.find((i) => i.id === id),
+    itemsForSelect: (state) => state.items.map((i) => ({ id: i.id, name: i.name })),
 
     // Lore
-    getLoreById: state => (id: number) => state.lore.find(l => l.id === id),
-    loreForSelect: state => state.lore.map(l => ({ id: l.id, name: l.name })),
+    getLoreById: (state) => (id: number) => state.lore.find((l) => l.id === id),
+    loreForSelect: (state) => state.lore.map((l) => ({ id: l.id, name: l.name })),
   },
 
   actions: {
@@ -92,8 +92,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     async fetchNPCs(campaignId: string | number, force = false) {
       // Skip if already loaded and not forcing
-      if (this.npcsLoaded && !force)
-        return
+      if (this.npcsLoaded && !force) return
 
       this.npcsLoading = true
       try {
@@ -102,12 +101,10 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.npcs = npcs
         this.npcsLoaded = true
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to fetch NPCs:', error)
         this.npcs = []
-      }
-      finally {
+      } finally {
         this.npcsLoading = false
       }
     },
@@ -129,7 +126,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.npcs.findIndex(n => n.id === id)
+      const index = this.npcs.findIndex((n) => n.id === id)
       if (index !== -1) {
         this.npcs[index] = npc
       }
@@ -140,14 +137,13 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/npcs/${id}`, {
         method: 'DELETE',
       })
-      this.npcs = this.npcs.filter(n => n.id !== id)
+      this.npcs = this.npcs.filter((n) => n.id !== id)
     },
 
     // ==================== Factions ====================
 
     async fetchFactions(campaignId: string | number, force = false) {
-      if (this.factionsLoaded && !force)
-        return
+      if (this.factionsLoaded && !force) return
 
       this.factionsLoading = true
       try {
@@ -156,12 +152,10 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.factions = factions
         this.factionsLoaded = true
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to fetch factions:', error)
         this.factions = []
-      }
-      finally {
+      } finally {
         this.factionsLoading = false
       }
     },
@@ -183,7 +177,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.factions.findIndex(f => f.id === id)
+      const index = this.factions.findIndex((f) => f.id === id)
       if (index !== -1) {
         this.factions[index] = faction
       }
@@ -194,14 +188,13 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/factions/${id}`, {
         method: 'DELETE',
       })
-      this.factions = this.factions.filter(f => f.id !== id)
+      this.factions = this.factions.filter((f) => f.id !== id)
     },
 
     // ==================== Locations ====================
 
     async fetchLocations(campaignId: string | number, force = false) {
-      if (this.locationsLoaded && !force)
-        return
+      if (this.locationsLoaded && !force) return
 
       this.locationsLoading = true
       try {
@@ -210,12 +203,10 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.locations = locations
         this.locationsLoaded = true
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to fetch locations:', error)
         this.locations = []
-      }
-      finally {
+      } finally {
         this.locationsLoading = false
       }
     },
@@ -237,7 +228,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.locations.findIndex(l => l.id === id)
+      const index = this.locations.findIndex((l) => l.id === id)
       if (index !== -1) {
         this.locations[index] = location
       }
@@ -248,14 +239,13 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/locations/${id}`, {
         method: 'DELETE',
       })
-      this.locations = this.locations.filter(l => l.id !== id)
+      this.locations = this.locations.filter((l) => l.id !== id)
     },
 
     // ==================== Items ====================
 
     async fetchItems(campaignId: string | number, force = false) {
-      if (this.itemsLoaded && !force)
-        return
+      if (this.itemsLoaded && !force) return
 
       this.itemsLoading = true
       try {
@@ -264,12 +254,10 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.items = items
         this.itemsLoaded = true
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to fetch items:', error)
         this.items = []
-      }
-      finally {
+      } finally {
         this.itemsLoading = false
       }
     },
@@ -291,7 +279,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.items.findIndex(i => i.id === id)
+      const index = this.items.findIndex((i) => i.id === id)
       if (index !== -1) {
         this.items[index] = item
       }
@@ -302,14 +290,13 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/items/${id}`, {
         method: 'DELETE',
       })
-      this.items = this.items.filter(i => i.id !== id)
+      this.items = this.items.filter((i) => i.id !== id)
     },
 
     // ==================== Lore ====================
 
     async fetchLore(campaignId: string | number, force = false) {
-      if (this.loreLoaded && !force)
-        return
+      if (this.loreLoaded && !force) return
 
       this.loreLoading = true
       try {
@@ -318,12 +305,10 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.lore = lore
         this.loreLoaded = true
-      }
-      catch (error) {
+      } catch (error) {
         console.error('Failed to fetch lore:', error)
         this.lore = []
-      }
-      finally {
+      } finally {
         this.loreLoading = false
       }
     },
@@ -345,7 +330,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.lore.findIndex(l => l.id === id)
+      const index = this.lore.findIndex((l) => l.id === id)
       if (index !== -1) {
         this.lore[index] = lore
       }
@@ -356,7 +341,7 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/lore/${id}`, {
         method: 'DELETE',
       })
-      this.lore = this.lore.filter(l => l.id !== id)
+      this.lore = this.lore.filter((l) => l.id !== id)
     },
 
     // ==================== Utility ====================

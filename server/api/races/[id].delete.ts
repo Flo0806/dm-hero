@@ -12,9 +12,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if race exists
-  const race = db.prepare(`
+  const race = db
+    .prepare(
+      `
     SELECT * FROM races WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!race) {
     throw createError({
@@ -24,15 +28,23 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if race is in use by any NPCs
-  const npcTypeId = db.prepare(`
+  const npcTypeId = db
+    .prepare(
+      `
     SELECT id FROM entity_types WHERE name = 'NPC'
-  `).get()
+  `,
+    )
+    .get()
 
-  const inUse = db.prepare(`
+  const inUse = db
+    .prepare(
+      `
     SELECT COUNT(*) as count FROM entities
     WHERE type_id = ? AND deleted_at IS NULL
     AND json_extract(metadata, '$.race') = ?
-  `).get(npcTypeId?.id, race.name)
+  `,
+    )
+    .get(npcTypeId?.id, race.name)
 
   if (inUse && inUse.count > 0) {
     throw createError({
@@ -42,11 +54,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Soft-delete the race
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE races
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

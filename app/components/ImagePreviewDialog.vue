@@ -7,28 +7,14 @@
     <v-card>
       <v-card-title class="d-flex justify-space-between align-center">
         <span>{{ title }}</span>
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          @click="$emit('update:model-value', false)"
-        />
+        <v-btn icon="mdi-close" variant="text" @click="$emit('update:model-value', false)" />
       </v-card-title>
       <v-card-text class="pa-0">
-        <v-img
-          :src="imageUrl"
-          max-height="700"
-          contain
-        />
+        <v-img :src="imageUrl" max-height="700" contain />
       </v-card-text>
       <v-card-actions v-if="showDownload">
         <v-spacer />
-        <v-btn
-          prepend-icon="mdi-download"
-          variant="text"
-          @click="handleDownload"
-        >
-          Download
-        </v-btn>
+        <v-btn prepend-icon="mdi-download" variant="text" @click="handleDownload"> Download </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -45,6 +31,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   showDownload: true,
+  downloadFileName: 'image',
 })
 
 defineEmits<{

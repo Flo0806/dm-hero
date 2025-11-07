@@ -28,15 +28,17 @@ export default defineEventHandler(async (event) => {
 
   // Create relation FROM NPC TO item
   const notes: Record<string, unknown> = {}
-  if (quantity)
-    notes.quantity = quantity
-  if (equipped !== undefined)
-    notes.equipped = equipped
+  if (quantity) notes.quantity = quantity
+  if (equipped !== undefined) notes.equipped = equipped
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type, notes)
     VALUES (?, ?, ?, ?)
-  `).run(npcId, itemId, relationType, Object.keys(notes).length > 0 ? JSON.stringify(notes) : null)
+  `,
+    )
+    .run(npcId, itemId, relationType, Object.keys(notes).length > 0 ? JSON.stringify(notes) : null)
 
   return { id: result.lastInsertRowid, success: true }
 })

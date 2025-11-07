@@ -37,12 +37,18 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const result = db.prepare(`
+    const result = db
+      .prepare(
+        `
       INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type, notes)
       VALUES (?, ?, ?, ?)
-    `).run(npcId, toEntityId, relationType, notes ? JSON.stringify(notes) : null)
+    `,
+      )
+      .run(npcId, toEntityId, relationType, notes ? JSON.stringify(notes) : null)
 
-    const relation = db.prepare<unknown[], DbRelation>(`
+    const relation = db
+      .prepare<unknown[], DbRelation>(
+        `
       SELECT
         er.id,
         er.from_entity_id,
@@ -56,7 +62,9 @@ export default defineEventHandler(async (event) => {
       INNER JOIN entities e ON er.to_entity_id = e.id
       INNER JOIN entity_types et ON e.type_id = et.id
       WHERE er.id = ?
-    `).get(result.lastInsertRowid)
+    `,
+      )
+      .get(result.lastInsertRowid)
 
     if (!relation) {
       throw createError({
@@ -69,8 +77,7 @@ export default defineEventHandler(async (event) => {
       ...relation,
       notes: relation.notes ? JSON.parse(relation.notes) : null,
     }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
       throw createError({
         statusCode: 409,

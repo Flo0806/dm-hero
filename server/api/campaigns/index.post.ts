@@ -13,14 +13,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO campaigns (name, description)
     VALUES (?, ?)
-  `).run(name, description || null)
+  `,
+    )
+    .run(name, description || null)
 
-  const campaign = db.prepare(`
+  const campaign = db
+    .prepare(
+      `
     SELECT * FROM campaigns WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   return campaign
 })

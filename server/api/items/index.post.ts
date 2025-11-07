@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get Item entity type ID
-  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('Item')
+  const entityType = db
+    .prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?')
+    .get('Item')
 
   if (!entityType) {
     throw createError({
@@ -33,16 +35,20 @@ export default defineEventHandler(async (event) => {
   // Convert localized type/rarity names to keys (e.g., "waffe" → "weapon")
   const convertedMetadata = metadata ? convertMetadataToKeys(metadata, 'item') : null
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entities (type_id, campaign_id, name, description, metadata)
     VALUES (?, ?, ?, ?, ?)
-  `).run(
-    entityType.id,
-    campaignId,
-    name,
-    description || null,
-    convertedMetadata ? JSON.stringify(convertedMetadata) : null,
-  )
+  `,
+    )
+    .run(
+      entityType.id,
+      campaignId,
+      name,
+      description || null,
+      convertedMetadata ? JSON.stringify(convertedMetadata) : null,
+    )
 
   interface DbEntity {
     id: number
@@ -56,9 +62,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const item = db.prepare<unknown[], DbEntity>(`
+  const item = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   if (!item) {
     throw createError({
@@ -69,6 +79,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...item,
-    metadata: item.metadata ? JSON.parse(item.metadata) as ItemMetadata : null,
+    metadata: item.metadata ? (JSON.parse(item.metadata) as ItemMetadata) : null,
   }
 })

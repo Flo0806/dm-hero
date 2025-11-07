@@ -5,12 +5,15 @@ This folder contains SQL scripts to populate the database with test data for dev
 ## Available Scripts
 
 ### `insert-100-npcs.sql`
+
 Inserts 100 diverse NPCs with:
+
 - **20 fully filled NPCs** - Complete with race, class, status, type, location, detailed descriptions
 - **40 medium filled NPCs** - Partial metadata, some descriptions
 - **40 minimal filled NPCs** - Just name and minimal info
 
 **Features:**
+
 - Diverse names with umlauts (ä, ö, ü, å, é, etc.)
 - Special characters (ç, ñ, æ, ø, etc.)
 - Various races: Human, Elf, Dwarf, Halfling, Gnome, Half-Elf, Half-Orc, Tiefling, Dragonborn
@@ -36,6 +39,7 @@ sqlite3 data/dm-hero.db < scripts/test-data/insert-100-npcs.sql
 ## Future Scripts
 
 This folder will contain more test data scripts for:
+
 - Locations
 - Items
 - Factions

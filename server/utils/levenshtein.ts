@@ -6,13 +6,7 @@
  */
 export function createLevenshtein() {
   function _min(d0: number, d1: number, d2: number, bx: number, ay: number) {
-    return d0 < d1 || d2 < d1
-      ? d0 > d2
-        ? d2 + 1
-        : d0 + 1
-      : bx === ay
-        ? d1
-        : d1 + 1
+    return d0 < d1 || d2 < d1 ? (d0 > d2 ? d2 + 1 : d0 + 1) : bx === ay ? d1 : d1 + 1
   }
 
   return function (a: string, b: string): number {
@@ -70,7 +64,7 @@ export function createLevenshtein() {
 
     const len = vector.length - 1
 
-    for (; x < lb - 3;) {
+    for (; x < lb - 3; ) {
       bx0 = b.charCodeAt(offset + (d0 = x))
       bx1 = b.charCodeAt(offset + (d1 = x + 1))
       bx2 = b.charCodeAt(offset + (d2 = x + 2))
@@ -91,7 +85,7 @@ export function createLevenshtein() {
       }
     }
 
-    for (; x < lb;) {
+    for (; x < lb; ) {
       bx0 = b.charCodeAt(offset + (d0 = x))
       dd = ++x
       for (y = 0; y < len; y += 2) {

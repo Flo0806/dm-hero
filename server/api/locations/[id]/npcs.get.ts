@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all NPCs related to this location via entity_relations
-  const npcs = db.prepare(`
+  const npcs = db
+    .prepare(
+      `
     SELECT
       e.*,
       er.relation_type,
@@ -24,9 +26,11 @@ export default defineEventHandler(async (event) => {
       AND et.name = 'NPC'
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(locationId)
+  `,
+    )
+    .all(locationId) as Array<{ metadata?: string | null; [key: string]: unknown }>
 
-  return npcs.map((npc: any) => ({
+  return npcs.map((npc) => ({
     ...npc,
     metadata: npc.metadata ? JSON.parse(npc.metadata) : null,
   }))

@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
   // Convert localized type/rarity names to keys (e.g., "waffe" → "weapon")
   const convertedMetadata = metadata ? convertMetadataToKeys(metadata, 'item') : null
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET
       name = COALESCE(?, name),
@@ -31,16 +32,16 @@ export default defineEventHandler(async (event) => {
       metadata = COALESCE(?, metadata),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(
-    name,
-    description,
-    convertedMetadata ? JSON.stringify(convertedMetadata) : null,
-    id,
-  )
+  `,
+  ).run(name, description, convertedMetadata ? JSON.stringify(convertedMetadata) : null, id)
 
-  const item = db.prepare(`
+  const item = db
+    .prepare(
+      `
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!item) {
     throw createError({

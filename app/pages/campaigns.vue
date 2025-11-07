@@ -1,9 +1,6 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('campaigns.title')"
-      :subtitle="$t('campaigns.subtitle')"
-    >
+    <UiPageHeader :title="$t('campaigns.title')" :subtitle="$t('campaigns.subtitle')">
       <template #actions>
         <v-btn
           color="primary"
@@ -17,30 +14,14 @@
     </UiPageHeader>
 
     <v-row v-if="pending">
-      <v-col
-        v-for="i in 3"
-        :key="i"
-        cols="12"
-        md="6"
-        lg="4"
-      >
+      <v-col v-for="i in 3" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <v-row v-else-if="campaigns && campaigns.length > 0">
-      <v-col
-        v-for="campaign in campaigns"
-        :key="campaign.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <v-card
-          hover
-          class="h-100 d-flex flex-column"
-          @click="selectCampaign(campaign)"
-        >
+      <v-col v-for="campaign in campaigns" :key="campaign.id" cols="12" md="6" lg="4">
+        <v-card hover class="h-100 d-flex flex-column" @click="selectCampaign(campaign)">
           <v-card-title class="d-flex align-center">
             <v-icon icon="mdi-sword-cross" class="mr-2" color="primary" />
             {{ campaign.name }}
@@ -57,11 +38,7 @@
             </div>
           </v-card-text>
           <v-card-actions>
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-pencil"
-              @click.stop="editCampaign(campaign)"
-            >
+            <v-btn variant="text" prepend-icon="mdi-pencil" @click.stop="editCampaign(campaign)">
               {{ $t('common.edit') }}
             </v-btn>
             <v-spacer />
@@ -85,11 +62,7 @@
         :text="$t('campaigns.emptyText')"
       >
         <template #actions>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('campaigns.create') }}
           </v-btn>
         </template>
@@ -99,11 +72,7 @@
           <v-icon icon="mdi-sword-cross" size="64" color="grey" class="mb-4" />
           <h2 class="text-h5 mb-2">{{ $t('campaigns.empty') }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('campaigns.emptyText') }}</p>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('campaigns.create') }}
           </v-btn>
         </v-container>
@@ -111,10 +80,7 @@
     </ClientOnly>
 
     <!-- Create/Edit Campaign Dialog -->
-    <v-dialog
-      v-model="showCreateDialog"
-      max-width="600"
-    >
+    <v-dialog v-model="showCreateDialog" max-width="600">
       <v-card>
         <v-card-title>
           {{ editingCampaign ? $t('campaigns.edit') : $t('campaigns.create') }}
@@ -123,7 +89,7 @@
           <v-text-field
             v-model="campaignForm.name"
             :label="$t('campaigns.name')"
-            :rules="[v => !!v || $t('campaigns.nameRequired')]"
+            :rules="[(v) => !!v || $t('campaigns.nameRequired')]"
             variant="outlined"
             class="mb-4"
           />
@@ -136,10 +102,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            @click="closeDialog"
-          >
+          <v-btn variant="text" @click="closeDialog">
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
@@ -234,8 +197,7 @@ function deleteCampaign(campaign: Campaign) {
 }
 
 async function saveCampaign() {
-  if (!campaignForm.value.name)
-    return
+  if (!campaignForm.value.name) return
 
   saving.value = true
 
@@ -243,25 +205,21 @@ async function saveCampaign() {
     if (editingCampaign.value) {
       // Update existing campaign via store
       await campaignStore.updateCampaign(editingCampaign.value.id, campaignForm.value)
-    }
-    else {
+    } else {
       // Create new campaign via store
       await campaignStore.createCampaign(campaignForm.value)
     }
 
     closeDialog()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to save campaign:', error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
 
 async function confirmDelete() {
-  if (!deletingCampaign.value)
-    return
+  if (!deletingCampaign.value) return
 
   deleting.value = true
 
@@ -269,11 +227,9 @@ async function confirmDelete() {
     await campaignStore.deleteCampaign(deletingCampaign.value.id)
     showDeleteDialog.value = false
     deletingCampaign.value = null
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete campaign:', error)
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }

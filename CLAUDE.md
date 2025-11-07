@@ -1,16 +1,20 @@
 # DM Hero - Project Context
 
 ## Project Overview
+
 DM Hero is a personal D&D campaign management tool for Dungeon Masters. The main goal is to solve the problem of scattered information across multiple Word documents, making it hard to find NPCs, locations, and connections between entities.
 
 ## Core Problem
+
 - User has 10+ Word files with session notes, NPCs, locations, etc.
 - Hard to find specific information (e.g., "3 bounty hunters")
 - Names are duplicated, misspelled, or scattered across files
 - No clear overview of relationships between entities
 
 ## Solution Approach
+
 A local-first web app with:
+
 - Universal fuzzy search (THE key feature)
 - Entity management (NPCs, Locations, Items, Factions, Quests, Sessions)
 - Automatic entity linking (like Obsidian)
@@ -19,6 +23,7 @@ A local-first web app with:
 - Duplicate detection
 
 ## Tech Stack
+
 - **Framework**: Nuxt 4 (new folder structure: app/ for client code)
 - **UI**: Vuetify 3 (no elevation, as configured in plugin)
 - **Database**: SQLite with better-sqlite3
@@ -26,6 +31,7 @@ A local-first web app with:
 - **Node**: 22.20.0 (see .nvmrc) - **IMPORTANT: Vite 7 requires Node 22.20+**
 
 ## Quick Start (for fresh clone)
+
 ```bash
 # 1. Use correct Node version
 nvm use
@@ -44,6 +50,7 @@ pnpm dev
 ```
 
 ## Design Principles
+
 1. **Functional over fancy** - This is a personal tool, utility is #1 priority
 2. **Search-first** - Global search accessible via `/` keyboard shortcut
 3. **No bloat** - Only features that directly help the DM
@@ -52,6 +59,7 @@ pnpm dev
 6. **Soft-delete everywhere** - NEVER hard-delete data. Always use `deleted_at` timestamp for recovery
 
 ## Code Style
+
 - **Comments**: Always in English
 - **Commit messages**: German or English (TBD by user)
 - **Variable names**: English
@@ -60,6 +68,7 @@ pnpm dev
 ## Database Architecture
 
 ### Core Tables
+
 - **campaigns**: Campaign management (name, description, soft-delete)
 - **entities**: Main table for all entity types (NPCs, Locations, Items, etc.)
 - **entity_types**: Type definitions (NPC, Location, Item, Faction, Quest)
@@ -71,11 +80,13 @@ pnpm dev
 - **entities_fts**: Full-text search index (FTS5) for fuzzy matching
 
 ### Reference Data Tables
+
 - **races**: D&D 5e races (16 pre-seeded: Mensch, Elf, Zwerg, Halbling, etc.)
 - **classes**: D&D 5e classes (12 pre-seeded: Barbar, Barde, Druide, etc.)
 - Both tables support soft-delete and custom entries
 
 ### Multi-Campaign Architecture
+
 - User can create multiple campaigns
 - All entities are scoped to a campaign via `campaign_id`
 - Campaign selection page shows card overview
@@ -83,6 +94,7 @@ pnpm dev
 - Soft-delete for campaigns (deleted_at timestamp)
 
 ### Entity Relations System
+
 - Bidirectional relationships between entities
 - Relation types: "lebt in", "arbeitet bei", "besucht oft", etc. (i18n)
 - Each relation can have optional notes
@@ -90,6 +102,7 @@ pnpm dev
 - API routes for CRUD operations on relations
 
 ## Migration System
+
 - Located in `server/utils/migrations.ts`
 - **8 migrations currently:**
   1. Initial schema (entities, types, relations, tags, sessions, FTS5)
@@ -106,13 +119,16 @@ pnpm dev
 - Migrations run automatically on server start via plugin
 
 ## Theme Colors
+
 **Dark Theme (Midnight Tavern)**:
+
 - Background: #1A1D29 (dark tavern)
 - Primary: #D4A574 (warm gold)
 - Secondary: #8B7355 (dark leather)
 - Accent: #CC8844 (amber)
 
 **Light Theme (Aged Parchment)**:
+
 - Background: #F5F1E8 (warm parchment)
 - Primary: #8B4513 (saddle brown)
 - Secondary: #B8860B (dark goldenrod)
@@ -121,6 +137,7 @@ pnpm dev
 ## Implemented Features
 
 ### ✅ Campaign Management
+
 - **Page**: `/campaigns`
 - Create, edit, delete (soft) campaigns
 - Card-based overview with creation date
@@ -128,6 +145,7 @@ pnpm dev
 - localStorage persistence for active campaign selection
 
 ### ✅ NPC Management
+
 - **Page**: `/npcs`
 - Full CRUD with soft-delete
 - Fields: name, description, race, class, location, faction, relationship
@@ -135,7 +153,7 @@ pnpm dev
 - **FTS5 Fuzzy Search** (implemented 2025-10-29):
   - Debounced search (300ms) - server-side FTS5 query
   - Searches name, description, AND metadata (race, class, location, etc.)
-  - Prefix matching with `*` wildcard (e.g., "gandlf*" finds "Gandalf")
+  - Prefix matching with `*` wildcard (e.g., "gandlf\*" finds "Gandalf")
   - Ranked results by relevance
   - Shows cached entities when no search, API results when searching
 - **Location Relations**:
@@ -156,6 +174,7 @@ pnpm dev
   - Images, tables, code blocks, task lists supported
 
 ### ✅ Location Management
+
 - **Page**: `/locations`
 - Full CRUD with soft-delete
 - Fields: name, description, type, region, notes
@@ -165,6 +184,7 @@ pnpm dev
 - **Markdown Documents**: Same as NPCs
 
 ### ✅ Reference Data Management
+
 - **Page**: `/reference-data`
 - Manage races and classes (D&D 5e pre-seeded)
 - Tab-based interface (Races | Classes)
@@ -174,6 +194,7 @@ pnpm dev
 - 16 races, 12 classes pre-seeded in German
 
 ### ✅ UI/UX Features
+
 - Dark/Light theme toggle (D&D themed colors)
 - i18n support (de/en) with full translations
 - Sidebar navigation with active campaign display
@@ -182,6 +203,7 @@ pnpm dev
 - Responsive layout
 
 ## API Routes Structure
+
 ```
 server/api/
 ├── campaigns/
@@ -221,6 +243,7 @@ server/api/
 ```
 
 ## File Structure
+
 ```
 dm-hero/
 ├── .nvmrc                   # Node 22.20.0
@@ -254,7 +277,9 @@ dm-hero/
 ```
 
 ## Items & Factions
+
 ### ✅ Items Management
+
 - **Page**: `/items`
 - Full CRUD with soft-delete
 - Fields: name, description, type, rarity, notes, value
@@ -263,12 +288,25 @@ dm-hero/
 - View dialog with all details
 
 ### ✅ Factions Management
+
 - **Page**: `/factions`
 - Full CRUD with soft-delete
 - Fields: name, description, type (guild, government, criminal, religious, etc.)
 - **FTS5 Fuzzy Search** (backend ready, frontend pending)
 
 ## TODO / Not Yet Implemented
+
+### 🚨 CRITICAL - Do This FIRST Next Session!
+
+- ⚠️ **Run `pnpm lint:fix` and `pnpm format` on entire project** - We just added ESLint + Prettier config, need to format all existing code to match new standards before continuing development
+  ```bash
+  pnpm lint:fix
+  pnpm format
+  # Then commit the formatting changes
+  ```
+
+### Feature Backlog
+
 - ⏳ Universal fuzzy search UI (FTS5 backend ready, `/` shortcut dialog pending)
 - ⏳ Apply FTS5 search to Items, Locations, Factions pages (backend ready)
 - ⏳ Quests page
@@ -290,11 +328,13 @@ dm-hero/
 #### Why FTS5 over Levenshtein Distance?
 
 **Levenshtein Algorithm** (Edit Distance):
+
 - Calculates minimum operations to transform one string into another
 - Great for ranking similar strings (e.g., "gandlf" → "gandalf" = 1 edit)
 - BUT: O(n) complexity - must check EVERY entity
 
 **FTS5 Advantages:**
+
 - O(log n) complexity - uses inverted index (like search engines)
 - Searches 100,000 entities in milliseconds
 - Built into SQLite - no external dependencies
@@ -303,6 +343,7 @@ dm-hero/
 - Handles basic typos with prefix matching
 
 **Hybrid Approach (Future):**
+
 1. FTS5 filters to 100-200 candidates (fast)
 2. Levenshtein ranks by similarity (accurate)
 3. Show top 20 results
@@ -312,6 +353,7 @@ dm-hero/
 #### Migration 8: Extending FTS5 to Metadata
 
 **Before (Migration 1):**
+
 ```sql
 CREATE VIRTUAL TABLE entities_fts USING fts5(
   name,
@@ -320,9 +362,11 @@ CREATE VIRTUAL TABLE entities_fts USING fts5(
   content_rowid='id'
 )
 ```
+
 Only searched `name` and `description` fields.
 
 **After (Migration 8):**
+
 ```sql
 CREATE VIRTUAL TABLE entities_fts USING fts5(
   name,
@@ -334,6 +378,7 @@ CREATE VIRTUAL TABLE entities_fts USING fts5(
 ```
 
 Now searches inside metadata like:
+
 - `{"race": "Elf", "class": "Ranger"}` (NPCs)
 - `{"type": "Longsword", "rarity": "legendary"}` (Items)
 - `{"type": "tavern", "region": "Waterdeep"}` (Locations)
@@ -341,13 +386,16 @@ Now searches inside metadata like:
 #### FTS5 Query Pattern
 
 **Backend API Pattern (all entity endpoints):**
+
 ```typescript
 const searchQuery = query.search as string | undefined
 
 if (searchQuery && searchQuery.trim().length > 0) {
-  const ftsQuery = `${searchQuery.trim()}*`  // Add wildcard for prefix matching
+  const ftsQuery = `${searchQuery.trim()}*` // Add wildcard for prefix matching
 
-  npcs = db.prepare(`
+  npcs = db
+    .prepare(
+      `
     SELECT e.*
     FROM entities_fts fts
     INNER JOIN entities e ON fts.rowid = e.id
@@ -356,13 +404,16 @@ if (searchQuery && searchQuery.trim().length > 0) {
       AND e.campaign_id = ?
       AND e.deleted_at IS NULL
     ORDER BY rank  -- FTS5 automatically ranks by relevance
-  `).all(ftsQuery, entityType.id, campaignId)
+  `,
+    )
+    .all(ftsQuery, entityType.id, campaignId)
 } else {
   // No search - return all entities
 }
 ```
 
 **Frontend Pattern (Debounced Search):**
+
 ```typescript
 const searchQuery = ref('')
 const searchResults = ref<NPC[]>([])
@@ -404,6 +455,7 @@ const filteredNpcs = computed(() => {
 ```
 
 **Why 300ms debounce?**
+
 - User types "gandalf" - that's 7 keystrokes
 - WITHOUT debounce: 7 API calls ("g", "ga", "gan", ...)
 - WITH 300ms debounce: 1 API call (after user finishes typing)
@@ -411,14 +463,15 @@ const filteredNpcs = computed(() => {
 
 #### FTS5 Backend Implementation Status
 
-| Entity Type | Backend API | Frontend UI |
-|-------------|-------------|-------------|
+| Entity Type | Backend API | Frontend UI    |
+| ----------- | ----------- | -------------- |
 | NPCs        | ✅ Ready    | ✅ Implemented |
-| Items       | ✅ Ready    | ⏳ Pending |
-| Locations   | ✅ Ready    | ⏳ Pending |
-| Factions    | ✅ Ready    | ⏳ Pending |
+| Items       | ✅ Ready    | ⏳ Pending     |
+| Locations   | ✅ Ready    | ⏳ Pending     |
+| Factions    | ✅ Ready    | ⏳ Pending     |
 
 **Files Modified:**
+
 - `/server/utils/migrations.ts` - Migration 8 (lines 369-422)
 - `/server/api/npcs/index.get.ts` - FTS5 query support (lines 26-44)
 - `/server/api/items/index.get.ts` - FTS5 query support
@@ -433,6 +486,7 @@ const filteredNpcs = computed(() => {
 ### Architecture
 
 **Database (Migration 4):**
+
 ```sql
 CREATE TABLE entity_images (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -446,6 +500,7 @@ CREATE TABLE entity_images (
 ```
 
 **File Storage:**
+
 - Location: `public/uploads/`
 - Naming: UUID v4 (e.g., `a3f2b1c4-...-.jpg`)
 - Formats: JPG, PNG, WebP, GIF
@@ -458,28 +513,28 @@ CREATE TABLE entity_images (
 **File:** `/app/composables/useImageDownload.ts`
 
 **Usage:**
+
 ```vue
 <script setup lang="ts">
 const { downloadImage, downloading } = useImageDownload()
 </script>
 
 <template>
-  <v-btn
-    :loading="downloading"
-    @click="downloadImage('/uploads/image.jpg', 'Gandalf.jpg')"
-  >
+  <v-btn :loading="downloading" @click="downloadImage('/uploads/image.jpg', 'Gandalf.jpg')">
     Download Image
   </v-btn>
 </template>
 ```
 
 **How it works:**
+
 1. Fetches image as Blob from server
 2. Creates temporary object URL
 3. Triggers browser download with custom filename
 4. Cleans up object URL
 
 **Why composable?**
+
 - Reusable across all entity pages (NPCs, Items, Locations)
 - Centralized loading state management
 - Proper error handling and cleanup
@@ -491,6 +546,7 @@ const { downloadImage, downloading } = useImageDownload()
 ### Architecture (Migration 5)
 
 **Database:**
+
 ```sql
 CREATE TABLE entity_documents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -505,6 +561,7 @@ CREATE TABLE entity_documents (
 ```
 
 **md-editor-v3 Integration:**
+
 - Library: `md-editor-v3` (Vue 3 compatible)
 - Features: Preview, Edit, Fullscreen modes
 - Auto-save: 500ms debounce (prevents excessive API calls)
@@ -518,14 +575,13 @@ CREATE TABLE entity_documents (
 **File:** `/app/components/EntityDocuments.vue`
 
 **Usage:**
+
 ```vue
-<EntityDocuments
-  :entity-id="npc.id"
-  entity-type="NPC"
-/>
+<EntityDocuments :entity-id="npc.id" entity-type="NPC" />
 ```
 
 **Features:**
+
 - Tab-based interface (one tab per document)
 - Create/rename/delete documents
 - Live preview
@@ -533,6 +589,7 @@ CREATE TABLE entity_documents (
 - Fullscreen mode for focused writing
 
 **Why separate component?**
+
 - Used by NPCs, Items, Locations (DRY principle)
 - Encapsulates complex editor logic
 - Maintains consistent UX across entity types
@@ -544,6 +601,7 @@ CREATE TABLE entity_documents (
 ### PageHeader Component
 
 **Problem:** Every entity page had duplicate header code:
+
 ```vue
 <!-- Repeated in npcs, items, locations, factions -->
 <div class="d-flex justify-space-between align-center mb-4">
@@ -563,6 +621,7 @@ CREATE TABLE entity_documents (
 **File:** `/app/components/PageHeader.vue`
 
 **Usage:**
+
 ```vue
 <PageHeader
   :title="$t('npcs.title')"
@@ -573,12 +632,14 @@ CREATE TABLE entity_documents (
 ```
 
 **Benefits:**
+
 - 15 lines → 5 lines per page
 - Consistent styling across pages
 - Single source of truth for header layout
 - Easier to update globally (e.g., add breadcrumbs)
 
 **When to extract components?**
+
 1. Code repeated 3+ times
 2. Complex logic that can be encapsulated
 3. Improves readability of parent component
@@ -590,17 +651,20 @@ CREATE TABLE entity_documents (
 ### Debouncing Best Practices
 
 **When to debounce:**
+
 - Search inputs (300ms)
 - Auto-save (500ms)
 - Resize/scroll events (100-200ms)
 
 **When NOT to debounce:**
+
 - Button clicks (use loading state instead)
 - Form submissions (single action)
 
 ### Loading States
 
 **Pattern:**
+
 ```typescript
 const loading = ref(false)
 
@@ -609,12 +673,13 @@ async function saveData() {
   try {
     await $fetch('/api/...')
   } finally {
-    loading.value = false  // Always reset, even on error
+    loading.value = false // Always reset, even on error
   }
 }
 ```
 
 **Visual feedback:**
+
 ```vue
 <v-btn :loading="loading" @click="saveData">
   Save
@@ -624,6 +689,7 @@ async function saveData() {
 ### Cached vs Live Data
 
 **Entities Store Pattern:**
+
 ```typescript
 // Load once on page mount
 const npcs = computed(() => entitiesStore.npcs)
@@ -638,6 +704,7 @@ const display = computed(() => {
 ```
 
 **Why?**
+
 - Instant page loads (cached data)
 - Fresh search results (live API)
 - Reduced server load (only search queries hit API)
@@ -645,6 +712,7 @@ const display = computed(() => {
 ---
 
 ## Important Notes
+
 - **Soft-delete everywhere**: NEVER hard-delete. Always set `deleted_at`
 - **Comments in English**: All code comments must be English
 - **i18n**: All UI text must go through translation files
@@ -657,6 +725,74 @@ const display = computed(() => {
 ---
 
 ## 📅 Changelog
+
+### 2025-11-04 - ESLint & Prettier Setup
+
+**🎨 Code Quality & Formatting Standards:**
+
+We added a complete linting and formatting setup to prepare the project for community sharing. This ensures consistent code style across all contributors.
+
+**Packages Installed:**
+
+- `@nuxt/eslint` - Official Nuxt ESLint integration
+- `eslint` + `eslint-plugin-vue` - Core linting with Vue support
+- `prettier` + `eslint-config-prettier` - Code formatting without conflicts
+- `@typescript-eslint/*` - TypeScript linting rules
+
+**Configuration Files Created:**
+
+1. **`eslint.config.mjs`** - ESLint Rules
+   - Single quotes, no semicolons, trailing commas
+   - Max 3 attributes per line in Vue templates
+   - TypeScript: No implicit `any` enforced
+   - 2 spaces indentation
+
+2. **`.prettierrc`** - Prettier Formatting
+   - Single quotes, no semicolons, trailing commas
+   - 100 character line width
+   - 2 spaces tabs, LF line endings
+
+3. **`.editorconfig`** - Cross-Editor Consistency
+   - Works in ALL editors (VSCode, WebStorm, Vim, etc.)
+   - UTF-8, LF line endings, trim trailing whitespace
+
+4. **`.vscode/settings.json`** - VSCode Auto-Format
+   - Format on save via `codeActionsOnSave`
+   - ESLint auto-fix runs FIRST, then Prettier formats
+   - Prevents race condition where ESLint overwrites Prettier
+
+5. **`.vscode/extensions.json`** - Recommended Extensions
+   - Vue.volar, ESLint, Prettier, EditorConfig
+
+**New NPM Scripts:**
+
+```bash
+pnpm lint          # Check for linting errors
+pnpm lint:fix      # Auto-fix linting errors
+pnpm format        # Format all files with Prettier
+pnpm format:check  # Check formatting (for CI)
+```
+
+**How It Works for Contributors:**
+
+1. Clone the repo
+2. VSCode prompts to install recommended extensions
+3. Auto-format on save is automatically enabled
+4. Code is consistently formatted across the team
+
+**⚠️ Important:** Next session, run `pnpm lint:fix && pnpm format` to format all existing code before continuing development!
+
+**Files Modified:**
+
+- `/eslint.config.mjs` - Added comprehensive ESLint rules
+- `/package.json` - Added lint and format scripts
+- `/.prettierrc` - NEW
+- `/.prettierignore` - NEW
+- `/.editorconfig` - NEW
+- `/.vscode/settings.json` - NEW (with race condition fix)
+- `/.vscode/extensions.json` - NEW
+
+---
 
 ### 2025-11-02 - Lore-NPC Linking & TypeScript Fixes
 
@@ -702,6 +838,7 @@ const display = computed(() => {
      - Lore: `(lore: { id: number, name: string })`
 
 **How Lore Linking Works:**
+
 1. Open NPC in edit mode
 2. Go to "Wissen" (Lore) tab (last tab)
 3. Select Lore entry from dropdown
@@ -710,6 +847,7 @@ const display = computed(() => {
 6. Relation stored in `entity_relations` with `relation_type = "kennt"`
 
 **Files Modified:**
+
 - `/app/pages/npcs/index.vue` - Added Lore tab, fetchLore() in onMounted, TypeScript fixes
 - `/app/pages/lore/index.vue` - TypeScript fixes
 - `/server/api/npcs/[id]/lore.get.ts` - NEW: Loads linked Lore for NPC
@@ -726,9 +864,11 @@ const display = computed(() => {
 ## 🚀 NEXT STEPS (for next session)
 
 ### 1. **Lore → NPCs Tab (Reverse Direction)**
+
 **Goal:** In Lore dialog, show which NPCs know this Lore
 
 **To Do:**
+
 - New "NPCs" tab in `/app/pages/lore/index.vue` (similar to Lore tab in NPCs)
 - Create endpoint `/api/lore/[id]/npcs.get.ts` (GET: Load all NPCs that know this Lore)
 - Same UI as Lore tab: Autocomplete + list with images
@@ -738,13 +878,16 @@ const display = computed(() => {
 **Estimated Time:** 30-45 minutes
 
 ### 2. **NPC Cross-Search via Linked Lore Names**
+
 **Goal:** Find NPCs through linked Lore names
 
 **Example:**
+
 - Lore "Ring of Power" is linked to NPC "Gandalf"
 - Search for "Ring" → finds "Gandalf" (because he knows the Lore)
 
 **To Do:**
+
 - Extend `/server/api/npcs/index.get.ts`:
   - JOIN with `entity_relations` + `entities` (type=Lore)
   - `GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names`
@@ -754,6 +897,7 @@ const display = computed(() => {
 - Lore name match → Score bonus (e.g. -20 points)
 
 **Reference Implementation:**
+
 - See `/server/api/locations/index.get.ts` (Lines ~180-280)
 - Pattern: Load ALL with JOINs → Filter with Levenshtein → Sort by score
 - Unicode normalization via `normalizeText()` already available
@@ -761,7 +905,9 @@ const display = computed(() => {
 **Estimated Time:** 1-2 hours
 
 ### 3. **Add Lore to Global Search**
+
 **To Do:**
+
 - Extend `/server/api/search.get.ts`
 - Add Lore type to entity type mapping
 - Route: `/lore?highlight={id}&search={query}`
@@ -774,9 +920,12 @@ const display = computed(() => {
 ## 💡 Important Patterns for Next Session
 
 ### Cross-Search Pattern (for NPC → Lore names):
+
 ```typescript
 // 1. Load ALL NPCs with JOINs (no FTS5 pre-filter!)
-const npcs = db.prepare(`
+const npcs = db
+  .prepare(
+    `
   SELECT e.*,
     GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
   FROM entities e
@@ -785,12 +934,14 @@ const npcs = db.prepare(`
     AND lore.type_id = ? AND lore.deleted_at IS NULL
   WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
   GROUP BY e.id
-`).all(loreTypeId, npcTypeId, campaignId)
+`,
+  )
+  .all(loreTypeId, npcTypeId, campaignId)
 
 // 2. Filter with Levenshtein (word-level!)
-const loreNames = linkedLoreNamesLower.split(',').map(n => n.trim())
+const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
 for (const loreName of loreNames) {
-  const loreWords = loreName.split(/\s+/)  // ← IMPORTANT!
+  const loreWords = loreName.split(/\s+/) // ← IMPORTANT!
   for (const word of loreWords) {
     if (word.length < 3) continue
     const levDist = levenshtein(normalizeText(term), normalizeText(word))
@@ -803,6 +954,7 @@ if (matchedViaLore) score -= 20
 ```
 
 ### Bidirectional Relations Pattern:
+
 ```typescript
 // NPC → Lore: from_entity_id = NPC, to_entity_id = Lore
 // Lore → NPCs: Same table, just queried in reverse!
@@ -819,6 +971,7 @@ WHERE er.to_entity_id = ? AND npc.type_id = ?
 ### 2025-10-31 (Late Evening) - Unicode Normalization & Global Search UX
 
 **🔤 Unicode Normalization für Akzent-Suche:**
+
 - ✅ **Problem**: "andre" findet "andré" nicht, weil é ≠ e
 - ✅ **Lösung**: `normalizeText()` Utility-Funktion erstellt
   - Verwendet `String.normalize('NFD')` - zerlegt Zeichen (é → e + Akzent)
@@ -834,6 +987,7 @@ WHERE er.to_entity_id = ? AND npc.type_id = ?
   - "sao paulo" findet "São Paulo"
 
 **🔍 Global Search UX Improvements:**
+
 - ✅ **Fixed entity type bug**: `/server/api/search.get.ts` gab `entity_type` zurück, Frontend erwartete `type`
 - ✅ **Locations Highlight Feature** (analog zu NPCs):
   - Query params: `?highlight=123&search=EntityName`
@@ -844,6 +998,7 @@ WHERE er.to_entity_id = ? AND npc.type_id = ?
   - CSS Animation: `highlight-pulse` mit box-shadow
 
 **🐛 Critical Bugfixes:**
+
 - ✅ **Nuxt 4 useFetch Warning**: `useFetch` in Composables führte zu "Component already mounted" Warnings
   - **Problem**: `useRaceName()`/`useClassName()` Composables verwendeten `useFetch` intern
   - **Root Cause**: Composables wurden in `computed()` aufgerufen → `useFetch` nach Component-Mount
@@ -858,24 +1013,26 @@ WHERE er.to_entity_id = ? AND npc.type_id = ?
 **📝 Composables Pattern Update:**
 
 **VORHER (funktioniert nicht in Nuxt 4):**
+
 ```typescript
 // ❌ BAD: useFetch in Composable
 export function useRaceName(race: string) {
   const { data: races } = useFetch('/api/races') // Problem!
-  const raceData = races.value?.find(r => r.name === race)
+  const raceData = races.value?.find((r) => r.name === race)
   return raceData?.name_de || race
 }
 
 // Verwendung in computed
 const raceItems = computed(() => {
-  return races.value.map(r => ({
+  return races.value.map((r) => ({
     title: useRaceName(r.name), // Ruft useFetch in computed auf!
-    value: r.name
+    value: r.name,
   }))
 })
 ```
 
 **NACHHER (Nuxt 4 kompatibel):**
+
 ```typescript
 // ✅ GOOD: Composable erwartet Daten
 export function useRaceName(race: ReferenceData) {
@@ -894,9 +1051,9 @@ onMounted(async () => {
 
 // Verwendung in computed mit geladenen Daten
 const raceItems = computed(() => {
-  return races.value.map(r => ({
+  return races.value.map((r) => ({
     title: useRaceName(r), // Kein useFetch, nur Daten-Transformation
-    value: r.name
+    value: r.name,
   }))
 })
 ```
@@ -922,7 +1079,7 @@ const store = useMyStore()
 
 // 4. Computed Properties
 const filteredItems = computed(() => {
-  return items.value.filter(i => i.name.includes(searchQuery.value))
+  return items.value.filter((i) => i.name.includes(searchQuery.value))
 })
 
 // 5. Functions
@@ -943,12 +1100,14 @@ watch(searchQuery, () => {
 ```
 
 **💡 Eselsbrücken für morgen:**
+
 1. **Unicode-Suche**: "André" wird "andre" → `normalize('NFD')` + Regex entfernt Akzente
 2. **Composables**: NIEMALS `useFetch` in Composables → immer Daten als Parameter übergeben
 3. **Script Order**: Template-refs müssen ZUERST kommen, sonst "Cannot access before initialization"
 4. **Global Search**: `type` nicht `entity_type` (API ↔ Frontend Mapping!)
 
 **Files Modified:**
+
 - `/server/utils/normalize.ts` - NEW: Unicode normalization utility
 - `/server/api/npcs/index.get.ts` - Added normalizeText for accent-insensitive search
 - `/server/api/locations/index.get.ts` - Added normalizeText for accent-insensitive search
@@ -963,6 +1122,7 @@ watch(searchQuery, () => {
 ### 2025-10-31 - Locations Cross-Entity Search - FINAL (Evening)
 
 **🗺️ Cross-Search für Locations - Vollständig implementiert:**
+
 - ✅ **Removed bm25() incompatibility**: Cannot use `bm25()` with `GROUP_CONCAT` - switched to full table scan
 - ✅ **Always load all locations**: Ditched FTS5 pre-filter, load ALL locations with linked NPCs/Items
 - ✅ **Word-level Levenshtein**: Split NPC/Item names into words ("Günther Müller" → ["günther", "müller"])
@@ -971,6 +1131,7 @@ watch(searchQuery, () => {
 - ✅ **Test Data Added**: 50 Locations with 287 relations to NPCs and Items
 
 **Beispiel - Jetzt funktioniert:**
+
 ```typescript
 // Location "Taverne zum Goldenen Drachen" mit NPCs "Günther" + "Søren"
 Suche: "Gunther" (Typo!)
@@ -1004,9 +1165,12 @@ Suche: "Caglar" (ohne Umlaut)
    - Ohne Split: "Günter" vs "Günther Müller" (Distance ~8) ❌
 
 **Code-Änderungen:**
+
 ```typescript
 // Always load ALL locations with linked entities
-locations = db.prepare(`
+locations = db
+  .prepare(
+    `
   SELECT e.*,
     GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
     GROUP_CONCAT(DISTINCT item.name) as linked_item_names
@@ -1017,12 +1181,14 @@ locations = db.prepare(`
   LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.type_id = 3
   WHERE e.type_id = 2 AND e.campaign_id = ? AND e.deleted_at IS NULL
   GROUP BY e.id
-`).all(campaignId)
+`,
+  )
+  .all(campaignId)
 
 // Split NPC names into WORDS and check each
-const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
+const npcNames = linkedNpcNamesLower.split(',').map((n) => n.trim())
 for (const npcName of npcNames) {
-  const npcWords = npcName.split(/\s+/)  // ← WICHTIG!
+  const npcWords = npcName.split(/\s+/) // ← WICHTIG!
   for (const word of npcWords) {
     const levDist = levenshtein(term, word)
     if (levDist <= maxDist) return true
@@ -1032,18 +1198,20 @@ for (const npcName of npcNames) {
 // Also check description WORDS (not just includes)
 const descWords = descriptionLower.split(/\s+/)
 for (const word of descWords) {
-  if (word.length < 3) continue  // Skip "der", "am", etc.
+  if (word.length < 3) continue // Skip "der", "am", etc.
   const levDist = levenshtein(term, word)
   if (levDist <= maxDist) return true
 }
 ```
 
 **Performance:**
+
 - Bei 50 Locations + 287 Relations: ~10-15ms
 - Full table scan (keine FTS5 pre-filter mehr)
 - Levenshtein-Filter macht die eigentliche Arbeit
 
 **Files Modified:**
+
 - `/server/api/locations/index.get.ts` - Removed bm25(), always load all locations, word-level Levenshtein
 
 ---
@@ -1051,11 +1219,13 @@ for (const word of descWords) {
 ### 2025-10-31 - Search UI Improvements (Afternoon)
 
 **🎨 Search Loading Overlay (Locations):**
+
 - ✅ **Removed `:loading` from v-text-field** - No more loading bar in search input
 - ✅ **Added v-overlay with v-progress-circular** - Beautiful centered loading animation over cards
 - ✅ **Consistent UX across all entity pages** - NPCs, Items, Locations, Factions now have identical search UI
 
 **Implementation Pattern:**
+
 ```vue
 <!-- Search Bar (no :loading prop) -->
 <v-text-field
@@ -1089,12 +1259,14 @@ for (const word of descWords) {
 ```
 
 **Why this is better:**
+
 - Cleaner search input (no distracting progress bar)
 - Clear visual feedback during search (centered spinner over content)
 - User sees what they're searching through while loading
 - Professional UX consistent with modern apps
 
 **Files Modified:**
+
 - `/app/pages/locations/index.vue` - Added v-overlay, removed `:loading` from search field
 
 ---
@@ -1102,11 +1274,13 @@ for (const word of descWords) {
 ### 2025-10-31 - Fuzzy Search for Linked NPC Names (Morning)
 
 **🎯 Levenshtein für verknüpfte Namen (Morning):**
+
 - ✅ **Fuzzy-Search für `leader_name`**: Levenshtein-Check jetzt auch für verknüpfte NPC-Namen
 - ✅ **Alle 3 Filter aktualisiert**: Simple/OR/AND Query Filter prüfen jetzt Leader-Namen
 - ✅ **LIMIT erhöht**: Von 100 auf 300 Candidates → mehr Treffer bei großen Datenmengen
 
 **Beispiel - Jetzt funktioniert:**
+
 ```typescript
 // Faction "Harpers" mit Anführer "Bernhard"
 Suche: "Bernard" (Typo!)
@@ -1115,23 +1289,26 @@ Suche: "Bernard" (Typo!)
 ```
 
 **Code-Änderungen:**
+
 ```typescript
 // Neu in allen 3 Filtern (Simple/OR/AND):
 // Check Levenshtein for leader_name
 if (leaderNameLower.length > 0) {
   const leaderLevDist = levenshtein(term, leaderNameLower)
   if (leaderLevDist <= maxDist) {
-    return true  // Match! ✅
+    return true // Match! ✅
   }
 }
 ```
 
 **Performance:**
+
 - LIMIT 100 → 300: Mehr Candidates für Levenshtein
 - Bei 300 Factions: Alle werden durchsucht ✅
 - Bei 1000+ Factions: Top 300 werden durchsucht (immer noch <50ms)
 
 **Files Modified:**
+
 - `/server/api/factions/index.get.ts` - Added Levenshtein checks for leader_name in 3 filters
 
 ---
@@ -1139,6 +1316,7 @@ if (leaderNameLower.length > 0) {
 ### 2025-10-30 - Faction Leader as NPC Relation
 
 **🔗 Faction Leader Verknüpfung (Evening):**
+
 - ✅ **Backend**: Faction leader now stored as entity_relation (type: "Anführer") instead of metadata.leader
 - ✅ **SQL Queries**: All faction queries extended with LEFT JOIN for leader NPC
   ```sql
@@ -1152,17 +1330,20 @@ if (leaderNameLower.length > 0) {
 - ✅ **Save Logic**: Automatically manages leader relation on faction save/update
 
 **Why This Is Better:**
+
 - **Consistency**: Leader is now a real entity relation (like "Mitglieder")
 - **Searchable**: Can find factions by searching for leader NPC name
 - **Type-safe**: Dropdown prevents typos, ensures valid NPC references
 - **Flexible**: Leader can be changed easily, relation is tracked in database
 
 **Example:**
+
 - Faction "Harpers" has leader NPC "Remallia Haventree"
 - Search for "Remallia" → finds "Harpers" faction ✅
 - Future: Will support fuzzy search ("Remalja" → "Remallia")
 
 **Files Modified:**
+
 - `/server/api/factions/index.get.ts` - Added leader JOIN to all queries, search logic
 - `/app/pages/factions/index.vue` - UI changed to NPC dropdown, save logic updated
 
@@ -1173,6 +1354,7 @@ if (leaderNameLower.length > 0) {
 **🎨 DALL-E 3 Integration mit Entity-spezifischen Prompts:**
 
 Die AI-Bildgenerierung nutzt einen **zweistufigen Prozess**:
+
 1. **GPT-4o-mini** optimiert den User-Prompt für DALL-E
 2. **DALL-E 3** generiert das Bild basierend auf optimiertem Prompt
 
@@ -1182,28 +1364,25 @@ Die AI-Bildgenerierung nutzt einen **zweistufigen Prozess**:
 // Entity-spezifische System-Prompts für GPT-4o-mini
 if (entityType === 'NPC') {
   // → Character portraits, waist-up, personality visible
-  systemPrompt = "...fantasy character portraits..."
-}
-else if (entityType === 'Location') {
+  systemPrompt = '...fantasy character portraits...'
+} else if (entityType === 'Location') {
   // → Environment art, establishing shots, atmospheric
-  systemPrompt = "...fantasy location and environment art..."
-}
-else if (entityType === 'Faction') {
+  systemPrompt = '...fantasy location and environment art...'
+} else if (entityType === 'Faction') {
   // → Heraldic symbols, emblems, guild crests
-  systemPrompt = "...heraldic symbols and faction logos..."
-}
-else if (entityType === 'Item') {
+  systemPrompt = '...heraldic symbols and faction logos...'
+} else if (entityType === 'Item') {
   // → Isolated object renders, product photography
-  systemPrompt = "...clean, isolated object renders..."
+  systemPrompt = '...clean, isolated object renders...'
 }
 
 // Schritt 1: GPT-4o-mini optimiert den Prompt
 const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-  model: 'gpt-4o-mini',  // Günstiger als gpt-4
+  model: 'gpt-4o-mini', // Günstiger als gpt-4
   messages: [
     { role: 'system', content: systemPrompt },
-    { role: 'user', content: objectDescription }
-  ]
+    { role: 'user', content: objectDescription },
+  ],
 })
 
 // Schritt 2: DALL-E 3 generiert Bild
@@ -1212,28 +1391,30 @@ const dalleResponse = await fetch('https://api.openai.com/v1/images/generations'
   prompt: enhancedPrompt,
   size: '1024x1024',
   quality: 'standard',
-  style: 'natural'  // Minimiert kreatives Umschreiben
+  style: 'natural', // Minimiert kreatives Umschreiben
 })
 ```
 
 **WICHTIG: Endpoint-Unterschied beim Speichern:**
 
 ❌ **FALSCH** (führt zu Timestamp-Prefix):
+
 ```typescript
 // Problem: /upload-image erwartet FormData mit File
 await $fetch(`/api/entities/${id}/upload-image`, {
   method: 'POST',
-  body: { imageUrl: filename }  // ← 400 Error!
+  body: { imageUrl: filename }, // ← 400 Error!
 })
 // Resultat: 1762022415398-uuid.png (mit Timestamp!)
 ```
 
 ✅ **RICHTIG** (nutzt neuen Endpoint):
+
 ```typescript
 // Lösung: /add-generated-image nimmt String-Pfad
 await $fetch(`/api/entities/${id}/add-generated-image`, {
   method: 'POST',
-  body: { imageUrl: filename }  // ← String ohne /uploads/
+  body: { imageUrl: filename }, // ← String ohne /uploads/
 })
 // Resultat: uuid.png (ohne Timestamp!)
 ```
@@ -1248,24 +1429,29 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
 
   // Zähle existierende Bilder
-  const count = db.prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
+  const count = db
+    .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
     .get(Number(entityId)) as { count: number }
 
   // Füge Bild direkt ein (KEIN Upload!)
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
     VALUES (?, ?, ?, ?)
-  `).run(
+  `,
+  ).run(
     Number(entityId),
-    body.imageUrl,  // Nur Filename, kein /uploads/
-    count.count === 0 ? 1 : 0,  // Erstes Bild = Primary
-    count.count
+    body.imageUrl, // Nur Filename, kein /uploads/
+    count.count === 0 ? 1 : 0, // Erstes Bild = Primary
+    count.count,
   )
 
   // Update entity.image_url wenn erstes Bild
   if (count.count === 0) {
-    db.prepare('UPDATE entities SET image_url = ? WHERE id = ?')
-      .run(body.imageUrl, Number(entityId))
+    db.prepare('UPDATE entities SET image_url = ? WHERE id = ?').run(
+      body.imageUrl,
+      Number(entityId),
+    )
   }
 })
 ```
@@ -1358,10 +1544,12 @@ export default defineEventHandler(async (event) => {
 
 ```typescript
 const generateButtonDisabled = computed(() => {
-  return uploadingImage.value
-    || deletingImage.value
-    || !entityForm.value.name  // Name ist Pflichtfeld
-    || !hasApiKey.value
+  return (
+    uploadingImage.value ||
+    deletingImage.value ||
+    !entityForm.value.name || // Name ist Pflichtfeld
+    !hasApiKey.value
+  )
 })
 ```
 
@@ -1411,7 +1599,7 @@ async function generateImage() {
     details.push(factionForm.value.metadata.notes)
   }
 
-  const prompt = details.filter(d => d).join(', ')
+  const prompt = details.filter((d) => d).join(', ')
 
   // API Call
   const result = await $fetch('/api/ai/generate-image', {
@@ -1420,19 +1608,20 @@ async function generateImage() {
       prompt,
       entityName: factionForm.value.name,
       entityType: 'Faction',
-      style: 'fantasy-art'
-    }
+      style: 'fantasy-art',
+    },
   })
 
   // Speichern mit korrektem Endpoint
   await $fetch(`/api/entities/${editingFaction.value.id}/add-generated-image`, {
     method: 'POST',
-    body: { imageUrl: result.imageUrl.replace('/uploads/', '') }
+    body: { imageUrl: result.imageUrl.replace('/uploads/', '') },
   })
 }
 ```
 
 **Kosten-Beispiel (OpenAI Pricing):**
+
 - GPT-4o-mini Prompt-Optimierung: ~$0.0002 pro Bild
 - DALL-E 3 (1024x1024, standard): $0.040 pro Bild
 - **Gesamt: ~$0.04 pro generiertes Bild**
@@ -1463,6 +1652,7 @@ async function generateImage() {
    - Hint anzeigen wenn kein Key vorhanden
 
 **Files Implemented:**
+
 - ✅ `/server/api/ai/generate-image.post.ts` - Location & Faction prompts
 - ✅ `/server/api/entities/[id]/add-generated-image.post.ts` - Neuer Endpoint
 - ✅ `/app/pages/locations/index.vue` - Vollständige Implementation
@@ -1475,6 +1665,7 @@ async function generateImage() {
 ### 2025-10-29 - FTS5 Search Implementation
 
 **🔍 Search System (Morning):**
+
 - ✅ **Migration 8**: Extended FTS5 to search metadata (race, class, type, rarity, etc.)
 - ✅ Added FTS5 search support to all entity APIs:
   - `/server/api/npcs/index.get.ts` - Added `?search=...` parameter
@@ -1486,12 +1677,14 @@ async function generateImage() {
 - ✅ Search now indexes JSON metadata for all entity types
 
 **Algorithm Discussion:**
+
 - Discussed **Levenshtein Distance** (Edit Distance) for fuzzy string matching
 - Decided on **FTS5** as primary solution due to O(log n) performance
 - FTS5 can handle 100,000+ entities in milliseconds
 - Hybrid approach (FTS5 + Levenshtein) documented as future enhancement
 
 **🚀 Search Enhancement v2 (Afternoon):**
+
 - ✅ **Installed `fastest-levenshtein`** - High-performance edit distance library
 - ✅ **BM25 Weighted Scoring** - Name gets 10x weight vs description (1x) and metadata (0.5x)
 - ✅ **Hybrid Ranking Algorithm** implemented in all entity APIs:
@@ -1501,29 +1694,35 @@ async function generateImage() {
   4. Top results sorted by relevance
 
 **Why This Is Better:**
+
 - **Typo Tolerance**: `"gandlf"` now finds `"Gandalf"` (edit distance: 1)
 - **Smart Ranking**: Exact name matches rank higher than description matches
 - **Still Fast**: Levenshtein only runs on 100 candidates, not all entities
 - **Better UX**: Most relevant results always appear first
 
 **Technical Implementation:**
+
 ```typescript
 // 1. FTS5 with weighted BM25
-const results = db.prepare(`
+const results = db
+  .prepare(
+    `
   SELECT e.*, bm25(entities_fts, 10.0, 1.0, 0.5) as fts_score
   FROM entities_fts fts
   INNER JOIN entities e ON fts.rowid = e.id
   WHERE entities_fts MATCH ?
   ORDER BY fts_score
   LIMIT 100
-`).all(ftsQuery, entityType.id, campaignId)
+`,
+  )
+  .all(ftsQuery, entityType.id, campaignId)
 
 // 2. Apply Levenshtein ranking
-results = results.map(entity => {
+results = results.map((entity) => {
   const nameDistance = distance(searchTerm, entity.name.toLowerCase())
   return {
     ...entity,
-    _final_score: entity.fts_score + nameDistance
+    _final_score: entity.fts_score + nameDistance,
   }
 })
 
@@ -1532,6 +1731,7 @@ results.sort((a, b) => a._final_score - b._final_score)
 ```
 
 **Performance Improvements:**
+
 - Reduced API calls by ~80% with 300ms debounce
 - Server-side filtering instead of client-side (faster, scales better)
 - Only matching results returned (reduced network payload)
@@ -1539,6 +1739,7 @@ results.sort((a, b) => a._final_score - b._final_score)
 - Typos handled gracefully with edit distance scoring
 
 **Files Modified (v2):**
+
 - `/server/api/npcs/index.get.ts` - Added BM25 + Levenshtein ranking
 - `/server/api/items/index.get.ts` - Added BM25 + Levenshtein ranking
 - `/server/api/locations/index.get.ts` - Added BM25 + Levenshtein ranking
@@ -1546,10 +1747,12 @@ results.sort((a, b) => a._final_score - b._final_score)
 - `package.json` - Added `fastest-levenshtein@1.0.16`
 
 **Example: Search "gandlf" (typo)**
+
 - **Before (v1)**: No results (requires `*` wildcard)
 - **After (v2)**: Finds "Gandalf" with score based on 1 character difference
 
 **Next Steps:**
+
 - ⏳ Apply debounced FTS5 search to Items, Locations, Factions pages (backend ready)
 - ⏳ Implement universal search dialog with `/` keyboard shortcut
 - ⏳ **Future**: Trigram index for suffix matching (`*dalf` finds `Gandalf`)
@@ -1560,12 +1763,14 @@ results.sort((a, b) => a._final_score - b._final_score)
 ### Earlier Sessions - Previous Work
 
 **🖼️ Image Management System:**
+
 - ✅ Created `entity_images` table (Migration 4)
 - ✅ Image gallery component with upload/delete/set primary
 - ✅ `useImageDownload` composable for one-click downloads
 - ✅ UUID v4 filenames in `public/uploads/`
 
 **📝 Markdown Document System:**
+
 - ✅ Created `entity_documents` table (Migration 5)
 - ✅ Integrated `md-editor-v3` (Vue 3 compatible)
 - ✅ `EntityDocuments` component (reusable across entity types)
@@ -1574,15 +1779,18 @@ results.sort((a, b) => a._final_score - b._final_score)
 - ✅ Preview/Edit/Fullscreen modes
 
 **🧩 Component Extraction:**
+
 - ✅ `PageHeader` component - Reusable page header with create button
 - ✅ Reduced duplication across NPCs, Items, Locations, Factions pages
 
 **🎨 View Dialogs:**
+
 - ✅ Items view dialog with image gallery + markdown docs
 - ✅ NPCs view dialog (existing)
 - ✅ Locations view dialog with connected NPCs
 
 **🌐 Pages Implemented:**
+
 - ✅ `/campaigns` - Campaign management
 - ✅ `/npcs` - NPC management with FTS5 search
 - ✅ `/items` - Item management
@@ -1597,20 +1805,22 @@ results.sort((a, b) => a._final_score - b._final_score)
 ### Why FTS5 over Client-Side Filtering?
 
 **Before (Client-Side):**
+
 ```typescript
-const filtered = npcs.value.filter(npc =>
-  npc.name.toLowerCase().includes(query.toLowerCase())
-)
+const filtered = npcs.value.filter((npc) => npc.name.toLowerCase().includes(query.toLowerCase()))
 ```
+
 - O(n) - checks every entity
 - Blocks UI thread (JavaScript single-threaded)
 - No ranking by relevance
 - Can't handle 100,000+ entities
 
 **After (FTS5 Server-Side):**
+
 ```typescript
 const results = await $fetch('/api/npcs?search=gandalf')
 ```
+
 - O(log n) - uses inverted index
 - Non-blocking (runs in SQLite)
 - Ranked by relevance
@@ -1619,12 +1829,14 @@ const results = await $fetch('/api/npcs?search=gandalf')
 ### Why Debouncing Matters
 
 **Without debounce:**
+
 - User types "gandalf" (7 keystrokes) → 7 API calls
 - Server processes 7 FTS5 queries
 - Network congestion
 - Poor UX (results flicker)
 
 **With 300ms debounce:**
+
 - User types "gandalf" → 1 API call (after typing stops)
 - Server processes 1 FTS5 query
 - Reduced load by 80%
@@ -1633,16 +1845,19 @@ const results = await $fetch('/api/npcs?search=gandalf')
 ### Component Extraction Philosophy
 
 **Extract when:**
+
 1. Code repeated 3+ times (DRY principle)
 2. Complex logic that benefits from encapsulation
 3. Improves parent component readability
 
 **Don't extract when:**
+
 1. Only used once
 2. Tightly coupled to parent logic
 3. Extraction adds more complexity than it removes
 
 **Example: EntityDocuments Component**
+
 - Used by NPCs, Items, Locations → ✅ Extract
 - Complex editor logic (auto-save, tabs, i18n) → ✅ Extract
 - Result: 300+ lines of reusable code
@@ -1663,16 +1878,19 @@ This CLAUDE.md file is **for Claude's benefit** - a comprehensive context docume
 ### How to Use This File
 
 **At Session Start:**
+
 1. Read CLAUDE.md to understand project context
 2. Ask user what they want to work on
 3. Reference relevant sections as needed
 
 **During Development:**
+
 1. Follow patterns documented here (FTS5, debouncing, component extraction)
 2. Update this file when major decisions are made
 3. Document "why" not just "what"
 
 **Key Sections for Quick Reference:**
+
 - **Search Implementation** → FTS5 patterns
 - **UI/UX Patterns** → Debouncing, loading states
 - **Component Extraction** → When and how to extract
@@ -1699,6 +1917,7 @@ Claude:
 ## 🎯 Current Status Summary
 
 **Fully Implemented:**
+
 - ✅ Multi-campaign management
 - ✅ NPC, Item, Location, Faction CRUD
 - ✅ Image galleries for all entity types
@@ -1711,10 +1930,12 @@ Claude:
 - ✅ Unicode normalization (akzent-insensitive Suche)
 
 **Partially Implemented:**
+
 - ⏳ FTS5 search frontend (Items, Factions pending)
 - ⏳ Universal search dialog (backend ready, UI pending)
 
 **Not Yet Implemented:**
+
 - ❌ Quests page
 - ❌ Session logs
 - ❌ Relationship graph visualization
@@ -1722,6 +1943,7 @@ Claude:
 - ❌ Tag system UI
 
 **Next Priority (für morgen!):**
+
 1. **Items page**: Apply same highlight + search pattern as NPCs/Locations
    - Copy pattern from locations/index.vue
    - Add highlight CSS

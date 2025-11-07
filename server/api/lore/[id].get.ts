@@ -12,7 +12,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get Lore entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as { id: number } | undefined
+  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as
+    | { id: number }
+    | undefined
 
   if (!entityType) {
     throw createError({
@@ -22,7 +24,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get the lore entry
-  const lore = db.prepare(`
+  const lore = db
+    .prepare(
+      `
     SELECT
       e.id,
       e.name,
@@ -35,7 +39,9 @@ export default defineEventHandler((event) => {
     WHERE e.id = ?
       AND e.type_id = ?
       AND e.deleted_at IS NULL
-  `).get(id, entityType.id)
+  `,
+    )
+    .get(id, entityType.id)
 
   if (!lore) {
     throw createError({

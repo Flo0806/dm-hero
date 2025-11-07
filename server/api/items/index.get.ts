@@ -24,7 +24,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get Item entity type ID
-  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Item') as { id: number } | undefined
+  const entityType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Item') as
+    | { id: number }
+    | undefined
 
   if (!entityType) {
     return []
@@ -60,7 +62,7 @@ export default defineEventHandler((event) => {
     // E.g., "waffe" (DE) → also search for "weapon" key
     // E.g., "weapon" (EN) → also search for "weapon" key
     // E.g., "legendär" (DE) → also search for "legendary" key
-    const expandedTerms = parsedQuery.terms.map(term => {
+    const expandedTerms = parsedQuery.terms.map((term) => {
       // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
       const enableFuzzy = term.length >= 5
       const typeKey = getItemTypeKey(term, enableFuzzy, locale)
@@ -77,8 +79,9 @@ export default defineEventHandler((event) => {
 
       // No type/rarity match - use original term (e.g., item name search)
       // But check if term might be a key in OTHER locale (block cross-language matching)
-      const isKeyInOtherLocale = getItemTypeKey(term, false, locale === 'de' ? 'en' : 'de') !== null
-        || getItemRarityKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+      const isKeyInOtherLocale =
+        getItemTypeKey(term, false, locale === 'de' ? 'en' : 'de') !== null ||
+        getItemRarityKey(term, false, locale === 'de' ? 'en' : 'de') !== null
 
       return { variants: [term], isTypeRarityKey: false, blockMetadata: isKeyInOtherLocale }
     })
@@ -87,13 +90,12 @@ export default defineEventHandler((event) => {
     let ftsQuery: string
     if (parsedQuery.hasOperators) {
       // For operator queries, expand each term: "sword AND legendary" → "(sword*) AND (legendary*)"
-      const expandedFtsTerms = expandedTerms.map(termObj => {
+      const expandedFtsTerms = expandedTerms.map((termObj) => {
         const keys = termObj.variants
         if (keys.length === 1) {
           return `${keys[0]}*`
-        }
-        else {
-          return `(${keys.map(k => `${k}*`).join(' OR ')})`
+        } else {
+          return `(${keys.map((k) => `${k}*`).join(' OR ')})`
         }
       })
 
@@ -101,25 +103,24 @@ export default defineEventHandler((event) => {
       const fts5QueryUpper = parsedQuery.fts5Query.toUpperCase()
       if (fts5QueryUpper.includes(' AND ')) {
         ftsQuery = expandedFtsTerms.join(' AND ')
-      }
-      else if (fts5QueryUpper.includes(' OR ')) {
+      } else if (fts5QueryUpper.includes(' OR ')) {
         ftsQuery = expandedFtsTerms.join(' OR ')
-      }
-      else {
+      } else {
         ftsQuery = expandedFtsTerms.join(' ')
       }
-    }
-    else {
+    } else {
       // Simple query: add all keys as OR
-      const allKeys = expandedTerms.flatMap(termObj => termObj.variants)
-      ftsQuery = allKeys.map(k => `${k}*`).join(' OR ')
+      const allKeys = expandedTerms.flatMap((termObj) => termObj.variants)
+      ftsQuery = allKeys.map((k) => `${k}*`).join(' OR ')
     }
 
     let useExactMatch = parsedQuery.useExactFirst
 
     try {
       // Step 1a: FTS5 pre-filter (fast, gets ~300 candidates) - WITHOUT bm25 to avoid JOIN issues
-      const ftsResults = db.prepare(`
+      const ftsResults = db
+        .prepare(
+          `
         SELECT
           e.id,
           e.name,
@@ -135,14 +136,18 @@ export default defineEventHandler((event) => {
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
         LIMIT 300
-      `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
+      `,
+        )
+        .all(ftsQuery, entityType.id, campaignId) as ItemRow[]
 
       // Step 1b: Get owner names for filtered items
       if (ftsResults.length > 0) {
-        const itemIds = ftsResults.map(item => item.id)
+        const itemIds = ftsResults.map((item) => item.id)
         const placeholders = itemIds.map(() => '?').join(',')
 
-        const ownerData = db.prepare(`
+        const ownerData = db
+          .prepare(
+            `
           SELECT
             e.id,
             GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
@@ -153,15 +158,16 @@ export default defineEventHandler((event) => {
             AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           WHERE e.id IN (${placeholders})
           GROUP BY e.id
-        `).all(...itemIds) as Array<{ id: number, owner_names: string | null }>
+        `,
+          )
+          .all(...itemIds) as Array<{ id: number; owner_names: string | null }>
 
-        const ownerMap = new Map(ownerData.map(row => [row.id, row.owner_names]))
-        items = ftsResults.map(item => ({
+        const ownerMap = new Map(ownerData.map((row) => [row.id, row.owner_names]))
+        items = ftsResults.map((item) => ({
           ...item,
           owner_names: ownerMap.get(item.id) || null,
         }))
-      }
-      else {
+      } else {
         items = []
       }
 
@@ -170,7 +176,9 @@ export default defineEventHandler((event) => {
         ftsQuery = `${searchTerm}*`
         useExactMatch = false
 
-        const ftsResults2 = db.prepare(`
+        const ftsResults2 = db
+          .prepare(
+            `
           SELECT
             e.id,
             e.name,
@@ -186,13 +194,17 @@ export default defineEventHandler((event) => {
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
           LIMIT 300
-        `).all(ftsQuery, entityType.id, campaignId) as ItemRow[]
+        `,
+          )
+          .all(ftsQuery, entityType.id, campaignId) as ItemRow[]
 
         if (ftsResults2.length > 0) {
-          const itemIds = ftsResults2.map(item => item.id)
+          const itemIds = ftsResults2.map((item) => item.id)
           const placeholders = itemIds.map(() => '?').join(',')
 
-          const ownerData = db.prepare(`
+          const ownerData = db
+            .prepare(
+              `
             SELECT
               e.id,
               GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
@@ -203,10 +215,12 @@ export default defineEventHandler((event) => {
               AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
             WHERE e.id IN (${placeholders})
             GROUP BY e.id
-          `).all(...itemIds) as Array<{ id: number, owner_names: string | null }>
+          `,
+            )
+            .all(...itemIds) as Array<{ id: number; owner_names: string | null }>
 
-          const ownerMap = new Map(ownerData.map(row => [row.id, row.owner_names]))
-          items = ftsResults2.map(item => ({
+          const ownerMap = new Map(ownerData.map((row) => [row.id, row.owner_names]))
+          items = ftsResults2.map((item) => ({
             ...item,
             owner_names: ownerMap.get(item.id) || null,
           }))
@@ -218,7 +232,9 @@ export default defineEventHandler((event) => {
       const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
 
       if (parsedQuery.hasOperators || items.length === 0) {
-        items = db.prepare(`
+        items = db
+          .prepare(
+            `
           SELECT
             e.id,
             e.name,
@@ -236,7 +252,9 @@ export default defineEventHandler((event) => {
             AND e.deleted_at IS NULL
           GROUP BY e.id
           ORDER BY e.name ASC
-        `).all(entityType.id, campaignId) as ItemRow[]
+        `,
+          )
+          .all(entityType.id, campaignId) as ItemRow[]
       }
 
       // Step 2: Apply Levenshtein distance for better ranking
@@ -255,26 +273,25 @@ export default defineEventHandler((event) => {
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isOwnerMatch = ownerNamesNormalized.includes(searchTerm)
-        const isNonNameMatch = (isMetadataMatch || isDescriptionMatch || isOwnerMatch) && !containsQuery
+        const isNonNameMatch =
+          (isMetadataMatch || isDescriptionMatch || isOwnerMatch) && !containsQuery
 
         let levDistance: number
 
         if (isNonNameMatch) {
           // Metadata/Description match: Set distance to 0 (perfect match conceptually)
           levDistance = 0
-        }
-        else if (startsWithQuery) {
+        } else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
           levDistance = nameNormalized.length - searchTerm.length
-        }
-        else {
+        } else {
           // Full Levenshtein distance for non-prefix matches
           levDistance = levenshtein(searchTerm, nameNormalized)
         }
 
         // Combined score: FTS score + weighted Levenshtein distance
         const ftsScore = item.fts_score ?? 0
-        let finalScore = ftsScore + (levDistance * 0.5)
+        let finalScore = ftsScore + levDistance * 0.5
 
         // Apply bonuses (reduce score = better ranking)
         if (exactMatch) finalScore -= 1000
@@ -294,7 +311,7 @@ export default defineEventHandler((event) => {
       // Step 3: Filter by Levenshtein distance
       if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
-        scoredItems = scoredItems.filter(item => {
+        scoredItems = scoredItems.filter((item) => {
           const nameNormalized = normalizeText(item.name)
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
@@ -307,7 +324,11 @@ export default defineEventHandler((event) => {
               const shouldCheckMetadata = !termObj.blockMetadata
 
               // Exact/substring match in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
+              if (
+                nameNormalized.includes(variant) ||
+                descriptionNormalized.includes(variant) ||
+                ownerNamesNormalized.includes(variant)
+              ) {
                 return true
               }
 
@@ -332,7 +353,7 @@ export default defineEventHandler((event) => {
 
               // Levenshtein match for owner names (split by comma, check each name)
               if (ownerNamesNormalized.length > 0) {
-                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
+                const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)
@@ -346,10 +367,9 @@ export default defineEventHandler((event) => {
 
           return false // No variant matched
         })
-      }
-      else if (hasOrOperator && !hasAndOperator) {
+      } else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
-        scoredItems = scoredItems.filter(item => {
+        scoredItems = scoredItems.filter((item) => {
           const nameNormalized = normalizeText(item.name)
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
@@ -363,7 +383,11 @@ export default defineEventHandler((event) => {
             // Check if ANY variant matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
+              if (
+                nameNormalized.includes(variant) ||
+                descriptionNormalized.includes(variant) ||
+                ownerNamesNormalized.includes(variant)
+              ) {
                 return true // At least one variant matches
               }
 
@@ -388,7 +412,7 @@ export default defineEventHandler((event) => {
 
               // Levenshtein match for owner names (split by comma, check each name)
               if (ownerNamesNormalized.length > 0) {
-                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
+                const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)
@@ -401,10 +425,9 @@ export default defineEventHandler((event) => {
           }
           return false // No term matched
         })
-      }
-      else if (hasAndOperator) {
+      } else if (hasAndOperator) {
         // AND query: ALL terms must match
-        scoredItems = scoredItems.filter(item => {
+        scoredItems = scoredItems.filter((item) => {
           const nameNormalized = normalizeText(item.name)
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
@@ -419,7 +442,11 @@ export default defineEventHandler((event) => {
             // Check if ANY variant of this term matches
             for (const variant of termObj.variants) {
               // Check if variant appears in any field
-              if (nameNormalized.includes(variant) || descriptionNormalized.includes(variant) || ownerNamesNormalized.includes(variant)) {
+              if (
+                nameNormalized.includes(variant) ||
+                descriptionNormalized.includes(variant) ||
+                ownerNamesNormalized.includes(variant)
+              ) {
                 termMatches = true
                 break
               }
@@ -448,7 +475,7 @@ export default defineEventHandler((event) => {
 
               // Levenshtein match for owner names (split by comma, check each name)
               if (!termMatches && ownerNamesNormalized.length > 0) {
-                const ownerNames = ownerNamesNormalized.split(',').map(n => n.trim())
+                const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
                   const ownerLevDist = levenshtein(variant, ownerName)
@@ -478,16 +505,16 @@ export default defineEventHandler((event) => {
 
       // Clean up scoring metadata
       items = scoredItems.map(({ fts_score, _lev_distance, _final_score, ...item }) => item)
-    }
-    catch (error) {
+    } catch (error) {
       // Fallback: If FTS5 fails, return empty (better than crashing)
       console.error('[Item Search] FTS5 search failed:', error)
       items = []
     }
-  }
-  else {
+  } else {
     // No search query - return all items for this campaign
-    items = db.prepare(`
+    items = db
+      .prepare(
+        `
       SELECT
         e.id,
         e.name,
@@ -505,11 +532,13 @@ export default defineEventHandler((event) => {
         AND e.deleted_at IS NULL
       GROUP BY e.id
       ORDER BY e.name ASC
-    `).all(entityType.id, campaignId) as ItemRow[]
+    `,
+      )
+      .all(entityType.id, campaignId) as ItemRow[]
   }
 
   // Parse metadata JSON
-  return items.map(item => ({
+  return items.map((item) => ({
     ...item,
     metadata: item.metadata ? JSON.parse(item.metadata as string) : null,
   }))

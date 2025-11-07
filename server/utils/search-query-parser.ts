@@ -38,7 +38,7 @@ export function parseSearchQuery(query: string): ParsedQuery {
   if (!hasOperators) {
     // Simple query WITHOUT quotes: split into words for multi-word matching
     // (e.g., "die grauen jäger" → ["die", "grauen", "jäger"])
-    const words = trimmed.split(/\s+/).filter(w => w.length > 0)
+    const words = trimmed.split(/\s+/).filter((w) => w.length > 0)
 
     return {
       fts5Query: trimmed,

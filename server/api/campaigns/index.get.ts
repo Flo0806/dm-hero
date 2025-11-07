@@ -4,7 +4,9 @@ export default defineEventHandler(() => {
   const db = getDb()
 
   // Get all non-deleted campaigns
-  const campaigns = db.prepare(`
+  const campaigns = db
+    .prepare(
+      `
     SELECT
       id,
       name,
@@ -14,7 +16,9 @@ export default defineEventHandler(() => {
     FROM campaigns
     WHERE deleted_at IS NULL
     ORDER BY updated_at DESC
-  `).all()
+  `,
+    )
+    .all()
 
   return campaigns
 })

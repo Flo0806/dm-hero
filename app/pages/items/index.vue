@@ -1,9 +1,6 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('items.title')"
-      :subtitle="$t('items.subtitle')"
-    >
+    <UiPageHeader :title="$t('items.title')" :subtitle="$t('items.subtitle')">
       <template #actions>
         <v-btn
           color="primary"
@@ -30,13 +27,7 @@
     />
 
     <v-row v-if="pending">
-      <v-col
-        v-for="i in 6"
-        :key="i"
-        cols="12"
-        md="6"
-        lg="4"
-      >
+      <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -53,12 +44,7 @@
         opacity="0.8"
       >
         <div class="text-center">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
+          <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
           <div class="text-h6">
             {{ $t('common.searching') }}
           </div>
@@ -67,116 +53,90 @@
 
       <!-- Item Cards -->
       <v-row>
-      <v-col
-        v-for="item in filteredItems"
-        :key="item.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <v-card
-          :id="`item-${item.id}`"
-          :class="[
-            'h-100 d-flex flex-column',
-            { 'highlighted-card': highlightedId === item.id }
-          ]"
-          hover
-          @click="viewItem(item)"
-        >
-          <v-card-title class="d-flex align-center">
-            <v-icon icon="mdi-sword" class="mr-2" color="primary" />
-            {{ item.name }}
-            <v-chip
-              v-if="item.metadata?.rarity"
-              :color="getRarityColor(item.metadata.rarity)"
-              size="small"
-              class="ml-auto"
-            >
-              {{ $t(`items.rarities.${item.metadata.rarity}`) }}
-            </v-chip>
-          </v-card-title>
-          <v-card-text class="flex-grow-1">
-            <div
-              v-if="item.image_url"
-              class="float-right ml-3 mb-2 position-relative image-container"
-              style="width: 80px; height: 80px; cursor: pointer;"
-              @click.stop="openImagePreview(`/uploads/${item.image_url}`, item.name)"
-            >
-              <v-img
-                :src="`/uploads/${item.image_url}`"
-                cover
-                rounded="lg"
-                style="width: 100%; height: 100%;"
-              />
+        <v-col v-for="item in filteredItems" :key="item.id" cols="12" md="6" lg="4">
+          <v-card
+            :id="`item-${item.id}`"
+            :class="['h-100 d-flex flex-column', { 'highlighted-card': highlightedId === item.id }]"
+            hover
+            @click="viewItem(item)"
+          >
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-sword" class="mr-2" color="primary" />
+              {{ item.name }}
+              <v-chip
+                v-if="item.metadata?.rarity"
+                :color="getRarityColor(item.metadata.rarity)"
+                size="small"
+                class="ml-auto"
+              >
+                {{ $t(`items.rarities.${item.metadata.rarity}`) }}
+              </v-chip>
+            </v-card-title>
+            <v-card-text class="flex-grow-1">
+              <div
+                v-if="item.image_url"
+                class="float-right ml-3 mb-2 position-relative image-container"
+                style="width: 80px; height: 80px; cursor: pointer"
+                @click.stop="openImagePreview(`/uploads/${item.image_url}`, item.name)"
+              >
+                <v-img
+                  :src="`/uploads/${item.image_url}`"
+                  cover
+                  rounded="lg"
+                  style="width: 100%; height: 100%"
+                />
+                <v-btn
+                  icon="mdi-download"
+                  size="x-small"
+                  variant="tonal"
+                  class="image-download-btn"
+                  @click.stop="downloadImage(`/uploads/${item.image_url}`, item.name)"
+                />
+              </div>
+              <v-chip v-if="item.metadata?.type" size="small" class="mb-3" variant="tonal">
+                {{ $t(`items.types.${item.metadata.type}`) }}
+              </v-chip>
+
+              <div v-if="item.description" class="text-body-2 mb-3">
+                {{ item.description }}
+              </div>
+              <div v-else class="text-body-2 text-disabled mb-3">
+                {{ $t('items.noDescription') }}
+              </div>
+
+              <div v-if="item.metadata" class="text-caption">
+                <div v-if="item.metadata.value">
+                  <strong>{{ $t('items.value') }}:</strong> {{ item.metadata.value }}
+                </div>
+                <div v-if="item.metadata.weight">
+                  <strong>{{ $t('items.weight') }}:</strong> {{ item.metadata.weight }}
+                </div>
+                <div v-if="item.metadata.attunement">
+                  <v-chip size="x-small" color="purple" class="mt-1">
+                    {{ $t('items.requiresAttunement') }}
+                  </v-chip>
+                </div>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn icon="mdi-pencil" variant="text" @click.stop="editItem(item)" />
+              <v-spacer />
               <v-btn
-                icon="mdi-download"
-                size="x-small"
-                variant="tonal"
-                class="image-download-btn"
-                @click.stop="downloadImage(`/uploads/${item.image_url}`, item.name)"
+                icon="mdi-delete"
+                variant="text"
+                color="error"
+                @click.stop="deleteItem(item)"
               />
-            </div>
-            <v-chip
-              v-if="item.metadata?.type"
-              size="small"
-              class="mb-3"
-              variant="tonal"
-            >
-              {{ $t(`items.types.${item.metadata.type}`) }}
-            </v-chip>
-
-            <div v-if="item.description" class="text-body-2 mb-3">
-              {{ item.description }}
-            </div>
-            <div v-else class="text-body-2 text-disabled mb-3">
-              {{ $t('items.noDescription') }}
-            </div>
-
-            <div v-if="item.metadata" class="text-caption">
-              <div v-if="item.metadata.value">
-                <strong>{{ $t('items.value') }}:</strong> {{ item.metadata.value }}
-              </div>
-              <div v-if="item.metadata.weight">
-                <strong>{{ $t('items.weight') }}:</strong> {{ item.metadata.weight }}
-              </div>
-              <div v-if="item.metadata.attunement">
-                <v-chip size="x-small" color="purple" class="mt-1">
-                  {{ $t('items.requiresAttunement') }}
-                </v-chip>
-              </div>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              @click.stop="editItem(item)"
-            />
-            <v-spacer />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              color="error"
-              @click.stop="deleteItem(item)"
-            />
-          </v-card-actions>
-        </v-card>
-      </v-col>
+            </v-card-actions>
+          </v-card>
+        </v-col>
       </v-row>
     </div>
 
     <ClientOnly v-else>
-      <v-empty-state
-        icon="mdi-sword"
-        :title="$t('items.empty')"
-        :text="$t('items.emptyText')"
-      >
+      <v-empty-state icon="mdi-sword" :title="$t('items.empty')" :text="$t('items.emptyText')">
         <template #actions>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('items.create') }}
           </v-btn>
         </template>
@@ -186,11 +146,7 @@
           <v-icon icon="mdi-sword" size="64" color="grey" class="mb-4" />
           <h2 class="text-h5 mb-2">{{ $t('items.empty') }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('items.emptyText') }}</p>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('items.create') }}
           </v-btn>
         </v-container>
@@ -198,11 +154,7 @@
     </ClientOnly>
 
     <!-- View Item Dialog -->
-    <v-dialog
-      v-model="showViewDialog"
-      max-width="1200"
-      scrollable
-    >
+    <v-dialog v-model="showViewDialog" max-width="1200" scrollable>
       <v-card v-if="viewingItem">
         <v-card-title class="d-flex align-center">
           <v-icon icon="mdi-sword" class="mr-2" color="primary" />
@@ -217,7 +169,7 @@
           </v-chip>
         </v-card-title>
 
-        <v-card-text style="max-height: 70vh;">
+        <v-card-text style="max-height: 70vh">
           <v-row>
             <!-- Image -->
             <v-col v-if="viewingItem.image_url" cols="12" md="4">
@@ -242,19 +194,10 @@
             <v-col :cols="viewingItem.image_url ? 12 : 12" :md="viewingItem.image_url ? 8 : 12">
               <!-- Type & Attunement -->
               <div class="mb-4">
-                <v-chip
-                  v-if="viewingItem.metadata?.type"
-                  size="small"
-                  variant="tonal"
-                  class="mr-2"
-                >
+                <v-chip v-if="viewingItem.metadata?.type" size="small" variant="tonal" class="mr-2">
                   {{ $t(`items.types.${viewingItem.metadata.type}`) }}
                 </v-chip>
-                <v-chip
-                  v-if="viewingItem.metadata?.attunement"
-                  size="small"
-                  color="purple"
-                >
+                <v-chip v-if="viewingItem.metadata?.attunement" size="small" color="purple">
                   {{ $t('items.requiresAttunement') }}
                 </v-chip>
               </div>
@@ -305,7 +248,10 @@
           <v-btn
             variant="text"
             prepend-icon="mdi-pencil"
-            @click="editItem(viewingItem); showViewDialog = false"
+            @click="
+              editItem(viewingItem)
+              showViewDialog = false
+            "
           >
             {{ $t('common.edit') }}
           </v-btn>
@@ -331,27 +277,19 @@
 
         <v-tabs v-if="editingItem" v-model="itemDialogTab" class="px-4">
           <v-tab value="details">
-            <v-icon start>
-              mdi-information
-            </v-icon>
+            <v-icon start> mdi-information </v-icon>
             {{ $t('items.details') }}
           </v-tab>
           <v-tab value="owners">
-            <v-icon start>
-              mdi-account
-            </v-icon>
+            <v-icon start> mdi-account </v-icon>
             {{ $t('items.owners') }}
           </v-tab>
           <v-tab value="locations">
-            <v-icon start>
-              mdi-map-marker
-            </v-icon>
+            <v-icon start> mdi-map-marker </v-icon>
             {{ $t('items.locations') }}
           </v-tab>
           <v-tab value="documents">
-            <v-icon start>
-              mdi-file-document
-            </v-icon>
+            <v-icon start> mdi-file-document </v-icon>
             {{ $t('documents.title') }}
           </v-tab>
         </v-tabs>
@@ -365,13 +303,17 @@
                 <v-card-text>
                   <div class="d-flex align-center gap-4">
                     <!-- Image Preview -->
-                    <div style="position: relative;">
+                    <div style="position: relative">
                       <v-avatar
                         size="160"
                         rounded="lg"
                         :color="editingItem?.image_url ? undefined : 'grey-lighten-2'"
                         :style="editingItem?.image_url ? 'cursor: pointer;' : ''"
-                        @click="editingItem?.image_url ? openImagePreview(`/uploads/${editingItem.image_url}`, itemForm.name) : null"
+                        @click="
+                          editingItem?.image_url
+                            ? openImagePreview(`/uploads/${editingItem.image_url}`, itemForm.name)
+                            : null
+                        "
                       >
                         <v-img
                           v-if="editingItem?.image_url"
@@ -379,7 +321,12 @@
                           cover
                           :class="{ 'blur-image': uploadingImage || generatingImage }"
                         />
-                        <v-icon v-else-if="!uploadingImage && !generatingImage" icon="mdi-sword" size="80" color="grey" />
+                        <v-icon
+                          v-else-if="!uploadingImage && !generatingImage"
+                          icon="mdi-sword"
+                          size="80"
+                          color="grey"
+                        />
                       </v-avatar>
                       <v-progress-circular
                         v-if="uploadingImage || generatingImage"
@@ -387,12 +334,17 @@
                         color="primary"
                         size="64"
                         width="6"
-                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
+                        style="
+                          position: absolute;
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
                       />
                     </div>
 
                     <!-- Image Actions -->
-                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px;">
+                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px">
                       <!-- Upload Button -->
                       <v-btn
                         prepend-icon="mdi-camera"
@@ -403,7 +355,9 @@
                         :disabled="uploadingImage || deletingImage || generatingImage"
                         @click="triggerImageUpload"
                       >
-                        {{ editingItem?.image_url ? $t('items.changeImage') : $t('items.uploadImage') }}
+                        {{
+                          editingItem?.image_url ? $t('items.changeImage') : $t('items.uploadImage')
+                        }}
                       </v-btn>
                       <input
                         ref="fileInputRef"
@@ -411,7 +365,7 @@
                         accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                         style="display: none"
                         @change="handleImageUpload"
-                      >
+                      />
 
                       <!-- AI Generate Button -->
                       <div class="d-flex align-center gap-2">
@@ -422,7 +376,13 @@
                           block
                           class="mb-2"
                           :loading="generatingImage"
-                          :disabled="uploadingImage || deletingImage || !itemForm.name || !hasApiKey || hasUnsavedChanges"
+                          :disabled="
+                            uploadingImage ||
+                            deletingImage ||
+                            !itemForm.name ||
+                            !hasApiKey ||
+                            hasUnsavedChanges
+                          "
                           @click="generateImage"
                         >
                           {{ $t('items.generateImage') }}
@@ -473,7 +433,10 @@
                         <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
                         KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
                       </div>
-                      <div v-else-if="!itemForm.name" class="text-caption text-medium-emphasis mt-3">
+                      <div
+                        v-else-if="!itemForm.name"
+                        class="text-caption text-medium-emphasis mt-3"
+                      >
                         <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
                         KI-Generierung: Bitte zuerst einen Namen eingeben
                       </div>
@@ -482,105 +445,105 @@
                 </v-card-text>
               </v-card>
 
-          <v-text-field
-            v-model="itemForm.name"
-            :label="$t('items.name')"
-            :rules="[v => !!v || $t('items.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="itemForm.description"
-            :label="$t('items.description')"
-            variant="outlined"
-            rows="3"
-            class="mb-4"
-          />
-
-          <v-divider class="my-4" />
-
-          <div class="text-h6 mb-4">
-            {{ $t('items.metadata') }}
-          </div>
-
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="itemForm.metadata.type"
-                :items="ITEM_TYPES"
-                :label="$t('items.type')"
-                variant="outlined"
-                clearable
-              >
-                <template #item="{ props, item }">
-                  <v-list-item v-bind="props" :title="$t(`items.types.${item.value}`)" />
-                </template>
-                <template #selection="{ item }">
-                  {{ $t(`items.types.${item.value}`) }}
-                </template>
-              </v-select>
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="itemForm.metadata.rarity"
-                :items="ITEM_RARITIES"
-                :label="$t('items.rarity')"
-                variant="outlined"
-                clearable
-              >
-                <template #item="{ props, item }">
-                  <v-list-item v-bind="props" :title="$t(`items.rarities.${item.value}`)" />
-                </template>
-                <template #selection="{ item }">
-                  {{ $t(`items.rarities.${item.value}`) }}
-                </template>
-              </v-select>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="12" md="6">
               <v-text-field
-                v-model="itemForm.metadata.value"
-                :label="$t('items.value')"
-                :placeholder="$t('items.valuePlaceholder')"
+                v-model="itemForm.name"
+                :label="$t('items.name')"
+                :rules="[(v) => !!v || $t('items.nameRequired')]"
                 variant="outlined"
+                class="mb-4"
               />
-            </v-col>
-            <v-col cols="12" md="6">
+
+              <v-textarea
+                v-model="itemForm.description"
+                :label="$t('items.description')"
+                variant="outlined"
+                rows="3"
+                class="mb-4"
+              />
+
+              <v-divider class="my-4" />
+
+              <div class="text-h6 mb-4">
+                {{ $t('items.metadata') }}
+              </div>
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="itemForm.metadata.type"
+                    :items="ITEM_TYPES"
+                    :label="$t('items.type')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props" :title="$t(`items.types.${item.value}`)" />
+                    </template>
+                    <template #selection="{ item }">
+                      {{ $t(`items.types.${item.value}`) }}
+                    </template>
+                  </v-select>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="itemForm.metadata.rarity"
+                    :items="ITEM_RARITIES"
+                    :label="$t('items.rarity')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props, item }">
+                      <v-list-item v-bind="props" :title="$t(`items.rarities.${item.value}`)" />
+                    </template>
+                    <template #selection="{ item }">
+                      {{ $t(`items.rarities.${item.value}`) }}
+                    </template>
+                  </v-select>
+                </v-col>
+              </v-row>
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="itemForm.metadata.value"
+                    :label="$t('items.value')"
+                    :placeholder="$t('items.valuePlaceholder')"
+                    variant="outlined"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="itemForm.metadata.weight"
+                    :label="$t('items.weight')"
+                    :placeholder="$t('items.weightPlaceholder')"
+                    variant="outlined"
+                  />
+                </v-col>
+              </v-row>
+
               <v-text-field
-                v-model="itemForm.metadata.weight"
-                :label="$t('items.weight')"
-                :placeholder="$t('items.weightPlaceholder')"
+                v-model="itemForm.metadata.charges"
+                :label="$t('items.charges')"
+                :placeholder="$t('items.chargesPlaceholder')"
                 variant="outlined"
+                class="mb-4"
               />
-            </v-col>
-          </v-row>
 
-          <v-text-field
-            v-model="itemForm.metadata.charges"
-            :label="$t('items.charges')"
-            :placeholder="$t('items.chargesPlaceholder')"
-            variant="outlined"
-            class="mb-4"
-          />
+              <v-textarea
+                v-model="itemForm.metadata.properties"
+                :label="$t('items.properties')"
+                :placeholder="$t('items.propertiesPlaceholder')"
+                variant="outlined"
+                rows="3"
+                class="mb-4"
+              />
 
-          <v-textarea
-            v-model="itemForm.metadata.properties"
-            :label="$t('items.properties')"
-            :placeholder="$t('items.propertiesPlaceholder')"
-            variant="outlined"
-            rows="3"
-            class="mb-4"
-          />
-
-          <v-switch
-            v-model="itemForm.metadata.attunement"
-            :label="$t('items.requiresAttunement')"
-            color="primary"
-            hide-details
-          />
+              <v-switch
+                v-model="itemForm.metadata.attunement"
+                :label="$t('items.requiresAttunement')"
+                color="primary"
+                hide-details
+              />
             </v-tabs-window-item>
 
             <!-- Owners Tab -->
@@ -590,12 +553,7 @@
               </div>
 
               <v-list v-if="itemOwners.length > 0" class="mb-3">
-                <v-list-item
-                  v-for="owner in itemOwners"
-                  :key="owner.id"
-                  class="mb-2"
-                  border
-                >
+                <v-list-item v-for="owner in itemOwners" :key="owner.id" class="mb-2" border>
                   <template #prepend>
                     <v-icon icon="mdi-account" color="primary" />
                   </template>
@@ -633,9 +591,7 @@
               <v-expansion-panels>
                 <v-expansion-panel>
                   <v-expansion-panel-title>
-                    <v-icon start>
-                      mdi-plus
-                    </v-icon>
+                    <v-icon start> mdi-plus </v-icon>
                     {{ $t('items.addOwner') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
@@ -735,9 +691,7 @@
               <v-expansion-panels>
                 <v-expansion-panel>
                   <v-expansion-panel-title>
-                    <v-icon start>
-                      mdi-plus
-                    </v-icon>
+                    <v-icon start> mdi-plus </v-icon>
                     {{ $t('items.addLocation') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
@@ -795,7 +749,7 @@
             <v-text-field
               v-model="itemForm.name"
               :label="$t('items.name')"
-              :rules="[v => !!v || $t('items.nameRequired')]"
+              :rules="[(v) => !!v || $t('items.nameRequired')]"
               variant="outlined"
               class="mb-4"
             />
@@ -895,11 +849,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            :disabled="generatingImage || uploadingImage"
-            @click="closeDialog"
-          >
+          <v-btn variant="text" :disabled="generatingImage || uploadingImage" @click="closeDialog">
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
@@ -1007,8 +957,7 @@ onMounted(async () => {
   try {
     const settings = await $fetch<{ openai_api_key_full?: string }>('/api/settings')
     hasApiKey.value = !!settings.openai_api_key_full
-  }
-  catch {
+  } catch {
     hasApiKey.value = false
   }
 
@@ -1017,12 +966,16 @@ onMounted(async () => {
 })
 
 // Watch for route changes (same-page navigation)
-watch(() => route.query, () => {
-  highlightedId.value = null
-  isFromGlobalSearch.value = false
-  // Re-initialize from new query
-  initializeFromQuery()
-}, { deep: true })
+watch(
+  () => route.query,
+  () => {
+    highlightedId.value = null
+    isFromGlobalSearch.value = false
+    // Re-initialize from new query
+    initializeFromQuery()
+  },
+  { deep: true },
+)
 
 // Clear highlight when user manually searches
 watch(searchQuery, () => {
@@ -1050,8 +1003,7 @@ let abortController: AbortController | null = null
 
 // Search execution function
 async function executeSearch(query: string) {
-  if (!activeCampaignId.value)
-    return
+  if (!activeCampaignId.value) return
 
   // Abort previous search if still running
   if (abortController) {
@@ -1074,16 +1026,14 @@ async function executeSearch(query: string) {
       signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  }
-  finally {
+  } finally {
     searching.value = false
     abortController = null
   }
@@ -1197,14 +1147,15 @@ async function generateImage() {
     // Rarity (affects visual quality and details)
     if (itemForm.value.metadata.rarity) {
       const rarityDescriptions: Record<string, string> = {
-        'common': 'simple',
-        'uncommon': 'well-crafted',
-        'rare': 'ornate and detailed',
-        'very_rare': 'exquisitely decorated',
-        'legendary': 'legendary artifact with glowing runes',
-        'artifact': 'ancient powerful artifact radiating magic',
+        common: 'simple',
+        uncommon: 'well-crafted',
+        rare: 'ornate and detailed',
+        very_rare: 'exquisitely decorated',
+        legendary: 'legendary artifact with glowing runes',
+        artifact: 'ancient powerful artifact radiating magic',
       }
-      const rarityDesc = rarityDescriptions[itemForm.value.metadata.rarity] || itemForm.value.metadata.rarity
+      const rarityDesc =
+        rarityDescriptions[itemForm.value.metadata.rarity] || itemForm.value.metadata.rarity
       details.push(rarityDesc)
     }
 
@@ -1216,26 +1167,32 @@ async function generateImage() {
       details.push(itemForm.value.description)
     }
 
-    const prompt = details.filter(d => d).join(', ')
+    const prompt = details.filter((d) => d).join(', ')
 
-    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
-      method: 'POST',
-      body: {
-        prompt,
-        entityName: itemForm.value.name,
-        entityType: 'Item',
-        style: 'fantasy-art',
+    const result = await $fetch<{ imageUrl: string; revisedPrompt?: string }>(
+      '/api/ai/generate-image',
+      {
+        method: 'POST',
+        body: {
+          prompt,
+          entityName: itemForm.value.name,
+          entityType: 'Item',
+          style: 'fantasy-art',
+        },
       },
-    })
+    )
 
     if (result.imageUrl && editingItem.value) {
       // Update the item with the generated image
-      const response = await $fetch<{ success: boolean }>(`/api/entities/${editingItem.value.id}/set-image`, {
-        method: 'POST',
-        body: {
-          imageUrl: result.imageUrl.replace('/uploads/', ''), // Remove /uploads/ prefix
+      const response = await $fetch<{ success: boolean }>(
+        `/api/entities/${editingItem.value.id}/set-image`,
+        {
+          method: 'POST',
+          body: {
+            imageUrl: result.imageUrl.replace('/uploads/', ''), // Remove /uploads/ prefix
+          },
         },
-      })
+      )
 
       if (response.success) {
         // Update local item
@@ -1246,15 +1203,19 @@ async function generateImage() {
         }
       }
     }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error('[Item] Failed to generate image:', error)
-    const errorMessage = error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data
-      ? String(error.data.message)
-      : 'Failed to generate image'
+    const errorMessage =
+      error &&
+      typeof error === 'object' &&
+      'data' in error &&
+      error.data &&
+      typeof error.data === 'object' &&
+      'message' in error.data
+        ? String(error.data.message)
+        : 'Failed to generate image'
     alert(errorMessage)
-  }
-  finally {
+  } finally {
     generatingImage.value = false
   }
 }
@@ -1262,8 +1223,7 @@ async function generateImage() {
 // Handle image upload from native input
 async function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  if (!target.files || !target.files.length || !editingItem.value)
-    return
+  if (!target.files || !target.files.length || !editingItem.value) return
 
   const file = target.files[0]
   if (!file) return
@@ -1274,17 +1234,20 @@ async function handleImageUpload(event: Event) {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await $fetch<{ success: boolean, imageUrl: string }>(`/api/entities/${editingItem.value.id}/upload-image`, {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await $fetch<{ success: boolean; imageUrl: string }>(
+      `/api/entities/${editingItem.value.id}/upload-image`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+    )
 
     if (response.success) {
       // Update the editing item with new image URL
       editingItem.value.image_url = response.imageUrl
 
       // Update the item in the store list directly
-      const itemInList = entitiesStore.items?.find(i => i.id === editingItem.value!.id)
+      const itemInList = entitiesStore.items?.find((i) => i.id === editingItem.value!.id)
       if (itemInList) {
         itemInList.image_url = response.imageUrl
       }
@@ -1292,20 +1255,17 @@ async function handleImageUpload(event: Event) {
       // Clear file input
       target.value = ''
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to upload image:', error)
     alert(t('items.uploadImageError'))
-  }
-  finally {
+  } finally {
     uploadingImage.value = false
   }
 }
 
 // Delete image function
 async function deleteImage() {
-  if (!editingItem.value?.image_url)
-    return
+  if (!editingItem.value?.image_url) return
 
   deletingImage.value = true
 
@@ -1318,16 +1278,14 @@ async function deleteImage() {
     editingItem.value.image_url = null
 
     // Update the item in the store list directly
-    const itemInList = entitiesStore.items?.find(i => i.id === editingItem.value!.id)
+    const itemInList = entitiesStore.items?.find((i) => i.id === editingItem.value!.id)
     if (itemInList) {
       itemInList.image_url = null
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('items.deleteImageError'))
-  }
-  finally {
+  } finally {
     deletingImage.value = false
   }
 }
@@ -1336,13 +1294,15 @@ async function deleteImage() {
 const { downloadImage } = useImageDownload()
 
 // Owners state
-const itemOwners = ref<Array<{
-  id: number
-  from_entity_id: number
-  npc_name: string
-  relation_type: string
-  notes: Record<string, unknown> | null
-}>>([])
+const itemOwners = ref<
+  Array<{
+    id: number
+    from_entity_id: number
+    npc_name: string
+    relation_type: string
+    notes: Record<string, unknown> | null
+  }>
+>([])
 
 const newOwner = ref({
   npcId: null as number | null,
@@ -1365,13 +1325,15 @@ const ownerRelationTypeSuggestions = computed(() => [
 ])
 
 // Locations state
-const itemLocations = ref<Array<{
-  id: number
-  from_entity_id: number
-  location_name: string
-  relation_type: string
-  notes: Record<string, unknown> | null
-}>>([])
+const itemLocations = ref<
+  Array<{
+    id: number
+    from_entity_id: number
+    location_name: string
+    relation_type: string
+    notes: Record<string, unknown> | null
+  }>
+>([])
 
 const newLocation = ref({
   locationId: null as number | null,
@@ -1427,10 +1389,7 @@ async function editItem(item: Item) {
   originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
 
   // Load owners and locations
-  await Promise.all([
-    loadItemOwners(),
-    loadItemLocations(),
-  ])
+  await Promise.all([loadItemOwners(), loadItemLocations()])
 
   showCreateDialog.value = true
   itemDialogTab.value = 'details'
@@ -1442,8 +1401,7 @@ function deleteItem(item: Item) {
 }
 
 async function saveItem() {
-  if (!itemForm.value.name || !activeCampaignId.value)
-    return
+  if (!itemForm.value.name || !activeCampaignId.value) return
 
   saving.value = true
 
@@ -1459,8 +1417,7 @@ async function saveItem() {
       originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
 
       closeDialog()
-    }
-    else {
+    } else {
       // Create new item and immediately open edit dialog
       const newItem = await entitiesStore.createItem(activeCampaignId.value, {
         name: itemForm.value.name,
@@ -1476,18 +1433,15 @@ async function saveItem() {
       await nextTick()
       editItem(newItem)
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to save item:', error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
 
 async function confirmDelete() {
-  if (!deletingItem.value)
-    return
+  if (!deletingItem.value) return
 
   deleting.value = true
 
@@ -1495,11 +1449,9 @@ async function confirmDelete() {
     await entitiesStore.deleteItem(deletingItem.value.id)
     showDeleteDialog.value = false
     deletingItem.value = null
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete item:', error)
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }
@@ -1518,22 +1470,21 @@ function closeDialog() {
 
 // Owner functions
 async function loadItemOwners() {
-  if (!editingItem.value)
-    return
+  if (!editingItem.value) return
 
   try {
-    const owners = await $fetch<typeof itemOwners.value>(`/api/items/${editingItem.value.id}/owners`)
+    const owners = await $fetch<typeof itemOwners.value>(
+      `/api/items/${editingItem.value.id}/owners`,
+    )
     itemOwners.value = owners
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load item owners:', error)
     itemOwners.value = []
   }
 }
 
 async function addOwnerToItem() {
-  if (!editingItem.value || !newOwner.value.npcId || !newOwner.value.relationType)
-    return
+  if (!editingItem.value || !newOwner.value.npcId || !newOwner.value.relationType) return
 
   addingOwner.value = true
 
@@ -1557,11 +1508,9 @@ async function addOwnerToItem() {
       quantity: 1,
       equipped: false,
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to add owner to item:', error)
-  }
-  finally {
+  } finally {
     addingOwner.value = false
   }
 }
@@ -1572,30 +1521,28 @@ async function removeOwner(relationId: number) {
       method: 'DELETE',
     })
     await loadItemOwners()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to remove owner:', error)
   }
 }
 
 // Location functions
 async function loadItemLocations() {
-  if (!editingItem.value)
-    return
+  if (!editingItem.value) return
 
   try {
-    const locs = await $fetch<typeof itemLocations.value>(`/api/items/${editingItem.value.id}/locations`)
+    const locs = await $fetch<typeof itemLocations.value>(
+      `/api/items/${editingItem.value.id}/locations`,
+    )
     itemLocations.value = locs
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load item locations:', error)
     itemLocations.value = []
   }
 }
 
 async function addLocationToItem() {
-  if (!editingItem.value || !newLocation.value.locationId || !newLocation.value.relationType)
-    return
+  if (!editingItem.value || !newLocation.value.locationId || !newLocation.value.relationType) return
 
   addingLocation.value = true
 
@@ -1617,11 +1564,9 @@ async function addLocationToItem() {
       relationType: '',
       quantity: 1,
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to add location to item:', error)
-  }
-  finally {
+  } finally {
     addingLocation.value = false
   }
 }
@@ -1632,8 +1577,7 @@ async function removeLocation(relationId: number) {
       method: 'DELETE',
     })
     await loadItemLocations()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to remove location:', error)
   }
 }
@@ -1645,7 +1589,9 @@ async function removeLocation(relationId: number) {
   bottom: 8px;
   right: 8px;
   opacity: 0.5;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .image-container:hover .image-download-btn {
@@ -1657,7 +1603,9 @@ async function removeLocation(relationId: number) {
 .blur-image {
   filter: blur(8px);
   opacity: 0.6;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Highlight animation for items from global search */
@@ -1667,7 +1615,8 @@ async function removeLocation(relationId: number) {
 }
 
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
   }
   50% {

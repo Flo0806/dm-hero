@@ -15,9 +15,13 @@ export default defineEventHandler(async (event) => {
   const { name, name_de, name_en } = body
 
   // Check if type exists
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT id FROM item_types WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!existing) {
     throw createError({
@@ -28,9 +32,13 @@ export default defineEventHandler(async (event) => {
 
   // Check if name conflicts with another type
   if (name) {
-    const conflict = db.prepare(`
+    const conflict = db
+      .prepare(
+        `
       SELECT id FROM item_types WHERE name = ? AND id != ? AND deleted_at IS NULL
-    `).get(name, id)
+    `,
+      )
+      .get(name, id)
 
     if (conflict) {
       throw createError({
@@ -40,18 +48,24 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE item_types
     SET
       name = COALESCE(?, name),
       name_de = COALESCE(?, name_de),
       name_en = COALESCE(?, name_en)
     WHERE id = ? AND deleted_at IS NULL
-  `).run(name, name_de, name_en, id)
+  `,
+  ).run(name, name_de, name_en, id)
 
-  const itemType = db.prepare(`
+  const itemType = db
+    .prepare(
+      `
     SELECT * FROM item_types WHERE id = ?
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   return itemType
 })

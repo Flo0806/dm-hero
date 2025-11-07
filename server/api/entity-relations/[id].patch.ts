@@ -14,15 +14,19 @@ export default defineEventHandler(async (event) => {
 
   const { relationType, notes } = body
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entity_relations
     SET
       relation_type = COALESCE(?, relation_type),
       notes = COALESCE(?, notes)
     WHERE id = ?
-  `).run(relationType, notes, id)
+  `,
+  ).run(relationType, notes, id)
 
-  const relation = db.prepare(`
+  const relation = db
+    .prepare(
+      `
     SELECT
       er.*,
       e.name as to_entity_name,
@@ -31,7 +35,9 @@ export default defineEventHandler(async (event) => {
     INNER JOIN entities e ON er.to_entity_id = e.id
     INNER JOIN entity_types et ON e.type_id = et.id
     WHERE er.id = ?
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!relation) {
     throw createError({

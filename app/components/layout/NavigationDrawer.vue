@@ -60,12 +60,7 @@
         value="locations"
         to="/locations"
       />
-      <v-list-item
-        prepend-icon="mdi-sword"
-        :title="$t('nav.items')"
-        value="items"
-        to="/items"
-      />
+      <v-list-item prepend-icon="mdi-sword" :title="$t('nav.items')" value="items" to="/items" />
       <v-list-item
         prepend-icon="mdi-shield"
         :title="$t('nav.factions')"

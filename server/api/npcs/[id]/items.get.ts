@@ -24,7 +24,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get all Items that this NPC has a relation TO
-  const items = db.prepare<unknown[], DbItem>(`
+  const items = db
+    .prepare<unknown[], DbItem>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -40,9 +42,11 @@ export default defineEventHandler(async (event) => {
     WHERE er.from_entity_id = ?
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(npcId)
+  `,
+    )
+    .all(npcId)
 
-  return items.map(item => ({
+  return items.map((item) => ({
     ...item,
     notes: item.notes ? JSON.parse(item.notes) : null,
     item_metadata: item.item_metadata ? JSON.parse(item.item_metadata) : null,

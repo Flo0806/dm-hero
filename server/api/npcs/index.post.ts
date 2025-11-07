@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get NPC entity type ID
-  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('NPC')
+  const entityType = db
+    .prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?')
+    .get('NPC')
 
   if (!entityType) {
     throw createError({
@@ -33,16 +35,20 @@ export default defineEventHandler(async (event) => {
   // Convert localized race/class names to keys before saving
   const metadataWithKeys = convertMetadataToKeys(metadata)
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entities (type_id, campaign_id, name, description, metadata)
     VALUES (?, ?, ?, ?, ?)
-  `).run(
-    entityType.id,
-    campaignId,
-    name,
-    description || null,
-    metadataWithKeys ? JSON.stringify(metadataWithKeys) : null,
-  )
+  `,
+    )
+    .run(
+      entityType.id,
+      campaignId,
+      name,
+      description || null,
+      metadataWithKeys ? JSON.stringify(metadataWithKeys) : null,
+    )
 
   interface DbEntity {
     id: number
@@ -56,9 +62,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const npc = db.prepare<unknown[], DbEntity>(`
+  const npc = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   if (!npc) {
     throw createError({
@@ -69,6 +79,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...npc,
-    metadata: npc.metadata ? JSON.parse(npc.metadata) as NpcMetadata : null,
+    metadata: npc.metadata ? (JSON.parse(npc.metadata) as NpcMetadata) : null,
   }
 })

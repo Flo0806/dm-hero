@@ -42,12 +42,7 @@
           </v-text-field>
 
           <!-- Get API Key Help -->
-          <v-alert
-            type="info"
-            variant="tonal"
-            density="compact"
-            class="mb-4"
-          >
+          <v-alert type="info" variant="tonal" density="compact" class="mb-4">
             <div class="d-flex align-center">
               <span class="flex-grow-1">{{ $t('settings.openai.howToGetKey') }}</span>
               <v-btn
@@ -58,9 +53,7 @@
                 color="primary"
               >
                 {{ $t('settings.openai.getApiKey') }}
-                <v-icon end>
-                  mdi-open-in-new
-                </v-icon>
+                <v-icon end> mdi-open-in-new </v-icon>
               </v-btn>
             </div>
           </v-alert>
@@ -74,9 +67,7 @@
             class="mb-4"
             @click="testConnection"
           >
-            <v-icon start>
-              mdi-connection
-            </v-icon>
+            <v-icon start> mdi-connection </v-icon>
             {{ $t('settings.openai.testConnection') }}
           </v-btn>
 
@@ -116,29 +107,17 @@
       <!-- Action Buttons -->
       <v-card-actions>
         <v-spacer />
-        <v-btn
-          variant="text"
-          @click="loadSettings"
-        >
+        <v-btn variant="text" @click="loadSettings">
           {{ $t('common.cancel') }}
         </v-btn>
-        <v-btn
-          :loading="saving"
-          color="primary"
-          variant="elevated"
-          @click="saveSettings"
-        >
+        <v-btn :loading="saving" color="primary" variant="elevated" @click="saveSettings">
           {{ $t('common.save') }}
         </v-btn>
       </v-card-actions>
     </v-card>
 
     <!-- Success/Error Snackbar -->
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      :timeout="3000"
-    >
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
       {{ snackbar.message }}
     </v-snackbar>
   </v-container>
@@ -176,13 +155,12 @@ onMounted(() => {
 // Load settings from backend
 async function loadSettings() {
   try {
-    const settings = await $fetch<Record<string, any>>('/api/settings')
+    const settings = await $fetch<Record<string, string>>('/api/settings')
 
     // Use the full API key (not masked) for editing
     apiKey.value = settings.openai_api_key_full || ''
     model.value = settings.openai_model || 'gpt-4o-mini'
-  }
-  catch (error) {
+  } catch (error) {
     console.error('[Settings] Failed to load settings:', error)
   }
 }
@@ -206,16 +184,15 @@ async function saveSettings() {
       message: t('settings.saved'),
       color: 'success',
     }
-  }
-  catch (error: any) {
+  } catch (error) {
+    const err = error as { data?: { message?: string } }
     console.error('[Settings] Failed to save settings:', error)
     snackbar.value = {
       show: true,
-      message: error.data?.message || t('settings.saveFailed'),
+      message: err.data?.message || t('settings.saveFailed'),
       color: 'error',
     }
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
@@ -244,15 +221,14 @@ async function testConnection() {
       modelsAvailable: result.modelsAvailable,
       hasGpt4oMini: result.hasGpt4oMini,
     }
-  }
-  catch (error: any) {
+  } catch (error) {
+    const err = error as { data?: { message?: string } }
     console.error('[Settings] Test connection failed:', error)
     testResult.value = {
       success: false,
-      message: error.data?.message || t('settings.openai.testFailed'),
+      message: err.data?.message || t('settings.openai.testFailed'),
     }
-  }
-  finally {
+  } finally {
     testing.value = false
   }
 }

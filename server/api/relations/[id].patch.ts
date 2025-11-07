@@ -17,17 +17,15 @@ export default defineEventHandler(async (event) => {
     notes?: Record<string, unknown>
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entity_relations
     SET
       relation_type = COALESCE(?, relation_type),
       notes = COALESCE(?, notes)
     WHERE id = ?
-  `).run(
-    relationType,
-    notes ? JSON.stringify(notes) : null,
-    id,
-  )
+  `,
+  ).run(relationType, notes ? JSON.stringify(notes) : null, id)
 
   interface DbRelation {
     id: number
@@ -40,7 +38,9 @@ export default defineEventHandler(async (event) => {
     to_entity_type: string
   }
 
-  const relation = db.prepare<unknown[], DbRelation>(`
+  const relation = db
+    .prepare<unknown[], DbRelation>(
+      `
     SELECT
       er.id,
       er.from_entity_id,
@@ -54,7 +54,9 @@ export default defineEventHandler(async (event) => {
     INNER JOIN entities e ON er.to_entity_id = e.id
     INNER JOIN entity_types et ON e.type_id = et.id
     WHERE er.id = ?
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!relation) {
     throw createError({

@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
 
   const { title, session_number, summary, date, notes } = body
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE sessions
     SET
       title = COALESCE(?, title),
@@ -24,11 +25,16 @@ export default defineEventHandler(async (event) => {
       notes = ?,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(title, session_number, summary, date, notes, id)
+  `,
+  ).run(title, session_number, summary, date, notes, id)
 
-  const session = db.prepare(`
+  const session = db
+    .prepare(
+      `
     SELECT * FROM sessions WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!session) {
     throw createError({

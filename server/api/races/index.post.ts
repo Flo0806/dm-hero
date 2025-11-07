@@ -22,9 +22,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if race with same name already exists (including soft-deleted)
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT id FROM races WHERE name = ? AND deleted_at IS NULL
-  `).get(name)
+  `,
+    )
+    .get(name)
 
   if (existing) {
     throw createError({
@@ -33,14 +37,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO races (name, name_de, name_en, description)
     VALUES (?, ?, ?, ?)
-  `).run(name, name_de, name_en, description || null)
+  `,
+    )
+    .run(name, name_de, name_en, description || null)
 
-  const race = db.prepare(`
+  const race = db
+    .prepare(
+      `
     SELECT * FROM races WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   return race
 })

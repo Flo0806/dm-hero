@@ -27,9 +27,13 @@ export default defineEventHandler((event) => {
   const searchTerm = searchQuery.trim().toLowerCase()
 
   // Get all entity types
-  const entityTypes = db.prepare(`
+  const entityTypes = db
+    .prepare(
+      `
     SELECT id, name, icon, color FROM entity_types
-  `).all() as Array<{ id: number, name: string, icon: string, color: string }>
+  `,
+    )
+    .all() as Array<{ id: number; name: string; icon: string; color: string }>
 
   let allResults: EntityResult[] = []
 
@@ -39,7 +43,9 @@ export default defineEventHandler((event) => {
 
     if (type.name === 'Location') {
       // Locations: Include linked NPCs and Items
-      typeResults = db.prepare(`
+      typeResults = db
+        .prepare(
+          `
         SELECT
           e.id,
           e.name,
@@ -61,11 +67,14 @@ export default defineEventHandler((event) => {
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
         GROUP BY e.id
-      `).all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    }
-    else if (type.name === 'NPC') {
+      `,
+        )
+        .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
+    } else if (type.name === 'NPC') {
       // NPCs: Include linked Locations
-      typeResults = db.prepare(`
+      typeResults = db
+        .prepare(
+          `
         SELECT
           e.id,
           e.name,
@@ -83,11 +92,14 @@ export default defineEventHandler((event) => {
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
         GROUP BY e.id
-      `).all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    }
-    else if (type.name === 'Item') {
+      `,
+        )
+        .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
+    } else if (type.name === 'Item') {
       // Items: Include owner NPCs and Locations
-      typeResults = db.prepare(`
+      typeResults = db
+        .prepare(
+          `
         SELECT
           e.id,
           e.name,
@@ -109,11 +121,14 @@ export default defineEventHandler((event) => {
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
         GROUP BY e.id
-      `).all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    }
-    else {
+      `,
+        )
+        .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
+    } else {
       // Other types: Simple query without relations
-      typeResults = db.prepare(`
+      typeResults = db
+        .prepare(
+          `
         SELECT
           e.id,
           e.name,
@@ -126,7 +141,9 @@ export default defineEventHandler((event) => {
         WHERE e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
-      `).all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
+      `,
+        )
+        .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
     }
 
     allResults = allResults.concat(typeResults)
@@ -136,7 +153,7 @@ export default defineEventHandler((event) => {
   const maxDist = searchTerm.length <= 3 ? 2 : searchTerm.length <= 6 ? 3 : 4
 
   const scoredResults = allResults
-    .map(result => {
+    .map((result) => {
       const nameLower = result.name.toLowerCase()
       const descriptionLower = (result.description || '').toLowerCase()
       const linkedEntitiesLower = (result.linked_entities || '').toLowerCase()
@@ -171,7 +188,7 @@ export default defineEventHandler((event) => {
         if (word.length === 0) continue
         const dist = levenshtein(searchTerm, word)
         if (dist <= maxDist) {
-          score -= (100 - dist * 10)
+          score -= 100 - dist * 10
           return { ...result, _score: score }
         }
       }
@@ -182,21 +199,21 @@ export default defineEventHandler((event) => {
         if (word.length < 3) continue
         const dist = levenshtein(searchTerm, word)
         if (dist <= maxDist) {
-          score -= (50 - dist * 5)
+          score -= 50 - dist * 5
           return { ...result, _score: score }
         }
       }
 
       // Levenshtein on linked entity names
       if (linkedEntitiesLower.length > 0) {
-        const linkedNames = linkedEntitiesLower.split(/[|,]/).map(n => n.trim())
+        const linkedNames = linkedEntitiesLower.split(/[|,]/).map((n) => n.trim())
         for (const linkedName of linkedNames) {
           const linkedWords = linkedName.split(/\s+/)
           for (const word of linkedWords) {
             if (word.length === 0) continue
             const dist = levenshtein(searchTerm, word)
             if (dist <= maxDist) {
-              score -= (80 - dist * 8)
+              score -= 80 - dist * 8
               return { ...result, _score: score }
             }
           }

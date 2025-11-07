@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const { name, description, metadata, campaignId } = body as {
     name: string
     description?: string
-    metadata?: Record<string, any>
+    metadata?: Record<string, string | number | boolean | null>
     campaignId: number
   }
 
@@ -19,7 +19,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get Faction entity type ID
-  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('Faction')
+  const entityType = db
+    .prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?')
+    .get('Faction')
 
   if (!entityType) {
     throw createError({
@@ -28,16 +30,20 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entities (type_id, campaign_id, name, description, metadata)
     VALUES (?, ?, ?, ?, ?)
-  `).run(
-    entityType.id,
-    campaignId,
-    name,
-    description || null,
-    metadata ? JSON.stringify(metadata) : null,
-  )
+  `,
+    )
+    .run(
+      entityType.id,
+      campaignId,
+      name,
+      description || null,
+      metadata ? JSON.stringify(metadata) : null,
+    )
 
   interface DbEntity {
     id: number
@@ -51,9 +57,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const faction = db.prepare<unknown[], DbEntity>(`
+  const faction = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   if (!faction) {
     throw createError({

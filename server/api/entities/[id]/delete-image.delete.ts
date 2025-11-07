@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get entity with image URL
-  const entity = db.prepare('SELECT id, image_url FROM entities WHERE id = ? AND deleted_at IS NULL').get(entityId) as { id: number, image_url: string | null } | undefined
+  const entity = db
+    .prepare('SELECT id, image_url FROM entities WHERE id = ? AND deleted_at IS NULL')
+    .get(entityId) as { id: number; image_url: string | null } | undefined
 
   if (!entity) {
     throw createError({
@@ -32,15 +34,16 @@ export default defineEventHandler(async (event) => {
   const storage = useStorage('pictures')
   try {
     await storage.removeItem(entity.image_url)
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete image from storage:', error)
     // Continue anyway to update database
   }
 
   // Update entity to remove image URL
-  db.prepare('UPDATE entities SET image_url = NULL, updated_at = ? WHERE id = ?')
-    .run(new Date().toISOString(), entityId)
+  db.prepare('UPDATE entities SET image_url = NULL, updated_at = ? WHERE id = ?').run(
+    new Date().toISOString(),
+    entityId,
+  )
 
   return {
     success: true,

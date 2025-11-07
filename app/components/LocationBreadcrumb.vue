@@ -1,11 +1,6 @@
 <template>
   <div v-if="breadcrumb" class="location-breadcrumb">
-    <v-chip
-      size="small"
-      prepend-icon="mdi-map-marker-path"
-      variant="outlined"
-      color="primary"
-    >
+    <v-chip size="small" prepend-icon="mdi-map-marker-path" variant="outlined" color="primary">
       {{ breadcrumb }}
     </v-chip>
   </div>
@@ -34,8 +29,7 @@ onMounted(async () => {
     if (parentPath.length > 0) {
       breadcrumb.value = formatBreadcrumb(parentPath)
     }
-  }
-  finally {
+  } finally {
     loading.value = false
   }
 })

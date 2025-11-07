@@ -9,13 +9,9 @@
 
     <!-- Language Switcher with Flags -->
     <v-menu>
-      <template #activator="{ props }">
-        <v-btn
-          v-bind="props"
-          variant="text"
-          class="mr-2"
-        >
-          <Icon :icon="currentLocaleData.flagIcon" width="20" height="15" class="mr-2" />
+      <template #activator="{ props: menuProps }">
+        <v-btn v-bind="menuProps" variant="text" class="mr-2">
+          <Icon :icon="currentLocaleData!.flagIcon" width="20" height="15" class="mr-2" />
           <span class="text-uppercase">{{ currentLocale }}</span>
           <v-icon end>mdi-chevron-down</v-icon>
         </v-btn>
@@ -35,10 +31,7 @@
       </v-list>
     </v-menu>
 
-    <v-btn
-      icon="mdi-magnify"
-      @click="$emit('search-click')"
-    />
+    <v-btn icon="mdi-magnify" @click="$emit('search-click')" />
   </v-app-bar>
 </template>
 
@@ -62,6 +55,6 @@ const locales = [
 ]
 
 const currentLocaleData = computed(() => {
-  return locales.find(l => l.value === props.currentLocale) ?? locales[0]
+  return locales.find((l) => l.value === props.currentLocale) ?? locales[0]
 })
 </script>

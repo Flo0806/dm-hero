@@ -1,9 +1,6 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('factions.title')"
-      :subtitle="$t('factions.subtitle')"
-    >
+    <UiPageHeader :title="$t('factions.title')" :subtitle="$t('factions.subtitle')">
       <template #actions>
         <v-btn
           color="primary"
@@ -28,13 +25,7 @@
     />
 
     <v-row v-if="pending">
-      <v-col
-        v-for="i in 6"
-        :key="i"
-        cols="12"
-        md="6"
-        lg="4"
-      >
+      <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -51,12 +42,7 @@
         opacity="0.8"
       >
         <div class="text-center">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
+          <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
           <div class="text-h6">
             {{ $t('common.searching') }}
           </div>
@@ -65,78 +51,65 @@
 
       <!-- Faction Cards -->
       <v-row>
-      <v-col
-        v-for="faction in filteredFactions"
-        :key="faction.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <v-card
-          :id="`faction-${faction.id}`"
-          :class="[
-            'h-100',
-            { 'highlighted-card': highlightedId === faction.id }
-          ]"
-          hover
-        >
-          <v-card-title>
-            <v-icon icon="mdi-shield-account" class="mr-2" color="primary" />
-            {{ faction.name }}
-          </v-card-title>
-          <v-card-text>
-            <div
-              v-if="faction.image_url"
-              class="float-right ml-3 mb-2 position-relative image-container"
-              style="width: 80px; height: 80px;"
-            >
-              <v-avatar
-                size="80"
-                rounded="lg"
-                style="cursor: pointer;"
-                @click.stop="openImagePreview(`/uploads/${faction.image_url}`, faction.name)"
+        <v-col v-for="faction in filteredFactions" :key="faction.id" cols="12" md="6" lg="4">
+          <v-card
+            :id="`faction-${faction.id}`"
+            :class="['h-100', { 'highlighted-card': highlightedId === faction.id }]"
+            hover
+          >
+            <v-card-title>
+              <v-icon icon="mdi-shield-account" class="mr-2" color="primary" />
+              {{ faction.name }}
+            </v-card-title>
+            <v-card-text>
+              <div
+                v-if="faction.image_url"
+                class="float-right ml-3 mb-2 position-relative image-container"
+                style="width: 80px; height: 80px"
               >
-                <v-img :src="`/uploads/${faction.image_url}`" cover />
-              </v-avatar>
+                <v-avatar
+                  size="80"
+                  rounded="lg"
+                  style="cursor: pointer"
+                  @click.stop="openImagePreview(`/uploads/${faction.image_url}`, faction.name)"
+                >
+                  <v-img :src="`/uploads/${faction.image_url}`" cover />
+                </v-avatar>
+                <v-btn
+                  icon="mdi-download"
+                  size="x-small"
+                  variant="tonal"
+                  class="image-download-btn"
+                  @click.stop="downloadImage(`/uploads/${faction.image_url}`, faction.name)"
+                />
+              </div>
+              <div v-if="faction.description" class="text-body-2 mb-3">
+                {{ truncateText(faction.description, 100) }}
+              </div>
+              <div class="text-caption">
+                <div v-if="faction.metadata?.type" class="mb-1">
+                  <strong>{{ $t('factions.type') }}:</strong> {{ faction.metadata.type }}
+                </div>
+                <div v-if="faction.leader_name" class="mb-1">
+                  <strong>{{ $t('factions.leader') }}:</strong> {{ faction.leader_name }}
+                </div>
+                <div v-if="faction.metadata?.alignment" class="mb-1">
+                  <strong>{{ $t('factions.alignment') }}:</strong> {{ faction.metadata.alignment }}
+                </div>
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-btn icon="mdi-pencil" variant="text" @click="editFaction(faction)" />
+              <v-spacer />
               <v-btn
-                icon="mdi-download"
-                size="x-small"
-                variant="tonal"
-                class="image-download-btn"
-                @click.stop="downloadImage(`/uploads/${faction.image_url}`, faction.name)"
+                icon="mdi-delete"
+                variant="text"
+                color="error"
+                @click="deleteFaction(faction)"
               />
-            </div>
-            <div v-if="faction.description" class="text-body-2 mb-3">
-              {{ truncateText(faction.description, 100) }}
-            </div>
-            <div class="text-caption">
-              <div v-if="faction.metadata?.type" class="mb-1">
-                <strong>{{ $t('factions.type') }}:</strong> {{ faction.metadata.type }}
-              </div>
-              <div v-if="faction.leader_name" class="mb-1">
-                <strong>{{ $t('factions.leader') }}:</strong> {{ faction.leader_name }}
-              </div>
-              <div v-if="faction.metadata?.alignment" class="mb-1">
-                <strong>{{ $t('factions.alignment') }}:</strong> {{ faction.metadata.alignment }}
-              </div>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              @click="editFaction(faction)"
-            />
-            <v-spacer />
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              color="error"
-              @click="deleteFaction(faction)"
-            />
-          </v-card-actions>
-        </v-card>
-      </v-col>
+            </v-card-actions>
+          </v-card>
+        </v-col>
       </v-row>
     </div>
 
@@ -147,11 +120,7 @@
         :text="$t('factions.emptyText')"
       >
         <template #actions>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('factions.create') }}
           </v-btn>
         </template>
@@ -161,11 +130,7 @@
           <v-icon icon="mdi-shield-account-outline" size="64" color="grey" class="mb-4" />
           <h2 class="text-h5 mb-2">{{ $t('factions.empty') }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('factions.emptyText') }}</p>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('factions.create') }}
           </v-btn>
         </v-container>
@@ -185,21 +150,15 @@
 
         <v-tabs v-if="editingFaction" v-model="factionDialogTab" class="mb-4">
           <v-tab value="details">
-            <v-icon start>
-              mdi-shield-account
-            </v-icon>
+            <v-icon start> mdi-shield-account </v-icon>
             {{ $t('factions.details') }}
           </v-tab>
           <v-tab value="members">
-            <v-icon start>
-              mdi-account-group
-            </v-icon>
+            <v-icon start> mdi-account-group </v-icon>
             {{ $t('factions.members') }} ({{ factionMembers.length }})
           </v-tab>
           <v-tab value="locations">
-            <v-icon start>
-              mdi-map-marker
-            </v-icon>
+            <v-icon start> mdi-map-marker </v-icon>
             {{ $t('factions.locations') }} ({{ factionLocations.length }})
           </v-tab>
         </v-tabs>
@@ -213,13 +172,20 @@
                 <v-card-text>
                   <div class="d-flex align-start gap-4">
                     <!-- Image Preview -->
-                    <div style="position: relative;">
+                    <div style="position: relative">
                       <v-avatar
                         size="160"
                         rounded="lg"
                         :color="editingFaction?.image_url ? undefined : 'grey-lighten-2'"
                         :style="editingFaction?.image_url ? 'cursor: pointer;' : ''"
-                        @click="editingFaction?.image_url ? openImagePreview(`/uploads/${editingFaction.image_url}`, factionForm.name) : null"
+                        @click="
+                          editingFaction?.image_url
+                            ? openImagePreview(
+                                `/uploads/${editingFaction.image_url}`,
+                                factionForm.name,
+                              )
+                            : null
+                        "
                       >
                         <v-img
                           v-if="editingFaction?.image_url"
@@ -227,7 +193,12 @@
                           cover
                           :class="{ 'blur-image': uploadingImage || generatingImage }"
                         />
-                        <v-icon v-else-if="!uploadingImage && !generatingImage" icon="mdi-shield-account" size="80" color="grey" />
+                        <v-icon
+                          v-else-if="!uploadingImage && !generatingImage"
+                          icon="mdi-shield-account"
+                          size="80"
+                          color="grey"
+                        />
                       </v-avatar>
                       <v-progress-circular
                         v-if="uploadingImage || generatingImage"
@@ -235,12 +206,17 @@
                         color="primary"
                         size="64"
                         width="6"
-                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"
+                        style="
+                          position: absolute;
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
                       />
                     </div>
 
                     <!-- Image Actions -->
-                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px;">
+                    <div class="flex-grow-1" style="max-width: 280px; margin-left: 16px">
                       <!-- Upload Button -->
                       <v-btn
                         prepend-icon="mdi-camera"
@@ -251,7 +227,11 @@
                         :disabled="uploadingImage || deletingImage || generatingImage"
                         @click="triggerImageUpload"
                       >
-                        {{ editingFaction?.image_url ? $t('factions.changeImage') : $t('factions.uploadImage') }}
+                        {{
+                          editingFaction?.image_url
+                            ? $t('factions.changeImage')
+                            : $t('factions.uploadImage')
+                        }}
                       </v-btn>
                       <input
                         ref="fileInputRef"
@@ -259,7 +239,7 @@
                         accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                         style="display: none"
                         @change="handleImageUpload"
-                      >
+                      />
 
                       <!-- AI Generate Button -->
                       <v-btn
@@ -283,7 +263,9 @@
                         block
                         class="mb-2"
                         :disabled="uploadingImage || generatingImage"
-                        @click="downloadImage(`/uploads/${editingFaction.image_url}`, factionForm.name)"
+                        @click="
+                          downloadImage(`/uploads/${editingFaction.image_url}`, factionForm.name)
+                        "
                       >
                         Download
                       </v-btn>
@@ -312,78 +294,78 @@
                 </v-card-text>
               </v-card>
 
-          <v-text-field
-            v-model="factionForm.name"
-            :label="$t('factions.name')"
-            :rules="[v => !!v || $t('factions.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="factionForm.description"
-            :label="$t('factions.description')"
-            variant="outlined"
-            rows="4"
-            class="mb-4"
-          />
-
-          <v-row>
-            <v-col cols="12" md="6">
               <v-text-field
-                v-model="factionForm.metadata.type"
-                :label="$t('factions.type')"
+                v-model="factionForm.name"
+                :label="$t('factions.name')"
+                :rules="[(v) => !!v || $t('factions.nameRequired')]"
                 variant="outlined"
-                :placeholder="$t('factions.typePlaceholder')"
+                class="mb-4"
               />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="factionForm.leaderId"
-                :items="npcs || []"
-                item-title="name"
-                item-value="id"
-                :label="$t('factions.leader')"
-                variant="outlined"
-                clearable
-                :placeholder="$t('factions.leaderPlaceholder')"
-              />
-            </v-col>
-          </v-row>
 
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="factionForm.metadata.alignment"
-                :label="$t('factions.alignment')"
+              <v-textarea
+                v-model="factionForm.description"
+                :label="$t('factions.description')"
                 variant="outlined"
-                :placeholder="$t('factions.alignmentPlaceholder')"
+                rows="4"
+                class="mb-4"
               />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="factionForm.metadata.headquarters"
-                :label="$t('factions.headquarters')"
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="factionForm.metadata.type"
+                    :label="$t('factions.type')"
+                    variant="outlined"
+                    :placeholder="$t('factions.typePlaceholder')"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="factionForm.leaderId"
+                    :items="npcs || []"
+                    item-title="name"
+                    item-value="id"
+                    :label="$t('factions.leader')"
+                    variant="outlined"
+                    clearable
+                    :placeholder="$t('factions.leaderPlaceholder')"
+                  />
+                </v-col>
+              </v-row>
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="factionForm.metadata.alignment"
+                    :label="$t('factions.alignment')"
+                    variant="outlined"
+                    :placeholder="$t('factions.alignmentPlaceholder')"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="factionForm.metadata.headquarters"
+                    :label="$t('factions.headquarters')"
+                    variant="outlined"
+                  />
+                </v-col>
+              </v-row>
+
+              <v-textarea
+                v-model="factionForm.metadata.goals"
+                :label="$t('factions.goals')"
+                :placeholder="$t('factions.goalsPlaceholder')"
                 variant="outlined"
+                rows="3"
+                class="mb-4"
               />
-            </v-col>
-          </v-row>
 
-          <v-textarea
-            v-model="factionForm.metadata.goals"
-            :label="$t('factions.goals')"
-            :placeholder="$t('factions.goalsPlaceholder')"
-            variant="outlined"
-            rows="3"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="factionForm.metadata.notes"
-            :label="$t('factions.notes')"
-            variant="outlined"
-            rows="3"
-          />
+              <v-textarea
+                v-model="factionForm.metadata.notes"
+                :label="$t('factions.notes')"
+                variant="outlined"
+                rows="3"
+              />
             </v-tabs-window-item>
 
             <!-- Members Tab -->
@@ -395,12 +377,7 @@
               <v-progress-linear v-if="loadingMembers" indeterminate />
 
               <v-list v-else-if="factionMembers.length > 0">
-                <v-list-item
-                  v-for="member in factionMembers"
-                  :key="member.id"
-                  class="mb-2"
-                  border
-                >
+                <v-list-item v-for="member in factionMembers" :key="member.id" class="mb-2" border>
                   <template #prepend>
                     <v-icon icon="mdi-account" color="primary" />
                   </template>
@@ -565,7 +542,7 @@
             <v-text-field
               v-model="factionForm.name"
               :label="$t('factions.name')"
-              :rules="[v => !!v || $t('factions.nameRequired')]"
+              :rules="[(v) => !!v || $t('factions.nameRequired')]"
               variant="outlined"
               class="mb-4"
             />
@@ -759,8 +736,7 @@ onMounted(async () => {
   try {
     const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
     hasApiKey.value = response.hasKey
-  }
-  catch {
+  } catch {
     hasApiKey.value = false
   }
 
@@ -769,12 +745,16 @@ onMounted(async () => {
 })
 
 // Watch for route changes (same-page navigation)
-watch(() => route.query, () => {
-  highlightedId.value = null
-  isFromGlobalSearch.value = false
-  // Re-initialize from new query
-  initializeFromQuery()
-}, { deep: true })
+watch(
+  () => route.query,
+  () => {
+    highlightedId.value = null
+    isFromGlobalSearch.value = false
+    // Re-initialize from new query
+    initializeFromQuery()
+  },
+  { deep: true },
+)
 
 // Clear highlight when user manually searches
 watch(searchQuery, () => {
@@ -960,8 +940,7 @@ const factionForm = ref({
 
 // Utility functions
 function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength)
-    return text
+  if (text.length <= maxLength) return text
   return `${text.substring(0, maxLength)}...`
 }
 
@@ -993,8 +972,7 @@ function deleteFaction(faction: Faction) {
 }
 
 async function saveFaction() {
-  if (!factionForm.value.name || !activeCampaignId.value)
-    return
+  if (!factionForm.value.name || !activeCampaignId.value) return
 
   saving.value = true
 
@@ -1009,8 +987,7 @@ async function saveFaction() {
         metadata: factionForm.value.metadata,
       })
       factionId = editingFaction.value.id
-    }
-    else {
+    } else {
       // Create new faction via store
       const newFaction = await entitiesStore.createFaction(activeCampaignId.value, {
         name: factionForm.value.name,
@@ -1026,7 +1003,7 @@ async function saveFaction() {
       try {
         // Find and delete the old leader relation
         const members = await $fetch<FactionMember[]>(`/api/factions/${factionId}/members`)
-        const leaderRelation = members.find(m => m.relation_type === 'Anführer')
+        const leaderRelation = members.find((m) => m.relation_type === 'Anführer')
         if (leaderRelation) {
           await $fetch(`/api/relations/${leaderRelation.id}`, { method: 'DELETE' })
         }
@@ -1051,18 +1028,15 @@ async function saveFaction() {
     }
 
     closeDialog()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to save faction:', error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
 
 async function confirmDelete() {
-  if (!deletingFaction.value)
-    return
+  if (!deletingFaction.value) return
 
   deleting.value = true
 
@@ -1070,37 +1044,33 @@ async function confirmDelete() {
     await entitiesStore.deleteFaction(deletingFaction.value.id)
     showDeleteDialog.value = false
     deletingFaction.value = null
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete faction:', error)
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }
 
 async function loadFactionMembers() {
-  if (!editingFaction.value)
-    return
+  if (!editingFaction.value) return
 
   loadingMembers.value = true
 
   try {
-    const members = await $fetch<FactionMember[]>(`/api/factions/${editingFaction.value.id}/members`)
+    const members = await $fetch<FactionMember[]>(
+      `/api/factions/${editingFaction.value.id}/members`,
+    )
     factionMembers.value = members
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load faction members:', error)
     factionMembers.value = []
-  }
-  finally {
+  } finally {
     loadingMembers.value = false
   }
 }
 
 async function addNpcMember() {
-  if (!editingFaction.value || !newMember.value.npcId || !newMember.value.membershipType)
-    return
+  if (!editingFaction.value || !newMember.value.npcId || !newMember.value.membershipType) return
 
   addingMember.value = true
 
@@ -1115,11 +1085,9 @@ async function addNpcMember() {
     })
     await loadFactionMembers()
     newMember.value = { npcId: null, membershipType: '', rank: '' }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to add NPC member:', error)
-  }
-  finally {
+  } finally {
     addingMember.value = false
   }
 }
@@ -1128,27 +1096,25 @@ async function removeMember(relationId: number) {
   try {
     await $fetch(`/api/relations/${relationId}`, { method: 'DELETE' })
     await loadFactionMembers()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to remove member:', error)
   }
 }
 
 async function loadFactionLocations() {
-  if (!editingFaction.value)
-    return
+  if (!editingFaction.value) return
 
   loadingLocations.value = true
 
   try {
-    const locations = await $fetch<FactionLocation[]>(`/api/factions/${editingFaction.value.id}/locations`)
+    const locations = await $fetch<FactionLocation[]>(
+      `/api/factions/${editingFaction.value.id}/locations`,
+    )
     factionLocations.value = locations
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load faction locations:', error)
     factionLocations.value = []
-  }
-  finally {
+  } finally {
     loadingLocations.value = false
   }
 }
@@ -1169,11 +1135,9 @@ async function addLocationLink() {
     })
     await loadFactionLocations()
     newLocation.value = { locationId: null, relationType: '' }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to add location link:', error)
-  }
-  finally {
+  } finally {
     addingLocation.value = false
   }
 }
@@ -1182,15 +1146,15 @@ async function removeLocation(relationId: number) {
   try {
     await $fetch(`/api/relations/${relationId}`, { method: 'DELETE' })
     await loadFactionLocations()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to remove location:', error)
   }
 }
 
 // Generate button disabled state
 const generateButtonDisabled = computed(() => {
-  const isDisabled = uploadingImage.value || deletingImage.value || !factionForm.value.name || !hasApiKey.value
+  const isDisabled =
+    uploadingImage.value || deletingImage.value || !factionForm.value.name || !hasApiKey.value
   return isDisabled
 })
 
@@ -1255,17 +1219,20 @@ async function generateImage() {
       details.push(factionForm.value.metadata.notes)
     }
 
-    const prompt = details.filter(d => d).join(', ')
+    const prompt = details.filter((d) => d).join(', ')
 
-    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
-      method: 'POST',
-      body: {
-        prompt,
-        entityName: factionForm.value.name,
-        entityType: 'Faction',
-        style: 'fantasy-art',
+    const result = await $fetch<{ imageUrl: string; revisedPrompt?: string }>(
+      '/api/ai/generate-image',
+      {
+        method: 'POST',
+        body: {
+          prompt,
+          entityName: factionForm.value.name,
+          entityType: 'Faction',
+          style: 'fantasy-art',
+        },
       },
-    })
+    )
 
     if (result.imageUrl && editingFaction.value) {
       // Add the generated image directly to the entity (no re-upload needed)
@@ -1286,13 +1253,11 @@ async function generateImage() {
         await entitiesStore.fetchFactions(activeCampaignId.value)
       }
     }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error('[Faction] Failed to generate image:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
     alert(errorMessage)
-  }
-  finally {
+  } finally {
     generatingImage.value = false
   }
 }
@@ -1300,29 +1265,30 @@ async function generateImage() {
 // Handle image upload from native input
 async function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  if (!target.files || !target.files.length || !editingFaction.value)
-    return
+  if (!target.files || !target.files.length || !editingFaction.value) return
 
   const file = target.files[0]
-  if (!file)
-    return
+  if (!file) return
   uploadingImage.value = true
 
   try {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await $fetch<{ success: boolean, imageUrl: string }>(`/api/entities/${editingFaction.value.id}/upload-image`, {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await $fetch<{ success: boolean; imageUrl: string }>(
+      `/api/entities/${editingFaction.value.id}/upload-image`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+    )
 
     if (response.success) {
       // Update the editing faction with new image URL
       editingFaction.value.image_url = response.imageUrl
 
       // Update the faction in the store list directly
-      const factionInList = entitiesStore.factions?.find(f => f.id === editingFaction.value!.id)
+      const factionInList = entitiesStore.factions?.find((f) => f.id === editingFaction.value!.id)
       if (factionInList) {
         factionInList.image_url = response.imageUrl
       }
@@ -1330,20 +1296,17 @@ async function handleImageUpload(event: Event) {
       // Clear file input
       target.value = ''
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to upload image:', error)
     alert(t('factions.uploadImageError'))
-  }
-  finally {
+  } finally {
     uploadingImage.value = false
   }
 }
 
 // Delete image function
 async function deleteImage() {
-  if (!editingFaction.value?.image_url)
-    return
+  if (!editingFaction.value?.image_url) return
 
   deletingImage.value = true
 
@@ -1356,16 +1319,14 @@ async function deleteImage() {
     editingFaction.value.image_url = null
 
     // Update the faction in the store list directly
-    const factionInList = entitiesStore.factions?.find(f => f.id === editingFaction.value!.id)
+    const factionInList = entitiesStore.factions?.find((f) => f.id === editingFaction.value!.id)
     if (factionInList) {
       factionInList.image_url = null
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('factions.deleteImageError'))
-  }
-  finally {
+  } finally {
     deletingImage.value = false
   }
 }
@@ -1399,7 +1360,9 @@ function closeDialog() {
   bottom: 8px;
   right: 8px;
   opacity: 0.5;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .image-container:hover .image-download-btn {
@@ -1411,7 +1374,9 @@ function closeDialog() {
 .blur-image {
   filter: blur(8px);
   opacity: 0.6;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Highlight animation for factions from global search */
@@ -1421,7 +1386,8 @@ function closeDialog() {
 }
 
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
   }
   50% {

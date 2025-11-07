@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const documents = db.prepare(`
+  const documents = db
+    .prepare(
+      `
     SELECT
       id,
       entity_id,
@@ -24,7 +26,9 @@ export default defineEventHandler(async (event) => {
     FROM entity_documents
     WHERE entity_id = ?
     ORDER BY sort_order ASC, created_at DESC
-  `).all(entityId)
+  `,
+    )
+    .all(entityId)
 
   return documents
 })

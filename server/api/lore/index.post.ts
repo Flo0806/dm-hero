@@ -20,7 +20,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get Lore entity type ID
-  const entityType = db.prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?').get('Lore')
+  const entityType = db
+    .prepare<unknown[], { id: number }>('SELECT id FROM entity_types WHERE name = ?')
+    .get('Lore')
 
   if (!entityType) {
     throw createError({
@@ -30,16 +32,20 @@ export default defineEventHandler(async (event) => {
   }
 
   // Lore metadata doesn't need conversion (type and date are already keys)
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entities (type_id, campaign_id, name, description, metadata)
     VALUES (?, ?, ?, ?, ?)
-  `).run(
-    entityType.id,
-    campaignId,
-    name,
-    description || null,
-    metadata ? JSON.stringify(metadata) : null,
-  )
+  `,
+    )
+    .run(
+      entityType.id,
+      campaignId,
+      name,
+      description || null,
+      metadata ? JSON.stringify(metadata) : null,
+    )
 
   interface DbEntity {
     id: number
@@ -53,9 +59,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const lore = db.prepare<unknown[], DbEntity>(`
+  const lore = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   if (!lore) {
     throw createError({
@@ -66,6 +76,6 @@ export default defineEventHandler(async (event) => {
 
   return {
     ...lore,
-    metadata: lore.metadata ? JSON.parse(lore.metadata) as LoreMetadata : null,
+    metadata: lore.metadata ? (JSON.parse(lore.metadata) as LoreMetadata) : null,
   }
 })

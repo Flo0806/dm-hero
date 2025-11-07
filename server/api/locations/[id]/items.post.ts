@@ -27,13 +27,21 @@ export default defineEventHandler(async (event) => {
 
   // Create relation FROM Location TO item
   const notes: Record<string, unknown> = {}
-  if (quantity)
-    notes.quantity = quantity
+  if (quantity) notes.quantity = quantity
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type, notes)
     VALUES (?, ?, ?, ?)
-  `).run(locationId, itemId, relationType, Object.keys(notes).length > 0 ? JSON.stringify(notes) : null)
+  `,
+    )
+    .run(
+      locationId,
+      itemId,
+      relationType,
+      Object.keys(notes).length > 0 ? JSON.stringify(notes) : null,
+    )
 
   return {
     id: result.lastInsertRowid,

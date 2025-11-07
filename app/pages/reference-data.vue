@@ -1,33 +1,22 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('referenceData.title')"
-      :subtitle="$t('referenceData.subtitle')"
-    />
+    <UiPageHeader :title="$t('referenceData.title')" :subtitle="$t('referenceData.subtitle')" />
 
     <v-tabs v-model="tab" class="mb-6">
       <v-tab value="races">
-        <v-icon start>
-          mdi-human
-        </v-icon>
+        <v-icon start> mdi-human </v-icon>
         {{ $t('referenceData.races') }}
       </v-tab>
       <v-tab value="classes">
-        <v-icon start>
-          mdi-sword-cross
-        </v-icon>
+        <v-icon start> mdi-sword-cross </v-icon>
         {{ $t('referenceData.classes') }}
       </v-tab>
       <v-tab value="item-types">
-        <v-icon start>
-          mdi-package-variant
-        </v-icon>
+        <v-icon start> mdi-package-variant </v-icon>
         {{ $t('referenceData.itemTypes') }}
       </v-tab>
       <v-tab value="item-rarities">
-        <v-icon start>
-          mdi-star
-        </v-icon>
+        <v-icon start> mdi-star </v-icon>
         {{ $t('referenceData.itemRarities') }}
       </v-tab>
     </v-tabs>
@@ -36,20 +25,12 @@
       <!-- Races Tab -->
       <v-tabs-window-item value="races">
         <div class="d-flex justify-end mb-4">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="openRaceDialog()"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="openRaceDialog()">
             {{ $t('referenceData.createRace') }}
           </v-btn>
         </div>
 
-        <v-data-table
-          :headers="raceHeaders"
-          :items="races || []"
-          :loading="racesPending"
-        >
+        <v-data-table :headers="raceHeaders" :items="races || []" :loading="racesPending">
           <template #[`item.name`]="{ item }">
             <div class="d-flex align-center gap-2">
               <span>{{ item.name }}</span>
@@ -61,12 +42,7 @@
               >
                 {{ $t('referenceData.standard') }}
               </v-chip>
-              <v-chip
-                v-else
-                size="x-small"
-                color="success"
-                variant="tonal"
-              >
+              <v-chip v-else size="x-small" color="success" variant="tonal">
                 {{ $t('referenceData.custom') }}
               </v-chip>
             </div>
@@ -74,12 +50,7 @@
           <template #[`item.actions`]="{ item }">
             <!-- Standard races (no name_de/name_en) cannot be edited/deleted -->
             <template v-if="item.name_de && item.name_en">
-              <v-btn
-                icon="mdi-pencil"
-                variant="text"
-                size="small"
-                @click="openRaceDialog(item)"
-              />
+              <v-btn icon="mdi-pencil" variant="text" size="small" @click="openRaceDialog(item)" />
               <v-btn
                 icon="mdi-delete"
                 variant="text"
@@ -91,12 +62,7 @@
             <template v-else>
               <v-tooltip location="top">
                 <template #activator="{ props }">
-                  <v-icon
-                    v-bind="props"
-                    icon="mdi-lock"
-                    size="small"
-                    color="grey"
-                  />
+                  <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" />
                 </template>
                 {{ $t('referenceData.standardProtected') }}
               </v-tooltip>
@@ -108,20 +74,12 @@
       <!-- Classes Tab -->
       <v-tabs-window-item value="classes">
         <div class="d-flex justify-end mb-4">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="openClassDialog()"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="openClassDialog()">
             {{ $t('referenceData.createClass') }}
           </v-btn>
         </div>
 
-        <v-data-table
-          :headers="classHeaders"
-          :items="classes || []"
-          :loading="classesPending"
-        >
+        <v-data-table :headers="classHeaders" :items="classes || []" :loading="classesPending">
           <template #[`item.name`]="{ item }">
             <div class="d-flex align-center gap-2">
               <span>{{ item.name }}</span>
@@ -133,12 +91,7 @@
               >
                 {{ $t('referenceData.standard') }}
               </v-chip>
-              <v-chip
-                v-else
-                size="x-small"
-                color="success"
-                variant="tonal"
-              >
+              <v-chip v-else size="x-small" color="success" variant="tonal">
                 {{ $t('referenceData.custom') }}
               </v-chip>
             </div>
@@ -146,12 +99,7 @@
           <template #[`item.actions`]="{ item }">
             <!-- Standard classes (no name_de/name_en) cannot be edited/deleted -->
             <template v-if="item.name_de && item.name_en">
-              <v-btn
-                icon="mdi-pencil"
-                variant="text"
-                size="small"
-                @click="openClassDialog(item)"
-              />
+              <v-btn icon="mdi-pencil" variant="text" size="small" @click="openClassDialog(item)" />
               <v-btn
                 icon="mdi-delete"
                 variant="text"
@@ -163,12 +111,7 @@
             <template v-else>
               <v-tooltip location="top">
                 <template #activator="{ props }">
-                  <v-icon
-                    v-bind="props"
-                    icon="mdi-lock"
-                    size="small"
-                    color="grey"
-                  />
+                  <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" />
                 </template>
                 {{ $t('referenceData.standardProtected') }}
               </v-tooltip>
@@ -179,10 +122,7 @@
     </v-tabs-window>
 
     <!-- Race Dialog -->
-    <v-dialog
-      v-model="showRaceDialog"
-      max-width="600"
-    >
+    <v-dialog v-model="showRaceDialog" max-width="600">
       <v-card>
         <v-card-title>
           {{ editingRace ? $t('referenceData.editRace') : $t('referenceData.createRace') }}
@@ -191,7 +131,7 @@
           <v-text-field
             v-model="raceForm.name"
             :label="$t('referenceData.name')"
-            :rules="[v => !!v || $t('referenceData.nameRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.nameRequired')]"
             variant="outlined"
             hint="Internal key (e.g., 'drachling') - lowercase, no spaces"
             persistent-hint
@@ -206,14 +146,14 @@
           <v-text-field
             v-model="raceForm.name_de"
             label="Name (Deutsch)"
-            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.translationRequired')]"
             variant="outlined"
             class="mb-4"
           />
           <v-text-field
             v-model="raceForm.name_en"
             label="Name (English)"
-            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.translationRequired')]"
             variant="outlined"
             class="mb-4"
           />
@@ -231,18 +171,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            @click="closeRaceDialog"
-          >
+          <v-btn variant="text" @click="closeRaceDialog">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!raceForm.name"
-            :loading="saving"
-            @click="saveRace"
-          >
+          <v-btn color="primary" :disabled="!raceForm.name" :loading="saving" @click="saveRace">
             {{ editingRace ? $t('common.save') : $t('common.create') }}
           </v-btn>
         </v-card-actions>
@@ -250,10 +182,7 @@
     </v-dialog>
 
     <!-- Class Dialog -->
-    <v-dialog
-      v-model="showClassDialog"
-      max-width="600"
-    >
+    <v-dialog v-model="showClassDialog" max-width="600">
       <v-card>
         <v-card-title>
           {{ editingClass ? $t('referenceData.editClass') : $t('referenceData.createClass') }}
@@ -262,7 +191,7 @@
           <v-text-field
             v-model="classForm.name"
             :label="$t('referenceData.name')"
-            :rules="[v => !!v || $t('referenceData.nameRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.nameRequired')]"
             variant="outlined"
             hint="Internal key (e.g., 'battlemage') - lowercase, no spaces"
             persistent-hint
@@ -277,7 +206,7 @@
           <v-text-field
             v-model="classForm.name_de"
             label="German (DE)"
-            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.translationRequired')]"
             variant="outlined"
             class="mb-2"
           />
@@ -285,17 +214,12 @@
           <v-text-field
             v-model="classForm.name_en"
             label="English (EN)"
-            :rules="[v => !!v || $t('referenceData.translationRequired')]"
+            :rules="[(v) => !!v || $t('referenceData.translationRequired')]"
             variant="outlined"
             class="mb-4"
           />
 
-          <v-alert
-            type="info"
-            variant="tonal"
-            density="compact"
-            class="mb-4"
-          >
+          <v-alert type="info" variant="tonal" density="compact" class="mb-4">
             {{ $t('referenceData.translationHint') }}
           </v-alert>
 
@@ -308,18 +232,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            variant="text"
-            @click="closeClassDialog"
-          >
+          <v-btn variant="text" @click="closeClassDialog">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!classForm.name"
-            :loading="saving"
-            @click="saveClass"
-          >
+          <v-btn color="primary" :disabled="!classForm.name" :loading="saving" @click="saveClass">
             {{ editingClass ? $t('common.save') : $t('common.create') }}
           </v-btn>
         </v-card-actions>
@@ -337,20 +253,12 @@
     />
 
     <!-- Success Snackbar -->
-    <v-snackbar
-      v-model="showSuccess"
-      color="success"
-      :timeout="3000"
-    >
+    <v-snackbar v-model="showSuccess" color="success" :timeout="3000">
       {{ successMessage }}
     </v-snackbar>
 
     <!-- Error Snackbar -->
-    <v-snackbar
-      v-model="showError"
-      color="error"
-      :timeout="5000"
-    >
+    <v-snackbar v-model="showError" color="error" :timeout="5000">
       {{ errorMessage }}
     </v-snackbar>
   </v-container>
@@ -370,13 +278,21 @@ const { t } = useI18n()
 const tab = ref('races')
 
 // Fetch data with caching (not campaign-specific, can be cached globally)
-const { data: races, pending: racesPending, refresh: refreshRaces } = await useFetch<ReferenceData[]>('/api/races', {
+const {
+  data: races,
+  pending: racesPending,
+  refresh: refreshRaces,
+} = await useFetch<ReferenceData[]>('/api/races', {
   key: 'races',
-  getCachedData: key => useNuxtApp().static.data[key],
+  getCachedData: (key) => useNuxtApp().static.data[key],
 })
-const { data: classes, pending: classesPending, refresh: refreshClasses } = await useFetch<ReferenceData[]>('/api/classes', {
+const {
+  data: classes,
+  pending: classesPending,
+  refresh: refreshClasses,
+} = await useFetch<ReferenceData[]>('/api/classes', {
   key: 'classes',
-  getCachedData: key => useNuxtApp().static.data[key],
+  getCachedData: (key) => useNuxtApp().static.data[key],
 })
 
 // Table headers
@@ -438,8 +354,7 @@ function openRaceDialog(race?: ReferenceData) {
       name_en: race.name_en || '',
       description: race.description || '',
     }
-  }
-  else {
+  } else {
     editingRace.value = null
     raceForm.value = {
       name: '',
@@ -471,8 +386,7 @@ function openClassDialog(classData?: ReferenceData) {
       name_en: classData.name_en || '',
       description: classData.description || '',
     }
-  }
-  else {
+  } else {
     editingClass.value = null
     classForm.value = {
       name: '',
@@ -505,8 +419,7 @@ async function saveRace() {
         body: raceForm.value,
       })
       successMessage.value = t('referenceData.races') + ' ' + t('common.save').toLowerCase()
-    }
-    else {
+    } else {
       await $fetch('/api/races', {
         method: 'POST',
         body: raceForm.value,
@@ -517,13 +430,11 @@ async function saveRace() {
     await refreshRaces()
     closeRaceDialog()
     showSuccess.value = true
-  }
-  catch (error) {
+  } catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
@@ -538,8 +449,7 @@ async function saveClass() {
         body: classForm.value,
       })
       successMessage.value = t('referenceData.classes') + ' ' + t('common.save').toLowerCase()
-    }
-    else {
+    } else {
       await $fetch('/api/classes', {
         method: 'POST',
         body: classForm.value,
@@ -550,13 +460,11 @@ async function saveClass() {
     await refreshClasses()
     closeClassDialog()
     showSuccess.value = true
-  }
-  catch (error) {
+  } catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
@@ -578,8 +486,7 @@ function deleteClass(classData: ReferenceData) {
 }
 
 async function confirmDelete() {
-  if (!deletingId.value)
-    return
+  if (!deletingId.value) return
 
   deleting.value = true
 
@@ -589,8 +496,7 @@ async function confirmDelete() {
         method: 'DELETE',
       })
       await refreshRaces()
-    }
-    else {
+    } else {
       await $fetch(`/api/classes/${deletingId.value}`, {
         method: 'DELETE',
       })
@@ -599,13 +505,11 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingId.value = null
-  }
-  catch (error) {
+  } catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.deleteError')
     showError.value = true
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }

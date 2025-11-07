@@ -22,9 +22,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if class with same name already exists (including soft-deleted)
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT id FROM classes WHERE name = ? AND deleted_at IS NULL
-  `).get(name)
+  `,
+    )
+    .get(name)
 
   if (existing) {
     throw createError({
@@ -33,14 +37,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO classes (name, name_de, name_en, description)
     VALUES (?, ?, ?, ?)
-  `).run(name, name_de, name_en, description || null)
+  `,
+    )
+    .run(name, name_de, name_en, description || null)
 
-  const classData = db.prepare(`
+  const classData = db
+    .prepare(
+      `
     SELECT * FROM classes WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   return classData
 })

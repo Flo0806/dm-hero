@@ -18,23 +18,47 @@ beforeAll(() => {
   db = getDb()
 
   // Get entity type IDs
-  const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number }
-  const factionType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Faction') as { id: number }
-  const locationType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Location') as { id: number }
+  const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as {
+    id: number
+  }
+  const factionType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Faction') as {
+    id: number
+  }
+  const locationType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Location') as {
+    id: number
+  }
 
   npcTypeId = npcType.id
   factionTypeId = factionType.id
   locationTypeId = locationType.id
 
   // Create test campaign
-  const campaign = db.prepare('INSERT INTO campaigns (name, description) VALUES (?, ?)').run('Test Campaign', 'Test description')
+  const campaign = db
+    .prepare('INSERT INTO campaigns (name, description) VALUES (?, ?)')
+    .run('Test Campaign', 'Test description')
   testCampaignId = Number(campaign.lastInsertRowid)
 
   // Add test races and classes
-  db.prepare('INSERT OR IGNORE INTO races (name, name_de, name_en) VALUES (?, ?, ?)').run('human', 'Mensch', 'Human')
-  db.prepare('INSERT OR IGNORE INTO races (name, name_de, name_en) VALUES (?, ?, ?)').run('elf', 'Elf', 'Elf')
-  db.prepare('INSERT OR IGNORE INTO classes (name, name_de, name_en) VALUES (?, ?, ?)').run('wizard', 'Zauberer', 'Wizard')
-  db.prepare('INSERT OR IGNORE INTO classes (name, name_de, name_en) VALUES (?, ?, ?)').run('fighter', 'Kämpfer', 'Fighter')
+  db.prepare('INSERT OR IGNORE INTO races (name, name_de, name_en) VALUES (?, ?, ?)').run(
+    'human',
+    'Mensch',
+    'Human',
+  )
+  db.prepare('INSERT OR IGNORE INTO races (name, name_de, name_en) VALUES (?, ?, ?)').run(
+    'elf',
+    'Elf',
+    'Elf',
+  )
+  db.prepare('INSERT OR IGNORE INTO classes (name, name_de, name_en) VALUES (?, ?, ?)').run(
+    'wizard',
+    'Zauberer',
+    'Wizard',
+  )
+  db.prepare('INSERT OR IGNORE INTO classes (name, name_de, name_en) VALUES (?, ?, ?)').run(
+    'fighter',
+    'Kämpfer',
+    'Fighter',
+  )
 })
 
 afterAll(() => {
@@ -46,21 +70,31 @@ afterAll(() => {
 beforeEach(() => {
   // Clean up entities before each test
   db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(testCampaignId)
-  db.prepare('DELETE FROM entity_relations WHERE from_entity_id IN (SELECT id FROM entities WHERE campaign_id = ?)').run(testCampaignId)
+  db.prepare(
+    'DELETE FROM entity_relations WHERE from_entity_id IN (SELECT id FROM entities WHERE campaign_id = ?)',
+  ).run(testCampaignId)
 })
 
 describe('NPC Search - Basic Functionality', () => {
   it('should return all NPCs when no search query is provided', () => {
     // Create test NPCs
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Gandalf', 'A wise wizard')
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Frodo', 'A brave hobbit')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Gandalf', 'A wise wizard')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Frodo', 'A brave hobbit')
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name, e.description, e.metadata
       FROM entities e
       WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
       ORDER BY e.name ASC
-    `).all(npcTypeId, testCampaignId)
+    `,
+      )
+      .all(npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(2)
     expect(npcs[0]).toHaveProperty('name', 'Frodo')
@@ -69,14 +103,22 @@ describe('NPC Search - Basic Functionality', () => {
 
   it('should not return soft-deleted NPCs', () => {
     // Create NPC and soft-delete it
-    const result = db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Deleted NPC', 'Should not appear')
-    db.prepare('UPDATE entities SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?').run(result.lastInsertRowid)
+    const result = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Deleted NPC', 'Should not appear')
+    db.prepare('UPDATE entities SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?').run(
+      result.lastInsertRowid,
+    )
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities e
       WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
-    `).all(npcTypeId, testCampaignId)
+    `,
+      )
+      .all(npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(0)
   })
@@ -87,14 +129,26 @@ describe('NPC Search - Basic Functionality', () => {
     const campaign2Id = Number(campaign2.lastInsertRowid)
 
     // Create NPCs in different campaigns
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(npcTypeId, testCampaignId, 'NPC in Campaign 1')
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(npcTypeId, campaign2Id, 'NPC in Campaign 2')
+    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
+      npcTypeId,
+      testCampaignId,
+      'NPC in Campaign 1',
+    )
+    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
+      npcTypeId,
+      campaign2Id,
+      'NPC in Campaign 2',
+    )
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities e
       WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
-    `).all(npcTypeId, testCampaignId)
+    `,
+      )
+      .all(npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('NPC in Campaign 1')
@@ -107,10 +161,16 @@ describe('NPC Search - Basic Functionality', () => {
 
 describe('NPC Search - FTS5 Full-Text Search', () => {
   it('should find NPCs by exact name match', () => {
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Gandalf', 'A wizard')
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Frodo', 'A hobbit')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Gandalf', 'A wizard')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Frodo', 'A hobbit')
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -118,17 +178,29 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
         AND e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-    `).all('gandalf*', npcTypeId, testCampaignId)
+    `,
+      )
+      .all('gandalf*', npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Gandalf')
   })
 
   it('should find NPCs by prefix match (FTS5 wildcard)', () => {
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(npcTypeId, testCampaignId, 'Gandalf')
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(npcTypeId, testCampaignId, 'Gandor')
+    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
+      npcTypeId,
+      testCampaignId,
+      'Gandalf',
+    )
+    db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
+      npcTypeId,
+      testCampaignId,
+      'Gandor',
+    )
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -137,7 +209,9 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
       ORDER BY e.name ASC
-    `).all('gand*', npcTypeId, testCampaignId)
+    `,
+      )
+      .all('gand*', npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(2)
     expect(npcs[0].name).toBe('Gandalf')
@@ -145,10 +219,16 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
   })
 
   it('should find NPCs by description match', () => {
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Merlin', 'A powerful wizard from ancient times')
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)').run(npcTypeId, testCampaignId, 'Arthur', 'A brave knight')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Merlin', 'A powerful wizard from ancient times')
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, description) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Arthur', 'A brave knight')
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -156,7 +236,9 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
         AND e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-    `).all('wizard*', npcTypeId, testCampaignId)
+    `,
+      )
+      .all('wizard*', npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Merlin')
@@ -164,20 +246,16 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
 
   it('should find NPCs by metadata (race/class)', () => {
     // Create NPC with race metadata
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Legolas',
-      JSON.stringify({ race: 'elf', class: 'fighter' }),
-    )
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Gimli',
-      JSON.stringify({ race: 'dwarf', class: 'fighter' }),
-    )
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Legolas', JSON.stringify({ race: 'elf', class: 'fighter' }))
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Gimli', JSON.stringify({ race: 'dwarf', class: 'fighter' }))
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -185,7 +263,9 @@ describe('NPC Search - FTS5 Full-Text Search', () => {
         AND e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-    `).all('elf*', npcTypeId, testCampaignId)
+    `,
+      )
+      .all('elf*', npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Legolas')
@@ -249,30 +329,26 @@ describe('NPC Search - Race/Class i18n Lookup', () => {
 describe('NPC Search - Linked Entities (Factions & Locations)', () => {
   it('should find NPCs linked to a faction', () => {
     // Create faction
-    const faction = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      factionTypeId,
-      testCampaignId,
-      'Die Harpers',
-    )
+    const faction = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(factionTypeId, testCampaignId, 'Die Harpers')
     const factionId = Number(faction.lastInsertRowid)
 
     // Create NPC
-    const npc = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Bernhard',
-    )
+    const npc = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Bernhard')
     const npcId = Number(npc.lastInsertRowid)
 
     // Link NPC to faction
-    db.prepare('INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)').run(
-      npcId,
-      factionId,
-      'Mitglied',
-    )
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npcId, factionId, 'Mitglied')
 
     // Query with JOIN
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT
         e.id,
         e.name,
@@ -286,7 +362,9 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
       GROUP BY e.id
-    `).all(factionTypeId, npcTypeId, testCampaignId)
+    `,
+      )
+      .all(factionTypeId, npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Bernhard')
@@ -295,30 +373,26 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
 
   it('should find NPCs linked to a location', () => {
     // Create location
-    const location = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      locationTypeId,
-      testCampaignId,
-      'Taverne zum Goldenen Drachen',
-    )
+    const location = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(locationTypeId, testCampaignId, 'Taverne zum Goldenen Drachen')
     const locationId = Number(location.lastInsertRowid)
 
     // Create NPC
-    const npc = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Günther',
-    )
+    const npc = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Günther')
     const npcId = Number(npc.lastInsertRowid)
 
     // Link NPC to location
-    db.prepare('INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)').run(
-      npcId,
-      locationId,
-      'arbeitet bei',
-    )
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npcId, locationId, 'arbeitet bei')
 
     // Query with JOIN
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT
         e.id,
         e.name,
@@ -332,7 +406,9 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
       GROUP BY e.id
-    `).all(locationTypeId, npcTypeId, testCampaignId)
+    `,
+      )
+      .all(locationTypeId, npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Günther')
@@ -341,38 +417,30 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
 
   it('should handle multi-word faction names in search', () => {
     // Create faction with multi-word name
-    const faction = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      factionTypeId,
-      testCampaignId,
-      'Die Grauen Jäger',
-    )
+    const faction = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(factionTypeId, testCampaignId, 'Die Grauen Jäger')
     const factionId = Number(faction.lastInsertRowid)
 
     // Create NPCs linked to faction
-    const npc1 = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Hans',
-    )
-    const npc2 = db.prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'Peter',
-    )
+    const npc1 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Hans')
+    const npc2 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Peter')
 
-    db.prepare('INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)').run(
-      npc1.lastInsertRowid,
-      factionId,
-      'Mitglied',
-    )
-    db.prepare('INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)').run(
-      npc2.lastInsertRowid,
-      factionId,
-      'Mitglied',
-    )
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npc1.lastInsertRowid, factionId, 'Mitglied')
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npc2.lastInsertRowid, factionId, 'Mitglied')
 
     // Search should find both NPCs when searching for faction name parts
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT
         e.id,
         e.name,
@@ -387,7 +455,9 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
         AND e.deleted_at IS NULL
       GROUP BY e.id
       HAVING linked_faction_names LIKE ?
-    `).all(factionTypeId, npcTypeId, testCampaignId, '%Grauen Jäger%')
+    `,
+      )
+      .all(factionTypeId, npcTypeId, testCampaignId, '%Grauen Jäger%')
 
     expect(npcs).toHaveLength(2)
   })
@@ -427,7 +497,9 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
     )
 
     // FTS5 should handle hyphens with quoting
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -435,7 +507,9 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
         AND e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-    `).all('"hans-peter"*', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
+    `,
+      )
+      .all('"hans-peter"*', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Hans-Peter')
@@ -443,28 +517,35 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
 
   it('should throw on invalid FTS5 query syntax', () => {
     expect(() => {
-      db.prepare(`
+      db.prepare(
+        `
         SELECT e.id
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         WHERE entities_fts MATCH ?
-      `).all('invalid** query((')
+      `,
+      ).all('invalid** query((')
     }).toThrow()
   })
 
   it('should handle NPCs with null metadata gracefully', () => {
-    db.prepare('INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)').run(
-      npcTypeId,
-      testCampaignId,
-      'NPC without metadata',
-      null,
-    )
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'NPC without metadata', null)
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name, e.metadata
       FROM entities e
       WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
-    `).all(npcTypeId, testCampaignId) as Array<{ id: number, name: string, metadata: string | null }>
+    `,
+      )
+      .all(npcTypeId, testCampaignId) as Array<{
+      id: number
+      name: string
+      metadata: string | null
+    }>
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].metadata).toBeNull()
@@ -477,7 +558,9 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
       'GANDALF',
     )
 
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities_fts fts
       INNER JOIN entities e ON fts.rowid = e.id
@@ -485,7 +568,9 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
         AND e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-    `).all('gandalf*', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
+    `,
+      )
+      .all('gandalf*', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('GANDALF')
@@ -499,12 +584,16 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
     }
 
     // Query with LIMIT (as used in the API route - LIMIT 300)
-    const npcs = db.prepare(`
+    const npcs = db
+      .prepare(
+        `
       SELECT e.id, e.name
       FROM entities e
       WHERE e.type_id = ? AND e.campaign_id = ? AND e.deleted_at IS NULL
       LIMIT 300
-    `).all(npcTypeId, testCampaignId)
+    `,
+      )
+      .all(npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(300)
   })

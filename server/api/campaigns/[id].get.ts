@@ -12,7 +12,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get campaign by ID
-  const campaign = db.prepare(`
+  const campaign = db
+    .prepare(
+      `
     SELECT
       id,
       name,
@@ -22,7 +24,9 @@ export default defineEventHandler((event) => {
     FROM campaigns
     WHERE id = ?
       AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!campaign) {
     throw createError({

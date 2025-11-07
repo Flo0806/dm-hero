@@ -12,10 +12,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get image info
-  const image = db.prepare('SELECT id, entity_id FROM entity_images WHERE id = ?').get(imageId) as {
-    id: number
-    entity_id: number
-  } | undefined
+  const image = db.prepare('SELECT id, entity_id FROM entity_images WHERE id = ?').get(imageId) as
+    | {
+        id: number
+        entity_id: number
+      }
+    | undefined
 
   if (!image) {
     throw createError({
@@ -31,8 +33,10 @@ export default defineEventHandler(async (event) => {
   db.prepare('UPDATE entity_images SET is_primary = 1 WHERE id = ?').run(imageId)
 
   // Update entity's updated_at
-  db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?')
-    .run(new Date().toISOString(), image.entity_id)
+  db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(
+    new Date().toISOString(),
+    image.entity_id,
+  )
 
   return {
     success: true,

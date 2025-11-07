@@ -1,0 +1,28 @@
+# Build outputs
+.nuxt
+.output
+dist
+node_modules
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# Database & backups
+data/
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.*
+
+# Test coverage
+coverage/

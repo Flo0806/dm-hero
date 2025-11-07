@@ -13,17 +13,11 @@ export const NPC_TYPES = [
   'informant',
 ] as const
 
-export type NpcType = typeof NPC_TYPES[number]
+export type NpcType = (typeof NPC_TYPES)[number]
 
-export const NPC_STATUSES = [
-  'alive',
-  'dead',
-  'missing',
-  'imprisoned',
-  'unknown',
-] as const
+export const NPC_STATUSES = ['alive', 'dead', 'missing', 'imprisoned', 'unknown'] as const
 
-export type NpcStatus = typeof NPC_STATUSES[number]
+export type NpcStatus = (typeof NPC_STATUSES)[number]
 
 export interface NpcMetadata {
   race?: string

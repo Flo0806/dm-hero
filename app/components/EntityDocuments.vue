@@ -13,28 +13,21 @@
           clearable
           class="flex-grow-1 mr-2"
         />
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          @click="startCreating"
-        >
+        <v-btn color="primary" prepend-icon="mdi-plus" @click="startCreating">
           {{ $t('documents.create') }}
         </v-btn>
       </div>
 
       <v-list v-if="filteredDocuments.length > 0">
-        <v-list-item
-          v-for="doc in filteredDocuments"
-          :key="doc.id"
-          @click="editDocument(doc)"
-        >
+        <v-list-item v-for="doc in filteredDocuments" :key="doc.id" @click="editDocument(doc)">
           <template #prepend>
             <v-icon icon="mdi-file-document" class="mr-2" />
           </template>
 
           <v-list-item-title>{{ doc.title }}</v-list-item-title>
           <v-list-item-subtitle>
-            {{ formatDate(doc.date) }} • {{ $t('documents.lastUpdated') }}: {{ formatDate(doc.updated_at) }}
+            {{ formatDate(doc.date) }} • {{ $t('documents.lastUpdated') }}:
+            {{ formatDate(doc.updated_at) }}
           </v-list-item-subtitle>
 
           <template #append>
@@ -83,7 +76,7 @@
         v-model.trim="documentForm.title"
         :label="$t('documents.titleField')"
         :placeholder="$t('documents.titlePlaceholder')"
-        :rules="[v => !!v || $t('documents.titleRequired')]"
+        :rules="[(v) => !!v || $t('documents.titleRequired')]"
         variant="outlined"
         class="mb-4"
       />
@@ -91,7 +84,7 @@
       <v-text-field
         v-model="documentForm.date"
         :label="$t('documents.dateField')"
-        :rules="[v => !!v || $t('documents.dateRequired')]"
+        :rules="[(v) => !!v || $t('documents.dateRequired')]"
         type="date"
         variant="outlined"
         class="mb-4"
@@ -114,31 +107,31 @@
 
         <ClientOnly>
           <MdEditor
-          ref="editorRef"
-          v-model="documentForm.content"
-          :language="currentLocale"
-          :theme="editorTheme"
-          :placeholder="$t('documents.contentPlaceholder')"
-          :on-upload-img="handleImageUpload"
-          :toolbars="toolbars"
-          style="height: 420px;"
-          @cancel.stop.prevent
-        >
-          <!-- Custom Toolbar Button (Galerie) -->
-          <template #defToolbars>
-            <NormalToolbar
-              :title="$t('documents.imageGallery')"
-              @on-click="openImageGallery"
-            >
-              <template #trigger>
-                <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6" />
-                </svg>
-              </template>
-            </NormalToolbar>
-          </template>
-        </MdEditor>
-      </ClientOnly>
+            ref="editorRef"
+            v-model="documentForm.content"
+            :language="currentLocale"
+            :theme="editorTheme"
+            :placeholder="$t('documents.contentPlaceholder')"
+            :on-upload-img="handleImageUpload"
+            :toolbars="toolbars"
+            style="height: 420px"
+            @cancel.stop.prevent
+          >
+            <!-- Custom Toolbar Button (Galerie) -->
+            <template #defToolbars>
+              <NormalToolbar :title="$t('documents.imageGallery')" @on-click="openImageGallery">
+                <template #trigger>
+                  <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6"
+                    />
+                  </svg>
+                </template>
+              </NormalToolbar>
+            </template>
+          </MdEditor>
+        </ClientOnly>
       </div>
 
       <div class="d-flex justify-end gap-2 mt-4">
@@ -166,7 +159,12 @@
               </v-card>
             </v-col>
           </v-row>
-          <v-empty-state v-else icon="mdi-image-off" title="Keine Bilder" text="Es wurden noch keine Bilder hochgeladen" />
+          <v-empty-state
+            v-else
+            icon="mdi-image-off"
+            title="Keine Bilder"
+            text="Es wurden noch keine Bilder hochgeladen"
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -248,7 +246,7 @@ const currentLocale = computed(() => (locale.value === 'de' ? 'de-DE' : 'en-US')
 
 // Wichtig: Theme-Sync mit Vuetify (dark/light)
 const editorTheme = computed<'light' | 'dark'>(() =>
-  theme.global.current.value.dark ? 'dark' : 'light'
+  theme.global.current.value.dark ? 'dark' : 'light',
 )
 
 // md-editor Toolbars: 0 = Platzhalter für Custom-Button via <template #defToolbars>
@@ -280,8 +278,8 @@ const toolbars: ToolbarOrSlot[] = [
 const filteredDocuments = computed(() => {
   if (!searchQuery.value) return documents.value
   const q = searchQuery.value.toLowerCase()
-  return documents.value.filter(doc =>
-    doc.title.toLowerCase().includes(q) || doc.content.toLowerCase().includes(q)
+  return documents.value.filter(
+    (doc) => doc.title.toLowerCase().includes(q) || doc.content.toLowerCase().includes(q),
   )
 })
 
@@ -368,7 +366,11 @@ async function deleteDocument() {
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
-  return date.toLocaleDateString(currentLocale.value, { year: 'numeric', month: 'short', day: 'numeric' })
+  return date.toLocaleDateString(currentLocale.value, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 async function handleImageUpload(files: File[], callback: (urls: string[]) => void) {
@@ -379,14 +381,17 @@ async function handleImageUpload(files: File[], callback: (urls: string[]) => vo
       try {
         const formData = new FormData()
         formData.append('image', file)
-        const res = await $fetch<{ image_url: string }>(`/api/documents/upload-image`, { method: 'POST', body: formData })
+        const res = await $fetch<{ image_url: string }>('/api/documents/upload-image', {
+          method: 'POST',
+          body: formData,
+        })
         uploaded.push(res.image_url)
       } catch (e) {
         console.error('Failed to upload image:', e)
       }
     }
     // md-editor erwartet endgültige URLs
-    callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
+    callback(uploaded.map((u) => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
   } finally {
     uploadingImage.value = false
   }

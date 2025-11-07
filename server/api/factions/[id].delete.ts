@@ -12,11 +12,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Soft-delete the faction
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

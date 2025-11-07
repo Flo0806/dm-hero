@@ -12,7 +12,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get Lore entity type ID
-  const loreType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as { id: number } | undefined
+  const loreType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as
+    | { id: number }
+    | undefined
 
   if (!loreType) {
     return []
@@ -26,7 +28,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get all lore entries linked to this NPC
-  const loreEntries = db.prepare<unknown[], LoreRow>(`
+  const loreEntries = db
+    .prepare<unknown[], LoreRow>(
+      `
     SELECT DISTINCT
       e.id,
       e.name,
@@ -43,7 +47,9 @@ export default defineEventHandler((event) => {
       AND e.type_id = ?
       AND e.deleted_at IS NULL
     ORDER BY e.name ASC
-  `).all(npcId, loreType.id)
+  `,
+    )
+    .all(npcId, loreType.id)
 
   return loreEntries
 })

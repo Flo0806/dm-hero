@@ -19,7 +19,7 @@
         />
       </v-card-title>
       <v-divider />
-      <v-card-text style="max-height: 500px; overflow-y: auto;">
+      <v-card-text style="max-height: 500px; overflow-y: auto">
         <div v-if="searchQuery" class="text-caption text-disabled mb-2">
           Suche nach "{{ searchQuery }}"...
         </div>
@@ -39,9 +39,7 @@
         <div v-else-if="searchQuery" class="text-center text-disabled py-8">
           Keine Ergebnisse gefunden
         </div>
-        <div v-else class="text-center text-disabled py-8">
-          Drücke <kbd>/</kbd> um zu suchen
-        </div>
+        <div v-else class="text-center text-disabled py-8">Drücke <kbd>/</kbd> um zu suchen</div>
       </v-card-text>
     </v-card>
   </v-dialog>

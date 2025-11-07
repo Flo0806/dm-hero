@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
 
   const { name, description, metadata, parentLocationId } = body
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET
       name = COALESCE(?, name),
@@ -23,7 +24,8 @@ export default defineEventHandler(async (event) => {
       parent_entity_id = ?,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(
+  `,
+  ).run(
     name,
     description,
     metadata ? JSON.stringify(metadata) : null,
@@ -41,9 +43,13 @@ export default defineEventHandler(async (event) => {
     updated_at: string
   }
 
-  const location = db.prepare<unknown[], LocationRow>(`
+  const location = db
+    .prepare<unknown[], LocationRow>(
+      `
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!location) {
     throw createError({

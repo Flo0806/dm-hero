@@ -13,10 +13,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // Verify document exists and belongs to entity
-  const document = db.prepare(`
+  const document = db
+    .prepare(
+      `
     SELECT id FROM entity_documents
     WHERE id = ? AND entity_id = ?
-  `).get(docId, entityId)
+  `,
+    )
+    .get(docId, entityId)
 
   if (!document) {
     throw createError({
@@ -26,10 +30,12 @@ export default defineEventHandler(async (event) => {
   }
 
   // Delete document
-  db.prepare(`
+  db.prepare(
+    `
     DELETE FROM entity_documents
     WHERE id = ? AND entity_id = ?
-  `).run(docId, entityId)
+  `,
+  ).run(docId, entityId)
 
   return { success: true }
 })

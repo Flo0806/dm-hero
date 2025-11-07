@@ -11,7 +11,7 @@ export const ITEM_TYPES = [
   'treasure',
 ] as const
 
-export type ItemType = typeof ITEM_TYPES[number]
+export type ItemType = (typeof ITEM_TYPES)[number]
 
 export const ITEM_RARITIES = [
   'common',
@@ -22,7 +22,7 @@ export const ITEM_RARITIES = [
   'artifact',
 ] as const
 
-export type ItemRarity = typeof ITEM_RARITIES[number]
+export type ItemRarity = (typeof ITEM_RARITIES)[number]
 
 export interface ItemMetadata {
   type?: ItemType

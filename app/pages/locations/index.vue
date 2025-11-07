@@ -1,9 +1,6 @@
 <template>
   <v-container>
-    <UiPageHeader
-      :title="$t('locations.title')"
-      :subtitle="$t('locations.subtitle')"
-    >
+    <UiPageHeader :title="$t('locations.title')" :subtitle="$t('locations.subtitle')">
       <template #actions>
         <v-btn
           color="primary"
@@ -29,13 +26,7 @@
     />
 
     <v-row v-if="pending">
-      <v-col
-        v-for="i in 6"
-        :key="i"
-        cols="12"
-        md="6"
-        lg="4"
-      >
+      <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -52,12 +43,7 @@
         opacity="0.8"
       >
         <div class="text-center">
-          <v-progress-circular
-            indeterminate
-            size="64"
-            color="primary"
-            class="mb-4"
-          />
+          <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
           <div class="text-h6">
             {{ $t('common.searching') }}
           </div>
@@ -133,11 +119,7 @@
         :text="$t('locations.emptyText')"
       >
         <template #actions>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('locations.create') }}
           </v-btn>
         </template>
@@ -147,11 +129,7 @@
           <v-icon icon="mdi-map-marker-multiple" size="64" color="grey" class="mb-4" />
           <h2 class="text-h5 mb-2">{{ $t('locations.empty') }}</h2>
           <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="showCreateDialog = true"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('locations.create') }}
           </v-btn>
         </v-container>
@@ -198,9 +176,7 @@
                 @click="triggerImageUpload"
               >
                 <v-icon>mdi-plus</v-icon>
-                <v-tooltip activator="parent" location="bottom">
-                  Bilder hochladen
-                </v-tooltip>
+                <v-tooltip activator="parent" location="bottom"> Bilder hochladen </v-tooltip>
               </v-btn>
               <input
                 ref="fileInputRef"
@@ -209,23 +185,24 @@
                 multiple
                 style="display: none"
                 @change="handleImageUpload"
-              >
+              />
             </v-card-title>
             <v-card-text>
               <v-progress-linear v-if="loadingImages" indeterminate />
               <v-list v-else-if="locationImages.length > 0">
-                <v-list-item
-                  v-for="image in locationImages"
-                  :key="image.id"
-                  class="mb-3"
-                >
+                <v-list-item v-for="image in locationImages" :key="image.id" class="mb-3">
                   <template #prepend>
                     <div class="position-relative image-container mr-3">
                       <v-avatar
                         size="80"
                         rounded="lg"
-                        style="cursor: pointer;"
-                        @click="openImagePreview(`/uploads/${image.image_url}`, editingLocation?.name || 'Location Image')"
+                        style="cursor: pointer"
+                        @click="
+                          openImagePreview(
+                            `/uploads/${image.image_url}`,
+                            editingLocation?.name || 'Location Image',
+                          )
+                        "
                       >
                         <v-img :src="`/uploads/${image.image_url}`" cover />
                       </v-avatar>
@@ -234,7 +211,12 @@
                         size="x-small"
                         variant="tonal"
                         class="image-download-btn"
-                        @click.stop="downloadImage(`/uploads/${image.image_url}`, editingLocation?.name || 'image')"
+                        @click.stop="
+                          downloadImage(
+                            `/uploads/${image.image_url}`,
+                            editingLocation?.name || 'image',
+                          )
+                        "
                       />
                     </div>
                   </template>
@@ -256,7 +238,10 @@
                       variant="outlined"
                       density="compact"
                       hide-details
-                      @blur="(e: FocusEvent) => updateImageCaption(image.id, (e.target as HTMLInputElement).value)"
+                      @blur="
+                        (e: FocusEvent) =>
+                          updateImageCaption(image.id, (e.target as HTMLInputElement).value)
+                      "
                       @keyup.enter="(e: KeyboardEvent) => (e.target as HTMLInputElement).blur()"
                     />
                   </v-list-item-subtitle>
@@ -282,9 +267,7 @@
                         @click="deleteImageFromGallery(image.id)"
                       >
                         <v-icon>mdi-delete</v-icon>
-                        <v-tooltip activator="parent" location="bottom">
-                          Löschen
-                        </v-tooltip>
+                        <v-tooltip activator="parent" location="bottom"> Löschen </v-tooltip>
                       </v-btn>
                     </div>
                   </template>
@@ -302,7 +285,7 @@
           <v-text-field
             v-model="locationForm.name"
             :label="$t('locations.name')"
-            :rules="[v => !!v || $t('locations.nameRequired')]"
+            :rules="[(v) => !!v || $t('locations.nameRequired')]"
             variant="outlined"
             class="mb-4"
           />
@@ -376,20 +359,13 @@
     </v-dialog>
 
     <!-- View Location Dialog -->
-    <v-dialog
-      v-model="showViewDialog"
-      max-width="900"
-    >
+    <v-dialog v-model="showViewDialog" max-width="900">
       <v-card v-if="viewingLocation">
         <v-card-title class="d-flex align-center">
           <v-icon icon="mdi-map-marker" class="mr-2" />
           {{ viewingLocation.name }}
           <v-spacer />
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            @click="showViewDialog = false"
-          />
+          <v-btn icon="mdi-close" variant="text" @click="showViewDialog = false" />
         </v-card-title>
         <v-divider />
         <v-card-text>
@@ -507,7 +483,10 @@
               <div class="d-flex justify-end gap-2">
                 <v-btn
                   variant="text"
-                  @click="showAddItemForm = false; resetItemForm()"
+                  @click="
+                    showAddItemForm = false
+                    resetItemForm()
+                  "
                 >
                   {{ $t('common.cancel') }}
                 </v-btn>
@@ -525,12 +504,7 @@
 
           <v-progress-linear v-if="loadingItems" indeterminate />
           <v-list v-else-if="locationItems && locationItems.length > 0">
-            <v-list-item
-              v-for="item in locationItems"
-              :key="item.id"
-              class="mb-2"
-              border
-            >
+            <v-list-item v-for="item in locationItems" :key="item.id" class="mb-2" border>
               <template #prepend>
                 <v-icon icon="mdi-sword" color="primary" />
               </template>
@@ -565,7 +539,10 @@
           <v-btn
             variant="text"
             prepend-icon="mdi-pencil"
-            @click="editLocation(viewingLocation); showViewDialog = false"
+            @click="
+              editLocation(viewingLocation)
+              showViewDialog = false
+            "
           >
             {{ $t('common.edit') }}
           </v-btn>
@@ -678,19 +655,22 @@ onMounted(async () => {
   try {
     const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
     hasApiKey.value = response.hasKey
-  }
-  catch {
+  } catch {
     hasApiKey.value = false
   }
 })
 
 // Watch for route changes (same-page navigation)
-watch(() => route.query, () => {
-  highlightedId.value = null
-  isFromGlobalSearch.value = false
-  // Re-initialize from new query
-  initializeFromQuery()
-}, { deep: true })
+watch(
+  () => route.query,
+  () => {
+    highlightedId.value = null
+    isFromGlobalSearch.value = false
+    // Re-initialize from new query
+    initializeFromQuery()
+  },
+  { deep: true },
+)
 
 // Clear highlight when user manually searches
 watch(searchQuery, () => {
@@ -717,8 +697,7 @@ let abortController: AbortController | null = null
 
 // Search execution function
 async function executeSearch(query: string) {
-  if (!activeCampaignId.value)
-    return
+  if (!activeCampaignId.value) return
 
   // Abort previous search if still running
   if (abortController) {
@@ -741,16 +720,14 @@ async function executeSearch(query: string) {
       signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  }
-  finally {
+  } finally {
     searching.value = false
     abortController = null
   }
@@ -800,12 +777,12 @@ interface TreeNode {
   title: string
   children?: TreeNode[]
   raw: Location
-  isSearchResult?: boolean  // Mark if this is an actual search result
+  isSearchResult?: boolean // Mark if this is an actual search result
 }
 
 // Helper: Get all parent IDs for a location
 function getParentIds(locationId: number, allLocations: Location[]): number[] {
-  const location = allLocations.find(l => l.id === locationId)
+  const location = allLocations.find((l) => l.id === locationId)
   if (!location || !location.parent_entity_id) return []
 
   return [location.parent_entity_id, ...getParentIds(location.parent_entity_id, allLocations)]
@@ -825,15 +802,15 @@ const treeItems = computed(() => {
 
   if (isSearching) {
     // Searching: Include search results + all their parents
-    searchResults.forEach(result => {
+    searchResults.forEach((result) => {
       searchResultIds.add(result.id)
       locationsToShow.push(result)
 
       // Add all parents
       const parentIds = getParentIds(result.id, allLocations)
-      parentIds.forEach(parentId => {
-        const parent = allLocations.find(l => l.id === parentId)
-        if (parent && !locationsToShow.find(l => l.id === parent.id)) {
+      parentIds.forEach((parentId) => {
+        const parent = allLocations.find((l) => l.id === parentId)
+        if (parent && !locationsToShow.find((l) => l.id === parent.id)) {
           locationsToShow.push(parent)
         }
       })
@@ -867,13 +844,11 @@ const treeItems = computed(() => {
       const parent = locationMap.get(location.parent_entity_id)
       if (parent) {
         parent.children!.push(node)
-      }
-      else {
+      } else {
         // Parent not found (not in locationsToShow) - treat as root
         rootNodes.push(node)
       }
-    }
-    else {
+    } else {
       // No parent - is a root node
       rootNodes.push(node)
     }
@@ -883,42 +858,42 @@ const treeItems = computed(() => {
 })
 
 // Get icon based on location type
-function getNodeIcon(item: any) {
+function getNodeIcon(item: TreeNode) {
   const type = item.raw?.metadata?.type?.toLowerCase()
   if (!type) return 'mdi-map-marker'
 
   const iconMap: Record<string, string> = {
-    'city': 'mdi-city',
-    'stadt': 'mdi-city',
-    'district': 'mdi-map-marker-radius',
-    'viertel': 'mdi-map-marker-radius',
-    'building': 'mdi-home',
-    'gebäude': 'mdi-home',
-    'tavern': 'mdi-beer',
-    'taverne': 'mdi-beer',
-    'shop': 'mdi-store',
-    'laden': 'mdi-store',
-    'temple': 'mdi-church',
-    'tempel': 'mdi-church',
-    'dungeon': 'mdi-gate',
-    'verlies': 'mdi-gate',
+    city: 'mdi-city',
+    stadt: 'mdi-city',
+    district: 'mdi-map-marker-radius',
+    viertel: 'mdi-map-marker-radius',
+    building: 'mdi-home',
+    gebäude: 'mdi-home',
+    tavern: 'mdi-beer',
+    taverne: 'mdi-beer',
+    shop: 'mdi-store',
+    laden: 'mdi-store',
+    temple: 'mdi-church',
+    tempel: 'mdi-church',
+    dungeon: 'mdi-gate',
+    verlies: 'mdi-gate',
   }
 
   return iconMap[type] || 'mdi-map-marker'
 }
 
 // Get color based on location type
-function getNodeColor(item: any) {
+function getNodeColor(item: TreeNode) {
   const type = item.raw?.metadata?.type?.toLowerCase()
   if (!type) return 'primary'
 
   const colorMap: Record<string, string> = {
-    'city': 'purple',
-    'stadt': 'purple',
-    'district': 'blue',
-    'viertel': 'blue',
-    'building': 'grey',
-    'gebäude': 'grey',
+    city: 'purple',
+    stadt: 'purple',
+    district: 'blue',
+    viertel: 'blue',
+    building: 'grey',
+    gebäude: 'grey',
   }
 
   return colorMap[type] || 'primary'
@@ -956,15 +931,17 @@ const uploadingImage = ref(false)
 const generatingImage = ref(false)
 const loadingImages = ref(false)
 const hasApiKey = ref(false)
-const locationImages = ref<Array<{
-  id: number
-  entity_id: number
-  image_url: string
-  caption: string | null
-  is_primary: number
-  display_order: number
-  created_at: string
-}>>([])
+const locationImages = ref<
+  Array<{
+    id: number
+    entity_id: number
+    image_url: string
+    caption: string | null
+    is_primary: number
+    display_order: number
+    created_at: string
+  }>
+>([])
 
 // Trigger file input click
 function triggerImageUpload() {
@@ -973,19 +950,18 @@ function triggerImageUpload() {
 
 // Load images for location
 async function loadLocationImages() {
-  if (!editingLocation.value)
-    return
+  if (!editingLocation.value) return
 
   loadingImages.value = true
   try {
-    const images = await $fetch<typeof locationImages.value>(`/api/entities/${editingLocation.value.id}/images`)
+    const images = await $fetch<typeof locationImages.value>(
+      `/api/entities/${editingLocation.value.id}/images`,
+    )
     locationImages.value = images
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load images:', error)
     locationImages.value = []
-  }
-  finally {
+  } finally {
     loadingImages.value = false
   }
 }
@@ -993,8 +969,7 @@ async function loadLocationImages() {
 // Handle image upload from native input (multiple files)
 async function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
-  if (!target.files || !target.files.length || !editingLocation.value)
-    return
+  if (!target.files || !target.files.length || !editingLocation.value) return
 
   uploadingImage.value = true
 
@@ -1004,7 +979,10 @@ async function handleImageUpload(event: Event) {
       formData.append('file', file)
     }
 
-    const response = await $fetch<{ success: boolean, images: Array<{ id: number, imageUrl: string, isPrimary: boolean }> }>(`/api/entities/${editingLocation.value.id}/images`, {
+    const response = await $fetch<{
+      success: boolean
+      images: Array<{ id: number; imageUrl: string; isPrimary: boolean }>
+    }>(`/api/entities/${editingLocation.value.id}/images`, {
       method: 'POST',
       body: formData,
     })
@@ -1013,12 +991,14 @@ async function handleImageUpload(event: Event) {
     await loadLocationImages()
 
     // If a primary image was uploaded, update the location
-    const primaryImage = response.images.find(img => img.isPrimary)
+    const primaryImage = response.images.find((img) => img.isPrimary)
     if (primaryImage && editingLocation.value) {
       editingLocation.value.image_url = primaryImage.imageUrl
 
       // Update the location in the store list directly
-      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      const locationInList = entitiesStore.locations?.find(
+        (l) => l.id === editingLocation.value!.id,
+      )
       if (locationInList) {
         locationInList.image_url = primaryImage.imageUrl
       }
@@ -1026,12 +1006,10 @@ async function handleImageUpload(event: Event) {
 
     // Clear file input
     target.value = ''
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to upload images:', error)
     alert(t('locations.uploadImageError'))
-  }
-  finally {
+  } finally {
     uploadingImage.value = false
   }
 }
@@ -1069,17 +1047,20 @@ async function generateImage() {
       details.push(locationForm.value.metadata.notes)
     }
 
-    const prompt = details.filter(d => d).join(', ')
+    const prompt = details.filter((d) => d).join(', ')
 
-    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>('/api/ai/generate-image', {
-      method: 'POST',
-      body: {
-        prompt,
-        entityName: locationForm.value.name,
-        entityType: 'Location',
-        style: 'fantasy-art',
+    const result = await $fetch<{ imageUrl: string; revisedPrompt?: string }>(
+      '/api/ai/generate-image',
+      {
+        method: 'POST',
+        body: {
+          prompt,
+          entityName: locationForm.value.name,
+          entityType: 'Location',
+          style: 'fantasy-art',
+        },
       },
-    })
+    )
 
     if (result.imageUrl && editingLocation.value) {
       // Add the generated image directly to the gallery (no re-upload needed)
@@ -1100,13 +1081,11 @@ async function generateImage() {
         await entitiesStore.fetchLocations(activeCampaignId.value)
       }
     }
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error('[Location] Failed to generate image:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
     alert(errorMessage)
-  }
-  finally {
+  } finally {
     generatingImage.value = false
   }
 }
@@ -1119,21 +1098,22 @@ async function deleteImageFromGallery(imageId: number) {
     })
 
     // Remove image from local array
-    locationImages.value = locationImages.value.filter(img => img.id !== imageId)
+    locationImages.value = locationImages.value.filter((img) => img.id !== imageId)
 
     // Update the editingLocation's image_url with the new primary image (if any)
-    const primaryImage = locationImages.value.find(img => img.is_primary === 1)
+    const primaryImage = locationImages.value.find((img) => img.is_primary === 1)
     if (editingLocation.value) {
       editingLocation.value.image_url = primaryImage?.image_url || null
 
       // Update the location in the store list directly
-      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      const locationInList = entitiesStore.locations?.find(
+        (l) => l.id === editingLocation.value!.id,
+      )
       if (locationInList) {
         locationInList.image_url = primaryImage?.image_url || null
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('locations.deleteImageError'))
   }
@@ -1152,18 +1132,19 @@ async function setPrimaryImage(imageId: number) {
     })
 
     // Update the editingLocation's image_url with the new primary image
-    const primaryImage = locationImages.value.find(img => img.id === imageId)
+    const primaryImage = locationImages.value.find((img) => img.id === imageId)
     if (primaryImage && editingLocation.value) {
       editingLocation.value.image_url = primaryImage.image_url
 
       // Update the location in the store list directly
-      const locationInList = entitiesStore.locations?.find(l => l.id === editingLocation.value!.id)
+      const locationInList = entitiesStore.locations?.find(
+        (l) => l.id === editingLocation.value!.id,
+      )
       if (locationInList) {
         locationInList.image_url = primaryImage.image_url
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to set primary image:', error)
   }
 }
@@ -1177,12 +1158,11 @@ async function updateImageCaption(imageId: number, caption: string) {
     })
 
     // Update local state
-    const image = locationImages.value.find(img => img.id === imageId)
+    const image = locationImages.value.find((img) => img.id === imageId)
     if (image) {
       image.caption = caption
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to update caption:', error)
   }
 }
@@ -1199,15 +1179,17 @@ const connectedNpcs = ref<ConnectedNPC[]>([])
 const loadingNpcs = ref(false)
 
 // Location Items
-const locationItems = ref<Array<{
-  id: number
-  to_entity_id: number
-  item_name: string
-  item_description: string | null
-  item_metadata: Record<string, unknown> | null
-  relation_type: string
-  notes: Record<string, unknown> | null
-}>>([])
+const locationItems = ref<
+  Array<{
+    id: number
+    to_entity_id: number
+    item_name: string
+    item_description: string | null
+    item_metadata: Record<string, unknown> | null
+    relation_type: string
+    notes: Record<string, unknown> | null
+  }>
+>([])
 const loadingItems = ref(false)
 const showAddItemForm = ref(false)
 const addingItem = ref(false)
@@ -1235,7 +1217,7 @@ const availableParentLocations = computed(() => {
 
   // When editing, exclude the current location and its children
   if (editingLocation.value) {
-    return locations.value.filter(loc => loc.id !== editingLocation.value?.id)
+    return locations.value.filter((loc) => loc.id !== editingLocation.value?.id)
   }
 
   // When creating, show all locations
@@ -1251,8 +1233,7 @@ async function viewLocation(location: Location) {
   try {
     const data = await $fetch<ConnectedNPC[]>(`/api/locations/${location.id}/npcs`)
     connectedNpcs.value = data
-  }
-  finally {
+  } finally {
     loadingNpcs.value = false
   }
 
@@ -1266,26 +1247,24 @@ async function viewLocation(location: Location) {
 }
 
 async function loadLocationItems() {
-  if (!viewingLocation.value)
-    return
+  if (!viewingLocation.value) return
 
   loadingItems.value = true
   try {
-    const items = await $fetch<typeof locationItems.value>(`/api/locations/${viewingLocation.value.id}/items`)
+    const items = await $fetch<typeof locationItems.value>(
+      `/api/locations/${viewingLocation.value.id}/items`,
+    )
     locationItems.value = items
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to load location items:', error)
     locationItems.value = []
-  }
-  finally {
+  } finally {
     loadingItems.value = false
   }
 }
 
 async function addItemToLocation() {
-  if (!viewingLocation.value || !newItem.value.itemId || !newItem.value.relationType)
-    return
+  if (!viewingLocation.value || !newItem.value.itemId || !newItem.value.relationType) return
 
   addingItem.value = true
 
@@ -1302,11 +1281,9 @@ async function addItemToLocation() {
     await loadLocationItems()
     resetItemForm()
     showAddItemForm.value = false
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to add item to location:', error)
-  }
-  finally {
+  } finally {
     addingItem.value = false
   }
 }
@@ -1317,8 +1294,7 @@ async function removeItem(relationId: number) {
       method: 'DELETE',
     })
     await loadLocationItems()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to remove item:', error)
   }
 }
@@ -1336,7 +1312,7 @@ async function editLocation(location: Location) {
   locationForm.value = {
     name: location.name,
     description: location.description || '',
-    parentLocationId: (location as any).parent_entity_id || null,
+    parentLocationId: location.parent_entity_id || null,
     metadata: {
       type: location.metadata?.type || '',
       region: location.metadata?.region || '',
@@ -1354,8 +1330,7 @@ function deleteLocation(location: Location) {
 }
 
 async function saveLocation() {
-  if (!activeCampaignId.value)
-    return
+  if (!activeCampaignId.value) return
 
   saving.value = true
 
@@ -1372,8 +1347,7 @@ async function saveLocation() {
       })
       // Reload locations to get updated data
       await entitiesStore.fetchLocations(activeCampaignId.value)
-    }
-    else {
+    } else {
       await $fetch('/api/locations', {
         method: 'POST',
         body: {
@@ -1389,18 +1363,15 @@ async function saveLocation() {
     }
 
     closeDialog()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to save location:', error)
-  }
-  finally {
+  } finally {
     saving.value = false
   }
 }
 
 async function confirmDelete() {
-  if (!deletingLocation.value)
-    return
+  if (!deletingLocation.value) return
 
   deleting.value = true
 
@@ -1408,11 +1379,9 @@ async function confirmDelete() {
     await entitiesStore.deleteLocation(deletingLocation.value.id)
     showDeleteDialog.value = false
     deletingLocation.value = null
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Failed to delete location:', error)
-  }
-  finally {
+  } finally {
     deleting.value = false
   }
 }
@@ -1439,7 +1408,9 @@ function closeDialog() {
   bottom: 8px;
   right: 8px;
   opacity: 0.5;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .image-container:hover .image-download-btn {
@@ -1454,7 +1425,8 @@ function closeDialog() {
 }
 
 @keyframes highlight-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
   }
   50% {

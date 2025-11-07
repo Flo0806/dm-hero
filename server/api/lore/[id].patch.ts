@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
   // Build dynamic SQL based on provided fields
   const updates: string[] = []
-  const values: any[] = []
+  const values: (string | null | number)[] = []
 
   if (name !== undefined) {
     updates.push('name = ?')
@@ -42,11 +42,13 @@ export default defineEventHandler(async (event) => {
   updates.push('updated_at = CURRENT_TIMESTAMP')
   values.push(id)
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET ${updates.join(', ')}
     WHERE id = ? AND deleted_at IS NULL
-  `).run(...values)
+  `,
+  ).run(...values)
 
   interface DbEntity {
     id: number
@@ -60,9 +62,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const lore = db.prepare<unknown[], DbEntity>(`
+  const lore = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!lore) {
     throw createError({

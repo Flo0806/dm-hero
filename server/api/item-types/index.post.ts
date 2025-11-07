@@ -22,9 +22,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if type with same name already exists (including soft-deleted)
-  const existing = db.prepare(`
+  const existing = db
+    .prepare(
+      `
     SELECT id FROM item_types WHERE name = ? AND deleted_at IS NULL
-  `).get(name)
+  `,
+    )
+    .get(name)
 
   if (existing) {
     throw createError({
@@ -33,14 +37,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const result = db.prepare(`
+  const result = db
+    .prepare(
+      `
     INSERT INTO item_types (name, name_de, name_en)
     VALUES (?, ?, ?)
-  `).run(name, name_de, name_en)
+  `,
+    )
+    .run(name, name_de, name_en)
 
-  const itemType = db.prepare(`
+  const itemType = db
+    .prepare(
+      `
     SELECT * FROM item_types WHERE id = ?
-  `).get(result.lastInsertRowid)
+  `,
+    )
+    .get(result.lastInsertRowid)
 
   return itemType
 })

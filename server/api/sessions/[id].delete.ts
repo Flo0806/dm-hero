@@ -12,11 +12,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Soft-delete the session
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE sessions
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

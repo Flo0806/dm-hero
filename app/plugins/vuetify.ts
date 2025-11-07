@@ -28,16 +28,16 @@ const lightTheme = {
     'on-primary': '#FFFFFF',
     'on-secondary': '#2C1810',
   },
-   variables: {
+  variables: {
     // Custom CSS vars für md-editor-v3 (LIGHT)
-    'md-bg':        '#FFFFFF',
-    'md-surface':   '#F5F1E8',
-    'md-text':      '#2C1810',
-    'md-muted':     '#4A4035',
-    'md-border':    '#E8DCC4',
-    'md-primary':   '#8B4513',
-    'md-code-bg':   '#FAF6EE',
-    'md-quote-bg':  '#FFF9F0',
+    'md-bg': '#FFFFFF',
+    'md-surface': '#F5F1E8',
+    'md-text': '#2C1810',
+    'md-muted': '#4A4035',
+    'md-border': '#E8DCC4',
+    'md-primary': '#8B4513',
+    'md-code-bg': '#FAF6EE',
+    'md-quote-bg': '#FFF9F0',
     'md-table-stripe': '#FAF2E3',
   },
 }
@@ -64,16 +64,16 @@ const darkTheme = {
     'on-primary': '#1A1D29',
     'on-secondary': '#E8DCC4',
   },
-    variables: {
+  variables: {
     // Custom CSS vars für md-editor-v3 (DARK)
-    'md-bg':        '#1A1D29',
-    'md-surface':   '#232632',
-    'md-text':      '#E8DCC4',
-    'md-muted':     '#C5B8A0',
-    'md-border':    '#2D3142',
-    'md-primary':   '#D4A574',
-    'md-code-bg':   '#11151F',
-    'md-quote-bg':  '#202534',
+    'md-bg': '#1A1D29',
+    'md-surface': '#232632',
+    'md-text': '#E8DCC4',
+    'md-muted': '#C5B8A0',
+    'md-border': '#2D3142',
+    'md-primary': '#D4A574',
+    'md-code-bg': '#11151F',
+    'md-quote-bg': '#202534',
     'md-table-stripe': '#1F2330',
   },
 }

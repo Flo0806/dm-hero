@@ -12,9 +12,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if type exists
-  const itemType = db.prepare(`
+  const itemType = db
+    .prepare(
+      `
     SELECT * FROM item_types WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!itemType) {
     throw createError({
@@ -24,15 +28,23 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if type is in use by any Items
-  const itemEntityTypeId = db.prepare(`
+  const itemEntityTypeId = db
+    .prepare(
+      `
     SELECT id FROM entity_types WHERE name = 'Item'
-  `).get()
+  `,
+    )
+    .get()
 
-  const inUse = db.prepare(`
+  const inUse = db
+    .prepare(
+      `
     SELECT COUNT(*) as count FROM entities
     WHERE type_id = ? AND deleted_at IS NULL
     AND json_extract(metadata, '$.type') = ?
-  `).get(itemEntityTypeId?.id, itemType.name)
+  `,
+    )
+    .get(itemEntityTypeId?.id, itemType.name)
 
   if (inUse && inUse.count > 0) {
     throw createError({
@@ -42,11 +54,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Soft-delete the type
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE item_types
     SET deleted_at = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(id)
+  `,
+  ).run(id)
 
   return { success: true }
 })

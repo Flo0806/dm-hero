@@ -12,10 +12,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const document = db.prepare(`
+  const document = db
+    .prepare(
+      `
     SELECT * FROM entity_documents
     WHERE id = ? AND entity_id = ?
-  `).get(docId, entityId)
+  `,
+    )
+    .get(docId, entityId)
 
   if (!document) {
     throw createError({

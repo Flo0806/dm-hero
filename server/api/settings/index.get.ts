@@ -15,7 +15,7 @@ export default defineEventHandler(() => {
   const settings = db.prepare('SELECT * FROM settings').all() as SettingRow[]
 
   // Decrypt and format settings for frontend
-  const formattedSettings: Record<string, any> = {}
+  const formattedSettings: Record<string, string | null> = {}
 
   for (const setting of settings) {
     try {
@@ -25,12 +25,10 @@ export default defineEventHandler(() => {
       if (setting.key.includes('api_key')) {
         formattedSettings[setting.key] = maskApiKey(decryptedValue)
         formattedSettings[`${setting.key}_full`] = decryptedValue // Full key for editing
-      }
-      else {
+      } else {
         formattedSettings[setting.key] = decryptedValue
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`[Settings] Failed to decrypt setting: ${setting.key}`, error)
       formattedSettings[setting.key] = null
     }

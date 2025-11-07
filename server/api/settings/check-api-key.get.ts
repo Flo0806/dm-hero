@@ -11,7 +11,9 @@ export default defineEventHandler(() => {
 
   try {
     // Check if openai_api_key exists and is not empty
-    const setting = db.prepare('SELECT * FROM settings WHERE key = ?').get('openai_api_key') as SettingRow | undefined
+    const setting = db.prepare('SELECT * FROM settings WHERE key = ?').get('openai_api_key') as
+      | SettingRow
+      | undefined
 
     if (!setting) {
       return { hasKey: false }
@@ -24,8 +26,7 @@ export default defineEventHandler(() => {
     const hasKey = decryptedValue && decryptedValue.length > 0 && decryptedValue.startsWith('sk-')
 
     return { hasKey: !!hasKey }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('[Settings] Failed to check API key:', error)
     return { hasKey: false }
   }

@@ -13,7 +13,9 @@ export default defineEventHandler((event) => {
   }
 
   // Get all Sessions for this campaign
-  const sessions = db.prepare(`
+  const sessions = db
+    .prepare(
+      `
     SELECT
       id,
       session_number,
@@ -27,7 +29,9 @@ export default defineEventHandler((event) => {
     WHERE campaign_id = ?
       AND deleted_at IS NULL
     ORDER BY session_number DESC, date DESC
-  `).all(campaignId)
+  `,
+    )
+    .all(campaignId)
 
   return sessions
 })

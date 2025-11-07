@@ -12,12 +12,16 @@ export default defineEventHandler((event) => {
   }
 
   // Get all images for this entity
-  const images = db.prepare(`
+  const images = db
+    .prepare(
+      `
     SELECT id, entity_id, image_url, caption, is_primary, display_order, created_at
     FROM entity_images
     WHERE entity_id = ?
     ORDER BY display_order ASC, created_at ASC
-  `).all(entityId)
+  `,
+    )
+    .all(entityId)
 
   return images
 })

@@ -20,8 +20,7 @@ export default defineEventHandler(async (event) => {
     }
 
     return image
-  }
-  catch (error) {
+  } catch (error) {
     throw createError({
       statusCode: 404,
       statusMessage: 'Image not found',

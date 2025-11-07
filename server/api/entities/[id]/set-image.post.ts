@@ -14,15 +14,16 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Update entity image_url
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE entities
       SET image_url = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(body.imageUrl, id)
+    `,
+    ).run(body.imageUrl, id)
 
     return { success: true }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('[Set Image] Error:', error)
     throw createError({
       statusCode: 500,

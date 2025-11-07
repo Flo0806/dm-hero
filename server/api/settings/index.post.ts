@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   `)
 
   // Update each setting (encrypt sensitive data)
-  const updates: Array<{ key: string, value: string }> = []
+  const updates: Array<{ key: string; value: string }> = []
 
   if (body.openai_api_key !== undefined) {
     // Only update if not empty (allow deletion by setting to empty string)
@@ -37,8 +37,7 @@ export default defineEventHandler(async (event) => {
         key: 'openai_api_key',
         value: encrypt(body.openai_api_key.trim()),
       })
-    }
-    else {
+    } else {
       // Delete the key if empty
       db.prepare('DELETE FROM settings WHERE key = ?').run('openai_api_key')
     }

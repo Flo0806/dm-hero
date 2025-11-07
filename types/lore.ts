@@ -9,7 +9,7 @@ export const LORE_TYPES = [
   'religion', // Deities, beliefs, and religious practices
 ] as const
 
-export type LoreType = typeof LORE_TYPES[number]
+export type LoreType = (typeof LORE_TYPES)[number]
 
 export interface LoreMetadata {
   type?: LoreType

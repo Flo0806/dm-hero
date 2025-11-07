@@ -15,10 +15,11 @@ export default defineEventHandler(async (event) => {
   const { name, description, metadata } = body as {
     name?: string
     description?: string
-    metadata?: Record<string, any>
+    metadata?: Record<string, string | number | boolean | null>
   }
 
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE entities
     SET
       name = COALESCE(?, name),
@@ -26,12 +27,8 @@ export default defineEventHandler(async (event) => {
       metadata = COALESCE(?, metadata),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
-  `).run(
-    name,
-    description,
-    metadata ? JSON.stringify(metadata) : null,
-    id,
-  )
+  `,
+  ).run(name, description, metadata ? JSON.stringify(metadata) : null, id)
 
   interface DbEntity {
     id: number
@@ -45,9 +42,13 @@ export default defineEventHandler(async (event) => {
     deleted_at: string | null
   }
 
-  const faction = db.prepare<unknown[], DbEntity>(`
+  const faction = db
+    .prepare<unknown[], DbEntity>(
+      `
     SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
-  `).get(id)
+  `,
+    )
+    .get(id)
 
   if (!faction) {
     throw createError({
