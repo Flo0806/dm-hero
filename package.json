@@ -21,31 +21,31 @@
     "@iconify/vue": "^5.0.0",
     "@mdi/font": "^7.4.47",
     "@nuxt/test-utils": "3.20.1",
-    "@nuxtjs/i18n": "^10.1.2",
-    "@pinia/nuxt": "^0.11.2",
+    "@nuxtjs/i18n": "^10.2.0",
+    "@pinia/nuxt": "^0.11.3",
     "fastest-levenshtein": "^1.0.16",
-    "marked": "^16.4.1",
-    "md-editor-v3": "^6.1.0",
-    "nuxt": "^4.2.0",
-    "pinia": "^3.0.3",
+    "marked": "^17.0.0",
+    "md-editor-v3": "^6.1.1",
+    "nuxt": "^4.2.1",
+    "pinia": "^3.0.4",
     "vite-plugin-vuetify": "^2.1.2",
-    "vue": "^3.5.22",
+    "vue": "^3.5.24",
     "vue-router": "^4.6.3",
-    "vuetify": "^3.10.8"
+    "vuetify": "^3.10.9"
   },
   "devDependencies": {
-    "@nuxt/eslint": "1.9.0",
+    "@nuxt/eslint": "1.10.0",
     "@types/better-sqlite3": "^7.6.13",
     "@typescript-eslint/eslint-plugin": "^8.46.3",
     "@typescript-eslint/parser": "^8.46.3",
     "@vitejs/plugin-vue": "^6.0.1",
     "better-sqlite3": "^12.4.1",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.5.1",
     "happy-dom": "^20.0.10",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.6"
+    "vitest": "^4.0.8"
   }
 }

@@ -248,10 +248,7 @@
           <v-btn
             variant="text"
             prepend-icon="mdi-pencil"
-            @click="
-              editItem(viewingItem)
-              showViewDialog = false
-            "
+            @click="editItemAndCloseView(viewingItem)"
           >
             {{ $t('common.edit') }}
           </v-btn>
@@ -1393,6 +1390,11 @@ async function editItem(item: Item) {
 
   showCreateDialog.value = true
   itemDialogTab.value = 'details'
+}
+
+async function editItemAndCloseView(item: Item) {
+  await editItem(item)
+  showViewDialog.value = false
 }
 
 function deleteItem(item: Item) {

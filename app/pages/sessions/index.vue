@@ -528,10 +528,7 @@
           <v-btn
             variant="text"
             prepend-icon="mdi-pencil"
-            @click="
-              editSession(viewingSession)
-              showViewDialog = false
-            "
+            @click="editSessionAndCloseView(viewingSession)"
           >
             {{ $t('common.edit') }}
           </v-btn>
@@ -927,21 +924,21 @@ const filteredEntities = computed(() => {
   let entities: Array<{ id: number; name: string }> = []
 
   switch (linkEntityType.value) {
-    case 'npc':
-      entities = entitiesStore.npcsForSelect || []
-      break
-    case 'location':
-      entities = entitiesStore.locationsForSelect || []
-      break
-    case 'item':
-      entities = entitiesStore.items || []
-      break
-    case 'faction':
-      entities = entitiesStore.factions || []
-      break
-    case 'lore':
-      entities = entitiesStore.loreForSelect || []
-      break
+  case 'npc':
+    entities = entitiesStore.npcsForSelect || []
+    break
+  case 'location':
+    entities = entitiesStore.locationsForSelect || []
+    break
+  case 'item':
+    entities = entitiesStore.items || []
+    break
+  case 'faction':
+    entities = entitiesStore.factions || []
+    break
+  case 'lore':
+    entities = entitiesStore.loreForSelect || []
+    break
   }
 
   if (!query) return entities
@@ -1177,6 +1174,11 @@ function editSession(session: Session) {
   sessionDialogTab.value = 'details'
 }
 
+function editSessionAndCloseView(session: Session) {
+  editSession(session)
+  showViewDialog.value = false
+}
+
 function deleteSession(session: Session) {
   deletingSession.value = session
   showDeleteDialog.value = true
@@ -1347,3 +1349,4 @@ function closeDialog() {
   cursor: pointer;
 }
 </style>
+>

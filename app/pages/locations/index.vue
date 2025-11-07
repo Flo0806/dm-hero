@@ -481,13 +481,7 @@
                 </v-col>
               </v-row>
               <div class="d-flex justify-end gap-2">
-                <v-btn
-                  variant="text"
-                  @click="
-                    showAddItemForm = false
-                    resetItemForm()
-                  "
-                >
+                <v-btn variant="text" @click="cancelAddItem">
                   {{ $t('common.cancel') }}
                 </v-btn>
                 <v-btn
@@ -539,10 +533,7 @@
           <v-btn
             variant="text"
             prepend-icon="mdi-pencil"
-            @click="
-              editLocation(viewingLocation)
-              showViewDialog = false
-            "
+            @click="editLocationAndCloseView(viewingLocation)"
           >
             {{ $t('common.edit') }}
           </v-btn>
@@ -1307,6 +1298,11 @@ function resetItemForm() {
   }
 }
 
+function cancelAddItem() {
+  showAddItemForm.value = false
+  resetItemForm()
+}
+
 async function editLocation(location: Location) {
   editingLocation.value = location
   locationForm.value = {
@@ -1322,6 +1318,11 @@ async function editLocation(location: Location) {
   showCreateDialog.value = true
   // Load images for this location
   await loadLocationImages()
+}
+
+async function editLocationAndCloseView(location: Location) {
+  await editLocation(location)
+  showViewDialog.value = false
 }
 
 function deleteLocation(location: Location) {
