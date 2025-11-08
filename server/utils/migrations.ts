@@ -739,6 +739,159 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 14: Added i18n keys to races and classes for proper translations')
     },
   },
+  {
+    version: 15,
+    name: 'fix_race_class_names_to_keys',
+    up: (db) => {
+      console.log('  Fixing race/class names to use i18n keys instead of German names...')
+
+      // First, delete duplicate entries that might have been manually created
+      // (entries where name is already a key like "human", "elf", etc.)
+      console.log('  Removing duplicate race/class entries...')
+      const standardRaceKeys = [
+        'human',
+        'elf',
+        'dwarf',
+        'halfling',
+        'gnome',
+        'halfelf',
+        'halforc',
+        'tiefling',
+        'dragonborn',
+        'drow',
+        'woodelf',
+        'highelf',
+        'mountaindwarf',
+        'hilldwarf',
+        'lightfoothalfling',
+        'stouthalfling',
+      ]
+
+      // Delete races where name is already a key (these are likely duplicates)
+      const deleteRace = db.prepare('DELETE FROM races WHERE name = ? AND key IS NULL')
+      for (const key of standardRaceKeys) {
+        deleteRace.run(key)
+      }
+
+      const standardClassKeys = [
+        'barbarian',
+        'bard',
+        'druid',
+        'warlock',
+        'fighter',
+        'cleric',
+        'wizard',
+        'monk',
+        'paladin',
+        'rogue',
+        'ranger',
+        'sorcerer',
+      ]
+
+      // Delete classes where name is already a key (these are likely duplicates)
+      const deleteClass = db.prepare('DELETE FROM classes WHERE name = ? AND key IS NULL')
+      for (const key of standardClassKeys) {
+        deleteClass.run(key)
+      }
+
+      // For standard races: name should be the KEY (english lowercase), not the German display name
+      // name_de and name_en should contain the localized display names
+      const raceMapping: Record<string, { key: string; name_de: string; name_en: string }> = {
+        Mensch: { key: 'human', name_de: 'Mensch', name_en: 'Human' },
+        Elf: { key: 'elf', name_de: 'Elf', name_en: 'Elf' },
+        Zwerg: { key: 'dwarf', name_de: 'Zwerg', name_en: 'Dwarf' },
+        Halbling: { key: 'halfling', name_de: 'Halbling', name_en: 'Halfling' },
+        Gnom: { key: 'gnome', name_de: 'Gnom', name_en: 'Gnome' },
+        Halbelf: { key: 'halfelf', name_de: 'Halbelf', name_en: 'Half-Elf' },
+        Halbork: { key: 'halforc', name_de: 'Halbork', name_en: 'Half-Orc' },
+        Tiefling: { key: 'tiefling', name_de: 'Tiefling', name_en: 'Tiefling' },
+        Drachenblütiger: { key: 'dragonborn', name_de: 'Drachenblütiger', name_en: 'Dragonborn' },
+        'Zwergelf (Drow)': { key: 'drow', name_de: 'Dunkelelf', name_en: 'Drow' },
+        Waldelf: { key: 'woodelf', name_de: 'Waldelf', name_en: 'Wood Elf' },
+        Hochelf: { key: 'highelf', name_de: 'Hochelf', name_en: 'High Elf' },
+        Bergzwerg: { key: 'mountaindwarf', name_de: 'Bergzwerg', name_en: 'Mountain Dwarf' },
+        Hügelzwerg: { key: 'hilldwarf', name_de: 'Hügelzwerg', name_en: 'Hill Dwarf' },
+        'Leichtfuß-Halbling': {
+          key: 'lightfoothalfling',
+          name_de: 'Leichtfuß-Halbling',
+          name_en: 'Lightfoot Halfling',
+        },
+        'Robuster Halbling': {
+          key: 'stouthalfling',
+          name_de: 'Robuster Halbling',
+          name_en: 'Stout Halfling',
+        },
+      }
+
+      const classMapping: Record<string, { key: string; name_de: string; name_en: string }> = {
+        Barbar: { key: 'barbarian', name_de: 'Barbar', name_en: 'Barbarian' },
+        Barde: { key: 'bard', name_de: 'Barde', name_en: 'Bard' },
+        Druide: { key: 'druid', name_de: 'Druide', name_en: 'Druid' },
+        Hexenmeister: { key: 'warlock', name_de: 'Hexenmeister', name_en: 'Warlock' },
+        Kämpfer: { key: 'fighter', name_de: 'Kämpfer', name_en: 'Fighter' },
+        Kleriker: { key: 'cleric', name_de: 'Kleriker', name_en: 'Cleric' },
+        Magier: { key: 'wizard', name_de: 'Magier', name_en: 'Wizard' },
+        Mönch: { key: 'monk', name_de: 'Mönch', name_en: 'Monk' },
+        Paladin: { key: 'paladin', name_de: 'Paladin', name_en: 'Paladin' },
+        Schurke: { key: 'rogue', name_de: 'Schurke', name_en: 'Rogue' },
+        Waldläufer: { key: 'ranger', name_de: 'Waldläufer', name_en: 'Ranger' },
+        Zauberer: { key: 'sorcerer', name_de: 'Zauberer', name_en: 'Sorcerer' },
+      }
+
+      // Update races: Set name = key, name_de = German name, name_en = English name
+      const updateRaceStmt = db.prepare(
+        'UPDATE races SET name = ?, key = ?, name_de = ?, name_en = ? WHERE name = ?',
+      )
+      for (const [germanName, data] of Object.entries(raceMapping)) {
+        updateRaceStmt.run(data.key, data.key, data.name_de, data.name_en, germanName)
+      }
+
+      // Update classes: Set name = key, name_de = German name, name_en = English name
+      const updateClassStmt = db.prepare(
+        'UPDATE classes SET name = ?, key = ?, name_de = ?, name_en = ? WHERE name = ?',
+      )
+      for (const [germanName, data] of Object.entries(classMapping)) {
+        updateClassStmt.run(data.key, data.key, data.name_de, data.name_en, germanName)
+      }
+
+      // Also need to update NPCs metadata that reference the old German names
+      console.log('  Updating NPC metadata to use new race/class keys...')
+
+      // Get all NPCs with metadata
+      const npcs = db
+        .prepare(
+          "SELECT id, metadata FROM entities WHERE type_id = (SELECT id FROM entity_types WHERE name = 'NPC') AND metadata IS NOT NULL",
+        )
+        .all() as Array<{ id: number; metadata: string }>
+
+      const updateNpcMetadata = db.prepare('UPDATE entities SET metadata = ? WHERE id = ?')
+
+      for (const npc of npcs) {
+        const metadata = JSON.parse(npc.metadata)
+        let changed = false
+
+        // Update race if it's a German name
+        if (metadata.race && raceMapping[metadata.race]) {
+          metadata.race = raceMapping[metadata.race].key
+          changed = true
+        }
+
+        // Update class if it's a German name
+        if (metadata.class && classMapping[metadata.class]) {
+          metadata.class = classMapping[metadata.class].key
+          changed = true
+        }
+
+        if (changed) {
+          updateNpcMetadata.run(JSON.stringify(metadata), npc.id)
+        }
+      }
+
+      console.log(
+        '✅ Migration 15: Fixed race/class names to use i18n keys with proper name_de/name_en',
+      )
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
