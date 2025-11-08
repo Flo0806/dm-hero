@@ -1424,13 +1424,16 @@ function getClassDisplayName(className: string | undefined): string {
 }
 
 // Translated race/class items for dropdowns (uses DB translations or i18n fallback)
+// IMPORTANT: We read locale.value to make this computed reactive to language changes
 const raceItems = computed(() => {
+  const _lang = locale.value // Track locale dependency
   return races.value.map((r: (typeof races.value)[0]) => ({
     title: useRaceName(r),
     value: r.name,
   }))
 })
 const classItems = computed(() => {
+  const _lang = locale.value // Track locale dependency
   return classes.value.map((c: (typeof classes.value)[0]) => ({
     title: useClassName(c),
     value: c.name,

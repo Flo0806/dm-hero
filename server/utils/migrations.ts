@@ -642,6 +642,103 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 13: Added Lore entity type for campaign knowledge')
     },
   },
+  {
+    version: 14,
+    name: 'add_i18n_keys_to_races_and_classes',
+    up: (db) => {
+      // Add 'key' column to races and classes for i18n lookups
+      console.log('  Adding key column to races table...')
+      db.exec(`
+        CREATE TABLE races_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          key TEXT NULL,
+          name_de TEXT NULL,
+          name_en TEXT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+      db.exec(`
+        INSERT INTO races_new (id, name, name_de, name_en, description, created_at, deleted_at)
+        SELECT id, name, name_de, name_en, description, created_at, deleted_at FROM races
+      `)
+      db.exec('DROP TABLE races')
+      db.exec('ALTER TABLE races_new RENAME TO races')
+
+      console.log('  Adding key column to classes table...')
+      db.exec(`
+        CREATE TABLE classes_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          key TEXT NULL,
+          name_de TEXT NULL,
+          name_en TEXT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT
+        )
+      `)
+      db.exec(`
+        INSERT INTO classes_new (id, name, name_de, name_en, description, created_at, deleted_at)
+        SELECT id, name, name_de, name_en, description, created_at, deleted_at FROM classes
+      `)
+      db.exec('DROP TABLE classes')
+      db.exec('ALTER TABLE classes_new RENAME TO classes')
+
+      // Map German names to English i18n keys
+      const raceKeyMapping: Record<string, string> = {
+        Mensch: 'human',
+        Elf: 'elf',
+        Zwerg: 'dwarf',
+        Halbling: 'halfling',
+        Gnom: 'gnome',
+        Halbelf: 'halfelf',
+        Halbork: 'halforc',
+        Tiefling: 'tiefling',
+        Drachenblütiger: 'dragonborn',
+        Drow: 'drow',
+        Waldelf: 'woodelf',
+        Hochelf: 'highelf',
+        Bergzwerg: 'mountaindwarf',
+        Hügelzwerg: 'hilldwarf',
+        'Leichtfuß-Halbling': 'lightfoothalfling',
+        'Robuster Halbling': 'stouthalfling',
+      }
+
+      const classKeyMapping: Record<string, string> = {
+        Barbar: 'barbarian',
+        Barde: 'bard',
+        Druide: 'druid',
+        Hexenmeister: 'warlock',
+        Kämpfer: 'fighter',
+        Kleriker: 'cleric',
+        Magier: 'wizard',
+        Mönch: 'monk',
+        Paladin: 'paladin',
+        Schurke: 'rogue',
+        Waldläufer: 'ranger',
+        Zauberer: 'sorcerer',
+      }
+
+      // Update races with i18n keys
+      console.log('  Updating races with i18n keys...')
+      const updateRace = db.prepare('UPDATE races SET key = ? WHERE name = ?')
+      for (const [germanName, key] of Object.entries(raceKeyMapping)) {
+        updateRace.run(key, germanName)
+      }
+
+      // Update classes with i18n keys
+      console.log('  Updating classes with i18n keys...')
+      const updateClass = db.prepare('UPDATE classes SET key = ? WHERE name = ?')
+      for (const [germanName, key] of Object.entries(classKeyMapping)) {
+        updateClass.run(key, germanName)
+      }
+
+      console.log('✅ Migration 14: Added i18n keys to races and classes for proper translations')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
