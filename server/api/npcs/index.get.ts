@@ -63,10 +63,21 @@ export default defineEventHandler(async (event) => {
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
     const originalSearchTerm = searchQuery.trim()
-    const searchTerm = normalizeText(originalSearchTerm)
 
-    // Parse query with operators (AND, OR, NOT) using ORIGINAL term (preserves hyphens for race/class names)
-    const parsedQuery = parseSearchQuery(originalSearchTerm)
+    // Check if this is a quoted phrase BEFORE normalization
+    const isQuotedPhrase = originalSearchTerm.startsWith('"') && originalSearchTerm.endsWith('"')
+
+    // If quoted, remove quotes, normalize, then re-add quotes
+    let searchTerm: string
+    if (isQuotedPhrase) {
+      const withoutQuotes = originalSearchTerm.slice(1, -1) // Remove surrounding quotes
+      searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
+    } else {
+      searchTerm = normalizeText(originalSearchTerm)
+    }
+
+    // Parse query with operators (AND, OR, NOT) using searchTerm (now with preserved quotes)
+    const parsedQuery = parseSearchQuery(searchTerm)
 
     // Expand all terms with race/class key lookups (locale-aware)
     // IMPORTANT: Use ORIGINAL terms (with hyphens) for race/class lookup, e.g., "en-bruddi" not "enbruddi"
@@ -406,7 +417,32 @@ export default defineEventHandler(async (event) => {
       }
 
       // Step 3: Filter by Levenshtein distance
-      if (!parsedQuery.hasOperators) {
+      const isQuotedPhraseSearch =
+        parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
+
+      if (isQuotedPhraseSearch) {
+        // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
+        const exactPhrase = parsedQuery.fts5Query.slice(1, -1) // Remove quotes
+
+        scoredNpcs = scoredNpcs.filter((npc) => {
+          const nameNormalized = normalizeText(npc.name)
+          const metadataNormalized = normalizeText(npc.metadata || '')
+          const descriptionNormalized = normalizeText(npc.description || '')
+          const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+          const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+          const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
+
+          // Check if EXACT phrase appears in ANY field
+          return (
+            nameNormalized.includes(exactPhrase) ||
+            descriptionNormalized.includes(exactPhrase) ||
+            metadataNormalized.includes(exactPhrase) ||
+            linkedFactionNamesNormalized.includes(exactPhrase) ||
+            linkedLocationNamesNormalized.includes(exactPhrase) ||
+            linkedLoreNamesNormalized.includes(exactPhrase)
+          )
+        })
+      } else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
         const filtered: ScoredNpc[] = []
         for (const npc of scoredNpcs) {

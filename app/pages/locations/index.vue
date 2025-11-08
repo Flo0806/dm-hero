@@ -63,14 +63,26 @@
       <!-- Tree View -->
       <v-card>
         <v-treeview
+          v-model:opened="openedNodes"
           :items="treeItems"
+          :open-on-click="true"
           item-value="id"
           item-title="title"
           density="comfortable"
-          open-all
+          expand-icon=""
+          collapse-icon=""
         >
-          <!-- Custom item slot for icons and actions -->
+          <!-- Custom prepend slot for expand button + icon -->
           <template #prepend="{ item }">
+            <!-- Expand/Collapse icon only if has children -->
+            <v-icon
+              v-if="item.children && item.children.length > 0"
+              :icon="openedNodes.includes(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+              size="small"
+            />
+            <div v-else style="width: 24px; display: inline-block" />
+
+            <!-- Location type icon -->
             <v-icon :color="getNodeColor(item)">
               {{ getNodeIcon(item) }}
             </v-icon>
@@ -78,9 +90,18 @@
 
           <!-- Custom title to highlight search results -->
           <template #title="{ item }">
-            <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
-              {{ item.title }}
-            </span>
+            <div
+              :id="`location-${item.raw.id}`"
+              :key="`location-title-${item.raw.id}-${animationKey}`"
+              :class="{
+                'highlight-blink': highlightedId === item.raw.id,
+              }"
+              style="display: inline-block; padding: 4px 8px; border-radius: 4px"
+            >
+              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
+                {{ item.title }}
+              </span>
+            </div>
           </template>
 
           <template #append="{ item }">
@@ -844,9 +865,10 @@ const { downloadImage } = useImageDownload()
 // Get active campaign from campaign store
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
-// Highlighted location (from global search)
+// Highlighted location (from global search or after save)
 const highlightedId = ref<number | null>(null)
 const isFromGlobalSearch = ref(false)
+const animationKey = ref(0) // Unique key to prevent re-triggering animation on re-render
 
 // Initialize from query params (global search)
 function initializeFromQuery() {
@@ -855,8 +877,12 @@ function initializeFromQuery() {
 
   if (highlightParam && searchParam) {
     highlightedId.value = Number(highlightParam)
-    searchQuery.value = String(searchParam)
+    const searchText = String(searchParam)
+    searchQuery.value = searchText
+    inputValue = searchText // Also update the non-reactive input value!
+    isInSearchMode.value = true // Activate search mode
     isFromGlobalSearch.value = true
+    // Note: animationKey will be incremented AFTER search completes (see watch below)
 
     // Scroll to highlighted location after a short delay
     nextTick(() => {
@@ -865,8 +891,13 @@ function initializeFromQuery() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
-      }, 100)
+      }, 500) // Longer delay to wait for search to complete
     })
+
+    // Clear highlight after animation completes (2s = 2 blinks)
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000) // Longer timeout because we wait for search
   }
 }
 
@@ -912,10 +943,7 @@ watch(
 
 // Clear highlight when user manually searches
 watch(searchQuery, () => {
-  if (isFromGlobalSearch.value) {
-    // First change after global search, keep highlight
-    isFromGlobalSearch.value = false
-  } else {
+  if (!isFromGlobalSearch.value) {
     // Manual search by user, clear highlight
     highlightedId.value = null
     // Remove query params from URL
@@ -923,6 +951,7 @@ watch(searchQuery, () => {
       router.replace({ query: {} })
     }
   }
+  // Note: isFromGlobalSearch is reset in the searchResults watch after animation triggers
 })
 
 // Use store data
@@ -1116,8 +1145,59 @@ const treeItems = computed(() => {
     }
   })
 
+  // Sort function: alphabetical by name (case-insensitive)
+  const sortNodes = (nodes: TreeNode[]) => {
+    nodes.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+    // Recursively sort children
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        sortNodes(node.children)
+      }
+    })
+  }
+
+  // Sort root nodes and all children
+  sortNodes(rootNodes)
+
   return rootNodes
 })
+
+// Control which tree nodes are open/collapsed
+// Use a writable ref that tracks both manual and search-based opening
+const openedNodes = ref<number[]>([])
+
+// Update opened nodes when search results change
+watch(
+  [isInSearchMode, searchResults],
+  ([searching, results]) => {
+    if (searching && results.length > 0) {
+      // When searching, expand all nodes that contain search results
+      const nodesToOpen = new Set<number>()
+      const allLocations = locations.value || []
+
+      results.forEach((result) => {
+        // Add the result node itself
+        nodesToOpen.add(result.id)
+
+        // Add all parent IDs to ensure the result is visible
+        const parentIds = getParentIds(result.id, allLocations)
+        parentIds.forEach((id) => nodesToOpen.add(id))
+      })
+
+      openedNodes.value = Array.from(nodesToOpen)
+
+      // If this is the first search after global search, trigger animation
+      if (isFromGlobalSearch.value) {
+        animationKey.value++
+        isFromGlobalSearch.value = false // Reset flag
+      }
+    } else if (!searching) {
+      // When not searching, collapse all
+      openedNodes.value = []
+    }
+  },
+  { immediate: true },
+)
 
 // Get icon based on location type
 function getNodeIcon(item: TreeNode) {
@@ -1616,6 +1696,8 @@ async function saveLocation() {
   saving.value = true
 
   try {
+    let savedLocationId: number
+
     if (editingLocation.value) {
       await $fetch(`/api/locations/${editingLocation.value.id}`, {
         method: 'PATCH',
@@ -1626,10 +1708,11 @@ async function saveLocation() {
           parentLocationId: locationForm.value.parentLocationId,
         },
       })
-      // Reload locations to get updated data
-      await entitiesStore.fetchLocations(activeCampaignId.value)
+      savedLocationId = editingLocation.value.id
+      // Reload locations to get updated data (force refresh!)
+      await entitiesStore.fetchLocations(activeCampaignId.value, true)
     } else {
-      await $fetch('/api/locations', {
+      const newLocation = await $fetch<Location>('/api/locations', {
         method: 'POST',
         body: {
           name: locationForm.value.name,
@@ -1639,11 +1722,41 @@ async function saveLocation() {
           parentLocationId: locationForm.value.parentLocationId,
         },
       })
-      // Reload locations to get new data
-      await entitiesStore.fetchLocations(activeCampaignId.value)
+      savedLocationId = newLocation.id
+      // Reload locations to get new data (force refresh!)
+      await entitiesStore.fetchLocations(activeCampaignId.value, true)
     }
 
     closeDialog()
+
+    // Highlight and scroll to the saved location
+    // Wait for: dialog close → store update → tree render
+    highlightedId.value = savedLocationId
+    animationKey.value++ // Increment key to trigger fresh animation
+
+    // Give Vue time to render everything
+    await nextTick()
+    await nextTick()
+
+    // Try multiple times to find the element (tree rendering can be slow)
+    let attempts = 0
+    const maxAttempts = 10
+    const scrollInterval = setInterval(() => {
+      attempts++
+      const element = document.getElementById(`location-${savedLocationId}`)
+
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        clearInterval(scrollInterval)
+      } else if (attempts >= maxAttempts) {
+        clearInterval(scrollInterval)
+      }
+    }, 200) // Check every 200ms
+
+    // Clear highlight after animation completes (2s = 2 blinks)
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 2500)
   } catch (error) {
     console.error('Failed to save location:', error)
   } finally {
@@ -1768,12 +1881,25 @@ async function removeLoreRelation(loreId: number) {
 }
 
 async function confirmDelete() {
-  if (!deletingLocation.value) return
+  if (!deletingLocation.value || !activeCampaignId.value) return
 
   deleting.value = true
 
   try {
-    await entitiesStore.deleteLocation(deletingLocation.value.id)
+    // Delete location (cascade deletes children)
+    const result = await $fetch<{ success: boolean; deletedCount: number; message: string }>(
+      `/api/locations/${deletingLocation.value.id}`,
+      { method: 'DELETE' },
+    )
+
+    // Show message if children were deleted
+    if (result.deletedCount > 1) {
+      console.log(result.message) // Could show a toast notification here
+    }
+
+    // Reload locations to reflect cascade deletions
+    await entitiesStore.fetchLocations(activeCampaignId.value, true)
+
     showDeleteDialog.value = false
     deletingLocation.value = null
   } catch (error) {
@@ -1824,21 +1950,5 @@ watch(
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
-}
-
-/* Highlight animation for locations from global search */
-.highlighted-card {
-  animation: highlight-pulse 2s ease-in-out;
-  box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
-}
-
-@keyframes highlight-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
-  }
-  50% {
-    box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
-  }
 }
 </style>

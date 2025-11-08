@@ -17,20 +17,10 @@ export interface ParsedQuery {
 export function parseSearchQuery(query: string): ParsedQuery {
   let trimmed = query.trim()
 
-  // Normalize operators: add spaces around symbols for consistent parsing
-  trimmed = trimmed
-    .replace(/\+/g, ' + ') // "a+b" → "a + b"
-    .replace(/\|/g, ' | ') // "a|b" → "a | b"
-    .replace(/\s+AND\s+/gi, ' + ')
-    .replace(/\s+OR\s+/gi, ' | ')
-    .replace(/\s+NOT\s+/gi, ' - ')
-    .replace(/\s+/g, ' ') // Normalize multiple spaces
-
-  // Check for operators
-  const hasAnd = trimmed.includes('+')
-  const hasOr = trimmed.includes('|')
-  // NOT operator: only if '-' is surrounded by spaces (not inside words like "en-bruddi")
-  const hasNot = /\s-\s/.test(trimmed) || trimmed.startsWith('- ')
+  // Check for operators BEFORE normalization
+  const hasAnd = /\s+AND\s+/i.test(trimmed) || /\s+\+\s+/.test(trimmed)
+  const hasOr = /\s+OR\s+/i.test(trimmed) || /\s+\|\s+/.test(trimmed)
+  const hasNot = /\s+NOT\s+/i.test(trimmed) || /\s+-\s+/.test(trimmed) || trimmed.startsWith('NOT ') || trimmed.startsWith('- ')
   const hasQuotes = trimmed.includes('"')
 
   const hasOperators = hasAnd || hasOr || hasNot || hasQuotes
@@ -77,15 +67,32 @@ export function parseSearchQuery(query: string): ParsedQuery {
 
     if (!token) continue
 
+    // Skip operator tokens (they'll be handled when processing the previous term)
+    const tokenUpper = token.toUpperCase()
+    if (tokenUpper === 'AND' || tokenUpper === 'OR' || tokenUpper === 'NOT' || token === '+' || token === '|' || token === '-') {
+      continue
+    }
+
     // Handle quoted phrases
     if (token.startsWith('"') && token.endsWith('"')) {
       const phrase = token.slice(1, -1)
       fts5Parts.push(`"${phrase}"`)
       terms.push(phrase)
+
+      // Check for operator after quoted phrase
+      const nextToken = tokens[i + 1]
+      if (nextToken) {
+        const nextUpper = nextToken.toUpperCase()
+        if (nextUpper === 'AND' || nextToken === '+') {
+          fts5Parts.push('AND')
+        } else if (nextUpper === 'OR' || nextToken === '|') {
+          fts5Parts.push('OR')
+        }
+      }
       continue
     }
 
-    // Handle NOT operator (prefix)
+    // Handle NOT prefix
     if (token.startsWith('-')) {
       const term = token.slice(1)
       if (term) {
@@ -94,40 +101,30 @@ export function parseSearchQuery(query: string): ParsedQuery {
       continue
     }
 
-    // Handle standalone NOT operator
-    if (token.toUpperCase() === 'NOT') {
-      const nextToken = tokens[i + 1]
-      if (nextToken) {
-        fts5Parts.push(`NOT ${nextToken}`)
-        i++ // Skip the next token
+    // Check what comes BEFORE this token (for NOT operator)
+    if (i > 0) {
+      const prevToken = tokens[i - 1]
+      const prevUpper = prevToken?.toUpperCase()
+      if (prevUpper === 'NOT' || prevToken === '-') {
+        fts5Parts.push(`NOT ${token}`)
+        continue
       }
-      continue
     }
 
-    // Check for operators after this token
-    const nextToken = tokens[i + 1]
-
-    if (nextToken === '+' || nextToken?.toUpperCase() === 'AND') {
-      // AND operator - add prefix wildcard for typo tolerance
-      fts5Parts.push(`${token}*`)
-      fts5Parts.push('AND')
-      terms.push(token)
-      i++ // Skip the operator token
-      continue
-    }
-
-    if (nextToken === '|' || nextToken?.toUpperCase() === 'OR') {
-      // OR operator - add prefix wildcard for typo tolerance
-      fts5Parts.push(`${token}*`)
-      fts5Parts.push('OR')
-      terms.push(token)
-      i++ // Skip the operator token
-      continue
-    }
-
-    // Default: simple term (implicit OR between terms) - add prefix wildcard
+    // Regular term - add with wildcard
     fts5Parts.push(`${token}*`)
     terms.push(token)
+
+    // Check for operator after this token
+    const nextToken = tokens[i + 1]
+    if (nextToken) {
+      const nextUpper = nextToken.toUpperCase()
+      if (nextUpper === 'AND' || nextToken === '+') {
+        fts5Parts.push('AND')
+      } else if (nextUpper === 'OR' || nextToken === '|') {
+        fts5Parts.push('OR')
+      }
+    }
   }
 
   return {

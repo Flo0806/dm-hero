@@ -75,7 +75,19 @@ export default defineEventHandler(async (event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = normalizeText(searchQuery.trim())
+    const trimmedQuery = searchQuery.trim()
+
+    // Check if this is a quoted phrase BEFORE normalization
+    const isQuotedPhrase = trimmedQuery.startsWith('"') && trimmedQuery.endsWith('"')
+
+    // If quoted, remove quotes, normalize, then re-add quotes
+    let searchTerm: string
+    if (isQuotedPhrase) {
+      const withoutQuotes = trimmedQuery.slice(1, -1) // Remove surrounding quotes
+      searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
+    } else {
+      searchTerm = normalizeText(trimmedQuery)
+    }
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -372,7 +384,30 @@ export default defineEventHandler(async (event) => {
       })
 
       // Step 3: Filter by Levenshtein distance
-      if (!parsedQuery.hasOperators) {
+      const isQuotedPhraseSearch =
+        parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
+
+      if (isQuotedPhraseSearch) {
+        // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
+        const exactPhrase = parsedQuery.fts5Query.slice(1, -1) // Remove quotes
+
+        scoredItems = scoredItems.filter((item) => {
+          const nameNormalized = normalizeText(item.name)
+          const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
+          const descriptionNormalized = item.description ? normalizeText(item.description) : ''
+          const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+          const loreNamesNormalized = item.linked_lore_names ? normalizeText(item.linked_lore_names) : ''
+
+          // Check if EXACT phrase appears in ANY field
+          return (
+            nameNormalized.includes(exactPhrase) ||
+            descriptionNormalized.includes(exactPhrase) ||
+            metadataNormalized.includes(exactPhrase) ||
+            ownerNamesNormalized.includes(exactPhrase) ||
+            loreNamesNormalized.includes(exactPhrase)
+          )
+        })
+      } else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY expanded term matches
         scoredItems = scoredItems.filter((item) => {
           const nameNormalized = normalizeText(item.name)

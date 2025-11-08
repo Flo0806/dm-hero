@@ -111,7 +111,8 @@ function getEntityPath(entityType: string, entityId: number, entityName: string)
   const basePath = typeMap[entityType] || '/npcs'
   const query = new URLSearchParams()
   query.set('highlight', entityId.toString())
-  query.set('search', entityName) // Pass the entity name, not the search query
+  // Wrap entity name in quotes for exact phrase search (prevents splitting on spaces)
+  query.set('search', `"${entityName}"`)
   return `${basePath}?${query.toString()}`
 }
 
