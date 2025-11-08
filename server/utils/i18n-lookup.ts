@@ -631,7 +631,8 @@ export async function convertMetadataToKeys(
           ? converted.race.value
           : converted.race
 
-      // If it's already a key (no uppercase, no spaces), keep it
+      // If it's already a key (lowercase, no spaces), keep it
+      // This prevents double-conversion: "halfelf" should stay "halfelf", not be converted again
       if (
         typeof raceValue === 'string' &&
         raceValue === raceValue.toLowerCase() &&
@@ -639,6 +640,7 @@ export async function convertMetadataToKeys(
       ) {
         converted.race = raceValue
       } else if (typeof raceValue === 'string') {
+        // It's a display name (e.g., "Halbelf") - convert to key
         const raceKey = await getRaceKey(raceValue)
         if (raceKey) converted.race = raceKey
       }
@@ -653,7 +655,7 @@ export async function convertMetadataToKeys(
           ? converted.class.value
           : converted.class
 
-      // If it's already a key (no uppercase, no spaces), keep it
+      // If it's already a key (lowercase, no spaces), keep it
       if (
         typeof classValue === 'string' &&
         classValue === classValue.toLowerCase() &&
@@ -661,6 +663,7 @@ export async function convertMetadataToKeys(
       ) {
         converted.class = classValue
       } else if (typeof classValue === 'string') {
+        // It's a display name (e.g., "Magier") - convert to key
         const classKey = await getClassKey(classValue)
         if (classKey) converted.class = classKey
       }

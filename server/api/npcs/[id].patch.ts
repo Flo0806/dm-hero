@@ -21,19 +21,39 @@ export default defineEventHandler(async (event) => {
   }
 
   // Convert localized race/class names to keys before saving
-  const metadataWithKeys = metadata ? convertMetadataToKeys(metadata) : null
+  const metadataWithKeys = metadata
+    ? await convertMetadataToKeys(metadata as Record<string, unknown>, 'npc')
+    : null
 
-  db.prepare(
-    `
-    UPDATE entities
-    SET
-      name = COALESCE(?, name),
-      description = COALESCE(?, description),
-      metadata = COALESCE(?, metadata),
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = ? AND deleted_at IS NULL
-  `,
-  ).run(name, description, metadataWithKeys ? JSON.stringify(metadataWithKeys) : null, id)
+  // Build UPDATE dynamically - only update fields that are provided
+  const updates: string[] = []
+  const values: unknown[] = []
+
+  if (name !== undefined) {
+    updates.push('name = ?')
+    values.push(name)
+  }
+  if (description !== undefined) {
+    updates.push('description = ?')
+    values.push(description)
+  }
+  if (metadata !== undefined) {
+    updates.push('metadata = ?')
+    values.push(metadataWithKeys ? JSON.stringify(metadataWithKeys) : null)
+  }
+
+  if (updates.length > 0) {
+    updates.push('updated_at = CURRENT_TIMESTAMP')
+    values.push(id)
+
+    db.prepare(
+      `
+      UPDATE entities
+      SET ${updates.join(', ')}
+      WHERE id = ? AND deleted_at IS NULL
+    `,
+    ).run(...values)
+  }
 
   interface DbEntity {
     id: number
