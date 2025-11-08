@@ -279,11 +279,15 @@
           </v-tab>
           <v-tab value="owners">
             <v-icon start> mdi-account </v-icon>
-            {{ $t('items.owners') }}
+            {{ $t('items.owners') }} ({{ itemOwners.length }})
           </v-tab>
           <v-tab value="locations">
             <v-icon start> mdi-map-marker </v-icon>
-            {{ $t('items.locations') }}
+            {{ $t('items.locations') }} ({{ itemLocations.length }})
+          </v-tab>
+          <v-tab value="lore">
+            <v-icon start> mdi-book-open-variant </v-icon>
+            {{ $t('lore.title') }} ({{ linkedLore.length }})
           </v-tab>
           <v-tab value="documents">
             <v-icon start> mdi-file-document </v-icon>
@@ -735,6 +739,66 @@
               </v-expansion-panels>
             </v-tabs-window-item>
 
+            <!-- Lore Tab -->
+            <v-tabs-window-item value="lore">
+              <div v-if="editingItem">
+                <!-- Add Lore Relation -->
+                <v-card variant="outlined" class="mb-4">
+                  <v-card-text>
+                    <v-autocomplete
+                      v-model="selectedLoreId"
+                      :items="loreItems"
+                      :label="$t('lore.selectLore')"
+                      :placeholder="$t('lore.selectLorePlaceholder')"
+                      variant="outlined"
+                      clearable
+                      :loading="loadingLore"
+                      class="mb-2"
+                    />
+                    <v-btn color="primary" :disabled="!selectedLoreId" @click="addLoreRelation">
+                      <v-icon start> mdi-link-plus </v-icon>
+                      {{ $t('lore.addRelation') }}
+                    </v-btn>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Linked Lore List -->
+                <v-list v-if="linkedLore.length > 0">
+                  <v-list-item v-for="lore in linkedLore" :key="lore.id" class="mb-2">
+                    <template #prepend>
+                      <v-avatar v-if="lore.image_url" size="56" rounded="lg" class="mr-3">
+                        <v-img :src="`/uploads/${lore.image_url}`" />
+                      </v-avatar>
+                      <v-avatar v-else size="56" rounded="lg" class="mr-3" color="surface-variant">
+                        <v-icon icon="mdi-book-open-variant" />
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title>{{ lore.name }}</v-list-item-title>
+                    <v-list-item-subtitle v-if="lore.description">
+                      {{ lore.description.substring(0, 100)
+                      }}{{ lore.description.length > 100 ? '...' : '' }}
+                    </v-list-item-subtitle>
+                    <template #append>
+                      <v-btn
+                        icon="mdi-delete"
+                        variant="text"
+                        color="error"
+                        size="small"
+                        @click="removeLoreRelation(lore.id)"
+                      />
+                    </template>
+                  </v-list-item>
+                </v-list>
+
+                <v-empty-state
+                  v-else
+                  icon="mdi-book-open-variant"
+                  :title="$t('lore.noLinkedLore')"
+                  :text="$t('lore.noLinkedLoreText')"
+                />
+              </div>
+            </v-tabs-window-item>
+
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
               <EntityDocuments v-if="editingItem" :entity-id="editingItem.id" />
@@ -948,6 +1012,7 @@ onMounted(async () => {
     entitiesStore.fetchItems(activeCampaignId.value),
     entitiesStore.fetchNPCs(activeCampaignId.value),
     entitiesStore.fetchLocations(activeCampaignId.value),
+    entitiesStore.fetchLore(activeCampaignId.value),
   ])
 
   // Check if API key is configured
@@ -1114,6 +1179,13 @@ const hasUnsavedChanges = computed(() => {
 
 // Dialog tab state
 const itemDialogTab = ref('details')
+
+// Lore linking state
+const linkedLore = ref<
+  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+>([])
+const selectedLoreId = ref<number | null>(null)
+const loadingLore = ref(false)
 
 // Image upload state
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -1581,6 +1653,88 @@ async function removeLocation(relationId: number) {
     await loadItemLocations()
   } catch (error) {
     console.error('Failed to remove location:', error)
+  }
+}
+
+// Lore items for selection
+const loreItems = computed(() => {
+  return entitiesStore.loreForSelect.map((lore: { id: number; name: string }) => ({
+    title: lore.name,
+    value: lore.id,
+  }))
+})
+
+// Load linked lore when editing Item
+watch(
+  () => editingItem.value?.id,
+  async (itemId) => {
+    if (itemId) {
+      await loadLinkedLore(itemId)
+    } else {
+      linkedLore.value = []
+    }
+  },
+)
+
+// Load linked lore entries
+async function loadLinkedLore(itemId: number) {
+  loadingLore.value = true
+  try {
+    const relations = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/items/${itemId}/lore`)
+    linkedLore.value = relations
+  } catch (error) {
+    console.error('Failed to load linked lore:', error)
+    linkedLore.value = []
+  } finally {
+    loadingLore.value = false
+  }
+}
+
+// Add lore relation
+async function addLoreRelation() {
+  if (!editingItem.value || !selectedLoreId.value) return
+
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: editingItem.value.id,
+        toEntityId: selectedLoreId.value,
+        relationType: 'bezieht sich auf',
+      },
+    })
+
+    await loadLinkedLore(editingItem.value.id)
+    selectedLoreId.value = null
+  } catch (error) {
+    console.error('Failed to add lore relation:', error)
+  }
+}
+
+// Remove lore relation
+async function removeLoreRelation(loreId: number) {
+  if (!editingItem.value) return
+
+  try {
+    // Find the relation ID
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        from_entity_id: editingItem.value.id,
+        to_entity_id: loreId,
+      },
+    })
+
+    if (relation?.id) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+
+      await loadLinkedLore(editingItem.value.id)
+    }
+  } catch (error) {
+    console.error('Failed to remove lore relation:', error)
   }
 }
 </script>

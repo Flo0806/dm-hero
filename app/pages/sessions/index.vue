@@ -86,7 +86,7 @@
           </v-tab>
           <v-tab value="mentions">
             <v-icon start> mdi-link-variant </v-icon>
-            {{ $t('sessions.mentions') }}
+            {{ $t('sessions.mentions') }} ({{ extractedMentions.length }})
           </v-tab>
         </v-tabs>
 

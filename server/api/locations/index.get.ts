@@ -41,6 +41,7 @@ export default defineEventHandler((event) => {
     fts_score?: number
     linked_npc_names?: string | null
     linked_item_names?: string | null
+    linked_lore_names?: string | null
   }
 
   interface ScoredLocation extends LocationRow {
@@ -95,7 +96,8 @@ export default defineEventHandler((event) => {
           e.updated_at,
           ei.image_url as primary_image_url,
           GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
-          GROUP_CONCAT(DISTINCT item.name) as linked_item_names
+          GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
+          GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
@@ -103,6 +105,8 @@ export default defineEventHandler((event) => {
         LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
         LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
         LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
+        LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+        LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
@@ -133,7 +137,8 @@ export default defineEventHandler((event) => {
             e.updated_at,
             ei.image_url as primary_image_url,
             GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
-            GROUP_CONCAT(DISTINCT item.name) as linked_item_names
+            GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
@@ -141,6 +146,8 @@ export default defineEventHandler((event) => {
           LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
           LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
           LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
@@ -173,13 +180,16 @@ export default defineEventHandler((event) => {
           e.updated_at,
           ei.image_url as primary_image_url,
           GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
-          GROUP_CONCAT(DISTINCT item.name) as linked_item_names
+          GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
+          GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
         FROM entities e
         LEFT JOIN entity_images ei ON e.id = ei.entity_id AND ei.is_primary = 1
         LEFT JOIN entity_relations npc_rel ON npc_rel.to_entity_id = e.id
         LEFT JOIN entities npc ON npc.id = npc_rel.from_entity_id AND npc.deleted_at IS NULL AND npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
         LEFT JOIN entity_relations item_rel ON item_rel.to_entity_id = e.id
         LEFT JOIN entities item ON item.id = item_rel.from_entity_id AND item.deleted_at IS NULL AND item.type_id = (SELECT id FROM entity_types WHERE name = 'Item')
+        LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+        LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
         WHERE e.type_id = ?
           AND e.campaign_id = ?
           AND e.deleted_at IS NULL
@@ -203,12 +213,15 @@ export default defineEventHandler((event) => {
         const descriptionNormalized = normalizeText(location.description || '')
         const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
         const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
+        const linkedLoreNamesNormalized = normalizeText(location.linked_lore_names || '')
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isNpcMatch = linkedNpcNamesNormalized.includes(searchTerm)
         const isItemMatch = linkedItemNamesNormalized.includes(searchTerm)
+        const isLoreMatch = linkedLoreNamesNormalized.includes(searchTerm)
         const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch) && !containsQuery
+          (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch || isLoreMatch) &&
+          !containsQuery
 
         let levDistance: number
 
@@ -233,8 +246,20 @@ export default defineEventHandler((event) => {
         if (containsQuery) finalScore -= 50
         if (isNpcMatch) finalScore -= 30 // NPC matches are very good
         if (isItemMatch) finalScore -= 30 // Item matches are very good
+        if (isLoreMatch) finalScore -= 30 // Lore matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
+
+        // SPECIAL: Multi-word lore match bonus (e.g., "böser frosch")
+        // Check if ALL terms from parsedQuery appear in this Location's lore names
+        if (parsedQuery.terms.length > 1 && linkedLoreNamesNormalized.length > 0) {
+          const allTermsInThisLore = parsedQuery.terms.every((term) =>
+            linkedLoreNamesNormalized.includes(normalizeText(term)),
+          )
+          if (allTermsInThisLore) {
+            finalScore -= 500 // HUGE bonus - these should be at the top!
+          }
+        }
 
         return {
           ...location,
@@ -252,6 +277,17 @@ export default defineEventHandler((event) => {
           const descriptionNormalized = normalizeText(location.description || '')
           const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
           const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
+          const linkedLoreNamesNormalized = normalizeText(location.linked_lore_names || '')
+
+          // Special case: Multi-word search - check if ALL terms appear in Lore names
+          if (parsedQuery.terms.length > 1 && linkedLoreNamesNormalized.length > 0) {
+            const allTermsInLore = parsedQuery.terms.every((term) =>
+              linkedLoreNamesNormalized.includes(term),
+            )
+            if (allTermsInLore) {
+              return true // Match via Lore!
+            }
+          }
 
           // Check ALL terms
           for (const term of parsedQuery.terms) {
@@ -261,7 +297,8 @@ export default defineEventHandler((event) => {
               descriptionNormalized.includes(term) ||
               metadataNormalized.includes(term) ||
               linkedNpcNamesNormalized.includes(term) ||
-              linkedItemNamesNormalized.includes(term)
+              linkedItemNamesNormalized.includes(term) ||
+              linkedLoreNamesNormalized.includes(term)
             ) {
               return true
             }
@@ -330,6 +367,23 @@ export default defineEventHandler((event) => {
                 }
               }
             }
+
+            // Levenshtein match for linked Lore names (split by comma, then by words)
+            if (linkedLoreNamesNormalized.length > 0) {
+              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                // Split each lore name into words (e.g., "Böser Frosch" → ["böser", "frosch"])
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
 
           return false // No term matched
@@ -342,6 +396,7 @@ export default defineEventHandler((event) => {
           const descriptionNormalized = normalizeText(location.description || '')
           const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
           const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
+          const linkedLoreNamesNormalized = normalizeText(location.linked_lore_names || '')
 
           // Check if at least one term matches
           for (const term of parsedQuery.terms) {
@@ -351,7 +406,8 @@ export default defineEventHandler((event) => {
               descriptionNormalized.includes(term) ||
               metadataNormalized.includes(term) ||
               linkedNpcNamesNormalized.includes(term) ||
-              linkedItemNamesNormalized.includes(term)
+              linkedItemNamesNormalized.includes(term) ||
+              linkedLoreNamesNormalized.includes(term)
             ) {
               return true
             }
@@ -420,6 +476,22 @@ export default defineEventHandler((event) => {
                 }
               }
             }
+
+            // Levenshtein match for linked Lore names
+            if (linkedLoreNamesNormalized.length > 0) {
+              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
           return false // No term matched
         })
@@ -431,6 +503,7 @@ export default defineEventHandler((event) => {
           const descriptionNormalized = normalizeText(location.description || '')
           const linkedNpcNamesNormalized = normalizeText(location.linked_npc_names || '')
           const linkedItemNamesNormalized = normalizeText(location.linked_item_names || '')
+          const linkedLoreNamesNormalized = normalizeText(location.linked_lore_names || '')
 
           // Check if ALL terms match
           for (const term of parsedQuery.terms) {
@@ -442,7 +515,8 @@ export default defineEventHandler((event) => {
               descriptionNormalized.includes(term) ||
               metadataNormalized.includes(term) ||
               linkedNpcNamesNormalized.includes(term) ||
-              linkedItemNamesNormalized.includes(term)
+              linkedItemNamesNormalized.includes(term) ||
+              linkedLoreNamesNormalized.includes(term)
             ) {
               termMatches = true
             }
@@ -518,6 +592,27 @@ export default defineEventHandler((event) => {
                   if (word.length === 0) continue
                   const itemLevDist = levenshtein(term, word)
                   if (itemLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
+              }
+            }
+
+            // Check Levenshtein for linked Lore names (split by comma, then by words)
+            if (!termMatches && linkedLoreNamesNormalized.length > 0) {
+              const termLength = term.length
+              const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
                     termMatches = true
                     break
                   }

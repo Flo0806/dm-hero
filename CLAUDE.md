@@ -1,5 +1,105 @@
 # DM Hero - Project Context
 
+---
+## ✅ COMPLETED SESSION - 2025-11-08
+
+**Items ↔ Lore Feature - VOLLSTÄNDIG FERTIG!**
+
+### 1. Bidirektionale Verknüpfung ✅
+
+**Backend APIs:**
+- `/server/api/items/[id]/lore.get.ts` - Lädt alle Lore-Einträge für ein Item
+- `/server/api/lore/[id]/items.get.ts` - Lädt alle Items für einen Lore-Eintrag
+
+**Frontend UI:**
+- Items Dialog: "Lore" Tab mit Autocomplete + Liste (zeigt Count)
+- Lore Dialog: "Items" Tab mit Autocomplete + Liste (zeigt Count)
+- Beide Seiten können Verknüpfungen erstellen und löschen
+
+### 2. Cross-Search Implementation ✅
+
+**File:** `/server/api/items/index.get.ts`
+
+**Implementierte Features:**
+1. ✅ `linked_lore_names` in Hauptabfrage (GROUP_CONCAT mit LEFT JOIN)
+2. ✅ `linked_lore_names` in Fallback 1 Query
+3. ✅ `linked_lore_names` in Fallback 2 Query
+4. ✅ Scoring Logic: Lore-Match = -30 Punkte Bonus
+5. ✅ Filter Logic: Word-level Levenshtein für Lore-Namen
+   - Split by comma → Split by spaces → Check words ≥ 3 chars
+6. ✅ Debug-Logging entfernt
+
+**Beispiel:**
+```
+Item: "Antigifte Phiole"
+Lore: "Böser Frosch" (verknüpft)
+
+Suche: "frosch" → Findet "Antigifte Phiole" ✅
+Suche: "frsch" (Typo) → Findet "Antigifte Phiole" ✅ (Levenshtein Distance 1)
+```
+
+### 3. Tab Counts in allen Dialogs ✅
+
+**Files Modified:**
+- `/app/pages/locations/index.vue` - NPCs (x), Lore (x)
+- `/app/pages/items/index.vue` - Owners (x), Locations (x), Lore (x)
+- `/app/pages/npcs/index.vue` - Relations (x), Memberships (x), Items (x), Lore (x)
+- `/app/pages/sessions/index.vue` - Mentions (x)
+
+### 4. Comprehensive Test Suite ✅
+
+**File:** `/test/unit/item-lore-search.test.ts` (NEW)
+
+**8 Tests Created:**
+1. Bidirectional linking (Item → Lore)
+2. Exact Lore name match
+3. Word-level Levenshtein (typo tolerance)
+4. Scoring logic (Lore vs Description)
+5. Multiple Lore links (GROUP_CONCAT)
+6. Search for any linked Lore
+7. Combined Owner + Lore search
+8. **Result: 8/8 Tests PASSING** ✅
+
+### 5. TypeScript Quality Improvements ✅
+
+**Files Fixed:**
+- `/test/unit/location-linking.test.ts` - Removed all `unknown` types
+- `/test/unit/item-lore-search.test.ts` - Removed all `any` types
+
+**Pattern Applied:**
+```typescript
+interface ItemWithLoreNames {
+  id: number
+  name: string
+  linked_lore_names?: string | null
+}
+
+const results = db.prepare(query).all(params) as ItemWithLoreNames[]
+```
+
+### 6. Final Test Run ✅
+
+```bash
+✓ unit test/unit/item-lore-search.test.ts (8 tests) 38ms
+✓ unit test/unit/faction-linking.test.ts (9 tests) 73ms
+✓ unit test/unit/location-linking.test.ts (13 tests) 82ms
+✓ unit test/unit/npc-search.test.ts (28 tests) 143ms
+
+Test Files  4 passed (4)
+Tests       58 passed (58)
+Duration    466ms
+```
+
+### Bugs Fixed This Session:
+
+1. ✅ **better-sqlite3 Node Version Mismatch** → `pnpm rebuild better-sqlite3`
+2. ✅ **FTS5 Syntax Error** → Async event handler + `await Promise.all()`
+3. ✅ **TypeScript 'unknown' types** → Added proper interfaces
+4. ✅ **TypeScript 'any' types in tests** → Replaced with typed interfaces
+5. ✅ **ESLint unused variable** → `location2` → `_location2`
+
+---
+
 ## Project Overview
 
 DM Hero is a personal D&D campaign management tool for Dungeon Masters. The main goal is to solve the problem of scattered information across multiple Word documents, making it hard to find NPCs, locations, and connections between entities.
@@ -33,7 +133,7 @@ A local-first web app with:
 ## Quick Start (for fresh clone)
 
 ```bash
-# 1. Use correct Node version
+# 1. Use correct Node version (CRITICAL!)
 nvm use
 
 # 2. Install dependencies
@@ -48,6 +148,31 @@ pnpm dev
 # Database will be auto-created in data/dm-hero.db
 # Migrations run automatically on server start
 ```
+
+## ⚠️ CRITICAL: Node Version & better-sqlite3
+
+**ALWAYS run `nvm use` before ANY npm/pnpm command!**
+
+better-sqlite3 is a **native Node module** that must be compiled for the EXACT Node version you're using. If you switch Node versions, you MUST rebuild:
+
+```bash
+# Switch to correct version
+nvm use
+
+# Rebuild native module
+pnpm rebuild better-sqlite3
+```
+
+**Common Error Symptoms:**
+- `Module did not self-register` → Wrong Node version
+- `NODE_MODULE_VERSION mismatch` → Rebuild needed
+- Dev server crashes with SQLite errors → Rebuild needed
+
+**Why This Happens:**
+- Node v20 uses MODULE_VERSION 115
+- Node v22 uses MODULE_VERSION 127
+- Compiled binaries are NOT compatible between versions
+- Always check `.nvmrc` (expects v22.20.0)
 
 ## Design Principles
 
@@ -73,6 +198,42 @@ pnpm dev
 3. **DEPLOYMENT.md** - Update if deployment process changes
 
 This ensures new contributors (and future you) can understand the project quickly.
+
+## Release Process
+
+**How to create a new release and trigger Docker build:**
+
+```bash
+# 1. Ensure all changes are committed and pushed to main
+git checkout main
+git pull
+
+# 2. Create and push a version tag (triggers GitHub Action)
+git tag v1.0.1 -m "Release 1.0.1: Description of changes"
+git push --tags
+
+# 3. GitHub Action automatically:
+#    - Builds Docker image
+#    - Pushes to ghcr.io/flo0806/dm-hero:latest
+#    - Pushes to ghcr.io/flo0806/dm-hero:1.0.1
+#    - Server pulls new image via cron (every 10 minutes)
+
+# 4. Monitor build: https://github.com/Flo0806/dm-hero/actions
+```
+
+**Version Numbering (Semantic Versioning):**
+- **Major (v2.0.0)**: Breaking changes, major features
+- **Minor (v1.1.0)**: New features, backwards compatible
+- **Patch (v1.0.1)**: Bug fixes, small improvements
+
+**Manual Trigger (alternative):**
+- Go to: https://github.com/Flo0806/dm-hero/actions
+- Select "Build and Push Docker Image"
+- Click "Run workflow" → Select branch `main` → Run
+
+**Server Update:**
+- Auto-update runs every 10 minutes (cron job on server)
+- Manual update: `cd /opt/webapps/dm-hero && docker-compose pull && docker-compose up -d`
 
 ## Database Architecture
 
@@ -1965,6 +2126,129 @@ Claude:
 ---
 
 ## 💡 Important Lessons Learned (2025-11-07)
+
+### Vue 3 Reactivity Performance - Critical Pattern! 🔥
+
+**Problem:** Locations search was EXTREMELY laggy - every keystroke froze the UI for ~1 second, making it completely unusable.
+
+**Root Cause:** Vue's reactivity system + expensive computed properties = UI death
+- `v-model="searchQuery"` made `searchQuery` a reactive ref
+- `treeItems` computed read `searchQuery.value` directly
+- EVERY keystroke triggered complete tree rebuild (with parent lookups, hierarchy building)
+- Tree building is O(n²) complexity for hierarchical data
+
+**Failed Attempts:**
+1. ❌ Debouncing the search query - still hung
+2. ❌ Using `shallowRef` - still hung
+3. ❌ Replacing Vuetify input with native HTML - still hung
+4. ❌ Removing v-model - still hung
+5. ❌ Adding `isInSearchMode` cache - helped but not enough
+
+**Final Solution - Two-Variable Pattern:**
+
+```typescript
+// NON-REACTIVE variable for input field (smooth typing)
+let inputValue = ''
+
+// REACTIVE variable for search logic (triggers after debounce)
+const searchQuery = ref('')
+const isInSearchMode = ref(false)
+
+// Handler with double-debounce
+let inputTimeout: ReturnType<typeof setTimeout> | null = null
+function handleSearchInput(value: string) {
+  // 1. Update non-reactive immediately (smooth!)
+  inputValue = value
+
+  // 2. Show loading state immediately
+  if (value && value.trim().length > 0) {
+    searching.value = true
+    isInSearchMode.value = true
+  } else {
+    searching.value = false
+    isInSearchMode.value = false
+  }
+
+  // 3. Debounce reactive update (50ms delay prevents UI hang)
+  if (inputTimeout) clearTimeout(inputTimeout)
+  inputTimeout = setTimeout(() => {
+    searchQuery.value = value // Triggers watch → API call after 300ms
+  }, 50)
+}
+
+// Template uses non-reactive for input
+<v-text-field
+  :model-value="inputValue"
+  @update:model-value="handleSearchInput"
+/>
+
+// Computeds use cached state, not searchQuery directly
+const treeItems = computed(() => {
+  const isSearching = isInSearchMode.value // NOT searchQuery.value!
+  // ... expensive tree building
+})
+```
+
+**Why This Works:**
+1. **Input field** reads `inputValue` (non-reactive) → Types INSTANTLY, no lag
+2. **Loading state** updates immediately → User sees feedback
+3. **After 50ms** → `searchQuery` updates → Triggers watch
+4. **After 300ms** → API call executes → Results come back
+5. **Tree rebuilds ONCE** when `isInSearchMode` changes (not per keystroke!)
+
+**Key Insights:**
+- Vue's reactivity is NOT suitable for high-frequency updates (typing)
+- Expensive computeds must NOT read frequently-changing refs
+- Use intermediary cached states (`isInSearchMode`) to decouple
+- Non-reactive primitives + manual handlers = smooth UX
+
+**Variable Declaration Order (Critical!):**
+```typescript
+// WRONG - causes ReferenceError
+function handleSearchInput(value: string) {
+  isInSearchMode.value = true // ❌ ReferenceError!
+}
+const isInSearchMode = ref(false) // Defined too late
+
+// CORRECT - declare refs BEFORE functions
+const isInSearchMode = ref(false) // ✅ Defined first
+function handleSearchInput(value: string) {
+  isInSearchMode.value = true // ✅ Works!
+}
+```
+
+**Loading States (Two Scenarios):**
+```vue
+<!-- First search (no results yet) -->
+<div v-if="searching && !searchResults.length" class="text-center">
+  <v-progress-circular indeterminate />
+</div>
+
+<!-- Subsequent searches (results exist) -->
+<v-overlay :model-value="searching" contained>
+  <v-progress-circular indeterminate />
+</v-overlay>
+```
+
+**Files Modified:**
+- `/app/pages/locations/index.vue`:
+  - Line 599: Added `let inputValue = ''` (non-reactive)
+  - Line 603: Moved `isInSearchMode` declaration to top
+  - Line 606-616: Implemented `handleSearchInput` with double-debounce
+  - Line 18: Changed input to use `:model-value="inputValue"`
+  - Line 37-42: Added loading state for first search
+  - Line 831: `treeItems` reads `isInSearchMode.value` not `searchQuery.value`
+
+**Performance Impact:**
+- Before: ~1000ms lag per keystroke (unusable)
+- After: 0ms lag, smooth typing, instant loading feedback ✅
+
+**TODO for Tomorrow:**
+1. Apply this pattern to ALL entity pages (NPCs, Items, Factions) if they have similar issues
+2. Document this as standard pattern for search implementations
+3. Consider extracting into reusable composable `useNonReactiveSearch()`
+
+---
 
 ### ESLint + Prettier Conflicts
 

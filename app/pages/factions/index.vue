@@ -161,6 +161,10 @@
             <v-icon start> mdi-map-marker </v-icon>
             {{ $t('factions.locations') }} ({{ factionLocations.length }})
           </v-tab>
+          <v-tab value="lore">
+            <v-icon start> mdi-book-open-variant </v-icon>
+            {{ $t('lore.title') }} ({{ linkedLore.length }})
+          </v-tab>
         </v-tabs>
 
         <v-card-text style="max-height: 600px; overflow-y: auto">
@@ -535,6 +539,73 @@
                 {{ $t('factions.addLocation') }}
               </v-btn>
             </v-tabs-window-item>
+
+            <!-- Lore Tab -->
+            <v-tabs-window-item value="lore">
+              <div class="text-h6 mb-4">
+                {{ $t('factions.linkedLore') }}
+              </div>
+
+              <v-list v-if="linkedLore.length > 0">
+                <v-list-item v-for="lore in linkedLore" :key="lore.id" class="mb-2" border>
+                  <template #prepend>
+                    <v-avatar v-if="lore.image_url" size="40" rounded="lg">
+                      <v-img :src="`/uploads/${lore.image_url}`" />
+                    </v-avatar>
+                    <v-icon v-else icon="mdi-book-open-variant" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ lore.name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle v-if="lore.description">
+                    {{ lore.description.substring(0, 100) }}{{ lore.description.length > 100 ? '...' : '' }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeLoreRelation(lore.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-empty-state
+                v-else
+                icon="mdi-book-off"
+                :title="$t('factions.noLinkedLore')"
+                :text="$t('factions.noLinkedLoreText')"
+              />
+
+              <v-divider class="my-4" />
+
+              <div class="text-h6 mb-4">
+                {{ $t('factions.addLore') }}
+              </div>
+
+              <v-autocomplete
+                v-model="selectedLoreToLink"
+                :items="loreForSelect"
+                item-title="name"
+                item-value="id"
+                :label="$t('factions.selectLore')"
+                :placeholder="$t('factions.selectLorePlaceholder')"
+                variant="outlined"
+                clearable
+                class="mb-2"
+              />
+
+              <v-btn
+                color="primary"
+                block
+                :disabled="!selectedLoreToLink"
+                @click="addLoreRelation"
+              >
+                {{ $t('factions.linkLore') }}
+              </v-btn>
+            </v-tabs-window-item>
           </v-tabs-window>
 
           <!-- Form when creating (no tabs) -->
@@ -730,6 +801,7 @@ onMounted(async () => {
     entitiesStore.fetchFactions(activeCampaignId.value),
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchNPCs(activeCampaignId.value),
+    entitiesStore.fetchLore(activeCampaignId.value),
   ])
 
   // Check API key
@@ -902,9 +974,19 @@ const newLocation = ref({
 })
 const addingLocation = ref(false)
 
-// Get locations and NPCs from store
+// Lore state
+const linkedLore = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const selectedLoreToLink = ref<number | null>(null)
+
+// Get locations, NPCs, and Lore from store
 const locations = computed(() => entitiesStore.locationsForSelect)
 const npcs = computed(() => entitiesStore.npcsForSelect)
+const loreForSelect = computed(() => {
+  return (entitiesStore.lore || []).map((lore) => ({
+    id: lore.id,
+    name: lore.name,
+  }))
+})
 
 const locationRelationTypeSuggestions = computed(() => [
   t('factions.locationTypes.headquarters'),
@@ -961,9 +1043,10 @@ async function editFaction(faction: Faction) {
   showCreateDialog.value = true
   factionDialogTab.value = 'details'
 
-  // Load faction members and locations
+  // Load faction members, locations, and lore
   await loadFactionMembers()
   await loadFactionLocations()
+  await loadLinkedLore()
 }
 
 function deleteFaction(faction: Faction) {
@@ -1148,6 +1231,58 @@ async function removeLocation(relationId: number) {
     await loadFactionLocations()
   } catch (error) {
     console.error('Failed to remove location:', error)
+  }
+}
+
+// Lore functions
+async function loadLinkedLore() {
+  if (!editingFaction.value) return
+  try {
+    const lore = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/factions/${editingFaction.value.id}/lore`)
+    linkedLore.value = lore
+  } catch (error) {
+    console.error('Failed to load linked Lore:', error)
+  }
+}
+
+async function addLoreRelation() {
+  if (!editingFaction.value || !selectedLoreToLink.value) return
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: selectedLoreToLink.value,
+        toEntityId: editingFaction.value.id,
+        relationType: 'bezieht sich auf',
+        relationNotes: null,
+      },
+    })
+    await loadLinkedLore()
+    selectedLoreToLink.value = null
+  } catch (error) {
+    console.error('Failed to add Lore relation:', error)
+  }
+}
+
+async function removeLoreRelation(loreId: number) {
+  if (!editingFaction.value) return
+  try {
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        fromEntityId: loreId,
+        toEntityId: editingFaction.value.id,
+      },
+    })
+    if (relation) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+      await loadLinkedLore()
+    }
+  } catch (error) {
+    console.error('Failed to remove Lore relation:', error)
   }
 }
 

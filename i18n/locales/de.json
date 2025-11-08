@@ -290,7 +290,14 @@
     "deleteImage": "Bild löschen",
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
-    "deleteImageError": "Fehler beim Löschen des Bildes"
+    "deleteImageError": "Fehler beim Löschen des Bildes",
+    "linkedLore": "Verknüpftes Wissen",
+    "noLinkedLore": "Kein verknüpftes Wissen",
+    "noLinkedLoreText": "Diese Fraktion ist noch mit keinem Wissen verknüpft.",
+    "addLore": "Wissen hinzufügen",
+    "selectLore": "Wissen auswählen",
+    "selectLorePlaceholder": "Wähle einen Wissenseintrag",
+    "linkLore": "Verknüpfen"
   },
   "lore": {
     "title": "Wissen",
@@ -330,7 +337,19 @@
     "selectLorePlaceholder": "Wähle einen Wissenseintrag",
     "addRelation": "Verknüpfen",
     "noLinkedLore": "Kein verknüpftes Wissen",
-    "noLinkedLoreText": "Dieser NPC ist noch mit keinem Wissen verknüpft."
+    "noLinkedLoreText": "Dieser NPC ist noch mit keinem Wissen verknüpft.",
+    "linkedFactions": "Verknüpfte Fraktionen",
+    "noLinkedFactions": "Keine verknüpften Fraktionen",
+    "noLinkedFactionsText": "Dieses Wissen ist noch mit keinen Fraktionen verknüpft.",
+    "addFaction": "Fraktion hinzufügen",
+    "selectFaction": "Fraktion auswählen",
+    "selectFactionPlaceholder": "Wähle eine Fraktion",
+    "linkFaction": "Verknüpfen",
+    "linkedItems": "Verknüpfte Items",
+    "noLinkedItems": "Keine verknüpften Items",
+    "noLinkedItemsText": "Dieses Wissen ist noch mit keinen Items verknüpft.",
+    "selectItem": "Item auswählen",
+    "linkItem": "Item verknüpfen"
   },
   "locations": {
     "title": "Orte",
@@ -374,7 +393,24 @@
     "deleteImage": "Bild löschen",
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
-    "deleteImageError": "Fehler beim Löschen des Bildes"
+    "deleteImageError": "Fehler beim Löschen des Bildes",
+    "details": "Details",
+    "linkedNpcs": "Verknüpfte NPCs",
+    "linkedLore": "Verknüpftes Wissen",
+    "selectNpc": "NPC auswählen",
+    "selectNpcPlaceholder": "Wähle einen NPC",
+    "linkNpc": "Verknüpfen",
+    "noLinkedNpcs": "Keine verknüpften NPCs",
+    "noLinkedNpcsText": "Dieser Ort ist noch mit keinen NPCs verknüpft.",
+    "addNpcRelationError": "Fehler beim Hinzufügen der NPC-Verknüpfung",
+    "removeNpcRelationError": "Fehler beim Entfernen der NPC-Verknüpfung",
+    "selectLore": "Wissen auswählen",
+    "selectLorePlaceholder": "Wähle einen Wissenseintrag",
+    "linkLore": "Verknüpfen",
+    "noLinkedLore": "Kein verknüpftes Wissen",
+    "noLinkedLoreText": "Dieser Ort ist noch mit keinem Wissen verknüpft.",
+    "addLoreRelationError": "Fehler beim Hinzufügen der Wissens-Verknüpfung",
+    "removeLoreRelationError": "Fehler beim Entfernen der Wissens-Verknüpfung"
   },
   "items": {
     "title": "Items",

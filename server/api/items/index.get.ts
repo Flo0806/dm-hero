@@ -7,7 +7,28 @@ import { normalizeText } from '../../utils/normalize'
 // Initialize Levenshtein function once
 const levenshtein = createLevenshtein()
 
-export default defineEventHandler((event) => {
+// Quote FTS5 terms that contain special characters
+function quoteFts5Term(term: string): string {
+  // Ensure term is a string
+  if (typeof term !== 'string') return ''
+
+  // FTS5 special chars that need quoting: - (hyphen), () [] {}
+  // Quote terms that contain hyphens or other special characters
+  if (
+    term.includes('-') ||
+    term.includes('(') ||
+    term.includes(')') ||
+    term.includes('[') ||
+    term.includes(']')
+  ) {
+    // Escape any double quotes in the term first
+    const escaped = term.replace(/"/g, '""')
+    return `"${escaped}"`
+  }
+  return term
+}
+
+export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
@@ -42,6 +63,7 @@ export default defineEventHandler((event) => {
     updated_at: string
     fts_score?: number
     owner_names?: string | null
+    linked_lore_names?: string | null
   }
 
   interface ScoredItem extends ItemRow {
@@ -62,36 +84,38 @@ export default defineEventHandler((event) => {
     // E.g., "waffe" (DE) → also search for "weapon" key
     // E.g., "weapon" (EN) → also search for "weapon" key
     // E.g., "legendär" (DE) → also search for "legendary" key
-    const expandedTerms = parsedQuery.terms.map((term) => {
-      // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
-      const enableFuzzy = term.length >= 5
-      const typeKey = getItemTypeKey(term, enableFuzzy, locale)
-      const rarityKey = getItemRarityKey(term, enableFuzzy, locale)
+    const expandedTerms = await Promise.all(
+      parsedQuery.terms.map(async (term) => {
+        // Only enable fuzzy matching for longer terms (>= 5 chars) to avoid false matches
+        const enableFuzzy = term.length >= 5
+        const typeKey = await getItemTypeKey(term, enableFuzzy, locale)
+        const rarityKey = await getItemRarityKey(term, enableFuzzy, locale)
 
-      // If we found a type/rarity key, ONLY use the key (not the original term)
-      // This prevents "weapon" (a key) from matching in DE when it shouldn't
-      if (typeKey) {
-        return { variants: [typeKey], isTypeRarityKey: true, blockMetadata: false }
-      }
-      if (rarityKey) {
-        return { variants: [rarityKey], isTypeRarityKey: true, blockMetadata: false }
-      }
+        // If we found a type/rarity key, ONLY use the key (not the original term)
+        // This prevents "weapon" (a key) from matching in DE when it shouldn't
+        if (typeKey) {
+          return { variants: [typeKey], isTypeRarityKey: true, blockMetadata: false }
+        }
+        if (rarityKey) {
+          return { variants: [rarityKey], isTypeRarityKey: true, blockMetadata: false }
+        }
 
-      // No type/rarity match - use original term (e.g., item name search)
-      // But check if term might be a key in OTHER locale (block cross-language matching)
-      const isKeyInOtherLocale =
-        getItemTypeKey(term, false, locale === 'de' ? 'en' : 'de') !== null ||
-        getItemRarityKey(term, false, locale === 'de' ? 'en' : 'de') !== null
+        // No type/rarity match - use original term (e.g., item name search)
+        // But check if term might be a key in OTHER locale (block cross-language matching)
+        const isKeyInOtherLocale =
+          (await getItemTypeKey(term, false, locale === 'de' ? 'en' : 'de')) !== null ||
+          (await getItemRarityKey(term, false, locale === 'de' ? 'en' : 'de')) !== null
 
-      return { variants: [term], isTypeRarityKey: false, blockMetadata: isKeyInOtherLocale }
-    })
+        return { variants: [term], isTypeRarityKey: false, blockMetadata: isKeyInOtherLocale }
+      }),
+    )
 
-    // Rebuild FTS query with expanded terms
+    // Rebuild FTS query with expanded terms (quote special chars to avoid FTS5 syntax errors)
     let ftsQuery: string
     if (parsedQuery.hasOperators) {
       // For operator queries, expand each term: "sword AND legendary" → "(sword*) AND (legendary*)"
       const expandedFtsTerms = expandedTerms.map((termObj) => {
-        const keys = termObj.variants
+        const keys = termObj.variants.map((k) => quoteFts5Term(k))
         if (keys.length === 1) {
           return `${keys[0]}*`
         } else {
@@ -109,9 +133,18 @@ export default defineEventHandler((event) => {
         ftsQuery = expandedFtsTerms.join(' ')
       }
     } else {
-      // Simple query: add all keys as OR
-      const allKeys = expandedTerms.flatMap((termObj) => termObj.variants)
-      ftsQuery = allKeys.map((k) => `${k}*`).join(' OR ')
+      // Simple query: add all keys as OR (quote special chars to avoid FTS5 syntax errors)
+      const allKeys = expandedTerms
+        .flatMap((termObj) => termObj.variants)
+        .map((k) => quoteFts5Term(k))
+        .filter((k) => k.length > 0) // Remove empty strings
+
+      if (allKeys.length === 0) {
+        // Fallback: if no valid keys, use a safe wildcard query
+        ftsQuery = '*'
+      } else {
+        ftsQuery = allKeys.map((k) => `${k}*`).join(' OR ')
+      }
     }
 
     let useExactMatch = parsedQuery.useExactFirst
@@ -150,22 +183,34 @@ export default defineEventHandler((event) => {
             `
           SELECT
             e.id,
-            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
           LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
           LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id
             AND owner_npc.deleted_at IS NULL
             AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id
+            AND lore.deleted_at IS NULL
+            AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE e.id IN (${placeholders})
           GROUP BY e.id
         `,
           )
-          .all(...itemIds) as Array<{ id: number; owner_names: string | null }>
+          .all(...itemIds) as Array<{
+          id: number
+          owner_names: string | null
+          linked_lore_names: string | null
+        }>
 
-        const ownerMap = new Map(ownerData.map((row) => [row.id, row.owner_names]))
+        const ownerMap = new Map(
+          ownerData.map((row) => [row.id, { owner_names: row.owner_names, linked_lore_names: row.linked_lore_names }]),
+        )
         items = ftsResults.map((item) => ({
           ...item,
-          owner_names: ownerMap.get(item.id) || null,
+          owner_names: ownerMap.get(item.id)?.owner_names || null,
+          linked_lore_names: ownerMap.get(item.id)?.linked_lore_names || null,
         }))
       } else {
         items = []
@@ -207,22 +252,34 @@ export default defineEventHandler((event) => {
               `
             SELECT
               e.id,
-              GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+              GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names,
+              GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
             FROM entities e
             LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
             LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id
               AND owner_npc.deleted_at IS NULL
               AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+            LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+            LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id
+              AND lore.deleted_at IS NULL
+              AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
             WHERE e.id IN (${placeholders})
             GROUP BY e.id
           `,
             )
-            .all(...itemIds) as Array<{ id: number; owner_names: string | null }>
+            .all(...itemIds) as Array<{
+            id: number
+            owner_names: string | null
+            linked_lore_names: string | null
+          }>
 
-          const ownerMap = new Map(ownerData.map((row) => [row.id, row.owner_names]))
+          const ownerMap = new Map(
+            ownerData.map((row) => [row.id, { owner_names: row.owner_names, linked_lore_names: row.linked_lore_names }]),
+          )
           items = ftsResults2.map((item) => ({
             ...item,
-            owner_names: ownerMap.get(item.id) || null,
+            owner_names: ownerMap.get(item.id)?.owner_names || null,
+            linked_lore_names: ownerMap.get(item.id)?.linked_lore_names || null,
           }))
         }
       }
@@ -243,10 +300,13 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
+            GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
           LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
           LEFT JOIN entities owner_npc ON owner_npc.id = owner_rel.from_entity_id AND owner_npc.deleted_at IS NULL AND owner_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
@@ -266,15 +326,17 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameNormalized.startsWith(searchTerm)
         const containsQuery = nameNormalized.includes(searchTerm)
 
-        // Check if search term appears in metadata, description, or owner names (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, owner names, or lore names (FTS5 match but not in name)
         const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
         const descriptionNormalized = item.description ? normalizeText(item.description) : ''
         const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+        const loreNamesNormalized = item.linked_lore_names ? normalizeText(item.linked_lore_names) : ''
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isOwnerMatch = ownerNamesNormalized.includes(searchTerm)
+        const isLoreMatch = loreNamesNormalized.includes(searchTerm)
         const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isOwnerMatch) && !containsQuery
+          (isMetadataMatch || isDescriptionMatch || isOwnerMatch || isLoreMatch) && !containsQuery
 
         let levDistance: number
 
@@ -298,6 +360,7 @@ export default defineEventHandler((event) => {
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
         if (isOwnerMatch) finalScore -= 30 // Owner matches are very good
+        if (isLoreMatch) finalScore -= 30 // Lore matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
 
@@ -316,6 +379,7 @@ export default defineEventHandler((event) => {
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
           const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+          const loreNamesNormalized = item.linked_lore_names ? normalizeText(item.linked_lore_names) : ''
 
           // Check ALL expanded terms (original + type/rarity keys)
           for (const termObj of expandedTerms) {
@@ -327,7 +391,8 @@ export default defineEventHandler((event) => {
               if (
                 nameNormalized.includes(variant) ||
                 descriptionNormalized.includes(variant) ||
-                ownerNamesNormalized.includes(variant)
+                ownerNamesNormalized.includes(variant) ||
+                loreNamesNormalized.includes(variant)
               ) {
                 return true
               }
@@ -351,14 +416,36 @@ export default defineEventHandler((event) => {
                 return true
               }
 
-              // Levenshtein match for owner names (split by comma, check each name)
+              // Levenshtein match for owner names (word-level: split by comma, then by spaces)
               if (ownerNamesNormalized.length > 0) {
                 const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
-                  const ownerLevDist = levenshtein(variant, ownerName)
-                  if (ownerLevDist <= maxDist) {
-                    return true
+                  // Word-level matching for multi-word names
+                  const ownerWords = ownerName.split(/\s+/)
+                  for (const word of ownerWords) {
+                    if (word.length < 3) continue
+                    const ownerLevDist = levenshtein(variant, word)
+                    if (ownerLevDist <= maxDist) {
+                      return true
+                    }
+                  }
+                }
+              }
+
+              // Levenshtein match for lore names (word-level: split by comma, then by spaces)
+              if (loreNamesNormalized.length > 0) {
+                const loreNames = loreNamesNormalized.split(',').map((n) => n.trim())
+                for (const loreName of loreNames) {
+                  if (loreName.length === 0) continue
+                  // Word-level matching for multi-word names
+                  const loreWords = loreName.split(/\s+/)
+                  for (const word of loreWords) {
+                    if (word.length < 3) continue
+                    const loreLevDist = levenshtein(variant, word)
+                    if (loreLevDist <= maxDist) {
+                      return true
+                    }
                   }
                 }
               }
@@ -374,6 +461,7 @@ export default defineEventHandler((event) => {
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
           const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+          const loreNamesNormalized = item.linked_lore_names ? normalizeText(item.linked_lore_names) : ''
 
           // Check if at least one term (or its variants) matches
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -386,7 +474,8 @@ export default defineEventHandler((event) => {
               if (
                 nameNormalized.includes(variant) ||
                 descriptionNormalized.includes(variant) ||
-                ownerNamesNormalized.includes(variant)
+                ownerNamesNormalized.includes(variant) ||
+                loreNamesNormalized.includes(variant)
               ) {
                 return true // At least one variant matches
               }
@@ -410,14 +499,34 @@ export default defineEventHandler((event) => {
                 return true // Close enough match
               }
 
-              // Levenshtein match for owner names (split by comma, check each name)
+              // Levenshtein match for owner names (word-level)
               if (ownerNamesNormalized.length > 0) {
                 const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
-                  const ownerLevDist = levenshtein(variant, ownerName)
-                  if (ownerLevDist <= maxDist) {
-                    return true
+                  const ownerWords = ownerName.split(/\s+/)
+                  for (const word of ownerWords) {
+                    if (word.length < 3) continue
+                    const ownerLevDist = levenshtein(variant, word)
+                    if (ownerLevDist <= maxDist) {
+                      return true
+                    }
+                  }
+                }
+              }
+
+              // Levenshtein match for lore names (word-level)
+              if (loreNamesNormalized.length > 0) {
+                const loreNames = loreNamesNormalized.split(',').map((n) => n.trim())
+                for (const loreName of loreNames) {
+                  if (loreName.length === 0) continue
+                  const loreWords = loreName.split(/\s+/)
+                  for (const word of loreWords) {
+                    if (word.length < 3) continue
+                    const loreLevDist = levenshtein(variant, word)
+                    if (loreLevDist <= maxDist) {
+                      return true
+                    }
                   }
                 }
               }
@@ -432,6 +541,7 @@ export default defineEventHandler((event) => {
           const metadataNormalized = item.metadata ? normalizeText(item.metadata) : ''
           const descriptionNormalized = item.description ? normalizeText(item.description) : ''
           const ownerNamesNormalized = item.owner_names ? normalizeText(item.owner_names) : ''
+          const loreNamesNormalized = item.linked_lore_names ? normalizeText(item.linked_lore_names) : ''
 
           // Check if ALL terms (or their expanded keys) match
           for (let i = 0; i < parsedQuery.terms.length; i++) {
@@ -445,7 +555,8 @@ export default defineEventHandler((event) => {
               if (
                 nameNormalized.includes(variant) ||
                 descriptionNormalized.includes(variant) ||
-                ownerNamesNormalized.includes(variant)
+                ownerNamesNormalized.includes(variant) ||
+                loreNamesNormalized.includes(variant)
               ) {
                 termMatches = true
                 break
@@ -473,16 +584,40 @@ export default defineEventHandler((event) => {
                 break
               }
 
-              // Levenshtein match for owner names (split by comma, check each name)
+              // Levenshtein match for owner names (word-level)
               if (!termMatches && ownerNamesNormalized.length > 0) {
                 const ownerNames = ownerNamesNormalized.split(',').map((n) => n.trim())
                 for (const ownerName of ownerNames) {
                   if (ownerName.length === 0) continue
-                  const ownerLevDist = levenshtein(variant, ownerName)
-                  if (ownerLevDist <= maxDist) {
-                    termMatches = true
-                    break
+                  const ownerWords = ownerName.split(/\s+/)
+                  for (const word of ownerWords) {
+                    if (word.length < 3) continue
+                    const ownerLevDist = levenshtein(variant, word)
+                    if (ownerLevDist <= maxDist) {
+                      termMatches = true
+                      break
+                    }
                   }
+                  if (termMatches) break
+                }
+                if (termMatches) break
+              }
+
+              // Levenshtein match for lore names (word-level)
+              if (!termMatches && loreNamesNormalized.length > 0) {
+                const loreNames = loreNamesNormalized.split(',').map((n) => n.trim())
+                for (const loreName of loreNames) {
+                  if (loreName.length === 0) continue
+                  const loreWords = loreName.split(/\s+/)
+                  for (const word of loreWords) {
+                    if (word.length < 3) continue
+                    const loreLevDist = levenshtein(variant, word)
+                    if (loreLevDist <= maxDist) {
+                      termMatches = true
+                      break
+                    }
+                  }
+                  if (termMatches) break
                 }
                 if (termMatches) break
               }

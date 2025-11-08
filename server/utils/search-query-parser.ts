@@ -53,9 +53,12 @@ export function parseSearchQuery(query: string): ParsedQuery {
     const quoteMatch = trimmed.match(/"([^"]+)"/)
     if (quoteMatch) {
       const phrase = quoteMatch[1]
+      // Split phrase into words for cross-entity search (Lore, Faction, Location names)
+      // This allows "böser frosch" to match NPCs linked to Lore "Böser Frosch"
+      const words = phrase.split(/\s+/).filter((w) => w.length > 0)
       return {
         fts5Query: `"${phrase}"`,
-        terms: [phrase], // Keep as ONE term (phrase search)
+        terms: words, // Split into words for Levenshtein cross-search
         hasOperators: true,
         useExactFirst: true,
       }

@@ -147,6 +147,14 @@
             <v-icon start> mdi-file-document </v-icon>
             {{ $t('documents.title') }}
           </v-tab>
+          <v-tab value="factions">
+            <v-icon start> mdi-shield-account </v-icon>
+            {{ $t('factions.title') }} ({{ linkedFactions.length }})
+          </v-tab>
+          <v-tab value="items">
+            <v-icon start> mdi-treasure-chest </v-icon>
+            {{ $t('items.title') }} ({{ linkedItems.length }})
+          </v-tab>
         </v-tabs>
 
         <v-card-text style="max-height: 600px">
@@ -206,6 +214,130 @@
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
               <EntityDocuments v-if="editingLore" :entity-id="editingLore.id" entity-type="Lore" />
+            </v-tabs-window-item>
+
+            <!-- Factions Tab -->
+            <v-tabs-window-item value="factions">
+              <div class="text-h6 mb-4">
+                {{ $t('lore.linkedFactions') }}
+              </div>
+
+              <v-list v-if="linkedFactions.length > 0">
+                <v-list-item v-for="faction in linkedFactions" :key="faction.id" class="mb-2" border>
+                  <template #prepend>
+                    <v-avatar v-if="faction.image_url" size="40" rounded="lg">
+                      <v-img :src="`/uploads/${faction.image_url}`" />
+                    </v-avatar>
+                    <v-icon v-else icon="mdi-shield-account" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ faction.name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle v-if="faction.description">
+                    {{ faction.description.substring(0, 100) }}{{ faction.description.length > 100 ? '...' : '' }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeFactionRelation(faction.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-empty-state
+                v-else
+                icon="mdi-shield-off"
+                :title="$t('lore.noLinkedFactions')"
+                :text="$t('lore.noLinkedFactionsText')"
+              />
+
+              <v-divider class="my-4" />
+
+              <div class="text-h6 mb-4">
+                {{ $t('lore.addFaction') }}
+              </div>
+
+              <v-autocomplete
+                v-model="selectedFactionToLink"
+                :items="factionsForSelect"
+                item-title="name"
+                item-value="id"
+                :label="$t('lore.selectFaction')"
+                :placeholder="$t('lore.selectFactionPlaceholder')"
+                variant="outlined"
+                clearable
+                class="mb-2"
+              />
+
+              <v-btn
+                color="primary"
+                block
+                :disabled="!selectedFactionToLink"
+                @click="addFactionRelation"
+              >
+                {{ $t('lore.linkFaction') }}
+              </v-btn>
+            </v-tabs-window-item>
+
+            <!-- Items Tab -->
+            <v-tabs-window-item value="items">
+              <!-- Link Items -->
+              <v-autocomplete
+                v-model="selectedItemToLink"
+                :items="itemsForSelect"
+                :label="$t('lore.selectItem')"
+                variant="outlined"
+                clearable
+                class="mb-4"
+              />
+              <v-btn
+                color="primary"
+                block
+                :disabled="!selectedItemToLink"
+                @click="addItemRelation"
+              >
+                {{ $t('lore.linkItem') }}
+              </v-btn>
+
+              <!-- Linked Items List -->
+              <v-list v-if="linkedItems.length > 0" class="mt-4">
+                <v-list-item v-for="item in linkedItems" :key="item.id">
+                  <template #prepend>
+                    <v-avatar v-if="item.image_url" size="48" class="mr-3">
+                      <v-img :src="`/uploads/${item.image_url}`" />
+                    </v-avatar>
+                    <v-avatar v-else size="48" class="mr-3" color="surface-variant">
+                      <v-icon icon="mdi-treasure-chest" />
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
+                  <v-list-item-subtitle v-if="item.description">
+                    {{ item.description.substring(0, 80)
+                    }}{{ item.description.length > 80 ? '...' : '' }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="removeItemRelation(item.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-empty-state
+                v-else
+                icon="mdi-treasure-chest"
+                :title="$t('lore.noLinkedItems')"
+                :text="$t('lore.noLinkedItemsText')"
+                class="mt-4"
+              />
             </v-tabs-window-item>
           </v-tabs-window>
 
@@ -366,6 +498,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const campaignStore = useCampaignStore()
+const entitiesStore = useEntitiesStore()
 const { downloadImage } = useImageDownload()
 
 // Refs for search
@@ -390,6 +523,14 @@ const highlightedId = ref<number | null>(null)
 const loreDialogTab = ref('details')
 const imageGenerating = ref(false)
 
+// Factions state
+const linkedFactions = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const selectedFactionToLink = ref<number | null>(null)
+
+// Items linking
+const linkedItems = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const selectedItemToLink = ref<number | null>(null)
+
 // Image preview
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
@@ -403,13 +544,27 @@ const formData = ref({
   date: '',
 })
 
+// Computed for factions selection
+const factionsForSelect = computed(() => {
+  return (entitiesStore.factions || []).map((faction) => ({
+    id: faction.id,
+    name: faction.name,
+  }))
+})
+
 // Check for active campaign and handle highlighting
-onMounted(() => {
+onMounted(async () => {
   // Redirect to campaigns if no active campaign
   if (!activeCampaignId.value) {
     router.push('/campaigns')
     return
   }
+
+  // Load Factions and Items for linking
+  await Promise.all([
+    entitiesStore.fetchFactions(activeCampaignId.value),
+    entitiesStore.fetchItems(activeCampaignId.value),
+  ])
 
   // Handle highlight query parameter
   const highlightParam = route.query.highlight
@@ -612,6 +767,128 @@ async function deleteLore() {
     deleting.value = false
   }
 }
+
+// Factions functions
+async function loadLinkedFactions() {
+  if (!editingLore.value) return
+  try {
+    const factions = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/lore/${editingLore.value.id}/factions`)
+    linkedFactions.value = factions
+  } catch (error) {
+    console.error('Failed to load linked Factions:', error)
+  }
+}
+
+async function addFactionRelation() {
+  if (!editingLore.value || !selectedFactionToLink.value) return
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: editingLore.value.id,
+        toEntityId: selectedFactionToLink.value,
+        relationType: 'bezieht sich auf',
+        relationNotes: null,
+      },
+    })
+    await loadLinkedFactions()
+    selectedFactionToLink.value = null
+  } catch (error) {
+    console.error('Failed to add Faction relation:', error)
+  }
+}
+
+async function removeFactionRelation(factionId: number) {
+  if (!editingLore.value) return
+  try {
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        fromEntityId: editingLore.value.id,
+        toEntityId: factionId,
+      },
+    })
+    if (relation) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+      await loadLinkedFactions()
+    }
+  } catch (error) {
+    console.error('Failed to remove Faction relation:', error)
+  }
+}
+
+// Items for selection
+const itemsForSelect = computed(() => {
+  return entitiesStore.itemsForSelect.map((item: { id: number; name: string }) => ({
+    title: item.name,
+    value: item.id,
+  }))
+})
+
+// Load linked Items
+async function loadLinkedItems() {
+  if (!editingLore.value) return
+  try {
+    const items = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/lore/${editingLore.value.id}/items`)
+    linkedItems.value = items
+  } catch (error) {
+    console.error('Failed to load linked Items:', error)
+  }
+}
+
+async function addItemRelation() {
+  if (!editingLore.value || !selectedItemToLink.value) return
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: selectedItemToLink.value,
+        toEntityId: editingLore.value.id,
+        relationType: 'bezieht sich auf',
+        relationNotes: null,
+      },
+    })
+    await loadLinkedItems()
+    selectedItemToLink.value = null
+  } catch (error) {
+    console.error('Failed to add Item relation:', error)
+  }
+}
+
+async function removeItemRelation(itemId: number) {
+  if (!editingLore.value) return
+  try {
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        from_entity_id: itemId,
+        to_entity_id: editingLore.value.id,
+      },
+    })
+    if (relation) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+      await loadLinkedItems()
+    }
+  } catch (error) {
+    console.error('Failed to remove Item relation:', error)
+  }
+}
+
+// Watch for editing lore to load linked factions and items (MUST be after editingLore declaration!)
+watch(
+  () => editingLore.value?.id,
+  async (loreId) => {
+    if (loreId) {
+      await Promise.all([loadLinkedFactions(), loadLinkedItems()])
+    }
+  },
+)
 </script>
 
 <style scoped>

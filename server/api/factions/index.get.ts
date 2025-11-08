@@ -40,6 +40,7 @@ export default defineEventHandler((event) => {
     leader_id?: number | null
     leader_name?: string | null
     linked_npc_names?: string | null
+    linked_lore_names?: string | null
   }
 
   interface ScoredFaction extends FactionRow {
@@ -93,13 +94,16 @@ export default defineEventHandler((event) => {
           e.updated_at,
           leader_rel.from_entity_id as leader_id,
           leader_npc.name as leader_name,
-          GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
+          GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
+          GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
         LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
         LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
         LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+        LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+        LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
@@ -129,13 +133,16 @@ export default defineEventHandler((event) => {
             e.updated_at,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
-            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
+            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
           LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
           LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
@@ -166,12 +173,15 @@ export default defineEventHandler((event) => {
             e.updated_at,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
-            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
+            GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
           LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
           LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
           LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
@@ -191,17 +201,19 @@ export default defineEventHandler((event) => {
         const startsWithQuery = nameLower.startsWith(searchTerm)
         const containsQuery = nameLower.includes(searchTerm)
 
-        // Check if search term appears in metadata, description, leader name, or linked NPCs (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, leader name, linked NPCs, or linked Lore (FTS5 match but not in name)
         const metadataLower = normalizeText(faction.metadata || '')
         const descriptionLower = normalizeText(faction.description || '')
         const leaderNameLower = normalizeText(faction.leader_name || '')
         const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
+        const linkedLoreNamesLower = normalizeText(faction.linked_lore_names || '')
         const isMetadataMatch = metadataLower.includes(searchTerm)
         const isDescriptionMatch = descriptionLower.includes(searchTerm)
         const isLeaderMatch = leaderNameLower.includes(searchTerm)
         const isNpcMatch = linkedNpcNamesLower.includes(searchTerm)
+        const isLoreMatch = linkedLoreNamesLower.includes(searchTerm)
         const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isLeaderMatch || isNpcMatch) && !containsQuery
+          (isMetadataMatch || isDescriptionMatch || isLeaderMatch || isNpcMatch || isLoreMatch) && !containsQuery
 
         let levDistance: number
 
@@ -224,6 +236,7 @@ export default defineEventHandler((event) => {
         if (exactMatch) finalScore -= 1000
         if (startsWithQuery) finalScore -= 100
         if (containsQuery) finalScore -= 50
+        if (isLoreMatch) finalScore -= 30 // Lore matches are very good
         if (isNpcMatch) finalScore -= 30 // NPC matches are very good
         if (isLeaderMatch) finalScore -= 30 // Leader name matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
@@ -245,6 +258,7 @@ export default defineEventHandler((event) => {
           const descriptionLower = normalizeText(faction.description || '')
           const leaderNameLower = normalizeText(faction.leader_name || '')
           const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
+          const linkedLoreNamesLower = normalizeText(faction.linked_lore_names || '')
 
           // Check ALL terms
           for (const term of parsedQuery.terms) {
@@ -254,7 +268,8 @@ export default defineEventHandler((event) => {
               descriptionLower.includes(term) ||
               metadataLower.includes(term) ||
               leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term)
+              linkedNpcNamesLower.includes(term) ||
+              linkedLoreNamesLower.includes(term)
             ) {
               return true
             }
@@ -297,6 +312,23 @@ export default defineEventHandler((event) => {
                 }
               }
             }
+
+            // Levenshtein match for linked Lore names (split by comma, then by words)
+            if (linkedLoreNamesLower.length > 0) {
+              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                // Split each Lore name into words (e.g., "böser frosch" → ["böser", "frosch"])
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
 
           return false // No term matched
@@ -309,6 +341,7 @@ export default defineEventHandler((event) => {
           const descriptionLower = normalizeText(faction.description || '')
           const leaderNameLower = normalizeText(faction.leader_name || '')
           const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
+          const linkedLoreNamesLower = normalizeText(faction.linked_lore_names || '')
 
           // Check if at least one term matches
           for (const term of parsedQuery.terms) {
@@ -318,7 +351,8 @@ export default defineEventHandler((event) => {
               descriptionLower.includes(term) ||
               metadataLower.includes(term) ||
               leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term)
+              linkedNpcNamesLower.includes(term) ||
+              linkedLoreNamesLower.includes(term)
             ) {
               return true
             }
@@ -360,6 +394,22 @@ export default defineEventHandler((event) => {
                 }
               }
             }
+
+            // Levenshtein match for linked Lore names (split by comma, then by words)
+            if (linkedLoreNamesLower.length > 0) {
+              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
+                    return true
+                  }
+                }
+              }
+            }
           }
           return false // No term matched
         })
@@ -371,6 +421,7 @@ export default defineEventHandler((event) => {
           const descriptionLower = normalizeText(faction.description || '')
           const leaderNameLower = normalizeText(faction.leader_name || '')
           const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
+          const linkedLoreNamesLower = normalizeText(faction.linked_lore_names || '')
 
           // Check if ALL terms match
           for (const term of parsedQuery.terms) {
@@ -382,7 +433,8 @@ export default defineEventHandler((event) => {
               descriptionLower.includes(term) ||
               metadataLower.includes(term) ||
               leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term)
+              linkedNpcNamesLower.includes(term) ||
+              linkedLoreNamesLower.includes(term)
             ) {
               termMatches = true
             }
@@ -435,6 +487,27 @@ export default defineEventHandler((event) => {
               }
             }
 
+            // Check Levenshtein for linked Lore names (split by comma, then by words)
+            if (!termMatches && linkedLoreNamesLower.length > 0) {
+              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              for (const loreName of loreNames) {
+                if (loreName.length === 0) continue
+                // Split each Lore name into words (e.g., "böser frosch" → ["böser", "frosch"])
+                const loreWords = loreName.split(/\s+/)
+                for (const word of loreWords) {
+                  if (word.length === 0) continue
+                  const termLength = term.length
+                  const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
+                  const loreLevDist = levenshtein(term, word)
+                  if (loreLevDist <= maxDist) {
+                    termMatches = true
+                    break
+                  }
+                }
+                if (termMatches) break
+              }
+            }
+
             // If this term doesn't match, reject the faction
             if (!termMatches) {
               return false
@@ -474,12 +547,15 @@ export default defineEventHandler((event) => {
         e.updated_at,
         leader_rel.from_entity_id as leader_id,
         leader_npc.name as leader_name,
-        GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names
+        GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
+        GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
       FROM entities e
       LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
       LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
       LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
       LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = (SELECT id FROM entity_types WHERE name = 'NPC')
+      LEFT JOIN entity_relations lore_rel ON lore_rel.to_entity_id = e.id
+      LEFT JOIN entities lore ON lore.id = lore_rel.from_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL

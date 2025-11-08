@@ -163,15 +163,15 @@
           </v-tab>
           <v-tab value="relations">
             <v-icon start> mdi-map-marker </v-icon>
-            {{ $t('npcs.linkedLocations') }} ({{ npcRelations.length }})
+            {{ $t('npcs.linkedLocations') }}
           </v-tab>
           <v-tab value="memberships">
             <v-icon start> mdi-account-group </v-icon>
-            {{ $t('npcs.memberships') }} ({{ factionMemberships.length }})
+            {{ $t('npcs.memberships') }}
           </v-tab>
           <v-tab value="items">
             <v-icon start> mdi-sword </v-icon>
-            {{ $t('npcs.items') }} ({{ npcItems.length }})
+            {{ $t('npcs.items') }}
           </v-tab>
           <v-tab value="notes">
             <v-icon start> mdi-note-text </v-icon>
@@ -183,7 +183,7 @@
           </v-tab>
           <v-tab value="lore">
             <v-icon start> mdi-book-open-variant </v-icon>
-            {{ $t('lore.title') }} ({{ linkedLore.length }})
+            {{ $t('lore.title') }}
           </v-tab>
         </v-tabs>
 

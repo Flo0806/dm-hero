@@ -63,8 +63,10 @@ beforeAll(() => {
 
 afterAll(() => {
   // Clean up test data
-  db.prepare('DELETE FROM campaigns WHERE id = ?').run(testCampaignId)
-  db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(testCampaignId)
+  if (db) {
+    db.prepare('DELETE FROM campaigns WHERE id = ?').run(testCampaignId)
+    db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(testCampaignId)
+  }
 })
 
 beforeEach(() => {
@@ -326,7 +328,7 @@ describe('NPC Search - Race/Class i18n Lookup', () => {
   })
 })
 
-describe('NPC Search - Linked Entities (Factions & Locations)', () => {
+describe('NPC Search - Linked Entities (Factions, Locations & Lore)', () => {
   it('should find NPCs linked to a faction', () => {
     // Create faction
     const faction = db
@@ -461,6 +463,150 @@ describe('NPC Search - Linked Entities (Factions & Locations)', () => {
 
     expect(npcs).toHaveLength(2)
   })
+
+  it('should find NPCs linked to Lore entries', () => {
+    // Get Lore entity type ID
+    const loreType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as {
+      id: number
+    }
+    const loreTypeId = loreType.id
+
+    // Create Lore entry
+    const lore = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(loreTypeId, testCampaignId, 'Böser Frosch')
+    const loreId = Number(lore.lastInsertRowid)
+
+    // Create NPCs
+    const npc1 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Bernhard von Berg')
+    const npc2 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'André Dubois')
+    const _npc3 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Hans Müller')
+
+    // Link NPCs to Lore (NPC → Lore)
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npc1.lastInsertRowid, loreId, 'kennt')
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npc2.lastInsertRowid, loreId, 'kennt')
+
+    // Query with JOIN to get linked Lore names
+    const npcs = db
+      .prepare(
+        `
+      SELECT
+        e.id,
+        e.name,
+        GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
+      FROM entities e
+      LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+      LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id
+        AND lore.deleted_at IS NULL
+        AND lore.type_id = ?
+      WHERE e.type_id = ?
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      GROUP BY e.id
+    `,
+      )
+      .all(loreTypeId, npcTypeId, testCampaignId)
+
+    // Should find all 3 NPCs, but only 2 have Lore linked
+    expect(npcs).toHaveLength(3)
+
+    // Filter NPCs with linked Lore
+    const npcsWithLore = npcs.filter(
+      (npc: { linked_lore_names: string | null }) => npc.linked_lore_names !== null,
+    )
+    expect(npcsWithLore).toHaveLength(2)
+    expect(npcsWithLore[0].linked_lore_names).toBe('Böser Frosch')
+    expect(npcsWithLore[1].linked_lore_names).toBe('Böser Frosch')
+  })
+
+  it('should find NPCs via quoted Lore name search (REGRESSION: Quoted multi-word phrases)', () => {
+    // CRITICAL TEST: This prevents breaking the cross-search when using quoted phrases
+    // BEFORE FIX: "böser frosch" was treated as ONE term → multi-word check skipped → no bonus
+    // AFTER FIX: "böser frosch" splits into ["böser", "frosch"] → multi-word check works → -500 bonus
+
+    // Get Lore entity type ID
+    const loreType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Lore') as {
+      id: number
+    }
+    const loreTypeId = loreType.id
+
+    // Create Lore entry
+    const lore = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(loreTypeId, testCampaignId, 'Böser Frosch')
+    const loreId = Number(lore.lastInsertRowid)
+
+    // Create NPCs
+    const npc1 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Bernhard von Berg')
+    const _npc2 = db
+      .prepare('INSERT INTO entities (type_id, campaign_id, name) VALUES (?, ?, ?)')
+      .run(npcTypeId, testCampaignId, 'Franz Böser') // Name contains "Böser" but NOT "Frosch"
+
+    // Link only Bernhard to Lore
+    db.prepare(
+      'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
+    ).run(npc1.lastInsertRowid, loreId, 'kennt')
+
+    // Parse quoted phrase search
+    const parsed = parseSearchQuery('"böser frosch"')
+
+    // CRITICAL: terms should be split into words for cross-search
+    expect(parsed.terms).toEqual(['böser', 'frosch'])
+    expect(parsed.hasOperators).toBe(true)
+
+    // Simulate the cross-search logic
+    const npcsWithLore = db
+      .prepare(
+        `
+      SELECT
+        e.id,
+        e.name,
+        GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
+      FROM entities e
+      LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+      LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id
+        AND lore.deleted_at IS NULL
+        AND lore.type_id = ?
+      WHERE e.type_id = ?
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      GROUP BY e.id
+    `,
+      )
+      .all(loreTypeId, npcTypeId, testCampaignId)
+
+    // Check multi-word matching logic
+    const linkedLoreMatches = npcsWithLore.filter(
+      (npc: { name: string; linked_lore_names: string | null }) => {
+        if (!npc.linked_lore_names) return false
+        const linkedLoreNormalized = normalizeText(npc.linked_lore_names)
+
+        // ALL terms from parsed.terms must appear in linked Lore name
+        const allTermsInLore = parsed.terms.every((term: string) =>
+          linkedLoreNormalized.includes(normalizeText(term)),
+        )
+
+        return allTermsInLore
+      },
+    )
+
+    // REGRESSION CHECK: Only Bernhard should match (linked to "Böser Frosch")
+    // Franz should NOT match (name contains "Böser" but no Lore link)
+    expect(linkedLoreMatches).toHaveLength(1)
+    expect(linkedLoreMatches[0].name).toBe('Bernhard von Berg')
+  })
 })
 
 describe('NPC Search - Search Query Parsing', () => {
@@ -485,6 +631,23 @@ describe('NPC Search - Search Query Parsing', () => {
 
     expect(parsed.hasOperators).toBe(false)
     expect(parsed.terms).toEqual(['gandalf'])
+  })
+
+  it('should split quoted phrases into words for cross-entity search (REGRESSION)', () => {
+    // CRITICAL: Quoted phrases like "böser frosch" must be split into words
+    // This allows multi-word bonus to trigger for Lore/Faction cross-search
+    const parsed = parseSearchQuery('"böser frosch"')
+
+    expect(parsed.hasOperators).toBe(true)
+    expect(parsed.terms).toEqual(['böser', 'frosch']) // MUST be split!
+    expect(parsed.fts5Query).toBe('"böser frosch"') // FTS5 keeps it quoted
+  })
+
+  it('should handle multi-word simple queries (no quotes)', () => {
+    const parsed = parseSearchQuery('die grauen jäger')
+
+    expect(parsed.hasOperators).toBe(false)
+    expect(parsed.terms).toEqual(['die', 'grauen', 'jäger'])
   })
 })
 

@@ -290,7 +290,14 @@
     "deleteImage": "Delete Image",
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
-    "deleteImageError": "Failed to delete image"
+    "deleteImageError": "Failed to delete image",
+    "linkedLore": "Linked Lore",
+    "noLinkedLore": "No Linked Lore",
+    "noLinkedLoreText": "This faction has no linked lore yet.",
+    "addLore": "Add Lore",
+    "selectLore": "Select Lore",
+    "selectLorePlaceholder": "Choose a lore entry",
+    "linkLore": "Link"
   },
   "lore": {
     "title": "Lore",
@@ -330,7 +337,19 @@
     "selectLorePlaceholder": "Choose a lore entry",
     "addRelation": "Link",
     "noLinkedLore": "No linked lore",
-    "noLinkedLoreText": "This NPC has no linked lore entries yet."
+    "noLinkedLoreText": "This NPC has no linked lore entries yet.",
+    "linkedFactions": "Linked Factions",
+    "noLinkedFactions": "No Linked Factions",
+    "noLinkedFactionsText": "This lore entry has no linked factions yet.",
+    "addFaction": "Add Faction",
+    "selectFaction": "Select Faction",
+    "selectFactionPlaceholder": "Choose a faction",
+    "linkFaction": "Link",
+    "linkedItems": "Linked Items",
+    "noLinkedItems": "No Linked Items",
+    "noLinkedItemsText": "This lore entry has no linked items yet.",
+    "selectItem": "Select Item",
+    "linkItem": "Link Item"
   },
   "locations": {
     "title": "Locations",
@@ -374,7 +393,24 @@
     "deleteImage": "Delete Image",
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
-    "deleteImageError": "Failed to delete image"
+    "deleteImageError": "Failed to delete image",
+    "details": "Details",
+    "linkedNpcs": "Linked NPCs",
+    "linkedLore": "Linked Lore",
+    "selectNpc": "Select NPC",
+    "selectNpcPlaceholder": "Choose an NPC",
+    "linkNpc": "Link",
+    "noLinkedNpcs": "No linked NPCs",
+    "noLinkedNpcsText": "This location is not yet linked to any NPCs.",
+    "addNpcRelationError": "Failed to add NPC relation",
+    "removeNpcRelationError": "Failed to remove NPC relation",
+    "selectLore": "Select Lore",
+    "selectLorePlaceholder": "Choose a lore entry",
+    "linkLore": "Link",
+    "noLinkedLore": "No linked lore",
+    "noLinkedLoreText": "This location is not yet linked to any lore.",
+    "addLoreRelationError": "Failed to add lore relation",
+    "removeLoreRelationError": "Failed to remove lore relation"
   },
   "items": {
     "title": "Items",

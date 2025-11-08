@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
     fts_score?: number
     linked_faction_names?: string | null
     linked_location_names?: string | null
+    linked_lore_names?: string | null
   }
 
   interface ScoredNpc extends NpcRow {
@@ -176,13 +177,16 @@ export default defineEventHandler(async (event) => {
           e.created_at,
           e.updated_at,
           GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-          GROUP_CONCAT(DISTINCT location.name) as linked_location_names
+          GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+          GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
         LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
         LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
         LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
+        LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+        LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
         WHERE entities_fts MATCH ?
           AND e.type_id = ?
           AND e.campaign_id = ?
@@ -212,13 +216,16 @@ export default defineEventHandler(async (event) => {
             e.created_at,
             e.updated_at,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
+            GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
           LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
           LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE entities_fts MATCH ?
             AND e.type_id = ?
             AND e.campaign_id = ?
@@ -231,13 +238,14 @@ export default defineEventHandler(async (event) => {
           .all(ftsQuery, entityType.id, campaignId) as NpcRow[]
       }
 
-      // FALLBACK 2: Decide based on operator type
+      // FALLBACK 2: Decide based on operator type OR if FTS5 found nothing
       const hasOrOperator = parsedQuery.fts5Query.toUpperCase().includes(' OR ')
       const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
 
       // For operator queries (AND/OR): ALWAYS use Levenshtein fallback
       // This ensures we catch typos in ALL terms
-      if (parsedQuery.hasOperators) {
+      // ALSO: If FTS5 found 0 results, use full table scan (catches cross-entity searches like Lore names)
+      if (parsedQuery.hasOperators || npcs.length === 0) {
         npcs = db
           .prepare(
             `
@@ -250,41 +258,15 @@ export default defineEventHandler(async (event) => {
             e.created_at,
             e.updated_at,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
+            GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+            GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
           LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
           LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
-          WHERE e.type_id = ?
-            AND e.campaign_id = ?
-            AND e.deleted_at IS NULL
-          GROUP BY e.id
-          ORDER BY e.name ASC
-        `,
-          )
-          .all(entityType.id, campaignId) as NpcRow[]
-      }
-      // For simple queries with no FTS5 results
-      else if (npcs.length === 0) {
-        npcs = db
-          .prepare(
-            `
-          SELECT
-            e.id,
-            e.name,
-            e.description,
-            e.image_url,
-            e.metadata,
-            e.created_at,
-            e.updated_at,
-            GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-            GROUP_CONCAT(DISTINCT location.name) as linked_location_names
-          FROM entities e
-          LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
-          LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
-          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
-          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
+          LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
+          LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           WHERE e.type_id = ?
             AND e.campaign_id = ?
             AND e.deleted_at IS NULL
@@ -304,17 +286,19 @@ export default defineEventHandler(async (event) => {
         const startsWithQuery = nameNormalized.startsWith(searchTerm)
         const containsQuery = nameNormalized.includes(searchTerm)
 
-        // Check if search term appears in metadata, description, linked factions, or linked locations (FTS5 match but not in name)
+        // Check if search term appears in metadata, description, linked factions, linked locations, or linked lore (FTS5 match but not in name)
         const metadataNormalized = normalizeText(npc.metadata || '')
         const descriptionNormalized = normalizeText(npc.description || '')
         const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
         const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+        const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
         const isMetadataMatch = metadataNormalized.includes(searchTerm)
         const isDescriptionMatch = descriptionNormalized.includes(searchTerm)
         const isFactionMatch = linkedFactionNamesNormalized.includes(searchTerm)
         const isLocationMatch = linkedLocationNamesNormalized.includes(searchTerm)
+        const isLoreMatch = linkedLoreNamesNormalized.includes(searchTerm)
         const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isFactionMatch || isLocationMatch) &&
+          (isMetadataMatch || isDescriptionMatch || isFactionMatch || isLocationMatch || isLoreMatch) &&
           !containsQuery
 
         let levDistance: number
@@ -341,6 +325,7 @@ export default defineEventHandler(async (event) => {
         if (containsQuery) finalScore -= 50
         if (isFactionMatch) finalScore -= 30 // Faction matches are very good
         if (isLocationMatch) finalScore -= 30 // Location matches are very good
+        if (isLoreMatch) finalScore -= 30 // Lore matches are very good
         if (isMetadataMatch) finalScore -= 25 // Metadata matches are good
         if (isDescriptionMatch) finalScore -= 10 // Description matches are ok
 
@@ -351,6 +336,17 @@ export default defineEventHandler(async (event) => {
             linkedFactionNamesNormalized.includes(normalizeText(term)),
           )
           if (allTermsInThisFaction) {
+            finalScore -= 500 // HUGE bonus - these should be at the top!
+          }
+        }
+
+        // SPECIAL: Multi-word lore match bonus (e.g., "böser frosch")
+        // Check if ALL terms from parsedQuery appear in this NPC's lore names
+        if (parsedQuery.terms.length > 1 && linkedLoreNamesNormalized.length > 0) {
+          const allTermsInThisLore = parsedQuery.terms.every((term) =>
+            linkedLoreNamesNormalized.includes(normalizeText(term)),
+          )
+          if (allTermsInThisLore) {
             finalScore -= 500 // HUGE bonus - these should be at the top!
           }
         }
@@ -419,6 +415,7 @@ export default defineEventHandler(async (event) => {
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
           const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+          const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
 
           // Parse metadata to check race/class with localized names
           let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
@@ -461,6 +458,16 @@ export default defineEventHandler(async (event) => {
               }
             }
 
+            // Check if all terms appear in lore names
+            if (!shouldInclude && linkedLoreNamesNormalized.length > 0) {
+              const allTermsInLore = expandedTerms.every((termObj) =>
+                termObj.variants.some((variant) => linkedLoreNamesNormalized.includes(variant)),
+              )
+              if (allTermsInLore) {
+                shouldInclude = true
+              }
+            }
+
             // Check if all terms appear in description
             if (!shouldInclude && descriptionNormalized.length > 0) {
               const allTermsInDescription = expandedTerms.every((termObj) =>
@@ -485,7 +492,8 @@ export default defineEventHandler(async (event) => {
                   nameNormalized.includes(variant) ||
                   descriptionNormalized.includes(variant) ||
                   linkedFactionNamesNormalized.includes(variant) ||
-                  linkedLocationNamesNormalized.includes(variant)
+                  linkedLocationNamesNormalized.includes(variant) ||
+                  linkedLoreNamesNormalized.includes(variant)
                 ) {
                   shouldInclude = true
                   break
@@ -538,6 +546,25 @@ export default defineEventHandler(async (event) => {
                   }
                 }
 
+                // Levenshtein match for linked Lore names (split by comma, then by words)
+                if (!shouldInclude && linkedLoreNamesNormalized.length > 0) {
+                  const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+                  for (const loreName of loreNames) {
+                    if (loreName.length === 0) continue
+                    // Split each lore name into words (e.g., "Böser Frosch" → ["böser", "frosch"])
+                    const loreWords = loreName.split(/\s+/)
+                    for (const word of loreWords) {
+                      if (word.length === 0) continue
+                      const loreLevDist = levenshtein(variant, word)
+                      if (loreLevDist <= maxDist) {
+                        shouldInclude = true
+                        break
+                      }
+                    }
+                    if (shouldInclude) break
+                  }
+                }
+
                 if (shouldInclude) break
               }
 
@@ -559,6 +586,7 @@ export default defineEventHandler(async (event) => {
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
           const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+          const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
 
           // Parse metadata to check race/class with localized names
           let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
@@ -582,7 +610,8 @@ export default defineEventHandler(async (event) => {
                 nameNormalized.includes(variant) ||
                 descriptionNormalized.includes(variant) ||
                 linkedFactionNamesNormalized.includes(variant) ||
-                linkedLocationNamesNormalized.includes(variant)
+                linkedLocationNamesNormalized.includes(variant) ||
+                linkedLoreNamesNormalized.includes(variant)
               ) {
                 shouldInclude = true
                 break
@@ -652,6 +681,24 @@ export default defineEventHandler(async (event) => {
                 }
               }
 
+              // Levenshtein match for linked Lore names (split by comma, then by words)
+              if (!shouldInclude && linkedLoreNamesNormalized.length > 0) {
+                const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+                for (const loreName of loreNames) {
+                  if (loreName.length === 0) continue
+                  const loreWords = loreName.split(/\s+/)
+                  for (const word of loreWords) {
+                    if (word.length === 0) continue
+                    const loreLevDist = levenshtein(variant, word)
+                    if (loreLevDist <= maxDist) {
+                      shouldInclude = true
+                      break
+                    }
+                  }
+                  if (shouldInclude) break
+                }
+              }
+
               if (shouldInclude) break
             }
 
@@ -672,6 +719,7 @@ export default defineEventHandler(async (event) => {
           const descriptionNormalized = normalizeText(npc.description || '')
           const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
           const linkedLocationNamesNormalized = normalizeText(npc.linked_location_names || '')
+          const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
 
           // Parse metadata to check race/class with localized names
           let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
@@ -696,7 +744,8 @@ export default defineEventHandler(async (event) => {
                 nameNormalized.includes(variant) ||
                 descriptionNormalized.includes(variant) ||
                 linkedFactionNamesNormalized.includes(variant) ||
-                linkedLocationNamesNormalized.includes(variant)
+                linkedLocationNamesNormalized.includes(variant) ||
+                linkedLoreNamesNormalized.includes(variant)
               ) {
                 termMatches = true
                 break
@@ -766,6 +815,24 @@ export default defineEventHandler(async (event) => {
                 }
               }
 
+              // Levenshtein match for linked Lore names (split by comma, then by words)
+              if (!termMatches && linkedLoreNamesNormalized.length > 0) {
+                const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+                for (const loreName of loreNames) {
+                  if (loreName.length === 0) continue
+                  const loreWords = loreName.split(/\s+/)
+                  for (const word of loreWords) {
+                    if (word.length === 0) continue
+                    const loreLevDist = levenshtein(variant, word)
+                    if (loreLevDist <= maxDist) {
+                      termMatches = true
+                      break
+                    }
+                  }
+                  if (termMatches) break
+                }
+              }
+
               if (termMatches) break
             }
 
@@ -781,6 +848,41 @@ export default defineEventHandler(async (event) => {
           }
         }
         scoredNpcs = filtered
+      }
+
+      // Step 3.5: Re-apply multi-word bonuses after filtering (for Levenshtein fallback results)
+      // This ensures that multi-word Lore/Faction matches get properly ranked even when FTS5 returns 0 results
+      if (parsedQuery.terms.length > 1) {
+        scoredNpcs = scoredNpcs.map((npc) => {
+          let adjustedScore = npc._final_score
+
+          // Check multi-word faction match
+          const linkedFactionNamesNormalized = normalizeText(npc.linked_faction_names || '')
+          if (linkedFactionNamesNormalized.length > 0) {
+            const allTermsInThisFaction = parsedQuery.terms.every((term) =>
+              linkedFactionNamesNormalized.includes(normalizeText(term)),
+            )
+            if (allTermsInThisFaction) {
+              adjustedScore -= 500 // HUGE bonus
+            }
+          }
+
+          // Check multi-word lore match
+          const linkedLoreNamesNormalized = normalizeText(npc.linked_lore_names || '')
+          if (linkedLoreNamesNormalized.length > 0) {
+            const allTermsInThisLore = parsedQuery.terms.every((term) =>
+              linkedLoreNamesNormalized.includes(normalizeText(term)),
+            )
+            if (allTermsInThisLore) {
+              adjustedScore -= 500 // HUGE bonus
+            }
+          }
+
+          return {
+            ...npc,
+            _final_score: adjustedScore,
+          }
+        })
       }
 
       // Step 4: Sort by combined score and take top 50

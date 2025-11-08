@@ -1,0 +1,39 @@
+image: node:22.20.0
+
+stages:
+  - test
+  - build
+
+cache:
+  paths:
+    - node_modules/
+    - .pnpm-store/
+
+before_script:
+  - npm install -g pnpm
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install
+  # better-sqlite3 wird automatisch via postinstall hook rebuilt
+
+test:
+  stage: test
+  script:
+    - pnpm test
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+
+lint:
+  stage: test
+  script:
+    - pnpm lint
+
+build:
+  stage: build
+  script:
+    - pnpm build
+  artifacts:
+    paths:
+      - .output/
+    expire_in: 1 week
+  only:
+    - main
+    - tags

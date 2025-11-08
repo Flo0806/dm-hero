@@ -13,9 +13,9 @@
       </template>
     </UiPageHeader>
 
-    <!-- Search Bar -->
+    <!-- Search Bar - Non-reactive for smooth typing -->
     <v-text-field
-      v-model="searchQuery"
+      :model-value="inputValue"
       :placeholder="$t('common.search')"
       prepend-inner-icon="mdi-magnify"
       variant="outlined"
@@ -23,6 +23,8 @@
       class="mb-4"
       :hint="searchQuery && searchQuery.trim().length > 0 ? $t('locations.searchHint') : ''"
       persistent-hint
+      @update:model-value="handleSearchInput"
+      @click:clear="handleSearchClear"
     />
 
     <v-row v-if="pending">
@@ -31,9 +33,17 @@
       </v-col>
     </v-row>
 
+    <!-- Search Loading Indicator (shown immediately when typing starts) -->
+    <div v-else-if="searching && (!searchResults || searchResults.length === 0)" class="text-center py-16">
+      <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
+      <div class="text-h6">
+        {{ $t('common.searching') }}
+      </div>
+    </div>
+
     <!-- Location Cards with Search Overlay -->
     <div v-else-if="filteredLocations && filteredLocations.length > 0" class="position-relative">
-      <!-- Search Loading Overlay -->
+      <!-- Search Loading Overlay (shown when searching with existing results) -->
       <v-overlay
         :model-value="searching"
         contained
@@ -146,7 +156,27 @@
         <v-card-title>
           {{ editingLocation ? $t('locations.edit') : $t('locations.create') }}
         </v-card-title>
-        <v-card-text>
+
+        <!-- Tabs (only for editing) -->
+        <v-tabs v-if="editingLocation" v-model="locationDialogTab" class="mb-4">
+          <v-tab value="details">
+            <v-icon start>mdi-map-marker-outline</v-icon>
+            {{ $t('locations.details') }}
+          </v-tab>
+          <v-tab value="npcs">
+            <v-icon start>mdi-account-group</v-icon>
+            {{ $t('npcs.title') }} ({{ linkedNpcs.length }})
+          </v-tab>
+          <v-tab value="lore">
+            <v-icon start>mdi-book-open-variant</v-icon>
+            {{ $t('lore.title') }} ({{ linkedLore.length }})
+          </v-tab>
+        </v-tabs>
+
+        <v-card-text style="max-height: 600px; overflow-y: auto">
+          <v-tabs-window v-if="editingLocation" v-model="locationDialogTab">
+            <!-- Details Tab -->
+            <v-tabs-window-item value="details">
           <!-- Image Upload Section (only for editing) -->
           <!-- Image Gallery -->
           <v-card v-if="editingLocation" variant="outlined" class="mb-4">
@@ -336,6 +366,188 @@
             variant="outlined"
             rows="3"
           />
+            </v-tabs-window-item>
+
+            <!-- NPCs Tab -->
+            <v-tabs-window-item value="npcs">
+              <div class="text-h6 mb-4">{{ $t('locations.linkedNpcs') }}</div>
+
+              <!-- Add NPC -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-text>
+                  <v-autocomplete
+                    v-model="selectedNpcToLink"
+                    :items="npcForSelect"
+                    item-title="name"
+                    item-value="id"
+                    :label="$t('locations.selectNpc')"
+                    :placeholder="$t('locations.selectNpcPlaceholder')"
+                    variant="outlined"
+                    clearable
+                    class="mb-2"
+                  />
+                  <v-btn
+                    color="primary"
+                    block
+                    :disabled="!selectedNpcToLink"
+                    @click="addNpcRelation"
+                  >
+                    {{ $t('locations.linkNpc') }}
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <!-- Linked NPCs List -->
+              <v-list v-if="linkedNpcs.length > 0">
+                <v-list-item v-for="npc in linkedNpcs" :key="npc.id" class="mb-2">
+                  <template #prepend>
+                    <v-avatar size="48" class="mr-3">
+                      <v-img v-if="npc.image_url" :src="`/uploads/${npc.image_url}`" />
+                      <v-icon v-else>mdi-account</v-icon>
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title>{{ npc.name }}</v-list-item-title>
+                  <v-list-item-subtitle v-if="npc.description">
+                    {{ npc.description.substring(0, 100) }}{{ npc.description.length > 100 ? '...' : '' }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeNpcRelation(npc.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+              <v-empty-state
+                v-else
+                icon="mdi-account-off"
+                :title="$t('locations.noLinkedNpcs')"
+                :text="$t('locations.noLinkedNpcsText')"
+              />
+            </v-tabs-window-item>
+
+            <!-- Lore Tab -->
+            <v-tabs-window-item value="lore">
+              <div class="text-h6 mb-4">{{ $t('locations.linkedLore') }}</div>
+
+              <!-- Add Lore -->
+              <v-card variant="outlined" class="mb-4">
+                <v-card-text>
+                  <v-autocomplete
+                    v-model="selectedLoreToLink"
+                    :items="loreForSelect"
+                    item-title="name"
+                    item-value="id"
+                    :label="$t('locations.selectLore')"
+                    :placeholder="$t('locations.selectLorePlaceholder')"
+                    variant="outlined"
+                    clearable
+                    class="mb-2"
+                  />
+                  <v-btn
+                    color="primary"
+                    block
+                    :disabled="!selectedLoreToLink"
+                    @click="addLoreRelation"
+                  >
+                    {{ $t('locations.linkLore') }}
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+
+              <!-- Linked Lore List -->
+              <v-list v-if="linkedLore.length > 0">
+                <v-list-item v-for="lore in linkedLore" :key="lore.id" class="mb-2">
+                  <template #prepend>
+                    <v-avatar size="48" class="mr-3">
+                      <v-img v-if="lore.image_url" :src="`/uploads/${lore.image_url}`" />
+                      <v-icon v-else>mdi-book-open-variant</v-icon>
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title>{{ lore.name }}</v-list-item-title>
+                  <v-list-item-subtitle v-if="lore.description">
+                    {{ lore.description.substring(0, 100) }}{{ lore.description.length > 100 ? '...' : '' }}
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeLoreRelation(lore.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+              <v-empty-state
+                v-else
+                icon="mdi-book-off"
+                :title="$t('locations.noLinkedLore')"
+                :text="$t('locations.noLinkedLoreText')"
+              />
+            </v-tabs-window-item>
+          </v-tabs-window>
+
+          <!-- Create mode (no tabs) - show all fields directly -->
+          <div v-else>
+          <v-text-field
+            v-model="locationForm.name"
+            :label="$t('locations.name')"
+            :rules="[(v: string) => !!v || $t('locations.nameRequired')]"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-textarea
+            v-model="locationForm.description"
+            :label="$t('locations.description')"
+            variant="outlined"
+            rows="4"
+            class="mb-4"
+          />
+
+          <!-- Parent Location Dropdown -->
+          <v-select
+            v-model="locationForm.parentLocationId"
+            :label="$t('locations.parentLocation')"
+            :items="availableParentLocations"
+            item-title="name"
+            item-value="id"
+            variant="outlined"
+            clearable
+            :hint="$t('locations.parentLocationHint')"
+            persistent-hint
+            class="mb-4"
+          />
+
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="locationForm.metadata.type"
+                :label="$t('locations.type')"
+                variant="outlined"
+                :placeholder="$t('locations.typePlaceholder')"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="locationForm.metadata.region"
+                :label="$t('locations.region')"
+                variant="outlined"
+              />
+            </v-col>
+          </v-row>
+
+          <v-textarea
+            v-model="locationForm.metadata.notes"
+            :label="$t('locations.notes')"
+            variant="outlined"
+            rows="3"
+          />
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -585,9 +797,40 @@ interface ConnectedNPC {
 }
 
 // Debounced FTS5 + Levenshtein Search with AbortController (must be declared early for template)
-const searchQuery = ref('')
+// IMPORTANT: inputValue is non-reactive for smooth typing, searchQuery is reactive for logic
+let inputValue = '' // Non-reactive - used by input field
+const searchQuery = ref('') // Reactive - used by computeds
 const searchResults = ref<Location[]>([])
 const searching = ref(false)
+const isInSearchMode = ref(false) // Cache the search mode to avoid rebuilding tree on every keystroke
+
+// Non-reactive search input handlers for smooth typing
+let inputTimeout: ReturnType<typeof setTimeout> | null = null
+function handleSearchInput(value: string) {
+  // Update non-reactive input value immediately (smooth typing)
+  inputValue = value
+
+  // Show loading immediately when user starts typing
+  if (value && value.trim().length > 0) {
+    searching.value = true
+    isInSearchMode.value = true
+  } else {
+    searching.value = false
+    isInSearchMode.value = false
+  }
+
+  // Debounce updating the reactive searchQuery (triggers search)
+  if (inputTimeout) clearTimeout(inputTimeout)
+  inputTimeout = setTimeout(() => {
+    searchQuery.value = value
+  }, 50) // Very short delay - just enough to keep typing smooth
+}
+
+function handleSearchClear() {
+  inputValue = ''
+  searchQuery.value = ''
+  if (inputTimeout) clearTimeout(inputTimeout)
+}
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -639,6 +882,10 @@ onMounted(async () => {
   // Load locations from store (cached)
   await entitiesStore.fetchLocations(activeCampaignId.value)
 
+  // Load NPCs and Lore for linking
+  await entitiesStore.fetchNPCs(activeCampaignId.value)
+  await entitiesStore.fetchLore(activeCampaignId.value)
+
   // Initialize from query params
   initializeFromQuery()
 
@@ -681,6 +928,21 @@ watch(searchQuery, () => {
 // Use store data
 const locations = computed(() => entitiesStore.locations)
 const pending = computed(() => entitiesStore.locationsLoading)
+
+// NPCs and Lore for selection dropdowns
+const npcForSelect = computed(() => {
+  return (entitiesStore.npcs || []).map((npc) => ({
+    id: npc.id,
+    name: npc.name,
+  }))
+})
+
+const loreForSelect = computed(() => {
+  return (entitiesStore.lore || []).map((lore) => ({
+    id: lore.id,
+    name: lore.name,
+  }))
+})
 
 // Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -741,11 +1003,13 @@ watch(searchQuery, async (query) => {
   if (!query || query.trim().length === 0) {
     searchResults.value = []
     searching.value = false
+    isInSearchMode.value = false // Exit search mode
     return
   }
 
   // Show loading state immediately (user sees overlay during debounce)
   searching.value = true
+  isInSearchMode.value = true // Enter search mode
 
   // Debounce search by 300ms
   searchTimeout = setTimeout(() => executeSearch(query), 300)
@@ -785,24 +1049,31 @@ const treeItems = computed(() => {
 
   if (!searchResults || searchResults.length === 0) return []
 
-  // If searching, we need to include parents of search results
-  const isSearching = searchQuery.value && searchQuery.value.trim().length > 0
+  // Use cached search mode instead of reading searchQuery directly
+  const isSearching = isInSearchMode.value
 
   let locationsToShow: Location[] = []
   const searchResultIds = new Set<number>()
+  const addedLocationIds = new Set<number>() // Track added locations to prevent duplicates
 
   if (isSearching) {
     // Searching: Include search results + all their parents
     searchResults.forEach((result) => {
       searchResultIds.add(result.id)
-      locationsToShow.push(result)
+      if (!addedLocationIds.has(result.id)) {
+        locationsToShow.push(result)
+        addedLocationIds.add(result.id)
+      }
 
       // Add all parents
       const parentIds = getParentIds(result.id, allLocations)
       parentIds.forEach((parentId) => {
-        const parent = allLocations.find((l) => l.id === parentId)
-        if (parent && !locationsToShow.find((l) => l.id === parent.id)) {
-          locationsToShow.push(parent)
+        if (!addedLocationIds.has(parentId)) {
+          const parent = allLocations.find((l) => l.id === parentId)
+          if (parent) {
+            locationsToShow.push(parent)
+            addedLocationIds.add(parentId)
+          }
         }
       })
     })
@@ -915,6 +1186,15 @@ const locationForm = ref({
     notes: '',
   },
 })
+
+// Dialog tabs
+const locationDialogTab = ref('details')
+
+// NPC & Lore linking
+const selectedNpcToLink = ref<number | null>(null)
+const selectedLoreToLink = ref<number | null>(null)
+const linkedNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const linkedLore = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
 
 // Image gallery state
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -1371,6 +1651,122 @@ async function saveLocation() {
   }
 }
 
+// NPC Linking Functions
+async function loadLinkedNpcs() {
+  if (!editingLocation.value) return
+
+  try {
+    const npcs = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/locations/${editingLocation.value.id}/npcs`)
+    linkedNpcs.value = npcs
+  } catch (error) {
+    console.error('Failed to load linked NPCs:', error)
+  }
+}
+
+async function addNpcRelation() {
+  if (!editingLocation.value || !selectedNpcToLink.value) return
+
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: selectedNpcToLink.value,
+        toEntityId: editingLocation.value.id,
+        relationType: 'befindet sich in',
+        relationNotes: null,
+      },
+    })
+
+    await loadLinkedNpcs()
+    selectedNpcToLink.value = null
+  } catch (error) {
+    console.error('Failed to add NPC relation:', error)
+  }
+}
+
+async function removeNpcRelation(npcId: number) {
+  if (!editingLocation.value) return
+
+  try {
+    // Find the relation
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        fromEntityId: npcId,
+        toEntityId: editingLocation.value.id,
+      },
+    })
+
+    if (relation) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+      await loadLinkedNpcs()
+    }
+  } catch (error) {
+    console.error('Failed to remove NPC relation:', error)
+  }
+}
+
+// Lore Linking Functions
+async function loadLinkedLore() {
+  if (!editingLocation.value) return
+
+  try {
+    const lore = await $fetch<
+      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+    >(`/api/locations/${editingLocation.value.id}/lore`)
+    linkedLore.value = lore
+  } catch (error) {
+    console.error('Failed to load linked Lore:', error)
+  }
+}
+
+async function addLoreRelation() {
+  if (!editingLocation.value || !selectedLoreToLink.value) return
+
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: selectedLoreToLink.value,
+        toEntityId: editingLocation.value.id,
+        relationType: 'bezieht sich auf',
+        relationNotes: null,
+      },
+    })
+
+    await loadLinkedLore()
+    selectedLoreToLink.value = null
+  } catch (error) {
+    console.error('Failed to add Lore relation:', error)
+  }
+}
+
+async function removeLoreRelation(loreId: number) {
+  if (!editingLocation.value) return
+
+  try {
+    // Find the relation
+    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
+      query: {
+        fromEntityId: loreId,
+        toEntityId: editingLocation.value.id,
+      },
+    })
+
+    if (relation) {
+      await $fetch(`/api/entity-relations/${relation.id}`, {
+        method: 'DELETE',
+      })
+      await loadLinkedLore()
+    }
+  } catch (error) {
+    console.error('Failed to remove Lore relation:', error)
+  }
+}
+
 async function confirmDelete() {
   if (!deletingLocation.value) return
 
@@ -1401,6 +1797,17 @@ function closeDialog() {
     },
   }
 }
+
+// Watch for editing location to load linked entities (MUST be after editingLocation declaration!)
+watch(
+  () => editingLocation.value?.id,
+  async (locationId) => {
+    if (locationId) {
+      await loadLinkedNpcs()
+      await loadLinkedLore()
+    }
+  },
+)
 </script>
 
 <style scoped>
