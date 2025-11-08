@@ -52,7 +52,19 @@ export default defineEventHandler((event) => {
 
   // HYBRID APPROACH: FTS5 pre-filter + Levenshtein ranking
   if (searchQuery && searchQuery.trim().length > 0) {
-    const searchTerm = normalizeText(searchQuery.trim())
+    const trimmedQuery = searchQuery.trim()
+
+    // Check if this is a quoted phrase BEFORE normalization
+    const isQuotedPhrase = trimmedQuery.startsWith('"') && trimmedQuery.endsWith('"')
+
+    // If quoted, remove quotes, normalize, then re-add quotes
+    let searchTerm: string
+    if (isQuotedPhrase) {
+      const withoutQuotes = trimmedQuery.slice(1, -1) // Remove surrounding quotes
+      searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
+    } else {
+      searchTerm = normalizeText(trimmedQuery)
+    }
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
@@ -250,7 +262,32 @@ export default defineEventHandler((event) => {
       })
 
       // Step 3: Filter by Levenshtein distance
-      if (!parsedQuery.hasOperators) {
+      const isQuotedPhraseSearch =
+        parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
+
+      if (isQuotedPhraseSearch) {
+        // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
+        const exactPhrase = parsedQuery.fts5Query.slice(1, -1) // Remove quotes
+
+        scoredFactions = scoredFactions.filter((faction) => {
+          const nameLower = normalizeText(faction.name)
+          const metadataLower = normalizeText(faction.metadata || '')
+          const descriptionLower = normalizeText(faction.description || '')
+          const leaderNameLower = normalizeText(faction.leader_name || '')
+          const linkedNpcNamesLower = normalizeText(faction.linked_npc_names || '')
+          const linkedLoreNamesLower = normalizeText(faction.linked_lore_names || '')
+
+          // Check if EXACT phrase appears in ANY field
+          return (
+            nameLower.includes(exactPhrase) ||
+            descriptionLower.includes(exactPhrase) ||
+            metadataLower.includes(exactPhrase) ||
+            leaderNameLower.includes(exactPhrase) ||
+            linkedNpcNamesLower.includes(exactPhrase) ||
+            linkedLoreNamesLower.includes(exactPhrase)
+          )
+        })
+      } else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches
         scoredFactions = scoredFactions.filter((faction) => {
           const nameLower = normalizeText(faction.name)
