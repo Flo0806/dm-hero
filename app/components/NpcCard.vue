@@ -1,0 +1,370 @@
+<template>
+  <v-card
+    :id="`npc-${npc.id}`"
+    hover
+    :class="['d-flex flex-column npc-card', { 'highlighted-card': isHighlighted }]"
+    style="height: 100%; cursor: pointer"
+    @click="$emit('view', npc)"
+  >
+    <!-- Card Header with Image & Status -->
+    <div class="d-flex align-start pa-4 pb-3">
+      <!-- Avatar -->
+      <v-avatar
+        :color="npc.image_url ? undefined : 'grey-lighten-2'"
+        size="80"
+        rounded="lg"
+        class="mr-3 flex-shrink-0"
+      >
+        <v-img v-if="npc.image_url" :src="`/uploads/${npc.image_url}`" cover />
+        <v-icon v-else icon="mdi-account" size="40" color="grey" />
+      </v-avatar>
+
+      <!-- Name & Metadata -->
+      <div class="flex-grow-1" style="min-width: 0">
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ npc.name }}</h3>
+
+        <!-- Type & Status Chips -->
+        <div v-if="npc.metadata?.type || npc.metadata?.status" class="d-flex flex-wrap gap-1 mb-2">
+          <v-chip
+            v-if="npc.metadata?.type"
+            :prepend-icon="getNpcTypeIcon(npc.metadata.type)"
+            size="x-small"
+            color="primary"
+            variant="tonal"
+          >
+            {{ $t(`npcs.types.${npc.metadata.type}`) }}
+          </v-chip>
+          <v-chip
+            v-if="npc.metadata?.status"
+            :prepend-icon="getNpcStatusIcon(npc.metadata.status)"
+            :color="getNpcStatusColor(npc.metadata.status)"
+            size="x-small"
+            variant="flat"
+          >
+            {{ $t(`npcs.statuses.${npc.metadata.status}`) }}
+          </v-chip>
+        </div>
+
+        <!-- Race & Class (always shown, takes same vertical space) -->
+        <div
+          class="text-caption text-medium-emphasis"
+          :style="{ minHeight: npc.metadata?.type || npc.metadata?.status ? '20px' : '44px' }"
+        >
+          <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
+          <span v-if="npc.metadata?.race && npc.metadata?.class"> • </span>
+          <span v-if="npc.metadata?.class">{{ getClassDisplayName(npc.metadata.class) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description (Fixed 3 lines) -->
+    <v-card-text class="pt-0 pb-3" style="flex-grow: 0">
+      <div class="npc-description">
+        <p v-if="npc.description" class="text-body-2 text-medium-emphasis mb-0">
+          {{ npc.description }}
+        </p>
+        <p v-else class="text-body-2 text-disabled mb-0 font-italic">
+          {{ $t('common.noDescription') }}
+        </p>
+      </div>
+    </v-card-text>
+
+    <!-- Info Badges (Bottom) -->
+    <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
+      <!-- Row 1: Metadata Badges (Location, Faction) - Fixed Height -->
+      <div class="d-flex flex-wrap mb-2" style="gap: 6px; min-height: 28px">
+        <!-- Location Badge -->
+        <v-chip
+          v-if="npc.metadata?.location"
+          prepend-icon="mdi-map-marker"
+          size="small"
+          variant="outlined"
+          color="primary"
+        >
+          {{ npc.metadata.location }}
+        </v-chip>
+
+        <!-- Faction Badge (async loaded) -->
+        <v-chip
+          v-if="counts?.factionName"
+          prepend-icon="mdi-shield-account"
+          size="small"
+          variant="outlined"
+          color="secondary"
+        >
+          {{ counts.factionName }}
+        </v-chip>
+      </div>
+
+      <!-- Row 2: Count Badges (Relations, Items, Documents, Images) -->
+      <div class="d-flex flex-wrap" style="gap: 6px">
+        <!-- Relations Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-account-group"
+              size="small"
+              variant="outlined"
+              :color="counts.relations > 0 ? 'primary' : undefined"
+            >
+              {{ counts.relations }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-account-group"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('npcs.badgeTooltips.relations') }}</span>
+        </v-tooltip>
+
+        <!-- Items Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-bag-personal"
+              size="small"
+              variant="outlined"
+              :color="counts.items > 0 ? 'primary' : undefined"
+            >
+              {{ counts.items }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-bag-personal"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('npcs.badgeTooltips.items') }}</span>
+        </v-tooltip>
+
+        <!-- Documents Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-file-document"
+              size="small"
+              variant="outlined"
+              :color="counts.documents > 0 ? 'primary' : undefined"
+            >
+              {{ counts.documents }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-file-document"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('npcs.badgeTooltips.documents') }}</span>
+        </v-tooltip>
+
+        <!-- Images Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-image"
+              size="small"
+              variant="outlined"
+              :color="counts.images > 0 ? 'primary' : undefined"
+            >
+              {{ counts.images }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-image"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('npcs.badgeTooltips.images') }}</span>
+        </v-tooltip>
+      </div>
+    </v-card-text>
+
+    <!-- Actions -->
+    <v-divider />
+    <v-card-actions class="px-4">
+      <v-btn icon="mdi-eye" size="small" variant="text" @click.stop="$emit('view', npc)">
+        <v-icon>mdi-eye</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.view') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', npc)">
+        <v-icon>mdi-pencil</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.edit') }}
+        </v-tooltip>
+      </v-btn>
+      <v-spacer />
+      <v-btn
+        icon="mdi-download"
+        size="small"
+        variant="text"
+        :disabled="!npc.image_url"
+        @click.stop="$emit('download', npc)"
+      >
+        <v-icon>mdi-download</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.download') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click.stop="$emit('delete', npc)">
+        <v-icon>mdi-delete</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.delete') }}
+        </v-tooltip>
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</template>
+
+<script setup lang="ts">
+import type { NPC } from '~~/types/npc'
+
+interface Props {
+  npc: NPC
+  isHighlighted?: boolean
+  races?: Array<{ name: string; name_de?: string; name_en?: string }>
+  classes?: Array<{ name: string; name_de?: string; name_en?: string }>
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isHighlighted: false,
+  races: () => [],
+  classes: () => [],
+})
+
+defineEmits<{
+  view: [npc: NPC]
+  edit: [npc: NPC]
+  download: [npc: NPC]
+  delete: [npc: NPC]
+}>()
+
+const { locale } = useI18n()
+const { getCounts } = useNpcCounts()
+
+// Get counts reactively from the composable
+const counts = computed(() => getCounts(props.npc.id) || props.npc._counts)
+
+// Helper functions for display names
+function getRaceDisplayName(raceName: string): string {
+  const race = props.races.find((r) => r.name === raceName)
+  if (!race) return raceName
+
+  if (race.name_de && race.name_en) {
+    return locale.value === 'de' ? race.name_de : race.name_en
+  }
+  return race.name
+}
+
+function getClassDisplayName(className: string): string {
+  const classData = props.classes.find((c) => c.name === className)
+  if (!classData) return className
+
+  if (classData.name_de && classData.name_en) {
+    return locale.value === 'de' ? classData.name_de : classData.name_en
+  }
+  return classData.name
+}
+
+// Icon helpers
+function getNpcTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    ally: 'mdi-handshake',
+    enemy: 'mdi-sword-cross',
+    neutral: 'mdi-minus-circle',
+    questgiver: 'mdi-exclamation',
+    merchant: 'mdi-cart',
+    guard: 'mdi-shield',
+    noble: 'mdi-crown',
+    commoner: 'mdi-account',
+    villain: 'mdi-skull',
+    mentor: 'mdi-school',
+    companion: 'mdi-account-multiple',
+    informant: 'mdi-eye',
+  }
+  return icons[type] || 'mdi-account'
+}
+
+function getNpcStatusIcon(status: string): string {
+  const icons: Record<string, string> = {
+    alive: 'mdi-heart-pulse',
+    dead: 'mdi-skull',
+    missing: 'mdi-help-circle',
+    imprisoned: 'mdi-lock',
+    unknown: 'mdi-help',
+    undead: 'mdi-zombie',
+  }
+  return icons[status] || 'mdi-help'
+}
+
+function getNpcStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    alive: 'success',
+    dead: 'error',
+    missing: 'warning',
+    imprisoned: 'grey-darken-2',
+    unknown: 'grey',
+    undead: 'purple',
+  }
+  return colors[status] || 'grey'
+}
+</script>
+
+<style scoped>
+.npc-card {
+  transition: all 0.3s ease;
+}
+
+.npc-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 60px;
+}
+
+.highlighted-card {
+  animation: highlight-pulse 2s ease-in-out;
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.4) !important;
+}
+
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0.4);
+  }
+}
+</style>

@@ -74,18 +74,21 @@
         >
           <!-- Custom prepend slot for expand button + icon -->
           <template #prepend="{ item }">
-            <!-- Expand/Collapse icon only if has children -->
-            <v-icon
-              v-if="item.children && item.children.length > 0"
-              :icon="openedNodes.includes(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-              size="small"
-            />
-            <div v-else style="width: 24px; display: inline-block" />
+            <div style="display: flex; align-items: center; gap: 4px; margin-left: -8px">
+              <!-- Expand/Collapse icon only if has children -->
+              <v-icon
+                v-if="item.children && item.children.length > 0"
+                :icon="openedNodes.includes(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                size="small"
+                style="width: 20px"
+              />
+              <div v-else style="width: 20px" />
 
-            <!-- Location type icon -->
-            <v-icon :color="getNodeColor(item)">
-              {{ getNodeIcon(item) }}
-            </v-icon>
+              <!-- Location type icon -->
+              <v-icon :color="getNodeColor(item)" size="small">
+                {{ getNodeIcon(item) }}
+              </v-icon>
+            </div>
           </template>
 
           <!-- Custom title to highlight search results -->

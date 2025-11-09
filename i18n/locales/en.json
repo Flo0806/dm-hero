@@ -225,7 +225,13 @@
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
-    "saveBeforeGenerating": "Details changed - save first"
+    "saveBeforeGenerating": "Details changed - save first",
+    "badgeTooltips": {
+      "relations": "Linked NPCs",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery",
+      "items": "Items Owned"
+    }
   },
   "factions": {
     "title": "Factions",
@@ -291,6 +297,12 @@
     "generateImage": "Generate Image",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
+    "badgeTooltips": {
+      "relations": "Linked NPCs",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery",
+      "items": "Items Owned"
+    },
     "linkedLore": "Linked Lore",
     "noLinkedLore": "No Linked Lore",
     "noLinkedLoreText": "This faction has no linked lore yet.",
@@ -410,7 +422,13 @@
     "noLinkedLore": "No linked lore",
     "noLinkedLoreText": "This location is not yet linked to any lore.",
     "addLoreRelationError": "Failed to add lore relation",
-    "removeLoreRelationError": "Failed to remove lore relation"
+    "removeLoreRelationError": "Failed to remove lore relation",
+    "badgeTooltips": {
+      "npcs": "Linked NPCs",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery",
+      "lore": "Linked Lore"
+    }
   },
   "items": {
     "title": "Items",
@@ -679,7 +697,9 @@
     "noImagesText": "No images uploaded yet",
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
-    "generateImageError": "Failed to generate image"
+    "generateImageError": "Failed to generate image",
+    "download": "Download",
+    "noDescription": "No description"
   },
   "settings": {
     "title": "Settings",

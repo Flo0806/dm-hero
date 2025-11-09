@@ -31,6 +31,14 @@ export interface NpcMetadata {
   gender?: string
 }
 
+export interface NpcCounts {
+  relations: number
+  items: number
+  documents: number
+  images: number
+  factionName: string | null
+}
+
 export interface NPC {
   id: number
   name: string
@@ -49,4 +57,6 @@ export interface NPC {
   } | null
   created_at: string
   updated_at: string
+  // Async loaded counts (optional, loaded on demand)
+  _counts?: NpcCounts
 }

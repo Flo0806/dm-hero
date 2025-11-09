@@ -51,74 +51,16 @@
       <!-- NPC Cards -->
       <v-row>
         <v-col v-for="npc in filteredNpcs" :key="npc.id" cols="12" md="6" lg="4">
-          <v-card
-            :id="`npc-${npc.id}`"
-            hover
-            :class="['h-100 d-flex flex-column', { 'highlighted-card': highlightedId === npc.id }]"
-          >
-            <v-card-title class="d-flex align-center">
-              <v-icon icon="mdi-account" class="mr-2" color="primary" />
-              {{ npc.name }}
-              <v-spacer />
-              <v-chip
-                v-if="npc.metadata?.status"
-                :prepend-icon="getNpcStatusIcon(npc.metadata.status)"
-                :color="getNpcStatusColor(npc.metadata.status)"
-                size="small"
-                variant="flat"
-              >
-                {{ $t(`npcs.statuses.${npc.metadata.status}`) }}
-              </v-chip>
-            </v-card-title>
-            <v-card-text class="flex-grow-1">
-              <div
-                v-if="npc.image_url"
-                class="float-right ml-3 mb-2 position-relative image-container"
-                style="width: 80px; height: 80px"
-              >
-                <v-avatar size="80" rounded="lg">
-                  <v-img :src="`/uploads/${npc.image_url}`" cover />
-                </v-avatar>
-                <v-btn
-                  icon="mdi-download"
-                  size="x-small"
-                  variant="tonal"
-                  class="image-download-btn"
-                  @click.stop="downloadImage(`/uploads/${npc.image_url}`, npc.name)"
-                />
-              </div>
-              <div v-if="npc.metadata?.type" class="mb-2">
-                <v-chip
-                  :prepend-icon="getNpcTypeIcon(npc.metadata.type)"
-                  size="small"
-                  color="primary"
-                >
-                  {{ $t(`npcs.types.${npc.metadata.type}`) }}
-                </v-chip>
-              </div>
-              <div v-if="npc.description" class="text-body-2 mb-3">
-                {{ truncateText(npc.description, 100) }}
-              </div>
-              <div v-if="npc.metadata" class="text-caption">
-                <div v-if="npc.metadata.race" class="mb-1">
-                  <strong>{{ $t('npcs.race') }}:</strong>
-                  {{ getRaceDisplayName(npc.metadata.race) }}
-                </div>
-                <div v-if="npc.metadata.class" class="mb-1">
-                  <strong>{{ $t('npcs.class') }}:</strong>
-                  {{ getClassDisplayName(npc.metadata.class) }}
-                </div>
-                <div v-if="npc.metadata.location">
-                  <strong>{{ $t('npcs.location') }}:</strong> {{ npc.metadata.location }}
-                </div>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn icon="mdi-pencil" variant="text" @click="editNpc(npc)" />
-              <v-spacer />
-              <v-btn icon="mdi-delete" variant="text" color="error" @click="deleteNpc(npc)" />
-            </v-card-actions>
-          </v-card>
+          <NpcCard
+            :npc="npc"
+            :is-highlighted="highlightedId === npc.id"
+            :races="races"
+            :classes="classes"
+            @view="viewNpc"
+            @edit="editNpc"
+            @download="(npc) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
+            @delete="deleteNpc"
+          />
         </v-col>
       </v-row>
     </div>
@@ -148,6 +90,19 @@
         </template>
       </ClientOnly>
     </div>
+
+    <!-- View NPC Dialog -->
+    <NpcViewDialog
+      v-model:show="showViewDialog"
+      :npc="viewingNpc"
+      :races="races"
+      :classes="classes"
+      :can-go-back="npcViewStack.length > 0"
+      @edit="handleEditFromView"
+      @view-npc="viewNpcById"
+      @view-item="viewItemById"
+      @go-back="goBackInNpcView"
+    />
 
     <!-- Create/Edit Dialog -->
     <v-dialog v-model="showCreateDialog" max-width="900" scrollable>
@@ -1253,6 +1208,9 @@ const router = useRouter()
 // Use image download composable
 const { downloadImage } = useImageDownload()
 
+// Use NPC counts composable
+const { loadNpcCountsBatch, reloadNpcCounts } = useNpcCounts()
+
 // Image Preview
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
@@ -1292,6 +1250,11 @@ onMounted(async () => {
 
   // Load races and classes for dropdowns
   await loadReferenceData()
+
+  // Load counts for all NPCs asynchronously (in background)
+  if (entitiesStore.npcs) {
+    loadNpcCountsBatch(entitiesStore.npcs)
+  }
 })
 
 // Search with FTS5
@@ -1479,6 +1442,11 @@ async function executeSearch(query: string) {
       signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
+
+    // Load counts for search results in background
+    if (results.length > 0) {
+      loadNpcCountsBatch(results)
+    }
   } catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
@@ -1539,6 +1507,10 @@ const filteredNpcs = computed(() => {
 })
 
 // Form state
+const showViewDialog = ref(false)
+const viewingNpc = ref<NPC | null>(null)
+// Stack for nested NPC views (when clicking relations in view dialog)
+const npcViewStack = ref<NPC[]>([])
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const editingNpc = ref<NPC | null>(null)
@@ -1628,8 +1600,13 @@ async function handleImageUpload(event: Event) {
     if (response.success) {
       // Update the editing NPC with new image URL
       editingNpc.value.image_url = response.imageUrl
-      // Refresh the list
-      await entitiesStore.fetchNPCs(activeCampaignId.value!)
+
+      // Update store reactively (no fetch needed!)
+      const npcInStore = entitiesStore.npcs.find((n) => n.id === editingNpc.value!.id)
+      if (npcInStore) {
+        npcInStore.image_url = response.imageUrl
+      }
+
       // Reset input
       target.value = ''
     }
@@ -1733,10 +1710,13 @@ async function generateImage() {
 
       if (response.success) {
         // Update local NPC
-        editingNpc.value.image_url = result.imageUrl.replace('/uploads/', '')
-        // Refresh NPCs to update the list
-        if (activeCampaignId.value) {
-          await entitiesStore.fetchNPCs(activeCampaignId.value)
+        const imageUrl = result.imageUrl.replace('/uploads/', '')
+        editingNpc.value.image_url = imageUrl
+
+        // Update store reactively (no fetch needed!)
+        const npcInStore = entitiesStore.npcs.find((n) => n.id === editingNpc.value!.id)
+        if (npcInStore) {
+          npcInStore.image_url = imageUrl
         }
       }
     }
@@ -1761,8 +1741,12 @@ async function deleteImage() {
 
     // Update the editing NPC
     editingNpc.value.image_url = null
-    // Refresh the list
-    await entitiesStore.fetchNPCs(activeCampaignId.value!)
+
+    // Update store reactively (no fetch needed!)
+    const npcInStore = entitiesStore.npcs.find((n) => n.id === editingNpc.value!.id)
+    if (npcInStore) {
+      npcInStore.image_url = null
+    }
   } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('npcs.deleteImageError'))
@@ -1788,48 +1772,6 @@ const npcStatuses = computed(() =>
 )
 
 // Get icon for NPC type
-function getNpcTypeIcon(type: NpcType): string {
-  const iconMap: Record<NpcType, string> = {
-    ally: 'mdi-handshake',
-    enemy: 'mdi-skull',
-    neutral: 'mdi-account-circle',
-    questgiver: 'mdi-message-question',
-    merchant: 'mdi-storefront',
-    guard: 'mdi-shield-account',
-    noble: 'mdi-crown',
-    commoner: 'mdi-account',
-    villain: 'mdi-skull-crossbones',
-    mentor: 'mdi-book-open-variant',
-    companion: 'mdi-account-heart',
-    informant: 'mdi-information',
-  }
-  return iconMap[type] || 'mdi-account'
-}
-
-// Get icon for NPC status
-function getNpcStatusIcon(status: NpcStatus): string {
-  const iconMap: Record<NpcStatus, string> = {
-    alive: 'mdi-heart-pulse',
-    dead: 'mdi-skull',
-    missing: 'mdi-help-circle',
-    imprisoned: 'mdi-lock',
-    unknown: 'mdi-help',
-  }
-  return iconMap[status] || 'mdi-help'
-}
-
-// Get color for NPC status
-function getNpcStatusColor(status: NpcStatus): string {
-  const colorMap: Record<NpcStatus, string> = {
-    alive: 'success',
-    dead: 'grey-darken-2',
-    missing: 'warning',
-    imprisoned: 'error',
-    unknown: 'grey',
-  }
-  return colorMap[status] || 'grey'
-}
-
 // NPC Relations state
 const npcRelations = ref<
   Array<{
@@ -2136,7 +2078,7 @@ async function loadAllRelations() {
   loadingRelations.value = true
 
   try {
-    const relations = await $fetch<Relation[]>(`/api/npcs/${editingNpc.value.id}/relations`)
+    const relations = await $fetch<Relation[]>(`/api/npcs/${editingNpc.value.id}/all-relations`)
     allRelations.value = relations
   } catch (error) {
     console.error('Failed to load relations:', error)
@@ -2210,13 +2152,22 @@ async function addNpcRelation() {
 
     await loadAllRelations()
 
+    // Reload counts for this NPC (relation count changed)
+    await reloadNpcCounts(editingNpc.value)
+
     // Reset form
     newNpcRelation.value = {
       npcId: null,
       relationType: '',
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to add NPC relation:', error)
+    // Show user-friendly error message
+    if (error?.statusCode === 409) {
+      alert('Diese Beziehung existiert bereits!')
+    } else {
+      alert('Fehler beim Hinzufügen der Beziehung')
+    }
   } finally {
     addingNpcRelation.value = false
   }
@@ -2228,11 +2179,16 @@ function editNpcRelation(relation: Relation) {
 }
 
 async function removeNpcRelation(relationId: number) {
+  if (!editingNpc.value) return
+
   try {
     await $fetch<{ success: boolean }>(`/api/relations/${relationId}`, {
       method: 'DELETE' as const,
     })
     await loadAllRelations()
+
+    // Reload counts for this NPC (relation count changed)
+    await reloadNpcCounts(editingNpc.value)
   } catch (error) {
     console.error('Failed to remove NPC relation:', error)
   }
@@ -2269,6 +2225,9 @@ async function addItemToNpc() {
 
     await loadNpcItems()
 
+    // Reload counts for this NPC (item count changed)
+    await reloadNpcCounts(editingNpc.value)
+
     // Reset form
     newItem.value = {
       itemId: null,
@@ -2284,11 +2243,16 @@ async function addItemToNpc() {
 }
 
 async function removeItem(relationId: number) {
+  if (!editingNpc.value) return
+
   try {
     await $fetch<{ success: boolean }>(`/api/relations/${relationId}`, {
       method: 'DELETE' as const,
     })
     await loadNpcItems()
+
+    // Reload counts for this NPC (item count changed)
+    await reloadNpcCounts(editingNpc.value)
   } catch (error) {
     console.error('Failed to remove item:', error)
   }
@@ -2341,6 +2305,61 @@ async function editNpc(npc: NPC) {
   showCreateDialog.value = true
   npcDialogTab.value = 'details'
 }
+
+// View NPC (read-only mode)
+async function viewNpc(npc: NPC) {
+  // If dialog is already open, push current NPC to stack
+  if (showViewDialog.value && viewingNpc.value) {
+    npcViewStack.value.push(viewingNpc.value)
+  }
+
+  viewingNpc.value = npc
+  showViewDialog.value = true
+}
+
+async function handleEditFromView(npc: NPC) {
+  // Close view dialog
+  showViewDialog.value = false
+  viewingNpc.value = null
+
+  // Open edit dialog
+  await editNpc(npc)
+}
+
+// View NPC by ID (from relations in view dialog)
+async function viewNpcById(npcId: number) {
+  console.log('viewNpcById called with:', npcId)
+  const npc = entitiesStore.npcs?.find((n) => n.id === npcId)
+  console.log('Found NPC:', npc)
+  if (npc) {
+    viewNpc(npc)
+  } else {
+    console.error('NPC not found in store:', npcId)
+  }
+}
+
+// View Item by ID (from items in view dialog)
+async function viewItemById(itemId: number) {
+  console.log('viewItemById called with:', itemId)
+  // TODO: Implement ItemViewDialog
+  // For now, just log. We'll implement this when ItemViewDialog is created
+}
+
+// Go back to previous NPC in view stack
+function goBackInNpcView() {
+  const previousNpc = npcViewStack.value.pop()
+  if (previousNpc) {
+    viewingNpc.value = previousNpc
+  }
+}
+
+// When closing dialog, clear the stack
+watch(showViewDialog, (isOpen) => {
+  if (!isOpen) {
+    npcViewStack.value = []
+    viewingNpc.value = null
+  }
+})
 
 function deleteNpc(npc: NPC) {
   deletingNpc.value = npc
@@ -2400,14 +2419,33 @@ async function saveNpc() {
   saving.value = true
 
   try {
+    let savedNpcId: number
+
     if (editingNpc.value) {
+      // Store updates this.npcs[index] reactively
       await entitiesStore.updateNPC(editingNpc.value.id, {
         name: npcForm.value.name,
         description: npcForm.value.description,
         metadata: npcForm.value.metadata,
       })
+      savedNpcId = editingNpc.value.id
     } else {
-      await entitiesStore.createNPC(activeCampaignId.value, npcForm.value)
+      // Store pushes to this.npcs reactively
+      const newNpc = await entitiesStore.createNPC(activeCampaignId.value, npcForm.value)
+      savedNpcId = newNpc.id
+    }
+
+    // If user is searching, re-execute search to update FTS5 results
+    // (metadata changed, need fresh FTS5 index)
+    if (searchQuery.value && searchQuery.value.trim().length > 0) {
+      await executeSearch(searchQuery.value)
+    }
+    // else: Store already updated reactively, no fetch needed!
+
+    // Reload counts for the saved NPC (get NPC from store, not API response!)
+    const npcFromStore = entitiesStore.npcs.find((n) => n.id === savedNpcId)
+    if (npcFromStore) {
+      await reloadNpcCounts(npcFromStore)
     }
 
     closeDialog()
@@ -2425,6 +2463,15 @@ async function confirmDelete() {
 
   try {
     await entitiesStore.deleteNPC(deletingNpc.value.id)
+
+    // If user is searching, remove from search results
+    if (searchQuery.value && searchQuery.value.trim().length > 0) {
+      const deleteIndex = searchResults.value.findIndex((n) => n.id === deletingNpc.value?.id)
+      if (deleteIndex !== -1) {
+        searchResults.value.splice(deleteIndex, 1)
+      }
+    }
+
     showDeleteDialog.value = false
     deletingNpc.value = null
   } catch (error) {
@@ -2644,6 +2691,49 @@ async function removeLoreRelation(loreId: number) {
     console.error('Failed to remove lore relation:', error)
   }
 }
+
+// Icon helper functions for NPC types and statuses
+function getNpcTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    ally: 'mdi-handshake',
+    enemy: 'mdi-sword-cross',
+    neutral: 'mdi-minus-circle',
+    questgiver: 'mdi-exclamation',
+    merchant: 'mdi-cart',
+    guard: 'mdi-shield',
+    noble: 'mdi-crown',
+    commoner: 'mdi-account',
+    villain: 'mdi-skull',
+    mentor: 'mdi-school',
+    companion: 'mdi-account-multiple',
+    informant: 'mdi-eye',
+  }
+  return icons[type] || 'mdi-account'
+}
+
+function getNpcStatusIcon(status: string): string {
+  const icons: Record<string, string> = {
+    alive: 'mdi-heart-pulse',
+    dead: 'mdi-skull',
+    missing: 'mdi-help-circle',
+    imprisoned: 'mdi-lock',
+    unknown: 'mdi-help',
+    undead: 'mdi-zombie',
+  }
+  return icons[status] || 'mdi-help'
+}
+
+function getNpcStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    alive: 'success',
+    dead: 'error',
+    missing: 'warning',
+    imprisoned: 'grey-darken-2',
+    unknown: 'grey',
+    undead: 'purple',
+  }
+  return colors[status] || 'grey'
+}
 </script>
 
 <style scoped>
@@ -2675,6 +2765,30 @@ async function removeLoreRelation(loreId: number) {
 .highlighted-card {
   animation: highlight-pulse 2s ease-in-out;
   box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
+}
+
+/* NPC Card Hover Effect */
+.npc-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.npc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* NPC Description - Fixed 3 lines */
+.npc-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  min-height: calc(1.5em * 3); /* 3 lines */
+  max-height: calc(1.5em * 3);
 }
 
 @keyframes highlight-pulse {
