@@ -1273,6 +1273,10 @@
 <script setup lang="ts">
 import type { NPC, NpcType, NpcStatus } from '../../../types/npc'
 import { NPC_TYPES, NPC_STATUSES } from '../../../types/npc'
+import NpcCard from '~/components/npcs/NpcCard.vue'
+import NpcViewDialog from '~/components/npcs/NpcViewDialog.vue'
+import EntityDocuments from '~/components/shared/EntityDocuments.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()

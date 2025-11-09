@@ -726,6 +726,9 @@
 </template>
 
 <script setup lang="ts">
+import EntityDocuments from '~/components/shared/EntityDocuments.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+
 interface Faction {
   id: number
   name: string

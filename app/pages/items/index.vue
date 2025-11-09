@@ -948,6 +948,8 @@
 <script setup lang="ts">
 import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
+import EntityDocuments from '~/components/shared/EntityDocuments.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 // Check if OpenAI API key is configured
 const hasApiKey = ref(false)

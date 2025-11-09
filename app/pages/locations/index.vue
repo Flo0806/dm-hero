@@ -702,6 +702,9 @@
 <script setup lang="ts">
 import LocationNpcsTab from '~/components/locations/LocationNpcsTab.vue'
 import LocationLoreTab from '~/components/locations/LocationLoreTab.vue'
+import EntityDocuments from '~/components/shared/EntityDocuments.vue'
+import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 interface Location {
   id: number

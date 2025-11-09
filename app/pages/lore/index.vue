@@ -492,6 +492,8 @@
 <script setup lang="ts">
 import type { Lore } from '../../../types/lore'
 import { LORE_TYPES } from '../../../types/lore'
+import EntityDocuments from '~/components/shared/EntityDocuments.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 // Composables
 const { t } = useI18n()
