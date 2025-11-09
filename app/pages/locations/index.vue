@@ -1226,7 +1226,7 @@ async function loadLocationImages() {
   loadingImages.value = true
   try {
     const images = await $fetch<typeof locationImages.value>(
-      `/api/entities/${editingLocation.value.id}/images`,
+      `/api/entity-images/${editingLocation.value.id}`,
     )
     locationImages.value = images
   } catch (error) {
@@ -1253,7 +1253,7 @@ async function handleImageUpload(event: Event) {
     const response = await $fetch<{
       success: boolean
       images: Array<{ id: number; imageUrl: string; isPrimary: boolean }>
-    }>(`/api/entities/${editingLocation.value.id}/images`, {
+    }>(`/api/entities/${editingLocation.value.id}/upload-image`, {
       method: 'POST',
       body: formData,
     })

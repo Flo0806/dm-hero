@@ -3,10 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { getDb } from '../../../utils/db'
 
 export default defineEventHandler(async (event) => {
-  console.log('=== Upload Image Request ===')
   const db = getDb()
   const entityId = getRouterParam(event, 'id')
-  console.log('Entity ID:', entityId)
 
   if (!entityId) {
     throw createError({
@@ -19,7 +17,6 @@ export default defineEventHandler(async (event) => {
   const entity = db
     .prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL')
     .get(entityId)
-  console.log('Entity found:', entity)
 
   if (!entity) {
     throw createError({
@@ -29,100 +26,97 @@ export default defineEventHandler(async (event) => {
   }
 
   // Read multipart form data
-  console.log('Reading multipart form data...')
   const files = await readMultipartFormData(event)
-  console.log('Files received:', files?.length || 0)
-  console.log(
-    'Files details:',
-    files?.map((f) => ({
-      name: f.name,
-      filename: f.filename,
-      type: f.type,
-      dataLength: f.data?.length || 0,
-    })),
-  )
 
   if (!files || files.length === 0) {
-    console.error('No files received in request')
     throw createError({
       statusCode: 400,
-      message: 'No file uploaded',
+      message: 'No files uploaded',
     })
   }
 
-  // Find the file field (it could be named 'file' or something else)
-  const file = files.find((f) => f.data && f.data.length > 0)
-  console.log(
-    'Selected file:',
-    file
-      ? {
-          name: file.name,
-          filename: file.filename,
-          type: file.type,
-          dataLength: file.data.length,
-        }
-      : 'none',
-  )
-
-  if (!file || !file.data) {
-    console.error('No valid file data found')
-    throw createError({
-      statusCode: 400,
-      message: 'No valid file data received',
-    })
-  }
-
-  // Validate file type
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-  const ext = extname(file.filename || '').toLowerCase()
+  const maxSize = 8 * 1024 * 1024 // 8MB
+  const uploadedImages: Array<{ id: number; imageUrl: string; isPrimary: boolean }> = []
 
-  if (!allowedExtensions.includes(ext)) {
+  const storage = useStorage('pictures')
+
+  // Check if this is the first image - if so, make it primary
+  const existingImages = db
+    .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
+    .get(Number(entityId)) as { count: number }
+  const shouldBePrimary = existingImages.count === 0
+
+  // Get max display order
+  const maxOrderResult = db
+    .prepare('SELECT COALESCE(MAX(display_order), -1) as max_order FROM entity_images WHERE entity_id = ?')
+    .get(Number(entityId)) as { max_order: number }
+  let displayOrder = maxOrderResult.max_order + 1
+
+  // Process all files
+  for (const file of files) {
+    if (!file.data || file.data.length === 0) continue
+
+    // Validate file type
+    const ext = extname(file.filename || '').toLowerCase()
+
+    if (!allowedExtensions.includes(ext)) {
+      console.warn(`Skipping file ${file.filename}: invalid extension`)
+      continue
+    }
+
+    // Validate file size
+    if (file.data.length > maxSize) {
+      console.warn(`Skipping file ${file.filename}: too large`)
+      continue
+    }
+
+    // Generate unique filename (UUID only, no timestamp prefix)
+    const uniqueName = `${randomUUID()}${ext}`
+
+    // Save to storage
+    await storage.setItemRaw(uniqueName, file.data)
+
+    // Insert into database
+    const result = db
+      .prepare(
+        `
+      INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
+      VALUES (?, ?, ?, ?)
+    `,
+      )
+      .run(
+        Number(entityId),
+        uniqueName,
+        shouldBePrimary && uploadedImages.length === 0 ? 1 : 0,
+        displayOrder++,
+      )
+
+    uploadedImages.push({
+      id: result.lastInsertRowid as number,
+      imageUrl: uniqueName,
+      isPrimary: shouldBePrimary && uploadedImages.length === 0,
+    })
+  }
+
+  // If no valid files were uploaded
+  if (uploadedImages.length === 0) {
     throw createError({
       statusCode: 400,
-      message: `Invalid file type. Allowed types: ${allowedExtensions.join(', ')}`,
+      message: 'No valid files uploaded',
     })
   }
 
-  // Validate file size (max 8MB)
-  const maxSize = 8 * 1024 * 1024
-  if (file.data.length > maxSize) {
-    throw createError({
-      statusCode: 413,
-      message: 'File too large. Maximum size: 8MB',
-    })
-  }
-
-  // Generate unique filename
-  const uniqueName = `${Date.now()}-${randomUUID()}${ext}`
-
-  // Save to storage
-  const storage = useStorage('pictures')
-  await storage.setItemRaw(uniqueName, file.data)
-
-  // Get old image URL to delete it later
-  const oldEntity = db.prepare('SELECT image_url FROM entities WHERE id = ?').get(entityId) as
-    | { image_url: string | null }
-    | undefined
-
-  // Update entity with new image URL
+  // Always update entity's image_url with the newly uploaded image
   db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?').run(
-    uniqueName,
+    uploadedImages[0].imageUrl,
     new Date().toISOString(),
     entityId,
   )
 
-  // Delete old image if exists
-  if (oldEntity?.image_url) {
-    try {
-      await storage.removeItem(oldEntity.image_url)
-    } catch (error) {
-      console.error('Failed to delete old image:', error)
-      // Continue anyway, don't fail the upload
-    }
-  }
-
   return {
     success: true,
-    imageUrl: uniqueName,
+    imageUrl: uploadedImages[0].imageUrl, // Backwards compatibility for single file upload
+    images: uploadedImages,
   }
 })
