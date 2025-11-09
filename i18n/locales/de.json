@@ -225,7 +225,13 @@
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes",
-    "saveBeforeGenerating": "Details geändert - erst speichern"
+    "saveBeforeGenerating": "Details geändert - erst speichern",
+    "badgeTooltips": {
+      "relations": "Verknüpfte NPCs",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie",
+      "items": "Items im Besitz"
+    }
   },
   "factions": {
     "title": "Fraktionen",
@@ -291,6 +297,12 @@
     "generateImage": "Bild generieren",
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes",
+    "badgeTooltips": {
+      "relations": "Verknüpfte NPCs",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie",
+      "items": "Items im Besitz"
+    },
     "linkedLore": "Verknüpftes Wissen",
     "noLinkedLore": "Kein verknüpftes Wissen",
     "noLinkedLoreText": "Diese Fraktion ist noch mit keinem Wissen verknüpft.",
@@ -410,7 +422,13 @@
     "noLinkedLore": "Kein verknüpftes Wissen",
     "noLinkedLoreText": "Dieser Ort ist noch mit keinem Wissen verknüpft.",
     "addLoreRelationError": "Fehler beim Hinzufügen der Wissens-Verknüpfung",
-    "removeLoreRelationError": "Fehler beim Entfernen der Wissens-Verknüpfung"
+    "removeLoreRelationError": "Fehler beim Entfernen der Wissens-Verknüpfung",
+    "badgeTooltips": {
+      "npcs": "Verknüpfte NPCs",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie",
+      "lore": "Verknüpftes Wissen"
+    }
   },
   "items": {
     "title": "Items",
@@ -679,7 +697,9 @@
     "noImagesText": "Noch keine Bilder hochgeladen",
     "uploadImageError": "Fehler beim Hochladen",
     "deleteImageError": "Fehler beim Löschen",
-    "generateImageError": "Fehler beim Generieren"
+    "generateImageError": "Fehler beim Generieren",
+    "download": "Herunterladen",
+    "noDescription": "Keine Beschreibung"
   },
   "settings": {
     "title": "Einstellungen",

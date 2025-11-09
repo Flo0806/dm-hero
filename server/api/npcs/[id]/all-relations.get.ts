@@ -23,22 +23,7 @@ export default defineEventHandler(async (event) => {
     to_entity_image_url: string | null
   }
 
-  // Get the NPC entity type ID
-  const npcTypeId = db.prepare("SELECT id FROM entity_types WHERE name = 'NPC'").get() as
-    | { id: number }
-    | undefined
-
-  if (!npcTypeId) {
-    throw createError({
-      statusCode: 500,
-      message: 'NPC entity type not found',
-    })
-  }
-
-  // DEBUG: Log query parameters
-  console.log(`[DEBUG] Getting relations for NPC ID: ${npcId}, NPC Type ID: ${npcTypeId.id}`)
-
-  // Get all NPC-to-NPC relations where this NPC is the 'from' entity
+  // Get ALL relations (NPCs, Locations, Factions, Items, etc.)
   const relations = db
     .prepare<unknown[], DbRelation>(
       `
@@ -56,31 +41,28 @@ export default defineEventHandler(async (event) => {
     INNER JOIN entities e ON er.to_entity_id = e.id
     INNER JOIN entity_types et ON e.type_id = et.id
     WHERE er.from_entity_id = ?
-      AND e.type_id = ?
       AND e.deleted_at IS NULL
-    ORDER BY e.name
+    ORDER BY et.name, e.name
   `,
     )
-    .all(npcId, npcTypeId.id)
-
-  console.log(`[DEBUG] Found ${relations.length} NPC relations:`, relations.map(r => r.to_entity_name))
+    .all(npcId)
 
   return relations.map((rel) => {
-    // Parse notes safely - handle both JSON and plain text
+    // Parse notes safely
     let parsedNotes = null
     if (rel.notes) {
       try {
         parsedNotes = JSON.parse(rel.notes)
       } catch {
-        // If not valid JSON, treat as plain text
         parsedNotes = rel.notes
       }
     }
 
     return {
-      id: rel.to_entity_id, // Use the related NPC's ID, not the relation ID
-      relation_id: rel.id, // Keep relation ID for editing/deleting
-      name: rel.to_entity_name,
+      id: rel.id,
+      to_entity_id: rel.to_entity_id,
+      to_entity_name: rel.to_entity_name,
+      to_entity_type: rel.to_entity_type,
       relation_type: rel.relation_type,
       notes: parsedNotes,
       image_url: rel.to_entity_image_url,
