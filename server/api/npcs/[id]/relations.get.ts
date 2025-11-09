@@ -78,9 +78,10 @@ export default defineEventHandler(async (event) => {
     }
 
     return {
-      id: rel.to_entity_id, // Use the related NPC's ID, not the relation ID
-      relation_id: rel.id, // Keep relation ID for editing/deleting
-      name: rel.to_entity_name,
+      id: rel.id, // Relation ID for editing/deleting
+      to_entity_id: rel.to_entity_id, // The related NPC's ID
+      to_entity_name: rel.to_entity_name,
+      to_entity_type: rel.to_entity_type, // 'NPC'
       relation_type: rel.relation_type,
       notes: parsedNotes,
       image_url: rel.to_entity_image_url,

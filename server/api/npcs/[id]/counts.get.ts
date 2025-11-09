@@ -81,13 +81,51 @@ export default defineEventHandler((event) => {
     itemsCount = itemsResult.count
   }
 
-  // Get primary faction (first faction membership found)
+  // Get locations count
+  const locationTypeId = db
+    .prepare("SELECT id FROM entity_types WHERE name = 'Location'")
+    .get() as { id: number } | undefined
+
+  let locationsCount = 0
+  if (locationTypeId) {
+    const locationsResult = db
+      .prepare(
+        `
+      SELECT COUNT(*) as count
+      FROM entity_relations er
+      INNER JOIN entities e ON e.id = er.to_entity_id
+      WHERE er.from_entity_id = ?
+        AND e.type_id = ?
+        AND e.deleted_at IS NULL
+    `,
+      )
+      .get(Number(npcId), locationTypeId.id) as { count: number }
+    locationsCount = locationsResult.count
+  }
+
+  // Get factions count (memberships)
   const factionTypeId = db
     .prepare("SELECT id FROM entity_types WHERE name = 'Faction'")
     .get() as { id: number } | undefined
 
+  let membershipsCount = 0
   let factionName: string | null = null
   if (factionTypeId) {
+    const membershipsResult = db
+      .prepare(
+        `
+      SELECT COUNT(*) as count
+      FROM entity_relations er
+      INNER JOIN entities e ON e.id = er.to_entity_id
+      WHERE er.from_entity_id = ?
+        AND e.type_id = ?
+        AND e.deleted_at IS NULL
+    `,
+      )
+      .get(Number(npcId), factionTypeId.id) as { count: number }
+    membershipsCount = membershipsResult.count
+
+    // Get primary faction (first faction membership found)
     const faction = db
       .prepare(
         `
@@ -108,8 +146,10 @@ export default defineEventHandler((event) => {
   return {
     relations: relationsCount.count,
     items: itemsCount,
+    locations: locationsCount,
     documents: documentsCount.count,
     images: imagesCount.count,
+    memberships: membershipsCount,
     factionName,
   }
 })

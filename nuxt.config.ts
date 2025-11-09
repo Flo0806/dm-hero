@@ -35,7 +35,7 @@ export default defineNuxtConfig({
     storage: {
       pictures: {
         driver: 'fs',
-        base: './uploads',
+        base: './public/uploads',
       },
     },
     // Mark better-sqlite3 as external to preserve native bindings

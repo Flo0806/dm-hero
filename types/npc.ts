@@ -34,8 +34,10 @@ export interface NpcMetadata {
 export interface NpcCounts {
   relations: number
   items: number
+  locations: number
   documents: number
   images: number
+  memberships: number
   factionName: string | null
 }
 

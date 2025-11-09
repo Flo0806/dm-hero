@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     WHERE er.id = ?
   `,
     )
-    .get(id)
+    .get(id) as any
 
   if (!relation) {
     throw createError({
@@ -46,5 +46,19 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return relation
+  // Parse notes safely - handle both JSON and plain text
+  let parsedNotes = null
+  if (relation.notes) {
+    try {
+      parsedNotes = JSON.parse(relation.notes)
+    } catch {
+      // If not valid JSON, treat as plain text
+      parsedNotes = relation.notes
+    }
+  }
+
+  return {
+    ...relation,
+    notes: parsedNotes,
+  }
 })
