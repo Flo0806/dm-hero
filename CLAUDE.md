@@ -1,6 +1,138 @@
 # DM Hero - Project Context
 
 ---
+## ✅ COMPLETED SESSION - 2025-11-09
+
+**Image Upload System - Unified & Fixed!**
+
+### 1. Problem: Inconsistent Upload Endpoints ❌
+
+**Before:** 3 different endpoints doing similar things:
+- `/upload-image` - Used by NPCs, Items, Factions (single file)
+- `/images` - Used by Locations (multiple files)
+- `/add-generated-image` - Used for AI images (file already exists)
+
+**Issue:** Code duplication, confusion, maintenance nightmare.
+
+### 2. Solution: One Universal Upload Endpoint ✅
+
+**File:** `/server/api/entities/[id]/upload-image.post.ts`
+
+**Key Features:**
+1. ✅ Supports **single AND multiple** file uploads
+2. ✅ Saves all images to `entity_images` table (gallery support)
+3. ✅ Always updates `entities.image_url` with newest upload
+4. ✅ Returns both `imageUrl` (string) and `images` (array) for backwards compatibility
+5. ✅ UUID-only filenames (no timestamp prefix)
+
+**How it works:**
+```typescript
+// Process all files in loop
+for (const file of files) {
+  const uniqueName = `${randomUUID()}${ext}`
+  await storage.setItemRaw(uniqueName, file.data)
+
+  db.prepare('INSERT INTO entity_images ...').run(
+    entityId, uniqueName, isPrimary, displayOrder++
+  )
+}
+
+// ALWAYS update entity.image_url with first uploaded image
+db.prepare('UPDATE entities SET image_url = ? WHERE id = ?').run(
+  uploadedImages[0].imageUrl, entityId
+)
+```
+
+**Response Format:**
+```typescript
+{
+  success: true,
+  imageUrl: "uuid.png",  // For NPCs/Items/Factions (single)
+  images: [              // For Locations (multiple)
+    { id: 123, imageUrl: "uuid.png", isPrimary: true }
+  ]
+}
+```
+
+### 3. Nitro Storage Route Fix ✅
+
+**Problem:** Images uploaded to `public/uploads/` but not accessible via `/uploads/` URL.
+
+**Root Cause:** Nitro route was `/pictures/[...path].ts` but frontend uses `/uploads/`.
+
+**Fix:** Moved route to match frontend:
+```bash
+mv server/routes/pictures/[...path].ts → server/routes/uploads/[...path].ts
+```
+
+**Route Code:**
+```typescript
+export default defineEventHandler(async (event) => {
+  const storage = useStorage('pictures')
+  const path = getRouterParam(event, 'path')
+  const image = await storage.getItemRaw(path)
+  return image
+})
+```
+
+### 4. Critical Bugs Fixed ✅
+
+**Bug 1: `entities.image_url` not updated on re-upload**
+- **Problem:** When uploading 2nd+ image, DB kept old `image_url`
+- **Root Cause:** Code only updated `image_url` if `shouldBePrimary` (first image)
+- **Fix:** ALWAYS update `image_url` with newest upload
+
+**Bug 2: Deleted `/images` endpoint but forgot to update Locations**
+- **Problem:** Locations still called `/api/entities/[id]/images`
+- **Fix:** Updated Locations to use `/upload-image`
+
+### 5. Files Modified ✅
+
+- `/server/api/entities/[id]/upload-image.post.ts` - Unified endpoint
+- `/server/api/entities/[id]/images.post.ts` - DELETED (obsolete)
+- `/server/routes/uploads/[...path].ts` - Moved from `/pictures/`
+- `/app/pages/locations/index.vue` - Changed to use `/upload-image`
+
+### 6. Important Lessons Learned 🧠
+
+**❌ DON'T:**
+- Rewrite working code without understanding it first
+- Change multiple endpoints at once without testing
+- Assume `public/` is served automatically in Nuxt (it's NOT in production!)
+
+**✅ DO:**
+- Use Nitro Storage (`useStorage('pictures')`) for file uploads
+- Create Nitro routes (`server/routes/`) to serve storage files
+- Keep ONE endpoint per use case, make it flexible instead
+- Write tests BEFORE refactoring to catch regressions
+
+**Key Pattern - Nitro Storage:**
+```typescript
+// 1. Storage config in nuxt.config.ts
+nitro: {
+  storage: {
+    pictures: {
+      driver: 'fs',
+      base: './public/uploads'
+    }
+  }
+}
+
+// 2. Upload endpoint uses storage
+const storage = useStorage('pictures')
+await storage.setItemRaw(filename, fileData)
+
+// 3. Nitro route serves files
+// server/routes/uploads/[...path].ts
+export default defineEventHandler(async (event) => {
+  const storage = useStorage('pictures')
+  const path = getRouterParam(event, 'path')
+  return await storage.getItemRaw(path)
+})
+```
+
+---
+
 ## ✅ COMPLETED SESSION - 2025-11-08
 
 **Items ↔ Lore Feature - VOLLSTÄNDIG FERTIG!**
