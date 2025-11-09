@@ -74,7 +74,12 @@
         >
           <!-- Custom prepend slot for expand button + icon -->
           <template #prepend="{ item }">
-            <div style="display: flex; align-items: center; gap: 4px; margin-left: -8px">
+            <div
+              :class="{
+                'highlight-blink-prepend': highlightedId === item.raw.id,
+              }"
+              style="display: flex; align-items: center; gap: 4px; margin-left: -8px"
+            >
               <!-- Expand/Collapse icon only if has children -->
               <v-icon
                 v-if="item.children && item.children.length > 0"
@@ -97,9 +102,8 @@
               :id="`location-${item.raw.id}`"
               :key="`location-title-${item.raw.id}-${animationKey}`"
               :class="{
-                'highlight-blink': highlightedId === item.raw.id,
+                'highlight-blink-title': highlightedId === item.raw.id,
               }"
-              style="display: inline-block; padding: 4px 8px; border-radius: 4px"
             >
               <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
                 {{ item.title }}
@@ -189,11 +193,11 @@
           </v-tab>
           <v-tab value="npcs">
             <v-icon start>mdi-account-group</v-icon>
-            {{ $t('npcs.title') }} ({{ linkedNpcs.length }})
+            {{ $t('npcs.title') }} ({{ locationCounts?.npcs || 0 }})
           </v-tab>
           <v-tab value="lore">
             <v-icon start>mdi-book-open-variant</v-icon>
-            {{ $t('lore.title') }} ({{ linkedLore.length }})
+            {{ $t('lore.title') }} ({{ locationCounts?.lore || 0 }})
           </v-tab>
         </v-tabs>
 
@@ -394,123 +398,21 @@
 
             <!-- NPCs Tab -->
             <v-tabs-window-item value="npcs">
-              <div class="text-h6 mb-4">{{ $t('locations.linkedNpcs') }}</div>
-
-              <!-- Add NPC -->
-              <v-card variant="outlined" class="mb-4">
-                <v-card-text>
-                  <v-autocomplete
-                    v-model="selectedNpcToLink"
-                    :items="npcForSelect"
-                    item-title="name"
-                    item-value="id"
-                    :label="$t('locations.selectNpc')"
-                    :placeholder="$t('locations.selectNpcPlaceholder')"
-                    variant="outlined"
-                    clearable
-                    class="mb-2"
-                  />
-                  <v-btn
-                    color="primary"
-                    block
-                    :disabled="!selectedNpcToLink"
-                    @click="addNpcRelation"
-                  >
-                    {{ $t('locations.linkNpc') }}
-                  </v-btn>
-                </v-card-text>
-              </v-card>
-
-              <!-- Linked NPCs List -->
-              <v-list v-if="linkedNpcs.length > 0">
-                <v-list-item v-for="npc in linkedNpcs" :key="npc.id" class="mb-2">
-                  <template #prepend>
-                    <v-avatar size="48" class="mr-3">
-                      <v-img v-if="npc.image_url" :src="`/uploads/${npc.image_url}`" />
-                      <v-icon v-else>mdi-account</v-icon>
-                    </v-avatar>
-                  </template>
-                  <v-list-item-title>{{ npc.name }}</v-list-item-title>
-                  <v-list-item-subtitle v-if="npc.description">
-                    {{ npc.description.substring(0, 100) }}{{ npc.description.length > 100 ? '...' : '' }}
-                  </v-list-item-subtitle>
-                  <template #append>
-                    <v-btn
-                      icon="mdi-delete"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click="removeNpcRelation(npc.id)"
-                    />
-                  </template>
-                </v-list-item>
-              </v-list>
-              <v-empty-state
-                v-else
-                icon="mdi-account-off"
-                :title="$t('locations.noLinkedNpcs')"
-                :text="$t('locations.noLinkedNpcsText')"
+              <LocationNpcsTab
+                :linked-npcs="linkedNpcs"
+                :available-npcs="npcForSelect"
+                @add="addNpcRelation"
+                @remove="removeNpcRelation"
               />
             </v-tabs-window-item>
 
             <!-- Lore Tab -->
             <v-tabs-window-item value="lore">
-              <div class="text-h6 mb-4">{{ $t('locations.linkedLore') }}</div>
-
-              <!-- Add Lore -->
-              <v-card variant="outlined" class="mb-4">
-                <v-card-text>
-                  <v-autocomplete
-                    v-model="selectedLoreToLink"
-                    :items="loreForSelect"
-                    item-title="name"
-                    item-value="id"
-                    :label="$t('locations.selectLore')"
-                    :placeholder="$t('locations.selectLorePlaceholder')"
-                    variant="outlined"
-                    clearable
-                    class="mb-2"
-                  />
-                  <v-btn
-                    color="primary"
-                    block
-                    :disabled="!selectedLoreToLink"
-                    @click="addLoreRelation"
-                  >
-                    {{ $t('locations.linkLore') }}
-                  </v-btn>
-                </v-card-text>
-              </v-card>
-
-              <!-- Linked Lore List -->
-              <v-list v-if="linkedLore.length > 0">
-                <v-list-item v-for="lore in linkedLore" :key="lore.id" class="mb-2">
-                  <template #prepend>
-                    <v-avatar size="48" class="mr-3">
-                      <v-img v-if="lore.image_url" :src="`/uploads/${lore.image_url}`" />
-                      <v-icon v-else>mdi-book-open-variant</v-icon>
-                    </v-avatar>
-                  </template>
-                  <v-list-item-title>{{ lore.name }}</v-list-item-title>
-                  <v-list-item-subtitle v-if="lore.description">
-                    {{ lore.description.substring(0, 100) }}{{ lore.description.length > 100 ? '...' : '' }}
-                  </v-list-item-subtitle>
-                  <template #append>
-                    <v-btn
-                      icon="mdi-delete"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click="removeLoreRelation(lore.id)"
-                    />
-                  </template>
-                </v-list-item>
-              </v-list>
-              <v-empty-state
-                v-else
-                icon="mdi-book-off"
-                :title="$t('locations.noLinkedLore')"
-                :text="$t('locations.noLinkedLoreText')"
+              <LocationLoreTab
+                :linked-lore="linkedLore"
+                :available-lore="loreForSelect"
+                @add="addLoreRelation"
+                @remove="removeLoreRelation"
               />
             </v-tabs-window-item>
           </v-tabs-window>
@@ -798,6 +700,9 @@
 </template>
 
 <script setup lang="ts">
+import LocationNpcsTab from '~/components/locations/LocationNpcsTab.vue'
+import LocationLoreTab from '~/components/locations/LocationLoreTab.vue'
+
 interface Location {
   id: number
   name: string
@@ -818,6 +723,11 @@ interface ConnectedNPC {
   name: string
   relation_type: string
   relation_notes: string | null
+}
+
+interface LocationCounts {
+  npcs: number
+  lore: number
 }
 
 // Debounced FTS5 + Levenshtein Search with AbortController (must be declared early for template)
@@ -963,17 +873,25 @@ const pending = computed(() => entitiesStore.locationsLoading)
 
 // NPCs and Lore for selection dropdowns
 const npcForSelect = computed(() => {
-  return (entitiesStore.npcs || []).map((npc) => ({
-    id: npc.id,
-    name: npc.name,
-  }))
+  // Filter out already linked NPCs
+  const linkedNpcIds = new Set(linkedNpcs.value.map((n) => n.id))
+  return (entitiesStore.npcs || [])
+    .filter((npc) => !linkedNpcIds.has(npc.id))
+    .map((npc) => ({
+      id: npc.id,
+      name: npc.name,
+    }))
 })
 
 const loreForSelect = computed(() => {
-  return (entitiesStore.lore || []).map((lore) => ({
-    id: lore.id,
-    name: lore.name,
-  }))
+  // Filter out already linked Lore
+  const linkedLoreIds = new Set(linkedLore.value.map((l) => l.id))
+  return (entitiesStore.lore || [])
+    .filter((lore) => !linkedLoreIds.has(lore.id))
+    .map((lore) => ({
+      id: lore.id,
+      name: lore.name,
+    }))
 })
 
 // Debounce search with abort controller
@@ -1251,6 +1169,7 @@ const showDeleteDialog = ref(false)
 const editingLocation = ref<Location | null>(null)
 const viewingLocation = ref<Location | null>(null)
 const deletingLocation = ref<Location | null>(null)
+const locationCounts = ref<LocationCounts | null>(null)
 const saving = ref(false)
 const deleting = ref(false)
 
@@ -1274,8 +1193,6 @@ const locationForm = ref({
 const locationDialogTab = ref('details')
 
 // NPC & Lore linking
-const selectedNpcToLink = ref<number | null>(null)
-const selectedLoreToLink = ref<number | null>(null)
 const linkedNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
 const linkedLore = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
 
@@ -1712,8 +1629,15 @@ async function saveLocation() {
         },
       })
       savedLocationId = editingLocation.value.id
-      // Reload locations to get updated data (force refresh!)
-      await entitiesStore.fetchLocations(activeCampaignId.value, true)
+
+      // Update store reactively (no reload!)
+      const locationInStore = entitiesStore.locations?.find((l) => l.id === editingLocation.value!.id)
+      if (locationInStore) {
+        locationInStore.name = locationForm.value.name
+        locationInStore.description = locationForm.value.description
+        locationInStore.metadata = locationForm.value.metadata
+        locationInStore.parent_entity_id = locationForm.value.parentLocationId
+      }
     } else {
       const newLocation = await $fetch<Location>('/api/locations', {
         method: 'POST',
@@ -1726,8 +1650,11 @@ async function saveLocation() {
         },
       })
       savedLocationId = newLocation.id
-      // Reload locations to get new data (force refresh!)
-      await entitiesStore.fetchLocations(activeCampaignId.value, true)
+
+      // Add to store reactively (no reload!)
+      if (entitiesStore.locations) {
+        entitiesStore.locations.push(newLocation)
+      }
     }
 
     closeDialog()
@@ -1781,22 +1708,35 @@ async function loadLinkedNpcs() {
   }
 }
 
-async function addNpcRelation() {
-  if (!editingLocation.value || !selectedNpcToLink.value) return
+async function addNpcRelation(npcId: number) {
+  if (!editingLocation.value || !npcId) return
 
   try {
     await $fetch('/api/entity-relations', {
       method: 'POST',
       body: {
-        fromEntityId: selectedNpcToLink.value,
+        fromEntityId: npcId,
         toEntityId: editingLocation.value.id,
         relationType: 'befindet sich in',
         relationNotes: null,
       },
     })
 
-    await loadLinkedNpcs()
-    selectedNpcToLink.value = null
+    // Find the NPC and add to local array (no reload needed)
+    const npc = entitiesStore.npcs?.find((n) => n.id === npcId)
+    if (npc) {
+      linkedNpcs.value.push({
+        id: npc.id,
+        name: npc.name,
+        description: npc.description,
+        image_url: npc.image_url || null,
+      })
+    }
+
+    // Update counts reactively
+    if (locationCounts.value) {
+      locationCounts.value.npcs++
+    }
   } catch (error) {
     console.error('Failed to add NPC relation:', error)
   }
@@ -1818,7 +1758,14 @@ async function removeNpcRelation(npcId: number) {
       await $fetch(`/api/entity-relations/${relation.id}`, {
         method: 'DELETE',
       })
-      await loadLinkedNpcs()
+
+      // Remove from local array (no reload needed)
+      linkedNpcs.value = linkedNpcs.value.filter((npc) => npc.id !== npcId)
+
+      // Update counts reactively
+      if (locationCounts.value && locationCounts.value.npcs > 0) {
+        locationCounts.value.npcs--
+      }
     }
   } catch (error) {
     console.error('Failed to remove NPC relation:', error)
@@ -1839,22 +1786,46 @@ async function loadLinkedLore() {
   }
 }
 
-async function addLoreRelation() {
-  if (!editingLocation.value || !selectedLoreToLink.value) return
+async function loadLocationCounts() {
+  if (!editingLocation.value) return
+
+  try {
+    const counts = await $fetch<LocationCounts>(`/api/locations/${editingLocation.value.id}/counts`)
+    locationCounts.value = counts
+  } catch (error) {
+    console.error('Failed to load location counts:', error)
+  }
+}
+
+async function addLoreRelation(loreId: number) {
+  if (!editingLocation.value || !loreId) return
 
   try {
     await $fetch('/api/entity-relations', {
       method: 'POST',
       body: {
-        fromEntityId: selectedLoreToLink.value,
+        fromEntityId: loreId,
         toEntityId: editingLocation.value.id,
         relationType: 'bezieht sich auf',
         relationNotes: null,
       },
     })
 
-    await loadLinkedLore()
-    selectedLoreToLink.value = null
+    // Find the Lore and add to local array (no reload needed)
+    const lore = entitiesStore.lore?.find((l) => l.id === loreId)
+    if (lore) {
+      linkedLore.value.push({
+        id: lore.id,
+        name: lore.name,
+        description: lore.description,
+        image_url: lore.image_url || null,
+      })
+    }
+
+    // Update counts reactively
+    if (locationCounts.value) {
+      locationCounts.value.lore++
+    }
   } catch (error) {
     console.error('Failed to add Lore relation:', error)
   }
@@ -1876,7 +1847,14 @@ async function removeLoreRelation(loreId: number) {
       await $fetch(`/api/entity-relations/${relation.id}`, {
         method: 'DELETE',
       })
-      await loadLinkedLore()
+
+      // Remove from local array (no reload needed)
+      linkedLore.value = linkedLore.value.filter((lore) => lore.id !== loreId)
+
+      // Update counts reactively
+      if (locationCounts.value && locationCounts.value.lore > 0) {
+        locationCounts.value.lore--
+      }
     }
   } catch (error) {
     console.error('Failed to remove Lore relation:', error)
@@ -1932,8 +1910,10 @@ watch(
   () => editingLocation.value?.id,
   async (locationId) => {
     if (locationId) {
-      await loadLinkedNpcs()
-      await loadLinkedLore()
+      await Promise.all([loadLinkedNpcs(), loadLinkedLore(), loadLocationCounts()])
+    } else {
+      // Reset counts when dialog closes
+      locationCounts.value = null
     }
   },
 )
@@ -1953,5 +1933,33 @@ watch(
 .image-container:hover .image-download-btn {
   opacity: 1;
   transform: scale(1.1);
+}
+
+/* Add consistent padding to all treeview items */
+:deep(.v-treeview-item) {
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+}
+
+/* Highlight entire treeview row - only animate background */
+:deep(.v-treeview-item:has(.highlight-blink-prepend)) {
+  animation: highlight-blink-animation 1s ease-in-out;
+  animation-iteration-count: 2;
+}
+
+@keyframes highlight-blink-animation {
+  0% {
+    background-color: transparent;
+  }
+  25% {
+    background-color: rgba(var(--v-theme-primary), 0.25);
+  }
+  50% {
+    background-color: rgba(var(--v-theme-primary), 0.25);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 </style>

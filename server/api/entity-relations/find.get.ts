@@ -3,13 +3,14 @@ import { getDb } from '../../utils/db'
 export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
-  const fromEntityId = query.from_entity_id as string
-  const toEntityId = query.to_entity_id as string
+  // Support both camelCase and snake_case
+  const fromEntityId = (query.fromEntityId || query.from_entity_id) as string
+  const toEntityId = (query.toEntityId || query.to_entity_id) as string
 
   if (!fromEntityId || !toEntityId) {
     throw createError({
       statusCode: 400,
-      message: 'from_entity_id and to_entity_id are required',
+      message: 'fromEntityId and toEntityId are required',
     })
   }
 

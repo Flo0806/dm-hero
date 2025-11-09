@@ -7,31 +7,24 @@
  * Highlight Blink Animation
  * Use: Add class "highlight-blink" to any element
  * Duration: 2s (2 blinks: 1s each)
- * Effect: Background color + scale pulse
+ * Effect: Simple background color blink - clean and minimal
  */
 .highlight-blink {
   animation: highlight-blink-animation 1s ease-in-out;
   animation-iteration-count: 2;
-  transform-origin: center;
 }
 
 @keyframes highlight-blink-animation {
   0% {
     background-color: transparent;
-    transform: scale(1);
   }
   25% {
-    background-color: rgba(var(--v-theme-primary), 0.2);
-    box-shadow: 0 0 8px rgba(var(--v-theme-primary), 0.4);
-    transform: scale(1.3);
+    background-color: rgba(var(--v-theme-primary), 0.25);
   }
   50% {
-    background-color: rgba(var(--v-theme-primary), 0.2);
-    box-shadow: 0 0 8px rgba(var(--v-theme-primary), 0.4);
-    transform: scale(1);
+    background-color: rgba(var(--v-theme-primary), 0.25);
   }
   100% {
     background-color: transparent;
-    transform: scale(1);
   }
 }
