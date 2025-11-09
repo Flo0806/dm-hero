@@ -101,6 +101,7 @@
       @edit="handleEditFromView"
       @view-npc="viewNpcById"
       @view-item="viewItemById"
+      @view-location="viewLocationById"
       @go-back="goBackInNpcView"
     />
 
@@ -116,12 +117,18 @@
             <v-icon start> mdi-account-details </v-icon>
             {{ $t('npcs.details') }}
           </v-tab>
-          <v-tab value="relations">
+          <v-tab value="npcRelations">
+            <v-icon start> mdi-account-multiple </v-icon>
+            {{ $t('npcs.npcRelations') }}
+            ({{ npcRelations.filter((r) => r.to_entity_type === 'NPC').length }})
+          </v-tab>
+          <v-tab value="locations">
             <v-icon start> mdi-map-marker </v-icon>
-            {{ $t('npcs.linkedLocations') }} ({{ npcRelations.length }})
+            {{ $t('npcs.linkedLocations') }}
+            ({{ npcRelations.filter((r) => r.to_entity_type === 'Location').length }})
           </v-tab>
           <v-tab value="memberships">
-            <v-icon start> mdi-account-group </v-icon>
+            <v-icon start> mdi-shield-account </v-icon>
             {{ $t('npcs.memberships') }} ({{ factionMemberships.length }})
           </v-tab>
           <v-tab value="items">
@@ -134,7 +141,7 @@
           </v-tab>
           <v-tab value="documents">
             <v-icon start> mdi-file-document </v-icon>
-            {{ $t('documents.title') }}
+            {{ $t('documents.title') }} ({{ editingNpc?._counts?.documents || 0 }})
           </v-tab>
           <v-tab value="lore">
             <v-icon start> mdi-book-open-variant </v-icon>
@@ -406,8 +413,107 @@
               </v-row>
             </v-tabs-window-item>
 
-            <!-- Relations Tab -->
-            <v-tabs-window-item value="relations">
+            <!-- NPC Relations Tab -->
+            <v-tabs-window-item value="npcRelations">
+              <v-list
+                v-if="
+                  editingNpc &&
+                  npcRelations.filter((r: (typeof npcRelations)[0]) => r.to_entity_type === 'NPC').length >
+                    0
+                "
+                class="mb-3"
+              >
+                <v-list-item
+                  v-for="relation in npcRelations.filter(
+                    (r: (typeof npcRelations)[0]) => r.to_entity_type === 'NPC',
+                  )"
+                  :key="relation.id"
+                  class="mb-2"
+                  border
+                >
+                  <template #prepend>
+                    <v-icon icon="mdi-account" color="primary" />
+                  </template>
+                  <v-list-item-title>
+                    {{ relation.to_entity_name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip size="small" class="mr-1" color="primary" variant="tonal">
+                      {{ $t(`npcs.npcRelationTypes.${relation.relation_type}`, relation.relation_type) }}
+                    </v-chip>
+                    <span v-if="relation.notes" class="text-caption">
+                      {{ relation.notes }}
+                    </span>
+                  </v-list-item-subtitle>
+                  <template #append>
+                    <v-btn
+                      icon="mdi-pencil"
+                      variant="text"
+                      size="small"
+                      @click="editRelation(relation)"
+                    />
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeRelation(relation.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+
+              <v-expansion-panels v-if="editingNpc" class="mb-3">
+                <v-expansion-panel>
+                  <v-expansion-panel-title>
+                    <v-icon start> mdi-plus </v-icon>
+                    {{ $t('npcs.addNpcRelation') }}
+                  </v-expansion-panel-title>
+                  <v-expansion-panel-text>
+                    <v-select
+                      v-model="newNpcRelation.npcId"
+                      :items="npcsForSelect || []"
+                      item-title="name"
+                      item-value="id"
+                      :label="$t('npcs.selectNpc')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-combobox
+                      v-model="newNpcRelation.relationType"
+                      :items="npcRelationTypeSuggestions"
+                      :label="$t('npcs.npcRelationType')"
+                      :placeholder="$t('npcs.npcRelationTypePlaceholder')"
+                      variant="outlined"
+                      class="mb-3"
+                    />
+
+                    <v-textarea
+                      v-model="newNpcRelation.notes"
+                      :label="$t('npcs.relationNotes')"
+                      :placeholder="$t('npcs.relationNotesPlaceholder')"
+                      variant="outlined"
+                      rows="2"
+                      class="mb-3"
+                    />
+
+                    <v-btn
+                      color="primary"
+                      prepend-icon="mdi-link"
+                      :disabled="!newNpcRelation.npcId || !newNpcRelation.relationType"
+                      :loading="addingNpcRelation"
+                      @click="addNpcRelation"
+                    >
+                      {{ $t('npcs.addNpcRelation') }}
+                    </v-btn>
+                  </v-expansion-panel-text>
+                </v-expansion-panel>
+              </v-expansion-panels>
+            </v-tabs-window-item>
+
+            <!-- Locations Tab -->
+            <v-tabs-window-item value="locations">
               <v-list
                 v-if="
                   editingNpc &&
@@ -597,87 +703,6 @@
                   </v-expansion-panel-text>
                 </v-expansion-panel>
               </v-expansion-panels>
-
-              <v-divider class="my-6" />
-
-              <div class="text-h6 mb-4">
-                {{ $t('npcs.npcRelations') }}
-              </div>
-
-              <v-list v-if="npcRelationsList.length > 0" class="mb-3">
-                <v-list-item
-                  v-for="relation in npcRelationsList"
-                  :key="relation.id"
-                  class="mb-2"
-                  border
-                >
-                  <template #prepend>
-                    <v-icon icon="mdi-account" color="primary" />
-                  </template>
-                  <v-list-item-title>
-                    {{ relation.to_entity_name }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>
-                    <v-chip size="small">
-                      {{ relation.relation_type }}
-                    </v-chip>
-                  </v-list-item-subtitle>
-                  <template #append>
-                    <v-btn
-                      icon="mdi-pencil"
-                      variant="text"
-                      size="small"
-                      @click="editNpcRelation(relation)"
-                    />
-                    <v-btn
-                      icon="mdi-delete"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click="removeNpcRelation(relation.id)"
-                    />
-                  </template>
-                </v-list-item>
-              </v-list>
-
-              <v-expansion-panels>
-                <v-expansion-panel>
-                  <v-expansion-panel-title>
-                    <v-icon start> mdi-plus </v-icon>
-                    {{ $t('npcs.addNpcRelation') }}
-                  </v-expansion-panel-title>
-                  <v-expansion-panel-text>
-                    <v-select
-                      v-model="newNpcRelation.npcId"
-                      :items="otherNpcs"
-                      item-title="name"
-                      item-value="id"
-                      :label="$t('npcs.selectNpc')"
-                      variant="outlined"
-                      class="mb-3"
-                    />
-
-                    <v-combobox
-                      v-model="newNpcRelation.relationType"
-                      :items="npcRelationTypeSuggestions"
-                      :label="$t('npcs.relationType')"
-                      :placeholder="$t('npcs.npcRelationTypePlaceholder')"
-                      variant="outlined"
-                      class="mb-3"
-                    />
-
-                    <v-btn
-                      color="primary"
-                      prepend-icon="mdi-link"
-                      :disabled="!newNpcRelation.npcId || !newNpcRelation.relationType"
-                      :loading="addingNpcRelation"
-                      @click="addNpcRelation"
-                    >
-                      {{ $t('npcs.addNpcRelation') }}
-                    </v-btn>
-                  </v-expansion-panel-text>
-                </v-expansion-panel>
-              </v-expansion-panels>
             </v-tabs-window-item>
 
             <!-- Items Tab -->
@@ -692,17 +717,23 @@
                     <v-icon icon="mdi-sword" color="primary" />
                   </template>
                   <v-list-item-title>
-                    {{ item.item_name }}
-                    <v-chip v-if="item.notes?.equipped" size="x-small" color="success" class="ml-2">
+                    {{ item.name }}
+                    <v-chip v-if="item.equipped" size="x-small" color="success" class="ml-2">
                       {{ $t('npcs.equipped') }}
+                    </v-chip>
+                    <v-chip v-if="item.rarity" size="x-small" :color="getRarityColor(item.rarity)" class="ml-2">
+                      {{ $t(`items.rarities.${item.rarity}`) }}
                     </v-chip>
                   </v-list-item-title>
                   <v-list-item-subtitle>
-                    <v-chip size="small" class="mr-1">
-                      {{ $t(`npcs.itemRelationTypes.${item.relation_type}`) }}
+                    <v-chip size="small" class="mr-1" color="primary" variant="tonal">
+                      {{ $t(`npcs.itemRelationTypes.${item.relation_type}`, item.relation_type) }}
                     </v-chip>
-                    <span v-if="item.notes?.quantity" class="text-caption">
-                      {{ $t('npcs.quantity') }}: {{ item.notes.quantity }}
+                    <span v-if="item.quantity && item.quantity > 1" class="text-caption mr-2">
+                      {{ item.quantity }}x
+                    </span>
+                    <span v-if="item.description" class="text-caption text-medium-emphasis">
+                      {{ item.description }}
                     </span>
                   </v-list-item-subtitle>
                   <template #append>
@@ -711,7 +742,7 @@
                       variant="text"
                       size="small"
                       color="error"
-                      @click="removeItem(item.id)"
+                      @click="removeItem(item.relation_id)"
                     />
                   </template>
                 </v-list-item>
@@ -1173,6 +1204,47 @@
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn color="primary" :loading="savingRelation" @click="saveRelation">
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit Membership Dialog -->
+    <v-dialog v-model="showEditMembershipDialog" max-width="600">
+      <v-card v-if="editingMembership">
+        <v-card-title>{{ $t('npcs.editMembership') }}</v-card-title>
+        <v-card-text>
+          <v-text-field
+            :model-value="editingMembership.to_entity_name"
+            :label="$t('npcs.faction')"
+            variant="outlined"
+            readonly
+            disabled
+            class="mb-3"
+          />
+
+          <v-combobox
+            v-model="membershipEditForm.relationType"
+            :items="membershipTypeSuggestions"
+            :label="$t('npcs.membershipType')"
+            variant="outlined"
+            class="mb-3"
+          />
+
+          <v-text-field
+            v-model="membershipEditForm.rank"
+            :label="$t('npcs.rank')"
+            :placeholder="$t('npcs.rankPlaceholder')"
+            variant="outlined"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeEditMembershipDialog">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" :loading="savingMembership" @click="saveMembership">
             {{ $t('common.save') }}
           </v-btn>
         </v-card-actions>
@@ -1792,6 +1864,15 @@ const newRelation = ref({
 
 const addingRelation = ref(false)
 
+// NPC-to-NPC relation state
+const newNpcRelation = ref({
+  npcId: null as number | null,
+  relationType: '',
+  notes: '',
+})
+
+const addingNpcRelation = ref(false)
+
 // Relation editing state
 const showEditRelationDialog = ref(false)
 const editingRelation = ref<(typeof npcRelations.value)[0] | null>(null)
@@ -1812,6 +1893,22 @@ const relationTypeSuggestions = computed(() => [
   t('npcs.relationTypes.searchesFor'),
   t('npcs.relationTypes.banishedFrom'),
 ])
+
+const npcRelationTypeSuggestions = computed(() => [
+  t('npcs.npcRelationTypes.ally'),
+  t('npcs.npcRelationTypes.enemy'),
+  t('npcs.npcRelationTypes.family'),
+  t('npcs.npcRelationTypes.friend'),
+  t('npcs.npcRelationTypes.rival'),
+  t('npcs.npcRelationTypes.mentor'),
+  t('npcs.npcRelationTypes.student'),
+  t('npcs.npcRelationTypes.colleague'),
+])
+
+const npcsForSelect = computed(() => {
+  // Filter out the current NPC from the list
+  return entitiesStore.npcs.filter((npc) => npc.id !== editingNpc.value?.id)
+})
 
 // Memberships state (all relations loaded from API)
 interface Relation {
@@ -1863,35 +1960,27 @@ const membershipTypeSuggestions = computed(() => [
   t('npcs.membershipTypes.exile'),
 ])
 
-// New NPC relation state
-const newNpcRelation = ref({
-  npcId: null as number | null,
+// Membership editing state
+const showEditMembershipDialog = ref(false)
+const editingMembership = ref<Relation | null>(null)
+const savingMembership = ref(false)
+const membershipEditForm = ref({
   relationType: '',
+  rank: '',
 })
-const addingNpcRelation = ref(false)
-
-// Suggested NPC relation types (i18n)
-const npcRelationTypeSuggestions = computed(() => [
-  t('npcs.npcRelationTypes.ally'),
-  t('npcs.npcRelationTypes.enemy'),
-  t('npcs.npcRelationTypes.family'),
-  t('npcs.npcRelationTypes.friend'),
-  t('npcs.npcRelationTypes.rival'),
-  t('npcs.npcRelationTypes.mentor'),
-  t('npcs.npcRelationTypes.student'),
-  t('npcs.npcRelationTypes.colleague'),
-])
 
 // Items state
 const npcItems = ref<
   Array<{
     id: number
-    to_entity_id: number
-    item_name: string
-    item_description: string | null
-    item_metadata: Record<string, unknown> | null
+    relation_id: number
+    name: string
+    description: string | null
     relation_type: string
-    notes: Record<string, unknown> | null
+    quantity: number | null
+    equipped: boolean
+    image_url: string | null
+    rarity: string | null
   }>
 >([])
 
@@ -2120,8 +2209,49 @@ async function addFactionMembership() {
 }
 
 function editMembership(membership: Relation) {
-  // TODO: Implement edit dialog for membership
-  console.log('Edit membership:', membership)
+  editingMembership.value = membership
+  membershipEditForm.value = {
+    relationType: membership.relation_type,
+    rank: (membership.notes as { rank?: string })?.rank || '',
+  }
+  showEditMembershipDialog.value = true
+}
+
+async function saveMembership() {
+  if (!editingMembership.value) return
+
+  savingMembership.value = true
+
+  try {
+    const updated = await $fetch<Relation>(`/api/entity-relations/${editingMembership.value.id}`, {
+      method: 'PATCH' as const,
+      body: {
+        relationType: membershipEditForm.value.relationType,
+        notes: JSON.stringify({ rank: membershipEditForm.value.rank }),
+      },
+    })
+
+    // Update in local array
+    const index = allRelations.value.findIndex((r) => r.id === editingMembership.value!.id)
+    if (index !== -1) {
+      allRelations.value[index] = updated
+    }
+
+    closeEditMembershipDialog()
+  } catch (error) {
+    console.error('Failed to update membership:', error)
+  } finally {
+    savingMembership.value = false
+  }
+}
+
+function closeEditMembershipDialog() {
+  showEditMembershipDialog.value = false
+  editingMembership.value = null
+  membershipEditForm.value = {
+    relationType: '',
+    rank: '',
+  }
 }
 
 async function removeMembership(relationId: number) {
@@ -2133,49 +2263,6 @@ async function removeMembership(relationId: number) {
   } catch (error) {
     console.error('Failed to remove membership:', error)
   }
-}
-
-async function addNpcRelation() {
-  if (!editingNpc.value || !newNpcRelation.value.npcId || !newNpcRelation.value.relationType) return
-
-  addingNpcRelation.value = true
-
-  try {
-    await $fetch(`/api/npcs/${editingNpc.value.id}/relations`, {
-      method: 'POST',
-      body: {
-        toEntityId: newNpcRelation.value.npcId,
-        relationType: newNpcRelation.value.relationType,
-        notes: null,
-      },
-    })
-
-    await loadAllRelations()
-
-    // Reload counts for this NPC (relation count changed)
-    await reloadNpcCounts(editingNpc.value)
-
-    // Reset form
-    newNpcRelation.value = {
-      npcId: null,
-      relationType: '',
-    }
-  } catch (error: any) {
-    console.error('Failed to add NPC relation:', error)
-    // Show user-friendly error message
-    if (error?.statusCode === 409) {
-      alert('Diese Beziehung existiert bereits!')
-    } else {
-      alert('Fehler beim Hinzufügen der Beziehung')
-    }
-  } finally {
-    addingNpcRelation.value = false
-  }
-}
-
-function editNpcRelation(relation: Relation) {
-  // TODO: Implement edit dialog for NPC relation
-  console.log('Edit NPC relation:', relation)
 }
 
 async function removeNpcRelation(relationId: number) {
@@ -2284,13 +2371,45 @@ async function editNpc(npc: NPC) {
     },
   }
 
-  // Load existing relations
+  // Load existing NPC relations
   try {
     const relations = await $fetch<typeof npcRelations.value>(`/api/npcs/${npc.id}/relations`)
     npcRelations.value = relations
   } catch (error) {
-    console.error('Failed to load relations:', error)
+    console.error('Failed to load NPC relations:', error)
     npcRelations.value = []
+  }
+
+  // Load existing Location relations and add to npcRelations
+  try {
+    const locationRelations = await $fetch<
+      Array<{
+        id: number
+        relation_id: number
+        name: string
+        description?: string
+        relation_type?: string
+        notes?: string | null
+        image_url?: string
+        type?: string
+        region?: string
+      }>
+    >(`/api/npcs/${npc.id}/locations`)
+
+    // Map locations to the same structure as npcRelations
+    const mappedLocationRelations = locationRelations.map((loc) => ({
+      id: loc.relation_id, // Use relation_id for deleting
+      to_entity_id: loc.id, // The actual location ID
+      to_entity_name: loc.name,
+      to_entity_type: 'Location',
+      relation_type: loc.relation_type || '',
+      notes: loc.notes || null,
+    }))
+
+    // Append location relations to npcRelations
+    npcRelations.value.push(...mappedLocationRelations)
+  } catch (error) {
+    console.error('Failed to load location relations:', error)
   }
 
   // Load notes
@@ -2343,6 +2462,12 @@ async function viewItemById(itemId: number) {
   console.log('viewItemById called with:', itemId)
   // TODO: Implement ItemViewDialog
   // For now, just log. We'll implement this when ItemViewDialog is created
+}
+
+// View Location by ID (from locations in view dialog)
+async function viewLocationById(locationId: number) {
+  // Navigate to locations page with highlight
+  await navigateTo(`/locations?highlight=${locationId}`)
 }
 
 // Go back to previous NPC in view stack
@@ -2481,6 +2606,47 @@ async function confirmDelete() {
   }
 }
 
+async function addNpcRelation() {
+  if (!editingNpc.value || !newNpcRelation.value.npcId) return
+
+  addingNpcRelation.value = true
+
+  try {
+    const relation = await $fetch<Relation>(`/api/npcs/${editingNpc.value.id}/relations`, {
+      method: 'POST',
+      body: {
+        toEntityId: newNpcRelation.value.npcId,
+        relationType: newNpcRelation.value.relationType || t('npcs.npcRelationTypes.ally'),
+        notes: newNpcRelation.value.notes || null,
+      },
+    })
+
+    npcRelations.value.push({
+      id: relation.id,
+      to_entity_id: relation.to_entity_id,
+      to_entity_name: relation.to_entity_name,
+      to_entity_type: relation.to_entity_type,
+      relation_type: relation.relation_type,
+      notes: typeof relation.notes === 'string' ? relation.notes : null,
+    })
+
+    // Reload counts to update NPC relations count badge
+    if (editingNpc.value) {
+      await reloadNpcCounts(editingNpc.value)
+    }
+
+    newNpcRelation.value = {
+      npcId: null,
+      relationType: '',
+      notes: '',
+    }
+  } catch (error) {
+    console.error('Failed to add NPC relation:', error)
+  } finally {
+    addingNpcRelation.value = false
+  }
+}
+
 async function addLocationRelation() {
   if (!editingNpc.value || !newRelation.value.locationId) return
 
@@ -2504,6 +2670,12 @@ async function addLocationRelation() {
       relation_type: relation.relation_type,
       notes: typeof relation.notes === 'string' ? relation.notes : null,
     })
+
+    // Reload counts to update location count badge
+    if (editingNpc.value) {
+      await reloadNpcCounts(editingNpc.value)
+    }
+
     newRelation.value = {
       locationId: null,
       relationType: '',
@@ -2733,6 +2905,18 @@ function getNpcStatusColor(status: string): string {
     undead: 'purple',
   }
   return colors[status] || 'grey'
+}
+
+function getRarityColor(rarity: string): string {
+  const colors: Record<string, string> = {
+    common: 'grey',
+    uncommon: 'success',
+    rare: 'info',
+    'very rare': 'warning',
+    legendary: 'error',
+    artifact: 'purple',
+  }
+  return colors[rarity] || 'grey'
 }
 </script>
 

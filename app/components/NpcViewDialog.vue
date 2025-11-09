@@ -52,6 +52,11 @@
           {{ $t('npcs.items') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.items }}</v-chip>
         </v-tab>
+        <v-tab value="locations">
+          <v-icon start>mdi-map-marker</v-icon>
+          {{ $t('nav.locations') }}
+          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.locations }}</v-chip>
+        </v-tab>
         <v-tab value="documents">
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('documents.title') }}
@@ -180,7 +185,7 @@
                   <v-list-item-subtitle>
                     <div class="d-flex align-center gap-2 mt-1">
                       <v-chip size="x-small" color="primary" variant="tonal">
-                        {{ rel.relation_type }}
+                        {{ $t(`npcs.npcRelationTypes.${rel.relation_type}`, rel.relation_type) }}
                       </v-chip>
                       <span v-if="rel.notes" class="text-caption">{{ rel.notes }}</span>
                     </div>
@@ -222,7 +227,7 @@
                   <v-list-item-subtitle>
                     <div class="d-flex align-center gap-2 mt-1">
                       <v-chip v-if="item.relation_type" size="x-small" color="primary" variant="tonal">
-                        {{ item.relation_type }}
+                        {{ $t(`npcs.itemRelationTypes.${item.relation_type}`, item.relation_type) }}
                       </v-chip>
                       <v-chip v-if="item.quantity && item.quantity > 1" size="x-small" variant="outlined">
                         {{ item.quantity }}x
@@ -232,6 +237,50 @@
                       </v-chip>
                       <span v-if="item.description" class="text-caption text-medium-emphasis">
                         {{ item.description }}
+                      </span>
+                    </div>
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+            </div>
+          </v-window-item>
+
+          <!-- Locations Tab -->
+          <v-window-item value="locations">
+            <div class="pa-4">
+              <div v-if="loading" class="text-center py-8">
+                <v-progress-circular indeterminate color="primary" />
+              </div>
+              <div v-else-if="locations.length === 0" class="text-center py-8 text-medium-emphasis">
+                {{ $t('nav.locations') }} - Keine Daten
+              </div>
+              <v-list v-else lines="two">
+                <v-list-item
+                  v-for="location in locations"
+                  :key="location.relation_id"
+                  class="mb-2"
+                  style="cursor: pointer"
+                  @click="$emit('view-location', location.id)"
+                >
+                  <template #prepend>
+                    <v-avatar color="accent" size="48">
+                      <v-img v-if="location.image_url" :src="`/uploads/${location.image_url}`" />
+                      <v-icon v-else>mdi-map-marker</v-icon>
+                    </v-avatar>
+                  </template>
+                  <v-list-item-title class="font-weight-medium">
+                    {{ location.name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    <div class="d-flex align-center gap-2 mt-1">
+                      <v-chip v-if="location.relation_type" size="x-small" color="primary" variant="tonal">
+                        {{ $t(`npcs.relationTypes.${location.relation_type}`, location.relation_type) }}
+                      </v-chip>
+                      <v-chip v-if="location.type" size="x-small" variant="outlined">
+                        {{ $t(`locations.types.${location.type}`) }}
+                      </v-chip>
+                      <span v-if="location.description" class="text-caption text-medium-emphasis">
+                        {{ location.description }}
                       </span>
                     </div>
                   </v-list-item-subtitle>
@@ -339,6 +388,7 @@ const emit = defineEmits<{
   edit: [npc: NPC]
   'view-npc': [npcId: number]
   'view-item': [itemId: number]
+  'view-location': [locationId: number]
   'go-back': []
 }>()
 
@@ -380,6 +430,18 @@ const items = ref<
     rarity?: string
   }>
 >([])
+const locations = ref<
+  Array<{
+    id: number
+    relation_id: number
+    name: string
+    description?: string
+    relation_type?: string
+    image_url?: string
+    type?: string
+    region?: string
+  }>
+>([])
 const documents = ref<Array<{ id: number; title: string; content: string }>>([])
 const images = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
 
@@ -401,7 +463,7 @@ watch(
     loading.value = true
     try {
       // Load all data in parallel
-      const [relationsData, itemsData, documentsData, imagesData] = await Promise.all([
+      const [relationsData, itemsData, locationsData, documentsData, imagesData] = await Promise.all([
         $fetch<
           Array<{
             id: number
@@ -431,6 +493,21 @@ watch(
           console.error('Failed to load items:', error)
           return []
         }),
+        $fetch<
+          Array<{
+            id: number
+            relation_id: number
+            name: string
+            description?: string
+            relation_type?: string
+            image_url?: string
+            type?: string
+            region?: string
+          }>
+        >(`/api/npcs/${newNpc.id}/locations`).catch((error) => {
+          console.error('Failed to load locations:', error)
+          return []
+        }),
         $fetch<Array<{ id: number; title: string; content: string }>>(`/api/entities/${newNpc.id}/documents`).catch(
           (error) => {
             console.error('Failed to load documents:', error)
@@ -445,11 +522,9 @@ watch(
         }),
       ])
 
-      console.log('Loaded relations:', relationsData)
-      console.log('Loaded items:', itemsData)
-
       relations.value = relationsData
       items.value = itemsData
+      locations.value = locationsData
       documents.value = documentsData
       images.value = imagesData
     } finally {

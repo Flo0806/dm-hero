@@ -205,6 +205,33 @@
           </template>
           <span>{{ $t('npcs.badgeTooltips.images') }}</span>
         </v-tooltip>
+
+        <!-- Memberships Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-shield-account"
+              size="small"
+              variant="outlined"
+              :color="counts.memberships > 0 ? 'primary' : undefined"
+            >
+              {{ counts.memberships }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-shield-account"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('npcs.badgeTooltips.memberships') }}</span>
+        </v-tooltip>
       </div>
     </v-card-text>
 
