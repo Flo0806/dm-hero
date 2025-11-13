@@ -52,63 +52,14 @@
       <!-- Faction Cards -->
       <v-row>
         <v-col v-for="faction in filteredFactions" :key="faction.id" cols="12" md="6" lg="4">
-          <v-card
-            :id="`faction-${faction.id}`"
-            :class="['h-100', { 'highlighted-card': highlightedId === faction.id }]"
-            hover
-          >
-            <v-card-title>
-              <v-icon icon="mdi-shield-account" class="mr-2" color="primary" />
-              {{ faction.name }}
-            </v-card-title>
-            <v-card-text>
-              <div
-                v-if="faction.image_url"
-                class="float-right ml-3 mb-2 position-relative image-container"
-                style="width: 80px; height: 80px"
-              >
-                <v-avatar
-                  size="80"
-                  rounded="lg"
-                  style="cursor: pointer"
-                  @click.stop="openImagePreview(`/uploads/${faction.image_url}`, faction.name)"
-                >
-                  <v-img :src="`/uploads/${faction.image_url}`" cover />
-                </v-avatar>
-                <v-btn
-                  icon="mdi-download"
-                  size="x-small"
-                  variant="tonal"
-                  class="image-download-btn"
-                  @click.stop="downloadImage(`/uploads/${faction.image_url}`, faction.name)"
-                />
-              </div>
-              <div v-if="faction.description" class="text-body-2 mb-3">
-                {{ truncateText(faction.description, 100) }}
-              </div>
-              <div class="text-caption">
-                <div v-if="faction.metadata?.type" class="mb-1">
-                  <strong>{{ $t('factions.type') }}:</strong> {{ faction.metadata.type }}
-                </div>
-                <div v-if="faction.leader_name" class="mb-1">
-                  <strong>{{ $t('factions.leader') }}:</strong> {{ faction.leader_name }}
-                </div>
-                <div v-if="faction.metadata?.alignment" class="mb-1">
-                  <strong>{{ $t('factions.alignment') }}:</strong> {{ faction.metadata.alignment }}
-                </div>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn icon="mdi-pencil" variant="text" @click="editFaction(faction)" />
-              <v-spacer />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                color="error"
-                @click="deleteFaction(faction)"
-              />
-            </v-card-actions>
-          </v-card>
+          <FactionCard
+            :faction="faction"
+            :is-highlighted="highlightedId === faction.id"
+            @view="viewFaction"
+            @edit="editFaction"
+            @download="(faction) => downloadImage(`/uploads/${faction.image_url}`, faction.name)"
+            @delete="deleteFaction"
+          />
         </v-col>
       </v-row>
     </div>
@@ -728,6 +679,7 @@
 <script setup lang="ts">
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import FactionCard from '~/components/factions/FactionCard.vue'
 
 interface Faction {
   id: number
@@ -792,6 +744,8 @@ function initializeFromQuery() {
   }
 }
 
+const { loadFactionCountsBatch, reloadFactionCounts } = useFactionCounts()
+
 // Check if campaign is selected
 onMounted(async () => {
   if (!activeCampaignId.value) {
@@ -806,6 +760,11 @@ onMounted(async () => {
     entitiesStore.fetchNPCs(activeCampaignId.value),
     entitiesStore.fetchLore(activeCampaignId.value),
   ])
+
+  // Load counts for all factions in background (non-blocking)
+  if (factions.value && factions.value.length > 0) {
+    loadFactionCountsBatch(factions.value)
+  }
 
   // Check API key
   try {
@@ -1023,10 +982,9 @@ const factionForm = ref({
   },
 })
 
-// Utility functions
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return `${text.substring(0, maxLength)}...`
+// View Faction (currently just opens edit - can be extended to view-only dialog later)
+function viewFaction(faction: Faction) {
+  editFaction(faction)
 }
 
 async function editFaction(faction: Faction) {
@@ -1111,6 +1069,17 @@ async function saveFaction() {
       } catch (error) {
         console.error('Failed to create leader relation:', error)
       }
+    }
+
+    // If user is searching, re-execute search to update FTS5 results
+    if (searchQuery.value && searchQuery.value.trim().length > 0) {
+      await executeSearch(searchQuery.value)
+    }
+
+    // Reload counts for the saved Faction (get from store, not API response)
+    const factionFromStore = entitiesStore.factions.find((f) => f.id === factionId)
+    if (factionFromStore) {
+      await reloadFactionCounts(factionFromStore)
     }
 
     closeDialog()

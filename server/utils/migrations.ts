@@ -892,6 +892,31 @@ export const migrations: Migration[] = [
       )
     },
   },
+  {
+    version: 16,
+    name: 'add_pdf_support_to_documents',
+    up: (db) => {
+      console.log('  Adding PDF support to entity_documents table...')
+
+      // Add file_path column for PDF files
+      // If file_path is set, the document is a PDF (not markdown)
+      db.exec(`
+        ALTER TABLE entity_documents ADD COLUMN file_path TEXT
+      `)
+
+      // Add file_type column to distinguish between markdown and PDF
+      db.exec(`
+        ALTER TABLE entity_documents ADD COLUMN file_type TEXT DEFAULT 'markdown'
+      `)
+
+      // Create index for faster file_type lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entity_documents_file_type ON entity_documents(file_type)
+      `)
+
+      console.log('✅ Migration 16: Added PDF support (file_path and file_type columns)')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

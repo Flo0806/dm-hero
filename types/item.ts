@@ -34,6 +34,14 @@ export interface ItemMetadata {
   properties?: string
 }
 
+export interface ItemCounts {
+  owners: number
+  locations: number
+  lore: number
+  documents: number
+  images: number
+}
+
 export interface Item {
   id: number
   name: string
@@ -42,4 +50,5 @@ export interface Item {
   metadata: ItemMetadata | null
   created_at: string
   updated_at: string
+  _counts?: ItemCounts
 }

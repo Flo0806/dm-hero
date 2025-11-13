@@ -8,12 +8,14 @@
   >
     <!-- Card Header with Image & Status -->
     <div class="d-flex align-start pa-4 pb-3">
-      <!-- Avatar -->
+      <!-- Avatar (clickable if image exists) -->
       <v-avatar
         :color="npc.image_url ? undefined : 'grey-lighten-2'"
         size="80"
         rounded="lg"
         class="mr-3 flex-shrink-0"
+        :style="npc.image_url ? 'cursor: pointer;' : ''"
+        @click.stop="npc.image_url ? openImagePreview() : null"
       >
         <v-img v-if="npc.image_url" :src="`/uploads/${npc.image_url}`" cover />
         <v-icon v-else icon="mdi-account" size="40" color="grey" />
@@ -271,10 +273,21 @@
       </v-btn>
     </v-card-actions>
   </v-card>
+
+  <!-- Image Preview Dialog -->
+  <ImagePreviewDialog
+    v-model="showImagePreview"
+    :image-url="`/uploads/${npc.image_url}`"
+    :title="npc.name"
+    :subtitle="previewSubtitle"
+    :chips="previewChips"
+    :download-file-name="npc.name"
+  />
 </template>
 
 <script setup lang="ts">
 import type { NPC } from '~~/types/npc'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 interface Props {
   npc: NPC
@@ -296,11 +309,52 @@ defineEmits<{
   delete: [npc: NPC]
 }>()
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { getCounts } = useNpcCounts()
 
 // Get counts reactively from the composable
 const counts = computed(() => getCounts(props.npc.id) || props.npc._counts)
+
+// Image Preview State
+const showImagePreview = ref(false)
+
+function openImagePreview() {
+  if (!props.npc.image_url) return
+  showImagePreview.value = true
+}
+
+// Build chips for preview dialog
+const previewChips = computed(() => {
+  const chips = []
+
+  if (props.npc.metadata?.type) {
+    chips.push({
+      text: t(`npcs.types.${props.npc.metadata.type}`),
+      icon: getNpcTypeIcon(props.npc.metadata.type),
+      color: 'primary',
+      variant: 'tonal' as const,
+    })
+  }
+
+  if (props.npc.metadata?.status) {
+    chips.push({
+      text: t(`npcs.statuses.${props.npc.metadata.status}`),
+      icon: getNpcStatusIcon(props.npc.metadata.status),
+      color: getNpcStatusColor(props.npc.metadata.status),
+      variant: 'flat' as const,
+    })
+  }
+
+  return chips
+})
+
+// Build subtitle for preview dialog (Race • Class)
+const previewSubtitle = computed(() => {
+  const parts = []
+  if (props.npc.metadata?.race) parts.push(getRaceDisplayName(props.npc.metadata.race))
+  if (props.npc.metadata?.class) parts.push(getClassDisplayName(props.npc.metadata.class))
+  return parts.join(' • ')
+})
 
 // Helper functions for display names
 function getRaceDisplayName(raceName: string): string {

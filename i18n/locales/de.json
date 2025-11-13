@@ -330,10 +330,40 @@
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes",
     "badgeTooltips": {
-      "relations": "Verknüpfte NPCs",
+      "members": "Mitglieder (NPCs)",
+      "lore": "Verknüpftes Wissen",
       "documents": "Dokumente & Notizen",
-      "images": "Bildergalerie",
-      "items": "Items im Besitz"
+      "images": "Bildergalerie"
+    },
+    "types": {
+      "guild": "Gilde",
+      "government": "Regierung",
+      "military": "Militär",
+      "criminal": "Kriminell",
+      "religious": "Religiös",
+      "merchant": "Händler",
+      "arcane": "Arkan",
+      "secret": "Geheim",
+      "mercenary": "Söldner",
+      "noble": "Adel"
+    },
+    "sizes": {
+      "tiny": "Winzig (1-5)",
+      "small": "Klein (6-20)",
+      "medium": "Mittel (21-100)",
+      "large": "Groß (101-500)",
+      "huge": "Riesig (500+)"
+    },
+    "alignments": {
+      "lawful_good": "Rechtschaffen Gut",
+      "neutral_good": "Neutral Gut",
+      "chaotic_good": "Chaotisch Gut",
+      "lawful_neutral": "Rechtschaffen Neutral",
+      "true_neutral": "Neutral",
+      "chaotic_neutral": "Chaotisch Neutral",
+      "lawful_evil": "Rechtschaffen Böse",
+      "neutral_evil": "Neutral Böse",
+      "chaotic_evil": "Chaotisch Böse"
     },
     "linkedLore": "Verknüpftes Wissen",
     "noLinkedLore": "Kein verknüpftes Wissen",
@@ -393,7 +423,14 @@
     "noLinkedItems": "Keine verknüpften Items",
     "noLinkedItemsText": "Dieses Wissen ist noch mit keinen Items verknüpft.",
     "selectItem": "Item auswählen",
-    "linkItem": "Item verknüpfen"
+    "linkItem": "Item verknüpfen",
+    "badgeTooltips": {
+      "npcs": "Verknüpfte NPCs",
+      "items": "Verknüpfte Items",
+      "factions": "Verknüpfte Fraktionen",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie"
+    }
   },
   "locations": {
     "title": "Orte",
@@ -601,7 +638,14 @@
     "uploadImageError": "Fehler beim Hochladen des Bildes",
     "deleteImageError": "Fehler beim Löschen des Bildes",
     "saveBeforeGenerating": "Details geändert - erst speichern",
-    "documents": "Dokumente"
+    "documents": "Dokumente",
+    "badgeTooltips": {
+      "owners": "Besitzer (NPCs)",
+      "locations": "Orte",
+      "lore": "Verknüpftes Wissen",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie"
+    }
   },
   "referenceData": {
     "title": "Referenzdaten",
@@ -721,7 +765,8 @@
     "noContent": "Kein Inhalt",
     "sortOrder": "Reihenfolge",
     "moveUp": "Nach oben",
-    "moveDown": "Nach unten"
+    "moveDown": "Nach unten",
+    "uploadPdf": "PDF hochladen"
   },
   "common": {
     "edit": "Bearbeiten",

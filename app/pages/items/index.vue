@@ -54,81 +54,14 @@
       <!-- Item Cards -->
       <v-row>
         <v-col v-for="item in filteredItems" :key="item.id" cols="12" md="6" lg="4">
-          <v-card
-            :id="`item-${item.id}`"
-            :class="['h-100 d-flex flex-column', { 'highlighted-card': highlightedId === item.id }]"
-            hover
-            @click="viewItem(item)"
-          >
-            <v-card-title class="d-flex align-center">
-              <v-icon icon="mdi-sword" class="mr-2" color="primary" />
-              {{ item.name }}
-              <v-chip
-                v-if="item.metadata?.rarity"
-                :color="getRarityColor(item.metadata.rarity)"
-                size="small"
-                class="ml-auto"
-              >
-                {{ $t(`items.rarities.${item.metadata.rarity}`) }}
-              </v-chip>
-            </v-card-title>
-            <v-card-text class="flex-grow-1">
-              <div
-                v-if="item.image_url"
-                class="float-right ml-3 mb-2 position-relative image-container"
-                style="width: 80px; height: 80px; cursor: pointer"
-                @click.stop="openImagePreview(`/uploads/${item.image_url}`, item.name)"
-              >
-                <v-img
-                  :src="`/uploads/${item.image_url}`"
-                  cover
-                  rounded="lg"
-                  style="width: 100%; height: 100%"
-                />
-                <v-btn
-                  icon="mdi-download"
-                  size="x-small"
-                  variant="tonal"
-                  class="image-download-btn"
-                  @click.stop="downloadImage(`/uploads/${item.image_url}`, item.name)"
-                />
-              </div>
-              <v-chip v-if="item.metadata?.type" size="small" class="mb-3" variant="tonal">
-                {{ $t(`items.types.${item.metadata.type}`) }}
-              </v-chip>
-
-              <div v-if="item.description" class="text-body-2 mb-3">
-                {{ item.description }}
-              </div>
-              <div v-else class="text-body-2 text-disabled mb-3">
-                {{ $t('items.noDescription') }}
-              </div>
-
-              <div v-if="item.metadata" class="text-caption">
-                <div v-if="item.metadata.value">
-                  <strong>{{ $t('items.value') }}:</strong> {{ item.metadata.value }}
-                </div>
-                <div v-if="item.metadata.weight">
-                  <strong>{{ $t('items.weight') }}:</strong> {{ item.metadata.weight }}
-                </div>
-                <div v-if="item.metadata.attunement">
-                  <v-chip size="x-small" color="purple" class="mt-1">
-                    {{ $t('items.requiresAttunement') }}
-                  </v-chip>
-                </div>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-btn icon="mdi-pencil" variant="text" @click.stop="editItem(item)" />
-              <v-spacer />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                color="error"
-                @click.stop="deleteItem(item)"
-              />
-            </v-card-actions>
-          </v-card>
+          <ItemCard
+            :item="item"
+            :is-highlighted="highlightedId === item.id"
+            @view="viewItem"
+            @edit="editItem"
+            @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
+            @delete="deleteItem"
+          />
         </v-col>
       </v-row>
     </div>
@@ -950,6 +883,7 @@ import type { Item, ItemMetadata } from '../../../types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '../../../types/item'
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import ItemCard from '~/components/items/ItemCard.vue'
 
 // Check if OpenAI API key is configured
 const hasApiKey = ref(false)
@@ -1004,6 +938,8 @@ function initializeFromQuery() {
   }
 }
 
+const { loadItemCountsBatch, reloadItemCounts } = useItemCounts()
+
 onMounted(async () => {
   if (!activeCampaignId.value) {
     router.push('/campaigns')
@@ -1016,6 +952,11 @@ onMounted(async () => {
     entitiesStore.fetchLocations(activeCampaignId.value),
     entitiesStore.fetchLore(activeCampaignId.value),
   ])
+
+  // Load counts for all items in background (non-blocking)
+  if (items.value && items.value.length > 0) {
+    loadItemCountsBatch(items.value)
+  }
 
   // Check if API key is configured
   try {
@@ -1423,6 +1364,7 @@ const locationRelationTypeSuggestions = computed(() => [
   'guarded',
 ])
 
+// Helper function for rarity colors (used in View Dialog)
 function getRarityColor(rarity: string) {
   const colors: Record<string, string> = {
     common: 'grey',
@@ -1482,33 +1424,40 @@ async function saveItem() {
   saving.value = true
 
   try {
+    let savedItemId: number
+
     if (editingItem.value) {
       await entitiesStore.updateItem(editingItem.value.id, {
         name: itemForm.value.name,
         description: itemForm.value.description || null,
         metadata: itemForm.value.metadata,
       })
+      savedItemId = editingItem.value.id
 
       // Update original data after successful save
       originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
-
-      closeDialog()
     } else {
-      // Create new item and immediately open edit dialog
+      // Create new item
       const newItem = await entitiesStore.createItem(activeCampaignId.value, {
         name: itemForm.value.name,
         description: itemForm.value.description || null,
         metadata: itemForm.value.metadata,
       })
-
-      // Close create dialog first
-      closeDialog()
-
-      // Open edit dialog with the newly created item
-      // Small delay to ensure smooth transition
-      await nextTick()
-      editItem(newItem)
+      savedItemId = newItem.id
     }
+
+    // If user is searching, re-execute search to update FTS5 results
+    if (searchQuery.value && searchQuery.value.trim().length > 0) {
+      await executeSearch(searchQuery.value)
+    }
+
+    // Reload counts for the saved Item (get Item from store, not API response!)
+    const itemFromStore = entitiesStore.items.find((i) => i.id === savedItemId)
+    if (itemFromStore) {
+      await reloadItemCounts(itemFromStore)
+    }
+
+    closeDialog()
   } catch (error) {
     console.error('Failed to save item:', error)
   } finally {
@@ -1764,21 +1713,5 @@ async function removeLoreRelation(loreId: number) {
   transition:
     filter 0.3s ease,
     opacity 0.3s ease;
-}
-
-/* Highlight animation for items from global search */
-.highlighted-card {
-  animation: highlight-pulse 2s ease-in-out;
-  box-shadow: 0 0 0 3px rgb(var(--v-theme-primary)) !important;
-}
-
-@keyframes highlight-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 3px rgb(var(--v-theme-primary));
-  }
-  50% {
-    box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
-  }
 }
 </style>

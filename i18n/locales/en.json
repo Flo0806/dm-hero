@@ -326,6 +326,42 @@
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
     "badgeTooltips": {
+      "members": "Members (NPCs)",
+      "lore": "Linked Lore",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery"
+    },
+    "types": {
+      "guild": "Guild",
+      "government": "Government",
+      "military": "Military",
+      "criminal": "Criminal",
+      "religious": "Religious",
+      "merchant": "Merchant",
+      "arcane": "Arcane",
+      "secret": "Secret",
+      "mercenary": "Mercenary",
+      "noble": "Noble"
+    },
+    "sizes": {
+      "tiny": "Tiny (1-5)",
+      "small": "Small (6-20)",
+      "medium": "Medium (21-100)",
+      "large": "Large (101-500)",
+      "huge": "Huge (500+)"
+    },
+    "alignments": {
+      "lawful_good": "Lawful Good",
+      "neutral_good": "Neutral Good",
+      "chaotic_good": "Chaotic Good",
+      "lawful_neutral": "Lawful Neutral",
+      "true_neutral": "True Neutral",
+      "chaotic_neutral": "Chaotic Neutral",
+      "lawful_evil": "Lawful Evil",
+      "neutral_evil": "Neutral Evil",
+      "chaotic_evil": "Chaotic Evil"
+    },
+    "oldBadgeTooltips": {
       "relations": "Linked NPCs",
       "documents": "Documents & Notes",
       "images": "Image Gallery",
@@ -389,7 +425,14 @@
     "noLinkedItems": "No Linked Items",
     "noLinkedItemsText": "This lore entry has no linked items yet.",
     "selectItem": "Select Item",
-    "linkItem": "Link Item"
+    "linkItem": "Link Item",
+    "badgeTooltips": {
+      "npcs": "Linked NPCs",
+      "items": "Linked Items",
+      "factions": "Linked Factions",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery"
+    }
   },
   "locations": {
     "title": "Locations",
@@ -575,7 +618,14 @@
     "uploadImageError": "Failed to upload image",
     "deleteImageError": "Failed to delete image",
     "saveBeforeGenerating": "Details changed - save first",
-    "documents": "Documents"
+    "documents": "Documents",
+    "badgeTooltips": {
+      "owners": "Owners (NPCs)",
+      "locations": "Locations",
+      "lore": "Linked Lore",
+      "documents": "Documents & Notes",
+      "images": "Image Gallery"
+    }
   },
   "referenceData": {
     "title": "Reference Data",
@@ -695,7 +745,8 @@
     "noContent": "No content",
     "sortOrder": "Order",
     "moveUp": "Move up",
-    "moveDown": "Move down"
+    "moveDown": "Move down",
+    "uploadPdf": "Upload PDF"
   },
   "common": {
     "edit": "Edit",

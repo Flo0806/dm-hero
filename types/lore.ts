@@ -16,6 +16,14 @@ export interface LoreMetadata {
   date?: string // Optional date for historical events (YYYY-MM-DD)
 }
 
+export interface LoreCounts {
+  npcs: number
+  items: number
+  factions: number
+  documents: number
+  images: number
+}
+
 export interface Lore {
   id: number
   name: string
@@ -24,4 +32,5 @@ export interface Lore {
   metadata: LoreMetadata | null
   created_at: string
   updated_at: string
+  _counts?: LoreCounts
 }
