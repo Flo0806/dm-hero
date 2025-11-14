@@ -1878,7 +1878,8 @@ async function confirmDelete() {
 
     // Show message if children were deleted
     if (result.deletedCount > 1) {
-      console.log(result.message) // Could show a toast notification here
+      // TODO: Show toast notification for deleted children
+      // result.message contains the count
     }
 
     // Reload locations to reflect cascade deletions

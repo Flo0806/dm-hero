@@ -746,7 +746,8 @@
     "sortOrder": "Order",
     "moveUp": "Move up",
     "moveDown": "Move down",
-    "uploadPdf": "Upload PDF"
+    "uploadPdf": "Upload PDF",
+    "previewPdf": "Preview PDF"
   },
   "common": {
     "edit": "Edit",

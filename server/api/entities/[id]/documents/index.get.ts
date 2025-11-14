@@ -21,6 +21,8 @@ export default defineEventHandler(async (event) => {
       content,
       date,
       sort_order,
+      file_path,
+      file_type,
       created_at,
       updated_at
     FROM entity_documents

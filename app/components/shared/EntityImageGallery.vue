@@ -235,6 +235,7 @@ async function handleImageUpload(event: Event) {
     }
 
     await loadImages()
+    emit('images-updated') // Notify parent that images changed
   } catch (error) {
     console.error('Failed to upload images:', error)
     alert(t('common.uploadImageError'))
@@ -283,6 +284,7 @@ async function generateImage() {
       })
 
       await loadImages()
+      emit('images-updated') // Notify parent that images changed
     }
   } catch (error) {
     console.error('Failed to generate image:', error)
@@ -334,6 +336,7 @@ async function deleteImage(imageId: number) {
     })
 
     images.value = images.value.filter((img) => img.id !== imageId)
+    emit('images-updated') // Notify parent that images changed
   } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('common.deleteImageError'))

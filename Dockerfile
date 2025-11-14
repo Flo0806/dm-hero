@@ -18,6 +18,14 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
 
+# Workaround: pnpm bug with optional dependencies (OXC bindings)
+# Explicitly install Linux bindings to ensure GitHub Actions build succeeds
+RUN pnpm add -D \
+  @oxc-parser/binding-linux-x64-gnu \
+  @oxc-transform/binding-linux-x64-gnu \
+  @oxc-minify/binding-linux-x64-gnu \
+  @oxc-resolver/binding-linux-x64-gnu || true
+
 # Copy source code
 COPY . .
 

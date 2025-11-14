@@ -93,20 +93,14 @@ export default defineEventHandler(async (event) => {
         const raceKey = await getRaceKey(term, enableFuzzy, locale)
         const classKey = await getClassKey(term, enableFuzzy, locale)
 
-        console.log(`[NPC Search] Term: "${term}", fuzzy=${enableFuzzy}, locale=${locale}`)
-        console.log('[NPC Search] - raceKey:', raceKey)
-        console.log('[NPC Search] - classKey:', classKey)
-
         // If we found a race/class key, use ALL search variants (key + localized names)
         // This allows FTS5 to find NPCs by both the key in metadata AND localized names in FTS
         if (raceKey) {
           const variants = await getRaceSearchVariants(term, locale)
-          console.log('[NPC Search] - Race variants:', variants)
           return { variants, isRaceClassKey: true }
         }
         if (classKey) {
           const variants = await getClassSearchVariants(term, locale)
-          console.log('[NPC Search] - Class variants:', variants)
           return { variants, isRaceClassKey: true }
         }
 
@@ -208,8 +202,6 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(ftsQuery, entityType.id, campaignId) as NpcRow[]
-      console.log('[NPC Search] FTS5 returned:', npcs.length, 'candidates')
-
       // FALLBACK 1: Try prefix wildcard if exact match found nothing (only for simple queries)
       if (npcs.length === 0 && useExactMatch && !parsedQuery.hasOperators) {
         ftsQuery = `${searchTerm}*`

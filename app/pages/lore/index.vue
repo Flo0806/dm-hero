@@ -93,11 +93,11 @@
           </v-tab>
           <v-tab value="images">
             <v-icon start> mdi-image-multiple </v-icon>
-            {{ $t('common.images') }}
+            {{ $t('common.images') }} ({{ editingLore._counts?.images ?? 0 }})
           </v-tab>
           <v-tab value="documents">
             <v-icon start> mdi-file-document </v-icon>
-            {{ $t('documents.title') }}
+            {{ $t('documents.title') }} ({{ editingLore._counts?.documents ?? 0 }})
           </v-tab>
           <v-tab value="factions">
             <v-icon start> mdi-shield-account </v-icon>
@@ -160,12 +160,18 @@
                 :entity-description="editingLore.description || undefined"
                 @preview-image="openImagePreview"
                 @generating="(isGenerating: boolean) => (imageGenerating = isGenerating)"
+                @images-updated="handleImagesUpdated"
               />
             </v-tabs-window-item>
 
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
-              <EntityDocuments v-if="editingLore" :entity-id="editingLore.id" entity-type="Lore" />
+              <EntityDocuments
+                v-if="editingLore"
+                :entity-id="editingLore.id"
+                entity-type="Lore"
+                @changed="handleDocumentsChanged"
+              />
             </v-tabs-window-item>
 
             <!-- Factions Tab -->
@@ -867,15 +873,40 @@ async function removeItemRelation(itemId: number) {
   }
 }
 
+// Handle images updated event (from EntityImageGallery)
+async function handleImagesUpdated() {
+  if (editingLore.value) {
+    await reloadLoreCounts(editingLore.value)
+  }
+}
+
+// Handle documents changed event (from EntityDocuments)
+async function handleDocumentsChanged() {
+  if (editingLore.value) {
+    await reloadLoreCounts(editingLore.value)
+  }
+}
+
 // Watch for editing lore to load linked factions and items (MUST be after editingLore declaration!)
 watch(
   () => editingLore.value?.id,
   async (loreId) => {
-    if (loreId) {
-      await Promise.all([loadLinkedFactions(), loadLinkedItems()])
+    if (loreId && editingLore.value) {
+      await Promise.all([
+        loadLinkedFactions(),
+        loadLinkedItems(),
+        reloadLoreCounts(editingLore.value),
+      ])
     }
   },
 )
+
+// Watch for tab changes to reload counts (user might have added/deleted images/documents)
+watch(loreDialogTab, async () => {
+  if (editingLore.value) {
+    await reloadLoreCounts(editingLore.value)
+  }
+})
 </script>
 
 <style scoped>

@@ -766,7 +766,8 @@
     "sortOrder": "Reihenfolge",
     "moveUp": "Nach oben",
     "moveDown": "Nach unten",
-    "uploadPdf": "PDF hochladen"
+    "uploadPdf": "PDF hochladen",
+    "previewPdf": "PDF Vorschau"
   },
   "common": {
     "edit": "Bearbeiten",

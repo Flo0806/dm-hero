@@ -224,7 +224,7 @@
           </v-tab>
           <v-tab value="documents">
             <v-icon start> mdi-file-document </v-icon>
-            {{ $t('documents.title') }}
+            {{ $t('documents.title') }} ({{ editingItem?._counts?.documents ?? 0 }})
           </v-tab>
         </v-tabs>
 
@@ -734,7 +734,11 @@
 
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
-              <EntityDocuments v-if="editingItem" :entity-id="editingItem.id" />
+              <EntityDocuments
+                v-if="editingItem"
+                :entity-id="editingItem.id"
+                @changed="handleDocumentsChanged"
+              />
             </v-tabs-window-item>
           </v-tabs-window>
 
@@ -1401,8 +1405,8 @@ async function editItem(item: Item) {
   // Store original data to track changes
   originalItemData.value = JSON.parse(JSON.stringify(itemForm.value))
 
-  // Load owners and locations
-  await Promise.all([loadItemOwners(), loadItemLocations()])
+  // Load owners, locations, and counts
+  await Promise.all([loadItemOwners(), loadItemLocations(), reloadItemCounts(item)])
 
   showCreateDialog.value = true
   itemDialogTab.value = 'details'
@@ -1478,6 +1482,13 @@ async function confirmDelete() {
     console.error('Failed to delete item:', error)
   } finally {
     deleting.value = false
+  }
+}
+
+// Handle documents changed event (from EntityDocuments)
+async function handleDocumentsChanged() {
+  if (editingItem.value) {
+    await reloadItemCounts(editingItem.value)
   }
 }
 

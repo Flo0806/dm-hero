@@ -13,38 +13,94 @@
           clearable
           class="flex-grow-1 mr-2"
         />
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="startCreating">
-          {{ $t('documents.create') }}
-        </v-btn>
+        <div class="d-flex" style="gap: 8px">
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="startCreating">
+            {{ $t('documents.create') }}
+          </v-btn>
+          <v-btn
+            color="secondary"
+            prepend-icon="mdi-file-pdf-box"
+            :loading="uploadingPdf"
+            @click="triggerPdfUpload"
+          >
+            {{ $t('documents.uploadPdf') }}
+          </v-btn>
+          <input
+            ref="pdfFileInput"
+            type="file"
+            accept="application/pdf"
+            style="display: none"
+            @change="handlePdfUpload"
+          />
+        </div>
       </div>
 
       <v-list v-if="filteredDocuments.length > 0">
-        <v-list-item v-for="doc in filteredDocuments" :key="doc.id" @click="editDocument(doc)">
+        <v-list-item v-for="doc in filteredDocuments" :key="doc.id" @click="openDocument(doc)">
           <template #prepend>
-            <v-icon icon="mdi-file-document" class="mr-2" />
+            <v-icon :icon="doc.file_type === 'pdf' ? 'mdi-file-pdf-box' : 'mdi-file-document'" class="mr-2" />
           </template>
 
           <v-list-item-title>{{ doc.title }}</v-list-item-title>
           <v-list-item-subtitle>
             {{ formatDate(doc.date) }} • {{ $t('documents.lastUpdated') }}:
             {{ formatDate(doc.updated_at) }}
+            <v-chip v-if="doc.file_type === 'pdf'" size="x-small" color="error" class="ml-2">PDF</v-chip>
           </v-list-item-subtitle>
 
           <template #append>
             <div class="d-flex gap-1">
+              <!-- PDF Actions: Preview + Download -->
+              <template v-if="doc.file_type === 'pdf'">
+                <v-btn
+                  icon="mdi-eye"
+                  variant="text"
+                  size="small"
+                  @click.stop="previewPdf(doc)"
+                >
+                  <v-icon>mdi-eye</v-icon>
+                  <v-tooltip activator="parent" location="bottom">
+                    {{ $t('documents.previewPdf') }}
+                  </v-tooltip>
+                </v-btn>
+                <v-btn
+                  icon="mdi-download"
+                  variant="text"
+                  size="small"
+                  @click.stop="downloadPdf(doc)"
+                >
+                  <v-icon>mdi-download</v-icon>
+                  <v-tooltip activator="parent" location="bottom">
+                    {{ $t('common.download') }}
+                  </v-tooltip>
+                </v-btn>
+              </template>
+              <!-- Markdown Actions: Edit -->
               <v-btn
+                v-else
                 icon="mdi-pencil"
                 variant="text"
                 size="small"
                 @click.stop="editDocument(doc)"
-              />
+              >
+                <v-icon>mdi-pencil</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ $t('common.edit') }}
+                </v-tooltip>
+              </v-btn>
+              <!-- Delete (both types) -->
               <v-btn
                 icon="mdi-delete"
                 variant="text"
                 size="small"
                 color="error"
                 @click.stop="confirmDeleteDocument(doc)"
-              />
+              >
+                <v-icon>mdi-delete</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ $t('common.delete') }}
+                </v-tooltip>
+              </v-btn>
             </div>
           </template>
         </v-list-item>
@@ -173,6 +229,43 @@
       </v-card>
     </v-dialog>
 
+    <!-- PDF PREVIEW DIALOG -->
+    <v-dialog v-model="showPdfPreview" max-width="1200" scrollable>
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-file-pdf-box" class="mr-2" />
+          {{ viewingPdf?.title }}
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" @click="showPdfPreview = false" />
+        </v-card-title>
+        <v-divider />
+        <v-card-text style="height: 80vh; overflow-y: auto">
+          <ClientOnly>
+            <VuePdfEmbed
+              v-if="viewingPdf?.file_path"
+              :source="`/documents/${viewingPdf.file_path}`"
+              class="pdf-viewer"
+            />
+          </ClientOnly>
+        </v-card-text>
+        <v-divider />
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            prepend-icon="mdi-download"
+            color="primary"
+            variant="text"
+            @click="downloadPdf(viewingPdf!)"
+          >
+            {{ $t('common.download') }}
+          </v-btn>
+          <v-btn variant="text" @click="showPdfPreview = false">
+            {{ $t('common.close') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- DELETE CONFIRM -->
     <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
@@ -191,6 +284,9 @@ import type { ToolbarNames } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useTheme } from 'vuetify'
 
+// Lazy import VuePdfEmbed to avoid SSR issues
+const VuePdfEmbed = defineAsyncComponent(() => import('vue-pdf-embed'))
+
 interface Document {
   id: number
   entity_id: number
@@ -200,6 +296,8 @@ interface Document {
   sort_order: number
   created_at: string
   updated_at: string
+  file_path?: string
+  file_type?: 'markdown' | 'pdf'
 }
 
 interface Props {
@@ -207,6 +305,12 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// Emit events for parent to react to changes
+const emit = defineEmits<{
+  changed: []
+}>()
+
 const { locale } = useI18n()
 const theme = useTheme()
 
@@ -222,6 +326,10 @@ const deleting = ref(false)
 const uploadingImage = ref(false)
 const showImageGallery = ref(false)
 const galleryImages = ref<string[]>([])
+const uploadingPdf = ref(false)
+const pdfFileInput = ref<HTMLInputElement | null>(null)
+const viewingPdf = ref<Document | null>(null)
+const showPdfPreview = ref(false)
 
 type EditorInsertBlock = {
   targetValue: string
@@ -335,6 +443,7 @@ async function saveDocument() {
     }
     await loadDocuments()
     cancelEditing()
+    emit('changed') // Notify parent that document count changed
   } catch (e) {
     console.error('Failed to save document:', e)
   } finally {
@@ -357,6 +466,7 @@ async function deleteDocument() {
     await loadDocuments()
     showDeleteDialog.value = false
     deletingDocument.value = null
+    emit('changed') // Notify parent that document count changed
   } catch (e) {
     console.error('Failed to delete document:', e)
   } finally {
@@ -428,6 +538,83 @@ function insertImageFromGallery(image: string) {
   showImageGallery.value = false
 }
 
+/* ---------- PDF Functions ---------- */
+function triggerPdfUpload() {
+  pdfFileInput.value?.click()
+}
+
+async function handlePdfUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (!file) return
+
+  uploadingPdf.value = true
+
+  try {
+    // Create FormData
+    const formData = new FormData()
+    formData.append('entityId', String(props.entityId))
+    formData.append('title', file.name.replace('.pdf', ''))
+    formData.append('file', file)
+
+    // Upload PDF
+    await $fetch('/api/entity-documents/upload-pdf', {
+      method: 'POST',
+      body: formData,
+    })
+
+    // Reload documents
+    await loadDocuments()
+
+    // Reset input
+    if (pdfFileInput.value) {
+      pdfFileInput.value.value = ''
+    }
+
+    emit('changed') // Notify parent that document count changed
+  } catch (error) {
+    console.error('PDF upload failed:', error)
+    alert('PDF Upload fehlgeschlagen. Bitte versuche es erneut.')
+  } finally {
+    uploadingPdf.value = false
+  }
+}
+
+function openDocument(doc: Document) {
+  if (doc.file_type === 'pdf') {
+    // Open PDF preview dialog
+    previewPdf(doc)
+  } else {
+    // Edit markdown document
+    editDocument(doc)
+  }
+}
+
+function previewPdf(doc: Document) {
+  viewingPdf.value = doc
+  showPdfPreview.value = true
+}
+
+function downloadPdf(doc: Document) {
+  if (!doc.file_path) return
+
+  try {
+    // Firefox-compatible: Direct link with download attribute
+    // No Blob, no fetch - just a simple link click
+    const link = document.createElement('a')
+    link.href = `/documents/${doc.file_path}?download=1`
+    link.download = `${doc.title}.pdf`
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (error) {
+    console.error('Failed to download PDF:', error)
+    alert('Download fehlgeschlagen. Bitte versuche es erneut.')
+  }
+}
+
 /* ---------- Lifecycle ---------- */
 onMounted(loadDocuments)
 watch(() => props.entityId, loadDocuments)
@@ -439,5 +626,9 @@ watch(() => props.entityId, loadDocuments)
 }
 .image-card {
   cursor: pointer;
+}
+.pdf-viewer {
+  width: 100%;
+  min-height: 600px;
 }
 </style>

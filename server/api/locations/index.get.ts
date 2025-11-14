@@ -58,23 +58,18 @@ export default defineEventHandler((event) => {
     // Check if this is a quoted phrase BEFORE normalization
     const isQuotedPhrase = trimmedQuery.startsWith('"') && trimmedQuery.endsWith('"')
 
-    console.log('[DEBUG] trimmedQuery:', trimmedQuery)
-    console.log('[DEBUG] isQuotedPhrase:', isQuotedPhrase)
 
     // If quoted, remove quotes, normalize, then re-add quotes
     let searchTerm: string
     if (isQuotedPhrase) {
       const withoutQuotes = trimmedQuery.slice(1, -1) // Remove surrounding quotes
       searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
-      console.log('[DEBUG] Quoted phrase - searchTerm:', searchTerm)
     } else {
       searchTerm = normalizeText(trimmedQuery)
-      console.log('[DEBUG] Normal query - searchTerm:', searchTerm)
     }
 
     // Parse query with operators (AND, OR, NOT)
     const parsedQuery = parseSearchQuery(searchTerm)
-    console.log('[DEBUG] parsedQuery:', JSON.stringify(parsedQuery, null, 2))
 
     // Build FTS query from parsed terms
     let ftsQuery: string
@@ -83,7 +78,6 @@ export default defineEventHandler((event) => {
       if (parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')) {
         // Use the exact quoted phrase for FTS5
         ftsQuery = parsedQuery.fts5Query
-        console.log('[DEBUG] Using quoted phrase FTS query:', ftsQuery)
       } else {
         // Reconstruct query with original operators
         const expandedTerms = parsedQuery.terms.map((term) => `${term}*`)
@@ -100,10 +94,8 @@ export default defineEventHandler((event) => {
     } else {
       // Simple query: add all terms as OR
       ftsQuery = parsedQuery.terms.map((t) => `${t}*`).join(' OR ')
-      console.log('[DEBUG] Using simple OR query:', ftsQuery)
     }
 
-    console.log('[DEBUG] Final ftsQuery:', ftsQuery)
 
     let useExactMatch = parsedQuery.useExactFirst
 
@@ -302,7 +294,6 @@ export default defineEventHandler((event) => {
       if (isQuotedPhraseSearch) {
         // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
         const exactPhrase = parsedQuery.fts5Query.slice(1, -1) // Remove quotes
-        console.log('[DEBUG] Filtering for exact phrase:', exactPhrase)
 
         scoredLocations = scoredLocations.filter((location) => {
           const nameNormalized = normalizeText(location.name)
@@ -323,7 +314,6 @@ export default defineEventHandler((event) => {
           )
         })
 
-        console.log('[DEBUG] After exact phrase filter:', scoredLocations.length, 'results')
       } else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches (with Levenshtein)
         scoredLocations = scoredLocations.filter((location) => {
@@ -552,7 +542,6 @@ export default defineEventHandler((event) => {
         })
       } else if (hasAndOperator) {
         // AND query: ALL terms must match
-        console.log('[DEBUG] AND query - terms:', parsedQuery.terms)
 
         scoredLocations = scoredLocations.filter((location) => {
           const nameNormalized = normalizeText(location.name)
@@ -568,8 +557,7 @@ export default defineEventHandler((event) => {
 
             // Check if this is a quoted phrase (contains spaces = multi-word term)
             const isPhraseTerm = term.includes(' ')
-            console.log(
-              `[DEBUG] Checking term "${term}" (isPhrase: ${isPhraseTerm}) against "${location.name}"`,
+            against "${location.name}"`,
             )
 
             if (isPhraseTerm) {
@@ -583,10 +571,8 @@ export default defineEventHandler((event) => {
                 linkedLoreNamesNormalized.includes(term)
               ) {
                 termMatches = true
-                console.log(`[DEBUG] Phrase term "${term}" MATCHED in location`)
-              } else {
-                console.log(`[DEBUG] Phrase term "${term}" NOT FOUND`)
-              }
+                } else {
+                }
             } else {
               // Single word term - check with substring match first
               if (
@@ -651,8 +637,6 @@ export default defineEventHandler((event) => {
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
               const npcNames = linkedNpcNamesNormalized.split(',').map((n) => n.trim())
 
-              console.log(`[DEBUG] Checking NPCs: "${linkedNpcNamesNormalized}" for term "${term}"`)
-
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words
@@ -661,8 +645,7 @@ export default defineEventHandler((event) => {
                   if (word.length === 0) continue
                   const npcLevDist = levenshtein(term, word)
                   if (npcLevDist <= maxDist) {
-                    console.log(
-                      `[DEBUG] NPC word "${word}" matched term "${term}" (distance: ${npcLevDist})`,
+                    `,
                     )
                     termMatches = true
                     break
@@ -717,19 +700,15 @@ export default defineEventHandler((event) => {
 
             // If this term doesn't match, reject the location
             if (!termMatches) {
-              console.log(`[DEBUG] Term "${term}" did NOT match - rejecting location "${location.name}"`)
               return false
             } else {
-              console.log(`[DEBUG] Term "${term}" MATCHED - continuing to next term`)
-            }
+              }
           }
 
           // All terms matched!
-          console.log(`[DEBUG] ALL terms matched for location "${location.name}"`)
           return true
         })
 
-        console.log('[DEBUG] After AND filter:', scoredLocations.length, 'results')
       }
 
       // Step 4: Sort by combined score and take top 50

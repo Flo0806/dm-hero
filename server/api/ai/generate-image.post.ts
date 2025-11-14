@@ -66,8 +66,6 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   }
 
   // Step 1: Use GPT-4 to optimize the prompt for DALL-E
-  console.log('[AI] Optimizing prompt with GPT-4...')
-
   // Choose system prompt based on entity type
   const entityType = body.entityType || 'Item'
   let systemPrompt: string
@@ -188,8 +186,7 @@ Output ONLY the optimized prompt.`
     enhancedPrompt =
       gptData.choices?.[0]?.message?.content?.trim() ||
       `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
-    console.log('[AI] GPT-4 optimized prompt:', enhancedPrompt)
-  }
+    }
 
   // Call OpenAI DALL-E 3 API
   try {
@@ -223,9 +220,6 @@ Output ONLY the optimized prompt.`
     const revisedPrompt = data.data?.[0]?.revised_prompt
 
     // Log what DALL-E actually generated vs what we asked for
-    console.log('[DALL-E] Original prompt:', enhancedPrompt)
-    console.log('[DALL-E] Revised prompt:', revisedPrompt)
-
     if (!imageUrl) {
       throw createError({
         statusCode: 500,

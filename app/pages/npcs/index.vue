@@ -868,7 +868,11 @@
 
             <!-- Documents Tab -->
             <v-tabs-window-item value="documents">
-              <EntityDocuments v-if="editingNpc" :entity-id="editingNpc.id" />
+              <EntityDocuments
+                v-if="editingNpc"
+                :entity-id="editingNpc.id"
+                @changed="handleDocumentsChanged"
+              />
             </v-tabs-window-item>
 
             <!-- Lore Tab -->
@@ -1526,7 +1530,6 @@ async function executeSearch(query: string) {
   } catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
-      console.log('Search aborted (new search started)')
       return
     }
     console.error('Search failed:', error)
@@ -1626,7 +1629,6 @@ onMounted(async () => {
   try {
     const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
     hasApiKey.value = response.hasKey
-    console.log('[NPC] API Key check result:', response.hasKey)
   } catch (error) {
     console.error('[NPC] API Key check failed:', error)
     hasApiKey.value = false
@@ -2451,9 +2453,7 @@ async function handleEditFromView(npc: NPC) {
 
 // View NPC by ID (from relations in view dialog)
 async function viewNpcById(npcId: number) {
-  console.log('viewNpcById called with:', npcId)
   const npc = entitiesStore.npcs?.find((n) => n.id === npcId)
-  console.log('Found NPC:', npc)
   if (npc) {
     viewNpc(npc)
   } else {
@@ -2463,9 +2463,9 @@ async function viewNpcById(npcId: number) {
 
 // View Item by ID (from items in view dialog)
 async function viewItemById(itemId: number) {
-  console.log('viewItemById called with:', itemId)
   // TODO: Implement ItemViewDialog
-  // For now, just log. We'll implement this when ItemViewDialog is created
+  // For now, just a placeholder. We'll implement this when ItemViewDialog is created
+  console.error('viewItemById not implemented yet:', itemId)
 }
 
 // View Location by ID (from locations in view dialog)
@@ -2865,6 +2865,13 @@ async function removeLoreRelation(loreId: number) {
     }
   } catch (error) {
     console.error('Failed to remove lore relation:', error)
+  }
+}
+
+// Handle documents changed event (from EntityDocuments)
+async function handleDocumentsChanged() {
+  if (editingNpc.value) {
+    await reloadNpcCounts(editingNpc.value)
   }
 }
 

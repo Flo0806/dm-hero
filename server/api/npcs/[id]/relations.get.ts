@@ -36,8 +36,6 @@ export default defineEventHandler(async (event) => {
   }
 
   // DEBUG: Log query parameters
-  console.log(`[DEBUG] Getting relations for NPC ID: ${npcId}, NPC Type ID: ${npcTypeId.id}`)
-
   // Get all NPC-to-NPC relations where this NPC is the 'from' entity
   const relations = db
     .prepare<unknown[], DbRelation>(
@@ -63,7 +61,7 @@ export default defineEventHandler(async (event) => {
     )
     .all(npcId, npcTypeId.id)
 
-  console.log(`[DEBUG] Found ${relations.length} NPC relations:`, relations.map(r => r.to_entity_name))
+  )
 
   return relations.map((rel) => {
     // Parse notes safely - handle both JSON and plain text

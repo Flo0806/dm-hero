@@ -1,6 +1,354 @@
 # DM Hero - Project Context
 
 ---
+## ✅ COMPLETED SESSION - 2025-11-13 (Evening)
+
+**Reactive Tab Counts & PDF Download Fix**
+
+### 1. Problem: Tab Counts Not Updating ❌
+
+**Issue:** When uploading/deleting documents or images in entity dialogs, the tab counts (e.g., "Documents (x)") did not update until the user switched tabs or reopened the dialog.
+
+**Root Cause:** Child components (`EntityDocuments`, `EntityImageGallery`) performed CRUD operations but didn't notify parent components about changes.
+
+### 2. Solution: Event-Driven Count Updates ✅
+
+**Pattern Implemented:**
+
+1. **Child Component** emits event after CRUD operation
+2. **Parent Component** catches event → calls `reloadXxxCounts()`
+3. **Tab Count** updates immediately (reactive via `editingEntity._counts`)
+
+**Files Modified:**
+
+**`EntityDocuments.vue`:**
+- Added `emit('changed')` event
+- Emits after: `saveDocument()`, `deleteDocument()`, `handlePdfUpload()`
+
+**`EntityImageGallery.vue`:**
+- Added `emit('images-updated')` event
+- Emits after: `handleImageUpload()`, `generateImage()`, `deleteImage()`
+
+**Parent Components Updated:**
+- ✅ **Lore** (`/app/pages/lore/index.vue`): Images + Documents counts
+- ✅ **NPCs** (`/app/pages/npcs/index.vue`): Documents count
+- ✅ **Items** (`/app/pages/items/index.vue`): Documents count
+- ⏭️ **Locations**: No EntityDocuments component - skipped
+- ⏭️ **Factions**: No EntityDocuments component - skipped
+
+**Code Example (Lore):**
+```vue
+<!-- Template -->
+<EntityDocuments
+  :entity-id="editingLore.id"
+  @changed="handleDocumentsChanged"
+/>
+
+<!-- Tab with reactive count -->
+<v-tab value="documents">
+  {{ $t('documents.title') }} ({{ editingLore._counts?.documents ?? 0 }})
+</v-tab>
+
+<!-- Script -->
+async function handleDocumentsChanged() {
+  if (editingLore.value) {
+    await reloadLoreCounts(editingLore.value)
+  }
+}
+```
+
+### 3. PDF Download Issue - Firefox Compatibility ✅
+
+**Problem:** PDF download button opened PDF in new tab instead of downloading (Firefox).
+
+**Solution - Query Parameter Pattern:**
+
+**Backend** (`/server/routes/documents/[...path].ts`):
+```typescript
+const query = getQuery(event)
+const shouldDownload = query.download === '1'
+
+if (shouldDownload) {
+  // Force download
+  setResponseHeader(event, 'Content-Type', 'application/octet-stream')
+  setResponseHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`)
+  setResponseHeader(event, 'Cache-Control', 'no-cache, no-store, must-revalidate')
+} else {
+  // Preview in browser
+  setResponseHeader(event, 'Content-Type', 'application/pdf')
+  setResponseHeader(event, 'Content-Disposition', 'inline')
+}
+```
+
+**Frontend** (`EntityDocuments.vue`):
+```typescript
+function downloadPdf(doc: Document) {
+  const link = document.createElement('a')
+  link.href = `/documents/${doc.file_path}?download=1`  // Query parameter!
+  link.download = `${doc.title}.pdf`
+  link.click()
+}
+```
+
+**Why This Works:**
+- **Preview**: `/documents/uuid.pdf` → Browser shows PDF inline
+- **Download**: `/documents/uuid.pdf?download=1` → Browser downloads file
+- **Chrome**: Works with `Content-Disposition: attachment`
+- **Firefox**: Needs `Content-Type: application/octet-stream` + Cache headers
+
+### 4. Key Learnings 🧠
+
+**Event-Driven Reactivity Pattern:**
+- Child components should emit events after state-changing operations
+- Parent components reload counts immediately (no tab-switch needed)
+- Use TypeScript typed events: `defineEmits<{ changed: [] }>()`
+
+**Browser Compatibility (Downloads):**
+- Chrome respects `Content-Disposition: attachment` with any Content-Type
+- Firefox needs `application/octet-stream` to force download
+- Query parameters (`?download=1`) are cleaner than separate endpoints
+
+**Composables Pattern:**
+- `useLoreCounts()`, `useNpcCounts()`, `useItemCounts()` provide reactive counts
+- `reloadXxxCounts()` forces cache refresh
+- Counts stored in `entity._counts` object (reactive via Vue)
+
+### 5. TODO for Tomorrow 📋
+
+**⚠️ CRITICAL - Dialog Consistency Check:**
+
+Before continuing development, audit all entity dialogs for consistency:
+
+1. **Button Layout:**
+   - Image upload/generate/download/delete buttons
+   - Are they all in the same position?
+   - Same icon sizes, variants, colors?
+
+2. **Tab Order:**
+   - Details, Images, Documents, Relations, etc.
+   - Consistent across NPCs, Items, Locations, Factions, Lore?
+
+3. **Tab Counts:**
+   - Do all tabs show counts where applicable?
+   - Format: `{{ $t('tab.title') }} ({{ count }})`
+
+4. **Component Usage:**
+   - All using `EntityImageGallery` and `EntityDocuments`?
+   - All have `@images-updated` and `@changed` handlers?
+
+5. **Form Fields:**
+   - Same field ordering (name, description, metadata)?
+   - Same validation rules?
+   - Same spacing/margins?
+
+**Files to Check:**
+- `/app/pages/npcs/index.vue`
+- `/app/pages/items/index.vue`
+- `/app/pages/locations/index.vue`
+- `/app/pages/factions/index.vue`
+- `/app/pages/lore/index.vue`
+
+**Goal:** Unified, professional UX across all entity types.
+
+---
+
+## ✅ COMPLETED SESSION - 2025-11-13 (Afternoon)
+
+**PDF Document Upload & Preview Feature**
+
+### 1. Feature Overview ✅
+
+Users can now upload PDF documents alongside Markdown documents for all entity types (NPCs, Items, Locations, Factions, Lore). Each document type has appropriate actions:
+
+- **PDF Documents**: Preview (eye icon) + Download + Delete
+- **Markdown Documents**: Edit + Delete (as before)
+
+### 2. Backend Implementation ✅
+
+**Migration 16 - PDF Support:**
+```typescript
+{
+  version: 16,
+  name: 'add_pdf_support_to_documents',
+  up: (db) => {
+    db.exec(`ALTER TABLE entity_documents ADD COLUMN file_path TEXT`)
+    db.exec(`ALTER TABLE entity_documents ADD COLUMN file_type TEXT DEFAULT 'markdown'`)
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_entity_documents_file_type ON entity_documents(file_type)`)
+  }
+}
+```
+
+**Upload Endpoint** (`/server/api/entity-documents/upload-pdf.post.ts`):
+- Accepts `multipart/form-data` with fields: `entityId`, `title`, `file`
+- Validates PDF file extension
+- Generates UUID filename
+- Saves to Nitro storage (`pictures`)
+- Inserts record with `file_type='pdf'`
+- Returns document metadata
+
+**Serving Route** (`/server/routes/documents/[...path].ts`):
+- Serves PDFs from Nitro storage
+- Sets `Content-Type: application/pdf` header
+- Sets `Content-Disposition: inline` for browser preview
+
+**Critical Bug Fix** (`/server/api/entities/[id]/documents/index.get.ts`):
+- **Problem**: GET endpoint didn't return `file_path` and `file_type` columns
+- **Symptom**: Frontend showed Edit icon for PDFs instead of Preview
+- **Fix**: Added `file_path` and `file_type` to SELECT statement
+
+### 3. Frontend Implementation ✅
+
+**Component** (`/app/components/shared/EntityDocuments.vue`):
+
+**PDF Preview Dialog:**
+```vue
+<v-dialog v-model="showPdfPreview" max-width="1200">
+  <ClientOnly>
+    <VuePdfEmbed
+      :source="`/documents/${viewingPdf.file_path}`"
+      class="pdf-viewer"
+    />
+  </ClientOnly>
+</v-dialog>
+```
+
+**Conditional Actions (PDF vs Markdown):**
+```vue
+<template v-if="doc.file_type === 'pdf'">
+  <!-- Preview Button -->
+  <v-btn icon="mdi-eye" @click.stop="previewPdf(doc)">
+    <v-tooltip>{{ $t('documents.previewPdf') }}</v-tooltip>
+  </v-btn>
+  <!-- Download Button -->
+  <v-btn icon="mdi-download" @click.stop="downloadPdf(doc)">
+    <v-tooltip>{{ $t('common.download') }}</v-tooltip>
+  </v-btn>
+</template>
+<v-btn v-else icon="mdi-pencil" @click.stop="editDocument(doc)">
+  <!-- Edit for Markdown -->
+</v-btn>
+```
+
+**Force Download (prevents browser preview):**
+```typescript
+async function downloadPdf(doc: Document) {
+  // Fetch as Blob to force download instead of opening in browser
+  const response = await fetch(`/documents/${doc.file_path}`)
+  const blob = await response.blob()
+
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${doc.title}.pdf`
+  link.click()
+
+  // Cleanup
+  window.URL.revokeObjectURL(url)
+}
+```
+
+**SSR-Safe Import:**
+```typescript
+// Lazy import to avoid "document is not defined" SSR error
+const VuePdfEmbed = defineAsyncComponent(() => import('vue-pdf-embed'))
+```
+
+### 4. Library Choice: vue-pdf-embed ✅
+
+**Why vue-pdf-embed?**
+- Lightweight (based on PDF.js, Mozilla's official PDF viewer)
+- Open-source (MIT license)
+- Vue 3 compatible
+- No built-in i18n → we control all UI text via our i18n system
+- No unnecessary features (just viewer, no annotations/editing)
+
+**Alternatives considered:**
+- `<iframe>` → Rejected (poor UX, limited control)
+- `pdf-viewer-vue` → Too heavy, built-in toolbar we don't need
+
+### 5. Docker Compatibility ✅
+
+**OXC Bindings Issue:**
+- **Problem**: pnpm bug (npm#4828) doesn't install optional platform bindings
+- **Solution**: Explicitly install Linux bindings in Dockerfile:
+  ```dockerfile
+  RUN pnpm add -D \
+    @oxc-parser/binding-linux-x64-gnu \
+    @oxc-transform/binding-linux-x64-gnu \
+    @oxc-minify/binding-linux-x64-gnu \
+    @oxc-resolver/binding-linux-x64-gnu || true
+  ```
+- **Verified**: Docker build succeeds with `--no-cache`
+
+### 6. Files Modified ✅
+
+**Backend:**
+- `/server/utils/migrations.ts` - Migration 16 (PDF support)
+- `/server/api/entity-documents/upload-pdf.post.ts` - NEW (PDF upload)
+- `/server/routes/documents/[...path].ts` - NEW (serve PDFs)
+- `/server/api/entities/[id]/documents/index.get.ts` - Added `file_path`, `file_type` to SELECT
+
+**Frontend:**
+- `/app/components/shared/EntityDocuments.vue` - PDF preview dialog, conditional actions, force download
+- `/i18n/locales/de.json` - `documents.uploadPdf`, `documents.previewPdf`
+- `/i18n/locales/en.json` - English translations
+
+**Config:**
+- `/package.json` - Added `vue-pdf-embed@2.1.3`
+- `/Dockerfile` - OXC bindings workaround
+
+### 7. UX Details ✅
+
+**Button Spacing:**
+- 8px gap between "New Document" and "PDF Upload" buttons
+- `<div class="d-flex" style="gap: 8px">`
+
+**Document List Icons:**
+- PDF: Red "PDF" chip + `mdi-file-pdf-box` icon
+- Markdown: `mdi-file-document-outline` icon
+- Different action buttons based on `file_type`
+
+**PDF Preview:**
+- Full-screen capable (max-width: 1200px)
+- Scrollable content area (80vh height)
+- Download button in dialog footer
+
+### 8. Important Lessons Learned 🧠
+
+**SSR Compatibility:**
+- Always use `defineAsyncComponent()` for browser-only libraries
+- Wrap in `<ClientOnly>` for extra safety
+- Error: "document is not defined" → library tries to access DOM during import
+
+**Force Download Pattern:**
+```typescript
+// ❌ WRONG - Browser opens PDF in new tab
+link.href = '/documents/file.pdf'
+link.download = 'file.pdf'
+link.click()
+
+// ✅ CORRECT - Forces download
+const blob = await fetch('/documents/file.pdf').then(r => r.blob())
+const url = URL.createObjectURL(blob)
+link.href = url
+link.download = 'file.pdf'
+link.click()
+URL.revokeObjectURL(url) // Cleanup!
+```
+
+**Database Schema for File Storage:**
+- Store only filename in `file_path` (NOT full path `/uploads/...`)
+- Use `file_type` enum ('pdf', 'markdown') for conditional logic
+- Let Nitro routes handle serving (`/documents/[...path].ts`)
+
+**Migration Pattern for Optional Columns:**
+```sql
+ALTER TABLE entity_documents ADD COLUMN file_type TEXT DEFAULT 'markdown'
+-- Old rows get 'markdown', new PDF uploads get 'pdf'
+```
+
+---
+
 ## ✅ COMPLETED SESSION - 2025-11-09
 
 **Image Upload System - Unified & Fixed!**
