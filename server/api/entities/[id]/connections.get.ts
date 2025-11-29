@@ -80,8 +80,38 @@ export default defineEventHandler((event) => {
   // Combine and deduplicate (same entity might have multiple relation types)
   const allConnections = [...outgoing, ...incoming]
 
-  // Parse notes and return
-  return allConnections.map((conn) => {
+  // Get unique entity IDs from connections
+  const connectedEntityIds = [...new Set(allConnections.map((c) => c.entity_id))]
+
+  // Get inter-connections (relations between the connected entities)
+  interface DbInterConnection {
+    relation_id: number
+    from_entity_id: number
+    to_entity_id: number
+    relation_type: string
+  }
+
+  let interConnections: DbInterConnection[] = []
+  if (connectedEntityIds.length >= 2) {
+    const placeholders = connectedEntityIds.map(() => '?').join(',')
+    interConnections = db
+      .prepare<unknown[], DbInterConnection>(
+        `
+        SELECT
+          er.id as relation_id,
+          er.from_entity_id,
+          er.to_entity_id,
+          er.relation_type
+        FROM entity_relations er
+        WHERE er.from_entity_id IN (${placeholders})
+          AND er.to_entity_id IN (${placeholders})
+        `,
+      )
+      .all(...connectedEntityIds, ...connectedEntityIds)
+  }
+
+  // Parse notes and build connections response
+  const connections = allConnections.map((conn) => {
     let parsedNotes = null
     if (conn.relation_notes) {
       try {
@@ -105,4 +135,14 @@ export default defineEventHandler((event) => {
       direction: conn.direction,
     }
   })
+
+  return {
+    connections,
+    interConnections: interConnections.map((ic) => ({
+      relationId: ic.relation_id,
+      fromEntityId: ic.from_entity_id,
+      toEntityId: ic.to_entity_id,
+      relationType: ic.relation_type,
+    })),
+  }
 })

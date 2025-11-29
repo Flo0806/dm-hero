@@ -138,6 +138,13 @@
                 @click.stop="editLocation(item.raw)"
               />
               <v-btn
+                icon="mdi-graph"
+                size="x-small"
+                variant="text"
+                color="primary"
+                @click.stop="openChaosGraph(item.raw)"
+              />
+              <v-btn
                 icon="mdi-delete"
                 size="x-small"
                 variant="text"
@@ -174,261 +181,16 @@
       </template>
     </ClientOnly>
 
-    <!-- Create/Edit Dialog -->
-    <v-dialog
-      v-model="showCreateDialog"
-      max-width="800"
-      :persistent="saving"
-    >
-      <v-card>
-        <v-card-title>
-          {{ editingLocation ? $t('locations.edit') : $t('locations.create') }}
-        </v-card-title>
-
-        <!-- Tabs (only for editing) -->
-        <v-tabs v-if="editingLocation" v-model="locationDialogTab" class="mb-4">
-          <v-tab value="details">
-            <v-icon start>mdi-map-marker-outline</v-icon>
-            {{ $t('locations.details') }}
-          </v-tab>
-          <v-tab value="images">
-            <v-icon start>mdi-image-multiple</v-icon>
-            {{ $t('common.images') }}
-            <v-chip size="x-small" class="ml-2">{{ locationCounts?.images || 0 }}</v-chip>
-          </v-tab>
-          <v-tab value="documents">
-            <v-icon start>mdi-file-document</v-icon>
-            {{ $t('documents.title') }}
-            <v-chip size="x-small" class="ml-2">{{ locationCounts?.documents || 0 }}</v-chip>
-          </v-tab>
-          <v-tab value="npcs">
-            <v-icon start>mdi-account-group</v-icon>
-            {{ $t('npcs.title') }}
-            <v-chip size="x-small" class="ml-2">{{ locationCounts?.npcs || 0 }}</v-chip>
-          </v-tab>
-          <v-tab value="items">
-            <v-icon start>mdi-treasure-chest</v-icon>
-            {{ $t('items.title') }}
-            <v-chip size="x-small" class="ml-2">{{ linkedItems.length }}</v-chip>
-          </v-tab>
-          <v-tab value="lore">
-            <v-icon start>mdi-book-open-variant</v-icon>
-            {{ $t('lore.title') }}
-            <v-chip size="x-small" class="ml-2">{{ locationCounts?.lore || 0 }}</v-chip>
-          </v-tab>
-          <v-tab value="players">
-            <v-icon start>mdi-account-star</v-icon>
-            {{ $t('players.title') }}
-            <v-chip size="x-small" class="ml-2">{{ locationCounts?.players || 0 }}</v-chip>
-          </v-tab>
-        </v-tabs>
-
-        <v-card-text style="max-height: 600px; overflow-y: auto">
-          <v-tabs-window v-if="editingLocation" v-model="locationDialogTab">
-            <!-- Details Tab -->
-            <v-tabs-window-item value="details">
-          <v-text-field
-            v-model="locationForm.name"
-            :label="$t('locations.name')"
-            :rules="[(v: string) => !!v || $t('locations.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="locationForm.description"
-            :label="$t('locations.description')"
-            variant="outlined"
-            rows="4"
-            class="mb-4"
-          />
-
-          <!-- Parent Location Dropdown -->
-          <v-select
-            v-model="locationForm.parentLocationId"
-            :label="$t('locations.parentLocation')"
-            :items="availableParentLocations"
-            item-title="name"
-            item-value="id"
-            variant="outlined"
-            clearable
-            :hint="$t('locations.parentLocationHint')"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="locationForm.metadata.type"
-                :label="$t('locations.type')"
-                variant="outlined"
-                :placeholder="$t('locations.typePlaceholder')"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="locationForm.metadata.region"
-                :label="$t('locations.region')"
-                variant="outlined"
-              />
-            </v-col>
-          </v-row>
-
-          <v-textarea
-            v-model="locationForm.metadata.notes"
-            :label="$t('locations.notes')"
-            variant="outlined"
-            rows="3"
-          />
-            </v-tabs-window-item>
-
-            <!-- Images Tab -->
-            <v-tabs-window-item value="images">
-              <EntityImageGallery
-                v-if="editingLocation"
-                :entity-id="editingLocation.id"
-                entity-type="Location"
-                :entity-name="editingLocation.name"
-                :entity-description="editingLocation.description || undefined"
-                @preview-image="openImagePreview"
-                @generating="(isGenerating: boolean) => (imageGenerating = isGenerating)"
-                @images-updated="handleImagesUpdated"
-              />
-            </v-tabs-window-item>
-
-            <!-- Documents Tab -->
-            <v-tabs-window-item value="documents">
-              <EntityDocuments
-                v-if="editingLocation"
-                :entity-id="editingLocation.id"
-                entity-type="Location"
-                @changed="handleDocumentsChanged"
-              />
-            </v-tabs-window-item>
-
-            <!-- NPCs Tab -->
-            <v-tabs-window-item value="npcs">
-              <SharedEntityNpcsTab
-                :linked-npcs="linkedNpcs"
-                :available-npcs="npcForSelect"
-                :show-avatar="true"
-                @add="addNpcRelation"
-                @remove="removeNpcRelation"
-              />
-            </v-tabs-window-item>
-
-            <!-- Items Tab -->
-            <v-tabs-window-item value="items">
-              <SharedEntityItemsTab
-                :linked-items="linkedItems"
-                :available-items="itemsForSelect"
-                :show-avatar="true"
-                :show-relation-type="true"
-                :relation-type-suggestions="itemRelationTypeSuggestions"
-                @add="addItemRelation"
-                @remove="removeItemRelation"
-              />
-            </v-tabs-window-item>
-
-            <!-- Lore Tab -->
-            <v-tabs-window-item value="lore">
-              <SharedEntityLoreTab
-                :linked-lore="linkedLore"
-                :available-lore="loreForSelect"
-                @add="addLoreRelation"
-                @remove="removeLoreRelation"
-              />
-            </v-tabs-window-item>
-
-            <!-- Players Tab -->
-            <v-tabs-window-item value="players">
-              <EntityPlayersTab
-                v-if="editingLocation"
-                :entity-id="editingLocation.id"
-                @changed="handlePlayersChanged"
-              />
-            </v-tabs-window-item>
-          </v-tabs-window>
-
-          <!-- Create mode (no tabs) - show all fields directly -->
-          <div v-else>
-          <v-text-field
-            v-model="locationForm.name"
-            :label="$t('locations.name')"
-            :rules="[(v: string) => !!v || $t('locations.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="locationForm.description"
-            :label="$t('locations.description')"
-            variant="outlined"
-            rows="4"
-            class="mb-4"
-          />
-
-          <!-- Parent Location Dropdown -->
-          <v-select
-            v-model="locationForm.parentLocationId"
-            :label="$t('locations.parentLocation')"
-            :items="availableParentLocations"
-            item-title="name"
-            item-value="id"
-            variant="outlined"
-            clearable
-            :hint="$t('locations.parentLocationHint')"
-            persistent-hint
-            class="mb-4"
-          />
-
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="locationForm.metadata.type"
-                :label="$t('locations.type')"
-                variant="outlined"
-                :placeholder="$t('locations.typePlaceholder')"
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="locationForm.metadata.region"
-                :label="$t('locations.region')"
-                variant="outlined"
-              />
-            </v-col>
-          </v-row>
-
-          <v-textarea
-            v-model="locationForm.metadata.notes"
-            :label="$t('locations.notes')"
-            variant="outlined"
-            rows="3"
-          />
-          </div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            :disabled="saving"
-            @click="closeDialog"
-          >
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!locationForm.name"
-            :loading="saving"
-            @click="saveLocation"
-          >
-            {{ editingLocation ? $t('common.save') : $t('common.create') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Create/Edit Dialog - Now self-contained! -->
+    <ClientOnly>
+      <LocationEditDialog
+        :show="showCreateDialog"
+        :location-id="editingLocationId"
+        @update:show="handleDialogClose"
+        @saved="handleLocationSaved"
+        @created="handleLocationCreated"
+      />
+    </ClientOnly>
 
     <!-- View Location Dialog -->
     <LocationViewDialog
@@ -470,10 +232,8 @@
 
 <script setup lang="ts">
 import LocationViewDialog from '~/components/locations/LocationViewDialog.vue'
+import LocationEditDialog from '~/components/locations/LocationEditDialog.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
-import EntityDocuments from '~/components/shared/EntityDocuments.vue'
-import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
-import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 
 interface Location {
   id: number
@@ -542,7 +302,7 @@ function handleSearchClear() {
   if (inputTimeout) clearTimeout(inputTimeout)
 }
 
-const { locale, t } = useI18n()
+const { locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const entitiesStore = useEntitiesStore()
@@ -637,49 +397,6 @@ watch(searchQuery, () => {
 // Use store data
 const locations = computed(() => entitiesStore.locations)
 const pending = computed(() => entitiesStore.locationsLoading)
-
-// NPCs and Lore for selection dropdowns
-const npcForSelect = computed(() => {
-  // Filter out already linked NPCs
-  const linkedNpcIds = new Set(linkedNpcs.value.map((n) => n.id))
-  return (entitiesStore.npcs || [])
-    .filter((npc) => !linkedNpcIds.has(npc.id))
-    .map((npc) => ({
-      id: npc.id,
-      name: npc.name,
-    }))
-})
-
-const loreForSelect = computed(() => {
-  // Filter out already linked Lore
-  const linkedLoreIds = new Set(linkedLore.value.map((l) => l.id))
-  return (entitiesStore.lore || [])
-    .filter((lore) => !linkedLoreIds.has(lore.id))
-    .map((lore) => ({
-      id: lore.id,
-      name: lore.name,
-    }))
-})
-
-const itemsForSelect = computed(() => {
-  // Filter out already linked Items
-  const linkedItemIds = new Set(linkedItems.value.map((i) => i.id))
-  return (entitiesStore.items || [])
-    .filter((item) => !linkedItemIds.has(item.id))
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-    }))
-})
-
-const itemRelationTypeSuggestions = computed(() => [
-  { title: t('locations.itemRelationTypes.contains'), value: 'contains' },
-  { title: t('locations.itemRelationTypes.hidden'), value: 'hidden' },
-  { title: t('locations.itemRelationTypes.displayed'), value: 'displayed' },
-  { title: t('locations.itemRelationTypes.stored'), value: 'stored' },
-  { title: t('locations.itemRelationTypes.lost'), value: 'lost' },
-  { title: t('locations.itemRelationTypes.guarded'), value: 'guarded' },
-])
 
 // Debounce search with abort controller
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -953,12 +670,10 @@ function getNodeColor(item: TreeNode) {
 const showCreateDialog = ref(false)
 const showViewDialog = ref(false)
 const showDeleteDialog = ref(false)
-const editingLocation = ref<Location | null>(null)
+const editingLocationId = ref<number | null>(null)
 const viewingLocation = ref<Location | null>(null)
 const deletingLocation = ref<Location | null>(null)
-const locationCounts = ref<LocationCounts | null>(null)
 const viewDialogCounts = ref<LocationCounts | null>(null)
-const saving = ref(false)
 const deleting = ref(false)
 
 // Image preview state
@@ -966,35 +681,7 @@ const showImagePreview = ref(false)
 const previewImageUrl = ref('')
 const previewImageTitle = ref('')
 
-const locationForm = ref({
-  name: '',
-  description: '',
-  parentLocationId: null as number | null,
-  metadata: {
-    type: '',
-    region: '',
-    notes: '',
-  },
-})
-
-// Dialog tabs
-const locationDialogTab = ref('details')
-
-// NPC & Lore linking
-const linkedNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
-const linkedLore = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
-const linkedItems = ref<
-  Array<{
-    id: number
-    name: string
-    description: string | null
-    image_url: string | null
-    direction?: 'outgoing' | 'incoming'
-  }>
->([])
-const imageGenerating = ref(false)
-
-// Image gallery state (removed - now in EntityImageGallery component)
+// API key state for image generation
 const hasApiKey = ref(false)
 
 // Image functions removed - now handled by EntityImageGallery component in LocationViewDialog
@@ -1035,19 +722,6 @@ const loadingLore = ref(false)
 const locationDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
 const locationImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
 const loadingViewData = ref(false)
-
-// Available parent locations (exclude current location to prevent circular references)
-const availableParentLocations = computed(() => {
-  if (!locations.value) return []
-
-  // When editing, exclude the current location and its children
-  if (editingLocation.value) {
-    return locations.value.filter((loc) => loc.id !== editingLocation.value?.id)
-  }
-
-  // When creating, show all locations
-  return locations.value
-})
 
 async function viewLocation(location: Location) {
   viewingLocation.value = location
@@ -1090,23 +764,13 @@ async function viewLocation(location: Location) {
 
 // loadLocationItems removed - now loaded in viewLocation() via Promise.all()
 
-async function editLocation(location: Location) {
-  editingLocation.value = location
-  locationForm.value = {
-    name: location.name,
-    description: location.description || '',
-    parentLocationId: location.parent_entity_id || null,
-    metadata: {
-      type: location.metadata?.type || '',
-      region: location.metadata?.region || '',
-      notes: location.metadata?.notes || '',
-    },
-  }
+function editLocation(location: Location) {
+  editingLocationId.value = location.id
   showCreateDialog.value = true
 }
 
-async function editLocationAndCloseView(location: Location) {
-  await editLocation(location)
+function editLocationAndCloseView(location: Location) {
+  editLocation(location)
   showViewDialog.value = false
 }
 
@@ -1115,324 +779,60 @@ function deleteLocation(location: Location) {
   showDeleteDialog.value = true
 }
 
-async function saveLocation() {
-  if (!activeCampaignId.value!) return
+// Handler for dialog close
+function handleDialogClose(open: boolean) {
+  showCreateDialog.value = open
+  if (!open) {
+    editingLocationId.value = null
+  }
+}
 
-  saving.value = true
+// Handler for location saved (updated)
+function handleLocationSaved(location: Location) {
+  // Store is already updated by LocationEditDialog
+  // Just highlight and scroll to saved location
+  highlightAfterSave(location.id)
+}
 
-  try {
-    let savedLocationId: number
+// Handler for location created
+function handleLocationCreated(location: Location) {
+  // Store is already updated by LocationEditDialog
+  // Just highlight and scroll to new location
+  highlightAfterSave(location.id)
+}
 
-    if (editingLocation.value) {
-      await $fetch(`/api/locations/${editingLocation.value.id}`, {
-        method: 'PATCH',
-        body: {
-          name: locationForm.value.name,
-          description: locationForm.value.description,
-          metadata: locationForm.value.metadata,
-          parentLocationId: locationForm.value.parentLocationId,
-        },
-      })
-      savedLocationId = editingLocation.value.id
+// Helper function to highlight and scroll to location after save
+async function highlightAfterSave(locationId: number) {
+  highlightedId.value = locationId
+  animationKey.value++
 
-      // Update store reactively (no reload!)
-      const locationInStore = entitiesStore.locations?.find((l) => l.id === editingLocation.value!.id)
-      if (locationInStore) {
-        locationInStore.name = locationForm.value.name
-        locationInStore.description = locationForm.value.description
-        locationInStore.metadata = locationForm.value.metadata
-        locationInStore.parent_entity_id = locationForm.value.parentLocationId
-      }
-    } else {
-      const newLocation = await $fetch<Location>('/api/locations', {
-        method: 'POST',
-        body: {
-          name: locationForm.value.name,
-          description: locationForm.value.description,
-          metadata: locationForm.value.metadata,
-          campaignId: activeCampaignId.value,
-          parentLocationId: locationForm.value.parentLocationId,
-        },
-      })
-      savedLocationId = newLocation.id
+  await nextTick()
+  await nextTick()
 
-      // Add to store reactively (no reload!)
-      if (entitiesStore.locations) {
-        entitiesStore.locations.push(newLocation)
-      }
+  // Try multiple times to find the element (tree rendering can be slow)
+  let attempts = 0
+  const maxAttempts = 10
+  const scrollInterval = setInterval(() => {
+    attempts++
+    const element = document.getElementById(`location-${locationId}`)
+
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      clearInterval(scrollInterval)
+    } else if (attempts >= maxAttempts) {
+      clearInterval(scrollInterval)
     }
+  }, 200)
 
-    closeDialog()
-
-    // Highlight and scroll to the saved location
-    // Wait for: dialog close → store update → tree render
-    highlightedId.value = savedLocationId
-    animationKey.value++ // Increment key to trigger fresh animation
-
-    // Give Vue time to render everything
-    await nextTick()
-    await nextTick()
-
-    // Try multiple times to find the element (tree rendering can be slow)
-    let attempts = 0
-    const maxAttempts = 10
-    const scrollInterval = setInterval(() => {
-      attempts++
-      const element = document.getElementById(`location-${savedLocationId}`)
-
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        clearInterval(scrollInterval)
-      } else if (attempts >= maxAttempts) {
-        clearInterval(scrollInterval)
-      }
-    }, 200) // Check every 200ms
-
-    // Clear highlight after animation completes (2s = 2 blinks)
-    setTimeout(() => {
-      highlightedId.value = null
-    }, 2500)
-  } catch (error) {
-    console.error('Failed to save location:', error)
-  } finally {
-    saving.value = false
-  }
+  // Clear highlight after animation completes
+  setTimeout(() => {
+    highlightedId.value = null
+  }, 2500)
 }
 
-// NPC Linking Functions
-async function loadLinkedNpcs() {
-  if (!editingLocation.value) return
-
-  try {
-    const npcs = await $fetch<
-      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
-    >(`/api/entities/${editingLocation.value.id}/related/npcs`)
-    linkedNpcs.value = npcs
-  } catch (error) {
-    console.error('Failed to load linked NPCs:', error)
-  }
-}
-
-async function addNpcRelation(payload: { npcId: number }) {
-  if (!editingLocation.value || !payload.npcId) return
-
-  try {
-    await $fetch('/api/entity-relations', {
-      method: 'POST',
-      body: {
-        fromEntityId: payload.npcId,
-        toEntityId: editingLocation.value.id,
-        relationType: 'befindet sich in',
-        relationNotes: null,
-      },
-    })
-
-    // Find the NPC and add to local array (no reload needed)
-    const npc = entitiesStore.npcs?.find((n) => n.id === payload.npcId)
-    if (npc) {
-      linkedNpcs.value.push({
-        id: npc.id,
-        name: npc.name,
-        description: npc.description,
-        image_url: npc.image_url || null,
-      })
-    }
-
-    // Update counts reactively
-    if (locationCounts.value) {
-      locationCounts.value.npcs++
-    }
-  } catch (error) {
-    console.error('Failed to add NPC relation:', error)
-  }
-}
-
-async function removeNpcRelation(npcId: number) {
-  if (!editingLocation.value) return
-
-  try {
-    // Find the relation
-    const relation = await $fetch<{ id: number } | null>('/api/entity-relations/find', {
-      query: {
-        fromEntityId: npcId,
-        toEntityId: editingLocation.value.id,
-      },
-    })
-
-    if (relation) {
-      await $fetch(`/api/entity-relations/${relation.id}`, {
-        method: 'DELETE',
-      })
-
-      // Remove from local array (no reload needed)
-      linkedNpcs.value = linkedNpcs.value.filter((npc) => npc.id !== npcId)
-
-      // Update counts reactively
-      if (locationCounts.value && locationCounts.value.npcs > 0) {
-        locationCounts.value.npcs--
-      }
-    }
-  } catch (error) {
-    console.error('Failed to remove NPC relation:', error)
-  }
-}
-
-// Lore Linking Functions
-async function loadLinkedLore() {
-  if (!editingLocation.value) return
-
-  try {
-    const lore = await $fetch<
-      Array<{ id: number; name: string; description: string | null; image_url: string | null }>
-    >(`/api/entities/${editingLocation.value.id}/related/lore`)
-    linkedLore.value = lore
-  } catch (error) {
-    console.error('Failed to load linked Lore:', error)
-  }
-}
-
-async function loadLocationCounts() {
-  if (!editingLocation.value) return
-
-  try {
-    const counts = await $fetch<LocationCounts>(`/api/locations/${editingLocation.value.id}/counts`)
-    locationCounts.value = counts
-  } catch (error) {
-    console.error('Failed to load location counts:', error)
-  }
-}
-
-async function addLoreRelation(loreId: number) {
-  if (!editingLocation.value || !loreId) return
-
-  try {
-    await $fetch('/api/entity-relations', {
-      method: 'POST',
-      body: {
-        fromEntityId: loreId,
-        toEntityId: editingLocation.value.id,
-        relationType: 'bezieht sich auf',
-        relationNotes: null,
-      },
-    })
-
-    // Find the Lore and add to local array (no reload needed)
-    const lore = entitiesStore.lore?.find((l) => l.id === loreId)
-    if (lore) {
-      linkedLore.value.push({
-        id: lore.id,
-        name: lore.name,
-        description: lore.description,
-        image_url: lore.image_url || null,
-      })
-    }
-
-    // Update counts reactively
-    if (locationCounts.value) {
-      locationCounts.value.lore++
-    }
-  } catch (error) {
-    console.error('Failed to add Lore relation:', error)
-  }
-}
-
-async function removeLoreRelation(relationId: number) {
-  if (!editingLocation.value) return
-
-  try {
-    // The id passed is already the relation ID from the API
-    await $fetch(`/api/entity-relations/${relationId}`, {
-      method: 'DELETE',
-    })
-
-    // Remove from local array by relation ID
-    linkedLore.value = linkedLore.value.filter((lore) => lore.id !== relationId)
-
-    // Update counts reactively
-    if (locationCounts.value && locationCounts.value.lore > 0) {
-      locationCounts.value.lore--
-    }
-  } catch (error) {
-    console.error('Failed to remove Lore relation:', error)
-  }
-}
-
-// Items linking functions
-async function loadLinkedItems() {
-  if (!editingLocation.value) return
-
-  try {
-    const items = await $fetch<
-      Array<{
-        id: number
-        name: string
-        description: string | null
-        image_url: string | null
-        direction?: 'outgoing' | 'incoming'
-      }>
-    >(`/api/entities/${editingLocation.value.id}/related/items`)
-    linkedItems.value = items
-  } catch (error) {
-    console.error('Failed to load linked Items:', error)
-  }
-}
-
-async function addItemRelation(payload: { itemId: number; relationType?: string }) {
-  if (!editingLocation.value || !payload.itemId) return
-
-  const relationType = payload.relationType || 'contains'
-
-  try {
-    await $fetch('/api/entity-relations', {
-      method: 'POST',
-      body: {
-        fromEntityId: editingLocation.value.id,
-        toEntityId: payload.itemId,
-        relationType,
-        relationNotes: null,
-      },
-    })
-
-    await loadLinkedItems()
-  } catch (error) {
-    console.error('Failed to add Item relation:', error)
-  }
-}
-
-async function removeItemRelation(relationId: number) {
-  if (!editingLocation.value) return
-
-  try {
-    // The id passed is already the relation ID from the API
-    await $fetch(`/api/entity-relations/${relationId}`, {
-      method: 'DELETE',
-    })
-
-    await loadLinkedItems()
-  } catch (error) {
-    console.error('Failed to remove Item relation:', error)
-  }
-}
-
-// Handler for EntityImageGallery updates
-function handleImagesUpdated() {
-  if (editingLocation.value) {
-    loadLocationCounts()
-  }
-}
-
-// Handler for EntityDocuments changes
-function handleDocumentsChanged() {
-  if (editingLocation.value) {
-    loadLocationCounts()
-  }
-}
-
-// Handler for EntityPlayersTab changes
-function handlePlayersChanged() {
-  if (editingLocation.value) {
-    loadLocationCounts()
-  }
+// Open Chaos Graph for location
+function openChaosGraph(location: Location) {
+  router.push(`/chaos/${location.id}`)
 }
 
 async function confirmDelete() {
@@ -1465,34 +865,6 @@ async function confirmDelete() {
   }
 }
 
-function closeDialog() {
-  showCreateDialog.value = false
-  editingLocation.value = null
-  linkedItems.value = []
-  locationForm.value = {
-    name: '',
-    description: '',
-    parentLocationId: null,
-    metadata: {
-      type: '',
-      region: '',
-      notes: '',
-    },
-  }
-}
-
-// Watch for editing location to load linked entities (MUST be after editingLocation declaration!)
-watch(
-  () => editingLocation.value?.id,
-  async (locationId) => {
-    if (locationId) {
-      await Promise.all([loadLinkedNpcs(), loadLinkedLore(), loadLinkedItems(), loadLocationCounts()])
-    } else {
-      // Reset counts when dialog closes
-      locationCounts.value = null
-    }
-  },
-)
 </script>
 
 <style scoped>

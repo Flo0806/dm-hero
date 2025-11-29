@@ -3,59 +3,72 @@
     :model-value="show"
     max-width="1200"
     scrollable
-    :persistent="uploadingImage || generatingImage"
-    @update:model-value="(v) => emit('update:show', v as boolean)"
+    :persistent="uploadingImage || generatingImage || saving"
+    @update:model-value="handleDialogChange"
   >
-    <v-card>
-      <v-card-title>
-        {{ editingItem ? $t('items.edit') : $t('items.create') }}
-      </v-card-title>
+    <v-card v-if="show">
+      <!-- Loading State -->
+      <template v-if="loading">
+        <v-card-text class="d-flex justify-center align-center" style="min-height: 300px">
+          <v-progress-circular indeterminate color="primary" size="64" />
+        </v-card-text>
+      </template>
 
-      <v-tabs
-        v-if="editingItem"
-        :model-value="activeTab"
-        class="px-4"
-        @update:model-value="(v) => emit('update:activeTab', v as string)"
-      >
+      <!-- Content -->
+      <template v-else>
+        <v-card-title class="d-flex align-center">
+          <span>{{ item ? $t('items.edit') : $t('items.create') }}</span>
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" density="compact" @click="close" />
+        </v-card-title>
+
+        <v-tabs v-if="item" v-model="activeTab" class="px-4" show-arrows>
         <v-tab value="details">
-          <v-icon start> mdi-information </v-icon>
+          <v-icon start>mdi-information</v-icon>
           {{ $t('items.details') }}
         </v-tab>
         <v-tab value="images">
-          <v-icon start> mdi-image-multiple </v-icon>
-          {{ $t('common.images') }} ({{ editingItem?._counts?.images ?? 0 }})
+          <v-icon start>mdi-image-multiple</v-icon>
+          {{ $t('common.images') }}
+          <v-badge v-if="counts.images > 0" :content="counts.images" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="documents">
-          <v-icon start> mdi-file-document </v-icon>
-          {{ $t('documents.title') }} ({{ editingItem?._counts?.documents ?? 0 }})
+          <v-icon start>mdi-file-document</v-icon>
+          {{ $t('documents.title') }}
+          <v-badge v-if="counts.documents > 0" :content="counts.documents" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="owners">
-          <v-icon start> mdi-account </v-icon>
-          {{ $t('items.owners') }} ({{ itemOwners.length }})
+          <v-icon start>mdi-account</v-icon>
+          {{ $t('items.owners') }}
+          <v-badge v-if="linkedOwners.length > 0" :content="linkedOwners.length" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="locations">
-          <v-icon start> mdi-map-marker </v-icon>
-          {{ $t('items.locations') }} ({{ itemLocations.length }})
+          <v-icon start>mdi-map-marker</v-icon>
+          {{ $t('items.locations') }}
+          <v-badge v-if="linkedLocations.length > 0" :content="linkedLocations.length" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="factions">
-          <v-icon start> mdi-shield-account </v-icon>
-          {{ $t('factions.title') }} ({{ linkedFactions.length }})
+          <v-icon start>mdi-shield-account</v-icon>
+          {{ $t('factions.title') }}
+          <v-badge v-if="linkedFactions.length > 0" :content="linkedFactions.length" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="lore">
-          <v-icon start> mdi-book-open-variant </v-icon>
-          {{ $t('lore.title') }} ({{ linkedLore.length }})
+          <v-icon start>mdi-book-open-variant</v-icon>
+          {{ $t('lore.title') }}
+          <v-badge v-if="linkedLore.length > 0" :content="linkedLore.length" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="players">
-          <v-icon start> mdi-account-star </v-icon>
-          {{ $t('players.title') }} ({{ editingItem?._counts?.players ?? 0 }})
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('players.title') }}
+          <v-badge v-if="counts.players > 0" :content="counts.players" color="primary" inline class="ml-1" />
         </v-tab>
-      </v-tabs>
+        </v-tabs>
 
-      <v-card-text style="max-height: 600px">
-        <v-tabs-window v-if="editingItem" :model-value="activeTab">
+        <v-card-text style="max-height: 600px">
+        <!-- Edit Mode with Tabs -->
+        <v-tabs-window v-if="item" v-model="activeTab">
           <!-- Details Tab -->
           <v-tabs-window-item value="details">
-            <!-- Hidden file input -->
             <input
               ref="fileInputRef"
               type="file"
@@ -64,10 +77,9 @@
               @change="handleImageUpload"
             />
 
-            <!-- Image Upload Section -->
             <EntityImageUpload
               class="mb-4"
-              :image-url="editingItem?.image_url"
+              :image-url="item?.image_url"
               :entity-name="form.name"
               entity-type="Item"
               :uploading="uploadingImage"
@@ -77,7 +89,7 @@
               :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey"
               :avatar-size="160"
               default-icon="mdi-sword"
-              @preview-image="(url, name) => emit('open-image-preview', url, name)"
+              @preview-image="openImagePreview"
               @upload="triggerImageUpload"
               @generate="generateImage"
               @download="downloadImage"
@@ -85,61 +97,55 @@
             />
 
             <v-text-field
-              :model-value="form.name"
+              v-model="form.name"
               :label="$t('items.name')"
               :rules="[(v: string) => !!v || $t('items.nameRequired')]"
               variant="outlined"
               class="mb-4"
-              @update:model-value="updateFormName"
             />
 
             <v-textarea
-              :model-value="form.description"
+              v-model="form.description"
               :label="$t('items.description')"
               variant="outlined"
               rows="3"
               class="mb-4"
-              @update:model-value="updateFormDescription"
             />
 
             <v-divider class="my-4" />
 
-            <div class="text-h6 mb-4">
-              {{ $t('items.metadata') }}
-            </div>
+            <div class="text-h6 mb-4">{{ $t('items.metadata') }}</div>
 
             <v-row>
               <v-col cols="12" md="6">
                 <v-select
-                  :model-value="itemType"
+                  v-model="form.metadata.type"
                   :items="ITEM_TYPES"
                   :label="$t('items.type')"
                   variant="outlined"
                   clearable
-                  @update:model-value="updateFormMetadataType"
                 >
-                  <template #item="{ props: itemProps, item }">
-                    <v-list-item v-bind="itemProps" :title="$t(`items.types.${item.value}`)" />
+                  <template #item="{ props: itemProps, item: selectItem }">
+                    <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
                   </template>
-                  <template #selection="{ item }">
-                    {{ $t(`items.types.${item.value}`) }}
+                  <template #selection="{ item: selectItem }">
+                    {{ $t(`items.types.${selectItem.value}`) }}
                   </template>
                 </v-select>
               </v-col>
               <v-col cols="12" md="6">
                 <v-select
-                  :model-value="itemRarity"
+                  v-model="form.metadata.rarity"
                   :items="ITEM_RARITIES"
                   :label="$t('items.rarity')"
                   variant="outlined"
                   clearable
-                  @update:model-value="updateFormMetadataRarity"
                 >
-                  <template #item="{ props: itemProps, item }">
-                    <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${item.value}`)" />
+                  <template #item="{ props: itemProps, item: selectItem }">
+                    <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
                   </template>
-                  <template #selection="{ item }">
-                    {{ $t(`items.rarities.${item.value}`) }}
+                  <template #selection="{ item: selectItem }">
+                    {{ $t(`items.rarities.${selectItem.value}`) }}
                   </template>
                 </v-select>
               </v-col>
@@ -148,57 +154,54 @@
             <v-row>
               <v-col cols="12" md="6">
                 <v-text-field
-                  :model-value="form.metadata.weight"
+                  v-model.number="form.metadata.weight"
                   :label="$t('items.weight')"
                   :suffix="$t('items.weightUnit')"
                   variant="outlined"
                   type="number"
                   step="0.1"
                   min="0"
-                  @update:model-value="updateFormMetadataWeight"
                 />
               </v-col>
               <v-col cols="12" md="6">
                 <v-text-field
-                  :model-value="form.metadata.value"
+                  v-model.number="form.metadata.value"
                   :label="$t('items.value')"
                   :suffix="$t('items.valueUnit')"
                   variant="outlined"
                   type="number"
                   min="0"
-                  @update:model-value="updateFormMetadataValue"
                 />
               </v-col>
             </v-row>
 
             <v-textarea
-              :model-value="form.metadata.notes"
+              v-model="form.metadata.notes"
               :label="$t('items.notes')"
               variant="outlined"
               rows="3"
-              @update:model-value="updateFormMetadataNotes"
             />
           </v-tabs-window-item>
 
           <!-- Images Tab -->
           <v-tabs-window-item value="images">
             <EntityImageGallery
-              v-if="editingItem"
-              :entity-id="editingItem.id"
+              v-if="item"
+              :entity-id="item.id"
               :entity-name="form.name"
               entity-type="Item"
-              @images-updated="emit('images-changed')"
-              @preview-image="(url, name) => emit('open-image-preview', url, name)"
+              @images-updated="loadCounts(item!.id)"
+              @preview-image="openImagePreview"
             />
           </v-tabs-window-item>
 
           <!-- Documents Tab -->
           <v-tabs-window-item value="documents">
             <EntityDocuments
-              v-if="editingItem"
-              :entity-id="editingItem.id"
+              v-if="item"
+              :entity-id="item.id"
               entity-type="Item"
-              @changed="emit('documents-changed')"
+              @changed="loadCounts(item!.id)"
             />
           </v-tabs-window-item>
 
@@ -207,13 +210,14 @@
             <div class="mb-4">
               <v-row align="center">
                 <v-col cols="12" md="6">
-                  <v-select
+                  <v-autocomplete
                     v-model="newOwner.npcId"
-                    :items="availableNpcs"
+                    :items="availableOwners"
                     :label="$t('items.selectNpc')"
                     variant="outlined"
                     item-title="name"
                     item-value="id"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="4">
@@ -228,9 +232,10 @@
                 <v-col cols="12" md="2">
                   <v-btn
                     color="primary"
-                    :disabled="!newOwner.npcId || !newOwner.quantity || addingOwner"
+                    block
+                    :disabled="!newOwner.npcId || !newOwner.quantity"
                     :loading="addingOwner"
-                    @click="handleAddOwner"
+                    @click="addOwner"
                   >
                     {{ $t('common.add') }}
                   </v-btn>
@@ -240,13 +245,15 @@
 
             <v-divider class="my-4" />
 
-            <div v-if="itemOwners.length === 0" class="text-center text-medium-emphasis py-8">
-              {{ $t('items.noOwners') }}
-            </div>
+            <v-empty-state
+              v-if="linkedOwners.length === 0"
+              icon="mdi-account-off"
+              :title="$t('items.noOwners')"
+            />
 
             <v-list v-else>
               <v-list-item
-                v-for="owner in itemOwners"
+                v-for="owner in linkedOwners"
                 :key="owner.id"
                 :prepend-avatar="owner.image_url ? `/uploads/${owner.image_url}` : undefined"
               >
@@ -259,9 +266,7 @@
                 <v-list-item-title>{{ owner.name }}</v-list-item-title>
                 <v-list-item-subtitle>
                   {{ $t('items.quantity') }}: {{ owner.quantity ?? 1 }}
-                  <span v-if="owner.equipped" class="ml-2">
-                    | {{ $t('items.equipped') }}
-                  </span>
+                  <span v-if="owner.equipped" class="ml-2">| {{ $t('items.equipped') }}</span>
                 </v-list-item-subtitle>
 
                 <template #append>
@@ -270,8 +275,7 @@
                     variant="text"
                     color="error"
                     size="small"
-                    :loading="removingOwner === owner.relation_id"
-                    @click="handleRemoveOwner(owner.relation_id)"
+                    @click="removeOwner(owner.id)"
                   />
                 </template>
               </v-list-item>
@@ -283,13 +287,14 @@
             <div class="mb-4">
               <v-row align="center">
                 <v-col cols="12" md="6">
-                  <v-select
+                  <v-autocomplete
                     v-model="newLocation.locationId"
                     :items="availableLocations"
                     :label="$t('items.selectLocation')"
                     variant="outlined"
                     item-title="name"
                     item-value="id"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="4">
@@ -304,9 +309,10 @@
                 <v-col cols="12" md="2">
                   <v-btn
                     color="primary"
-                    :disabled="!newLocation.locationId || !newLocation.quantity || addingLocation"
+                    block
+                    :disabled="!newLocation.locationId || !newLocation.quantity"
                     :loading="addingLocation"
-                    @click="handleAddLocation"
+                    @click="addLocation"
                   >
                     {{ $t('common.add') }}
                   </v-btn>
@@ -316,25 +322,27 @@
 
             <v-divider class="my-4" />
 
-            <div v-if="itemLocations.length === 0" class="text-center text-medium-emphasis py-8">
-              {{ $t('items.noLocations') }}
-            </div>
+            <v-empty-state
+              v-if="linkedLocations.length === 0"
+              icon="mdi-map-marker-off"
+              :title="$t('items.noLocations')"
+            />
 
             <v-list v-else>
               <v-list-item
-                v-for="location in itemLocations"
-                :key="location.id"
-                :prepend-avatar="location.image_url ? `/uploads/${location.image_url}` : undefined"
+                v-for="loc in linkedLocations"
+                :key="loc.id"
+                :prepend-avatar="loc.image_url ? `/uploads/${loc.image_url}` : undefined"
               >
-                <template v-if="!location.image_url" #prepend>
+                <template v-if="!loc.image_url" #prepend>
                   <v-avatar color="grey-lighten-2">
                     <v-icon>mdi-map-marker</v-icon>
                   </v-avatar>
                 </template>
 
-                <v-list-item-title>{{ location.name }}</v-list-item-title>
+                <v-list-item-title>{{ loc.name }}</v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ $t('items.quantity') }}: {{ location.quantity ?? 1 }}
+                  {{ $t('items.quantity') }}: {{ loc.quantity ?? 1 }}
                 </v-list-item-subtitle>
 
                 <template #append>
@@ -343,8 +351,7 @@
                     variant="text"
                     color="error"
                     size="small"
-                    :loading="removingLocation === location.relation_id"
-                    @click="handleRemoveLocation(location.relation_id)"
+                    @click="removeLocation(loc.id)"
                   />
                 </template>
               </v-list-item>
@@ -356,21 +363,23 @@
             <div class="mb-4">
               <v-row align="center">
                 <v-col cols="12" md="8">
-                  <v-select
+                  <v-autocomplete
                     v-model="newFaction.factionId"
                     :items="availableFactions"
                     :label="$t('items.selectFaction')"
                     variant="outlined"
                     item-title="name"
                     item-value="id"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="4">
                   <v-btn
                     color="primary"
-                    :disabled="!newFaction.factionId || addingFaction"
+                    block
+                    :disabled="!newFaction.factionId"
                     :loading="addingFaction"
-                    @click="handleAddFaction"
+                    @click="addFaction"
                   >
                     {{ $t('common.add') }}
                   </v-btn>
@@ -380,9 +389,11 @@
 
             <v-divider class="my-4" />
 
-            <div v-if="linkedFactions.length === 0" class="text-center text-medium-emphasis py-8">
-              {{ $t('items.noFactions') }}
-            </div>
+            <v-empty-state
+              v-if="linkedFactions.length === 0"
+              icon="mdi-shield-account-outline"
+              :title="$t('items.noFactions')"
+            />
 
             <v-list v-else>
               <v-list-item
@@ -407,8 +418,7 @@
                     variant="text"
                     color="error"
                     size="small"
-                    :loading="removingFaction === faction.id"
-                    @click="handleRemoveFaction(faction.id)"
+                    @click="removeFaction(faction.id)"
                   />
                 </template>
               </v-list-item>
@@ -417,116 +427,118 @@
 
           <!-- Lore Tab -->
           <v-tabs-window-item value="lore">
-            <SharedEntityLoreTab
+            <EntityLoreTab
               :linked-lore="linkedLore"
               :available-lore="availableLore"
               :loading="addingLore"
-              @add="handleAddLore"
-              @remove="handleRemoveLore"
+              @add="addLore"
+              @remove="removeLore"
             />
           </v-tabs-window-item>
 
           <!-- Players Tab -->
           <v-tabs-window-item value="players">
             <EntityPlayersTab
-              v-if="editingItem"
-              :entity-id="editingItem.id"
-              @changed="emit('players-changed')"
+              v-if="item"
+              :entity-id="item.id"
+              @changed="loadCounts(item!.id)"
             />
           </v-tabs-window-item>
         </v-tabs-window>
 
-        <!-- Create Mode (no tabs) -->
-        <div v-else>
+          <!-- Create Mode (no tabs) -->
+          <div v-else>
           <v-text-field
-            :model-value="form.name"
+            v-model="form.name"
             :label="$t('items.name')"
             :rules="[(v: string) => !!v || $t('items.nameRequired')]"
             variant="outlined"
             class="mb-4"
-            @update:model-value="updateFormName"
           />
 
           <v-textarea
-            :model-value="form.description"
+            v-model="form.description"
             :label="$t('items.description')"
             variant="outlined"
             rows="3"
             class="mb-4"
-            @update:model-value="updateFormDescription"
           />
 
           <v-row>
             <v-col cols="12" md="6">
               <v-select
-                :model-value="itemType"
+                v-model="form.metadata.type"
                 :items="ITEM_TYPES"
                 :label="$t('items.type')"
                 variant="outlined"
                 clearable
-                @update:model-value="updateFormMetadataType"
               >
-                <template #item="{ props: itemProps, item }">
-                  <v-list-item v-bind="itemProps" :title="$t(`items.types.${item.value}`)" />
+                <template #item="{ props: itemProps, item: selectItem }">
+                  <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
                 </template>
-                <template #selection="{ item }">
-                  {{ $t(`items.types.${item.value}`) }}
+                <template #selection="{ item: selectItem }">
+                  {{ $t(`items.types.${selectItem.value}`) }}
                 </template>
               </v-select>
             </v-col>
             <v-col cols="12" md="6">
               <v-select
-                :model-value="itemRarity"
+                v-model="form.metadata.rarity"
                 :items="ITEM_RARITIES"
                 :label="$t('items.rarity')"
                 variant="outlined"
                 clearable
-                @update:model-value="updateFormMetadataRarity"
               >
-                <template #item="{ props: itemProps, item }">
-                  <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${item.value}`)" />
+                <template #item="{ props: itemProps, item: selectItem }">
+                  <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
                 </template>
-                <template #selection="{ item }">
-                  {{ $t(`items.rarities.${item.value}`) }}
+                <template #selection="{ item: selectItem }">
+                  {{ $t(`items.rarities.${selectItem.value}`) }}
                 </template>
               </v-select>
             </v-col>
           </v-row>
-        </div>
-      </v-card-text>
+          </div>
+        </v-card-text>
 
-      <v-card-actions>
-        <v-spacer />
-        <v-btn variant="text" @click="emit('close')">
-          {{ $t('common.cancel') }}
-        </v-btn>
-        <v-btn color="primary" variant="flat" :loading="saving" @click="emit('save')">
-          {{ $t('common.save') }}
-        </v-btn>
-      </v-card-actions>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="close">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="primary" variant="flat" :loading="saving" :disabled="!form.name" @click="save">
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </template>
     </v-card>
+
+    <!-- Image Preview Dialog -->
+    <ImagePreviewDialog
+      v-model="showImagePreview"
+      :image-url="previewImageUrl"
+      :title="previewImageTitle"
+      :download-file-name="previewImageTitle"
+    />
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import type { Item, ItemMetadata, ItemType, ItemRarity } from '~~/types/item'
+import type { Item, ItemMetadata } from '~~/types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '~~/types/item'
-import type { NPC } from '~~/types/npc'
-import type { Location } from '~~/types/location'
-import type { Faction } from '~~/types/faction'
-import type { Lore } from '~~/types/lore'
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityImageUpload from '~/components/shared/EntityImageUpload.vue'
 import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
+import EntityLoreTab from '~/components/shared/EntityLoreTab.vue'
+import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 import { useEntitiesStore } from '~/stores/entities'
+import { useCampaignStore } from '~/stores/campaign'
 
-const entitiesStore = useEntitiesStore()
-
-// Component-specific types for relations
-interface ItemOwner {
-  id: number
-  relation_id: number
+// ============================================================================
+// Interfaces
+// ============================================================================
+interface LinkedOwner {
+  id: number // relation_id
+  entity_id: number
   name: string
   description?: string | null
   image_url?: string | null
@@ -534,13 +546,40 @@ interface ItemOwner {
   equipped?: boolean | null
 }
 
-interface ItemLocation {
-  id: number
-  relation_id: number
+interface LinkedLocation {
+  id: number // relation_id
+  entity_id: number
   name: string
   description?: string | null
   image_url?: string | null
   quantity?: number | null
+}
+
+interface LinkedFaction {
+  id: number // relation_id
+  entity_id: number
+  name: string
+  description?: string | null
+  image_url?: string | null
+}
+
+interface LinkedLoreItem {
+  id: number // relation_id
+  entity_id: number
+  name: string
+  description?: string | null
+  image_url?: string | null
+}
+
+interface ApiRelatedEntity {
+  id: number
+  from_entity_id: number
+  to_entity_id: number
+  name: string
+  description: string | null
+  image_url: string | null
+  notes: { quantity?: number; equipped?: boolean } | null
+  direction: 'outgoing' | 'incoming'
 }
 
 interface ItemForm {
@@ -549,123 +588,533 @@ interface ItemForm {
   metadata: ItemMetadata
 }
 
-interface Props {
+// ============================================================================
+// Props & Emits
+// ============================================================================
+const props = defineProps<{
   show: boolean
-  editingItem: (Item & { _counts?: { images?: number; documents?: number; players?: number } }) | null
-  form: ItemForm
-  activeTab: string
-  // Relations data
-  itemOwners: ItemOwner[]
-  itemLocations: ItemLocation[]
-  linkedFactions: Array<Pick<Faction, 'id' | 'name' | 'description' | 'image_url'>>
-  linkedLore: Array<Pick<Lore, 'id' | 'name' | 'description' | 'image_url'>>
-  // Available entities for selects
-  availableNpcs: Array<Pick<NPC, 'id' | 'name' | 'image_url'>>
-  availableLocations: Array<Pick<Location, 'id' | 'name' | 'image_url'>>
-  availableFactions: Array<Pick<Faction, 'id' | 'name'>>
-  availableLore: Array<{ id: number; name: string }>
-  // Loading states
-  saving: boolean
-  addingOwner: boolean
-  addingLocation: boolean
-  addingFaction: boolean
-  addingLore: boolean
-  removingOwner: number | null
-  removingLocation: number | null
-  removingFaction: number | null
-}
-
-const props = defineProps<Props>()
+  itemId?: number | null
+}>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  'update:form': [value: ItemForm]
-  'update:activeTab': [value: string]
-  'open-image-preview': [url: string, name: string]
-  'add-owner': [payload: { npcId: number; quantity: number }]
-  'remove-owner': [relationId: number]
-  'add-location': [payload: { locationId: number; quantity: number }]
-  'remove-location': [relationId: number]
-  'add-faction': [factionId: number]
-  'remove-faction': [factionId: number]
-  'add-lore': [loreId: number]
-  'remove-lore': [loreId: number]
-  save: []
-  close: []
-  'image-changed': []
-  'images-changed': []
-  'documents-changed': []
-  'players-changed': []
+  saved: [item: Item]
+  created: [item: Item]
 }>()
 
-// Image management state (same as NPC)
+// ============================================================================
+// Composables & Stores
+// ============================================================================
+const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+
+// ============================================================================
+// State
+// ============================================================================
+const item = ref<Item | null>(null)
+const loading = ref(false)
+const saving = ref(false)
+const activeTab = ref('details')
+
+const form = ref<ItemForm>({
+  name: '',
+  description: null,
+  metadata: {
+    type: null,
+    rarity: null,
+    weight: null,
+    value: null,
+    notes: undefined,
+  },
+})
+
+const counts = ref({
+  images: 0,
+  documents: 0,
+  players: 0,
+})
+
+// Linked entities
+const linkedOwners = ref<LinkedOwner[]>([])
+const linkedLocations = ref<LinkedLocation[]>([])
+const linkedFactions = ref<LinkedFaction[]>([])
+const linkedLore = ref<LinkedLoreItem[]>([])
+
+// Available entities for dropdowns
+const availableOwners = computed(() => {
+  const linkedIds = new Set(linkedOwners.value.map((o) => o.entity_id))
+  return (entitiesStore.npcs || [])
+    .filter((npc) => !linkedIds.has(npc.id))
+    .map((npc) => ({ id: npc.id, name: npc.name }))
+})
+
+const availableLocations = computed(() => {
+  const linkedIds = new Set(linkedLocations.value.map((l) => l.entity_id))
+  return (entitiesStore.locations || [])
+    .filter((loc) => !linkedIds.has(loc.id))
+    .map((loc) => ({ id: loc.id, name: loc.name }))
+})
+
+const availableFactions = computed(() => {
+  const linkedIds = new Set(linkedFactions.value.map((f) => f.entity_id))
+  return (entitiesStore.factions || [])
+    .filter((f) => !linkedIds.has(f.id))
+    .map((f) => ({ id: f.id, name: f.name }))
+})
+
+const availableLore = computed(() => {
+  const linkedIds = new Set(linkedLore.value.map((l) => l.entity_id))
+  return (entitiesStore.lore || [])
+    .filter((l) => !linkedIds.has(l.id))
+    .map((l) => ({ id: l.id, name: l.name }))
+})
+
+// New relation forms
+const newOwner = ref({ npcId: null as number | null, quantity: 1 })
+const newLocation = ref({ locationId: null as number | null, quantity: 1 })
+const newFaction = ref({ factionId: null as number | null })
+
+// Loading states for relation operations
+const addingOwner = ref(false)
+const addingLocation = ref(false)
+const addingFaction = ref(false)
+const addingLore = ref(false)
+
+// Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadingImage = ref(false)
 const deletingImage = ref(false)
 const generatingImage = ref(false)
 const hasApiKey = ref(false)
 
-// Local state for adding relations
-const newOwner = ref({ npcId: null as number | null, quantity: 1 })
-const newLocation = ref({ locationId: null as number | null, quantity: 1 })
-const newFaction = ref({ factionId: null as number | null })
+// Image preview
+const showImagePreview = ref(false)
+const previewImageUrl = ref('')
+const previewImageTitle = ref('')
 
-// i18n
-const { t } = useI18n()
+// ============================================================================
+// Watch for dialog open
+// ============================================================================
+watch(
+  () => [props.show, props.itemId] as const,
+  async ([show, itemId]) => {
+    if (show) {
+      await loadData(itemId)
+    }
+  },
+  { immediate: true },
+)
 
-// Helper functions for form updates (fixes TypeScript emit overload issue)
-function updateFormName(name: string) {
-  const updated: ItemForm = { ...props.form, name }
-  emit('update:form', updated)
-}
+// ============================================================================
+// Data Loading
+// ============================================================================
+async function loadData(itemId: number | null | undefined) {
+  loading.value = true
+  activeTab.value = 'details'
 
-function updateFormDescription(description: string) {
-  const updated: ItemForm = { ...props.form, description }
-  emit('update:form', updated)
-}
+  try {
+    await loadStoreData()
 
-function updateFormMetadataType(type: string | null) {
-  const updated: ItemForm = { ...props.form, metadata: { ...props.form.metadata, type } }
-  emit('update:form', updated)
-}
-
-function updateFormMetadataRarity(rarity: string | null) {
-  const updated: ItemForm = { ...props.form, metadata: { ...props.form.metadata, rarity } }
-  emit('update:form', updated)
-}
-
-function updateFormMetadataWeight(value: string) {
-  const updated: ItemForm = {
-    ...props.form,
-    metadata: { ...props.form.metadata, weight: value ? parseFloat(value) : null },
+    if (itemId) {
+      await loadItem(itemId)
+      await loadRelations(itemId)
+      await loadCounts(itemId)
+    } else {
+      resetForm()
+    }
+  } finally {
+    loading.value = false
   }
-  emit('update:form', updated)
 }
 
-function updateFormMetadataValue(value: string) {
-  const updated: ItemForm = {
-    ...props.form,
-    metadata: { ...props.form.metadata, value: value ? parseInt(value) : null },
-  }
-  emit('update:form', updated)
-}
+async function loadStoreData() {
+  const campaignId = campaignStore.activeCampaignId
+  if (!campaignId) return
 
-function updateFormMetadataNotes(notes: string) {
-  const updated: ItemForm = { ...props.form, metadata: { ...props.form.metadata, notes } }
-  emit('update:form', updated)
-}
+  await Promise.all([
+    entitiesStore.fetchItems(campaignId),
+    entitiesStore.fetchNPCs(campaignId),
+    entitiesStore.fetchLocations(campaignId),
+    entitiesStore.fetchFactions(campaignId),
+    entitiesStore.fetchLore(campaignId),
+    entitiesStore.fetchPlayers(campaignId),
+  ])
 
-// Check if API key is available
-onMounted(async () => {
+  // Check API key
   try {
     const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
     hasApiKey.value = result.hasKey
   } catch {
     hasApiKey.value = false
   }
-})
+}
 
-// Image management functions
+async function loadItem(itemId: number) {
+  try {
+    const data = await $fetch<Item>(`/api/items/${itemId}`)
+    item.value = data
+
+    form.value = {
+      name: data.name,
+      description: data.description || null,
+      metadata: {
+        type: data.metadata?.type || null,
+        rarity: data.metadata?.rarity || null,
+        weight: data.metadata?.weight || null,
+        value: data.metadata?.value || null,
+        notes: data.metadata?.notes || undefined,
+      },
+    }
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to load item:', e)
+  }
+}
+
+async function loadRelations(itemId: number) {
+  try {
+    const [ownersRaw, locationsRaw, factionsRaw, loreRaw] = await Promise.all([
+      $fetch<ApiRelatedEntity[]>(`/api/entities/${itemId}/related/npcs`),
+      $fetch<ApiRelatedEntity[]>(`/api/entities/${itemId}/related/locations`),
+      $fetch<ApiRelatedEntity[]>(`/api/entities/${itemId}/related/factions`),
+      $fetch<ApiRelatedEntity[]>(`/api/entities/${itemId}/related/lore`),
+    ])
+
+    linkedOwners.value = ownersRaw.map((o) => ({
+      id: o.id,
+      entity_id: o.direction === 'outgoing' ? o.to_entity_id : o.from_entity_id,
+      name: o.name,
+      description: o.description,
+      image_url: o.image_url,
+      quantity: o.notes?.quantity,
+      equipped: o.notes?.equipped,
+    }))
+
+    linkedLocations.value = locationsRaw.map((l) => ({
+      id: l.id,
+      entity_id: l.direction === 'outgoing' ? l.to_entity_id : l.from_entity_id,
+      name: l.name,
+      description: l.description,
+      image_url: l.image_url,
+      quantity: l.notes?.quantity,
+    }))
+
+    linkedFactions.value = factionsRaw.map((f) => ({
+      id: f.id,
+      entity_id: f.direction === 'outgoing' ? f.to_entity_id : f.from_entity_id,
+      name: f.name,
+      description: f.description,
+      image_url: f.image_url,
+    }))
+
+    linkedLore.value = loreRaw.map((l) => ({
+      id: l.id,
+      entity_id: l.direction === 'outgoing' ? l.to_entity_id : l.from_entity_id,
+      name: l.name,
+      description: l.description,
+      image_url: l.image_url,
+    }))
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to load relations:', e)
+  }
+}
+
+async function loadCounts(itemId: number) {
+  try {
+    const data = await $fetch<{ images: number; documents: number; players: number }>(`/api/items/${itemId}/counts`)
+    counts.value = data
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to load counts:', e)
+  }
+}
+
+function resetForm() {
+  item.value = null
+  form.value = {
+    name: '',
+    description: null,
+    metadata: {
+      type: null,
+      rarity: null,
+      weight: null,
+      value: null,
+      notes: undefined,
+    },
+  }
+  counts.value = { images: 0, documents: 0, players: 0 }
+  linkedOwners.value = []
+  linkedLocations.value = []
+  linkedFactions.value = []
+  linkedLore.value = []
+  newOwner.value = { npcId: null, quantity: 1 }
+  newLocation.value = { locationId: null, quantity: 1 }
+  newFaction.value = { factionId: null }
+}
+
+// ============================================================================
+// Dialog Actions
+// ============================================================================
+function handleDialogChange(value: boolean) {
+  if (!value) {
+    close()
+  }
+}
+
+function close() {
+  resetForm()
+  emit('update:show', false)
+}
+
+async function save() {
+  if (!form.value.name) return
+
+  saving.value = true
+
+  try {
+    const campaignId = campaignStore.activeCampaignId
+    if (!campaignId) throw new Error('No active campaign')
+
+    if (item.value) {
+      // Update existing
+      const updated = await $fetch<Item>(`/api/items/${item.value.id}`, {
+        method: 'PATCH',
+        body: {
+          name: form.value.name,
+          description: form.value.description,
+          metadata: form.value.metadata,
+        },
+      })
+
+      // Update store
+      const index = entitiesStore.items?.findIndex((i) => i.id === item.value!.id)
+      if (index !== undefined && index !== -1 && entitiesStore.items) {
+        entitiesStore.items[index] = { ...entitiesStore.items[index], ...updated }
+      }
+
+      emit('saved', updated)
+    } else {
+      // Create new
+      const created = await $fetch<Item>('/api/items', {
+        method: 'POST',
+        body: {
+          name: form.value.name,
+          description: form.value.description,
+          metadata: form.value.metadata,
+          campaignId,
+        },
+      })
+
+      entitiesStore.items?.push(created)
+      emit('created', created)
+    }
+
+    close()
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to save:', e)
+  } finally {
+    saving.value = false
+  }
+}
+
+// ============================================================================
+// Relation Management - Owners
+// ============================================================================
+async function addOwner() {
+  if (!item.value || !newOwner.value.npcId) return
+
+  addingOwner.value = true
+  try {
+    const createdRelation = await $fetch<{ id: number }>('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: newOwner.value.npcId,
+        toEntityId: item.value.id,
+        relationType: 'owns',
+        notes: { quantity: newOwner.value.quantity },
+      },
+    })
+
+    const npc = entitiesStore.npcs?.find((n) => n.id === newOwner.value.npcId)
+    if (npc) {
+      linkedOwners.value.push({
+        id: createdRelation.id,
+        entity_id: npc.id,
+        name: npc.name,
+        description: npc.description,
+        image_url: npc.image_url || null,
+        quantity: newOwner.value.quantity,
+      })
+    }
+
+    newOwner.value = { npcId: null, quantity: 1 }
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to add owner:', e)
+  } finally {
+    addingOwner.value = false
+  }
+}
+
+async function removeOwner(relationId: number) {
+  if (!item.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
+    linkedOwners.value = linkedOwners.value.filter((o) => o.id !== relationId)
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to remove owner:', e)
+  }
+}
+
+// ============================================================================
+// Relation Management - Locations
+// ============================================================================
+async function addLocation() {
+  if (!item.value || !newLocation.value.locationId) return
+
+  addingLocation.value = true
+  try {
+    const createdRelation = await $fetch<{ id: number }>('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: newLocation.value.locationId,
+        toEntityId: item.value.id,
+        relationType: 'contains',
+        notes: { quantity: newLocation.value.quantity },
+      },
+    })
+
+    const loc = entitiesStore.locations?.find((l) => l.id === newLocation.value.locationId)
+    if (loc) {
+      linkedLocations.value.push({
+        id: createdRelation.id,
+        entity_id: loc.id,
+        name: loc.name,
+        description: loc.description,
+        image_url: loc.image_url || null,
+        quantity: newLocation.value.quantity,
+      })
+    }
+
+    newLocation.value = { locationId: null, quantity: 1 }
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to add location:', e)
+  } finally {
+    addingLocation.value = false
+  }
+}
+
+async function removeLocation(relationId: number) {
+  if (!item.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
+    linkedLocations.value = linkedLocations.value.filter((l) => l.id !== relationId)
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to remove location:', e)
+  }
+}
+
+// ============================================================================
+// Relation Management - Factions
+// ============================================================================
+async function addFaction() {
+  if (!item.value || !newFaction.value.factionId) return
+
+  addingFaction.value = true
+  try {
+    const createdRelation = await $fetch<{ id: number }>('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: newFaction.value.factionId,
+        toEntityId: item.value.id,
+        relationType: 'possesses',
+      },
+    })
+
+    const faction = entitiesStore.factions?.find((f) => f.id === newFaction.value.factionId)
+    if (faction) {
+      linkedFactions.value.push({
+        id: createdRelation.id,
+        entity_id: faction.id,
+        name: faction.name,
+        description: faction.description,
+        image_url: faction.image_url || null,
+      })
+    }
+
+    newFaction.value = { factionId: null }
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to add faction:', e)
+  } finally {
+    addingFaction.value = false
+  }
+}
+
+async function removeFaction(relationId: number) {
+  if (!item.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
+    linkedFactions.value = linkedFactions.value.filter((f) => f.id !== relationId)
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to remove faction:', e)
+  }
+}
+
+// ============================================================================
+// Relation Management - Lore
+// ============================================================================
+async function addLore(loreId: number) {
+  if (!item.value || !loreId) return
+
+  addingLore.value = true
+  try {
+    const createdRelation = await $fetch<{ id: number }>('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: loreId,
+        toEntityId: item.value.id,
+        relationType: 'references',
+      },
+    })
+
+    const lore = entitiesStore.lore?.find((l) => l.id === loreId)
+    if (lore) {
+      linkedLore.value.push({
+        id: createdRelation.id,
+        entity_id: lore.id,
+        name: lore.name,
+        description: lore.description,
+        image_url: lore.image_url || null,
+      })
+    }
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to add lore:', e)
+  } finally {
+    addingLore.value = false
+  }
+}
+
+async function removeLore(relationId: number) {
+  if (!item.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
+    linkedLore.value = linkedLore.value.filter((l) => l.id !== relationId)
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to remove lore:', e)
+  }
+}
+
+// ============================================================================
+// Image Management
+// ============================================================================
+function openImagePreview(url: string, title: string) {
+  previewImageUrl.value = url
+  previewImageTitle.value = title
+  showImagePreview.value = true
+}
+
 function triggerImageUpload() {
   fileInputRef.value?.click()
 }
@@ -673,33 +1122,25 @@ function triggerImageUpload() {
 async function handleImageUpload(event: Event) {
   const target = event.target as HTMLInputElement
   const files = target.files
-  if (!files || files.length === 0 || !props.editingItem) return
+  if (!files || files.length === 0 || !item.value) return
 
   uploadingImage.value = true
   try {
     const formData = new FormData()
     const file = files[0]
-    if (file) {
-      formData.append('image', file)
-    }
+    if (file) formData.append('image', file)
 
-    const response = await fetch(`/api/entities/${props.editingItem.id}/upload-image`, {
+    const response = await fetch(`/api/entities/${item.value.id}/upload-image`, {
       method: 'POST',
       body: formData,
     })
 
-    if (!response.ok) {
-      throw new Error('Upload failed')
-    }
+    if (!response.ok) throw new Error('Upload failed')
 
-    await response.json()
-
-    // Refresh the item in the store to update the image reactively
-    await entitiesStore.refreshItem(props.editingItem.id)
-    emit('image-changed')
+    await entitiesStore.refreshItem(item.value.id)
+    await loadItem(item.value.id)
   } catch (error) {
-    console.error('Failed to upload image:', error)
-    alert(t('items.uploadImageError'))
+    console.error('[ItemEditDialog] Failed to upload image:', error)
   } finally {
     uploadingImage.value = false
     if (target) target.value = ''
@@ -707,35 +1148,16 @@ async function handleImageUpload(event: Event) {
 }
 
 async function generateImage() {
-  if (!props.editingItem || !props.form.name) return
+  if (!item.value || !form.value.name) return
 
   generatingImage.value = true
-
   try {
     const details = []
-
-    // Type (weapon, armor, potion, etc.)
-    if (props.form.metadata.type) {
-      details.push(props.form.metadata.type)
-    }
-
-    // Rarity (common, uncommon, rare, legendary, etc.)
-    if (props.form.metadata.rarity) {
-      details.push(props.form.metadata.rarity)
-    }
-
-    // Name (required)
-    details.push(props.form.name)
-
-    // Description (free-form details)
-    if (props.form.description) {
-      details.push(props.form.description)
-    }
-
-    // Notes (additional context)
-    if (props.form.metadata.notes) {
-      details.push(props.form.metadata.notes)
-    }
+    if (form.value.metadata.type) details.push(form.value.metadata.type)
+    if (form.value.metadata.rarity) details.push(form.value.metadata.rarity)
+    details.push(form.value.name)
+    if (form.value.description) details.push(form.value.description)
+    if (form.value.metadata.notes) details.push(form.value.metadata.notes)
 
     const prompt = details.filter((d) => d).join(', ')
 
@@ -743,115 +1165,58 @@ async function generateImage() {
       method: 'POST',
       body: {
         prompt,
-        entityName: props.form.name,
+        entityName: form.value.name,
         entityType: 'Item',
         style: 'fantasy-art',
       },
     })
 
     if (result.imageUrl) {
-      await $fetch(`/api/entities/${props.editingItem.id}/add-generated-image`, {
+      await $fetch(`/api/entities/${item.value.id}/add-generated-image`, {
         method: 'POST',
-        body: {
-          imageUrl: result.imageUrl.replace('/uploads/', ''),
-        },
+        body: { imageUrl: result.imageUrl.replace('/uploads/', '') },
       })
 
-      // Refresh the item in the store to update the image reactively
-      await entitiesStore.refreshItem(props.editingItem.id)
-      emit('image-changed')
+      await entitiesStore.refreshItem(item.value.id)
+      await loadItem(item.value.id)
     }
   } catch (error) {
-    console.error('Failed to generate image:', error)
-    alert(t('items.generateImageError'))
+    console.error('[ItemEditDialog] Failed to generate image:', error)
   } finally {
     generatingImage.value = false
   }
 }
 
 async function deleteImage() {
-  if (!props.editingItem?.image_url) return
-
+  if (!item.value?.image_url) return
   if (!confirm(t('items.deleteImageConfirm'))) return
 
   deletingImage.value = true
   try {
-    await $fetch(`/api/entities/${props.editingItem.id}/image`, {
-      method: 'DELETE',
-    })
-
-    emit('image-changed')
+    await $fetch(`/api/entities/${item.value.id}/delete-image`, { method: 'DELETE' })
+    await entitiesStore.refreshItem(item.value.id)
+    await loadItem(item.value.id)
   } catch (error) {
-    console.error('Failed to delete image:', error)
-    alert(t('items.deleteImageError'))
+    console.error('[ItemEditDialog] Failed to delete image:', error)
   } finally {
     deletingImage.value = false
   }
 }
 
 async function downloadImage() {
-  if (!props.editingItem?.image_url) return
+  if (!item.value?.image_url) return
 
   try {
-    const response = await fetch(`/uploads/${props.editingItem.image_url}`)
+    const response = await fetch(`/uploads/${item.value.image_url}`)
     const blob = await response.blob()
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${props.form.name}.${props.editingItem.image_url.split('.').pop()}`
+    link.download = `${form.value.name}.${item.value.image_url.split('.').pop()}`
     link.click()
     window.URL.revokeObjectURL(url)
   } catch (error) {
-    console.error('Failed to download image:', error)
+    console.error('[ItemEditDialog] Failed to download image:', error)
   }
 }
-
-// Relation handlers
-function handleAddOwner() {
-  if (!newOwner.value.npcId || !newOwner.value.quantity) return
-  emit('add-owner', {
-    npcId: newOwner.value.npcId,
-    quantity: newOwner.value.quantity,
-  })
-  newOwner.value = { npcId: null, quantity: 1 }
-}
-
-function handleRemoveOwner(relationId: number) {
-  emit('remove-owner', relationId)
-}
-
-function handleAddLocation() {
-  if (!newLocation.value.locationId || !newLocation.value.quantity) return
-  emit('add-location', {
-    locationId: newLocation.value.locationId,
-    quantity: newLocation.value.quantity,
-  })
-  newLocation.value = { locationId: null, quantity: 1 }
-}
-
-function handleRemoveLocation(relationId: number) {
-  emit('remove-location', relationId)
-}
-
-function handleAddFaction() {
-  if (!newFaction.value.factionId) return
-  emit('add-faction', newFaction.value.factionId)
-  newFaction.value = { factionId: null }
-}
-
-function handleRemoveFaction(factionId: number) {
-  emit('remove-faction', factionId)
-}
-
-function handleAddLore(loreId: number) {
-  emit('add-lore', loreId)
-}
-
-function handleRemoveLore(relationId: number) {
-  emit('remove-lore', relationId)
-}
-
-// Computed properties for type-safe v-model bindings
-const itemType = computed(() => props.form.metadata.type as ItemType | null | undefined)
-const itemRarity = computed(() => props.form.metadata.rarity as ItemRarity | null | undefined)
 </script>

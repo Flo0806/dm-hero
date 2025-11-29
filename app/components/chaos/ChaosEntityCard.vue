@@ -10,6 +10,30 @@
     @mouseleave="$emit('hover', null)"
     @click="$emit('click', entity)"
   >
+    <!-- Action Buttons (top right) -->
+    <div class="chaos-entity-card__actions">
+      <v-btn
+        icon
+        size="x-small"
+        variant="text"
+        density="compact"
+        @click.stop="$emit('view', entity)"
+      >
+        <v-icon size="16">mdi-eye</v-icon>
+        <v-tooltip activator="parent" location="top">{{ $t('common.view') }}</v-tooltip>
+      </v-btn>
+      <v-btn
+        icon
+        size="x-small"
+        variant="text"
+        density="compact"
+        @click.stop="$emit('edit', entity)"
+      >
+        <v-icon size="16">mdi-pencil</v-icon>
+        <v-tooltip activator="parent" location="top">{{ $t('common.edit') }}</v-tooltip>
+      </v-btn>
+    </div>
+
     <!-- Entity Image or Icon -->
     <div class="chaos-entity-card__avatar">
       <v-avatar v-if="entity.image_url" :size="isCenter ? 80 : 56">
@@ -69,6 +93,8 @@ const props = defineProps<{
 defineEmits<{
   hover: [entity: Entity | null]
   click: [entity: Entity]
+  view: [entity: Entity]
+  edit: [entity: Entity]
 }>()
 
 const cardStyle = computed(() => {
@@ -89,7 +115,7 @@ const cardStyle = computed(() => {
   border: 2px solid var(--card-border-color, #888);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 150px;
   height: 180px;
   position: relative;
@@ -113,6 +139,21 @@ const cardStyle = computed(() => {
   box-shadow: 0 0 20px var(--card-border-color);
   z-index: 20; /* Above the highlighted SVG line */
   position: relative;
+  transform: scale(1.05);
+}
+
+.chaos-entity-card__actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chaos-entity-card:hover .chaos-entity-card__actions {
+  opacity: 1;
 }
 
 .chaos-entity-card__avatar {
@@ -127,6 +168,7 @@ const cardStyle = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   max-width: 100%;

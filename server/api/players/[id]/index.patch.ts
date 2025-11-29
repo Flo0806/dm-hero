@@ -1,5 +1,5 @@
 import { getDb } from '../../../utils/db'
-import type { PlayerMetadata } from '../../../types/player'
+import type { PlayerMetadata } from '~~/types/player'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()

@@ -339,7 +339,6 @@ async function deleteImage(imageId: number) {
     emit('images-updated') // Notify parent that images changed
   } catch (error) {
     console.error('Failed to delete image:', error)
-    alert(t('common.deleteImageError'))
   }
 }
 

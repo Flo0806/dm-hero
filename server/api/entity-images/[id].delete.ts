@@ -1,8 +1,8 @@
-import { getDb } from '../../../utils/db'
+import { getDb } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
-  const imageId = getRouterParam(event, 'imageId')
+  const imageId = getRouterParam(event, 'id')
 
   if (!imageId) {
     throw createError({

@@ -2,7 +2,7 @@ import { getDb } from '../../utils/db'
 
 export default defineEventHandler((event) => {
   const db = getDb()
-  const entityId = getRouterParam(event, 'entityId')
+  const entityId = getRouterParam(event, 'id')
 
   if (!entityId) {
     throw createError({

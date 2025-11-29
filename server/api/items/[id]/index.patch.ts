@@ -1,6 +1,6 @@
 import { getDb } from '../../../utils/db'
 import { convertMetadataToKeys } from '../../../utils/i18n-lookup'
-import type { ItemMetadata } from '../../../types/item'
+import type { ItemMetadata } from '~~/types/item'
 import type { EntityRow } from '../../../types/database'
 
 export default defineEventHandler(async (event) => {

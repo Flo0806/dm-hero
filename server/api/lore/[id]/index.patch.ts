@@ -1,5 +1,5 @@
 import { getDb } from '../../../utils/db'
-import type { LoreMetadata } from '../../../types/lore'
+import type { LoreMetadata } from '~~/types/lore'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()

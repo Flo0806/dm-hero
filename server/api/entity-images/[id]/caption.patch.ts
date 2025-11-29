@@ -2,7 +2,7 @@ import { getDb } from '../../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
-  const imageId = getRouterParam(event, 'imageId')
+  const imageId = getRouterParam(event, 'id')
 
   if (!imageId) {
     throw createError({
@@ -10,6 +10,9 @@ export default defineEventHandler(async (event) => {
       message: 'Image ID is required',
     })
   }
+
+  const body = await readBody(event)
+  const caption = body.caption
 
   // Get image info
   const image = db.prepare('SELECT id, entity_id FROM entity_images WHERE id = ?').get(imageId) as
@@ -26,11 +29,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Unset all other primary images for this entity
-  db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(image.entity_id)
-
-  // Set this image as primary
-  db.prepare('UPDATE entity_images SET is_primary = 1 WHERE id = ?').run(imageId)
+  // Update caption
+  db.prepare('UPDATE entity_images SET caption = ? WHERE id = ?').run(caption || null, imageId)
 
   // Update entity's updated_at
   db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(

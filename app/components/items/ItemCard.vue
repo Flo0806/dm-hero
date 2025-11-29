@@ -274,6 +274,12 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <v-btn icon="mdi-graph" size="small" variant="text" color="primary" @click.stop="$emit('chaos', item)">
+        <v-icon>mdi-graph</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('chaos.title') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn
         icon="mdi-download"
         size="small"
@@ -337,6 +343,7 @@ defineEmits<{
   edit: [item: Item]
   download: [item: Item]
   delete: [item: Item]
+  chaos: [item: Item]
 }>()
 
 const { getCounts } = useItemCounts()

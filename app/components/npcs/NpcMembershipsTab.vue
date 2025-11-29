@@ -10,11 +10,11 @@
           <v-icon icon="mdi-shield-account" color="primary" />
         </template>
         <v-list-item-title>
-          {{ membership.to_entity_name }}
+          {{ membership.to_entity_name || membership.name }}
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip size="small" class="mr-1">
-            {{ membership.relation_type }}
+            {{ translateMembershipType(membership.relation_type) }}
           </v-chip>
           <span
             v-if="membership.notes && typeof membership.notes === 'object' && 'rank' in membership.notes"
@@ -97,7 +97,13 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, te } = useI18n()
+
+// Translate membership type - check if translation exists, otherwise show raw value
+function translateMembershipType(type: string): string {
+  const key = `npcs.membershipTypes.${type}`
+  return te(key) ? t(key) : type
+}
 
 interface Membership {
   id: number
@@ -108,6 +114,7 @@ interface Membership {
   relation_type: string
   notes: Record<string, unknown> | null
   created_at: string
+  name?: string // Legacy fallback for to_entity_name
 }
 
 interface Faction {

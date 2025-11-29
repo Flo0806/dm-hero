@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
       VALUES (?, ?, ?, ?)
     `,
       )
-      .run(fromEntityId, toEntityId, relationType, notes || null)
+      .run(fromEntityId, toEntityId, relationType, notes ? JSON.stringify(notes) : null)
 
     const relation = db
       .prepare(
