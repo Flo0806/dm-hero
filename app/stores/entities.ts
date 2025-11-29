@@ -3,25 +3,7 @@ import type { NPC } from '../../types/npc'
 import type { Item } from '../../types/item'
 import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
-
-interface Faction {
-  id: number
-  name: string
-  description: string | null
-  image_url?: string | null
-  metadata: {
-    type?: string
-    leader?: string
-    alignment?: string
-    headquarters?: string
-    goals?: string
-    notes?: string
-  } | null
-  leader_id?: number | null
-  leader_name?: string | null
-  created_at: string
-  updated_at: string
-}
+import type { Faction } from '../../types/faction'
 
 interface Location {
   id: number
@@ -267,6 +249,30 @@ export const useEntitiesStore = defineStore('entities', {
         this.factions[index] = { ...this.factions[index], ...faction }
       }
       return faction
+    },
+
+    async loadFactionCounts(id: number) {
+      const index = this.factions.findIndex((f) => f.id === id)
+      if (index === -1) return
+
+      try {
+        const counts = await $fetch<{
+          members: number
+          items: number
+          locations: number
+          lore: number
+          players: number
+          documents: number
+          images: number
+        }>(`/api/factions/${id}/counts`)
+
+        this.factions[index] = {
+          ...this.factions[index],
+          _counts: counts,
+        }
+      } catch (error) {
+        console.error(`Failed to load counts for faction ${id}:`, error)
+      }
     },
 
     // ==================== Locations ====================

@@ -156,6 +156,7 @@
       :model-value="viewDialogOpen"
       :faction="viewingFaction"
       @update:model-value="viewDialogOpen = $event"
+      @edit="openEditDialogFromFaction"
     />
 
     <!-- Edit Dialogs -->
@@ -185,6 +186,15 @@
       @saved="handleEntitySaved"
       @created="handleEntityCreated"
     />
+
+    <FactionEditDialog
+      v-if="editDialogTypeName === 'Faction'"
+      :show="editDialogOpen"
+      :faction-id="editingEntityId"
+      @update:show="editDialogOpen = $event"
+      @saved="handleEntitySaved"
+      @created="handleEntityCreated"
+    />
   </div>
 </template>
 
@@ -196,6 +206,7 @@ import ItemEditDialog from '~/components/items/ItemEditDialog.vue'
 import LocationViewDialog from '~/components/locations/LocationViewDialog.vue'
 import LocationEditDialog from '~/components/locations/LocationEditDialog.vue'
 import FactionViewDialog from '~/components/factions/FactionViewDialog.vue'
+import FactionEditDialog from '~/components/factions/FactionEditDialog.vue'
 import type { NPC } from '~~/types/npc'
 import type { Item } from '~~/types/item'
 import type { Location } from '~~/types/location'
@@ -662,7 +673,7 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
 // Open edit dialog for supported entity types, navigate for others
 function openEditDialog(ent: Entity, entType: EntityType) {
   // Types with integrated edit dialogs
-  const supportedTypes = ['NPC', 'Location', 'Item']
+  const supportedTypes = ['NPC', 'Location', 'Item', 'Faction']
 
   if (supportedTypes.includes(entType.name)) {
     editingEntityId.value = ent.id
@@ -685,6 +696,14 @@ function openEditDialog(ent: Entity, entType: EntityType) {
 function openEditDialogFromNpc(npc: NPC) {
   editingEntityId.value = npc.id
   editDialogTypeName.value = 'NPC'
+  editDialogOpen.value = true
+  viewDialogOpen.value = false
+}
+
+// Helper for FactionViewDialog edit event (receives Faction directly, not Connection)
+function openEditDialogFromFaction(faction: Faction) {
+  editingEntityId.value = faction.id
+  editDialogTypeName.value = 'Faction'
   editDialogOpen.value = true
   viewDialogOpen.value = false
 }

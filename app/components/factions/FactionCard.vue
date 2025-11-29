@@ -278,6 +278,12 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <v-btn icon="mdi-graph" size="small" variant="text" color="primary" @click.stop="$emit('chaos', faction)">
+        <v-icon>mdi-graph</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('chaos.title') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn
         icon="mdi-download"
         size="small"
@@ -366,6 +372,7 @@ defineEmits<{
   edit: [faction: Faction]
   download: [faction: Faction]
   delete: [faction: Faction]
+  chaos: [faction: Faction]
 }>()
 
 const { getCounts } = useFactionCounts()
