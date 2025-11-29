@@ -223,6 +223,15 @@
       @saved="handleEntitySaved"
       @created="handleEntityCreated"
     />
+
+    <PlayerEditDialog
+      v-if="editDialogTypeName === 'Player'"
+      :show="editDialogOpen"
+      :player-id="editingEntityId"
+      @update:show="editDialogOpen = $event"
+      @saved="handleEntitySaved"
+      @created="handleEntityCreated"
+    />
   </div>
 </template>
 
@@ -237,6 +246,7 @@ import FactionViewDialog from '~/components/factions/FactionViewDialog.vue'
 import FactionEditDialog from '~/components/factions/FactionEditDialog.vue'
 import LoreViewDialog from '~/components/lore/LoreViewDialog.vue'
 import LoreEditDialog from '~/components/lore/LoreEditDialog.vue'
+import PlayerEditDialog from '~/components/players/PlayerEditDialog.vue'
 import type { NPC } from '~~/types/npc'
 import type { Item } from '~~/types/item'
 import type { Location } from '~~/types/location'
@@ -687,12 +697,21 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     Location: 'locations',
     Faction: 'factions',
     Lore: 'lore',
+    Player: 'players',
   }
 
   const apiRoute = typeRoutes[entType.name]
   if (!apiRoute) {
-    // Unsupported type (Player) - navigate to page instead
+    // Unsupported type - navigate to page instead
     router.push(`/${entType.name.toLowerCase()}/${ent.id}`)
+    return
+  }
+
+  // Player has no ViewDialog - open EditDialog directly
+  if (entType.name === 'Player') {
+    editingEntityId.value = ent.id
+    editDialogTypeName.value = 'Player'
+    editDialogOpen.value = true
     return
   }
 
@@ -736,7 +755,7 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
 // Open edit dialog for supported entity types, navigate for others
 function openEditDialog(ent: Entity, entType: EntityType) {
   // Types with integrated edit dialogs
-  const supportedTypes = ['NPC', 'Location', 'Item', 'Faction', 'Lore']
+  const supportedTypes = ['NPC', 'Location', 'Item', 'Faction', 'Lore', 'Player']
 
   if (supportedTypes.includes(entType.name)) {
     editingEntityId.value = ent.id

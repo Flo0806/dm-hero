@@ -579,6 +579,8 @@ async function loadCounts(loreId: number) {
       images: number
     }>(`/api/lore/${loreId}/counts`)
     counts.value = data
+    // Also update the store's lore counts for card badge updates (no extra fetch)
+    entitiesStore.setLoreCounts(loreId, data)
   } catch (e) {
     console.error('[LoreEditDialog] Failed to load counts:', e)
   }

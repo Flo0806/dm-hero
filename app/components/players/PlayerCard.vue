@@ -258,6 +258,12 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <v-btn icon="mdi-graph" size="small" variant="text" color="primary" @click.stop="$emit('chaos', player)">
+        <v-icon>mdi-graph</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('chaos.title') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn
         icon="mdi-download"
         size="small"
@@ -305,7 +311,6 @@
 <script setup lang="ts">
 import type { Player } from '~~/types/player'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
-import { usePlayerCounts } from '~/composables/usePlayerCounts'
 
 interface Props {
   player: Player
@@ -321,15 +326,18 @@ defineEmits<{
   edit: [player: Player]
   download: [player: Player]
   delete: [player: Player]
+  chaos: [player: Player]
 }>()
 
-// Get counts reactively from the composable
-const { getCounts, loadPlayerCounts } = usePlayerCounts()
-const counts = computed(() => getCounts(props.player.id) || props.player._counts)
+// Use store's _counts directly - updated by entitiesStore when relations change
+const entitiesStore = useEntitiesStore()
+const counts = computed(() => props.player._counts)
 
-// Load counts when card is mounted
+// Load counts when card is mounted (if not already loaded)
 onMounted(() => {
-  loadPlayerCounts(props.player)
+  if (!props.player._counts) {
+    entitiesStore.loadPlayerCounts(props.player.id)
+  }
 })
 
 // Image Preview State
@@ -356,6 +364,7 @@ const previewSubtitle = computed(() => {
 
 .player-description {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;

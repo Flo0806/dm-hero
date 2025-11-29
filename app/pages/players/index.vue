@@ -2,12 +2,7 @@
   <v-container>
     <UiPageHeader :title="$t('players.title')" :subtitle="$t('players.subtitle')">
       <template #actions>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
-          size="large"
-          @click="openCreateDialog"
-        >
+        <v-btn color="primary" prepend-icon="mdi-plus" size="large" @click="openCreateDialog">
           {{ $t('players.create') }}
         </v-btn>
       </template>
@@ -55,10 +50,11 @@
           <PlayerCard
             :player="player"
             :is-highlighted="highlightedId === player.id"
-            @view="viewPlayer"
+            @view="editPlayer"
             @edit="editPlayer"
             @download="handleDownload"
             @delete="confirmDelete"
+            @chaos="openChaos"
           />
         </v-col>
       </v-row>
@@ -81,21 +77,13 @@
       </ClientOnly>
     </div>
 
-    <!-- Create/Edit Dialog -->
+    <!-- Self-contained Edit Dialog -->
     <PlayerEditDialog
-      :show="showDialog"
-      :editing-player="editingPlayer"
-      :form="form"
-      :active-tab="activeTab"
-      :saving="saving"
-      @update:show="showDialog = $event"
-      @update:form="form = $event"
-      @update:active-tab="activeTab = $event"
-      @save="savePlayer"
-      @close="closeDialog"
-      @image-changed="handleImageChanged"
-      @counts-changed="reloadPlayerCounts"
-      @open-image-preview="openImagePreview"
+      :show="showEditDialog"
+      :player-id="editingPlayerId"
+      @update:show="handleDialogClose"
+      @saved="handlePlayerSaved"
+      @created="handlePlayerCreated"
     />
 
     <!-- Delete Confirmation -->
@@ -107,35 +95,20 @@
       @confirm="deletePlayer"
       @cancel="showDeleteDialog = false"
     />
-
-    <!-- Image Preview Dialog (from dialog) -->
-    <v-dialog v-model="showImagePreview" max-width="1200">
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          {{ previewImageName }}
-          <v-spacer />
-          <v-btn icon="mdi-close" variant="text" @click="showImagePreview = false" />
-        </v-card-title>
-        <v-card-text class="pa-0">
-          <v-img :src="previewImageUrl" max-height="80vh" contain />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import type { Player, PlayerMetadata } from '../../../types/player'
+import type { Player } from '../../../types/player'
 import PlayerEditDialog from '~/components/players/PlayerEditDialog.vue'
 import PlayerCard from '~/components/players/PlayerCard.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
-import { usePlayerCounts } from '~/composables/usePlayerCounts'
 
 const route = useRoute()
+const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
 const { downloadImage } = useImageDownload()
-const { reloadPlayerCounts: reloadCounts } = usePlayerCounts()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -147,31 +120,11 @@ const searchQuery = ref('')
 const searchResults = ref<Player[]>([])
 const searching = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
-const showDialog = ref(false)
+const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
-const saving = ref(false)
 const deleting = ref(false)
-const editingPlayer = ref<Player | null>(null)
+const editingPlayerId = ref<number | null>(null)
 const deletingPlayer = ref<Player | null>(null)
-const activeTab = ref('details')
-
-// Image preview
-const showImagePreview = ref(false)
-const previewImageUrl = ref('')
-const previewImageName = ref('')
-
-const form = ref({
-  name: '',
-  description: '',
-  metadata: {
-    player_name: '',
-    inspiration: 0,
-    email: '',
-    discord: '',
-    phone: '',
-    notes: '',
-  } as PlayerMetadata,
-})
 
 // Computed
 const loading = computed(() => entitiesStore.playersLoading)
@@ -219,118 +172,34 @@ watch(searchQuery, async (query) => {
 // Load data
 onMounted(async () => {
   if (activeCampaignId.value) {
-    await Promise.all([
-      entitiesStore.fetchPlayers(activeCampaignId.value),
-      entitiesStore.fetchNPCs(activeCampaignId.value),
-      entitiesStore.fetchItems(activeCampaignId.value),
-      entitiesStore.fetchLocations(activeCampaignId.value),
-      entitiesStore.fetchFactions(activeCampaignId.value),
-      entitiesStore.fetchLore(activeCampaignId.value),
-    ])
+    await entitiesStore.fetchPlayers(activeCampaignId.value)
   }
 })
 
 // Methods
 function openCreateDialog() {
-  editingPlayer.value = null
-  activeTab.value = 'details'
-  form.value = {
-    name: '',
-    description: '',
-    metadata: {
-      player_name: '',
-      inspiration: 0,
-      email: '',
-      discord: '',
-      phone: '',
-      notes: '',
-    },
-  }
-  showDialog.value = true
+  editingPlayerId.value = null
+  showEditDialog.value = true
 }
 
-function viewPlayer(player: Player) {
-  editPlayer(player)
+function editPlayer(player: Player) {
+  editingPlayerId.value = player.id
+  showEditDialog.value = true
 }
 
-async function editPlayer(player: Player) {
-  editingPlayer.value = player
-  activeTab.value = 'details'
-  form.value = {
-    name: player.name,
-    description: player.description || '',
-    metadata: {
-      player_name: player.metadata?.player_name || '',
-      inspiration: player.metadata?.inspiration || 0,
-      email: player.metadata?.email || '',
-      discord: player.metadata?.discord || '',
-      phone: player.metadata?.phone || '',
-      notes: player.metadata?.notes || '',
-    },
-  }
-
-  // Load counts
-  await reloadPlayerCounts()
-
-  showDialog.value = true
-}
-
-function closeDialog() {
-  showDialog.value = false
-  editingPlayer.value = null
-}
-
-async function savePlayer() {
-  if (!activeCampaignId.value || !form.value.name) return
-
-  saving.value = true
-  try {
-    const data = {
-      name: form.value.name,
-      description: form.value.description || null,
-      metadata: form.value.metadata,
-    }
-
-    if (editingPlayer.value) {
-      await entitiesStore.updatePlayer(editingPlayer.value.id, data)
-    } else {
-      await entitiesStore.createPlayer(activeCampaignId.value, data)
-    }
-
-    // Reload players and close dialog
-    await entitiesStore.fetchPlayers(activeCampaignId.value)
-    closeDialog()
-  } catch (error) {
-    console.error('Failed to save player:', error)
-  } finally {
-    saving.value = false
+function handleDialogClose(value: boolean) {
+  showEditDialog.value = value
+  if (!value) {
+    editingPlayerId.value = null
   }
 }
 
-async function reloadPlayerCounts() {
-  if (!editingPlayer.value) return
-
-  try {
-    // Reload counts using the composable
-    await reloadCounts(editingPlayer.value)
-
-    // Update editingPlayer with fresh counts from the player object
-    editingPlayer.value = { ...editingPlayer.value }
-  } catch (error) {
-    console.error('Failed to reload player counts:', error)
-  }
+function handlePlayerSaved(_player: Player) {
+  // Store already updated via entitiesStore.updatePlayer
 }
 
-async function handleImageChanged() {
-  if (editingPlayer.value) {
-    // Get the updated player from the store (already refreshed by the dialog)
-    const updatedPlayer = entitiesStore.getPlayerById(editingPlayer.value.id)
-    if (updatedPlayer) {
-      // Update the local editingPlayer to reflect the new image
-      editingPlayer.value = { ...editingPlayer.value, image_url: updatedPlayer.image_url }
-    }
-    await reloadPlayerCounts()
-  }
+function handlePlayerCreated(_player: Player) {
+  // Store already updated via entitiesStore.createPlayer
 }
 
 function confirmDelete(player: Player) {
@@ -353,10 +222,8 @@ async function deletePlayer() {
   }
 }
 
-function openImagePreview(url: string, name: string) {
-  previewImageUrl.value = url
-  previewImageName.value = name
-  showImagePreview.value = true
+function openChaos(player: Player) {
+  router.push(`/chaos/${player.id}`)
 }
 
 function handleDownload(player: Player) {
@@ -402,4 +269,3 @@ watch(searchQuery, (newVal, oldVal) => {
   }
 })
 </script>
-
