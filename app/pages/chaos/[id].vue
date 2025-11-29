@@ -159,6 +159,25 @@
       @edit="openEditDialogFromFaction"
     />
 
+    <LoreViewDialog
+      v-if="viewDialogTypeName === 'Lore'"
+      :model-value="viewDialogOpen"
+      :lore="viewingLore"
+      :npcs="viewDialogNpcs"
+      :items="viewDialogItems"
+      :factions="viewDialogFactions"
+      :locations="viewDialogLocations"
+      :documents="viewDialogDocuments"
+      :images="viewDialogImages"
+      :counts="viewDialogCounts"
+      :loading-npcs="loadingViewNpcs"
+      :loading-items="loadingViewItems"
+      :loading-factions="loadingViewFactions"
+      :loading-locations="loadingViewLocations"
+      @update:model-value="viewDialogOpen = $event"
+      @edit="openEditDialogFromLore"
+    />
+
     <!-- Edit Dialogs -->
     <NpcEditDialog
       v-if="editDialogTypeName === 'NPC'"
@@ -195,6 +214,15 @@
       @saved="handleEntitySaved"
       @created="handleEntityCreated"
     />
+
+    <LoreEditDialog
+      v-if="editDialogTypeName === 'Lore'"
+      :show="editDialogOpen"
+      :lore-id="editingEntityId"
+      @update:show="editDialogOpen = $event"
+      @saved="handleEntitySaved"
+      @created="handleEntityCreated"
+    />
   </div>
 </template>
 
@@ -207,10 +235,13 @@ import LocationViewDialog from '~/components/locations/LocationViewDialog.vue'
 import LocationEditDialog from '~/components/locations/LocationEditDialog.vue'
 import FactionViewDialog from '~/components/factions/FactionViewDialog.vue'
 import FactionEditDialog from '~/components/factions/FactionEditDialog.vue'
+import LoreViewDialog from '~/components/lore/LoreViewDialog.vue'
+import LoreEditDialog from '~/components/lore/LoreEditDialog.vue'
 import type { NPC } from '~~/types/npc'
 import type { Item } from '~~/types/item'
 import type { Location } from '~~/types/location'
 import type { Faction } from '~~/types/faction'
+import type { Lore } from '~~/types/lore'
 
 interface Entity {
   id: number
@@ -278,6 +309,31 @@ const viewingNpc = ref<NPC | null>(null)
 const viewingItem = ref<Item | null>(null)
 const viewingLocation = ref<Location | null>(null)
 const viewingFaction = ref<Faction | null>(null)
+const viewingLore = ref<Lore | null>(null)
+
+// Lore view dialog data
+const viewDialogNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const viewDialogItems = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const viewDialogFactions = ref<
+  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+>([])
+const viewDialogLocations = ref<
+  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+>([])
+const viewDialogDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
+const viewDialogImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const viewDialogCounts = ref<{
+  npcs: number
+  items: number
+  factions: number
+  locations: number
+  documents: number
+  images: number
+} | null>(null)
+const loadingViewNpcs = ref(false)
+const loadingViewItems = ref(false)
+const loadingViewFactions = ref(false)
+const loadingViewLocations = ref(false)
 
 // Edit Dialog state
 const editDialogOpen = ref(false)
@@ -630,11 +686,12 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     Item: 'items',
     Location: 'locations',
     Faction: 'factions',
+    Lore: 'lore',
   }
 
   const apiRoute = typeRoutes[entType.name]
   if (!apiRoute) {
-    // Unsupported type (Lore, Player) - navigate to page instead
+    // Unsupported type (Player) - navigate to page instead
     router.push(`/${entType.name.toLowerCase()}/${ent.id}`)
     return
   }
@@ -647,6 +704,7 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     viewingItem.value = null
     viewingLocation.value = null
     viewingFaction.value = null
+    viewingLore.value = null
 
     switch (entType.name) {
     case 'NPC':
@@ -661,6 +719,11 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     case 'Faction':
       viewingFaction.value = data as Faction
       break
+    case 'Lore':
+      viewingLore.value = data as Lore
+      // Load additional data for Lore view dialog
+      loadLoreViewData(ent.id)
+      break
     }
 
     viewDialogTypeName.value = entType.name
@@ -673,7 +736,7 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
 // Open edit dialog for supported entity types, navigate for others
 function openEditDialog(ent: Entity, entType: EntityType) {
   // Types with integrated edit dialogs
-  const supportedTypes = ['NPC', 'Location', 'Item', 'Faction']
+  const supportedTypes = ['NPC', 'Location', 'Item', 'Faction', 'Lore']
 
   if (supportedTypes.includes(entType.name)) {
     editingEntityId.value = ent.id
@@ -682,9 +745,6 @@ function openEditDialog(ent: Entity, entType: EntityType) {
   } else {
     // Fallback: navigate to list page with edit query
     const typeRoutes: Record<string, string> = {
-      Item: 'items',
-      Faction: 'factions',
-      Lore: 'lore',
       Player: 'players',
     }
     const routePath = typeRoutes[entType.name] || 'npcs'
@@ -706,6 +766,49 @@ function openEditDialogFromFaction(faction: Faction) {
   editDialogTypeName.value = 'Faction'
   editDialogOpen.value = true
   viewDialogOpen.value = false
+}
+
+// Helper for LoreViewDialog edit event (receives Lore directly, not Connection)
+function openEditDialogFromLore(lore: Lore) {
+  editingEntityId.value = lore.id
+  editDialogTypeName.value = 'Lore'
+  editDialogOpen.value = true
+  viewDialogOpen.value = false
+}
+
+// Load additional data for Lore view dialog
+async function loadLoreViewData(loreId: number) {
+  loadingViewNpcs.value = true
+  loadingViewItems.value = true
+  loadingViewFactions.value = true
+  loadingViewLocations.value = true
+
+  try {
+    const [npcs, items, factions, locations, documents, images, counts] = await Promise.all([
+      $fetch<typeof viewDialogNpcs.value>(`/api/entities/${loreId}/related/npcs`).catch(() => []),
+      $fetch<typeof viewDialogItems.value>(`/api/entities/${loreId}/related/items`).catch(() => []),
+      $fetch<typeof viewDialogFactions.value>(`/api/entities/${loreId}/related/factions`).catch(() => []),
+      $fetch<typeof viewDialogLocations.value>(`/api/entities/${loreId}/related/locations`).catch(() => []),
+      $fetch<typeof viewDialogDocuments.value>(`/api/entities/${loreId}/documents`).catch(() => []),
+      $fetch<typeof viewDialogImages.value>(`/api/entity-images/${loreId}`).catch(() => []),
+      $fetch<typeof viewDialogCounts.value>(`/api/lore/${loreId}/counts`).catch(() => null),
+    ])
+
+    viewDialogNpcs.value = npcs
+    viewDialogItems.value = items
+    viewDialogFactions.value = factions
+    viewDialogLocations.value = locations
+    viewDialogDocuments.value = documents
+    viewDialogImages.value = images
+    viewDialogCounts.value = counts
+  } catch (error) {
+    console.error('[ChaosGraph] Failed to load lore view data:', error)
+  } finally {
+    loadingViewNpcs.value = false
+    loadingViewItems.value = false
+    loadingViewFactions.value = false
+    loadingViewLocations.value = false
+  }
 }
 
 // Handle entity saved/created - reload connections

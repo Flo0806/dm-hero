@@ -266,6 +266,12 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <v-btn icon="mdi-graph" size="small" variant="text" color="primary" @click.stop="$emit('chaos', lore)">
+        <v-icon>mdi-graph</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('chaos.title') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', lore)">
         <v-icon>mdi-pencil</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -329,13 +335,13 @@ defineEmits<{
   edit: [lore: Lore]
   download: [lore: Lore]
   delete: [lore: Lore]
+  chaos: [lore: Lore]
 }>()
 
-const { getCounts } = useLoreCounts()
 const { t } = useI18n()
 
-// Get counts reactively from the composable
-const counts = computed(() => getCounts(props.lore.id) || props.lore._counts)
+// Get counts from props (stored in the entities store)
+const counts = computed(() => props.lore._counts)
 
 // Image Preview State
 const showImagePreview = ref(false)
@@ -396,6 +402,7 @@ function getLoreTypeIcon(type: string): string {
 
 .lore-description {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;

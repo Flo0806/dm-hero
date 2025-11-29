@@ -266,9 +266,12 @@ export const useEntitiesStore = defineStore('entities', {
           images: number
         }>(`/api/factions/${id}/counts`)
 
-        this.factions[index] = {
-          ...this.factions[index],
-          _counts: counts,
+        const faction = this.factions[index]
+        if (faction) {
+          this.factions[index] = {
+            ...faction,
+            _counts: counts,
+          }
         }
       } catch (error) {
         console.error(`Failed to load counts for faction ${id}:`, error)
@@ -437,9 +440,26 @@ export const useEntitiesStore = defineStore('entities', {
 
       this.loreLoading = true
       try {
+        // Save existing _counts before fetching
+        const existingCounts = new Map<number, Lore['_counts']>()
+        this.lore.forEach((l) => {
+          if (l._counts) {
+            existingCounts.set(l.id, l._counts)
+          }
+        })
+
         const lore = await $fetch<Lore[]>('/api/lore', {
           query: { campaignId },
         })
+
+        // Restore _counts from previous data
+        lore.forEach((l) => {
+          const savedCounts = existingCounts.get(l.id)
+          if (savedCounts) {
+            l._counts = savedCounts
+          }
+        })
+
         this.lore = lore
         this.loreLoaded = true
       } catch (error) {
@@ -469,9 +489,13 @@ export const useEntitiesStore = defineStore('entities', {
       })
       const index = this.lore.findIndex((l) => l.id === id)
       if (index !== -1) {
-        this.lore[index] = lore
+        // Preserve _counts from old Lore and merge with new data
+        const oldLore = this.lore[index]
+        this.lore[index] = { ...oldLore, ...lore }
+        // Reload counts after update
+        await this.loadLoreCounts(id)
       }
-      return lore
+      return this.lore[index] || lore
     },
 
     async deleteLore(id: number) {
@@ -489,6 +513,39 @@ export const useEntitiesStore = defineStore('entities', {
         this.lore[index] = { ...this.lore[index], ...lore }
       }
       return lore
+    },
+
+    // Load counts for a single Lore and update it in the store
+    async loadLoreCounts(id: number) {
+      const index = this.lore.findIndex((l) => l.id === id)
+      if (index === -1) return
+
+      try {
+        const counts = await $fetch<{
+          npcs: number
+          items: number
+          factions: number
+          locations: number
+          players: number
+          documents: number
+          images: number
+        }>(`/api/lore/${id}/counts`)
+
+        // Update Lore in store with new counts
+        if (this.lore[index]) {
+          this.lore[index] = {
+            ...this.lore[index],
+            _counts: counts,
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to load counts for Lore ${id}:`, error)
+      }
+    },
+
+    // Load counts for all Lore entries in the store
+    async loadAllLoreCounts() {
+      await Promise.all(this.lore.map((l) => this.loadLoreCounts(l.id)))
     },
 
     // ==================== Players ====================
