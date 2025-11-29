@@ -139,17 +139,11 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async refreshNPC(id: number) {
-      console.log('[Store] refreshNPC called for id:', id)
       const npc = await $fetch<NPC>(`/api/npcs/${id}`)
-      console.log('[Store] Fetched NPC:', npc.name, 'image_url:', npc.image_url)
       const index = this.npcs.findIndex((n) => n.id === id)
       if (index !== -1) {
-        console.log('[Store] Updating NPC at index:', index, 'old image:', this.npcs[index]?.image_url)
         // Preserve _counts from the old NPC (not returned by API)
         this.npcs[index] = { ...this.npcs[index], ...npc }
-        console.log('[Store] Updated NPC image_url:', this.npcs[index]?.image_url)
-      } else {
-        console.log('[Store] NPC not found in store!')
       }
       return npc
     },

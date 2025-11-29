@@ -668,13 +668,10 @@ async function removeNpcRelation(relationId: number) {
     return
   }
 
-  console.log('[LocationEditDialog] Removing NPC relation by ID:', relationId)
-
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     linkedNpcs.value = linkedNpcs.value.filter((n) => n.id !== relationId)
     await loadCounts(location.value.id)
-    console.log('[LocationEditDialog] NPC relation removed successfully')
   } catch (e) {
     console.error('[LocationEditDialog] Failed to remove NPC relation:', e)
   }
