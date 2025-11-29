@@ -893,6 +893,7 @@
     "yes": "Ja",
     "no": "Nein",
     "uploading": "Wird hochgeladen...",
+    "loading": "Wird geladen...",
     "images": "Bilder",
     "uploadImage": "Bild hochladen",
     "generateImage": "Bild generieren",
@@ -1158,5 +1159,12 @@
     "leapYearExtraDays": "Extra Tage",
     "isLeapYear": "Schaltjahr",
     "advanceDay": "Nächster Tag"
+  },
+  "chaos": {
+    "title": "Chaos-Graph",
+    "subtitle": "Alle Verbindungen auf einen Blick",
+    "connections": "Verbindungen",
+    "noConnections": "Keine Verbindungen",
+    "noConnectionsText": "Diese Entität hat noch keine Verknüpfungen"
   }
 }

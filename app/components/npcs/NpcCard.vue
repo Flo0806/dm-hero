@@ -327,6 +327,12 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <v-btn icon size="small" variant="text" @click.stop="openChaosGraph">
+        <v-icon>mdi-graph</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('chaos.title') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn
         icon="mdi-download"
         size="small"
@@ -392,6 +398,12 @@ defineEmits<{
 
 const { locale, t } = useI18n()
 const { getCounts } = useNpcCounts()
+const router = useRouter()
+
+// Navigate to Chaos Graph
+function openChaosGraph() {
+  router.push(`/chaos/${props.npc.id}`)
+}
 
 // Get counts reactively from the composable
 const counts = computed(() => getCounts(props.npc.id) || props.npc._counts)
@@ -509,6 +521,7 @@ function getNpcStatusColor(status: string): string {
 
 .npc-description {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
