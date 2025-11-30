@@ -5,5 +5,7 @@
     "@dm-hero/app": "1.0.0-alpha.8",
     "@dm-hero/landing": "1.0.0-beta.2"
   },
-  "changesets": []
+  "changesets": [
+    "nsis-installer"
+  ]
 }
