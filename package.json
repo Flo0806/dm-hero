@@ -5,6 +5,7 @@
   "description": "DM Hero Monorepo - Campaign management tool for Dungeon Masters",
   "scripts": {
     "dev": "pnpm --filter @dm-hero/app dev",
+    "dev:landing": "pnpm --filter @dm-hero/landing dev",
     "dev:electron": "pnpm --filter @dm-hero/app dev:electron",
     "build": "pnpm --filter @dm-hero/app build",
     "build:landing": "pnpm --filter @dm-hero/landing build",
@@ -12,9 +13,15 @@
     "test": "pnpm --filter @dm-hero/app test",
     "db:reset": "pnpm --filter @dm-hero/app db:reset",
     "electron:build": "pnpm --filter @dm-hero/app electron:build",
-    "electron:rebuild": "pnpm --filter @dm-hero/app electron:rebuild"
+    "electron:rebuild": "pnpm --filter @dm-hero/app electron:rebuild",
+    "changeset": "changeset",
+    "version:apply": "changeset version && pnpm install --lockfile-only"
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8"
   }
 }

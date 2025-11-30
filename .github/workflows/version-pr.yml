@@ -1,0 +1,58 @@
+name: Version PR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.changeset/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Changeset PR or update existing one
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm version:apply
+          title: 'chore: Version Packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update PR title with package versions
+        if: steps.changesets.outputs.hasChangesets == 'true'
+        run: |
+          # Extract versions from package.json files
+          APP_VERSION=$(node -p "require('./packages/app/package.json').version")
+          LANDING_VERSION=$(node -p "require('./packages/landing/package.json').version")
+
+          echo "App version: $APP_VERSION"
+          echo "Landing version: $LANDING_VERSION"

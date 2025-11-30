@@ -1,0 +1,170 @@
+name: Release App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/app/package.json'
+      - 'packages/app/CHANGELOG.md'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for changesets
+        id: check
+        run: |
+          # If there are still changeset files (excluding README), this is NOT a release
+          if ls .changeset/*.md 2>/dev/null | grep -v "README" | grep -q .; then
+            echo "Changesets still present - not a release merge"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "No changesets found - this is a release merge"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./packages/app/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "App version: $VERSION"
+
+  build-docker:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.check.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  build-electron-windows:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Nuxt
+        run: pnpm --filter @dm-hero/app build
+
+      - name: Rebuild better-sqlite3 for Electron
+        run: pnpm --filter @dm-hero/app electron:rebuild
+
+      - name: Build Electron app
+        working-directory: packages/app
+        run: pnpm exec electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dm-hero-windows
+          path: packages/app/dist-electron/*.exe
+          if-no-files-found: warn
+
+  create-release:
+    needs: [check, build-docker, build-electron-windows]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dm-hero-windows
+          path: ./artifacts
+
+      - name: Read changelog
+        id: changelog
+        run: |
+          # Extract the latest changelog entry
+          CHANGELOG=$(sed -n '/^## /,/^## /p' packages/app/CHANGELOG.md | sed '$ d' | tail -n +2)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.check.outputs.version }}
+          name: DM Hero v${{ needs.check.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: ./artifacts/*
+          draft: false
+          prerelease: ${{ contains(needs.check.outputs.version, 'alpha') || contains(needs.check.outputs.version, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

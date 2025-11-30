@@ -1,0 +1,129 @@
+name: Release Landing Page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/landing/package.json'
+      - 'packages/landing/CHANGELOG.md'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-landing
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for changesets
+        id: check
+        run: |
+          # If there are still changeset files (excluding README), this is NOT a release
+          if ls .changeset/*.md 2>/dev/null | grep -v "README" | grep -q .; then
+            echo "Changesets still present - not a release merge"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "No changesets found - this is a release merge"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./packages/landing/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Landing version: $VERSION"
+
+  build-and-push:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.check.outputs.version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: packages/landing/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  create-release:
+    needs: [check, build-and-push]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read changelog
+        id: changelog
+        run: |
+          if [ -f packages/landing/CHANGELOG.md ]; then
+            CHANGELOG=$(sed -n '/^## /,/^## /p' packages/landing/CHANGELOG.md | sed '$ d' | tail -n +2)
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Initial release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: landing-v${{ needs.check.outputs.version }}
+          name: DM Hero Landing v${{ needs.check.outputs.version }}
+          body: |
+            ## Landing Page v${{ needs.check.outputs.version }}
+
+            Docker image: `ghcr.io/flo0806/dm-hero-landing:${{ needs.check.outputs.version }}`
+
+            ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: ${{ contains(needs.check.outputs.version, 'alpha') || contains(needs.check.outputs.version, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
