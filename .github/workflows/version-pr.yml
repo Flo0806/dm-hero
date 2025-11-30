@@ -37,22 +37,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create Changeset PR or update existing one
+      - name: Create Changeset PR
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm version:apply
-          title: 'chore: Version Packages'
-          commit: 'chore: version packages'
+          # Skip automatic versioning - we handle versions manually for alpha/beta
+          version: echo "Skipping auto-version - update package.json manually before merging"
+          title: 'chore: Release Updates'
+          commit: 'chore: update changelogs'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update PR title with package versions
-        if: steps.changesets.outputs.hasChangesets == 'true'
-        run: |
-          # Extract versions from package.json files
-          APP_VERSION=$(node -p "require('./packages/app/package.json').version")
-          LANDING_VERSION=$(node -p "require('./packages/landing/package.json').version")
-
-          echo "App version: $APP_VERSION"
-          echo "Landing version: $LANDING_VERSION"
