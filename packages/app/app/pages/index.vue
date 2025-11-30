@@ -33,7 +33,7 @@
               size="large"
               prepend-icon="mdi-sword-cross"
               class="cursor-pointer"
-              @click="navigateTo('/campaigns')"
+              @click="router.push('/campaigns')"
             >
               {{ activeCampaignName }}
             </v-chip>
@@ -102,6 +102,7 @@
 </template>
 
 <script setup lang="ts">
+const router = useRouter()
 const campaignStore = useCampaignStore()
 
 // Get active campaign from campaign store

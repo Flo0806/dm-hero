@@ -64,7 +64,7 @@ WORKDIR /app/.output/server
 RUN pnpm install --prod --frozen-lockfile
 
 # Build better-sqlite3 native bindings (CRITICAL!)
-RUN cd node_modules/.pnpm/better-sqlite3@12.4.1/node_modules/better-sqlite3 && \
+RUN cd $(find node_modules/.pnpm -type d -name "better-sqlite3" -path "*/node_modules/better-sqlite3" | head -1) && \
     npm run build-release
 
 # Go back to app root

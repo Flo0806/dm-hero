@@ -30,7 +30,7 @@
       :title="activeCampaignName || ''"
       :subtitle="$t('nav.activeCampaign')"
       class="mb-2"
-      @click="navigateTo('/campaigns')"
+      @click="router.push('/campaigns')"
     />
 
     <v-divider v-if="activeCampaignName && !rail" />
@@ -117,6 +117,8 @@
 </template>
 
 <script setup lang="ts">
+const router = useRouter()
+
 interface Props {
   modelValue: boolean
   rail: boolean

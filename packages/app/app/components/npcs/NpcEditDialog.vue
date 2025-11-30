@@ -475,7 +475,7 @@
 import type { NPC } from '~~/types/npc'
 import type { Lore } from '~~/types/lore'
 import type { NpcItem, NpcMembership } from '~~/types/npc-components'
-import { NPC_TYPES, NPC_STATUSES } from '~~/types/npc'
+import { NPC_TYPES, NPC_STATUSES, type NpcType, type NpcStatus } from '~~/types/npc'
 import NpcRelationsTab from './NpcRelationsTab.vue'
 import EntityLocationsTab from '../shared/EntityLocationsTab.vue'
 import NpcMembershipsTab from './NpcMembershipsTab.vue'
@@ -534,8 +534,8 @@ const form = ref({
     class: undefined as string | undefined,
     age: undefined as number | undefined,
     gender: undefined as string | undefined,
-    type: undefined as string | undefined,
-    status: undefined as string | undefined,
+    type: undefined as NpcType | undefined,
+    status: undefined as NpcStatus | undefined,
   },
 })
 
@@ -753,8 +753,8 @@ async function loadNpc(npcId: number) {
         class: data.metadata?.class as string | undefined,
         age: data.metadata?.age as number | undefined,
         gender: data.metadata?.gender as string | undefined,
-        type: data.metadata?.type as string | undefined,
-        status: data.metadata?.status as string | undefined,
+        type: data.metadata?.type as NpcType | undefined,
+        status: data.metadata?.status as NpcStatus | undefined,
       },
     }
 
@@ -847,8 +847,8 @@ function resetForm() {
       class: undefined,
       age: undefined,
       gender: undefined,
-      type: undefined,
-      status: undefined,
+      type: undefined as NpcType | undefined,
+      status: undefined as NpcStatus | undefined,
     },
   }
   npcRelations.value = []

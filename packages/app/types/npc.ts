@@ -25,8 +25,8 @@ export interface NpcMetadata {
   location?: string
   faction?: string
   relationship?: string
-  type?: NpcType | string
-  status?: NpcStatus | string
+  type?: NpcType
+  status?: NpcStatus
   age?: number
   gender?: string
   [key: string]: unknown // Index signature for convertMetadataToKeys compatibility

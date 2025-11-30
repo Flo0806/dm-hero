@@ -25,8 +25,8 @@ export const ITEM_RARITIES = [
 export type ItemRarity = (typeof ITEM_RARITIES)[number]
 
 export interface ItemMetadata {
-  type?: ItemType | string | null
-  rarity?: ItemRarity | string | null
+  type?: ItemType | null
+  rarity?: ItemRarity | null
   value?: number | null
   weight?: number | null
   attunement?: boolean

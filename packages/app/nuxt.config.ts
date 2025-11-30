@@ -48,11 +48,12 @@ export default defineNuxtConfig({
   },
 })
 
-function extendViteConfig(config: import('vite').UserConfig) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extendViteConfig(config: any) {
   const plugin = config.plugins?.find((p: unknown) => isPlugin(p, 'nuxt:environments'))
   if (plugin) plugin.enforce = 'pre'
 }
 
-function isPlugin(plugin: unknown, name: string): plugin is import('vite').Plugin {
+function isPlugin(plugin: unknown, name: string): plugin is { name: string; enforce?: string } {
   return !!(plugin && typeof plugin === 'object' && 'name' in plugin && plugin.name === name)
 }

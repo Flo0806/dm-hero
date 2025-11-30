@@ -300,8 +300,8 @@ function openChaosGraph(item: Item) {
   router.push(`/chaos/${item.id}`)
 }
 
-function editItemAndCloseView(item: Item) {
-  editItem(item)
+function editItemAndCloseView(item: Item | { id: number }) {
+  editItem(item as Item)
   showViewDialog.value = false
 }
 
