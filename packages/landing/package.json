@@ -1,0 +1,29 @@
+{
+  "name": "@dm-hero/landing",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --port 3001",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@nuxt/eslint": "1.11.0",
+    "@nuxt/test-utils": "3.20.1",
+    "@nuxtjs/i18n": "^10.2.1",
+    "@vueuse/core": "^14.1.0",
+    "@vueuse/motion": "^3.0.3",
+    "eslint": "^9.39.1",
+    "nuxt": "^4.2.1",
+    "vite-plugin-vuetify": "^2.1.2",
+    "vue": "^3.5.25",
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.11.0"
+  }
+}

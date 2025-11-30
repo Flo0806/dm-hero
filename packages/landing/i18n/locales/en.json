@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "title": "DM Hero - Your D&D Campaign Companion",
+    "description": "The ultimate campaign management tool for Dungeon Masters. Track NPCs, locations, items, and sessions with powerful search and AI features."
+  },
+  "nav": {
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "download": "Download",
+    "github": "GitHub"
+  },
+  "hero": {
+    "badge": "Free & Open Source",
+    "title": {
+      "line1": "Your Campaign.",
+      "line2": "Your Story.",
+      "line3": "Your Hero."
+    },
+    "subtitle": "The ultimate campaign management tool for Dungeon Masters. Organize NPCs, locations, items, factions, and sessions with powerful fuzzy search and AI integration.",
+    "cta": {
+      "download": "Download Now",
+      "github": "View on GitHub"
+    },
+    "stats": {
+      "entities": "Entity Types",
+      "search": "Fuzzy Search",
+      "local": "100% Local",
+      "free": "Free Forever"
+    }
+  },
+  "features": {
+    "title": "Everything You Need to Run Epic Campaigns",
+    "subtitle": "DM Hero gives you all the tools to organize, search, and enhance your tabletop adventures",
+    "items": {
+      "entities": {
+        "title": "Entity Management",
+        "description": "Organize NPCs, Locations, Items, Factions, Lore, Players, and Sessions. Everything interconnected with bidirectional relationships."
+      },
+      "search": {
+        "title": "Powerful Fuzzy Search",
+        "description": "Find anything instantly with FTS5 full-text search and Levenshtein distance. Search across ALL fields including linked entities."
+      },
+      "linking": {
+        "title": "Entity Linking",
+        "description": "Use {'{{'}npc:123{'}}'}  syntax in Markdown to create clickable badges with hover previews. See connections at a glance."
+      },
+      "calendar": {
+        "title": "In-Game Calendar",
+        "description": "Track your campaign timeline with an absolute day system. Perfect for session notes and world events."
+      },
+      "ai": {
+        "title": "AI Integration",
+        "description": "Generate NPC names with GPT and create character portraits with DALL-E. Bring your imagination to life."
+      },
+      "local": {
+        "title": "Local-First & Private",
+        "description": "All your data stays on your machine in SQLite. No cloud, no subscriptions, your campaign is truly yours."
+      },
+      "chaos": {
+        "title": "Chaos Graph",
+        "description": "Visualize entity relationships in an interactive force-directed graph. Discover hidden connections in your world."
+      },
+      "markdown": {
+        "title": "Rich Markdown Editor",
+        "description": "Write beautiful descriptions with full Markdown support, syntax highlighting, and live preview."
+      }
+    }
+  },
+  "screenshots": {
+    "title": "See DM Hero in Action",
+    "subtitle": "A glimpse into your future campaign headquarters",
+    "items": {
+      "dashboard": "Dashboard with active campaign overview",
+      "npcs": "NPC management with detailed profiles",
+      "chaos": "Interactive Chaos Graph visualization",
+      "calendar": "In-game calendar with session tracking",
+      "darkLight": "Beautiful dark and light themes"
+    },
+    "comingSoon": "Screenshots coming soon!"
+  },
+  "download": {
+    "title": "Ready to Become a Hero?",
+    "subtitle": "Download DM Hero and start organizing your campaigns today. Free, open source, and always will be.",
+    "version": "Latest Version",
+    "platforms": {
+      "windows": {
+        "title": "Windows",
+        "description": "Windows 10 or later",
+        "button": "Download for Windows"
+      },
+      "mac": {
+        "title": "macOS",
+        "description": "Coming Soon",
+        "button": "Coming Soon"
+      },
+      "linux": {
+        "title": "Linux",
+        "description": "Coming Soon",
+        "button": "Coming Soon"
+      }
+    },
+    "docker": {
+      "title": "Or run with Docker",
+      "description": "For self-hosted deployment"
+    },
+    "allReleases": "View all releases on GitHub"
+  },
+  "footer": {
+    "tagline": "Empowering Dungeon Masters to tell epic stories.",
+    "madeWith": "Made with",
+    "loveBy": "by",
+    "links": {
+      "github": "GitHub",
+      "issues": "Report Issues",
+      "releases": "Releases",
+      "license": "MIT License"
+    },
+    "copyright": "© {year} DM Hero. Open source under MIT License."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again"
+  }
+}

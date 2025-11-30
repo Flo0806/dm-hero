@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "title": "DM Hero - Dein D&D Kampagnen-Begleiter",
+    "description": "Das ultimative Kampagnen-Management-Tool für Spielleiter. Verwalte NPCs, Orte, Gegenstände und Sessions mit leistungsstarker Suche und KI-Funktionen."
+  },
+  "nav": {
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "download": "Download",
+    "github": "GitHub"
+  },
+  "hero": {
+    "badge": "Kostenlos & Open Source",
+    "title": {
+      "line1": "Deine Kampagne.",
+      "line2": "Deine Geschichte.",
+      "line3": "Deine Helden."
+    },
+    "subtitle": "Das ultimative Kampagnen-Management-Tool für Spielleiter. Organisiere NPCs, Orte, Gegenstände, Fraktionen und Sessions mit leistungsstarker Fuzzy-Suche und KI-Integration.",
+    "cta": {
+      "download": "Jetzt Herunterladen",
+      "github": "Auf GitHub ansehen"
+    },
+    "stats": {
+      "entities": "Entity-Typen",
+      "search": "Fuzzy-Suche",
+      "local": "100% Lokal",
+      "free": "Für immer kostenlos"
+    }
+  },
+  "features": {
+    "title": "Alles, was du für epische Kampagnen brauchst",
+    "subtitle": "DM Hero gibt dir alle Werkzeuge, um deine Tischrollenspiel-Abenteuer zu organisieren, durchsuchen und zu verbessern",
+    "items": {
+      "entities": {
+        "title": "Entity-Verwaltung",
+        "description": "Organisiere NPCs, Orte, Gegenstände, Fraktionen, Wissen, Spieler und Sessions. Alles miteinander verbunden durch bidirektionale Beziehungen."
+      },
+      "search": {
+        "title": "Leistungsstarke Fuzzy-Suche",
+        "description": "Finde alles sofort mit FTS5-Volltextsuche und Levenshtein-Distanz. Suche über ALLE Felder inklusive verknüpfter Entities."
+      },
+      "linking": {
+        "title": "Entity-Verknüpfung",
+        "description": "Verwende {'{{'}npc:123{'}}'}  Syntax in Markdown, um anklickbare Badges mit Hover-Vorschau zu erstellen. Erkenne Verbindungen auf einen Blick."
+      },
+      "calendar": {
+        "title": "In-Game Kalender",
+        "description": "Verfolge deine Kampagnen-Timeline mit einem absoluten Tagessystem. Perfekt für Session-Notizen und Weltereignisse."
+      },
+      "ai": {
+        "title": "KI-Integration",
+        "description": "Generiere NPC-Namen mit GPT und erstelle Charakterporträts mit DALL-E. Erwecke deine Fantasie zum Leben."
+      },
+      "local": {
+        "title": "Lokal & Privat",
+        "description": "Alle deine Daten bleiben auf deinem Rechner in SQLite. Keine Cloud, keine Abos, deine Kampagne gehört wirklich dir."
+      },
+      "chaos": {
+        "title": "Chaos-Graph",
+        "description": "Visualisiere Entity-Beziehungen in einem interaktiven Force-Directed-Graph. Entdecke versteckte Verbindungen in deiner Welt."
+      },
+      "markdown": {
+        "title": "Rich Markdown Editor",
+        "description": "Schreibe wunderschöne Beschreibungen mit voller Markdown-Unterstützung, Syntax-Highlighting und Live-Vorschau."
+      }
+    }
+  },
+  "screenshots": {
+    "title": "DM Hero in Aktion",
+    "subtitle": "Ein Einblick in dein zukünftiges Kampagnen-Hauptquartier",
+    "items": {
+      "dashboard": "Dashboard mit aktiver Kampagnen-Übersicht",
+      "npcs": "NPC-Verwaltung mit detaillierten Profilen",
+      "chaos": "Interaktive Chaos-Graph Visualisierung",
+      "calendar": "In-Game Kalender mit Session-Tracking",
+      "darkLight": "Wunderschöne Dark und Light Themes"
+    },
+    "comingSoon": "Screenshots kommen bald!"
+  },
+  "download": {
+    "title": "Bereit, ein Held zu werden?",
+    "subtitle": "Lade DM Hero herunter und beginne noch heute mit der Organisation deiner Kampagnen. Kostenlos, Open Source, und das bleibt so.",
+    "version": "Neueste Version",
+    "platforms": {
+      "windows": {
+        "title": "Windows",
+        "description": "Windows 10 oder neuer",
+        "button": "Für Windows herunterladen"
+      },
+      "mac": {
+        "title": "macOS",
+        "description": "Kommt bald",
+        "button": "Kommt bald"
+      },
+      "linux": {
+        "title": "Linux",
+        "description": "Kommt bald",
+        "button": "Kommt bald"
+      }
+    },
+    "docker": {
+      "title": "Oder mit Docker ausführen",
+      "description": "Für Self-Hosted Deployment"
+    },
+    "allReleases": "Alle Releases auf GitHub ansehen"
+  },
+  "footer": {
+    "tagline": "Wir unterstützen Spielleiter dabei, epische Geschichten zu erzählen.",
+    "madeWith": "Made with",
+    "loveBy": "by",
+    "links": {
+      "github": "GitHub",
+      "issues": "Probleme melden",
+      "releases": "Releases",
+      "license": "MIT Lizenz"
+    },
+    "copyright": "© {year} DM Hero. Open Source unter MIT Lizenz."
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Etwas ist schiefgelaufen",
+    "retry": "Erneut versuchen"
+  }
+}
