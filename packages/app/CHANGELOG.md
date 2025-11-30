@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.13
+
+### Patch Changes
+
+- [`f41ffb0`](https://github.com/Flo0806/dm-hero/commit/f41ffb02576cc42d2425405f0cea139546e7cf43) Thanks [@Flo0806](https://github.com/Flo0806)! - Include better-sqlite3 in extraResources for Electron build
+
 ## 1.0.0-alpha.12
 
 ### Patch Changes
