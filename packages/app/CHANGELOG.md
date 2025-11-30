@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.14
+
+### Patch Changes
+
+- [`4d33153`](https://github.com/Flo0806/dm-hero/commit/4d33153e0967bcf74ad882a23f2f6c3737fa973c) Thanks [@Flo0806](https://github.com/Flo0806)! - Include bindings and file-uri-to-path dependencies for Electron build
+
 ## 1.0.0-alpha.13
 
 ### Patch Changes

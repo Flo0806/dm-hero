@@ -6,6 +6,7 @@
     "@dm-hero/landing": "1.0.0-beta.2"
   },
   "changesets": [
-    "better-sqlite3-fix"
+    "better-sqlite3-fix",
+    "bindings-fix"
   ]
 }
