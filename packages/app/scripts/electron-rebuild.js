@@ -4,7 +4,7 @@
  */
 
 import { execSync } from 'child_process'
-import { existsSync } from 'fs'
+import { existsSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -12,18 +12,43 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const projectRoot = join(__dirname, '..')
 
-// Find better-sqlite3 in node_modules
-const betterSqlitePath = join(
-  projectRoot,
-  'node_modules',
-  '.pnpm',
-  'better-sqlite3@12.4.6',
-  'node_modules',
-  'better-sqlite3',
-)
+/**
+ * Find better-sqlite3 dynamically in pnpm's node_modules structure
+ */
+function findBetterSqlite() {
+  const pnpmDir = join(projectRoot, 'node_modules', '.pnpm')
 
-if (!existsSync(betterSqlitePath)) {
-  console.error('❌ better-sqlite3 not found at:', betterSqlitePath)
+  if (!existsSync(pnpmDir)) {
+    // Fallback: direct node_modules (non-pnpm or hoisted)
+    const directPath = join(projectRoot, 'node_modules', 'better-sqlite3')
+    if (existsSync(directPath)) {
+      return directPath
+    }
+    return null
+  }
+
+  // Find better-sqlite3@* folder dynamically
+  const entries = readdirSync(pnpmDir)
+  const betterSqliteFolder = entries.find((entry) => entry.startsWith('better-sqlite3@'))
+
+  if (!betterSqliteFolder) {
+    return null
+  }
+
+  const betterSqlitePath = join(pnpmDir, betterSqliteFolder, 'node_modules', 'better-sqlite3')
+
+  if (existsSync(betterSqlitePath)) {
+    return betterSqlitePath
+  }
+
+  return null
+}
+
+const betterSqlitePath = findBetterSqlite()
+
+if (!betterSqlitePath) {
+  console.error('❌ better-sqlite3 not found in node_modules')
+  console.error('   Searched in:', join(projectRoot, 'node_modules'))
   process.exit(1)
 }
 

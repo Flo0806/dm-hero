@@ -57,11 +57,11 @@ COPY --from=builder /app/packages/app/.output .output
 
 # Copy package files for production install
 COPY --from=builder /app/packages/app/package.json .output/server/
-COPY --from=builder /app/pnpm-lock.yaml .output/server/
 
 # Install production dependencies directly into .output/server/node_modules
+# Note: Using --no-frozen-lockfile because we only have the app's package.json, not the full monorepo lockfile
 WORKDIR /app/.output/server
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --ignore-workspace
 
 # Build better-sqlite3 native bindings (CRITICAL!)
 # Use find to locate better-sqlite3 regardless of version
