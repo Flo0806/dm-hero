@@ -4,6 +4,12 @@
 
 ### Patch Changes
 
+- [`9ffa508`](https://github.com/Flo0806/dm-hero/commit/9ffa50810f0c1adf3b043bacebbeacdaba846c78) Thanks [@Flo0806](https://github.com/Flo0806)! - Fix Windows build to create portable .exe instead of directory
+
+## 1.0.0
+
+### Patch Changes
+
 - [`562cb39`](https://github.com/Flo0806/dm-hero/commit/562cb39c532ea826342a59d264fc9fa0efb220fb) Thanks [@Flo0806](https://github.com/Flo0806)! - Fix Windows Electron build scripts in monorepo
 
 ## 1.0.0-alpha.7
