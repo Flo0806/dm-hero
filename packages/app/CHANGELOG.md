@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.11
+
+### Patch Changes
+
+- [`33103a5`](https://github.com/Flo0806/dm-hero/commit/33103a56981353b6ebbe944ccf68518a317782c7) Thanks [@Flo0806](https://github.com/Flo0806)! - Use NSIS installer instead of portable exe for Windows builds
+
 ## 1.0.0-alpha.10
 
 ### Patch Changes
