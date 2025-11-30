@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.12
+
+### Patch Changes
+
+- [`ec177f1`](https://github.com/Flo0806/dm-hero/commit/ec177f12c7cc63251b88f7f8906376b3960a94d3) Thanks [@Flo0806](https://github.com/Flo0806)! - Switch Windows build from NSIS installer to ZIP archive for better compatibility
+
 ## 1.0.0-alpha.11
 
 ### Patch Changes
