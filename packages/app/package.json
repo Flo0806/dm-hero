@@ -1,0 +1,138 @@
+{
+  "name": "@dm-hero/app",
+  "version": "1.0.0-alpha.7",
+  "description": "A personal D&D campaign management tool for Dungeon Masters with fuzzy search, entity management, and session tracking",
+  "author": "Florian Heuberger",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Flo0806/dm-hero.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Flo0806/dm-hero/issues"
+  },
+  "homepage": "https://github.com/Flo0806/dm-hero#readme",
+  "keywords": [
+    "dnd",
+    "dungeons-and-dragons",
+    "campaign-management",
+    "dungeon-master",
+    "dm-tools",
+    "rpg",
+    "ttrpg",
+    "nuxt",
+    "vue",
+    "vuetify",
+    "sqlite",
+    "fuzzy-search",
+    "entity-management"
+  ],
+  "main": "electron/main.js",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:electron": "concurrently \"nuxt dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare && pnpm rebuild better-sqlite3",
+    "test": "vitest",
+    "test:unit": "vitest --project unit",
+    "test:nuxt": "vitest --project nuxt",
+    "test:watch": "vitest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:reset": "node scripts/test-data/reset-and-seed.js",
+    "electron:rebuild": "node scripts/electron-rebuild.js",
+    "electron:rebuild:linux": "cd node_modules/.pnpm/better-sqlite3@12.4.6/node_modules/better-sqlite3 && HOME=~/.electron-gyp npx node-gyp rebuild --target=39.2.3 --arch=x64 --dist-url=https://electronjs.org/headers",
+    "electron:start": "cross-env NODE_ENV=production electron .",
+    "electron:build": "nuxt build && pnpm electron:rebuild && electron-builder --linux",
+    "electron:build:win": "nuxt build && pnpm electron:rebuild && electron-builder --win",
+    "mode:web": "pnpm rebuild better-sqlite3 && echo '✅ Switched to Web Mode (pnpm dev)'",
+    "mode:electron": "pnpm electron:rebuild:linux && echo '✅ Switched to Electron Mode (pnpm electron:start)'"
+  },
+  "build": {
+    "appId": "com.dm-hero.app",
+    "productName": "DM Hero",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".output",
+        "to": ".output",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "dir"
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "npmRebuild": true
+  },
+  "dependencies": {
+    "@iconify/vue": "^5.0.0",
+    "@mdi/font": "^7.4.47",
+    "@nuxt/test-utils": "3.20.1",
+    "@nuxtjs/i18n": "^10.2.0",
+    "@pinia/nuxt": "^0.11.3",
+    "better-sqlite3": "^12.4.6",
+    "fastest-levenshtein": "^1.0.16",
+    "marked": "^17.0.0",
+    "md-editor-v3": "^6.1.1",
+    "nuxt": "^4.2.1",
+    "pinia": "^3.0.4",
+    "vite-plugin-vuetify": "^2.1.2",
+    "vue": "^3.5.24",
+    "vue-pdf-embed": "^2.1.3",
+    "vue-router": "^4.6.3",
+    "vuetify": "^3.10.9"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "@nuxt/eslint": "1.10.0",
+    "@oxc-minify/binding-linux-x64-gnu": "^0.97.0",
+    "@oxc-parser/binding-linux-x64-gnu": "^0.97.0",
+    "@oxc-resolver/binding-linux-x64-gnu": "^11.13.2",
+    "@oxc-transform/binding-linux-x64-gnu": "^0.97.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.3",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.5.1",
+    "happy-dom": "^20.0.10",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.0.8",
+    "wait-on": "^9.0.3"
+  }
+}

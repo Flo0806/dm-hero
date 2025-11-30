@@ -12,28 +12,31 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy workspace config and lockfile
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Copy app package.json
+COPY packages/app/package.json ./packages/app/
 
 # Install dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile
 
 # Workaround: pnpm bug with optional dependencies (OXC bindings)
 # Explicitly install Linux bindings to ensure GitHub Actions build succeeds
-RUN pnpm add -D \
+RUN pnpm --filter @dm-hero/app add -D \
   @oxc-parser/binding-linux-x64-gnu \
   @oxc-transform/binding-linux-x64-gnu \
   @oxc-minify/binding-linux-x64-gnu \
   @oxc-resolver/binding-linux-x64-gnu || true
 
-# Copy source code
-COPY . .
+# Copy app source code
+COPY packages/app ./packages/app
 
 # Build the application
-RUN pnpm build
+RUN pnpm --filter @dm-hero/app build
 
 # Rebuild better-sqlite3 for production (ensures native bindings are correct)
-RUN cd node_modules/better-sqlite3 && npm run build-release
+RUN cd packages/app/node_modules/better-sqlite3 && npm run build-release
 
 # ==========================================
 # Stage 2: Production Stage
@@ -50,10 +53,11 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Copy built output to .output/ (keep Nuxt's directory structure)
-COPY --from=builder /app/.output .output
+COPY --from=builder /app/packages/app/.output .output
 
-# Copy package files
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml .output/server/
+# Copy package files for production install
+COPY --from=builder /app/packages/app/package.json .output/server/
+COPY --from=builder /app/pnpm-lock.yaml .output/server/
 
 # Install production dependencies directly into .output/server/node_modules
 WORKDIR /app/.output/server

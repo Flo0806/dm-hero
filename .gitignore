@@ -25,12 +25,16 @@ logs
 
 # Database
 data/
+/data/
+packages/*/data/
 *.db
 *.db-shm
 *.db-wal
 
-# Uplaods
+# Uploads
 uploads/
+/uploads/
+packages/*/uploads/
 
 # Private project documentation (keep local only)
 CLAUDE.md
