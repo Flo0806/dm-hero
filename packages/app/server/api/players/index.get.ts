@@ -52,9 +52,10 @@ export default defineEventHandler((event) => {
 
   if (searchQuery && searchQuery.trim().length > 0) {
     const searchTerm = normalizeText(searchQuery.trim())
+    const maxDist = searchTerm.length <= 3 ? 1 : searchTerm.length <= 6 ? 2 : 3
 
-    // Step 1: Find Players matching the search term directly
-    players = db
+    // Step 1: Get ALL Players and filter with Levenshtein
+    const allPlayers = db
       .prepare<unknown[], PlayerRow>(
         `
       SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
@@ -68,15 +69,34 @@ export default defineEventHandler((event) => {
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-        AND (
-          LOWER(e.name) LIKE ?
-          OR LOWER(e.description) LIKE ?
-          OR LOWER(e.metadata) LIKE ?
-        )
       ORDER BY e.name ASC
     `,
       )
-      .all(entityType.id, campaignId, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`)
+      .all(entityType.id, campaignId)
+
+    // Filter with substring match OR Levenshtein distance
+    players = allPlayers.filter((player) => {
+      const nameNormalized = normalizeText(player.name)
+      const descNormalized = normalizeText(player.description || '')
+      const metaNormalized = normalizeText(player.metadata || '')
+
+      // Substring match on name, description, or metadata
+      if (nameNormalized.includes(searchTerm)) return true
+      if (descNormalized.includes(searchTerm)) return true
+      if (metaNormalized.includes(searchTerm)) return true
+
+      // Full name Levenshtein
+      if (levenshtein(searchTerm, nameNormalized) <= maxDist) return true
+
+      // Word-level Levenshtein on name
+      const nameWords = nameNormalized.split(/\s+/)
+      for (const word of nameWords) {
+        if (word.length < 3) continue
+        if (levenshtein(searchTerm, word) <= maxDist) return true
+      }
+
+      return false
+    })
 
     // Step 2: Cross-entity search - find Players linked to matching entities
     const playerIdsLinkedToMatchingEntities = new Set<number>()

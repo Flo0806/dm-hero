@@ -49,9 +49,10 @@ export default defineEventHandler((event) => {
   // Search implementation with Player cross-search
   if (searchQuery && searchQuery.trim().length > 0) {
     const searchTerm = normalizeText(searchQuery.trim())
+    const maxDist = searchTerm.length <= 3 ? 1 : searchTerm.length <= 6 ? 2 : 3
 
-    // Step 1: Find Lore entries matching the search term directly
-    loreEntries = db
+    // Step 1: Get ALL Lore entries and filter with Levenshtein
+    const allLoreEntries = db
       .prepare<unknown[], LoreRow>(
         `
       SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
@@ -65,14 +66,32 @@ export default defineEventHandler((event) => {
       WHERE e.type_id = ?
         AND e.campaign_id = ?
         AND e.deleted_at IS NULL
-        AND (
-          LOWER(e.name) LIKE ?
-          OR LOWER(e.description) LIKE ?
-        )
       ORDER BY e.updated_at DESC
     `,
       )
-      .all(entityType.id, campaignId, `%${searchTerm}%`, `%${searchTerm}%`)
+      .all(entityType.id, campaignId)
+
+    // Filter with substring match OR Levenshtein distance
+    loreEntries = allLoreEntries.filter((lore) => {
+      const nameNormalized = normalizeText(lore.name)
+      const descNormalized = normalizeText(lore.description || '')
+
+      // Substring match on name or description
+      if (nameNormalized.includes(searchTerm)) return true
+      if (descNormalized.includes(searchTerm)) return true
+
+      // Full name Levenshtein
+      if (levenshtein(searchTerm, nameNormalized) <= maxDist) return true
+
+      // Word-level Levenshtein on name
+      const nameWords = nameNormalized.split(/\s+/)
+      for (const word of nameWords) {
+        if (word.length < 3) continue
+        if (levenshtein(searchTerm, word) <= maxDist) return true
+      }
+
+      return false
+    })
 
     // Step 2: Separate Player lookup for cross-entity search
     const loreIdsLinkedToMatchingPlayers = new Set<number>()
