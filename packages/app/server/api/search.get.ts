@@ -541,13 +541,20 @@ export default defineEventHandler((event) => {
         return { ...result, _score: score }
       }
 
-      // Levenshtein on name words
+      // Levenshtein on full name (for single-word names or close matches)
+      const fullNameDist = levenshtein(searchTerm, nameNormalized)
+      if (fullNameDist <= maxDist) {
+        score -= 100 - fullNameDist * 10
+        return { ...result, _score: score }
+      }
+
+      // Levenshtein on name words (for multi-word names)
       const nameWords = nameNormalized.split(/\s+/)
       for (const word of nameWords) {
         if (word.length === 0) continue
         const dist = levenshtein(searchTerm, word)
         if (dist <= maxDist) {
-          score -= 100 - dist * 10
+          score -= 90 - dist * 10 // Slightly lower than full name match
           return { ...result, _score: score }
         }
       }
