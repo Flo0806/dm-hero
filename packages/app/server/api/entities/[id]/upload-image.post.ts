@@ -45,12 +45,6 @@ export default defineEventHandler(async (event) => {
   // Ensure uploads directory exists
   await mkdir(uploadsDir, { recursive: true })
 
-  // Check if this is the first image - if so, make it primary
-  const existingImages = db
-    .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
-    .get(Number(entityId)) as { count: number }
-  const shouldBePrimary = existingImages.count === 0
-
   // Get max display order
   const maxOrderResult = db
     .prepare('SELECT COALESCE(MAX(display_order), -1) as max_order FROM entity_images WHERE entity_id = ?')
@@ -82,6 +76,12 @@ export default defineEventHandler(async (event) => {
     const filePath = join(uploadsDir, uniqueName)
     await writeFile(filePath, file.data)
 
+    // First uploaded image becomes primary - reset existing primaries
+    const isFirstUpload = uploadedImages.length === 0
+    if (isFirstUpload) {
+      db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(Number(entityId))
+    }
+
     // Insert into database
     const result = db
       .prepare(
@@ -90,17 +90,12 @@ export default defineEventHandler(async (event) => {
       VALUES (?, ?, ?, ?)
     `,
       )
-      .run(
-        Number(entityId),
-        uniqueName,
-        shouldBePrimary && uploadedImages.length === 0 ? 1 : 0,
-        displayOrder++,
-      )
+      .run(Number(entityId), uniqueName, isFirstUpload ? 1 : 0, displayOrder++)
 
     uploadedImages.push({
       id: result.lastInsertRowid as number,
       imageUrl: uniqueName,
-      isPrimary: shouldBePrimary && uploadedImages.length === 0,
+      isPrimary: isFirstUpload,
     })
   }
 

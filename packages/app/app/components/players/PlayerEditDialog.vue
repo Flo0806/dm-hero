@@ -171,11 +171,12 @@
           <v-tabs-window-item value="images">
             <EntityImageGallery
               v-if="player"
+              ref="imageGalleryRef"
               :entity-id="player.id"
               entity-type="Player"
               :entity-name="form.name"
               :entity-description="form.description"
-              @images-updated="loadCounts(player!.id)"
+              @images-updated="handleGalleryUpdated"
               @preview-image="handleImagePreview"
             />
           </v-tabs-window-item>
@@ -319,10 +320,10 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn variant="text" :disabled="saving" @click="close">
+        <v-btn variant="text" :disabled="saving || generatingImage || uploadingImage" @click="close">
           {{ $t('common.cancel') }}
         </v-btn>
-        <v-btn color="primary" :disabled="!form.name" :loading="saving" @click="save">
+        <v-btn color="primary" :disabled="!form.name || generatingImage || uploadingImage" :loading="saving" @click="save">
           {{ player ? $t('common.save') : $t('common.create') }}
         </v-btn>
       </v-card-actions>
@@ -402,6 +403,7 @@ const counts = ref<PlayerCounts>({
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const imageGalleryRef = ref<{ refresh: () => Promise<void> } | null>(null)
 const uploadingImage = ref(false)
 const deletingImage = ref(false)
 const generatingImage = ref(false)
@@ -584,9 +586,11 @@ async function handleImageUpload(event: Event) {
       throw new Error('Upload failed')
     }
 
-    // Refresh player data
+    // Refresh player data and gallery
     await loadPlayer(player.value.id)
     await entitiesStore.refreshPlayer(player.value.id)
+    await imageGalleryRef.value?.refresh()
+    await loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to upload image:', error)
     alert(t('players.uploadImageError'))
@@ -636,6 +640,8 @@ async function generateImage() {
       if (response.success) {
         await loadPlayer(player.value.id)
         await entitiesStore.refreshPlayer(player.value.id)
+        await imageGalleryRef.value?.refresh()
+        await loadCounts(player.value.id)
       }
     }
   } catch (error: unknown) {
@@ -659,12 +665,22 @@ async function deleteImage() {
 
     await loadPlayer(player.value.id)
     await entitiesStore.refreshPlayer(player.value.id)
+    await imageGalleryRef.value?.refresh()
+    await loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to delete image:', error)
     alert(t('players.deleteImageError'))
   } finally {
     deletingImage.value = false
   }
+}
+
+// Handle gallery updates - sync main image and counts
+async function handleGalleryUpdated() {
+  if (!player.value) return
+  await loadPlayer(player.value.id)
+  await entitiesStore.refreshPlayer(player.value.id)
+  await loadCounts(player.value.id)
 }
 
 function downloadImage() {

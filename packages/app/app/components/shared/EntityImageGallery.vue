@@ -351,6 +351,11 @@ watch(
     }
   },
 )
+
+// Expose refresh method for parent components
+defineExpose({
+  refresh: loadImages,
+})
 </script>
 
 <style scoped>

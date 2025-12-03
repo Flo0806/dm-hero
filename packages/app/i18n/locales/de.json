@@ -26,6 +26,10 @@
     "noResults": "Keine Ergebnisse gefunden",
     "hint": "Drücke / um zu suchen"
   },
+  "editor": {
+    "quickInsert": "Schnell einfügen",
+    "quickSearchPlaceholder": "Tippe z.B. 'npc gandalf' oder 'loc taverne'..."
+  },
   "categories": {
     "npcs": {
       "title": "NPCs",
@@ -449,7 +453,14 @@
       "creature": "Kreatur",
       "concept": "Konzept",
       "magic": "Magie",
-      "religion": "Religion"
+      "religion": "Religion",
+      "prophecy": "Prophezeiung",
+      "mystery": "Mysterium",
+      "history": "Geschichte",
+      "curse": "Fluch",
+      "artifact": "Artefakt",
+      "treaty": "Vertrag",
+      "legend": "Legende"
     },
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
@@ -843,6 +854,7 @@
     "linkFaction": "Fraktion verknüpfen",
     "linkLore": "Wissen verknüpfen",
     "linkPlayer": "Spieler verknüpfen",
+    "linkSession": "Session verknüpfen",
     "goToPage": "Zur Seite",
     "cover": "Cover",
     "coverImages": "Cover-Bilder",
@@ -1065,6 +1077,8 @@
     "noLore": "Kein Wissen",
     "noLoreText": "Dieser Spieler hat noch kein Wissen.",
     "addLore": "Wissen hinzufügen",
+    "noLocations": "Keine Orte",
+    "noFactions": "Keine Fraktionen",
     "badgeTooltips": {
       "characters": "Spielercharaktere",
       "items": "Verknüpfte Items",

@@ -26,6 +26,10 @@
     "noResults": "No results found",
     "hint": "Press / to search"
   },
+  "editor": {
+    "quickInsert": "Quick Insert",
+    "quickSearchPlaceholder": "Type e.g. 'npc gandalf' or 'loc tavern'..."
+  },
   "categories": {
     "npcs": {
       "title": "NPCs",
@@ -450,7 +454,14 @@
       "creature": "Creature",
       "concept": "Concept",
       "magic": "Magic",
-      "religion": "Religion"
+      "religion": "Religion",
+      "prophecy": "Prophecy",
+      "mystery": "Mystery",
+      "history": "History",
+      "curse": "Curse",
+      "artifact": "Artifact",
+      "treaty": "Treaty",
+      "legend": "Legend"
     },
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
@@ -822,6 +833,7 @@
     "linkFaction": "Link Faction",
     "linkLore": "Link Lore",
     "linkPlayer": "Link Player",
+    "linkSession": "Link Session",
     "goToPage": "Go to Page",
     "cover": "Cover",
     "coverImages": "Cover Images",
@@ -1044,6 +1056,8 @@
     "noLore": "No Lore",
     "noLoreText": "This player has no lore yet.",
     "addLore": "Add Lore",
+    "noLocations": "No Locations",
+    "noFactions": "No Factions",
     "badgeTooltips": {
       "characters": "Player Characters",
       "items": "Linked Items",

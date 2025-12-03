@@ -266,117 +266,16 @@
                   </div>
                 </v-overlay>
 
-                <ClientOnly>
-                  <MdEditor
-                    ref="editorRef"
-                    v-model="sessionForm.notes"
-                    :language="currentLocale"
-                    :theme="editorTheme"
-                    :placeholder="$t('sessions.notesPlaceholder')"
-                    :on-upload-img="handleImageUpload"
-                    :toolbars="toolbars"
-                    :sanitize="sanitizeHtml"
-                    style="height: 500px"
-                    class="mb-4"
-                    @click="handleEditorClick"
-                    @cancel.stop.prevent
-                  >
-                    <!-- Custom Entity Link Buttons -->
-                    <template #defToolbars>
-                      <NormalToolbar
-                        :title="$t('sessions.linkNpc')"
-                        @on-click="showLinkEntityDialog('npc')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('sessions.linkLocation')"
-                        @on-click="showLinkEntityDialog('location')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('sessions.linkItem')"
-                        @on-click="showLinkEntityDialog('item')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M6.92,5H5L14,14L15,13.06M19.96,19.12L19.12,19.96C18.73,20.35 18.1,20.35 17.71,19.96L14.59,16.84L11.91,19.5L10.5,18.09L13.16,15.43L11.06,13.33L8.85,15.54L7.44,14.13L9.65,11.92L6.5,8.77L7.91,7.36L11.06,10.5L13.27,8.29L9.12,4.12C8.73,3.73 8.73,3.1 9.12,2.71L9.96,1.87C10.35,1.5 10.98,1.5 11.37,1.87L19.96,10.46C20.35,10.85 20.35,11.5 19.96,11.87L19.12,12.71C18.73,13.1 18.1,13.1 17.71,12.71L15.92,10.92L13.71,13.13L15.81,15.23L18.5,12.54L19.91,13.95L17.22,16.64L19.96,19.38C20.35,19.77 20.35,20.4 19.96,20.79Z"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('sessions.linkFaction')"
-                        @on-click="showLinkEntityDialog('faction')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('sessions.linkLore')"
-                        @on-click="showLinkEntityDialog('lore')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M21,4H7A2,2 0 0,0 5,6V17H21V16L23,14V6C23,4.89 22.1,4 21,4M21,14H7V6H21M3,19V8H1V19A2,2 0 0,0 3,21H19V19"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('sessions.linkPlayer')"
-                        @on-click="showLinkEntityDialog('player')"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,6A2,2 0 0,0 10,8A2,2 0 0,0 12,10A2,2 0 0,0 14,8A2,2 0 0,0 12,6M12,13C14.67,13 20,14.33 20,17V20H4V17C4,14.33 9.33,13 12,13M12,14.9C9.03,14.9 5.9,16.36 5.9,17V18.1H18.1V17C18.1,16.36 14.97,14.9 12,14.9M18,9V12H15V13H18V16H19V13H22V12H19V9H18Z"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                      <NormalToolbar
-                        :title="$t('documents.imageGallery')"
-                        @on-click="openImageGallery"
-                      >
-                        <template #trigger>
-                          <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                            <path
-                              fill="currentColor"
-                              d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6"
-                            />
-                          </svg>
-                        </template>
-                      </NormalToolbar>
-                    </template>
-                  </MdEditor>
-                </ClientOnly>
+                <SharedEntityMarkdownEditor
+                  ref="editorRef"
+                  v-model="sessionForm.notes"
+                  :placeholder="$t('sessions.notesPlaceholder')"
+                  :sessions="sessions"
+                  height="500px"
+                  show-image-gallery-button
+                  @open-image-gallery="openImageGallery"
+                  @upload-image="handleImageUpload"
+                />
               </div>
             </v-tabs-window-item>
 
@@ -537,117 +436,16 @@
                 </div>
               </v-overlay>
 
-              <ClientOnly>
-                <MdEditor
-                  ref="editorRef"
-                  v-model="sessionForm.notes"
-                  :language="currentLocale"
-                  :theme="editorTheme"
-                  :placeholder="$t('sessions.notesPlaceholder')"
-                  :on-upload-img="handleImageUpload"
-                  :toolbars="toolbars"
-                  :sanitize="sanitizeHtml"
-                  style="height: 500px"
-                  class="mb-4"
-                  @click="handleEditorClick"
-                  @cancel.stop.prevent
-                >
-                  <!-- Custom Entity Link Buttons -->
-                  <template #defToolbars>
-                    <NormalToolbar
-                      :title="$t('sessions.linkNpc')"
-                      @on-click="showLinkEntityDialog('npc')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('sessions.linkLocation')"
-                      @on-click="showLinkEntityDialog('location')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('sessions.linkItem')"
-                      @on-click="showLinkEntityDialog('item')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M6.92,5H5L14,14L15,13.06M19.96,19.12L19.12,19.96C18.73,20.35 18.1,20.35 17.71,19.96L14.59,16.84L11.91,19.5L10.5,18.09L13.16,15.43L11.06,13.33L8.85,15.54L7.44,14.13L9.65,11.92L6.5,8.77L7.91,7.36L11.06,10.5L13.27,8.29L9.12,4.12C8.73,3.73 8.73,3.1 9.12,2.71L9.96,1.87C10.35,1.5 10.98,1.5 11.37,1.87L19.96,10.46C20.35,10.85 20.35,11.5 19.96,11.87L19.12,12.71C18.73,13.1 18.1,13.1 17.71,12.71L15.92,10.92L13.71,13.13L15.81,15.23L18.5,12.54L19.91,13.95L17.22,16.64L19.96,19.38C20.35,19.77 20.35,20.4 19.96,20.79Z"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('sessions.linkFaction')"
-                      @on-click="showLinkEntityDialog('faction')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('sessions.linkLore')"
-                      @on-click="showLinkEntityDialog('lore')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M21,4H7A2,2 0 0,0 5,6V17H21V16L23,14V6C23,4.89 22.1,4 21,4M21,14H7V6H21M3,19V8H1V19A2,2 0 0,0 3,21H19V19"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('sessions.linkPlayer')"
-                      @on-click="showLinkEntityDialog('player')"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,6A2,2 0 0,0 10,8A2,2 0 0,0 12,10A2,2 0 0,0 14,8A2,2 0 0,0 12,6M12,13C14.67,13 20,14.33 20,17V20H4V17C4,14.33 9.33,13 12,13M12,14.9C9.03,14.9 5.9,16.36 5.9,17V18.1H18.1V17C18.1,16.36 14.97,14.9 12,14.9M18,9V12H15V13H18V16H19V13H22V12H19V9H18Z"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                    <NormalToolbar
-                      :title="$t('documents.imageGallery')"
-                      @on-click="openImageGallery"
-                    >
-                      <template #trigger>
-                        <svg class="md-editor-icon" aria-hidden="true" viewBox="0 0 24 24">
-                          <path
-                            fill="currentColor"
-                            d="M22,16V4A2,2 0 0,0 20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16M11,12L13.03,14.71L16,11L20,16H8M2,6V20A2,2 0 0,0 4,22H18V20H4V6"
-                          />
-                        </svg>
-                      </template>
-                    </NormalToolbar>
-                  </template>
-                </MdEditor>
-              </ClientOnly>
+              <SharedEntityMarkdownEditor
+                ref="editorRef"
+                v-model="sessionForm.notes"
+                :placeholder="$t('sessions.notesPlaceholder')"
+                :sessions="sessions"
+                height="500px"
+                show-image-gallery-button
+                @open-image-gallery="openImageGallery"
+                @upload-image="handleImageUpload"
+              />
             </div>
           </template>
         </v-card-text>
@@ -664,56 +462,6 @@
             @click="saveSession"
           >
             {{ editingSession ? $t('common.save') : $t('common.create') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Entity Link Dialog -->
-    <v-dialog v-model="showEntityLinkDialog" max-width="600">
-      <v-card>
-        <v-card-title>
-          {{
-            $t(`sessions.link${linkEntityType.charAt(0).toUpperCase() + linkEntityType.slice(1)}`)
-          }}
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="entitySearch"
-            :label="$t('common.search')"
-            prepend-inner-icon="mdi-magnify"
-            variant="outlined"
-            autofocus
-            clearable
-            class="mb-4"
-          />
-
-          <v-list>
-            <v-list-item
-              v-for="entity in filteredEntities"
-              :key="entity.id"
-              @click="insertEntityLink(entity)"
-            >
-              <template #prepend>
-                <v-icon :icon="getEntityIcon(linkEntityType)" color="primary" />
-              </template>
-              <v-list-item-title>
-                {{ entity.displayName || entity.name }}
-                <span v-if="entity.subtitle" class="text-caption text-medium-emphasis ml-2">
-                  ({{ entity.subtitle }})
-                </span>
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-
-          <div v-if="filteredEntities.length === 0" class="text-center text-disabled py-4">
-            {{ $t('common.noResults') }}
-          </div>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showEntityLinkDialog = false">
-            {{ $t('common.cancel') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -827,8 +575,7 @@
 </template>
 
 <script setup lang="ts">
-import { MdEditor, NormalToolbar, MdPreview } from 'md-editor-v3'
-import type { ToolbarNames } from 'md-editor-v3'
+import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useTheme } from 'vuetify'
 
@@ -894,7 +641,6 @@ const pending = ref(false)
 const showCreateDialog = ref(false)
 const showViewDialog = ref(false)
 const showDeleteDialog = ref(false)
-const showEntityLinkDialog = ref(false)
 const showEntityDialog = ref(false)
 const showImageGallery = ref(false)
 const galleryImages = ref<string[]>([])
@@ -981,94 +727,11 @@ watch(
   },
 )
 
-// Entity linking
-const linkEntityType = ref<'npc' | 'location' | 'item' | 'faction' | 'lore' | 'player'>('npc')
-const entitySearch = ref('')
-const notesTextarea = ref<{ $el: HTMLElement } | null>(null)
-
-type EditorInsertBlock = {
-  targetValue: string
-  select?: boolean
-  deviationStart?: number
-  deviationEnd?: number
+// Editor ref for image gallery insertion
+interface EditorExpose {
+  insert: (text: string) => void
 }
-interface MdEditorExpose {
-  insert: (gen: () => EditorInsertBlock) => void
-}
-const editorRef = ref<MdEditorExpose | null>(null)
-
-// md-editor Toolbars: 0-6 = Placeholders for custom buttons
-type ToolbarOrSlot = ToolbarNames | 0 | 1 | 2 | 3 | 4 | 5 | 6
-const toolbars: ToolbarOrSlot[] = [
-  'bold',
-  'italic',
-  'strikeThrough',
-  '-',
-  'title',
-  'quote',
-  'unorderedList',
-  'orderedList',
-  '-',
-  'code',
-  'link',
-  'image',
-  0, // NPC
-  1, // Location
-  2, // Item
-  3, // Faction
-  4, // Lore
-  5, // Player
-  6, // Gallery
-  'table',
-  '-',
-  'revoke',
-  'next',
-  '=',
-  // 'pageFullscreen',
-  'preview',
-  // 'catalog',
-]
-
-const filteredEntities = computed(() => {
-  const query = entitySearch.value?.toLowerCase() || ''
-  let entities: Array<{ id: number; name: string; displayName?: string; subtitle?: string }> = []
-
-  switch (linkEntityType.value) {
-  case 'npc':
-    entities = entitiesStore.npcsForSelect || []
-    break
-  case 'location':
-    entities = entitiesStore.locationsForSelect || []
-    break
-  case 'item':
-    entities = entitiesStore.items || []
-    break
-  case 'faction':
-    entities = entitiesStore.factions || []
-    break
-  case 'lore':
-    entities = entitiesStore.loreForSelect || []
-    break
-  case 'player':
-    // For players: displayName = human name (Spielername), subtitle = character name
-    entities = (entitiesStore.players || []).map((p) => ({
-      id: p.id,
-      name: p.name, // Character name (used for linking)
-      displayName: p.metadata?.player_name || p.name, // Human player name shown first
-      subtitle: p.metadata?.player_name ? p.name : undefined, // Character name as subtitle if player_name exists
-    }))
-    break
-  }
-
-  if (!query) return entities
-
-  // For players, also search in displayName
-  return entities.filter((e) => {
-    const nameMatch = e.name.toLowerCase().includes(query)
-    const displayMatch = e.displayName?.toLowerCase().includes(query)
-    return nameMatch || displayMatch
-  })
-})
+const editorRef = ref<EditorExpose | null>(null)
 
 // Helper to resolve entity name from stores
 function resolveEntityName(type: string, id: number): string {
@@ -1253,51 +916,6 @@ function getEntityColor(type: string): string {
     player: '#4CAF50',
   }
   return colors[type] || '#888888'
-}
-
-function showLinkEntityDialog(type: 'npc' | 'location' | 'item' | 'faction' | 'lore' | 'player') {
-  linkEntityType.value = type
-  entitySearch.value = ''
-  showEntityLinkDialog.value = true
-}
-
-function insertEntityLink(entity: { id: number; name: string }) {
-  // New format: {{type:id}} - name is resolved dynamically when rendering
-  const link = `{{${linkEntityType.value}:${entity.id}}}`
-
-  // Use md-editor's insert API if available, fallback to textarea method
-  if (editorRef.value) {
-    editorRef.value.insert(() => ({
-      targetValue: link,
-      select: false,
-      deviationStart: 0,
-      deviationEnd: 0,
-    }))
-  } else {
-    insertMarkdown(link, '')
-  }
-
-  showEntityLinkDialog.value = false
-}
-
-function insertMarkdown(before: string, after: string) {
-  const textarea = notesTextarea.value?.$el?.querySelector('textarea')
-  if (!textarea) return
-
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const text = sessionForm.value.notes || ''
-  const selectedText = text.substring(start, end)
-
-  sessionForm.value.notes =
-    text.substring(0, start) + before + selectedText + after + text.substring(end)
-
-  // Restore cursor position
-  nextTick(() => {
-    textarea.focus()
-    textarea.selectionStart = start + before.length
-    textarea.selectionEnd = start + before.length + selectedText.length
-  })
 }
 
 function removeMention(mention: EntityMention) {
@@ -1500,14 +1118,9 @@ function insertImageFromGallery(image: string) {
   const src = image.startsWith('/pictures/') ? image : `/pictures/${image}`
   const markdown = `![](${src})`
 
-  // Use md-editor's insert API to insert at cursor position
+  // Use the EntityMarkdownEditor's insert API
   if (editorRef.value) {
-    editorRef.value.insert(() => ({
-      targetValue: markdown,
-      select: false,
-      deviationStart: 0,
-      deviationEnd: 0,
-    }))
+    editorRef.value.insert(markdown)
   } else {
     // Fallback: append at end
     sessionForm.value.notes += `\n${markdown}\n`

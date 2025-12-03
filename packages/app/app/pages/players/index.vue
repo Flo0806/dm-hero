@@ -52,7 +52,7 @@
           <PlayerCard
             :player="player"
             :is-highlighted="highlightedId === player.id"
-            @view="editPlayer"
+            @view="viewPlayer"
             @edit="editPlayer"
             @download="handleDownload"
             @delete="confirmDelete"
@@ -79,6 +79,14 @@
       </ClientOnly>
     </div>
 
+    <!-- View Dialog -->
+    <PlayerViewDialog
+      :show="showViewDialog"
+      :player="viewingPlayer"
+      @update:show="handleViewDialogClose"
+      @edit="handleEditFromView"
+    />
+
     <!-- Self-contained Edit Dialog -->
     <PlayerEditDialog
       :show="showEditDialog"
@@ -103,6 +111,7 @@
 <script setup lang="ts">
 import type { Player } from '../../../types/player'
 import PlayerEditDialog from '~/components/players/PlayerEditDialog.vue'
+import PlayerViewDialog from '~/components/players/PlayerViewDialog.vue'
 import PlayerCard from '~/components/players/PlayerCard.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
 
@@ -111,7 +120,7 @@ const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
 const { downloadImage } = useImageDownload()
-const { loadPlayerCountsBatch } = usePlayerCounts()
+const { loadPlayerCountsBatch, reloadPlayerCounts } = usePlayerCounts()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -123,9 +132,11 @@ const searchQuery = ref('')
 const searchResults = ref<Player[]>([])
 const searching = ref(false)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+const showViewDialog = ref(false)
 const showEditDialog = ref(false)
 const showDeleteDialog = ref(false)
 const deleting = ref(false)
+const viewingPlayer = ref<Player | null>(null)
 const editingPlayerId = ref<number | null>(null)
 const deletingPlayer = ref<Player | null>(null)
 
@@ -192,7 +203,26 @@ function openCreateDialog() {
   showEditDialog.value = true
 }
 
+function viewPlayer(player: Player) {
+  viewingPlayer.value = player
+  showViewDialog.value = true
+}
+
 function editPlayer(player: Player) {
+  editingPlayerId.value = player.id
+  showEditDialog.value = true
+}
+
+function handleViewDialogClose(value: boolean) {
+  showViewDialog.value = value
+  if (!value) {
+    viewingPlayer.value = null
+  }
+}
+
+function handleEditFromView(player: Player) {
+  showViewDialog.value = false
+  viewingPlayer.value = null
   editingPlayerId.value = player.id
   showEditDialog.value = true
 }
@@ -204,12 +234,14 @@ function handleDialogClose(value: boolean) {
   }
 }
 
-function handlePlayerSaved(_player: Player) {
-  // Store already updated via entitiesStore.updatePlayer
+async function handlePlayerSaved(player: Player) {
+  // Force reload counts for this player (ignores cache)
+  await reloadPlayerCounts(player)
 }
 
-function handlePlayerCreated(_player: Player) {
-  // Store already updated via entitiesStore.createPlayer
+async function handlePlayerCreated(player: Player) {
+  // Load counts for the new player
+  await reloadPlayerCounts(player)
 }
 
 function confirmDelete(player: Player) {
