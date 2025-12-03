@@ -245,6 +245,7 @@
                 variant="outlined"
                 rows="3"
                 class="mb-4"
+                persistent-placeholder
               />
 
               <div class="text-h6 mb-4">
@@ -415,6 +416,7 @@
               variant="outlined"
               rows="3"
               class="mb-4"
+              persistent-placeholder
             />
 
             <div class="text-h6 mb-4">

@@ -84,6 +84,7 @@
             variant="outlined"
             rows="2"
             class="mb-3"
+            persistent-placeholder
           />
 
           <v-btn

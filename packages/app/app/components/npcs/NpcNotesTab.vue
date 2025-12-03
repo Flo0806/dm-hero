@@ -81,6 +81,7 @@
             variant="outlined"
             rows="6"
             class="mb-4"
+            persistent-placeholder
           />
 
           <v-text-field
@@ -97,6 +98,7 @@
             :placeholder="$t('npcs.noteDetailsPlaceholder')"
             variant="outlined"
             rows="3"
+            persistent-placeholder
           />
         </v-card-text>
         <v-card-actions>

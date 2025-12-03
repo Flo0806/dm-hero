@@ -153,6 +153,7 @@
                 variant="outlined"
                 rows="3"
                 class="mb-4"
+                persistent-placeholder
               />
 
               <v-textarea
@@ -312,6 +313,7 @@
               variant="outlined"
               rows="3"
               class="mb-4"
+              persistent-placeholder
             />
 
             <v-textarea

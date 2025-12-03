@@ -193,6 +193,7 @@
       variant="outlined"
       rows="3"
       class="mb-4"
+      persistent-placeholder
       @update:model-value="
         $emit('update:modelValue', {
           ...modelValue,
