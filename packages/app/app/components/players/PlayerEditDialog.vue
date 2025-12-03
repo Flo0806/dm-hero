@@ -108,6 +108,7 @@
               variant="outlined"
               rows="2"
               class="mb-3"
+              persistent-placeholder
             />
 
             <!-- Inspiration Counter -->
@@ -162,6 +163,7 @@
               :placeholder="$t('players.notesPlaceholder')"
               variant="outlined"
               rows="3"
+              persistent-placeholder
             />
           </v-tabs-window-item>
 
@@ -255,6 +257,7 @@
             variant="outlined"
             rows="2"
             class="mb-3"
+            persistent-placeholder
           />
 
           <!-- Inspiration Counter -->
@@ -309,6 +312,7 @@
             :placeholder="$t('players.notesPlaceholder')"
             variant="outlined"
             rows="3"
+            persistent-placeholder
           />
         </div>
       </v-card-text>
