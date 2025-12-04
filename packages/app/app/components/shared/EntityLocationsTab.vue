@@ -166,6 +166,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  changed: []
+}>()
+
 // State
 const locationRelations = ref<LocationRelation[]>([])
 const availableLocations = ref<{ id: number; name: string }[]>([])
@@ -279,6 +283,8 @@ async function handleAdd() {
     localLocationId.value = null
     localRelationType.value = ''
     localNotes.value = ''
+
+    emit('changed')
   } catch (error) {
     console.error('Failed to add location relation:', error)
   } finally {
@@ -317,6 +323,7 @@ async function saveRelation() {
     }
 
     closeEditDialog()
+    emit('changed')
   } catch (error) {
     console.error('Failed to update relation:', error)
   } finally {
@@ -332,6 +339,8 @@ async function removeRelation(relationId: number) {
 
     // Remove from local array
     locationRelations.value = locationRelations.value.filter((r) => r.id !== relationId)
+
+    emit('changed')
   } catch (error) {
     console.error('Failed to remove relation:', error)
   }

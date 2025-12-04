@@ -242,7 +242,11 @@
 
             <!-- Locations Tab -->
             <v-tabs-window-item value="locations">
-              <EntityLocationsTab v-if="npc" :entity-id="npc.id" />
+              <EntityLocationsTab
+                v-if="npc"
+                :entity-id="npc.id"
+                @changed="refreshNpc"
+              />
             </v-tabs-window-item>
 
             <!-- Memberships Tab -->

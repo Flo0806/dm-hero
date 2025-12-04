@@ -210,7 +210,11 @@
 
           <!-- Locations Tab -->
           <v-tabs-window-item value="locations">
-            <EntityLocationsTab v-if="player" :entity-id="player.id" />
+            <EntityLocationsTab
+              v-if="player"
+              :entity-id="player.id"
+              @changed="loadCounts(player!.id)"
+            />
           </v-tabs-window-item>
 
           <!-- Factions Tab -->
