@@ -114,18 +114,21 @@
       </v-timeline-item>
     </v-timeline>
 
-    <v-empty-state
-      v-else
-      icon="mdi-book-open-page-variant"
-      :title="$t('sessions.empty')"
-      :text="$t('sessions.emptyText')"
-    >
-      <template #actions>
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
-          {{ $t('sessions.create') }}
-        </v-btn>
-      </template>
-    </v-empty-state>
+    <template v-else>
+      <ClientOnly>
+        <v-empty-state
+          icon="mdi-book-open-page-variant"
+          :title="$t('sessions.empty')"
+          :text="$t('sessions.emptyText')"
+        >
+          <template #actions>
+            <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
+              {{ $t('sessions.create') }}
+            </v-btn>
+          </template>
+        </v-empty-state>
+      </ClientOnly>
+    </template>
 
     <!-- Create/Edit Session Dialog -->
     <v-dialog v-model="showCreateDialog" max-width="1000" scrollable :persistent="saving || uploadingAudio">
@@ -1174,6 +1177,7 @@ function closeDialog() {
 
 .session-card {
   width: 100%;
+  min-width: 350px;
 }
 
 .markdown-content {
