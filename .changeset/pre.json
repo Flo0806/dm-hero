@@ -7,6 +7,7 @@
   },
   "changesets": [
     "better-sqlite3-fix",
-    "bindings-fix"
+    "bindings-fix",
+    "keyboard-shortcut-display"
   ]
 }

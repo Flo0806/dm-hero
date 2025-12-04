@@ -1,5 +1,16 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.16
+
+### Patch Changes
+
+- [`533a3cd`](https://github.com/Flo0806/dm-hero/commit/533a3cdb8d77c8bef2690956f9d1641eead5fa4f) Thanks [@Flo0806](https://github.com/Flo0806)! - feat: improve keyboard shortcut display with v-hotkey component
+  - Replace text-based keyboard hint with Vuetify v-hotkey component
+  - Add platform detection (Mac/PC) including Electron support
+  - Fix session cards minimum width (350px)
+  - Fix v-empty-state hydration mismatch on sessions page
+  - Fix README badge link for release workflow
+
 ## 1.0.0-alpha.15
 
 ### Features
