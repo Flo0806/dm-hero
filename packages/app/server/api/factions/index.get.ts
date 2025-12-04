@@ -144,7 +144,7 @@ export default defineEventHandler((event) => {
           GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
-        LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
+        LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'leader'
         LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
         LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
         LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = ?
@@ -183,7 +183,7 @@ export default defineEventHandler((event) => {
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
-          LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
+          LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'leader'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
           LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
           LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = ?
@@ -222,7 +222,7 @@ export default defineEventHandler((event) => {
             GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
-          LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
+          LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'leader'
           LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
           LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
           LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = ?
@@ -698,7 +698,7 @@ export default defineEventHandler((event) => {
         GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
         GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
       FROM entities e
-      LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'Anführer'
+      LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'leader'
       LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
       LEFT JOIN entity_relations member_rel ON member_rel.to_entity_id = e.id
       LEFT JOIN entities member_npc ON member_npc.id = member_rel.from_entity_id AND member_npc.deleted_at IS NULL AND member_npc.type_id = ?

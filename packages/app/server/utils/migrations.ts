@@ -1181,6 +1181,202 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 23: Session audio and markers tables created')
     },
   },
+  {
+    version: 24,
+    name: 'normalize_relation_types_to_english_keys',
+    up: (db) => {
+      // Map German relation_type values to English keys
+      // This fixes data that was saved with translated values instead of keys
+
+      // NPC relation types (German -> English key)
+      const npcRelationMappings: Record<string, string> = {
+        'Verbündeter': 'ally',
+        'Feind': 'enemy',
+        'Enemy': 'enemy',
+        'Familie': 'family',
+        'Freund': 'friend',
+        'Friend': 'friend',
+        'Rivale': 'rival',
+        'Mentor': 'mentor',
+        'Schüler': 'student',
+        'Kollege': 'colleague',
+        'Vorgesetzter': 'superior',
+        'Untergebener': 'subordinate',
+        'Erschaffer': 'creator',
+        'Erschaffung': 'creation',
+        'Diener': 'servant',
+        'Herr': 'master',
+        'Ehepartner': 'spouse',
+        'Elternteil': 'parent',
+        'Kind': 'child',
+        'Geschwister': 'sibling',
+        'Arbeitgeber': 'employer',
+        'Angestellter': 'employee',
+        'Verräter': 'betrayer',
+        'Geliebte/r': 'lover',
+        'Lehrling': 'apprentice',
+        'Geschäftspartner': 'business_partner',
+        'Gleichgesinnter': 'like_minded',
+        'Beschützer': 'protector',
+        'Schützling': 'ward',
+        'Erzfeind': 'nemesis',
+        'Kontakt': 'contact',
+        'Informant': 'informant',
+        'Schuldner': 'debtor',
+        'Gläubiger': 'creditor',
+      }
+
+      // Location relation types (German -> English key)
+      const locationRelationMappings: Record<string, string> = {
+        'lebt in': 'livesIn',
+        'arbeitet bei': 'worksAt',
+        'besucht oft': 'visitsOften',
+        'geboren in': 'bornIn',
+        'versteckt sich in': 'hidesIn',
+        'besitzt': 'owns',
+        'sucht nach': 'searchesFor',
+        'verbannt aus': 'banishedFrom',
+        'bewacht': 'guards',
+        'derzeit anwesend': 'currentlyAt',
+        'gefangen in': 'imprisonedIn',
+        'regiert': 'rulesOver',
+        'geflohen aus': 'fledFrom',
+        'hat Bezug zu': 'hasConnectionTo',
+        'gestorben in': 'diedIn',
+        'ausgebildet in': 'trainedIn',
+        'patrouilliert in': 'patrolsIn',
+        'verkehrt in': 'frequents',
+        'meidet': 'avoids',
+        'beschützt': 'protects',
+        'gereist nach': 'traveledTo',
+      }
+
+      // Item relation types (German -> English key)
+      const itemRelationMappings: Record<string, string> = {
+        'besitzt': 'owns',
+        'trägt bei sich': 'carries',
+        'führt': 'wields',
+        'trägt': 'wears',
+        'sucht': 'seeks',
+        'bewacht': 'guards',
+        'hat gestohlen': 'stole',
+        'hat verloren': 'lost',
+        'hat erschaffen': 'created',
+        'hat zerstört': 'destroyed',
+        'hat verkauft': 'sold',
+        'hat gekauft': 'bought',
+        'hat geliehen': 'borrowed',
+        'hat verliehen': 'lent',
+        'versteckt': 'hides',
+        'hat geerbt': 'inherited',
+        'hat geschenkt': 'gifted',
+        'hat gefunden': 'found',
+        'hat verzaubert': 'enchanted',
+        'hat repariert': 'repaired',
+      }
+
+      // Faction membership types (German -> English key)
+      const membershipMappings: Record<string, string> = {
+        'Anführer': 'leader',
+        'Mitglied': 'member',
+        'Gründer': 'founder',
+        'Verbündeter': 'ally',
+        'Feind': 'enemy',
+        'Ehemaliges Mitglied': 'former',
+        'Rekrut': 'recruit',
+        'Veteran': 'veteran',
+        'Offizier': 'officer',
+        'Spion': 'spy',
+        'Informant': 'informant',
+        'Unterstützer': 'supporter',
+        'Söldner': 'mercenary',
+        'Berater': 'advisor',
+        'Schirmherr': 'patron',
+        'Agent': 'agent',
+        'Botschafter': 'ambassador',
+        'Ehrenmitglied': 'honorary',
+        'Verbannter': 'exile',
+        'Überläufer': 'defector',
+        'Anwärter': 'aspirant',
+        'Schüler': 'acolyte',
+      }
+
+      // Faction location types (German -> English key)
+      const factionLocationMappings: Record<string, string> = {
+        'Hauptquartier': 'headquarters',
+        'Versteck': 'hideout',
+        'Treffpunkt': 'meetingPlace',
+        'Territorium': 'territory',
+        'Außenposten': 'outpost',
+        'Operationsbasis': 'operationsBase',
+        'Ressourcengebiet': 'resourceArea',
+        'Verbotene Zone': 'forbiddenZone',
+        'Historische Stätte': 'historicSite',
+        'Rekrutierungsort': 'recruitmentGround',
+      }
+
+      // Combine all mappings
+      const allMappings: Record<string, string> = {
+        ...npcRelationMappings,
+        ...locationRelationMappings,
+        ...itemRelationMappings,
+        ...membershipMappings,
+        ...factionLocationMappings,
+      }
+
+      // Update entity_relations table
+      const updateStmt = db.prepare('UPDATE entity_relations SET relation_type = ? WHERE relation_type = ?')
+
+      let updatedCount = 0
+      for (const [germanValue, englishKey] of Object.entries(allMappings)) {
+        const result = updateStmt.run(englishKey, germanValue)
+        if (result.changes > 0) {
+          console.log(`  Updated ${result.changes} relations: "${germanValue}" → "${englishKey}"`)
+          updatedCount += result.changes
+        }
+      }
+
+      // Also update faction alignments in metadata
+      const alignmentMappings: Record<string, string> = {
+        'Rechtschaffen Gut': 'lawfulGood',
+        'Neutral Gut': 'neutralGood',
+        'Chaotisch Gut': 'chaoticGood',
+        'Rechtschaffen Neutral': 'lawfulNeutral',
+        'Neutral': 'trueNeutral',
+        'Echt Neutral': 'trueNeutral',
+        'Chaotisch Neutral': 'chaoticNeutral',
+        'Rechtschaffen Böse': 'lawfulEvil',
+        'Neutral Böse': 'neutralEvil',
+        'Chaotisch Böse': 'chaoticEvil',
+      }
+
+      // Get all factions with metadata
+      const factions = db.prepare(`
+        SELECT e.id, e.metadata FROM entities e
+        JOIN entity_types et ON e.type_id = et.id
+        WHERE et.name = 'Faction' AND e.metadata IS NOT NULL AND e.deleted_at IS NULL
+      `).all() as Array<{ id: number; metadata: string }>
+
+      const updateMetadataStmt = db.prepare('UPDATE entities SET metadata = ? WHERE id = ?')
+
+      for (const faction of factions) {
+        try {
+          const metadata = JSON.parse(faction.metadata)
+          if (metadata.alignment && alignmentMappings[metadata.alignment]) {
+            const oldAlignment = metadata.alignment
+            metadata.alignment = alignmentMappings[metadata.alignment]
+            updateMetadataStmt.run(JSON.stringify(metadata), faction.id)
+            console.log(`  Updated faction ${faction.id} alignment: "${oldAlignment}" → "${metadata.alignment}"`)
+            updatedCount++
+          }
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+
+      console.log(`✅ Migration 24: Normalized ${updatedCount} relation_type values to English keys`)
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

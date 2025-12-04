@@ -1,3 +1,21 @@
+// Player-to-Entity relation types (what a player knows/has discovered)
+export const PLAYER_RELATION_TYPES = [
+  'knows',
+  'discovered',
+  'created',
+  'owns',
+  'visited',
+  'interested',
+  'allied',
+  'hostile',
+  'met',
+  'heard_of',
+  'researched',
+  'forgotten',
+] as const
+
+export type PlayerRelationType = (typeof PLAYER_RELATION_TYPES)[number]
+
 export interface PlayerMetadata {
   player_name?: string | null // Real name of the player (Spielername)
   inspiration?: number // DM inspiration counter

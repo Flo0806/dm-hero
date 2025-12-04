@@ -59,6 +59,8 @@
           <v-combobox
             v-model="editRelationType"
             :items="npcRelationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('npcs.npcRelationType')"
             variant="outlined"
             class="mb-3"
@@ -103,6 +105,8 @@
           <v-combobox
             v-model="localRelationType"
             :items="npcRelationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('npcs.npcRelationType')"
             :placeholder="$t('npcs.npcRelationTypePlaceholder')"
             variant="outlined"
@@ -135,6 +139,8 @@
 </template>
 
 <script setup lang="ts">
+import { NPC_RELATION_TYPES } from '~~/types/npc'
+
 const { t } = useI18n()
 
 interface NpcRelation {
@@ -183,16 +189,12 @@ const editRelationType = ref('')
 const editNotes = ref('')
 const saving = ref(false)
 
-const npcRelationTypeSuggestions = computed(() => [
-  t('npcs.npcRelationTypes.ally'),
-  t('npcs.npcRelationTypes.enemy'),
-  t('npcs.npcRelationTypes.family'),
-  t('npcs.npcRelationTypes.friend'),
-  t('npcs.npcRelationTypes.rival'),
-  t('npcs.npcRelationTypes.mentor'),
-  t('npcs.npcRelationTypes.student'),
-  t('npcs.npcRelationTypes.colleague'),
-])
+const npcRelationTypeSuggestions = computed(() =>
+  NPC_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`npcs.npcRelationTypes.${type}`),
+  })),
+)
 
 // Extract text from notes (can be string, object with text property, or null)
 function getNotesText(notes: string | Record<string, unknown> | null): string {
@@ -209,13 +211,22 @@ function openEditDialog(relation: NpcRelation) {
   editDialog.value = true
 }
 
+// Extract value from combobox selection (can be string or {value, title} object)
+function getRelationTypeValue(val: string | { value: string; title: string } | null): string {
+  if (!val) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'object' && 'value' in val) return val.value
+  return ''
+}
+
 function saveEdit() {
-  if (!editRelationId.value || !editRelationType.value) return
+  const relationType = getRelationTypeValue(editRelationType.value as string | { value: string; title: string })
+  if (!editRelationId.value || !relationType) return
 
   saving.value = true
   emit('update', {
     relationId: editRelationId.value,
-    relationType: editRelationType.value,
+    relationType,
     notes: editNotes.value || undefined,
   })
 
@@ -225,11 +236,12 @@ function saveEdit() {
 }
 
 function handleAdd() {
-  if (!localNpcId.value || !localRelationType.value) return
+  const relationType = getRelationTypeValue(localRelationType.value as string | { value: string; title: string })
+  if (!localNpcId.value || !relationType) return
 
   emit('add', {
     npcId: localNpcId.value,
-    relationType: localRelationType.value,
+    relationType,
     notes: localNotes.value || undefined,
   })
 

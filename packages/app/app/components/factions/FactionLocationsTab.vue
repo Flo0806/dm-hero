@@ -16,7 +16,7 @@
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip size="small" class="mr-1">
-            {{ location.relation_type }}
+            {{ $t(`factions.locationTypes.${location.relation_type}`, location.relation_type) }}
           </v-chip>
         </v-list-item-subtitle>
         <template #append>
@@ -54,9 +54,11 @@
       class="mb-3"
     />
 
-    <v-combobox
+    <v-select
       v-model="localRelationType"
       :items="relationTypeSuggestions"
+      item-title="title"
+      item-value="value"
       :label="$t('factions.locationType')"
       :placeholder="$t('factions.locationTypePlaceholder')"
       variant="outlined"
@@ -114,14 +116,27 @@ const { t } = useI18n()
 const localLocationId = ref<number | null>(null)
 const localRelationType = ref('')
 
-const relationTypeSuggestions = computed(() => [
-  t('factions.locationTypes.headquarters'),
-  t('factions.locationTypes.hideout'),
-  t('factions.locationTypes.meetingPlace'),
-  t('factions.locationTypes.territory'),
-  t('factions.locationTypes.safehouse'),
-  t('factions.locationTypes.baseOfOperations'),
-])
+const FACTION_LOCATION_TYPES = [
+  'headquarters',
+  'hideout',
+  'meetingPlace',
+  'territory',
+  'safehouse',
+  'baseOfOperations',
+  'warehouse',
+  'temple',
+  'training_ground',
+  'outpost',
+  'embassy',
+  'stronghold',
+]
+
+const relationTypeSuggestions = computed(() =>
+  FACTION_LOCATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`factions.locationTypes.${type}`),
+  })),
+)
 
 function handleAdd() {
   if (!localLocationId.value || !localRelationType.value) return

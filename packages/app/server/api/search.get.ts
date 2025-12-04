@@ -1,6 +1,7 @@
 import { getDb } from '../utils/db'
 import { createLevenshtein } from '../utils/levenshtein'
 import { normalizeText } from '../utils/normalize'
+import { getRaceKey, getClassKey, getLocaleFromEvent } from '../utils/i18n-lookup'
 
 const levenshtein = createLevenshtein()
 
@@ -12,10 +13,11 @@ interface EntityResult {
   icon: string
   color: string
   linked_entities?: string | null
+  metadata?: string | null
   _score?: number
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
   const searchQuery = query.q as string
@@ -26,6 +28,12 @@ export default defineEventHandler((event) => {
   }
 
   const searchTerm = normalizeText(searchQuery.trim())
+
+  // Convert search term to race/class key (for metadata search)
+  // User might search "human" (EN) or "Mensch" (DE) - we need to find the KEY
+  const locale = getLocaleFromEvent(event)
+  const raceKey = await getRaceKey(searchQuery.trim(), true, locale)
+  const classKey = await getClassKey(searchQuery.trim(), true, locale)
 
   // Get all entity types
   const entityTypes = db
@@ -119,7 +127,7 @@ export default defineEventHandler((event) => {
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
     } else if (type.name === 'NPC') {
-      // NPCs: Include linked Locations, Items, Lore, Factions, Players (bidirectional)
+      // NPCs: Include linked Locations, Items, Lore, Factions, Players (bidirectional) + metadata for race/class search
       typeResults = db
         .prepare(
           `
@@ -127,6 +135,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
+          e.metadata,
           ? as type,
           ? as icon,
           ? as color,
@@ -338,7 +347,7 @@ export default defineEventHandler((event) => {
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
     } else if (type.name === 'Player') {
-      // Players: Include linked NPCs, Items, Locations, Factions, Lore (bidirectional)
+      // Players: Include linked NPCs, Items, Locations, Factions, Lore (bidirectional) + metadata for race/class search
       typeResults = db
         .prepare(
           `
@@ -346,6 +355,7 @@ export default defineEventHandler((event) => {
           e.id,
           e.name,
           e.description,
+          e.metadata,
           ? as type,
           ? as icon,
           ? as color,
@@ -529,6 +539,35 @@ export default defineEventHandler((event) => {
         return { ...result, _score: score }
       }
 
+      // Check metadata race/class KEY match (for NPCs and Players)
+      // User might search "human" (EN) or "Mensch" (DE) - we converted it to KEY above
+      if (result.metadata && (result.type === 'NPC' || result.type === 'Player')) {
+        try {
+          const metadata = JSON.parse(result.metadata)
+          // Check if race KEY matches
+          if (raceKey && metadata.race === raceKey) {
+            score -= 300 // Metadata race match: very good
+            return { ...result, _score: score }
+          }
+          // Check if class KEY matches
+          if (classKey && metadata.class === classKey) {
+            score -= 300 // Metadata class match: very good
+            return { ...result, _score: score }
+          }
+          // Also check if searchTerm directly matches the KEY in metadata
+          if (metadata.race && normalizeText(metadata.race) === searchTerm) {
+            score -= 250
+            return { ...result, _score: score }
+          }
+          if (metadata.class && normalizeText(metadata.class) === searchTerm) {
+            score -= 250
+            return { ...result, _score: score }
+          }
+        } catch {
+          // Invalid JSON metadata, skip
+        }
+      }
+
       // Check description match
       if (descriptionNormalized.includes(searchTerm)) {
         score -= 50
@@ -593,8 +632,8 @@ export default defineEventHandler((event) => {
     .sort((a, b) => a._score - b._score)
     .slice(0, 20)
 
-  // Parse linked_entities into clean array and return
-  return scoredResults.map(({ _score, linked_entities, ...result }) => {
+  // Parse linked_entities into clean array and return (exclude internal fields)
+  return scoredResults.map(({ _score, linked_entities, metadata: _metadata, ...result }) => {
     // Parse linked_entities string into unique, non-empty names
     const linkedNames: string[] = []
     if (linked_entities) {

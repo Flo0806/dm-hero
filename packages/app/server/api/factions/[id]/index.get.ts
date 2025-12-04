@@ -24,9 +24,14 @@ export default defineEventHandler((event) => {
     })
   }
 
-  // Get the faction
+  // Get the faction with leader info
+  interface FactionWithLeader extends EntityRow {
+    leader_id: number | null
+    leader_name: string | null
+  }
+
   const faction = db
-    .prepare<[string, number], EntityRow>(
+    .prepare<[string, number], FactionWithLeader>(
       `
     SELECT
       e.id,
@@ -35,8 +40,12 @@ export default defineEventHandler((event) => {
       e.image_url,
       e.metadata,
       e.created_at,
-      e.updated_at
+      e.updated_at,
+      leader_rel.from_entity_id as leader_id,
+      leader_npc.name as leader_name
     FROM entities e
+    LEFT JOIN entity_relations leader_rel ON leader_rel.to_entity_id = e.id AND leader_rel.relation_type = 'leader'
+    LEFT JOIN entities leader_npc ON leader_npc.id = leader_rel.from_entity_id AND leader_npc.deleted_at IS NULL
     WHERE e.id = ?
       AND e.type_id = ?
       AND e.deleted_at IS NULL
@@ -61,5 +70,7 @@ export default defineEventHandler((event) => {
     created_at: faction.created_at,
     updated_at: faction.updated_at,
     metadata,
+    leader_id: faction.leader_id,
+    leader_name: faction.leader_name,
   }
 })

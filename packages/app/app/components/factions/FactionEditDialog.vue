@@ -107,11 +107,14 @@
 
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field
+                  <v-combobox
                     v-model="form.metadata.type"
                     :label="$t('factions.type')"
+                    :items="factionTypes"
+                    item-title="title"
+                    item-value="value"
                     variant="outlined"
-                    :placeholder="$t('factions.typePlaceholder')"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="6">
@@ -130,11 +133,14 @@
 
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field
+                  <v-select
                     v-model="form.metadata.alignment"
                     :label="$t('factions.alignment')"
+                    :items="factionAlignments"
+                    item-title="title"
+                    item-value="value"
                     variant="outlined"
-                    :placeholder="$t('factions.alignmentPlaceholder')"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="6">
@@ -267,11 +273,14 @@
 
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field
+                <v-combobox
                   v-model="form.metadata.type"
                   :label="$t('factions.type')"
+                  :items="factionTypes"
+                  item-title="title"
+                  item-value="value"
                   variant="outlined"
-                  :placeholder="$t('factions.typePlaceholder')"
+                  clearable
                 />
               </v-col>
               <v-col cols="12" md="6">
@@ -290,11 +299,14 @@
 
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field
+                <v-select
                   v-model="form.metadata.alignment"
                   :label="$t('factions.alignment')"
+                  :items="factionAlignments"
+                  item-title="title"
+                  item-value="value"
                   variant="outlined"
-                  :placeholder="$t('factions.alignmentPlaceholder')"
+                  clearable
                 />
               </v-col>
               <v-col cols="12" md="6">
@@ -358,6 +370,7 @@
 <script setup lang="ts">
 import type { Faction } from '~~/types/faction'
 import type { Lore } from '~~/types/lore'
+import { FACTION_TYPES, FACTION_ALIGNMENTS, FACTION_MEMBERSHIP_TYPES } from '~~/types/faction'
 import EntityNpcsTab from '~/components/shared/EntityNpcsTab.vue'
 import FactionLocationsTab from './FactionLocationsTab.vue'
 import EntityItemsTab from '~/components/shared/EntityItemsTab.vue'
@@ -407,12 +420,13 @@ const activeTab = ref('details')
 const faction = ref<Faction | null>(null)
 
 // Form state - managed internally
+// Note: type can be string (custom value) or {value, title} object (predefined value from v-combobox)
 const form = ref({
   name: '',
   description: '',
   leaderId: null as number | null,
   metadata: {
-    type: undefined as string | undefined,
+    type: undefined as string | { value: string; title: string } | undefined,
     alignment: undefined as string | undefined,
     headquarters: undefined as string | undefined,
     goals: undefined as string | undefined,
@@ -490,16 +504,30 @@ const showImagePreview = ref(false)
 const previewImageUrl = ref('')
 const previewImageTitle = ref('')
 
-// Membership type suggestions
-const membershipTypeSuggestions = computed(() => [
-  { title: t('factions.membershipTypes.member'), value: 'member' },
-  { title: t('factions.membershipTypes.leader'), value: 'leader' },
-  { title: t('factions.membershipTypes.founder'), value: 'founder' },
-  { title: t('factions.membershipTypes.officer'), value: 'officer' },
-  { title: t('factions.membershipTypes.recruit'), value: 'recruit' },
-  { title: t('factions.membershipTypes.veteran'), value: 'veteran' },
-  { title: t('factions.membershipTypes.exile'), value: 'exile' },
-])
+// Membership type suggestions from TypeScript types
+const membershipTypeSuggestions = computed(() =>
+  FACTION_MEMBERSHIP_TYPES.map((type) => ({
+    value: type,
+    title: t(`factions.membershipTypes.${type}`),
+  })),
+)
+
+// Faction type options from TypeScript types
+// Explicitly typed to allow custom string values in v-combobox
+const factionTypes = computed((): Array<{ value: string; title: string }> =>
+  FACTION_TYPES.map((type) => ({
+    value: type,
+    title: t(`factions.types.${type}`),
+  })),
+)
+
+// Faction alignment options from TypeScript types
+const factionAlignments = computed(() =>
+  FACTION_ALIGNMENTS.map((alignment) => ({
+    value: alignment,
+    title: t(`factions.alignments.${alignment}`),
+  })),
+)
 
 // ============================================================================
 // Computed: Available entities from store
@@ -590,12 +618,18 @@ async function loadFaction(factionId: number) {
     faction.value = data
 
     // Populate form from faction
+    // For v-combobox: convert KEY to {value, title} object so it displays the title correctly
+    const typeKey = data.metadata?.type as string | undefined
+    const typeItem = typeKey ? factionTypes.value.find((t) => t.value === typeKey) : undefined
+
     form.value = {
       name: data.name,
       description: data.description || '',
       leaderId: data.leader_id || null,
       metadata: {
-        type: data.metadata?.type as string | undefined,
+        // If type is a known key, use the full object for proper display in v-combobox
+        // If it's a custom value (not in predefined list), keep as string
+        type: typeItem || typeKey,
         alignment: data.metadata?.alignment as string | undefined,
         headquarters: data.metadata?.headquarters as string | undefined,
         goals: data.metadata?.goals as string | undefined,
@@ -693,6 +727,16 @@ function resetForm() {
 }
 
 // ============================================================================
+// Helper: Extract value from combobox selection (can be string or {value, title} object)
+// ============================================================================
+function getComboboxValue(val: string | { value: string; title: string } | undefined): string | undefined {
+  if (!val) return undefined
+  if (typeof val === 'string') return val
+  if (typeof val === 'object' && 'value' in val) return val.value
+  return undefined
+}
+
+// ============================================================================
 // Save & Close
 // ============================================================================
 async function save() {
@@ -704,13 +748,19 @@ async function save() {
     const campaignId = campaignStore.activeCampaignId
     if (!campaignId) throw new Error('No active campaign')
 
+    // Extract actual values from combobox selections
+    const metadata = {
+      ...form.value.metadata,
+      type: getComboboxValue(form.value.metadata.type as string | { value: string; title: string } | undefined),
+    }
+
     if (faction.value) {
       // Update existing faction
       const updated = await entitiesStore.updateFaction(faction.value.id, {
         name: form.value.name,
         description: form.value.description || null,
         leader_id: form.value.leaderId,
-        metadata: form.value.metadata,
+        metadata,
       })
       emit('saved', updated)
     } else {
@@ -719,7 +769,7 @@ async function save() {
         name: form.value.name,
         description: form.value.description || null,
         leader_id: form.value.leaderId,
-        metadata: form.value.metadata,
+        metadata,
       })
       emit('created', created)
     }

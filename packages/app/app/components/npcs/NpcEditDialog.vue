@@ -472,10 +472,9 @@
 </template>
 
 <script setup lang="ts">
-import type { NPC } from '~~/types/npc'
 import type { Lore } from '~~/types/lore'
 import type { NpcItem, NpcMembership } from '~~/types/npc-components'
-import { NPC_TYPES, NPC_STATUSES, type NpcType, type NpcStatus } from '~~/types/npc'
+import { NPC_TYPES, NPC_STATUSES, NPC_ITEM_RELATION_TYPES, type NpcType, type NpcStatus, type NPC } from '~~/types/npc'
 import NpcRelationsTab from './NpcRelationsTab.vue'
 import EntityLocationsTab from '../shared/EntityLocationsTab.vue'
 import NpcMembershipsTab from './NpcMembershipsTab.vue'
@@ -546,7 +545,7 @@ interface NpcRelation {
   related_npc_name: string
   related_npc_type: string
   relation_type: string
-  notes: string | null
+  notes: string | Record<string, unknown> | null
   image_url: string | null
   direction: 'outgoing' | 'incoming'
 }
@@ -649,17 +648,13 @@ const availableLore = computed(() =>
   entitiesStore.lore.map((l) => ({ id: l.id, name: l.name })),
 )
 
-// Item relation type suggestions
-const npcItemRelationTypeSuggestions = computed(() => [
-  { title: t('npcs.itemRelationTypes.owns'), value: 'owns' },
-  { title: t('npcs.itemRelationTypes.carries'), value: 'carries' },
-  { title: t('npcs.itemRelationTypes.wields'), value: 'wields' },
-  { title: t('npcs.itemRelationTypes.wears'), value: 'wears' },
-  { title: t('npcs.itemRelationTypes.seeks'), value: 'seeks' },
-  { title: t('npcs.itemRelationTypes.guards'), value: 'guards' },
-  { title: t('npcs.itemRelationTypes.stole'), value: 'stole' },
-  { title: t('npcs.itemRelationTypes.lost'), value: 'lost' },
-])
+// Item relation type suggestions from TypeScript types
+const npcItemRelationTypeSuggestions = computed(() =>
+  NPC_ITEM_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`npcs.itemRelationTypes.${type}`),
+  })),
+)
 
 // ============================================================================
 // Watch: Load data when dialog opens or npcId changes

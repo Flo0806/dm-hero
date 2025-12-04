@@ -68,11 +68,26 @@ export default defineEventHandler(async (event) => {
     // Check if this is a quoted phrase BEFORE normalization
     const isQuotedPhrase = originalSearchTerm.startsWith('"') && originalSearchTerm.endsWith('"')
 
+    // For quoted phrases: first try to find the KEY for the whole phrase (custom race/class lookup)
+    // E.g., "Meine DE Rasse" → lookup in races table → find key "meinederasse"
+    let quotedPhraseKey: string | null = null
+    if (isQuotedPhrase) {
+      const phraseWithoutQuotes = originalSearchTerm.slice(1, -1)
+      // Try to find this as a custom race or class name
+      quotedPhraseKey = await getRaceKey(phraseWithoutQuotes, true, locale)
+      if (!quotedPhraseKey) {
+        quotedPhraseKey = await getClassKey(phraseWithoutQuotes, true, locale)
+      }
+    }
+
     // If quoted, remove quotes, normalize, then re-add quotes
+    // NOTE: parseSearchQuery will add quotes again in fts5Query, so we keep them here for correct parsing
     let searchTerm: string
     if (isQuotedPhrase) {
       const withoutQuotes = originalSearchTerm.slice(1, -1) // Remove surrounding quotes
-      searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
+      // If we found a key for the phrase, use that instead
+      const searchPhrase = quotedPhraseKey || normalizeText(withoutQuotes)
+      searchTerm = `"${searchPhrase}"`
     } else {
       searchTerm = normalizeText(originalSearchTerm)
     }
@@ -540,7 +555,7 @@ export default defineEventHandler(async (event) => {
 
       if (isQuotedPhraseSearch) {
         // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
-        const exactPhrase = parsedQuery.fts5Query.slice(1, -1) // Remove quotes
+        const exactPhrase = normalizeText(parsedQuery.fts5Query.slice(1, -1)) // Remove quotes and normalize
 
         scoredNpcs = scoredNpcs.filter((npc) => {
           const nameNormalized = normalizeText(npc.name)

@@ -9,9 +9,70 @@ export const ITEM_TYPES = [
   'mundane',
   'tool',
   'treasure',
+  'scroll',
+  'key',
+  'map',
+  'gem',
+  'clothing',
+  'food',
+  'drink',
+  'mount',
+  'container',
+  'currency',
+  'component',
+  'poison',
+  'vehicle',
+  'trap',
+  'banner',
+  'jewelry',
+  'figurine',
+  'orb',
+  'horn',
+  'bag',
+  'lantern',
+  'rope',
+  'mirror',
+  'crystal',
+  'idol',
+  'totem',
+  'relic',
+  'ammunition',
+  'material',
 ] as const
 
 export type ItemType = (typeof ITEM_TYPES)[number]
+
+// Item-to-NPC relation types (owner relations)
+export const ITEM_OWNER_RELATION_TYPES = [
+  'owns',
+  'carries',
+  'created',
+  'stole',
+  'found',
+  'inherited',
+  'guards',
+  'seeks',
+  'lost',
+  'destroyed',
+  'enchanted',
+  'cursed',
+] as const
+
+export type ItemOwnerRelationType = (typeof ITEM_OWNER_RELATION_TYPES)[number]
+
+// Item-to-Item relation types
+export const ITEM_RELATION_TYPES = [
+  'part_of',
+  'set_with',
+  'requires',
+  'upgrades_to',
+  'transforms_into',
+  'complements',
+  'counters',
+  'contains',
+] as const
+
+export type ItemRelationType = (typeof ITEM_RELATION_TYPES)[number]
 
 export const ITEM_RARITIES = [
   'common',

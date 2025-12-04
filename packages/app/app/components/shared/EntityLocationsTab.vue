@@ -19,7 +19,7 @@
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip size="small" class="mr-1">
-            {{ relation.relation_type }}
+            {{ $t(`npcs.relationTypes.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
           <span v-if="relation.notes" class="text-caption">
             {{ relation.notes }}
@@ -71,6 +71,8 @@
           <v-select
             v-model="localRelationType"
             :items="relationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('npcs.relationType')"
             :placeholder="$t('npcs.relationTypePlaceholder')"
             variant="outlined"
@@ -107,6 +109,8 @@
           <v-select
             v-model="editForm.relationType"
             :items="relationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('npcs.relationType')"
             variant="outlined"
             class="mb-3"
@@ -133,6 +137,8 @@
 </template>
 
 <script setup lang="ts">
+import { NPC_LOCATION_RELATION_TYPES } from '~~/types/npc'
+
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 
@@ -178,16 +184,12 @@ const editForm = ref({
   notes: '',
 })
 
-const relationTypeSuggestions = computed(() => [
-  t('npcs.relationTypes.livesIn'),
-  t('npcs.relationTypes.worksAt'),
-  t('npcs.relationTypes.visitsOften'),
-  t('npcs.relationTypes.bornIn'),
-  t('npcs.relationTypes.hidesIn'),
-  t('npcs.relationTypes.owns'),
-  t('npcs.relationTypes.searchesFor'),
-  t('npcs.relationTypes.banishedFrom'),
-])
+const relationTypeSuggestions = computed(() =>
+  NPC_LOCATION_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`npcs.relationTypes.${type}`),
+  })),
+)
 
 // Load locations on mount and when entityId changes
 watch(

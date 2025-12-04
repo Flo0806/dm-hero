@@ -94,11 +94,14 @@
 
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field
+                  <v-combobox
                     v-model="form.metadata.type"
                     :label="$t('locations.type')"
+                    :items="locationTypes"
+                    item-title="title"
+                    item-value="value"
                     variant="outlined"
-                    :placeholder="$t('locations.typePlaceholder')"
+                    clearable
                   />
                 </v-col>
                 <v-col cols="12" md="6">
@@ -217,11 +220,14 @@
 
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field
+                <v-combobox
                   v-model="form.metadata.type"
                   :label="$t('locations.type')"
+                  :items="locationTypes"
+                  item-title="title"
+                  item-value="value"
                   variant="outlined"
-                  :placeholder="$t('locations.typePlaceholder')"
+                  clearable
                 />
               </v-col>
               <v-col cols="12" md="6">
@@ -268,6 +274,7 @@ import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 import EntityNpcsTab from '~/components/shared/EntityNpcsTab.vue'
 import EntityItemsTab from '~/components/shared/EntityItemsTab.vue'
 import EntityLoreTab from '~/components/shared/EntityLoreTab.vue'
+import { LOCATION_TYPES, LOCATION_ITEM_RELATION_TYPES } from '~~/types/location'
 
 interface Location {
   id: number
@@ -396,14 +403,20 @@ const availableParentLocations = computed(() => {
   return entitiesStore.locations
 })
 
-const itemRelationTypeSuggestions = computed(() => [
-  { title: t('locations.itemRelationTypes.contains'), value: 'contains' },
-  { title: t('locations.itemRelationTypes.hidden'), value: 'hidden' },
-  { title: t('locations.itemRelationTypes.displayed'), value: 'displayed' },
-  { title: t('locations.itemRelationTypes.stored'), value: 'stored' },
-  { title: t('locations.itemRelationTypes.lost'), value: 'lost' },
-  { title: t('locations.itemRelationTypes.guarded'), value: 'guarded' },
-])
+// Item relation type suggestions from TypeScript types
+const itemRelationTypeSuggestions = computed(() =>
+  LOCATION_ITEM_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`locations.itemRelationTypes.${type}`),
+  })),
+)
+
+const locationTypes = computed(() =>
+  LOCATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`locations.types.${type}`),
+  })),
+)
 
 // Watch for dialog open - watch both show AND locationId together
 watch(
@@ -567,6 +580,16 @@ function resetForm() {
 }
 
 // ============================================================================
+// Helper: Extract value from combobox selection (can be string or {value, title} object)
+// ============================================================================
+function getComboboxValue(val: string | { value: string; title: string } | undefined): string {
+  if (!val) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'object' && 'value' in val) return val.value
+  return ''
+}
+
+// ============================================================================
 // Save & Close
 // ============================================================================
 async function save() {
@@ -578,6 +601,12 @@ async function save() {
     const campaignId = campaignStore.activeCampaignId
     if (!campaignId) throw new Error('No active campaign')
 
+    // Extract actual values from combobox selections
+    const metadata = {
+      ...form.value.metadata,
+      type: getComboboxValue(form.value.metadata.type as string | { value: string; title: string } | undefined),
+    }
+
     if (location.value) {
       // Update existing location
       const updated = await $fetch<Location>(`/api/locations/${location.value.id}`, {
@@ -585,7 +614,7 @@ async function save() {
         body: {
           name: form.value.name,
           description: form.value.description || null,
-          metadata: form.value.metadata,
+          metadata,
           parentLocationId: form.value.parentLocationId,
         },
       })
@@ -604,7 +633,7 @@ async function save() {
         body: {
           name: form.value.name,
           description: form.value.description || null,
-          metadata: form.value.metadata,
+          metadata,
           campaignId,
           parentLocationId: form.value.parentLocationId,
         },

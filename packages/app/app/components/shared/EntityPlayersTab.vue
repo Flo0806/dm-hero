@@ -24,7 +24,7 @@
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip v-if="relation.relation_type" size="small" class="mr-1">
-            {{ relation.relation_type }}
+            {{ $t(`players.relationTypes.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
           <span v-if="relation.notes" class="text-caption">
             {{ relation.notes }}
@@ -76,6 +76,8 @@
           <v-select
             v-model="localRelationType"
             :items="relationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('common.relationType')"
             variant="outlined"
             class="mb-3"
@@ -109,6 +111,8 @@
           <v-select
             v-model="editForm.relationType"
             :items="relationTypeSuggestions"
+            item-title="title"
+            item-value="value"
             :label="$t('common.relationType')"
             variant="outlined"
             class="mb-3"
@@ -135,6 +139,7 @@
 </template>
 
 <script setup lang="ts">
+import { PLAYER_RELATION_TYPES } from '~~/types/player'
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 
@@ -176,14 +181,12 @@ const editForm = ref({
   notes: '',
 })
 
-const relationTypeSuggestions = computed(() => [
-  t('players.relationTypes.knows'),
-  t('players.relationTypes.discovered'),
-  t('players.relationTypes.created'),
-  t('players.relationTypes.owns'),
-  t('players.relationTypes.visited'),
-  t('players.relationTypes.interested'),
-])
+const relationTypeSuggestions = computed(() =>
+  PLAYER_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`players.relationTypes.${type}`),
+  })),
+)
 
 // Load players on mount and when entityId changes
 watch(

@@ -148,7 +148,15 @@ function getRelationTypeLabel(relationType: string): string {
   const entitySpecificKey = `${props.entityType}s.relationTypes.${relationType}`
   const translated = t(entitySpecificKey)
 
-  // If translation exists, use it; otherwise fallback to relationType
-  return translated !== entitySpecificKey ? translated : relationType
+  // If translation exists, use it
+  if (translated !== entitySpecificKey) return translated
+
+  // Fallback: try npcs.relationTypes (NPC-to-Location relations are stored there)
+  const npcKey = `npcs.relationTypes.${relationType}`
+  const npcTranslated = t(npcKey)
+  if (npcTranslated !== npcKey) return npcTranslated
+
+  // Final fallback: return relationType as-is
+  return relationType
 }
 </script>

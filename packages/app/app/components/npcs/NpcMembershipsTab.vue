@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import { FACTION_MEMBERSHIP_TYPES } from '~~/types/faction'
 const { t, te } = useI18n()
 
 // Translate membership type - check if translation exists, otherwise show raw value
@@ -141,15 +142,12 @@ const localFactionId = ref<number | null>(null)
 const localRelationType = ref('')
 const localRank = ref('')
 
-const membershipTypeSuggestions = computed(() => [
-  { title: t('npcs.membershipTypes.member'), value: 'member' },
-  { title: t('npcs.membershipTypes.leader'), value: 'leader' },
-  { title: t('npcs.membershipTypes.founder'), value: 'founder' },
-  { title: t('npcs.membershipTypes.officer'), value: 'officer' },
-  { title: t('npcs.membershipTypes.recruit'), value: 'recruit' },
-  { title: t('npcs.membershipTypes.veteran'), value: 'veteran' },
-  { title: t('npcs.membershipTypes.exile'), value: 'exile' },
-])
+const membershipTypeSuggestions = computed(() =>
+  FACTION_MEMBERSHIP_TYPES.map((type) => ({
+    value: type,
+    title: t(`factions.membershipTypes.${type}`),
+  })),
+)
 
 function handleAdd() {
   if (!localFactionId.value || !localRelationType.value) return

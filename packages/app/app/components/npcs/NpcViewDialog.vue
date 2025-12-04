@@ -178,7 +178,7 @@
                       <v-chip size="x-small" color="primary" variant="tonal">
                         {{ $t(`npcs.npcRelationTypes.${rel.relation_type}`, rel.relation_type) }}
                       </v-chip>
-                      <span v-if="rel.notes" class="text-caption">{{ rel.notes }}</span>
+                      <span v-if="getNotesText(rel.notes)" class="text-caption">{{ getNotesText(rel.notes) }}</span>
                     </div>
                   </v-list-item-subtitle>
                 </v-list-item>
@@ -357,6 +357,27 @@ const previewImage = ref<{ id: number; image_url: string; is_primary: boolean } 
 function openImagePreview(image: { id: number; image_url: string; is_primary: boolean }) {
   previewImage.value = image
   showImagePreview.value = true
+}
+
+// Extract text from notes (can be string, object with text property, or null)
+// Also handles double-encoded JSON strings from legacy data
+function getNotesText(notes: string | Record<string, unknown> | null | undefined): string {
+  if (!notes) return ''
+  if (typeof notes === 'object' && 'text' in notes) return String(notes.text)
+  if (typeof notes === 'string') {
+    if (notes.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(notes)
+        if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+          return String(parsed.text)
+        }
+      } catch {
+        // Not valid JSON, return as-is
+      }
+    }
+    return notes
+  }
+  return ''
 }
 
 // Load data when NPC changes
