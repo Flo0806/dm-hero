@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 // Fetch all docs for sidebar using Nuxt Content v3 API
 const { data: allDocs } = await useAsyncData('docs-list', () =>
@@ -20,9 +21,34 @@ const docs = computed(() => {
   })
 })
 
-// Fetch current page content
-const { data: page } = await useAsyncData(`docs-${route.path}`, () =>
-  queryCollection('docs').path(route.path).first()
+// Compute correct path for current locale
+const localizedPath = computed(() => {
+  const currentPath = route.path
+  const isGerman = locale.value === 'de'
+  const isCurrentlyInDe = currentPath.startsWith('/docs/de/')
+
+  if (isGerman && !isCurrentlyInDe) {
+    // Switch to German: /docs/getting-started -> /docs/de/getting-started
+    return currentPath.replace('/docs/', '/docs/de/')
+  } else if (!isGerman && isCurrentlyInDe) {
+    // Switch to English: /docs/de/getting-started -> /docs/getting-started
+    return currentPath.replace('/docs/de/', '/docs/')
+  }
+  return currentPath
+})
+
+// Watch for locale changes and navigate to corresponding doc
+watch(locale, () => {
+  if (localizedPath.value !== route.path) {
+    router.push(localizedPath.value)
+  }
+})
+
+// Fetch current page content based on localized path
+const { data: page } = await useAsyncData(
+  () => `docs-${localizedPath.value}`,
+  () => queryCollection('docs').path(localizedPath.value).first(),
+  { watch: [localizedPath] }
 )
 </script>
 
@@ -43,7 +69,7 @@ const { data: page } = await useAsyncData(`docs-${route.path}`, () =>
                 v-for="doc in docs"
                 :key="doc.path"
                 :to="doc.path"
-                :active="route.path === doc.path"
+                :active="localizedPath === doc.path"
                 color="primary"
                 rounded
               >
