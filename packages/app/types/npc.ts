@@ -186,6 +186,7 @@ export interface NPC {
   name: string
   description: string | null
   image_url?: string | null
+  location_id?: number | null
   metadata: {
     race?: string
     class?: string

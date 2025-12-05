@@ -225,6 +225,18 @@
                   </v-select>
                 </v-col>
               </v-row>
+
+              <!-- Current Location -->
+              <v-row class="mt-2">
+                <v-col cols="12">
+                  <LocationSelectWithMap
+                    v-model="form.location_id"
+                    :entity-id="npc?.id"
+                    entity-type="NPC"
+                    @update:map-sync="mapSyncData = $event"
+                  />
+                </v-col>
+              </v-row>
             </v-tabs-window-item>
 
             <!-- NPC Relations Tab -->
@@ -442,6 +454,17 @@
                 </v-select>
               </v-col>
             </v-row>
+
+            <!-- Current Location (Create mode) -->
+            <v-row class="mt-2">
+              <v-col cols="12">
+                <LocationSelectWithMap
+                  v-model="form.location_id"
+                  entity-type="NPC"
+                  @update:map-sync="mapSyncData = $event"
+                />
+              </v-col>
+            </v-row>
           </div>
         </v-card-text>
 
@@ -489,9 +512,11 @@ import NpcNotesTab from './NpcNotesTab.vue'
 import EntityDocuments from '../shared/EntityDocuments.vue'
 import EntityImageUpload from '../shared/EntityImageUpload.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
+import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and npcId needed!
@@ -513,6 +538,7 @@ const emit = defineEmits<{
 const { locale, t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage: downloadImageFile } = useImageDownload()
 
 // ============================================================================
@@ -532,6 +558,7 @@ const npc = ref<NPC | null>(null)
 const form = ref({
   name: '',
   description: '',
+  location_id: null as number | null,
   metadata: {
     race: undefined as string | undefined,
     class: undefined as string | undefined,
@@ -541,6 +568,9 @@ const form = ref({
     status: undefined as NpcStatus | undefined,
   },
 })
+
+// Map sync data (from LocationSelectWithMap)
+const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
 // Relations data - loaded internally
 interface NpcRelation {
@@ -747,6 +777,7 @@ async function loadNpc(npcId: number) {
     form.value = {
       name: data.name,
       description: data.description || '',
+      location_id: data.location_id || null,
       metadata: {
         race: data.metadata?.race as string | undefined,
         class: data.metadata?.class as string | undefined,
@@ -841,6 +872,7 @@ function resetForm() {
   form.value = {
     name: '',
     description: '',
+    location_id: null,
     metadata: {
       race: undefined,
       class: undefined,
@@ -850,6 +882,7 @@ function resetForm() {
       status: undefined as NpcStatus | undefined,
     },
   }
+  mapSyncData.value = null
   npcRelations.value = []
   factionMemberships.value = []
   npcItems.value = []
@@ -883,16 +916,30 @@ async function save() {
       const updated = await entitiesStore.updateNPC(npc.value.id, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata: form.value.metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(npc.value.id, mapSyncData.value.mapIds)
+      }
+
       emit('saved', updated)
     } else {
       // Create new NPC
       const created = await entitiesStore.createNPC(campaignId, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata: form.value.metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(created.id, mapSyncData.value.mapIds)
+      }
+
       emit('created', created)
     }
 
@@ -906,6 +953,101 @@ async function save() {
 
 function close() {
   internalShow.value = false
+}
+
+// Sync NPC marker to selected maps - place inside location circle if available
+async function syncToMaps(entityId: number, mapIds: number[]) {
+  // Get maps that have an area (circle) for the selected location
+  const locationId = form.value.location_id
+  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let locationName = ''
+
+  if (locationId) {
+    try {
+      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+        `/api/locations/${locationId}/maps-with-area`,
+      )
+      // Get location name from API
+      const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
+      locationName = location.name
+    } catch (e) {
+      console.error('[NpcEditDialog] Failed to get maps with area:', e)
+    }
+  }
+
+  // Track maps where location is not present (marker placed in center)
+  const mapsWithoutLocation: string[] = []
+
+  // Get all maps to know their names for warning message
+  let allMaps: Array<{ id: number; name: string }> = []
+  try {
+    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch (e) {
+    console.error('[NpcEditDialog] Failed to get maps:', e)
+  }
+
+  for (const mapId of mapIds) {
+    try {
+      // Check if this map has an area for the location
+      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+
+      if (areaInfo) {
+        // Place marker inside the location circle (finds free spot automatically)
+        // This API creates OR updates the marker position
+        await $fetch(`/api/maps/${mapId}/place-in-area`, {
+          method: 'POST',
+          body: {
+            entity_id: entityId,
+            area_id: areaInfo.area_id,
+          },
+        })
+      } else {
+        // No area for this location on this map
+        // Check if marker already exists
+        const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
+          query: { entityId },
+        })
+
+        if (existingMarkers.length === 0) {
+          // Create a new marker at a default position (center of map)
+          await $fetch(`/api/maps/${mapId}/markers`, {
+            method: 'POST',
+            body: {
+              entity_id: entityId,
+              x: 50,
+              y: 50,
+            },
+          })
+        }
+
+        // Track this map for warning (location is not on this map)
+        // Show warning for both new and existing markers
+        if (locationId) {
+          const mapInfo = allMaps.find((m) => m.id === mapId)
+          if (mapInfo) {
+            mapsWithoutLocation.push(mapInfo.name)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[NpcEditDialog] Failed to sync to map ${mapId}:`, e)
+    }
+  }
+
+  // Show warning if location was not found on some maps
+  if (mapsWithoutLocation.length > 0 && locationId) {
+    if (mapsWithoutLocation.length === 1) {
+      snackbarStore.warning(
+        t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
+      )
+    } else {
+      snackbarStore.warning(
+        t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
+      )
+    }
+  }
 }
 
 // ============================================================================

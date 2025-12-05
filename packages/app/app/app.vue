@@ -32,6 +32,16 @@
       :search-results="searchResults"
       @select-result="navigateToResult"
     />
+
+    <!-- Global Snackbar -->
+    <v-snackbar
+      v-model="snackbarStore.show"
+      :color="snackbarStore.color"
+      :timeout="snackbarStore.timeout"
+      location="top"
+    >
+      {{ snackbarStore.message }}
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -60,8 +70,9 @@ const searchResults = ref<
   }>
 >([])
 
-// Campaign store
+// Stores
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Active campaign from cookies
 const activeCampaignName = useCookie('activeCampaignName')

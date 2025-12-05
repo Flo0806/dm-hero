@@ -14,10 +14,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata } = body as {
+  const { name, description, metadata, location_id } = body as {
     name?: string
     description?: string
     metadata?: NpcMetadata
+    location_id?: number | null
   }
 
   // Convert localized race/class names to keys before saving
@@ -41,6 +42,10 @@ export default defineEventHandler(async (event) => {
     updates.push('metadata = ?')
     values.push(metadataWithKeys ? JSON.stringify(metadataWithKeys) : null)
   }
+  if (location_id !== undefined) {
+    updates.push('location_id = ?')
+    values.push(location_id)
+  }
 
   if (updates.length > 0) {
     updates.push('updated_at = CURRENT_TIMESTAMP')
@@ -62,6 +67,7 @@ export default defineEventHandler(async (event) => {
     name: string
     description: string | null
     metadata: string | null
+    location_id: number | null
     created_at: string
     updated_at: string
     deleted_at: string | null

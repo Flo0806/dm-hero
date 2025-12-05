@@ -26,7 +26,7 @@ export default defineEventHandler((event) => {
 
   // Get the NPC
   const npc = db
-    .prepare<[string, number], EntityRow>(
+    .prepare<[string, number], EntityRow & { location_id: number | null }>(
       `
     SELECT
       e.id,
@@ -34,6 +34,7 @@ export default defineEventHandler((event) => {
       e.description,
       e.image_url,
       e.metadata,
+      e.location_id,
       e.created_at,
       e.updated_at
     FROM entities e
@@ -58,6 +59,7 @@ export default defineEventHandler((event) => {
     name: npc.name,
     description: npc.description,
     image_url: npc.image_url,
+    location_id: npc.location_id,
     created_at: npc.created_at,
     updated_at: npc.updated_at,
     metadata,

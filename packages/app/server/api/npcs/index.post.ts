@@ -6,11 +6,12 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description, metadata, campaignId } = body as {
+  const { name, description, metadata, campaignId, location_id } = body as {
     name: string
     description?: string
     metadata?: NpcMetadata
     campaignId: number
+    location_id?: number | null
   }
 
   if (!name || !campaignId) {
@@ -38,8 +39,8 @@ export default defineEventHandler(async (event) => {
   const result = db
     .prepare(
       `
-    INSERT INTO entities (type_id, campaign_id, name, description, metadata)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO entities (type_id, campaign_id, name, description, metadata, location_id)
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
     )
     .run(
@@ -48,6 +49,7 @@ export default defineEventHandler(async (event) => {
       name,
       description || null,
       metadataWithKeys ? JSON.stringify(metadataWithKeys) : null,
+      location_id || null,
     )
 
   interface DbEntity {
@@ -57,6 +59,7 @@ export default defineEventHandler(async (event) => {
     name: string
     description: string | null
     metadata: string | null
+    location_id: number | null
     created_at: string
     updated_at: string
     deleted_at: string | null

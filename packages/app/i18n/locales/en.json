@@ -1425,6 +1425,13 @@
     "noConnections": "No connections",
     "noConnectionsText": "This entity has no links yet"
   },
+  "entities": {
+    "currentLocation": "Current Location",
+    "currentLocationHint": "The place where this entity is currently located",
+    "updateOnMaps": "Update on Maps",
+    "selectMaps": "Select Maps",
+    "selectMapsHint": "Choose the maps where the location should be updated"
+  },
   "maps": {
     "title": "Maps",
     "subtitle": "Interactive campaign maps",
@@ -1461,6 +1468,19 @@
     "update": "Update",
     "helpClick": "Click = View",
     "helpRightClick": "Right-click = Edit",
-    "helpDrag": "Drag = Move"
+    "helpDrag": "Drag = Move",
+    "addArea": "Add Area",
+    "editArea": "Edit Area",
+    "selectLocation": "Select Location",
+    "radius": "Radius",
+    "colorOptional": "Color (optional)",
+    "colorHint": "Hex color code, e.g. #8B7355",
+    "clickToPlaceArea": "Click to place area",
+    "assignLocation": "Assign Location",
+    "assignLocationQuestion": "Should '{entity}' be assigned to location '{location}'?",
+    "removeLocation": "Remove Location",
+    "removeLocationQuestion": "Should the location '{location}' be removed from '{entity}'?",
+    "locationNotOnMap": "Location '{location}' is not on map '{map}'. Marker was placed in the center.",
+    "locationNotOnMaps": "Location '{location}' is not on {count} maps. Markers were placed in the center."
   }
 }

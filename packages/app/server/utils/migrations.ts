@@ -1431,6 +1431,48 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 25: Campaign maps and markers tables created')
     },
   },
+  {
+    version: 26,
+    name: 'location_standort_feature',
+    up: (db) => {
+      // Add location_id to entities table for current location (Standort)
+      // This is separate from relations - it's THE current location for map display
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN location_id INTEGER REFERENCES entities(id) ON DELETE SET NULL
+      `)
+
+      // Create index for faster location lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entities_location_id ON entities(location_id)
+      `)
+
+      // Create map_areas table for location circles/regions on maps
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS map_areas (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          map_id INTEGER NOT NULL,
+          location_id INTEGER NOT NULL,
+          center_x REAL NOT NULL,
+          center_y REAL NOT NULL,
+          radius REAL NOT NULL DEFAULT 5.0,
+          color TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (map_id) REFERENCES campaign_maps(id) ON DELETE CASCADE,
+          FOREIGN KEY (location_id) REFERENCES entities(id) ON DELETE CASCADE,
+          UNIQUE(map_id, location_id)
+        )
+      `)
+
+      // Create indexes for map_areas
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_map_areas_map_id ON map_areas(map_id);
+        CREATE INDEX IF NOT EXISTS idx_map_areas_location_id ON map_areas(location_id);
+      `)
+
+      console.log('✅ Migration 26: Location Standort feature - location_id and map_areas created')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

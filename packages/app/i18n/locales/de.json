@@ -1420,6 +1420,13 @@
     "noConnections": "Keine Verbindungen",
     "noConnectionsText": "Diese Entität hat noch keine Verknüpfungen"
   },
+  "entities": {
+    "currentLocation": "Aktueller Standort",
+    "currentLocationHint": "Der Ort, an dem sich diese Entität gerade befindet",
+    "updateOnMaps": "Auf Karten aktualisieren",
+    "selectMaps": "Karten auswählen",
+    "selectMapsHint": "Wähle die Karten, auf denen der Standort aktualisiert werden soll"
+  },
   "maps": {
     "title": "Karten",
     "subtitle": "Interaktive Kampagnenkarten",
@@ -1456,6 +1463,19 @@
     "update": "Aktualisieren",
     "helpClick": "Klick = Anzeigen",
     "helpRightClick": "Rechtsklick = Bearbeiten",
-    "helpDrag": "Ziehen = Verschieben"
+    "helpDrag": "Ziehen = Verschieben",
+    "addArea": "Bereich hinzufügen",
+    "editArea": "Bereich bearbeiten",
+    "selectLocation": "Ort auswählen",
+    "radius": "Radius",
+    "colorOptional": "Farbe (optional)",
+    "colorHint": "Hex-Farbcode, z.B. #8B7355",
+    "clickToPlaceArea": "Klicke um Bereich zu platzieren",
+    "assignLocation": "Standort zuweisen",
+    "assignLocationQuestion": "Soll '{entity}' den Standort '{location}' zugewiesen bekommen?",
+    "removeLocation": "Standort entfernen",
+    "removeLocationQuestion": "Soll der Standort '{location}' von '{entity}' entfernt werden?",
+    "locationNotOnMap": "Standort '{location}' ist auf Karte '{map}' nicht vorhanden. Marker wurde mittig platziert.",
+    "locationNotOnMaps": "Standort '{location}' ist auf {count} Karten nicht vorhanden. Marker wurden mittig platziert."
   }
 }

@@ -79,6 +79,38 @@ export interface UpdateMarkerPayload {
   notes?: string | null
 }
 
+// Map Areas (Location circles/regions)
+export interface MapArea {
+  id: number
+  map_id: number
+  location_id: number
+  center_x: number // Position as percentage (0-100)
+  center_y: number // Position as percentage (0-100)
+  radius: number // Radius as percentage
+  color: string | null
+  created_at: string
+  updated_at: string
+  // Joined from entities table
+  location_name?: string
+  location_description?: string | null
+  location_image_url?: string | null
+}
+
+export interface CreateMapAreaPayload {
+  location_id: number
+  center_x: number
+  center_y: number
+  radius?: number
+  color?: string | null
+}
+
+export interface UpdateMapAreaPayload {
+  center_x?: number
+  center_y?: number
+  radius?: number
+  color?: string | null
+}
+
 // Entity type helpers for markers
 export const ENTITY_TYPE_ICONS: Record<string, string> = {
   NPC: 'mdi-account',

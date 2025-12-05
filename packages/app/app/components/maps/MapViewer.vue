@@ -3,13 +3,14 @@
 </template>
 
 <script setup lang="ts">
-import type { CampaignMap, MapMarker } from '~~/types/map'
+import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
 import type {
   Map as LeafletMap,
   ImageOverlay,
   LayerGroup,
   LeafletMouseEvent,
   DragEndEvent,
+  Circle,
 } from 'leaflet'
 
 // Leaflet only works in browser (needs window)
@@ -18,6 +19,8 @@ let L: typeof import('leaflet') | null = null
 const props = defineProps<{
   map: CampaignMap
   markers?: MapMarker[]
+  areas?: MapArea[]
+  editMode?: boolean // Enable area drawing/editing
 }>()
 
 const emit = defineEmits<{
@@ -25,12 +28,22 @@ const emit = defineEmits<{
   markerRightClick: [marker: MapMarker]
   mapClick: [position: { x: number; y: number }]
   markerDrag: [data: { marker: MapMarker; x: number; y: number }]
+  markerDragIntoArea: [data: { marker: MapMarker; area: MapArea; x: number; y: number }]
+  markerDragOutOfArea: [data: { marker: MapMarker; previousArea: MapArea; x: number; y: number }]
+  areaClick: [area: MapArea]
+  areaRightClick: [area: MapArea]
+  areaDrag: [data: { area: MapArea; x: number; y: number }]
+  areaResize: [data: { area: MapArea; radius: number }]
 }>()
 
 const mapContainer = ref<HTMLElement | null>(null)
 let leafletMap: LeafletMap | null = null
 let imageOverlay: ImageOverlay | null = null
 const markerLayer = shallowRef<LayerGroup | null>(null)
+const areaLayer = shallowRef<LayerGroup | null>(null)
+
+// Store circle references for resize handling
+const circleRefs = new Map<number, Circle>()
 
 // Initialize map when container is ready
 onMounted(async () => {
@@ -73,6 +86,15 @@ watch(
   { deep: true },
 )
 
+// Update areas when they change
+watch(
+  () => props.areas,
+  () => {
+    updateAreas()
+  },
+  { deep: true },
+)
+
 function initMap() {
   if (!mapContainer.value || !L) return
 
@@ -107,10 +129,14 @@ function initMap() {
     imageOverlay = L.imageOverlay(`/uploads/${props.map.image_url}`, bounds)
     imageOverlay.addTo(leafletMap)
 
-    // Create marker layer
+    // Create area layer (below markers)
+    areaLayer.value = L.layerGroup().addTo(leafletMap)
+
+    // Create marker layer (above areas)
     markerLayer.value = L.layerGroup().addTo(leafletMap)
 
-    // Add markers
+    // Add areas and markers
+    updateAreas()
     updateMarkers()
 
     // Handle map clicks
@@ -145,6 +171,94 @@ function initMap() {
 
 // Threshold: show labels only when zoomed in enough
 const LABEL_ZOOM_THRESHOLD = 0
+
+// Default color for location areas
+const LOCATION_AREA_COLOR = '#8B7355'
+
+// Helper: Check if a point (x%, y%) is inside an area circle
+function isPointInArea(x: number, y: number, area: MapArea): boolean {
+  const dx = x - area.center_x
+  const dy = y - area.center_y
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  return distance <= area.radius
+}
+
+// Helper: Find which area a point is inside (if any)
+function findAreaAtPoint(x: number, y: number): MapArea | null {
+  if (!props.areas) return null
+  for (const area of props.areas) {
+    if (isPointInArea(x, y, area)) {
+      return area
+    }
+  }
+  return null
+}
+
+// Helper: Find which area a marker was in before dragging (based on entity's location_id)
+function findPreviousAreaForMarker(marker: MapMarker): MapArea | null {
+  if (!props.areas) return null
+  // Check if there's an area for this entity's current location
+  // We need to check if the marker's entity has a location that matches an area
+  // For now, we check if the marker's OLD position was inside any area
+  return findAreaAtPoint(marker.x, marker.y)
+}
+
+function updateAreas() {
+  if (!areaLayer.value || !imageOverlay || !props.areas || !L || !leafletMap) return
+
+  // Clear existing areas
+  areaLayer.value.clearLayers()
+  circleRefs.clear()
+
+  const bounds = imageOverlay.getBounds()
+  const width = bounds.getEast() - bounds.getWest()
+  const height = bounds.getNorth() - bounds.getSouth()
+
+  // Add areas
+  for (const area of props.areas) {
+    // Convert percentage to lat/lng
+    const lng = bounds.getWest() + (area.center_x / 100) * width
+    const lat = bounds.getNorth() - (area.center_y / 100) * height
+
+    // Radius as percentage of width converted to map units
+    const radiusInMapUnits = (area.radius / 100) * width
+
+    const color = area.color || LOCATION_AREA_COLOR
+
+    const circle = L.circle([lat, lng], {
+      radius: radiusInMapUnits,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.2,
+      weight: 2,
+      interactive: true,
+    })
+
+    // Store reference for potential resize
+    circleRefs.set(area.id, circle)
+
+    // Tooltip with location name
+    circle.bindTooltip(area.location_name || 'Location', {
+      permanent: false,
+      direction: 'center',
+    })
+
+    // Click handler - view location
+    circle.on('click', (e: LeafletMouseEvent) => {
+      L?.DomEvent.stopPropagation(e)
+      emit('areaClick', area)
+    })
+
+    // Right-click handler - edit area
+    circle.on('contextmenu', (e: LeafletMouseEvent) => {
+      e.originalEvent.preventDefault()
+      L?.DomEvent.stopPropagation(e)
+      emit('areaRightClick', area)
+    })
+
+    circle.addTo(areaLayer.value!)
+  }
+}
 
 function updateMarkers() {
   if (!markerLayer.value || !imageOverlay || !props.markers || !L || !leafletMap) return
@@ -193,12 +307,31 @@ function updateMarkers() {
       emit('markerRightClick', marker)
     })
 
-    // Drag handler - emit new position
+    // Drag handler - emit new position and check for area transitions
     leafletMarker.on('dragend', (e: DragEndEvent) => {
       const newPos = e.target.getLatLng()
       const newX = ((newPos.lng - bounds.getWest()) / width) * 100
       const newY = ((bounds.getNorth() - newPos.lat) / height) * 100
+
+      // Check if marker moved in/out of an area
+      const previousArea = findPreviousAreaForMarker(marker)
+      const newArea = findAreaAtPoint(newX, newY)
+
+      // Emit base drag event first
       emit('markerDrag', { marker, x: newX, y: newY })
+
+      // Check for area transitions
+      if (!previousArea && newArea) {
+        // Marker was dragged INTO an area
+        emit('markerDragIntoArea', { marker, area: newArea, x: newX, y: newY })
+      } else if (previousArea && !newArea) {
+        // Marker was dragged OUT OF an area
+        emit('markerDragOutOfArea', { marker, previousArea, x: newX, y: newY })
+      } else if (previousArea && newArea && previousArea.id !== newArea.id) {
+        // Marker moved from one area to another - treat as out of old, into new
+        emit('markerDragOutOfArea', { marker, previousArea, x: newX, y: newY })
+        emit('markerDragIntoArea', { marker, area: newArea, x: newX, y: newY })
+      }
     })
 
     leafletMarker.addTo(markerLayer.value!)
