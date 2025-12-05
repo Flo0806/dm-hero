@@ -1,11 +1,24 @@
 <script setup lang="ts">
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 
 // Fetch all docs for sidebar using Nuxt Content v3 API
-const { data: docs } = await useAsyncData('docs-list', () =>
+const { data: allDocs } = await useAsyncData('docs-list', () =>
   queryCollection('docs').order('stem', 'ASC').all()
 )
+
+// Filter docs based on current locale
+const docs = computed(() => {
+  if (!allDocs.value) return []
+
+  const isGerman = locale.value === 'de'
+
+  return allDocs.value.filter((doc) => {
+    const isInDeFolder = doc.path.startsWith('/docs/de/')
+    // German: show /docs/de/*, English: show /docs/* but not /docs/de/*
+    return isGerman ? isInDeFolder : !isInDeFolder
+  })
+})
 
 // Fetch current page content
 const { data: page } = await useAsyncData(`docs-${route.path}`, () =>
