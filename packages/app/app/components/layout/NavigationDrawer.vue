@@ -91,6 +91,12 @@
         value="calendar"
         to="/calendar"
       />
+      <v-list-item
+        prepend-icon="mdi-map"
+        :title="$t('nav.maps')"
+        value="maps"
+        to="/maps"
+      />
     </v-list>
 
     <template #append>

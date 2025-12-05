@@ -1377,6 +1377,60 @@ export const migrations: Migration[] = [
       console.log(`✅ Migration 24: Normalized ${updatedCount} relation_type values to English keys`)
     },
   },
+  {
+    version: 25,
+    name: 'campaign_maps',
+    up: (db) => {
+      // Create campaign_maps table for interactive maps
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS campaign_maps (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          image_url TEXT NOT NULL,
+          parent_map_id INTEGER,
+          version_name TEXT,
+          default_zoom REAL DEFAULT 1.0,
+          min_zoom REAL DEFAULT 0.5,
+          max_zoom REAL DEFAULT 3.0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY (parent_map_id) REFERENCES campaign_maps(id) ON DELETE SET NULL
+        )
+      `)
+
+      // Create map_markers table for entity markers on maps
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS map_markers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          map_id INTEGER NOT NULL,
+          entity_id INTEGER NOT NULL,
+          x REAL NOT NULL,
+          y REAL NOT NULL,
+          custom_icon TEXT,
+          custom_color TEXT,
+          custom_label TEXT,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (map_id) REFERENCES campaign_maps(id) ON DELETE CASCADE,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Create indexes for faster lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_campaign_maps_campaign ON campaign_maps(campaign_id);
+        CREATE INDEX IF NOT EXISTS idx_map_markers_map_id ON map_markers(map_id);
+        CREATE INDEX IF NOT EXISTS idx_map_markers_entity_id ON map_markers(entity_id);
+      `)
+
+      console.log('✅ Migration 25: Campaign maps and markers tables created')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

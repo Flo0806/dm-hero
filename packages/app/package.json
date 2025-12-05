@@ -58,7 +58,8 @@
     "appId": "com.dm-hero.app",
     "productName": "DM Hero",
     "directories": {
-      "output": "dist-electron"
+      "output": "dist-electron",
+      "buildResources": "electron/icons"
     },
     "files": [
       "electron/**/*"
@@ -97,8 +98,7 @@
     "win": {
       "target": [
         "zip"
-      ],
-      "signAndEditExecutable": false
+      ]
     },
     "linux": {
       "target": [
@@ -121,8 +121,9 @@
     "@pinia/nuxt": "^0.11.3",
     "better-sqlite3": "^12.4.6",
     "bindings": "^1.5.0",
-    "file-uri-to-path": "^1.0.0",
     "fastest-levenshtein": "^1.0.16",
+    "file-uri-to-path": "^1.0.0",
+    "leaflet": "^1.9.4",
     "marked": "^17.0.0",
     "md-editor-v3": "^6.1.1",
     "nuxt": "^4.2.1",
@@ -141,6 +142,7 @@
     "@oxc-resolver/binding-linux-x64-gnu": "^11.13.2",
     "@oxc-transform/binding-linux-x64-gnu": "^0.97.0",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/leaflet": "^1.9.21",
     "@typescript-eslint/eslint-plugin": "^8.46.3",
     "@typescript-eslint/parser": "^8.46.3",
     "@vitejs/plugin-vue": "^6.0.1",
