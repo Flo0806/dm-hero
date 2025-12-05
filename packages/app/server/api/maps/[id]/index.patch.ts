@@ -56,6 +56,14 @@ export default defineEventHandler(async (event) => {
     updates.push('max_zoom = ?')
     values.push(body.max_zoom)
   }
+  if (body.scale_value !== undefined) {
+    updates.push('scale_value = ?')
+    values.push(body.scale_value)
+  }
+  if (body.scale_unit !== undefined) {
+    updates.push('scale_unit = ?')
+    values.push(body.scale_unit)
+  }
 
   if (updates.length > 0) {
     updates.push('updated_at = CURRENT_TIMESTAMP')

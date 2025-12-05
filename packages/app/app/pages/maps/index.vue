@@ -19,7 +19,7 @@
 
       <v-row v-else-if="maps.length > 0">
         <v-col v-for="map in maps" :key="map.id" cols="12" md="4">
-          <v-card hover @click="selectMap(map)">
+          <v-card hover class="map-card" @click="selectMap(map)">
             <v-img
               :src="`/uploads/${map.image_url}`"
               height="200"
@@ -32,13 +32,15 @@
                 </div>
               </template>
             </v-img>
-            <v-card-title>{{ map.name }}</v-card-title>
-            <v-card-subtitle v-if="map.version_name">
-              {{ map.version_name }}
-            </v-card-subtitle>
-            <v-card-text v-if="map.description">
-              {{ map.description }}
-            </v-card-text>
+            <div class="map-card-content">
+              <v-card-title class="map-card-title">{{ map.name }}</v-card-title>
+              <v-card-subtitle class="map-card-subtitle">
+                {{ map.version_name || '&nbsp;' }}
+              </v-card-subtitle>
+              <v-card-text class="map-card-description">
+                {{ map.description || '&nbsp;' }}
+              </v-card-text>
+            </div>
             <v-card-actions>
               <v-chip size="small" prepend-icon="mdi-map-marker">
                 {{ map._markerCount || 0 }} {{ $t('maps.markers') }}
@@ -86,6 +88,31 @@
         >
           {{ addMode === 'marker' ? $t('maps.addingMarker') : $t('maps.addingArea') }}
         </v-chip>
+
+        <!-- Entity type filters -->
+        <div v-if="availableEntityTypes.length > 0" class="filter-chips">
+          <v-chip
+            v-for="entityType in availableEntityTypes"
+            :key="entityType"
+            :prepend-icon="ENTITY_TYPE_ICONS[entityType] || 'mdi-help'"
+            :variant="activeFilters.has(entityType) ? 'flat' : 'outlined'"
+            :color="activeFilters.has(entityType) ? ENTITY_TYPE_COLORS[entityType] : undefined"
+            size="small"
+            class="mr-1"
+            @click="toggleFilter(entityType)"
+          >
+            {{ $t(`nav.${entityType.toLowerCase()}s`) }}
+          </v-chip>
+        </div>
+
+        <!-- Measure button -->
+        <v-btn
+          icon="mdi-ruler"
+          :variant="measureMode ? 'flat' : 'text'"
+          :color="measureMode ? 'primary' : undefined"
+          @click="toggleMeasureMode"
+        />
+
         <v-menu>
           <template #activator="{ props: menuProps }">
             <v-btn icon="mdi-plus" variant="text" v-bind="menuProps" />
@@ -110,8 +137,9 @@
         <ClientOnly>
           <MapsMapViewer
             :map="selectedMap"
-            :markers="selectedMapMarkers"
+            :markers="filteredMarkers"
             :areas="selectedMapAreas"
+            :measure-points="measurePoints"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
             @map-click="onMapClick"
@@ -124,14 +152,41 @@
         </ClientOnly>
         <!-- Help badges -->
         <div class="map-help-badges">
+          <!-- Measure mode hints -->
+          <template v-if="measureMode">
+            <v-chip size="small" color="primary" prepend-icon="mdi-ruler">
+              {{ $t('maps.measuring') }}
+            </v-chip>
+            <!-- Warning if no scale set -->
+            <v-chip
+              v-if="!selectedMap?.scale_value"
+              size="small"
+              color="warning"
+              prepend-icon="mdi-alert"
+              class="measure-warning"
+            >
+              {{ $t('maps.measureNoScale') }}
+            </v-chip>
+            <v-chip v-else-if="measurePoints.length > 0" size="small" color="secondary">
+              {{ $t('maps.measureTotal', { distance: measuredDistance.toFixed(1), unit: selectedMap?.scale_unit || '?' }) }}
+            </v-chip>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click">
+              {{ $t('maps.measureClick') }}
+            </v-chip>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-keyboard-esc">
+              {{ $t('maps.measureFinish') }}
+            </v-chip>
+          </template>
+          <!-- Area mode hint -->
           <v-chip
-            v-if="addMode === 'area'"
+            v-else-if="addMode === 'area'"
             size="small"
             color="primary"
             prepend-icon="mdi-map-marker-radius"
           >
             {{ $t('maps.clickToPlaceArea') }}
           </v-chip>
+          <!-- Default hints -->
           <template v-else>
             <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click">
               {{ $t('maps.helpClick') }}
@@ -190,6 +245,93 @@
             @click="uploadMap"
           >
             {{ $t('maps.upload') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit Map Dialog -->
+    <v-dialog v-model="showEditDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('maps.edit') }}</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="editForm.name"
+            :label="$t('maps.name')"
+            variant="outlined"
+            class="mb-3"
+          />
+          <v-textarea
+            v-model="editForm.description"
+            :label="$t('maps.descriptionOptional')"
+            variant="outlined"
+            rows="2"
+            class="mb-3"
+          />
+          <v-text-field
+            v-model="editForm.version_name"
+            :label="$t('maps.versionNameOptional')"
+            :placeholder="$t('maps.versionNamePlaceholder')"
+            variant="outlined"
+            class="mb-3"
+          />
+          <v-divider class="my-4" />
+          <div class="text-subtitle-2 mb-2">{{ $t('maps.scale') }}</div>
+          <v-row dense>
+            <v-col cols="6">
+              <v-text-field
+                v-model.number="editForm.scale_value"
+                :label="$t('maps.scaleValue')"
+                :placeholder="$t('maps.scaleValuePlaceholder')"
+                variant="outlined"
+                type="number"
+                min="0"
+                density="compact"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-select
+                v-model="editForm.scale_unit"
+                :label="$t('maps.scaleUnit')"
+                :items="scaleUnitOptions"
+                variant="outlined"
+                density="compact"
+                clearable
+              />
+            </v-col>
+          </v-row>
+          <div class="text-caption text-medium-emphasis mb-3">
+            {{ $t('maps.scaleHint') }}
+          </div>
+
+          <v-divider class="my-4" />
+          <v-file-input
+            v-model="editForm.newImage"
+            :label="$t('maps.replaceImage')"
+            accept="image/*"
+            variant="outlined"
+            prepend-icon="mdi-image-edit"
+          />
+          <v-alert
+            v-if="editForm.newImage"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mt-2"
+          >
+            {{ $t('maps.replaceImageHint') }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showEditDialog = false">{{ $t('maps.cancel') }}</v-btn>
+          <v-btn
+            color="primary"
+            :loading="saving"
+            :disabled="!editForm.name"
+            @click="saveMapEdit"
+          >
+            {{ $t('maps.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -285,6 +427,7 @@
 
 <script setup lang="ts">
 import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
+import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
 import type { EntityPreviewType } from '~/components/shared/EntityPreviewDialog.vue'
 
 const campaignStore = useCampaignStore()
@@ -297,6 +440,7 @@ const uploading = ref(false)
 const deleting = ref(false)
 
 const showUploadDialog = ref(false)
+const showEditDialog = ref(false)
 const showAddMarkerDialog = ref(false)
 const showAddAreaDialog = ref(false)
 const showDeleteDialog = ref(false)
@@ -311,12 +455,111 @@ const selectedMapMarkers = ref<MapMarker[]>([])
 const selectedMapAreas = ref<MapArea[]>([])
 const deletingMap = ref<CampaignMap | null>(null)
 
+// Entity type filter
+const activeFilters = ref<Set<string>>(new Set())
+
+// Available entity types based on current markers
+const availableEntityTypes = computed(() => {
+  const types = new Set<string>()
+  for (const marker of selectedMapMarkers.value) {
+    if (marker.entity_type) {
+      types.add(marker.entity_type)
+    }
+  }
+  return Array.from(types).sort()
+})
+
+// Filtered markers based on active filters
+const filteredMarkers = computed(() => {
+  if (activeFilters.value.size === 0) {
+    return selectedMapMarkers.value
+  }
+  return selectedMapMarkers.value.filter(
+    (marker) => marker.entity_type && activeFilters.value.has(marker.entity_type),
+  )
+})
+
+// Toggle filter for an entity type
+function toggleFilter(entityType: string) {
+  if (activeFilters.value.has(entityType)) {
+    activeFilters.value.delete(entityType)
+  } else {
+    activeFilters.value.add(entityType)
+  }
+  // Trigger reactivity
+  activeFilters.value = new Set(activeFilters.value)
+}
+
 const uploadForm = ref({
   name: '',
   description: '',
   version_name: '',
   file: null as File | null,
 })
+
+const editForm = ref({
+  name: '',
+  description: '',
+  version_name: '',
+  scale_value: null as number | null,
+  scale_unit: null as string | null,
+  newImage: null as File | null,
+})
+
+// Scale unit options for measurement
+const scaleUnitOptions = [
+  { value: 'km', title: 'Kilometer (km)' },
+  { value: 'miles', title: 'Miles' },
+  { value: 'm', title: 'Meter (m)' },
+  { value: 'ft', title: 'Feet (ft)' },
+  { value: 'leagues', title: 'Leagues' },
+]
+const editingMap = ref<CampaignMap | null>(null)
+const saving = ref(false)
+
+// Measurement tool state
+const measureMode = ref(false)
+const measurePoints = ref<{ x: number; y: number }[]>([])
+
+// Calculate total measured distance
+const measuredDistance = computed(() => {
+  if (measurePoints.value.length < 2 || !selectedMap.value?.scale_value) {
+    return 0
+  }
+
+  let totalDistance = 0
+  for (let i = 1; i < measurePoints.value.length; i++) {
+    const p1 = measurePoints.value[i - 1]!
+    const p2 = measurePoints.value[i]!
+    // Calculate distance in percentage units, then convert to map scale
+    const dx = p2.x - p1.x
+    const dy = p2.y - p1.y
+    const distPercent = Math.sqrt(dx * dx + dy * dy)
+    // Scale: 100% width = scale_value units
+    totalDistance += (distPercent / 100) * selectedMap.value.scale_value
+  }
+
+  return totalDistance
+})
+
+function toggleMeasureMode() {
+  measureMode.value = !measureMode.value
+  if (!measureMode.value) {
+    // Clear measurement when exiting
+    measurePoints.value = []
+  } else {
+    // Disable other modes
+    addMode.value = null
+  }
+}
+
+function addMeasurePoint(x: number, y: number) {
+  measurePoints.value.push({ x, y })
+}
+
+function clearMeasurement() {
+  measurePoints.value = []
+}
 
 const editingMarker = ref<MapMarker | null>(null)
 const markerPosition = ref<{ x: number; y: number } | null>(null)
@@ -385,6 +628,8 @@ function closeMap() {
   selectedMapMarkers.value = []
   selectedMapAreas.value = []
   addMode.value = null
+  measureMode.value = false
+  measurePoints.value = []
 }
 
 // Upload new map
@@ -448,6 +693,12 @@ function onMarkerRightClick(marker: MapMarker) {
 }
 
 function onMapClick(position: { x: number; y: number }) {
+  // Measure mode: add point
+  if (measureMode.value) {
+    addMeasurePoint(position.x, position.y)
+    return
+  }
+
   if (addMode.value === 'area') {
     // Create new area at clicked position
     editingArea.value = null
@@ -618,8 +869,64 @@ async function reloadMapData() {
 const reloadMarkers = reloadMapData
 
 function editMap(map: CampaignMap) {
-  // TODO: Edit dialog
-  console.log('Edit map:', map)
+  editingMap.value = map
+  editForm.value = {
+    name: map.name,
+    description: map.description || '',
+    version_name: map.version_name || '',
+    scale_value: map.scale_value,
+    scale_unit: map.scale_unit,
+    newImage: null,
+  }
+  showEditDialog.value = true
+}
+
+async function saveMapEdit() {
+  if (!editingMap.value) return
+
+  saving.value = true
+  try {
+    // Update map metadata
+    let updated = await $fetch<CampaignMap>(`/api/maps/${editingMap.value.id}`, {
+      method: 'PATCH',
+      body: {
+        name: editForm.value.name,
+        description: editForm.value.description || null,
+        version_name: editForm.value.version_name || null,
+        scale_value: editForm.value.scale_value || null,
+        scale_unit: editForm.value.scale_unit || null,
+      },
+    })
+
+    // Upload new image if provided
+    if (editForm.value.newImage) {
+      const formData = new FormData()
+      formData.append('image', editForm.value.newImage)
+
+      updated = await $fetch<CampaignMap>(`/api/maps/${editingMap.value.id}/upload-image`, {
+        method: 'POST',
+        body: formData,
+      })
+    }
+
+    // Update in maps list
+    const index = maps.value.findIndex((m) => m.id === updated.id)
+    if (index !== -1) {
+      maps.value[index] = { ...maps.value[index], ...updated }
+    }
+
+    // Update selectedMap if it's the one being edited
+    if (selectedMap.value?.id === updated.id) {
+      selectedMap.value = { ...selectedMap.value, ...updated }
+    }
+
+    showEditDialog.value = false
+    editingMap.value = null
+  } catch (error) {
+    console.error('Failed to update map:', error)
+  } finally {
+    saving.value = false
+  }
 }
 
 function deleteMap(map: CampaignMap) {
@@ -643,9 +950,22 @@ async function confirmDelete() {
   }
 }
 
+// Handle ESC key to exit measure mode
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && measureMode.value) {
+    clearMeasurement()
+    measureMode.value = false
+  }
+}
+
 // Load on mount
 onMounted(() => {
   loadMaps()
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
 })
 
 // Reload when campaign changes
@@ -716,6 +1036,12 @@ watch(activeCampaignId, () => {
   background: rgb(var(--v-theme-surface));
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   flex-shrink: 0;
+  gap: 8px;
+}
+
+.filter-chips {
+  display: flex;
+  align-items: center;
 }
 
 .map-title {
@@ -739,5 +1065,44 @@ watch(activeCampaignId, () => {
   gap: 6px;
   z-index: 1000;
   pointer-events: none;
+}
+
+/* Make help badges more visible on any background */
+.map-help-badges :deep(.v-chip) {
+  background: rgba(var(--v-theme-surface), 0.95) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+/* Map selection cards - equal height */
+.map-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.map-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-card-subtitle {
+  min-height: 20px;
+}
+
+.map-card-description {
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 48px;
 }
 </style>

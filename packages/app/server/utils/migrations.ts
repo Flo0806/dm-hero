@@ -1473,6 +1473,21 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 26: Location Standort feature - location_id and map_areas created')
     },
   },
+  {
+    version: 27,
+    name: 'Add map scale for measurement tool',
+    up: (db: Database.Database) => {
+      // Add scale fields to campaign_maps
+      // scale_value: the distance value the map width represents (e.g., 100)
+      // scale_unit: the unit of measurement (km, miles, m, ft, leagues)
+      db.exec(`
+        ALTER TABLE campaign_maps ADD COLUMN scale_value REAL DEFAULT NULL;
+        ALTER TABLE campaign_maps ADD COLUMN scale_unit TEXT DEFAULT NULL;
+      `)
+
+      console.log('✅ Migration 27: Map scale fields added for measurement tool')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

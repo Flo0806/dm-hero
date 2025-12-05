@@ -11,6 +11,8 @@ export interface CampaignMap {
   default_zoom: number
   min_zoom: number
   max_zoom: number
+  scale_value: number | null
+  scale_unit: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -18,6 +20,10 @@ export interface CampaignMap {
   _markerCount?: number
   _versions?: CampaignMap[]
 }
+
+// Available scale units for measurement
+export const SCALE_UNITS = ['km', 'miles', 'm', 'ft', 'leagues'] as const
+export type ScaleUnit = (typeof SCALE_UNITS)[number]
 
 export interface MapMarker {
   id: number
@@ -58,6 +64,8 @@ export interface UpdateMapPayload {
   default_zoom?: number
   min_zoom?: number
   max_zoom?: number
+  scale_value?: number | null
+  scale_unit?: string | null
 }
 
 export interface CreateMarkerPayload {

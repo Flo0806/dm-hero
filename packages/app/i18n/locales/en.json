@@ -1487,6 +1487,19 @@
     "locationNotOnMap": "Location '{location}' is not on map '{map}'. Marker was placed in the center.",
     "locationNotOnMaps": "Location '{location}' is not on {count} maps. Markers were placed in the center.",
     "addingMarker": "Adding marker",
-    "addingArea": "Adding area"
+    "addingArea": "Adding area",
+    "replaceImage": "Replace map image",
+    "replaceImageHint": "Warning: Marker and area positions may be offset!",
+    "scale": "Map Scale",
+    "scaleValue": "Map width",
+    "scaleValuePlaceholder": "e.g. 100",
+    "scaleUnit": "Unit",
+    "scaleHint": "How wide is the map in the selected unit? Used for distance measurements.",
+    "measure": "Measure",
+    "measuring": "Measuring distance",
+    "measureTotal": "Total: {distance} {unit}",
+    "measureClick": "Click to add measurement points",
+    "measureFinish": "Double-click or ESC to finish",
+    "measureNoScale": "No scale defined - please set in map settings"
   }
 }

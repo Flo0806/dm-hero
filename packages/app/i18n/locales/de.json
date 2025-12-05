@@ -1482,6 +1482,19 @@
     "locationNotOnMap": "Standort '{location}' ist auf Karte '{map}' nicht vorhanden. Marker wurde mittig platziert.",
     "locationNotOnMaps": "Standort '{location}' ist auf {count} Karten nicht vorhanden. Marker wurden mittig platziert.",
     "addingMarker": "Markierung hinzufügen",
-    "addingArea": "Bereich hinzufügen"
+    "addingArea": "Bereich hinzufügen",
+    "replaceImage": "Kartenbild ersetzen",
+    "replaceImageHint": "Achtung: Die Positionen von Markierungen und Bereichen könnten versetzt werden!",
+    "scale": "Kartenmaßstab",
+    "scaleValue": "Kartenbreite",
+    "scaleValuePlaceholder": "z.B. 100",
+    "scaleUnit": "Einheit",
+    "scaleHint": "Wie breit ist die Karte in der gewählten Einheit? Wird für Entfernungsmessungen verwendet.",
+    "measure": "Messen",
+    "measuring": "Entfernung messen",
+    "measureTotal": "Gesamt: {distance} {unit}",
+    "measureClick": "Klicke um Messpunkte zu setzen",
+    "measureFinish": "Doppelklick oder ESC zum Beenden",
+    "measureNoScale": "Kein Maßstab definiert - bitte in den Karteneinstellungen setzen"
   }
 }

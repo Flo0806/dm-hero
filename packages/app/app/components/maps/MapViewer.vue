@@ -11,6 +11,8 @@ import type {
   LeafletMouseEvent,
   DragEndEvent,
   Circle,
+  Polyline,
+  CircleMarker,
 } from 'leaflet'
 
 // Leaflet only works in browser (needs window)
@@ -21,6 +23,7 @@ const props = defineProps<{
   markers?: MapMarker[]
   areas?: MapArea[]
   editMode?: boolean // Enable area drawing/editing
+  measurePoints?: { x: number; y: number }[] // Points for measurement tool
 }>()
 
 const emit = defineEmits<{
@@ -44,6 +47,11 @@ const areaLayer = shallowRef<LayerGroup | null>(null)
 
 // Store circle references for resize handling
 const circleRefs = new Map<number, Circle>()
+
+// Measurement line layer
+let measureLineLayer: LayerGroup | null = null
+let _measureLine: Polyline | null = null // Prefixed with _ to satisfy linter
+const measureMarkers: CircleMarker[] = []
 
 // Initialize map when container is ready
 onMounted(async () => {
@@ -95,6 +103,15 @@ watch(
   { deep: true },
 )
 
+// Update measurement line when points change
+watch(
+  () => props.measurePoints,
+  () => {
+    updateMeasureLine()
+  },
+  { deep: true },
+)
+
 function initMap() {
   if (!mapContainer.value || !L) return
 
@@ -135,9 +152,13 @@ function initMap() {
     // Create marker layer (above areas)
     markerLayer.value = L.layerGroup().addTo(leafletMap)
 
+    // Create measurement line layer (top)
+    measureLineLayer = L.layerGroup().addTo(leafletMap)
+
     // Add areas and markers
     updateAreas()
     updateMarkers()
+    updateMeasureLine()
 
     // Handle map clicks
     leafletMap.on('click', (e: LeafletMouseEvent) => {
@@ -432,6 +453,52 @@ function loadMapState(mapId: number): { zoom: number; center: [number, number] }
     // localStorage might not be available
   }
   return null
+}
+
+// Update measurement line
+function updateMeasureLine() {
+  if (!measureLineLayer || !L || !imageOverlay) return
+
+  // Clear existing
+  measureLineLayer.clearLayers()
+  measureMarkers.length = 0
+  _measureLine = null
+
+  const points = props.measurePoints
+  if (!points || points.length === 0) return
+
+  const b = imageOverlay.getBounds()
+
+  // Convert percentage points to lat/lng
+  const latLngs = points.map((p) => {
+    const lng = b.getWest() + (p.x / 100) * (b.getEast() - b.getWest())
+    const lat = b.getNorth() - (p.y / 100) * (b.getNorth() - b.getSouth())
+    return L!.latLng(lat, lng)
+  })
+
+  // Draw polyline
+  if (latLngs.length >= 2) {
+    _measureLine = L.polyline(latLngs, {
+      color: '#FFD700',
+      weight: 3,
+      opacity: 0.8,
+      dashArray: '10, 5',
+    }).addTo(measureLineLayer)
+  }
+
+  // Draw circle markers at each point
+  latLngs.forEach((latLng, index) => {
+    const circleMarker = L!.circleMarker(latLng, {
+      radius: 6,
+      fillColor: index === 0 ? '#4CAF50' : '#FFD700', // First point green
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 1,
+    }).addTo(measureLineLayer!)
+
+    measureMarkers.push(circleMarker)
+  })
 }
 
 // Expose method to programmatically add marker at position
