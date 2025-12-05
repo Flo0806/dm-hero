@@ -8,8 +8,27 @@
       <div class="chaos-title">
         <h1 class="text-h5">{{ $t('chaos.title') }}</h1>
         <span v-if="entity" class="text-body-2 text-medium-emphasis">
-          {{ entity.name }} · {{ connections.length }} {{ $t('chaos.connections') }}
+          {{ entity.name }} · {{ filteredConnections.length }} {{ $t('chaos.connections') }}
+          <span v-if="activeFilters.length > 0" class="text-disabled">
+            ({{ connections.length }} {{ $t('chaos.total') }})
+          </span>
         </span>
+      </div>
+      <v-spacer />
+      <!-- Entity Type Filter Chips -->
+      <div class="chaos-filters">
+        <v-chip
+          v-for="filter in availableFilters"
+          :key="filter.type"
+          :color="isFilterActive(filter.type) ? filter.color : undefined"
+          :variant="isFilterActive(filter.type) ? 'flat' : 'outlined'"
+          size="small"
+          class="filter-chip"
+          @click="toggleFilter(filter.type)"
+        >
+          <v-icon start size="16">{{ filter.icon }}</v-icon>
+          {{ filter.label }} ({{ filter.count }})
+        </v-chip>
       </div>
     </div>
 
@@ -31,7 +50,7 @@
     <!-- Chaos Graph Canvas -->
     <div v-else-if="entity" ref="canvasRef" class="chaos-canvas" @scroll="updateLines">
       <!-- SVG Lines Layer (behind cards) -->
-      <svg v-if="connections.length > 0" class="chaos-lines chaos-lines--back">
+      <svg v-if="filteredConnections.length > 0" class="chaos-lines chaos-lines--back">
         <!-- Main connection lines to center -->
         <line
           v-for="line in connectionLines"
@@ -105,11 +124,11 @@
       </div>
 
       <!-- Connections Grid -->
-      <div v-if="connections.length > 0" ref="gridRef" class="chaos-connections-grid">
+      <div v-if="filteredConnections.length > 0" ref="gridRef" class="chaos-connections-grid">
         <ChaosEntityCard
-          v-for="(conn, index) in connections"
+          v-for="conn in filteredConnections"
           :key="conn.relationId"
-          :ref="(el) => setConnectionRef(index, el)"
+          :ref="(el) => setConnectionRef(conn.relationId, el)"
           :entity="connectionToEntity(conn)"
           :entity-type="connectionToEntityType(conn)"
           :relation-label="translateRelationType(conn.relationType)"
@@ -312,6 +331,73 @@ const centerRef = ref<HTMLElement | null>(null)
 const connectionRefs = ref<Map<number, HTMLElement>>(new Map())
 const hoveredConnectionId = ref<number | null>(null)
 
+// Filter state
+const activeFilters = ref<string[]>([])
+
+// Entity type configuration for filters
+const entityTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
+  NPC: { icon: 'mdi-account', color: '#4CAF50', label: 'NPCs' },
+  Location: { icon: 'mdi-map-marker', color: '#2196F3', label: 'Locations' },
+  Item: { icon: 'mdi-sword', color: '#FF9800', label: 'Items' },
+  Faction: { icon: 'mdi-shield-account', color: '#9C27B0', label: 'Factions' },
+  Lore: { icon: 'mdi-book-open-variant', color: '#795548', label: 'Lore' },
+  Player: { icon: 'mdi-account-group', color: '#E91E63', label: 'Players' },
+}
+
+// Computed: available filters based on current connections
+const availableFilters = computed(() => {
+  const typeCounts = new Map<string, number>()
+
+  connections.value.forEach((conn) => {
+    const count = typeCounts.get(conn.entityType) || 0
+    typeCounts.set(conn.entityType, count + 1)
+  })
+
+  return Array.from(typeCounts.entries())
+    .map(([type, count]) => ({
+      type,
+      count,
+      icon: entityTypeConfig[type]?.icon || 'mdi-help',
+      color: entityTypeConfig[type]?.color || '#888',
+      label: entityTypeConfig[type]?.label || type,
+    }))
+    .sort((a, b) => b.count - a.count)
+})
+
+// Computed: filtered connections based on active filters
+const filteredConnections = computed(() => {
+  if (activeFilters.value.length === 0) {
+    return connections.value
+  }
+  return connections.value.filter((conn) => activeFilters.value.includes(conn.entityType))
+})
+
+// Computed: filtered inter-connections (only between visible entities)
+const filteredInterConnections = computed(() => {
+  const visibleEntityIds = new Set(filteredConnections.value.map((c) => c.entityId))
+  return interConnections.value.filter(
+    (ic) => visibleEntityIds.has(ic.fromEntityId) && visibleEntityIds.has(ic.toEntityId),
+  )
+})
+
+// Filter functions
+function isFilterActive(type: string): boolean {
+  return activeFilters.value.includes(type)
+}
+
+function toggleFilter(type: string) {
+  const index = activeFilters.value.indexOf(type)
+  if (index === -1) {
+    activeFilters.value.push(type)
+  } else {
+    activeFilters.value.splice(index, 1)
+  }
+  // Update lines after filter change
+  nextTick(() => {
+    setTimeout(updateLines, 50)
+  })
+}
+
 // View Dialog state - simple refs like npcs/index.vue does it
 const viewDialogOpen = ref(false)
 const viewDialogTypeName = ref<string | null>(null)
@@ -492,10 +578,10 @@ function getLineRectIntersection(
   }
 }
 
-function setConnectionRef(index: number, el: unknown) {
-  if (el && connections.value[index]) {
+function setConnectionRef(relationId: number, el: unknown) {
+  if (el) {
     const htmlEl = (el as { $el?: HTMLElement }).$el || (el as HTMLElement)
-    connectionRefs.value.set(connections.value[index].relationId, htmlEl)
+    connectionRefs.value.set(relationId, htmlEl)
   }
 }
 
@@ -504,7 +590,7 @@ function onCardHover(relationId: number, hoveredEntity: unknown) {
 }
 
 function updateLines() {
-  if (!canvasRef.value || !centerRef.value || connections.value.length === 0) {
+  if (!canvasRef.value || !centerRef.value || filteredConnections.value.length === 0) {
     connectionLines.value = []
     interConnectionLines.value = []
     return
@@ -531,7 +617,7 @@ function updateLines() {
   // Build a map of entityId -> card rect (relative to canvas)
   const entityRects = new Map<number, { x: number; y: number; width: number; height: number }>()
 
-  connections.value.forEach((conn) => {
+  filteredConnections.value.forEach((conn) => {
     const cardEl = connectionRefs.value.get(conn.relationId)
     if (!cardEl) return
 
@@ -571,10 +657,10 @@ function updateLines() {
 
   connectionLines.value = lines
 
-  // Calculate inter-connection lines
+  // Calculate inter-connection lines (only for filtered/visible connections)
   const interLines: InterConnectionLine[] = []
 
-  interConnections.value.forEach((ic) => {
+  filteredInterConnections.value.forEach((ic) => {
     const fromRect = entityRects.get(ic.fromEntityId)
     const toRect = entityRects.get(ic.toEntityId)
 
@@ -889,6 +975,23 @@ function translateRelationType(relationType: string): string {
 .chaos-title {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+}
+
+.chaos-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.filter-chip {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  transform: scale(1.05);
 }
 
 .chaos-loading,

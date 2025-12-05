@@ -1421,6 +1421,7 @@
     "title": "Chaos-Graph",
     "subtitle": "Alle Verbindungen auf einen Blick",
     "connections": "Verbindungen",
+    "total": "gesamt",
     "noConnections": "Keine Verbindungen",
     "noConnectionsText": "Diese Entität hat noch keine Verknüpfungen"
   },
