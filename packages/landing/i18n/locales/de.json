@@ -7,7 +7,15 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
+    "docs": "Docs",
     "github": "GitHub"
+  },
+  "docs": {
+    "title": "Dokumentation",
+    "welcome": "Willkommen in der Dokumentation",
+    "intro": "Lerne, wie du DM Hero nutzen kannst, um deine Kampagnen wie ein Profi zu verwalten.",
+    "readMore": "Klicke um mehr zu lesen",
+    "backToHome": "Zurück zur Startseite"
   },
   "hero": {
     "badge": "Kostenlos & Open Source",

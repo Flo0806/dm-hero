@@ -7,14 +7,22 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
+    "docs": "Docs",
     "github": "GitHub"
+  },
+  "docs": {
+    "title": "Documentation",
+    "welcome": "Welcome to the Docs",
+    "intro": "Learn how to use DM Hero to manage your campaigns like a pro.",
+    "readMore": "Click to read more",
+    "backToHome": "Back to Home"
   },
   "hero": {
     "badge": "Free & Open Source",
     "title": {
       "line1": "Your Campaign.",
       "line2": "Your Story.",
-      "line3": "Your Hero."
+      "line3": "Your Heros."
     },
     "subtitle": "The ultimate campaign management tool for Dungeon Masters. Organize NPCs, locations, items, factions, and sessions with powerful fuzzy search and AI integration.",
     "cta": {

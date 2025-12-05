@@ -46,11 +46,21 @@ onMounted(() => {
     <v-container class="hero-content">
       <v-row align="center" justify="center" class="min-h-screen">
         <v-col cols="12" lg="10" xl="8" class="text-center">
+          <!-- Logo -->
+          <div
+            v-motion
+            :initial="{ opacity: 0, scale: 0.8 }"
+            :enter="{ opacity: 1, scale: 1, transition: { delay: 100, duration: 500 } }"
+            class="hero-logo mb-6"
+          >
+            <img src="/logo.png" alt="DM Hero" class="hero-logo-img" />
+          </div>
+
           <!-- Badge -->
           <div
             v-motion
             :initial="{ opacity: 0, y: -20 }"
-            :enter="{ opacity: 1, y: 0, transition: { delay: 200 } }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 300 } }"
             class="hero-badge mb-6"
           >
             <v-chip color="primary" variant="tonal" size="large" class="px-6 py-2">
@@ -271,6 +281,31 @@ onMounted(() => {
 
 .min-h-screen {
   min-height: 100vh;
+}
+
+.hero-logo {
+  display: flex;
+  justify-content: center;
+}
+
+.hero-logo-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(212, 165, 116, 0.3),
+    0 0 100px rgba(212, 165, 116, 0.15);
+  animation: logoGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  from {
+    box-shadow: 0 20px 60px rgba(212, 165, 116, 0.3),
+      0 0 100px rgba(212, 165, 116, 0.15);
+  }
+  to {
+    box-shadow: 0 20px 80px rgba(212, 165, 116, 0.4),
+      0 0 120px rgba(212, 165, 116, 0.25);
+  }
 }
 
 .hero-badge :deep(.v-chip) {

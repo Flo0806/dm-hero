@@ -8,6 +8,7 @@ const navItems = [
   { key: 'features', href: '#features' },
   { key: 'screenshots', href: '#screenshots' },
   { key: 'download', href: '#download' },
+  { key: 'docs', href: '/docs' },
 ]
 
 // Handle scroll effect
@@ -39,8 +40,8 @@ function toggleLanguage() {
   >
     <v-container class="d-flex align-center">
       <!-- Logo -->
-      <a href="#" class="d-flex align-center text-decoration-none">
-        <v-icon size="32" color="primary" class="mr-2">mdi-shield-sword</v-icon>
+      <a href="#" class="d-flex align-center text-decoration-none logo-link">
+        <img src="/logo.png" alt="DM Hero" class="nav-logo" />
         <span class="text-h6 font-weight-bold gradient-text d-none d-sm-inline">
           DM Hero
         </span>
@@ -106,7 +107,7 @@ function toggleLanguage() {
     <v-list nav>
       <v-list-item class="mb-4">
         <template #prepend>
-          <v-icon color="primary">mdi-shield-sword</v-icon>
+          <img src="/logo.png" alt="DM Hero" class="drawer-logo" />
         </template>
         <v-list-item-title class="text-h6 font-weight-bold gradient-text">
           DM Hero
@@ -174,5 +175,23 @@ function toggleLanguage() {
 
 .nav-link:hover {
   background: rgba(212, 165, 116, 0.1);
+}
+
+.nav-logo {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  border-radius: 8px;
+}
+
+.logo-link:hover .nav-logo {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+.drawer-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
 }
 </style>
