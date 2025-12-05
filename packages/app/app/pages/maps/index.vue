@@ -1,53 +1,55 @@
 <template>
-  <v-container>
-    <UiPageHeader :title="$t('maps.title')" :subtitle="$t('maps.subtitle')">
-      <template #actions>
-        <v-btn color="primary" prepend-icon="mdi-plus" size="large" @click="showUploadDialog = true">
-          {{ $t('maps.upload') }}
-        </v-btn>
-      </template>
-    </UiPageHeader>
+  <div class="maps-page">
+    <!-- Map Selection View (no map selected) -->
+    <v-container v-if="!selectedMap">
+      <UiPageHeader :title="$t('maps.title')" :subtitle="$t('maps.subtitle')">
+        <template #actions>
+          <v-btn color="primary" prepend-icon="mdi-plus" size="large" @click="showUploadDialog = true">
+            {{ $t('maps.upload') }}
+          </v-btn>
+        </template>
+      </UiPageHeader>
 
-    <!-- Maps List -->
-    <v-row v-if="loading">
-      <v-col v-for="i in 3" :key="i" cols="12" md="4">
-        <v-skeleton-loader type="card" />
-      </v-col>
-    </v-row>
+      <!-- Maps List -->
+      <v-row v-if="loading">
+        <v-col v-for="i in 3" :key="i" cols="12" md="4">
+          <v-skeleton-loader type="card" />
+        </v-col>
+      </v-row>
 
-    <v-row v-else-if="maps.length > 0">
-      <v-col v-for="map in maps" :key="map.id" cols="12" md="4">
-        <v-card hover @click="selectMap(map)">
-          <v-img
-            :src="`/uploads/${map.image_url}`"
-            height="200"
-            cover
-            class="bg-grey-darken-3"
-          >
-            <template #placeholder>
-              <div class="d-flex align-center justify-center fill-height">
-                <v-progress-circular indeterminate />
-              </div>
-            </template>
-          </v-img>
-          <v-card-title>{{ map.name }}</v-card-title>
-          <v-card-subtitle v-if="map.version_name">
-            {{ map.version_name }}
-          </v-card-subtitle>
-          <v-card-text v-if="map.description">
-            {{ map.description }}
-          </v-card-text>
-          <v-card-actions>
-            <v-chip size="small" prepend-icon="mdi-map-marker">
-              {{ map._markerCount || 0 }} {{ $t('maps.markers') }}
-            </v-chip>
-            <v-spacer />
-            <v-btn icon="mdi-pencil" variant="text" size="small" @click.stop="editMap(map)" />
-            <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click.stop="deleteMap(map)" />
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+      <v-row v-else-if="maps.length > 0">
+        <v-col v-for="map in maps" :key="map.id" cols="12" md="4">
+          <v-card hover @click="selectMap(map)">
+            <v-img
+              :src="`/uploads/${map.image_url}`"
+              height="200"
+              cover
+              class="bg-grey-darken-3"
+            >
+              <template #placeholder>
+                <div class="d-flex align-center justify-center fill-height">
+                  <v-progress-circular indeterminate />
+                </div>
+              </template>
+            </v-img>
+            <v-card-title>{{ map.name }}</v-card-title>
+            <v-card-subtitle v-if="map.version_name">
+              {{ map.version_name }}
+            </v-card-subtitle>
+            <v-card-text v-if="map.description">
+              {{ map.description }}
+            </v-card-text>
+            <v-card-actions>
+              <v-chip size="small" prepend-icon="mdi-map-marker">
+                {{ map._markerCount || 0 }} {{ $t('maps.markers') }}
+              </v-chip>
+              <v-spacer />
+              <v-btn icon="mdi-pencil" variant="text" size="small" @click.stop="editMap(map)" />
+              <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click.stop="deleteMap(map)" />
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
 
       <v-empty-state
         v-else
@@ -61,73 +63,89 @@
           </v-btn>
         </template>
       </v-empty-state>
+    </v-container>
 
-    <!-- Selected Map Viewer (placeholder) -->
-    <v-dialog v-model="showMapViewer" fullscreen>
-      <v-card v-if="selectedMap">
-        <v-toolbar color="primary">
-          <v-btn icon="mdi-close" @click="showMapViewer = false" />
-          <v-toolbar-title>{{ selectedMap.name }}</v-toolbar-title>
-          <v-spacer />
-          <v-menu>
-            <template #activator="{ props: menuProps }">
-              <v-btn icon="mdi-plus" v-bind="menuProps" />
-            </template>
-            <v-list density="compact">
-              <v-list-item
-                prepend-icon="mdi-map-marker-plus"
-                :title="$t('maps.addMarker')"
-                @click="startAddMarker"
-              />
-              <v-list-item
-                prepend-icon="mdi-map-marker-radius"
-                :title="$t('maps.addArea')"
-                @click="startAddArea"
-              />
-            </v-list>
-          </v-menu>
-        </v-toolbar>
-        <v-card-text class="pa-0" style="height: calc(100vh - 64px); position: relative;">
-          <ClientOnly>
-            <MapsMapViewer
-              :map="selectedMap"
-              :markers="selectedMapMarkers"
-              :areas="selectedMapAreas"
-              @marker-click="onMarkerClick"
-              @marker-right-click="onMarkerRightClick"
-              @map-click="onMapClick"
-              @marker-drag="onMarkerDrag"
-              @marker-drag-into-area="onMarkerDragIntoArea"
-              @marker-drag-out-of-area="onMarkerDragOutOfArea"
-              @area-click="onAreaClick"
-              @area-right-click="onAreaRightClick"
+    <!-- Map Viewer (map selected) - Inline instead of dialog -->
+    <div v-else class="map-viewer-container">
+      <!-- Header Bar -->
+      <div class="map-header">
+        <v-btn icon="mdi-arrow-left" variant="text" @click="closeMap" />
+        <h2 class="map-title">{{ selectedMap.name }}</h2>
+        <v-chip v-if="selectedMap.version_name" size="small" class="ml-2">
+          {{ selectedMap.version_name }}
+        </v-chip>
+        <v-spacer />
+        <!-- Active mode indicator -->
+        <v-chip
+          v-if="addMode"
+          color="primary"
+          closable
+          class="mr-2"
+          :prepend-icon="addMode === 'marker' ? 'mdi-map-marker-plus' : 'mdi-map-marker-radius'"
+          @click:close="addMode = null"
+        >
+          {{ addMode === 'marker' ? $t('maps.addingMarker') : $t('maps.addingArea') }}
+        </v-chip>
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-btn icon="mdi-plus" variant="text" v-bind="menuProps" />
+          </template>
+          <v-list density="compact">
+            <v-list-item
+              prepend-icon="mdi-map-marker-plus"
+              :title="$t('maps.addMarker')"
+              @click="startAddMarker"
             />
-          </ClientOnly>
-          <!-- Help badges -->
-          <div class="map-help-badges">
-            <v-chip
-              v-if="addMode === 'area'"
-              size="small"
-              color="primary"
+            <v-list-item
               prepend-icon="mdi-map-marker-radius"
-            >
-              {{ $t('maps.clickToPlaceArea') }}
+              :title="$t('maps.addArea')"
+              @click="startAddArea"
+            />
+          </v-list>
+        </v-menu>
+      </div>
+
+      <!-- Map Content -->
+      <div class="map-content">
+        <ClientOnly>
+          <MapsMapViewer
+            :map="selectedMap"
+            :markers="selectedMapMarkers"
+            :areas="selectedMapAreas"
+            @marker-click="onMarkerClick"
+            @marker-right-click="onMarkerRightClick"
+            @map-click="onMapClick"
+            @marker-drag="onMarkerDrag"
+            @marker-drag-into-area="onMarkerDragIntoArea"
+            @marker-drag-out-of-area="onMarkerDragOutOfArea"
+            @area-click="onAreaClick"
+            @area-right-click="onAreaRightClick"
+          />
+        </ClientOnly>
+        <!-- Help badges -->
+        <div class="map-help-badges">
+          <v-chip
+            v-if="addMode === 'area'"
+            size="small"
+            color="primary"
+            prepend-icon="mdi-map-marker-radius"
+          >
+            {{ $t('maps.clickToPlaceArea') }}
+          </v-chip>
+          <template v-else>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click">
+              {{ $t('maps.helpClick') }}
             </v-chip>
-            <template v-else>
-              <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click">
-                {{ $t('maps.helpClick') }}
-              </v-chip>
-              <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click-outline">
-                {{ $t('maps.helpRightClick') }}
-              </v-chip>
-              <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-move">
-                {{ $t('maps.helpDrag') }}
-              </v-chip>
-            </template>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-default-click-outline">
+              {{ $t('maps.helpRightClick') }}
+            </v-chip>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-move">
+              {{ $t('maps.helpDrag') }}
+            </v-chip>
+          </template>
+        </div>
+      </div>
+    </div>
 
     <!-- Upload Dialog -->
     <v-dialog v-model="showUploadDialog" max-width="500">
@@ -262,7 +280,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -279,7 +297,6 @@ const uploading = ref(false)
 const deleting = ref(false)
 
 const showUploadDialog = ref(false)
-const showMapViewer = ref(false)
 const showAddMarkerDialog = ref(false)
 const showAddAreaDialog = ref(false)
 const showDeleteDialog = ref(false)
@@ -350,7 +367,7 @@ async function loadMaps() {
 // Select map and load details
 async function selectMap(map: CampaignMap) {
   selectedMap.value = map
-  showMapViewer.value = true
+  addMode.value = 'marker' // Default mode when opening map
 
   try {
     const details = await $fetch<CampaignMap & { markers: MapMarker[]; areas: MapArea[] }>(`/api/maps/${map.id}`)
@@ -360,6 +377,14 @@ async function selectMap(map: CampaignMap) {
   } catch (error) {
     console.error('Failed to load map details:', error)
   }
+}
+
+// Close map and go back to selection
+function closeMap() {
+  selectedMap.value = null
+  selectedMapMarkers.value = []
+  selectedMapAreas.value = []
+  addMode.value = null
 }
 
 // Upload new map
@@ -626,10 +651,85 @@ onMounted(() => {
 // Reload when campaign changes
 watch(activeCampaignId, () => {
   loadMaps()
+  closeMap() // Close any open map when campaign changes
 })
 </script>
 
 <style scoped>
+.maps-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px - 8px);
+  overflow: hidden;
+  margin: -12px;
+}
+
+/* Hide Leaflet attribution */
+.map-viewer-container :deep(.leaflet-control-attribution) {
+  display: none;
+}
+
+/* Style Leaflet zoom controls to match theme */
+.map-viewer-container :deep(.leaflet-control-zoom) {
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.map-viewer-container :deep(.leaflet-control-zoom a) {
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-primary));
+  border: none;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  font-size: 18px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.map-viewer-container :deep(.leaflet-control-zoom a:hover) {
+  background: rgba(var(--v-theme-primary), 0.1);
+  color: rgb(var(--v-theme-primary));
+}
+
+.map-viewer-container :deep(.leaflet-control-zoom-in) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+  border-radius: 8px 8px 0 0;
+}
+
+.map-viewer-container :deep(.leaflet-control-zoom-out) {
+  border-radius: 0 0 8px 8px;
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: rgb(var(--v-theme-surface));
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  flex-shrink: 0;
+}
+
+.map-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.map-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
 .map-help-badges {
   position: absolute;
   top: 12px;

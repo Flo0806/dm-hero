@@ -4,12 +4,13 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description, metadata, campaignId, leader_id } = body as {
+  const { name, description, metadata, campaignId, leader_id, location_id } = body as {
     name: string
     description?: string
     metadata?: Record<string, string | number | boolean | null>
     campaignId: number
     leader_id?: number | null
+    location_id?: number | null
   }
 
   if (!name || !campaignId) {
@@ -34,8 +35,8 @@ export default defineEventHandler(async (event) => {
   const result = db
     .prepare(
       `
-    INSERT INTO entities (type_id, campaign_id, name, description, metadata)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO entities (type_id, campaign_id, name, description, location_id, metadata)
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
     )
     .run(
@@ -43,6 +44,7 @@ export default defineEventHandler(async (event) => {
       campaignId,
       name,
       description || null,
+      location_id ?? null,
       metadata ? JSON.stringify(metadata) : null,
     )
 

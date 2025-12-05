@@ -13,9 +13,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata } = body as {
+  const { name, description, location_id, metadata } = body as {
     name?: string
     description?: string
+    location_id?: number | null
     metadata?: LoreMetadata
   }
 
@@ -31,6 +32,11 @@ export default defineEventHandler(async (event) => {
   if (description !== undefined) {
     updates.push('description = ?')
     values.push(description)
+  }
+
+  if (location_id !== undefined) {
+    updates.push('location_id = ?')
+    values.push(location_id)
   }
 
   // Lore metadata doesn't need conversion (type and date are already keys)

@@ -165,6 +165,15 @@
               rows="3"
               persistent-placeholder
             />
+
+            <v-divider class="my-4" />
+
+            <!-- Current Location with Map Sync -->
+            <LocationSelectWithMap
+              v-model="form.location_id"
+              :label="$t('players.currentLocation')"
+              @update:map-sync="mapSyncData = $event"
+            />
           </v-tabs-window-item>
 
           <!-- Images Tab -->
@@ -353,7 +362,9 @@ import PlayerCharactersTab from './PlayerCharactersTab.vue'
 import PlayerItemsTab from './PlayerItemsTab.vue'
 import PlayerLoreTab from './PlayerLoreTab.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
+import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 const props = defineProps<{
   show: boolean
@@ -370,6 +381,7 @@ const { t } = useI18n()
 const { downloadImage: downloadImageFile } = useImageDownload()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // ============================================================================
 // State
@@ -392,7 +404,11 @@ const form = ref({
   discord: '',
   phone: '',
   notes: '',
+  location_id: null as number | null,
 })
+
+// Map sync data (from LocationSelectWithMap)
+const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
 const counts = ref<PlayerCounts>({
   characters: 0,
@@ -467,6 +483,7 @@ async function loadPlayer(playerId: number) {
       discord: data.metadata?.discord || '',
       phone: data.metadata?.phone || '',
       notes: data.metadata?.notes || '',
+      location_id: data.location_id || null,
     }
 
     await loadCounts(playerId)
@@ -497,7 +514,9 @@ function resetForm() {
     discord: '',
     phone: '',
     notes: '',
+    location_id: null,
   }
+  mapSyncData.value = null
   counts.value = {
     characters: 0,
     items: 0,
@@ -536,16 +555,30 @@ async function save() {
       const updated = await entitiesStore.updatePlayer(player.value.id, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(player.value.id, mapSyncData.value.mapIds)
+      }
+
       emit('saved', updated)
     } else {
       // Create new player via store
       const created = await entitiesStore.createPlayer(campaignId, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(created.id, mapSyncData.value.mapIds)
+      }
+
       emit('created', created)
     }
 
@@ -559,6 +592,88 @@ async function save() {
 
 function close() {
   internalShow.value = false
+}
+
+// Sync Player marker to selected maps - place inside location circle if available
+async function syncToMaps(entityId: number, mapIds: number[]) {
+  const locationId = form.value.location_id
+  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let locationName = ''
+
+  if (locationId) {
+    try {
+      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+        `/api/locations/${locationId}/maps-with-area`,
+      )
+      const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
+      locationName = location.name
+    } catch (e) {
+      console.error('[PlayerEditDialog] Failed to get maps with area:', e)
+    }
+  }
+
+  const mapsWithoutLocation: string[] = []
+
+  let allMaps: Array<{ id: number; name: string }> = []
+  try {
+    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch (e) {
+    console.error('[PlayerEditDialog] Failed to get maps:', e)
+  }
+
+  for (const mapId of mapIds) {
+    try {
+      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+
+      if (areaInfo) {
+        await $fetch(`/api/maps/${mapId}/place-in-area`, {
+          method: 'POST',
+          body: {
+            entity_id: entityId,
+            area_id: areaInfo.area_id,
+          },
+        })
+      } else {
+        const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
+          query: { entityId },
+        })
+
+        if (existingMarkers.length === 0) {
+          await $fetch(`/api/maps/${mapId}/markers`, {
+            method: 'POST',
+            body: {
+              entity_id: entityId,
+              x: 50,
+              y: 50,
+            },
+          })
+        }
+
+        if (locationId) {
+          const mapInfo = allMaps.find((m) => m.id === mapId)
+          if (mapInfo) {
+            mapsWithoutLocation.push(mapInfo.name)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[PlayerEditDialog] Failed to sync to map ${mapId}:`, e)
+    }
+  }
+
+  if (mapsWithoutLocation.length > 0 && locationId) {
+    if (mapsWithoutLocation.length === 1) {
+      snackbarStore.warning(
+        t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
+      )
+    } else {
+      snackbarStore.warning(
+        t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
+      )
+    }
+  }
 }
 
 // ============================================================================

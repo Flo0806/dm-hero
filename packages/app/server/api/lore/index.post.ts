@@ -5,9 +5,10 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { name, description, metadata, campaignId } = body as {
+  const { name, description, location_id, metadata, campaignId } = body as {
     name: string
     description?: string
+    location_id?: number | null
     metadata?: LoreMetadata
     campaignId: number
   }
@@ -35,8 +36,8 @@ export default defineEventHandler(async (event) => {
   const result = db
     .prepare(
       `
-    INSERT INTO entities (type_id, campaign_id, name, description, metadata)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO entities (type_id, campaign_id, name, description, location_id, metadata)
+    VALUES (?, ?, ?, ?, ?, ?)
   `,
     )
     .run(
@@ -44,6 +45,7 @@ export default defineEventHandler(async (event) => {
       campaignId,
       name,
       description || null,
+      location_id ?? null,
       metadata ? JSON.stringify(metadata) : null,
     )
 

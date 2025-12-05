@@ -119,6 +119,7 @@ export interface Faction {
   name: string
   description: string | null
   image_url?: string | null
+  location_id?: number | null
   metadata: FactionMetadata | null
   leader_id?: number | null
   leader_name?: string | null

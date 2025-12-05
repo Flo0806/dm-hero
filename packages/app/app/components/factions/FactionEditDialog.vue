@@ -168,6 +168,15 @@
                 variant="outlined"
                 rows="3"
               />
+
+              <v-divider class="my-4" />
+
+              <!-- Current Location (Headquarters) with Map Sync -->
+              <LocationSelectWithMap
+                v-model="form.location_id"
+                :label="$t('factions.currentLocation')"
+                @update:map-sync="mapSyncData = $event"
+              />
             </v-tabs-window-item>
 
             <!-- Images Tab -->
@@ -381,8 +390,10 @@ import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityImageUpload from '~/components/shared/EntityImageUpload.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
+import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and factionId needed!
@@ -404,6 +415,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage: downloadImageFile } = useImageDownload()
 
 // ============================================================================
@@ -425,6 +437,7 @@ const form = ref({
   name: '',
   description: '',
   leaderId: null as number | null,
+  location_id: null as number | null,
   metadata: {
     type: undefined as string | { value: string; title: string } | undefined,
     alignment: undefined as string | undefined,
@@ -433,6 +446,9 @@ const form = ref({
     notes: undefined as string | undefined,
   },
 })
+
+// Map sync data (from LocationSelectWithMap)
+const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
 // Relations data - loaded internally
 interface FactionMember {
@@ -626,6 +642,7 @@ async function loadFaction(factionId: number) {
       name: data.name,
       description: data.description || '',
       leaderId: data.leader_id || null,
+      location_id: data.location_id || null,
       metadata: {
         // If type is a known key, use the full object for proper display in v-combobox
         // If it's a custom value (not in predefined list), keep as string
@@ -703,6 +720,7 @@ function resetForm() {
     name: '',
     description: '',
     leaderId: null,
+    location_id: null,
     metadata: {
       type: undefined,
       alignment: undefined,
@@ -711,6 +729,7 @@ function resetForm() {
       notes: undefined,
     },
   }
+  mapSyncData.value = null
   factionMembers.value = []
   factionLocations.value = []
   factionItems.value = []
@@ -760,8 +779,15 @@ async function save() {
         name: form.value.name,
         description: form.value.description || null,
         leader_id: form.value.leaderId,
+        location_id: form.value.location_id,
         metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(faction.value.id, mapSyncData.value.mapIds)
+      }
+
       emit('saved', updated)
     } else {
       // Create new faction
@@ -769,8 +795,15 @@ async function save() {
         name: form.value.name,
         description: form.value.description || null,
         leader_id: form.value.leaderId,
+        location_id: form.value.location_id,
         metadata,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(created.id, mapSyncData.value.mapIds)
+      }
+
       emit('created', created)
     }
 
@@ -784,6 +817,88 @@ async function save() {
 
 function close() {
   internalShow.value = false
+}
+
+// Sync Faction marker to selected maps - place inside location circle if available
+async function syncToMaps(entityId: number, mapIds: number[]) {
+  const locationId = form.value.location_id
+  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let locationName = ''
+
+  if (locationId) {
+    try {
+      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+        `/api/locations/${locationId}/maps-with-area`,
+      )
+      const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
+      locationName = location.name
+    } catch (e) {
+      console.error('[FactionEditDialog] Failed to get maps with area:', e)
+    }
+  }
+
+  const mapsWithoutLocation: string[] = []
+
+  let allMaps: Array<{ id: number; name: string }> = []
+  try {
+    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to get maps:', e)
+  }
+
+  for (const mapId of mapIds) {
+    try {
+      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+
+      if (areaInfo) {
+        await $fetch(`/api/maps/${mapId}/place-in-area`, {
+          method: 'POST',
+          body: {
+            entity_id: entityId,
+            area_id: areaInfo.area_id,
+          },
+        })
+      } else {
+        const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
+          query: { entityId },
+        })
+
+        if (existingMarkers.length === 0) {
+          await $fetch(`/api/maps/${mapId}/markers`, {
+            method: 'POST',
+            body: {
+              entity_id: entityId,
+              x: 50,
+              y: 50,
+            },
+          })
+        }
+
+        if (locationId) {
+          const mapInfo = allMaps.find((m) => m.id === mapId)
+          if (mapInfo) {
+            mapsWithoutLocation.push(mapInfo.name)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[FactionEditDialog] Failed to sync to map ${mapId}:`, e)
+    }
+  }
+
+  if (mapsWithoutLocation.length > 0 && locationId) {
+    if (mapsWithoutLocation.length === 1) {
+      snackbarStore.warning(
+        t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
+      )
+    } else {
+      snackbarStore.warning(
+        t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
+      )
+    }
+  }
 }
 
 // ============================================================================

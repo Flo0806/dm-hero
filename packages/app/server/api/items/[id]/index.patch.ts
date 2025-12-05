@@ -15,9 +15,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata } = body as {
+  const { name, description, location_id, metadata } = body as {
     name?: string
     description?: string
+    location_id?: number | null
     metadata?: ItemMetadata
   }
 
@@ -30,11 +31,12 @@ export default defineEventHandler(async (event) => {
     SET
       name = COALESCE(?, name),
       description = COALESCE(?, description),
+      location_id = ?,
       metadata = COALESCE(?, metadata),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
   `,
-  ).run(name, description, convertedMetadata ? JSON.stringify(convertedMetadata) : null, id)
+  ).run(name, description, location_id ?? null, convertedMetadata ? JSON.stringify(convertedMetadata) : null, id)
 
   const item = db
     .prepare<[string], EntityRow>(

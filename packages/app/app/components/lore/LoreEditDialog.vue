@@ -94,6 +94,15 @@
                 rows="5"
                 auto-grow
               />
+
+              <v-divider class="my-4" />
+
+              <!-- Current Location with Map Sync -->
+              <LocationSelectWithMap
+                v-model="form.location_id"
+                :label="$t('lore.currentLocation')"
+                @update:map-sync="mapSyncData = $event"
+              />
             </v-tabs-window-item>
 
             <!-- Images Tab -->
@@ -388,8 +397,10 @@ import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 // ============================================================================
 // Props & Emits
@@ -411,6 +422,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // ============================================================================
 // Internal State
@@ -431,7 +443,11 @@ const form = ref({
   description: '',
   type: '' as string,
   date: '',
+  location_id: null as number | null,
 })
+
+// Map sync data (from LocationSelectWithMap)
+const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
 // Counts for tab badges
 const counts = ref({
@@ -559,6 +575,7 @@ async function loadLore(loreId: number) {
       description: data.description || '',
       type: data.metadata?.type || '',
       date: data.metadata?.date || '',
+      location_id: data.location_id || null,
     }
 
     await loadCounts(loreId)
@@ -622,7 +639,8 @@ async function refreshLore() {
 
 function resetForm() {
   lore.value = null
-  form.value = { name: '', description: '', type: '', date: '' }
+  form.value = { name: '', description: '', type: '', date: '', location_id: null }
+  mapSyncData.value = null
   linkedNpcs.value = []
   linkedFactions.value = []
   linkedItems.value = []
@@ -655,16 +673,30 @@ async function save() {
       const updated = await entitiesStore.updateLore(lore.value.id, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(lore.value.id, mapSyncData.value.mapIds)
+      }
+
       emit('saved', updated)
     } else {
       // Create new lore via store
       const created = await entitiesStore.createLore(campaignId, {
         name: form.value.name,
         description: form.value.description || null,
+        location_id: form.value.location_id,
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(created.id, mapSyncData.value.mapIds)
+      }
+
       // Load counts for new Lore
       await entitiesStore.loadLoreCounts(created.id)
       emit('created', created)
@@ -680,6 +712,88 @@ async function save() {
 
 function close() {
   internalShow.value = false
+}
+
+// Sync Lore marker to selected maps - place inside location circle if available
+async function syncToMaps(entityId: number, mapIds: number[]) {
+  const locationId = form.value.location_id
+  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let locationName = ''
+
+  if (locationId) {
+    try {
+      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+        `/api/locations/${locationId}/maps-with-area`,
+      )
+      const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
+      locationName = location.name
+    } catch (e) {
+      console.error('[LoreEditDialog] Failed to get maps with area:', e)
+    }
+  }
+
+  const mapsWithoutLocation: string[] = []
+
+  let allMaps: Array<{ id: number; name: string }> = []
+  try {
+    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch (e) {
+    console.error('[LoreEditDialog] Failed to get maps:', e)
+  }
+
+  for (const mapId of mapIds) {
+    try {
+      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+
+      if (areaInfo) {
+        await $fetch(`/api/maps/${mapId}/place-in-area`, {
+          method: 'POST',
+          body: {
+            entity_id: entityId,
+            area_id: areaInfo.area_id,
+          },
+        })
+      } else {
+        const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
+          query: { entityId },
+        })
+
+        if (existingMarkers.length === 0) {
+          await $fetch(`/api/maps/${mapId}/markers`, {
+            method: 'POST',
+            body: {
+              entity_id: entityId,
+              x: 50,
+              y: 50,
+            },
+          })
+        }
+
+        if (locationId) {
+          const mapInfo = allMaps.find((m) => m.id === mapId)
+          if (mapInfo) {
+            mapsWithoutLocation.push(mapInfo.name)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[LoreEditDialog] Failed to sync to map ${mapId}:`, e)
+    }
+  }
+
+  if (mapsWithoutLocation.length > 0 && locationId) {
+    if (mapsWithoutLocation.length === 1) {
+      snackbarStore.warning(
+        t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
+      )
+    } else {
+      snackbarStore.warning(
+        t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
+      )
+    }
+  }
 }
 
 // ============================================================================

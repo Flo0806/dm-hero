@@ -54,6 +54,7 @@ export interface Lore {
   name: string
   description: string | null
   image_url?: string | null
+  location_id?: number | null
   metadata: LoreMetadata | null
   created_at: string
   updated_at: string

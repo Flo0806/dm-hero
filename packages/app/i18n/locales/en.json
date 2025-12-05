@@ -367,6 +367,7 @@
     "deleteConfirm": "Do you really want to delete '{name}'? The faction will be archived and can be restored.",
     "searchHint": "Search by name, type or leader...",
     "details": "Details",
+    "currentLocation": "Current Location",
     "members": "Members",
     "membersList": "Members List",
     "rank": "Rank",
@@ -543,6 +544,7 @@
     "deleteConfirm": "Do you really want to delete '{name}'? The entry will be archived and can be restored.",
     "searchHint": "Search by name or type...",
     "details": "Details",
+    "currentLocation": "Current Location",
     "types": {
       "object": "Object",
       "plant": "Plant",
@@ -879,6 +881,7 @@
       "stole": "stole"
     },
     "details": "Details",
+    "currentLocation": "Current Location",
     "owners": "Owners",
     "ownersList": "Owners & Carriers",
     "addOwner": "Add Owner",
@@ -1253,6 +1256,7 @@
     "deleteConfirm": "Are you sure you want to delete '{name}'? The player will be archived and can be restored.",
     "searchHint": "Search by name or character...",
     "details": "Details",
+    "currentLocation": "Current Location",
     "characters": "Characters",
     "charactersTab": "Characters",
     "noCharacters": "No characters",
@@ -1481,6 +1485,8 @@
     "removeLocation": "Remove Location",
     "removeLocationQuestion": "Should the location '{location}' be removed from '{entity}'?",
     "locationNotOnMap": "Location '{location}' is not on map '{map}'. Marker was placed in the center.",
-    "locationNotOnMaps": "Location '{location}' is not on {count} maps. Markers were placed in the center."
+    "locationNotOnMaps": "Location '{location}' is not on {count} maps. Markers were placed in the center.",
+    "addingMarker": "Adding marker",
+    "addingArea": "Adding area"
   }
 }

@@ -12,11 +12,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const { name, description, metadata, leader_id } = body as {
+  const { name, description, metadata, leader_id, location_id } = body as {
     name?: string
     description?: string
     metadata?: Record<string, string | number | boolean | null>
     leader_id?: number | null
+    location_id?: number | null
   }
 
   // Update basic entity fields
@@ -26,11 +27,12 @@ export default defineEventHandler(async (event) => {
     SET
       name = COALESCE(?, name),
       description = COALESCE(?, description),
+      location_id = ?,
       metadata = COALESCE(?, metadata),
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ? AND deleted_at IS NULL
   `,
-  ).run(name, description, metadata ? JSON.stringify(metadata) : null, id)
+  ).run(name, description, location_id ?? null, metadata ? JSON.stringify(metadata) : null, id)
 
   // Handle leader relation (stored as entity_relation with type 'leader')
   if (leader_id !== undefined) {

@@ -181,6 +181,15 @@
               variant="outlined"
               rows="3"
             />
+
+            <v-divider class="my-4" />
+
+            <!-- Current Location with Map Sync -->
+            <LocationSelectWithMap
+              v-model="form.location_id"
+              :label="$t('items.currentLocation')"
+              @update:map-sync="mapSyncData = $event"
+            />
           </v-tabs-window-item>
 
           <!-- Images Tab -->
@@ -530,8 +539,10 @@ import EntityImageUpload from '~/components/shared/EntityImageUpload.vue'
 import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 import EntityLoreTab from '~/components/shared/EntityLoreTab.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 // ============================================================================
 // Interfaces
@@ -585,6 +596,7 @@ interface ApiRelatedEntity {
 interface ItemForm {
   name: string
   description: string | null
+  location_id: number | null
   metadata: ItemMetadata
 }
 
@@ -608,6 +620,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // ============================================================================
 // State
@@ -620,6 +633,7 @@ const activeTab = ref('details')
 const form = ref<ItemForm>({
   name: '',
   description: null,
+  location_id: null,
   metadata: {
     type: null,
     rarity: null,
@@ -628,6 +642,9 @@ const form = ref<ItemForm>({
     notes: undefined,
   },
 })
+
+// Map sync data (from LocationSelectWithMap)
+const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
 const counts = ref({
   images: 0,
@@ -758,6 +775,7 @@ async function loadItem(itemId: number) {
     form.value = {
       name: data.name,
       description: data.description || null,
+      location_id: data.location_id || null,
       metadata: {
         type: data.metadata?.type || null,
         rarity: data.metadata?.rarity || null,
@@ -833,6 +851,7 @@ function resetForm() {
   form.value = {
     name: '',
     description: null,
+    location_id: null,
     metadata: {
       type: null,
       rarity: null,
@@ -841,6 +860,7 @@ function resetForm() {
       notes: undefined,
     },
   }
+  mapSyncData.value = null
   counts.value = { images: 0, documents: 0, players: 0 }
   linkedOwners.value = []
   linkedLocations.value = []
@@ -881,9 +901,15 @@ async function save() {
         body: {
           name: form.value.name,
           description: form.value.description,
+          location_id: form.value.location_id,
           metadata: form.value.metadata,
         },
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(item.value.id, mapSyncData.value.mapIds)
+      }
 
       // Update store
       const index = entitiesStore.items?.findIndex((i) => i.id === item.value!.id)
@@ -899,10 +925,16 @@ async function save() {
         body: {
           name: form.value.name,
           description: form.value.description,
+          location_id: form.value.location_id,
           metadata: form.value.metadata,
           campaignId,
         },
       })
+
+      // Handle map sync if enabled
+      if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
+        await syncToMaps(created.id, mapSyncData.value.mapIds)
+      }
 
       entitiesStore.items?.push(created)
       emit('created', created)
@@ -913,6 +945,88 @@ async function save() {
     console.error('[ItemEditDialog] Failed to save:', e)
   } finally {
     saving.value = false
+  }
+}
+
+// Sync Item marker to selected maps - place inside location circle if available
+async function syncToMaps(entityId: number, mapIds: number[]) {
+  const locationId = form.value.location_id
+  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let locationName = ''
+
+  if (locationId) {
+    try {
+      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+        `/api/locations/${locationId}/maps-with-area`,
+      )
+      const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
+      locationName = location.name
+    } catch (e) {
+      console.error('[ItemEditDialog] Failed to get maps with area:', e)
+    }
+  }
+
+  const mapsWithoutLocation: string[] = []
+
+  let allMaps: Array<{ id: number; name: string }> = []
+  try {
+    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch (e) {
+    console.error('[ItemEditDialog] Failed to get maps:', e)
+  }
+
+  for (const mapId of mapIds) {
+    try {
+      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+
+      if (areaInfo) {
+        await $fetch(`/api/maps/${mapId}/place-in-area`, {
+          method: 'POST',
+          body: {
+            entity_id: entityId,
+            area_id: areaInfo.area_id,
+          },
+        })
+      } else {
+        const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
+          query: { entityId },
+        })
+
+        if (existingMarkers.length === 0) {
+          await $fetch(`/api/maps/${mapId}/markers`, {
+            method: 'POST',
+            body: {
+              entity_id: entityId,
+              x: 50,
+              y: 50,
+            },
+          })
+        }
+
+        if (locationId) {
+          const mapInfo = allMaps.find((m) => m.id === mapId)
+          if (mapInfo) {
+            mapsWithoutLocation.push(mapInfo.name)
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[ItemEditDialog] Failed to sync to map ${mapId}:`, e)
+    }
+  }
+
+  if (mapsWithoutLocation.length > 0 && locationId) {
+    if (mapsWithoutLocation.length === 1) {
+      snackbarStore.warning(
+        t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
+      )
+    } else {
+      snackbarStore.warning(
+        t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
+      )
+    }
   }
 }
 

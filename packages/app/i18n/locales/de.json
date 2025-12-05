@@ -368,6 +368,7 @@
     "deleteConfirm": "Möchtest du '{name}' wirklich löschen? Die Fraktion wird archiviert und kann wiederhergestellt werden.",
     "searchHint": "Suche nach Name, Typ oder Anführer...",
     "details": "Details",
+    "currentLocation": "Aktueller Standort",
     "members": "Mitglieder",
     "membersList": "Mitgliederliste",
     "rank": "Rang",
@@ -538,6 +539,7 @@
     "deleteConfirm": "Möchtest du '{name}' wirklich löschen? Der Eintrag wird archiviert und kann wiederhergestellt werden.",
     "searchHint": "Suche nach Name oder Typ...",
     "details": "Details",
+    "currentLocation": "Aktueller Standort",
     "types": {
       "object": "Gegenstand",
       "plant": "Pflanze",
@@ -874,6 +876,7 @@
       "stole": "hat gestohlen"
     },
     "details": "Details",
+    "currentLocation": "Aktueller Standort",
     "owners": "Besitzer",
     "ownersList": "Besitzer & Träger",
     "addOwner": "Besitzer hinzufügen",
@@ -1248,6 +1251,7 @@
     "deleteConfirm": "Möchtest du '{name}' wirklich löschen? Der Spieler wird archiviert und kann wiederhergestellt werden.",
     "searchHint": "Suche nach Name oder Charakter...",
     "details": "Details",
+    "currentLocation": "Aktueller Standort",
     "characters": "Charaktere",
     "charactersTab": "Charaktere",
     "noCharacters": "Keine Charaktere",
@@ -1476,6 +1480,8 @@
     "removeLocation": "Standort entfernen",
     "removeLocationQuestion": "Soll der Standort '{location}' von '{entity}' entfernt werden?",
     "locationNotOnMap": "Standort '{location}' ist auf Karte '{map}' nicht vorhanden. Marker wurde mittig platziert.",
-    "locationNotOnMaps": "Standort '{location}' ist auf {count} Karten nicht vorhanden. Marker wurden mittig platziert."
+    "locationNotOnMaps": "Standort '{location}' ist auf {count} Karten nicht vorhanden. Marker wurden mittig platziert.",
+    "addingMarker": "Markierung hinzufügen",
+    "addingArea": "Bereich hinzufügen"
   }
 }

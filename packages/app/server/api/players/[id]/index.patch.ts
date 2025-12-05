@@ -6,9 +6,10 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
 
-  const { name, description, metadata } = body as {
+  const { name, description, location_id, metadata } = body as {
     name?: string
     description?: string | null
+    location_id?: number | null
     metadata?: PlayerMetadata
   }
 
@@ -21,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
   // Build update query dynamically
   const updates: string[] = []
-  const values: (string | null)[] = []
+  const values: (string | number | null)[] = []
 
   if (name !== undefined) {
     updates.push('name = ?')
@@ -31,6 +32,11 @@ export default defineEventHandler(async (event) => {
   if (description !== undefined) {
     updates.push('description = ?')
     values.push(description)
+  }
+
+  if (location_id !== undefined) {
+    updates.push('location_id = ?')
+    values.push(location_id)
   }
 
   if (metadata !== undefined) {
