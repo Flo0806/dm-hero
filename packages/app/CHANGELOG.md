@@ -1,5 +1,20 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.17
+
+### Minor Changes
+
+- [`cc80972`](https://github.com/Flo0806/dm-hero/commit/cc80972ed3af0e626d21755ec1ff2a538e2bcfb9) Thanks [@Flo0806](https://github.com/Flo0806)! - feat: interactive campaign maps and chaos graph filters
+  - Interactive campaign maps with Leaflet.js
+  - Map markers linked to entities (NPC, Item, Location, Faction, Lore, Player)
+  - Location areas (circles) for marking regions
+  - Measurement tool with configurable scale
+  - Map editing dialog (rename, change image, set scale)
+  - Entity type filter for map markers
+  - Location field for all entities with map sync
+  - Entity type filter for chaos graph
+  - Snackbar notifications for map actions
+
 ## 1.0.0-alpha.16
 
 ### Patch Changes
