@@ -132,10 +132,25 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async deleteNPC(id: number) {
-      await $fetch(`/api/npcs/${id}`, {
-        method: 'DELETE',
-      })
+      const result = await $fetch<{ success: boolean; affectedNpcIds: number[] }>(
+        `/api/npcs/${id}`,
+        {
+          method: 'DELETE',
+        },
+      )
+
+      // Remove the deleted NPC from the list
       this.npcs = this.npcs.filter((n) => n.id !== id)
+
+      // Decrement relation counts for affected NPCs
+      if (result.affectedNpcIds && result.affectedNpcIds.length > 0) {
+        for (const affectedId of result.affectedNpcIds) {
+          const npc = this.npcs.find((n) => n.id === affectedId)
+          if (npc?._counts && npc._counts.relations > 0) {
+            npc._counts.relations--
+          }
+        }
+      }
     },
 
     async refreshNPC(id: number) {
