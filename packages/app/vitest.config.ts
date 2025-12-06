@@ -11,6 +11,8 @@ export default defineConfig({
           name: 'unit',
           include: ['test/{e2e,unit}/**/*.{test,spec}.ts'],
           environment: 'node',
+          // Run test files sequentially to avoid SQLite conflicts
+          fileParallelism: false,
         },
         resolve: {
           alias: {
