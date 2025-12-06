@@ -60,13 +60,23 @@
             color="primary"
             variant="tonal"
             block
-            class="mb-2"
+            class="mb-1"
             :loading="generating"
             :disabled="generateDisabled"
             @click="$emit('generate')"
           >
             {{ $t(generateImageKey) }}
           </v-btn>
+          <!-- Unsaved changes warning -->
+          <v-alert
+            v-if="generateDisabled && generateDisabledReason"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mb-2"
+          >
+            {{ generateDisabledReason }}
+          </v-alert>
 
           <!-- Download Button (only if image exists) -->
           <v-btn
@@ -116,6 +126,7 @@ interface Props {
   deleting?: boolean
   hasApiKey?: boolean
   generateDisabled?: boolean
+  generateDisabledReason?: string
   avatarSize?: number
   defaultIcon?: string
 }
@@ -127,6 +138,7 @@ const props = withDefaults(defineProps<Props>(), {
   deleting: false,
   hasApiKey: false,
   generateDisabled: false,
+  generateDisabledReason: '',
   avatarSize: 160,
   defaultIcon: 'mdi-image',
 })

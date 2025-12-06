@@ -131,7 +131,7 @@
     </template>
 
     <!-- Create/Edit Session Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="1000" scrollable :persistent="saving || uploadingAudio">
+    <v-dialog v-model="showCreateDialog" max-width="1000" scrollable :persistent="saving || uploadingAudio || generatingImage">
       <v-card>
         <v-card-title>
           {{ editingSession ? $t('sessions.edit') : $t('sessions.create') }}
@@ -289,9 +289,9 @@
                 v-if="editingSession"
                 :session-id="editingSession.id"
                 :session-title="sessionForm.title"
-                :session-summary="sessionForm.summary"
                 @preview-image="openImagePreview"
                 @images-updated="reloadSessions"
+                @generating="generatingImage = $event"
               />
             </v-tabs-window-item>
 
@@ -457,12 +457,12 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" :disabled="saving || uploadingAudio" @click="closeDialog">
+          <v-btn variant="text" :disabled="saving || uploadingAudio || generatingImage" @click="closeDialog">
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!sessionForm.title || uploadingAudio"
+            :disabled="!sessionForm.title || uploadingAudio || generatingImage"
             :loading="saving"
             @click="saveSession"
           >
@@ -667,6 +667,7 @@ const saving = ref(false)
 const deleting = ref(false)
 const uploadingImage = ref(false)
 const uploadingAudio = ref(false)
+const generatingImage = ref(false)
 const sessionDialogTab = ref('details')
 
 // Image preview state

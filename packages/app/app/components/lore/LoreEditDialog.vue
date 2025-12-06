@@ -111,10 +111,13 @@
                 v-if="lore"
                 :entity-id="lore.id"
                 entity-type="Lore"
-                :entity-name="lore.name"
-                :entity-description="lore.description || undefined"
+                :entity-name="form.name"
+                :entity-description="form.description || undefined"
+                :generate-disabled="hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
                 @preview-image="(url: string) => handleImagePreview(url, lore?.name || '')"
                 @images-updated="refreshLore"
+                @generating="generatingImage = $event"
               />
             </v-tabs-window-item>
 
@@ -375,10 +378,10 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" :disabled="saving" @click="close">
+          <v-btn variant="text" :disabled="saving || generatingImage" @click="close">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn color="primary" :disabled="!form.name" :loading="saving" @click="save">
+          <v-btn color="primary" :disabled="!form.name || generatingImage" :loading="saving" @click="save">
             {{ lore ? $t('common.save') : $t('common.create') }}
           </v-btn>
         </v-card-actions>
@@ -434,6 +437,7 @@ const internalShow = computed({
 
 const loading = ref(false)
 const saving = ref(false)
+const generatingImage = ref(false)
 const activeTab = ref('details')
 const lore = ref<Lore | null>(null)
 
@@ -444,6 +448,22 @@ const form = ref({
   type: '' as string,
   date: '',
   location_id: null as number | null,
+})
+
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+  type: undefined as string | undefined,
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  return (
+    form.value.name !== originalImageData.value.name ||
+    form.value.description !== originalImageData.value.description ||
+    (form.value.type || undefined) !== originalImageData.value.type
+  )
 })
 
 // Map sync data (from LocationSelectWithMap)
@@ -576,6 +596,13 @@ async function loadLore(loreId: number) {
       type: data.metadata?.type || '',
       date: data.metadata?.date || '',
       location_id: data.location_id || null,
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
+      type: data.metadata?.type || undefined,
     }
 
     await loadCounts(loreId)

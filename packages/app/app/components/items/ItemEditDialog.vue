@@ -86,7 +86,8 @@
               :generating="generatingImage"
               :deleting="deletingImage"
               :has-api-key="hasApiKey"
-              :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey"
+              :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
+              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
               :avatar-size="160"
               default-icon="mdi-sword"
               @preview-image="openImagePreview"
@@ -226,8 +227,11 @@
               :entity-id="item.id"
               :entity-name="form.name"
               entity-type="Item"
+              :generate-disabled="hasUnsavedImageChanges"
+              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
               @images-updated="loadCounts(item!.id)"
               @preview-image="openImagePreview"
+              @generating="generatingImage = $event"
             />
           </v-tabs-window-item>
 
@@ -554,8 +558,16 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="close">{{ $t('common.cancel') }}</v-btn>
-          <v-btn color="primary" variant="flat" :loading="saving" :disabled="!form.name" @click="save">
+          <v-btn variant="text" :disabled="saving || uploadingImage || deletingImage || generatingImage" @click="close">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="saving"
+            :disabled="!form.name || uploadingImage || deletingImage || generatingImage"
+            @click="save"
+          >
             {{ $t('common.save') }}
           </v-btn>
         </v-card-actions>
@@ -785,6 +797,24 @@ const deletingImage = ref(false)
 const generatingImage = ref(false)
 const hasApiKey = ref(false)
 
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+  type: undefined as string | undefined,
+  rarity: undefined as string | undefined,
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  return (
+    form.value.name !== originalImageData.value.name ||
+    (form.value.description || '') !== originalImageData.value.description ||
+    (form.value.metadata.type || undefined) !== originalImageData.value.type ||
+    (form.value.metadata.rarity || undefined) !== originalImageData.value.rarity
+  )
+})
+
 // Image preview
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
@@ -880,6 +910,14 @@ async function loadItem(itemId: number) {
         currency_id: currencyId,
         notes: data.metadata?.notes || undefined,
       },
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
+      type: data.metadata?.type || undefined,
+      rarity: data.metadata?.rarity || undefined,
     }
   } catch (e) {
     console.error('[ItemEditDialog] Failed to load item:', e)
@@ -1370,22 +1408,20 @@ async function generateImage() {
 
   generatingImage.value = true
   try {
-    const details = []
-    if (form.value.metadata.type) details.push(form.value.metadata.type)
-    if (form.value.metadata.rarity) details.push(form.value.metadata.rarity)
-    details.push(form.value.name)
-    if (form.value.description) details.push(form.value.description)
-    if (form.value.metadata.notes) details.push(form.value.metadata.notes)
-
-    const prompt = details.filter((d) => d).join(', ')
-
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
       body: {
-        prompt,
+        prompt: '', // Empty prompt - we pass structured data instead
         entityName: form.value.name,
         entityType: 'Item',
         style: 'fantasy-art',
+        entityData: {
+          name: form.value.name,
+          type: form.value.metadata.type,
+          rarity: form.value.metadata.rarity,
+          material: form.value.metadata.material,
+          description: form.value.description,
+        },
       },
     })
 

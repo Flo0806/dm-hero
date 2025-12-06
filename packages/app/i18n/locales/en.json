@@ -762,7 +762,21 @@
       "monastery": "Monastery",
       "lighthouse": "Lighthouse",
       "windmill": "Windmill",
-      "quarry": "Quarry"
+      "quarry": "Quarry",
+      "underground": "Underground",
+      "district": "District",
+      "smithy": "Smithy",
+      "warehouse": "Warehouse",
+      "sewers": "Sewers",
+      "throne_room": "Throne Room",
+      "barracks": "Barracks",
+      "stable": "Stable",
+      "garden": "Garden",
+      "cemetery": "Cemetery",
+      "dock": "Dock",
+      "alley": "Alley",
+      "plaza": "Plaza",
+      "outpost": "Outpost"
     },
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
@@ -1092,7 +1106,11 @@
     "goToPage": "Go to Page",
     "cover": "Cover",
     "coverImages": "Cover Images",
-    "noCoverImagesText": "Upload a cover image or generate one with AI"
+    "noCoverImagesText": "Upload a cover image or generate one with AI",
+    "generateCoverImage": "Generate Image with AI",
+    "coverImageDescription": "Image Description",
+    "coverImageDescriptionPlaceholder": "Describe the scene, e.g.: A group of adventurers standing before a huge dragon in a cave full of gold...",
+    "coverImageSafetyError": "The description was rejected by the AI safety filter. Please rephrase the scene - avoid direct violence descriptions and use more general terms like 'epic battle' or 'dramatic confrontation' instead."
   },
   "documents": {
     "title": "Documents",
@@ -1201,6 +1219,7 @@
     "linkItem": "Link item",
     "noLinkedItems": "No linked items",
     "noLinkedItemsText": "Add relevant items to this entity",
+    "saveChangesFirst": "Please save first - data for image generation was changed",
     "relationType": "Relation type",
     "quantity": "Quantity",
     "quantityPlaceholder": "1",

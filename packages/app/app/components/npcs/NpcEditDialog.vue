@@ -84,7 +84,8 @@
                 :generating="generatingImage"
                 :deleting="deletingImage"
                 :has-api-key="hasApiKey"
-                :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey"
+                :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
                 :avatar-size="160"
                 default-icon="mdi-account"
                 @preview-image="handleImagePreview"
@@ -569,6 +570,28 @@ const form = ref({
   },
 })
 
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+  race: undefined as string | undefined,
+  class: undefined as string | undefined,
+  age: undefined as number | undefined,
+  gender: undefined as string | undefined,
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  return (
+    form.value.name !== originalImageData.value.name ||
+    form.value.description !== originalImageData.value.description ||
+    form.value.metadata.race !== originalImageData.value.race ||
+    form.value.metadata.class !== originalImageData.value.class ||
+    form.value.metadata.age !== originalImageData.value.age ||
+    form.value.metadata.gender !== originalImageData.value.gender
+  )
+})
+
 // Map sync data (from LocationSelectWithMap)
 const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
@@ -786,6 +809,16 @@ async function loadNpc(npcId: number) {
         type: data.metadata?.type as NpcType | undefined,
         status: data.metadata?.status as NpcStatus | undefined,
       },
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
+      race: data.metadata?.race as string | undefined,
+      class: data.metadata?.class as string | undefined,
+      age: data.metadata?.age as number | undefined,
+      gender: data.metadata?.gender as string | undefined,
     }
 
     // Load counts for tab badges
@@ -1271,21 +1304,23 @@ async function generateImage() {
   generatingImage.value = true
 
   try {
-    const details = []
-    if (form.value.metadata.race) details.push(form.value.metadata.race)
-    if (form.value.metadata.class) details.push(form.value.metadata.class)
-    details.push(form.value.name)
-    if (form.value.description) details.push(form.value.description)
-
-    const prompt = details.filter((d) => d).join(', ')
-
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
       body: {
-        prompt,
+        prompt: '', // Empty prompt - we pass structured data instead
         entityName: form.value.name,
         entityType: 'NPC',
         style: 'fantasy-art',
+        entityData: {
+          name: form.value.name,
+          race: form.value.metadata.race,
+          class: form.value.metadata.class,
+          age: form.value.metadata.age,
+          gender: form.value.metadata.gender,
+          type: form.value.metadata.type,
+          status: form.value.metadata.status,
+          description: form.value.description,
+        },
       },
     })
 

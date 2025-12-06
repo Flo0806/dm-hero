@@ -127,9 +127,12 @@
                 v-if="location"
                 :entity-id="location.id"
                 entity-type="Location"
-                :entity-name="location.name"
-                :entity-description="location.description || undefined"
+                :entity-name="form.name"
+                :entity-description="form.description || undefined"
+                :generate-disabled="hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
                 @images-updated="loadCounts(location!.id)"
+                @generating="generatingImage = $event"
               />
             </v-tabs-window-item>
 
@@ -250,12 +253,12 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" :disabled="saving" @click="close">
+          <v-btn variant="text" :disabled="saving || generatingImage" @click="close">
             {{ $t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
-            :disabled="!form.name"
+            :disabled="!form.name || generatingImage"
             :loading="saving"
             @click="save"
           >
@@ -341,6 +344,7 @@ const internalShow = computed({
 
 const loading = ref(false)
 const saving = ref(false)
+const generatingImage = ref(false)
 const activeTab = ref('details')
 const location = ref<Location | null>(null)
 
@@ -418,6 +422,27 @@ const locationTypes = computed(() =>
   })),
 )
 
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+  type: undefined as string | undefined,
+  region: undefined as string | undefined,
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  const currentType = getComboboxValue(
+    form.value.metadata.type as string | { value: string; title: string } | undefined,
+  )
+  return (
+    form.value.name !== originalImageData.value.name ||
+    form.value.description !== originalImageData.value.description ||
+    currentType !== originalImageData.value.type ||
+    form.value.metadata.region !== originalImageData.value.region
+  )
+})
+
 // Watch for dialog open - watch both show AND locationId together
 watch(
   () => [props.show, props.locationId] as const,
@@ -486,6 +511,14 @@ async function loadLocation(locationId: number) {
         region: data.metadata?.region || '',
         notes: data.metadata?.notes || '',
       },
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
+      type: typeKey || undefined,
+      region: data.metadata?.region || undefined,
     }
   } catch (e) {
     console.error('[LocationEditDialog] Failed to load location:', e)

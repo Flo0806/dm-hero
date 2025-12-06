@@ -757,7 +757,21 @@
       "monastery": "Kloster",
       "lighthouse": "Leuchtturm",
       "windmill": "Windmühle",
-      "quarry": "Steinbruch"
+      "quarry": "Steinbruch",
+      "underground": "Untergrund",
+      "district": "Stadtviertel",
+      "smithy": "Schmiede",
+      "warehouse": "Lagerhaus",
+      "sewers": "Kanalisation",
+      "throne_room": "Thronsaal",
+      "barracks": "Kaserne",
+      "stable": "Stall",
+      "garden": "Garten",
+      "cemetery": "Friedhof",
+      "dock": "Dock",
+      "alley": "Gasse",
+      "plaza": "Platz",
+      "outpost": "Außenposten"
     },
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
@@ -1087,7 +1101,11 @@
     "goToPage": "Zur Seite",
     "cover": "Cover",
     "coverImages": "Cover-Bilder",
-    "noCoverImagesText": "Lade ein Cover-Bild hoch oder generiere eines mit KI"
+    "noCoverImagesText": "Lade ein Cover-Bild hoch oder generiere eines mit KI",
+    "generateCoverImage": "Bild mit KI generieren",
+    "coverImageDescription": "Bildbeschreibung",
+    "coverImageDescriptionPlaceholder": "Beschreibe die Szene, z.B.: Eine Gruppe Abenteurer steht vor einem riesigen Drachen in einer Höhle voller Gold...",
+    "coverImageSafetyError": "Die Beschreibung wurde vom KI-Sicherheitsfilter abgelehnt. Bitte formuliere die Szene anders - vermeide direkte Gewaltbeschreibungen und verwende stattdessen allgemeinere Begriffe wie 'epischer Kampf' oder 'dramatische Konfrontation'."
   },
   "documents": {
     "title": "Dokumente",
@@ -1167,6 +1185,7 @@
     "yes": "Ja",
     "no": "Nein",
     "confirm": "Bestätigen",
+    "saveChangesFirst": "Bitte erst speichern - Daten für Bildgenerierung wurden geändert",
     "uploading": "Wird hochgeladen...",
     "loading": "Wird geladen...",
     "images": "Bilder",

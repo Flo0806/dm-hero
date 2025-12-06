@@ -10,7 +10,7 @@
         color="primary"
         size="small"
         class="mr-2"
-        :disabled="!entityName || !hasApiKey || generatingImage || uploadingImage"
+        :disabled="!entityName || !hasApiKey || generatingImage || uploadingImage || generateDisabled"
         :loading="generatingImage"
         @click="generateImage"
       >
@@ -40,6 +40,16 @@
         @change="handleImageUpload"
       />
     </v-card-title>
+    <!-- Unsaved changes warning -->
+    <v-alert
+      v-if="generateDisabled && generateDisabledReason"
+      type="warning"
+      variant="tonal"
+      density="compact"
+      class="mx-4 mb-2"
+    >
+      {{ generateDisabledReason }}
+    </v-alert>
     <v-card-text>
       <v-progress-linear v-if="loadingImages" indeterminate />
       <v-list v-else-if="images.length > 0">
@@ -149,12 +159,16 @@ interface Props {
   entityName?: string
   entityDescription?: string
   canGenerateImage?: boolean
+  generateDisabled?: boolean
+  generateDisabledReason?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   canGenerateImage: true,
   entityName: undefined,
   entityDescription: undefined,
+  generateDisabled: false,
+  generateDisabledReason: '',
 })
 
 const emit = defineEmits<{
@@ -253,21 +267,20 @@ async function generateImage() {
   emit('generating', true)
 
   try {
-    const details = []
-    if (props.entityDescription) {
-      details.push(props.entityDescription)
+    // Build entity data based on type
+    const entityData: Record<string, unknown> = {
+      name: props.entityName,
+      description: props.entityDescription,
     }
-    details.push(props.entityName)
-
-    const prompt = details.filter((d) => d).join(', ')
 
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
       body: {
-        prompt,
+        prompt: '', // Empty prompt - we pass structured data instead
         entityName: props.entityName,
         entityType: props.entityType,
         style: 'fantasy-art',
+        entityData,
       },
     })
 

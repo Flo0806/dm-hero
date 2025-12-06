@@ -74,7 +74,8 @@
               :generating="generatingImage"
               :deleting="deletingImage"
               :has-api-key="hasApiKey"
-              :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey"
+              :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
+              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
               :avatar-size="120"
               default-icon="mdi-account-star"
               @preview-image="handleImagePreview"
@@ -185,8 +186,11 @@
               entity-type="Player"
               :entity-name="form.name"
               :entity-description="form.description"
+              :generate-disabled="hasUnsavedImageChanges"
+              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
               @images-updated="handleGalleryUpdated"
               @preview-image="handleImagePreview"
+              @generating="generatingImage = $event"
             />
           </v-tabs-window-item>
 
@@ -429,6 +433,20 @@ const deletingImage = ref(false)
 const generatingImage = ref(false)
 const hasApiKey = ref(false)
 
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  return (
+    form.value.name !== originalImageData.value.name ||
+    (form.value.description || '') !== originalImageData.value.description
+  )
+})
+
 // Image preview
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
@@ -484,6 +502,12 @@ async function loadPlayer(playerId: number) {
       phone: data.metadata?.phone || '',
       notes: data.metadata?.notes || '',
       location_id: data.location_id || null,
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
     }
 
     await loadCounts(playerId)
@@ -725,22 +749,20 @@ async function generateImage() {
   generatingImage.value = true
 
   try {
-    const details = [form.value.name]
-    if (form.value.description) {
-      details.push(form.value.description)
-    }
-
-    const prompt = details.filter((d) => d).join(', ')
-
     const result = await $fetch<{ imageUrl: string; revisedPrompt?: string }>(
       '/api/ai/generate-image',
       {
         method: 'POST',
         body: {
-          prompt,
+          prompt: '', // Empty prompt - we pass structured data instead
           entityName: form.value.name,
           entityType: 'Player',
           style: 'fantasy-art',
+          entityData: {
+            name: form.value.player_name || form.value.name,
+            characterName: form.value.name,
+            description: form.value.description,
+          },
         },
       },
     )

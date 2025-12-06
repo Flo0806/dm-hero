@@ -79,7 +79,8 @@
                 :generating="generatingImage"
                 :deleting="deletingImage"
                 :has-api-key="hasApiKey"
-                :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey"
+                :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
                 :avatar-size="160"
                 default-icon="mdi-shield-account"
                 @preview-image="handleImagePreview"
@@ -187,8 +188,11 @@
                 entity-type="Faction"
                 :entity-name="faction.name"
                 :entity-description="faction.description || undefined"
+                :generate-disabled="hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
                 @preview-image="(url: string) => handleImagePreview(url, faction?.name || '')"
                 @images-updated="refreshFaction"
+                @generating="generatingImage = $event"
               />
             </v-tabs-window-item>
 
@@ -515,6 +519,25 @@ const deletingImage = ref(false)
 const generatingImage = ref(false)
 const hasApiKey = ref(false)
 
+// Snapshot of original values for image-critical fields
+const originalImageData = ref({
+  name: '',
+  description: '',
+  type: undefined as string | undefined,
+})
+
+// Check if image-critical fields have unsaved changes
+const hasUnsavedImageChanges = computed(() => {
+  const currentType = getComboboxValue(
+    form.value.metadata.type as string | { value: string; title: string } | undefined,
+  )
+  return (
+    form.value.name !== originalImageData.value.name ||
+    form.value.description !== originalImageData.value.description ||
+    currentType !== originalImageData.value.type
+  )
+})
+
 // Image preview
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
@@ -652,6 +675,13 @@ async function loadFaction(factionId: number) {
         goals: data.metadata?.goals as string | undefined,
         notes: data.metadata?.notes as string | undefined,
       },
+    }
+
+    // Save snapshot of image-critical fields
+    originalImageData.value = {
+      name: data.name,
+      description: data.description || '',
+      type: typeKey || undefined,
     }
 
     // Load counts for tab badges
@@ -1092,21 +1122,19 @@ async function generateImage() {
   generatingImage.value = true
 
   try {
-    const details = []
-    if (form.value.metadata.type) details.push(form.value.metadata.type)
-    details.push(form.value.name)
-    if (form.value.description) details.push(form.value.description)
-    if (form.value.metadata.goals) details.push(form.value.metadata.goals)
-
-    const prompt = details.filter((d) => d).join(', ')
-
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
       body: {
-        prompt,
+        prompt: '', // Empty prompt - we pass structured data instead
         entityName: form.value.name,
         entityType: 'Faction',
         style: 'fantasy-art',
+        entityData: {
+          name: form.value.name,
+          type: form.value.metadata.type,
+          goals: form.value.metadata.goals,
+          description: form.value.description,
+        },
       },
     })
 

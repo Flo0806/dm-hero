@@ -5,20 +5,6 @@
       {{ $t('sessions.coverImages') }}
       <v-spacer />
       <v-btn
-        icon="mdi-creation"
-        color="primary"
-        size="small"
-        class="mr-2"
-        :disabled="!sessionTitle || !hasApiKey || generatingImage || uploadingImage"
-        :loading="generatingImage"
-        @click="generateImage"
-      >
-        <v-icon>mdi-creation</v-icon>
-        <v-tooltip activator="parent" location="bottom">
-          {{ $t('common.generateImage') }}
-        </v-tooltip>
-      </v-btn>
-      <v-btn
         icon="mdi-plus"
         color="primary"
         size="small"
@@ -39,7 +25,59 @@
         @change="handleImageUpload"
       />
     </v-card-title>
+
     <v-card-text>
+      <!-- AI Image Generation Section -->
+      <v-card variant="tonal" class="mb-4">
+        <v-card-text>
+          <div class="text-subtitle-2 mb-2">
+            <v-icon size="small" class="mr-1">mdi-creation</v-icon>
+            {{ $t('sessions.generateCoverImage') }}
+          </div>
+          <v-textarea
+            v-model="imagePrompt"
+            :label="$t('sessions.coverImageDescription')"
+            :placeholder="$t('sessions.coverImageDescriptionPlaceholder')"
+            variant="outlined"
+            density="compact"
+            rows="2"
+            auto-grow
+            hide-details
+            persistent-placeholder
+            class="mb-3"
+            :disabled="generatingImage"
+          />
+          <div class="d-flex align-center gap-2">
+            <v-btn
+              color="primary"
+              :disabled="!imagePrompt.trim() || !hasApiKey || generatingImage || uploadingImage"
+              :loading="generatingImage"
+              prepend-icon="mdi-creation"
+              @click="generateImage"
+            >
+              {{ $t('common.generateImage') }}
+            </v-btn>
+            <span v-if="!hasApiKey" class="text-caption text-medium-emphasis">
+              {{ $t('settings.noApiKey') }}
+            </span>
+          </div>
+
+          <!-- Error message -->
+          <v-alert
+            v-if="generationError"
+            type="error"
+            variant="tonal"
+            density="compact"
+            class="mt-3"
+            closable
+            @click:close="generationError = ''"
+          >
+            {{ generationError }}
+          </v-alert>
+        </v-card-text>
+      </v-card>
+
+      <!-- Images List -->
       <v-progress-linear v-if="loadingImages" indeterminate />
       <v-list v-else-if="images.length > 0">
         <v-list-item v-for="image in images" :key="image.id" class="mb-3">
@@ -140,12 +178,10 @@ interface SessionImage {
 interface Props {
   sessionId: number
   sessionTitle?: string
-  sessionSummary?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   sessionTitle: undefined,
-  sessionSummary: undefined,
 })
 
 const emit = defineEmits<{
@@ -163,6 +199,10 @@ const loadingImages = ref(false)
 const uploadingImage = ref(false)
 const generatingImage = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+// AI generation state
+const imagePrompt = ref('')
+const generationError = ref('')
 
 // Check if API key is available
 const hasApiKey = ref(false)
@@ -247,27 +287,21 @@ async function handleImageUpload(event: Event) {
 
 // Generate image with AI
 async function generateImage() {
-  if (!props.sessionTitle) return
+  if (!imagePrompt.value.trim()) return
 
   generatingImage.value = true
+  generationError.value = ''
   emit('generating', true)
 
   try {
-    const details = []
-    if (props.sessionSummary) {
-      details.push(props.sessionSummary.slice(0, 500))
-    }
-    details.push(`D&D session: ${props.sessionTitle}`)
-
-    const prompt = details.filter((d) => d).join('. ')
-
+    // Use the user's custom description for image generation
     const result = await $fetch<{ imageUrl: string }>('/api/ai/generate-image', {
       method: 'POST',
       body: {
-        prompt,
-        entityName: props.sessionTitle,
-        entityType: 'session',
-        style: 'fantasy-art',
+        prompt: imagePrompt.value.trim(),
+        entityName: props.sessionTitle || 'Session Cover',
+        entityType: 'Session',
+        style: 'realistic', // Cinematic film still style for session covers
       },
     })
 
@@ -285,10 +319,30 @@ async function generateImage() {
 
       await loadImages()
       emit('images-updated')
+      // Clear prompt on success
+      imagePrompt.value = ''
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to generate session image:', error)
-    alert(t('common.generateImageError'))
+    // Extract error message from different error formats
+    let errorMessage = ''
+    if (error && typeof error === 'object') {
+      // Check for $fetch error format (has data.message or statusMessage)
+      const fetchError = error as { data?: { message?: string }; statusMessage?: string; message?: string }
+      errorMessage = fetchError.data?.message || fetchError.statusMessage || fetchError.message || String(error)
+    } else {
+      errorMessage = String(error)
+    }
+
+    console.error('Error message:', errorMessage)
+
+    // Check for safety filter error
+    if (errorMessage.includes('safety system') || errorMessage.includes('rejected')) {
+      generationError.value = t('sessions.coverImageSafetyError')
+    } else {
+      // Show actual error message for debugging
+      generationError.value = `${t('common.generateImageError')}: ${errorMessage}`
+    }
   } finally {
     generatingImage.value = false
     emit('generating', false)
