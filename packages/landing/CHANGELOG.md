@@ -1,5 +1,14 @@
 # @dm-hero/landing
 
+## 1.0.0-alpha.7
+
+### Patch Changes
+
+- [`f8a248e`](https://github.com/Flo0806/dm-hero/commit/f8a248eb853012ffc0f7c08bdeb75b5771bb42dd) Thanks [@Flo0806](https://github.com/Flo0806)! - Fix MDI icons in production build, add Powered by Nuxt badge
+  - Fix MDI icons not rendering in static build
+  - Add icon set configuration to Vuetify plugin
+  - Add "Powered by Nuxt" badge with official logo in footer
+
 ## 1.0.0-alpha.6
 
 ### Patch Changes
