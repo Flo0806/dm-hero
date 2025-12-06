@@ -84,7 +84,34 @@
     "empty": "Keine Kampagnen vorhanden",
     "emptyText": "Erstelle deine erste Kampagne um loszulegen",
     "deleteTitle": "Kampagne löschen",
-    "deleteConfirm": "Möchtest du die Kampagne '{name}' wirklich löschen? Alle zugehörigen Daten werden archiviert."
+    "deleteConfirm": "Möchtest du die Kampagne '{name}' wirklich löschen? Alle zugehörigen Daten werden archiviert.",
+    "settings": "Einstellungen",
+    "currencies": {
+      "title": "Währungen",
+      "subtitle": "Verwalte Währungen für diese Kampagne",
+      "add": "Währung hinzufügen",
+      "edit": "Währung bearbeiten",
+      "code": "Code",
+      "codePlaceholder": "z.B. GP, SP",
+      "name": "Name",
+      "namePlaceholder": "z.B. Gold, Silber",
+      "symbol": "Symbol",
+      "symbolPlaceholder": "z.B. GP, G",
+      "exchangeRate": "Wechselkurs",
+      "exchangeRateHint": "Wert in Kupfer (kleinste Einheit)",
+      "isDefault": "Standard-Währung",
+      "deleteTitle": "Währung löschen",
+      "deleteConfirm": "Möchtest du '{name}' wirklich löschen?",
+      "deleteWarning": "{count} Item(s) verwenden diese Währung. Diese Items behalten ihren Wert, aber die Währung wird entfernt.",
+      "empty": "Keine Währungen vorhanden",
+      "emptyText": "Erstelle deine erste Währung",
+      "defaults": {
+        "copper": "Kupfer",
+        "silver": "Silber",
+        "gold": "Gold",
+        "platinum": "Platin"
+      }
+    }
   },
   "npcs": {
     "title": "NPCs",
@@ -786,6 +813,7 @@
     "type": "Typ",
     "rarity": "Seltenheit",
     "value": "Wert",
+    "currency": "Währung",
     "valuePlaceholder": "z.B. 50 GM",
     "weight": "Gewicht",
     "weightPlaceholder": "z.B. 2 kg",
@@ -942,6 +970,7 @@
     "notes": "Notizen",
     "weightUnit": "kg",
     "valueUnit": "GM",
+    "valueHint": "Dezimalwerte erlaubt (z.B. 10.5 oder 10,5)",
     "badgeTooltips": {
       "owners": "Besitzer (NPCs)",
       "locations": "Orte",
@@ -978,6 +1007,7 @@
     "deleteClassConfirm": "Möchtest du die Klasse '{name}' wirklich löschen?",
     "saveError": "Fehler beim Speichern",
     "deleteError": "Fehler beim Löschen",
+    "noCampaignSelected": "Bitte wähle zuerst eine Kampagne aus, um Währungen zu verwalten.",
     "raceNames": {
       "human": "Mensch",
       "elf": "Elf",
@@ -1190,7 +1220,12 @@
     "subtitle": "Konfiguriere API-Keys und Präferenzen",
     "sections": {
       "openai": "OpenAI Integration",
-      "preferences": "Präferenzen"
+      "preferences": "Präferenzen",
+      "campaign": "Kampagne"
+    },
+    "campaign": {
+      "title": "Kampagnen-Einstellungen",
+      "subtitle": "Einstellungen für die aktive Kampagne"
     },
     "openai": {
       "apiKey": "OpenAI API-Key",

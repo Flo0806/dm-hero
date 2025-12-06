@@ -1488,6 +1488,76 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 27: Map scale fields added for measurement tool')
     },
   },
+  {
+    version: 28,
+    name: 'Add currencies table for flexible item pricing',
+    up: (db: Database.Database) => {
+      // Create currencies table
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS currencies (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          code TEXT NOT NULL,
+          name TEXT NOT NULL,
+          symbol TEXT,
+          exchange_rate REAL NOT NULL DEFAULT 1,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          is_default INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Add unique constraint for code per campaign
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_currencies_campaign_code
+        ON currencies(campaign_id, code)
+      `)
+
+      // Insert default currencies for all existing campaigns
+      // Bronze = 1, Silver = 10, Gold = 100, Platinum = 1000
+      const campaigns = db.prepare('SELECT id FROM campaigns').all() as { id: number }[]
+
+      const insertCurrency = db.prepare(`
+        INSERT INTO currencies (campaign_id, code, name, symbol, exchange_rate, sort_order, is_default)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `)
+
+      for (const campaign of campaigns) {
+        // Store keys (copper, silver, gold, platinum) for i18n translation in frontend
+        insertCurrency.run(campaign.id, 'CP', 'copper', 'CP', 1, 0, 0)
+        insertCurrency.run(campaign.id, 'SP', 'silver', 'SP', 10, 1, 0)
+        insertCurrency.run(campaign.id, 'GP', 'gold', 'GP', 100, 2, 1) // Gold is default
+        insertCurrency.run(campaign.id, 'PP', 'platinum', 'PP', 1000, 3, 0)
+      }
+
+      console.log('✅ Migration 28: Currencies table created with defaults for all campaigns')
+    },
+  },
+  {
+    version: 29,
+    name: 'Convert currency names to i18n keys',
+    up: (db: Database.Database) => {
+      // Convert English currency names to lowercase keys for i18n
+      const nameMapping: Record<string, string> = {
+        Copper: 'copper',
+        Silver: 'silver',
+        Gold: 'gold',
+        Platinum: 'platinum',
+      }
+
+      const updateStmt = db.prepare('UPDATE currencies SET name = ? WHERE name = ?')
+
+      for (const [englishName, key] of Object.entries(nameMapping)) {
+        const result = updateStmt.run(key, englishName)
+        if (result.changes > 0) {
+          console.log(`  Converted "${englishName}" → "${key}" (${result.changes} rows)`)
+        }
+      }
+
+      console.log('✅ Migration 29: Currency names converted to i18n keys')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

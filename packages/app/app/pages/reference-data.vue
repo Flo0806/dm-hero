@@ -3,6 +3,10 @@
     <UiPageHeader :title="$t('referenceData.title')" :subtitle="$t('referenceData.subtitle')" />
 
     <v-tabs v-model="tab" class="mb-6">
+      <v-tab value="currencies">
+        <v-icon start> mdi-cash-multiple </v-icon>
+        {{ $t('campaigns.currencies.title') }}
+      </v-tab>
       <v-tab value="races">
         <v-icon start> mdi-human </v-icon>
         {{ $t('referenceData.races') }}
@@ -11,17 +15,66 @@
         <v-icon start> mdi-sword-cross </v-icon>
         {{ $t('referenceData.classes') }}
       </v-tab>
-      <v-tab value="item-types">
-        <v-icon start> mdi-package-variant </v-icon>
-        {{ $t('referenceData.itemTypes') }}
-      </v-tab>
-      <v-tab value="item-rarities">
-        <v-icon start> mdi-star </v-icon>
-        {{ $t('referenceData.itemRarities') }}
-      </v-tab>
     </v-tabs>
 
     <v-tabs-window v-model="tab">
+      <!-- Currencies Tab -->
+      <v-tabs-window-item value="currencies">
+        <div v-if="!activeCampaignId" class="text-center py-8">
+          <v-icon icon="mdi-alert-circle-outline" size="48" color="warning" class="mb-4" />
+          <p class="text-body-1">{{ $t('referenceData.noCampaignSelected') }}</p>
+        </div>
+        <div v-else>
+          <div class="d-flex justify-end mb-4">
+            <v-btn color="primary" prepend-icon="mdi-plus" @click="showCurrencyDialog = true">
+              {{ $t('campaigns.currencies.add') }}
+            </v-btn>
+          </div>
+
+          <v-data-table
+            :headers="currencyHeaders"
+            :items="sortedCurrencies"
+            :loading="currenciesLoading"
+            :sort-by="[]"
+          >
+            <template #[`item.sort`]="{ item, index }">
+              <div class="d-flex">
+                <v-btn
+                  icon="mdi-chevron-up"
+                  variant="text"
+                  size="x-small"
+                  :disabled="index === 0"
+                  @click="moveCurrency(item, 'up')"
+                />
+                <v-btn
+                  icon="mdi-chevron-down"
+                  variant="text"
+                  size="x-small"
+                  :disabled="index === sortedCurrencies.length - 1"
+                  @click="moveCurrency(item, 'down')"
+                />
+              </div>
+            </template>
+            <template #[`item.name`]="{ item }">
+              {{ getCurrencyDisplayName(item.name) }}
+              <v-chip v-if="item.is_default" size="x-small" color="primary" class="ml-2">
+                {{ $t('campaigns.currencies.isDefault') }}
+              </v-chip>
+            </template>
+            <template #[`item.actions`]="{ item }">
+              <v-btn icon="mdi-pencil" variant="text" size="small" @click="editCurrency(item)" />
+              <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                color="error"
+                @click="confirmDeleteCurrency(item)"
+              />
+            </template>
+          </v-data-table>
+        </div>
+      </v-tabs-window-item>
+
       <!-- Races Tab -->
       <v-tabs-window-item value="races">
         <div class="d-flex justify-end mb-4">
@@ -261,10 +314,106 @@
     <v-snackbar v-model="showError" color="error" :timeout="5000">
       {{ errorMessage }}
     </v-snackbar>
+
+    <!-- Currency Edit Dialog -->
+    <v-dialog v-model="showCurrencyDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title>
+          {{ editingCurrency ? $t('campaigns.currencies.edit') : $t('campaigns.currencies.add') }}
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="currencyForm.code"
+            :label="$t('campaigns.currencies.code')"
+            :placeholder="$t('campaigns.currencies.codePlaceholder')"
+            variant="outlined"
+            class="mb-3"
+            :rules="[(v) => !!v || $t('campaigns.nameRequired')]"
+            maxlength="10"
+          />
+          <v-text-field
+            v-model="currencyForm.name"
+            :label="$t('campaigns.currencies.name')"
+            :placeholder="$t('campaigns.currencies.namePlaceholder')"
+            variant="outlined"
+            class="mb-3"
+            :rules="[(v) => !!v || $t('campaigns.nameRequired')]"
+          />
+          <v-text-field
+            v-model="currencyForm.symbol"
+            :label="$t('campaigns.currencies.symbol')"
+            :placeholder="$t('campaigns.currencies.symbolPlaceholder')"
+            variant="outlined"
+            class="mb-3"
+            maxlength="10"
+          />
+          <v-text-field
+            v-model.number="currencyForm.exchange_rate"
+            :label="$t('campaigns.currencies.exchangeRate')"
+            :hint="$t('campaigns.currencies.exchangeRateHint')"
+            persistent-hint
+            variant="outlined"
+            type="number"
+            min="1"
+            class="mb-3"
+          />
+          <v-switch
+            v-model="currencyForm.is_default"
+            :label="$t('campaigns.currencies.isDefault')"
+            color="primary"
+            hide-details
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeCurrencyDialog">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            :disabled="!currencyForm.code || !currencyForm.name"
+            :loading="savingCurrency"
+            @click="saveCurrency"
+          >
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Currency Delete Dialog -->
+    <v-dialog v-model="showCurrencyDeleteDialog" max-width="450">
+      <v-card>
+        <v-card-title>{{ $t('campaigns.currencies.deleteTitle') }}</v-card-title>
+        <v-card-text>
+          <p>{{ $t('campaigns.currencies.deleteConfirm', { name: deletingCurrency ? getCurrencyDisplayName(deletingCurrency.name) : '' }) }}</p>
+          <v-alert
+            v-if="deletingCurrencyItemCount > 0"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mt-4"
+          >
+            {{ $t('campaigns.currencies.deleteWarning', { count: deletingCurrencyItemCount }) }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showCurrencyDeleteDialog = false">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="error" :loading="deletingCurrencyLoading" @click="deleteCurrency">
+            {{ $t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
+import { useCampaignStore } from '~/stores/campaign'
+
 interface ReferenceData {
   id: number
   name: string
@@ -274,8 +423,24 @@ interface ReferenceData {
   created_at: string
 }
 
+interface Currency {
+  id: number
+  campaign_id: number
+  code: string
+  name: string
+  symbol: string | null
+  exchange_rate: number
+  sort_order: number
+  is_default: number
+  created_at: string
+}
+
 const { t } = useI18n()
-const tab = ref('races')
+const campaignStore = useCampaignStore()
+const tab = ref('currencies')
+
+// Campaign-specific data
+const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 // Fetch data with caching (not campaign-specific, can be cached globally)
 const {
@@ -307,6 +472,203 @@ const classHeaders = [
   { title: t('referenceData.description'), key: 'description', sortable: false },
   { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' as const },
 ]
+
+const currencyHeaders = [
+  { title: '', key: 'sort', sortable: false, width: '70px' },
+  { title: t('campaigns.currencies.code'), key: 'code', sortable: false },
+  { title: t('campaigns.currencies.name'), key: 'name', sortable: false },
+  { title: t('campaigns.currencies.symbol'), key: 'symbol', sortable: false },
+  { title: t('campaigns.currencies.exchangeRate'), key: 'exchange_rate', sortable: false },
+  { title: t('common.actions'), key: 'actions', sortable: false, align: 'end' as const },
+]
+
+// Currency state
+const currencies = ref<Currency[]>([])
+const currenciesLoading = ref(false)
+
+// Sorted currencies by sort_order
+const sortedCurrencies = computed(() => {
+  return [...currencies.value].sort((a, b) => a.sort_order - b.sort_order)
+})
+const showCurrencyDialog = ref(false)
+const showCurrencyDeleteDialog = ref(false)
+const editingCurrency = ref<Currency | null>(null)
+const deletingCurrency = ref<Currency | null>(null)
+const deletingCurrencyItemCount = ref(0)
+const savingCurrency = ref(false)
+const deletingCurrencyLoading = ref(false)
+const currencyForm = ref({
+  code: '',
+  name: '',
+  symbol: '',
+  exchange_rate: 1,
+  is_default: false,
+})
+
+// Load currencies when campaign changes
+watch(
+  activeCampaignId,
+  async (newId) => {
+    if (newId) {
+      await loadCurrencies()
+    } else {
+      currencies.value = []
+    }
+  },
+  { immediate: true },
+)
+
+async function loadCurrencies() {
+  if (!activeCampaignId.value) return
+
+  currenciesLoading.value = true
+  try {
+    currencies.value = await $fetch<Currency[]>('/api/currencies', {
+      query: { campaignId: activeCampaignId.value },
+    })
+  } catch (error) {
+    console.error('Failed to load currencies:', error)
+    currencies.value = []
+  } finally {
+    currenciesLoading.value = false
+  }
+}
+
+// Helper to translate default currency names
+function getCurrencyDisplayName(name: string): string {
+  const defaultNames = ['copper', 'silver', 'gold', 'platinum']
+  if (defaultNames.includes(name.toLowerCase())) {
+    return t(`campaigns.currencies.defaults.${name.toLowerCase()}`)
+  }
+  return name
+}
+
+function editCurrency(currency: Currency) {
+  editingCurrency.value = currency
+  currencyForm.value = {
+    code: currency.code,
+    name: currency.name,
+    symbol: currency.symbol || '',
+    exchange_rate: currency.exchange_rate,
+    is_default: Boolean(currency.is_default),
+  }
+  showCurrencyDialog.value = true
+}
+
+async function confirmDeleteCurrency(currency: Currency) {
+  deletingCurrency.value = currency
+  deletingCurrencyItemCount.value = 0
+
+  // Check how many items use this currency
+  try {
+    const usage = await $fetch<{ itemCount: number }>(`/api/currencies/${currency.id}/usage`)
+    deletingCurrencyItemCount.value = usage.itemCount
+  } catch (error) {
+    console.error('Failed to check currency usage:', error)
+  }
+
+  showCurrencyDeleteDialog.value = true
+}
+
+function closeCurrencyDialog() {
+  showCurrencyDialog.value = false
+  editingCurrency.value = null
+  currencyForm.value = {
+    code: '',
+    name: '',
+    symbol: '',
+    exchange_rate: 1,
+    is_default: false,
+  }
+}
+
+async function saveCurrency() {
+  if (!activeCampaignId.value) return
+
+  savingCurrency.value = true
+  try {
+    if (editingCurrency.value) {
+      await $fetch(`/api/currencies/${editingCurrency.value.id}`, {
+        method: 'PATCH',
+        body: {
+          ...currencyForm.value,
+          is_default: currencyForm.value.is_default ? 1 : 0,
+        },
+      })
+    } else {
+      await $fetch('/api/currencies', {
+        method: 'POST',
+        body: {
+          campaignId: activeCampaignId.value,
+          ...currencyForm.value,
+          is_default: currencyForm.value.is_default ? 1 : 0,
+        },
+      })
+    }
+
+    await loadCurrencies()
+    closeCurrencyDialog()
+    successMessage.value = t('common.saved')
+    showSuccess.value = true
+  } catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.saveError')
+    showError.value = true
+  } finally {
+    savingCurrency.value = false
+  }
+}
+
+async function deleteCurrency() {
+  if (!deletingCurrency.value) return
+
+  deletingCurrencyLoading.value = true
+  try {
+    await $fetch(`/api/currencies/${deletingCurrency.value.id}`, {
+      method: 'DELETE',
+    })
+    await loadCurrencies()
+    showCurrencyDeleteDialog.value = false
+    deletingCurrency.value = null
+  } catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.deleteError')
+    showError.value = true
+  } finally {
+    deletingCurrencyLoading.value = false
+  }
+}
+
+async function moveCurrency(currency: Currency, direction: 'up' | 'down') {
+  const sorted = sortedCurrencies.value
+  const currentIndex = sorted.findIndex((c) => c.id === currency.id)
+  if (currentIndex === -1) return
+
+  const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+  if (targetIndex < 0 || targetIndex >= sorted.length) return
+
+  const targetCurrency = sorted[targetIndex]
+  if (!targetCurrency) return
+
+  // Swap sort_order values
+  try {
+    await Promise.all([
+      $fetch(`/api/currencies/${currency.id}`, {
+        method: 'PATCH',
+        body: { sort_order: targetCurrency.sort_order },
+      }),
+      $fetch(`/api/currencies/${targetCurrency.id}`, {
+        method: 'PATCH',
+        body: { sort_order: currency.sort_order },
+      }),
+    ])
+    await loadCurrencies()
+  } catch (error) {
+    console.error('Failed to reorder currencies:', error)
+    errorMessage.value = t('referenceData.saveError')
+    showError.value = true
+  }
+}
 
 // Race form state
 const showRaceDialog = ref(false)

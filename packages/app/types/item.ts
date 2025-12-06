@@ -89,6 +89,7 @@ export interface ItemMetadata {
   type?: ItemType | null
   rarity?: ItemRarity | null
   value?: number | null
+  currency_id?: number | null
   weight?: number | null
   attunement?: boolean
   damage?: string

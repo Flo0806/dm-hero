@@ -85,7 +85,7 @@ dm-hero/
 
 ## Database
 
-- **SQLite** with 13 migrations (auto-run on startup)
+- **SQLite** with auto-migrations on startup
 - **FTS5** for full-text search with Unicode normalization
 - **Soft-delete** everywhere (deleted_at timestamps)
 - **Auto-backup** before each migration

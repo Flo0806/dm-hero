@@ -152,7 +152,7 @@
             </v-row>
 
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="5">
                 <v-text-field
                   v-model.number="form.metadata.weight"
                   :label="$t('items.weight')"
@@ -163,15 +163,42 @@
                   min="0"
                 />
               </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="form.metadata.value"
-                  :label="$t('items.value')"
-                  :suffix="$t('items.valueUnit')"
+              <v-col cols="12" md="5">
+                <v-tooltip :text="$t('items.valueHint')" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <v-text-field
+                      v-bind="tooltipProps"
+                      v-model.number="form.metadata.value"
+                      :label="$t('items.value')"
+                      variant="outlined"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                    />
+                  </template>
+                </v-tooltip>
+              </v-col>
+              <v-col cols="12" md="2">
+                <v-select
+                  v-model="form.metadata.currency_id"
+                  :items="translatedCurrencies"
+                  :label="$t('items.currency')"
                   variant="outlined"
-                  type="number"
-                  min="0"
-                />
+                  item-title="displayName"
+                  item-value="id"
+                  density="default"
+                >
+                  <template #item="{ props: itemProps, item: selectItem }">
+                    <v-list-item v-bind="itemProps">
+                      <template #prepend>
+                        <span class="font-weight-bold mr-2">{{ selectItem.raw.symbol }}</span>
+                      </template>
+                    </v-list-item>
+                  </template>
+                  <template #selection="{ item: selectItem }">
+                    {{ selectItem.raw.symbol }}
+                  </template>
+                </v-select>
               </v-col>
             </v-row>
 
@@ -582,6 +609,19 @@ interface LinkedLoreItem {
   image_url?: string | null
 }
 
+interface Currency {
+  id: number
+  campaign_id: number
+  code: string
+  name: string
+  symbol: string | null
+  exchange_rate: number
+  is_default: number
+}
+
+// Default currency keys that have translations
+const DEFAULT_CURRENCY_KEYS = ['copper', 'silver', 'gold', 'platinum']
+
 interface ApiRelatedEntity {
   id: number
   from_entity_id: number
@@ -639,6 +679,7 @@ const form = ref<ItemForm>({
     rarity: null,
     weight: null,
     value: null,
+    currency_id: null,
     notes: undefined,
   },
 })
@@ -650,6 +691,19 @@ const counts = ref({
   images: 0,
   documents: 0,
   players: 0,
+})
+
+// Currencies
+const currencies = ref<Currency[]>([])
+
+// Translated currencies for display
+const translatedCurrencies = computed(() => {
+  return currencies.value.map((c) => ({
+    ...c,
+    displayName: DEFAULT_CURRENCY_KEYS.includes(c.name)
+      ? t(`campaigns.currencies.defaults.${c.name}`)
+      : c.name,
+  }))
 })
 
 // Linked entities
@@ -758,6 +812,15 @@ async function loadStoreData() {
     entitiesStore.fetchPlayers(campaignId),
   ])
 
+  // Load currencies for the campaign
+  try {
+    currencies.value = await $fetch<Currency[]>('/api/currencies', {
+      query: { campaignId },
+    })
+  } catch {
+    currencies.value = []
+  }
+
   // Check API key
   try {
     const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
@@ -772,6 +835,13 @@ async function loadItem(itemId: number) {
     const data = await $fetch<Item>(`/api/items/${itemId}`)
     item.value = data
 
+    // If no currency_id set, use the default currency for this campaign
+    let currencyId = data.metadata?.currency_id || null
+    if (!currencyId) {
+      const defaultCurrency = currencies.value.find((c) => c.is_default === 1)
+      currencyId = defaultCurrency?.id || null
+    }
+
     form.value = {
       name: data.name,
       description: data.description || null,
@@ -781,6 +851,7 @@ async function loadItem(itemId: number) {
         rarity: data.metadata?.rarity || null,
         weight: data.metadata?.weight || null,
         value: data.metadata?.value || null,
+        currency_id: currencyId,
         notes: data.metadata?.notes || undefined,
       },
     }
@@ -848,6 +919,10 @@ async function loadCounts(itemId: number) {
 
 function resetForm() {
   item.value = null
+
+  // Set default currency
+  const defaultCurrency = currencies.value.find((c) => c.is_default === 1)
+
   form.value = {
     name: '',
     description: null,
@@ -857,6 +932,7 @@ function resetForm() {
       rarity: null,
       weight: null,
       value: null,
+      currency_id: defaultCurrency?.id || null,
       notes: undefined,
     },
   }

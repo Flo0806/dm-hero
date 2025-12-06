@@ -84,7 +84,34 @@
     "empty": "No campaigns available",
     "emptyText": "Create your first campaign to get started",
     "deleteTitle": "Delete Campaign",
-    "deleteConfirm": "Do you really want to delete the campaign '{name}'? All associated data will be archived."
+    "deleteConfirm": "Do you really want to delete the campaign '{name}'? All associated data will be archived.",
+    "settings": "Settings",
+    "currencies": {
+      "title": "Currencies",
+      "subtitle": "Manage currencies for this campaign",
+      "add": "Add Currency",
+      "edit": "Edit Currency",
+      "code": "Code",
+      "codePlaceholder": "e.g. GP, SP",
+      "name": "Name",
+      "namePlaceholder": "e.g. Gold, Silver",
+      "symbol": "Symbol",
+      "symbolPlaceholder": "e.g. GP, G",
+      "exchangeRate": "Exchange Rate",
+      "exchangeRateHint": "Value in copper (smallest unit)",
+      "isDefault": "Default Currency",
+      "deleteTitle": "Delete Currency",
+      "deleteConfirm": "Do you really want to delete '{name}'?",
+      "deleteWarning": "{count} item(s) use this currency. These items will keep their value, but the currency will be removed.",
+      "empty": "No currencies available",
+      "emptyText": "Create your first currency",
+      "defaults": {
+        "copper": "Copper",
+        "silver": "Silver",
+        "gold": "Gold",
+        "platinum": "Platinum"
+      }
+    }
   },
   "npcs": {
     "title": "NPCs",
@@ -791,6 +818,7 @@
     "type": "Type",
     "rarity": "Rarity",
     "value": "Value",
+    "currency": "Currency",
     "valuePlaceholder": "e.g. 50 gp",
     "weight": "Weight",
     "weightPlaceholder": "e.g. 2 lbs",
@@ -947,6 +975,7 @@
     "notes": "Notes",
     "weightUnit": "kg",
     "valueUnit": "GP",
+    "valueHint": "Decimal values allowed (e.g. 10.5)",
     "badgeTooltips": {
       "owners": "Owners (NPCs)",
       "locations": "Locations",
@@ -983,6 +1012,7 @@
     "deleteClassConfirm": "Do you really want to delete the class '{name}'?",
     "saveError": "Error saving",
     "deleteError": "Error deleting",
+    "noCampaignSelected": "Please select a campaign first to manage currencies.",
     "raceNames": {
       "human": "Human",
       "elf": "Elf",
@@ -1195,7 +1225,12 @@
     "subtitle": "Configure API keys and preferences",
     "sections": {
       "openai": "OpenAI Integration",
-      "preferences": "Preferences"
+      "preferences": "Preferences",
+      "campaign": "Campaign"
+    },
+    "campaign": {
+      "title": "Campaign Settings",
+      "subtitle": "Settings for the active campaign"
     },
     "openai": {
       "apiKey": "OpenAI API Key",
