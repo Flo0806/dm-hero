@@ -9,7 +9,7 @@
         <div class="flex-grow-1">
           <h2 class="text-h5">{{ location.name }}</h2>
           <div v-if="location.metadata?.type" class="text-body-2 text-medium-emphasis">
-            {{ location.metadata.type }}
+            {{ $t(`locations.types.${location.metadata.type}`, location.metadata.type) }}
           </div>
         </div>
         <v-btn icon="mdi-close" variant="text" @click="$emit('update:modelValue', false)">
@@ -84,7 +84,7 @@
                       <v-icon class="mr-3" color="primary">mdi-shape</v-icon>
                       <div>
                         <div class="text-caption text-medium-emphasis">{{ $t('locations.type') }}</div>
-                        <div class="font-weight-medium">{{ location.metadata.type }}</div>
+                        <div class="font-weight-medium">{{ $t(`locations.types.${location.metadata.type}`, location.metadata.type) }}</div>
                       </div>
                     </div>
                   </v-card>

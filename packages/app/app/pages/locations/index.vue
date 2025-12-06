@@ -121,7 +121,7 @@
                 variant="tonal"
                 class="mr-2"
               >
-                {{ item.raw.metadata.type }}
+                {{ $t(`locations.types.${item.raw.metadata.type}`, item.raw.metadata.type) }}
               </v-chip>
 
               <!-- Actions -->

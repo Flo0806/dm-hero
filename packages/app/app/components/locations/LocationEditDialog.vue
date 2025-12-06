@@ -472,12 +472,17 @@ async function loadLocation(locationId: number) {
     const data = await $fetch<Location>(`/api/locations/${locationId}`)
     location.value = data
 
+    // Find the matching location type object for the combobox
+    // This ensures the translated title is displayed, not the raw key
+    const typeKey = data.metadata?.type || ''
+    const typeObject = typeKey ? locationTypes.value.find((lt) => lt.value === typeKey) : undefined
+
     form.value = {
       name: data.name,
       description: data.description || '',
       parentLocationId: data.parent_entity_id || null,
       metadata: {
-        type: data.metadata?.type || '',
+        type: (typeObject || typeKey) as string,
         region: data.metadata?.region || '',
         notes: data.metadata?.notes || '',
       },
