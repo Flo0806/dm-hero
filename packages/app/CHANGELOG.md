@@ -1,5 +1,19 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.19
+
+### Minor Changes
+
+- [`0b213b3`](https://github.com/Flo0806/dm-hero/commit/0b213b304fc50331dbc43e3bd50755a83f183641) Thanks [@Flo0806](https://github.com/Flo0806)! - feat(ai): enhance DALL-E prompts with structured entity data and safety-filter handling
+  - Add structured entity data support for richer DALL-E prompts (NPC, Location, Item, Faction, Player, Session)
+  - Change default style from fantasy-art to realistic with anti-3D/CGI instructions
+  - Add 16:9 format (1792x1024) for session cover images
+  - Add GPT-4 safety-filter-friendly rephrasing for session prompts
+  - Add custom description field for session cover image generation
+  - Add meaningful error messages for safety filter rejections
+  - Add unsaved changes warning for image generation across all entity dialogs
+  - Disable dialog buttons during image generation
+
 ## 1.0.0-alpha.18
 
 ### Patch Changes
