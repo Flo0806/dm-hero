@@ -360,6 +360,205 @@ describe('Maps - Campaign Isolation', () => {
   })
 })
 
+describe('Maps - Area Drag (Move Position)', () => {
+  it('should update area position when dragged', () => {
+    const mapId = createMap('Drag Area Map')
+    const locationId = createEntity(locationTypeId, 'Draggable City')
+
+    const result = db
+      .prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 20, 20, 10)
+
+    // Simulate drag - update position
+    db.prepare('UPDATE map_areas SET center_x = ?, center_y = ? WHERE id = ?')
+      .run(60, 70, result.lastInsertRowid)
+
+    const area = db
+      .prepare('SELECT center_x, center_y FROM map_areas WHERE id = ?')
+      .get(result.lastInsertRowid) as { center_x: number; center_y: number }
+
+    expect(area.center_x).toBe(60)
+    expect(area.center_y).toBe(70)
+  })
+
+  it('should detect markers inside an area', () => {
+    const mapId = createMap('Marker Inside Area Map')
+    const locationId = createEntity(locationTypeId, 'Container City')
+    const npcId = createEntity(npcTypeId, 'NPC Inside Area')
+
+    // Create area at 50,50 with radius 20
+    db.prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 50, 50, 20)
+
+    // Create marker at 55,55 (inside the area)
+    db.prepare('INSERT INTO map_markers (map_id, entity_id, x, y) VALUES (?, ?, ?, ?)')
+      .run(mapId, npcId, 55, 55)
+
+    // Query to check if marker is inside area (distance from center < radius)
+    const markersInArea = db
+      .prepare(`
+        SELECT mm.*,
+          SQRT(POWER(mm.x - ma.center_x, 2) + POWER(mm.y - ma.center_y, 2)) as distance,
+          ma.radius
+        FROM map_markers mm
+        JOIN map_areas ma ON ma.map_id = mm.map_id
+        WHERE mm.map_id = ?
+          AND SQRT(POWER(mm.x - ma.center_x, 2) + POWER(mm.y - ma.center_y, 2)) <= ma.radius
+      `)
+      .all(mapId) as Array<{ distance: number; radius: number }>
+
+    expect(markersInArea).toHaveLength(1)
+    expect(markersInArea[0].distance).toBeLessThanOrEqual(markersInArea[0].radius)
+  })
+
+  it('should detect markers outside an area after move', () => {
+    const mapId = createMap('Markers Outside After Move Map')
+    const locationId = createEntity(locationTypeId, 'Moving City')
+    const npcId = createEntity(npcTypeId, 'NPC That Falls Out')
+
+    // Create area at 50,50 with radius 10
+    const areaResult = db
+      .prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 50, 50, 10)
+
+    // Create marker at 55,50 (inside the area, distance = 5)
+    db.prepare('INSERT INTO map_markers (map_id, entity_id, x, y) VALUES (?, ?, ?, ?)')
+      .run(mapId, npcId, 55, 50)
+
+    // Verify marker is inside before move
+    const markersBefore = db
+      .prepare(`
+        SELECT COUNT(*) as count FROM map_markers mm
+        JOIN map_areas ma ON ma.map_id = mm.map_id AND ma.id = ?
+        WHERE mm.map_id = ?
+          AND SQRT(POWER(mm.x - ma.center_x, 2) + POWER(mm.y - ma.center_y, 2)) <= ma.radius
+      `)
+      .get(areaResult.lastInsertRowid, mapId) as { count: number }
+    expect(markersBefore.count).toBe(1)
+
+    // Move area to 80,80 (marker at 55,50 is now outside)
+    db.prepare('UPDATE map_areas SET center_x = ?, center_y = ? WHERE id = ?')
+      .run(80, 80, areaResult.lastInsertRowid)
+
+    // Verify marker is outside after move
+    const markersAfter = db
+      .prepare(`
+        SELECT COUNT(*) as count FROM map_markers mm
+        JOIN map_areas ma ON ma.map_id = mm.map_id AND ma.id = ?
+        WHERE mm.map_id = ?
+          AND SQRT(POWER(mm.x - ma.center_x, 2) + POWER(mm.y - ma.center_y, 2)) <= ma.radius
+      `)
+      .get(areaResult.lastInsertRowid, mapId) as { count: number }
+    expect(markersAfter.count).toBe(0)
+  })
+
+  it('should move markers with area (conflict resolution: move)', () => {
+    const mapId = createMap('Move Markers With Area Map')
+    const locationId = createEntity(locationTypeId, 'City With Markers')
+    const npcId = createEntity(npcTypeId, 'NPC To Move With Area')
+
+    // Create area at 30,30 with radius 15
+    const areaResult = db
+      .prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 30, 30, 15)
+
+    // Create marker at 35,35 (inside the area)
+    const markerResult = db
+      .prepare('INSERT INTO map_markers (map_id, entity_id, x, y) VALUES (?, ?, ?, ?)')
+      .run(mapId, npcId, 35, 35)
+
+    // Calculate delta for area move (30,30 -> 70,70 = delta +40,+40)
+    const deltaX = 40
+    const deltaY = 40
+
+    // Move area
+    db.prepare('UPDATE map_areas SET center_x = center_x + ?, center_y = center_y + ? WHERE id = ?')
+      .run(deltaX, deltaY, areaResult.lastInsertRowid)
+
+    // Move marker with same delta
+    db.prepare('UPDATE map_markers SET x = x + ?, y = y + ? WHERE id = ?')
+      .run(deltaX, deltaY, markerResult.lastInsertRowid)
+
+    // Verify marker moved with area
+    const marker = db
+      .prepare('SELECT x, y FROM map_markers WHERE id = ?')
+      .get(markerResult.lastInsertRowid) as { x: number; y: number }
+
+    expect(marker.x).toBe(75) // 35 + 40
+    expect(marker.y).toBe(75) // 35 + 40
+
+    // Verify marker is still inside the moved area
+    const area = db
+      .prepare('SELECT center_x, center_y, radius FROM map_areas WHERE id = ?')
+      .get(areaResult.lastInsertRowid) as { center_x: number; center_y: number; radius: number }
+
+    const distance = Math.sqrt(Math.pow(marker.x - area.center_x, 2) + Math.pow(marker.y - area.center_y, 2))
+    expect(distance).toBeLessThanOrEqual(area.radius)
+  })
+
+  it('should keep markers in place (conflict resolution: keep)', () => {
+    const mapId = createMap('Keep Markers Map')
+    const locationId = createEntity(locationTypeId, 'City Leaving Markers')
+    const npcId = createEntity(npcTypeId, 'NPC Left Behind')
+
+    // Create area at 30,30 with radius 15
+    const areaResult = db
+      .prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 30, 30, 15)
+
+    // Create marker at 35,35 (inside the area)
+    const markerResult = db
+      .prepare('INSERT INTO map_markers (map_id, entity_id, x, y) VALUES (?, ?, ?, ?)')
+      .run(mapId, npcId, 35, 35)
+
+    // Move area without moving marker (keep option)
+    db.prepare('UPDATE map_areas SET center_x = ?, center_y = ? WHERE id = ?')
+      .run(70, 70, areaResult.lastInsertRowid)
+
+    // Verify marker stayed in place
+    const marker = db
+      .prepare('SELECT x, y FROM map_markers WHERE id = ?')
+      .get(markerResult.lastInsertRowid) as { x: number; y: number }
+
+    expect(marker.x).toBe(35)
+    expect(marker.y).toBe(35)
+  })
+
+  it('should remove location_id from entities (conflict resolution: remove)', () => {
+    const mapId = createMap('Remove Location Map')
+    const locationId = createEntity(locationTypeId, 'City Removing Location')
+    const npcId = createEntity(npcTypeId, 'NPC Losing Location')
+
+    // Set entity's location_id
+    db.prepare('UPDATE entities SET location_id = ? WHERE id = ?')
+      .run(locationId, npcId)
+
+    // Create area at 30,30 with radius 15
+    const areaResult = db
+      .prepare('INSERT INTO map_areas (map_id, location_id, center_x, center_y, radius) VALUES (?, ?, ?, ?, ?)')
+      .run(mapId, locationId, 30, 30, 15)
+
+    // Create marker at 35,35 (inside the area)
+    db.prepare('INSERT INTO map_markers (map_id, entity_id, x, y) VALUES (?, ?, ?, ?)')
+      .run(mapId, npcId, 35, 35)
+
+    // Move area
+    db.prepare('UPDATE map_areas SET center_x = ?, center_y = ? WHERE id = ?')
+      .run(70, 70, areaResult.lastInsertRowid)
+
+    // Remove location_id from entity (remove option)
+    db.prepare('UPDATE entities SET location_id = NULL WHERE id = ?')
+      .run(npcId)
+
+    // Verify location_id is removed
+    const entity = db
+      .prepare('SELECT location_id FROM entities WHERE id = ?')
+      .get(npcId) as { location_id: number | null }
+
+    expect(entity.location_id).toBeNull()
+  })
+})
+
 describe('Maps - Cascade Delete', () => {
   it('should delete markers when map is deleted', () => {
     const mapId = createMap('Cascade Map')

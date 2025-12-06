@@ -36,7 +36,6 @@ const emit = defineEmits<{
   areaClick: [area: MapArea]
   areaRightClick: [area: MapArea]
   areaDrag: [data: { area: MapArea; x: number; y: number }]
-  areaResize: [data: { area: MapArea; radius: number }]
 }>()
 
 const mapContainer = ref<HTMLElement | null>(null)
@@ -45,8 +44,17 @@ let imageOverlay: ImageOverlay | null = null
 const markerLayer = shallowRef<LayerGroup | null>(null)
 const areaLayer = shallowRef<LayerGroup | null>(null)
 
-// Store circle references for resize handling
+// Store circle references for drag handling
 const circleRefs = new Map<number, Circle>()
+
+// Drag state for areas
+const draggingArea = ref<MapArea | null>(null)
+const dragStartPos = ref<{ lat: number; lng: number } | null>(null)
+const areaStartCenter = ref<{ lat: number; lng: number } | null>(null)
+
+// Flag to suppress click after drag/resize (only if actually moved)
+const justFinishedDragging = ref(false)
+const didActuallyDrag = ref(false)
 
 // Measurement line layer
 let measureLineLayer: LayerGroup | null = null
@@ -163,6 +171,8 @@ function initMap() {
     // Handle map clicks
     leafletMap.on('click', (e: LeafletMouseEvent) => {
       if (!imageOverlay) return
+      // Don't emit click if we just finished dragging an area
+      if (justFinishedDragging.value) return
 
       // Convert lat/lng to percentage of image
       const b = imageOverlay.getBounds()
@@ -264,8 +274,9 @@ function updateAreas() {
       direction: 'center',
     })
 
-    // Click handler - view location
+    // Click handler - view location (only if not dragging)
     circle.on('click', (e: LeafletMouseEvent) => {
+      if (draggingArea.value || justFinishedDragging.value) return
       L?.DomEvent.stopPropagation(e)
       emit('areaClick', area)
     })
@@ -277,8 +288,105 @@ function updateAreas() {
       emit('areaRightClick', area)
     })
 
+    // Drag start - begin dragging the area
+    circle.on('mousedown', (e: LeafletMouseEvent) => {
+      if (e.originalEvent.button !== 0) return // Only left mouse button
+      L?.DomEvent.stopPropagation(e)
+      startAreaDrag(area, e)
+    })
+
     circle.addTo(areaLayer.value!)
   }
+}
+
+// Area drag handlers
+function startAreaDrag(area: MapArea, e: LeafletMouseEvent) {
+  if (!leafletMap || !L) return
+
+  draggingArea.value = area
+  dragStartPos.value = { lat: e.latlng.lat, lng: e.latlng.lng }
+
+  const circle = circleRefs.get(area.id)
+  if (circle) {
+    const center = circle.getLatLng()
+    areaStartCenter.value = { lat: center.lat, lng: center.lng }
+  }
+
+  // Disable map drag during area drag
+  leafletMap.dragging.disable()
+
+  // Add move and up listeners to map container
+  leafletMap.on('mousemove', onAreaDragMove)
+  leafletMap.on('mouseup', onAreaDragEnd)
+}
+
+function onAreaDragMove(e: LeafletMouseEvent) {
+  if (!draggingArea.value || !dragStartPos.value || !areaStartCenter.value || !L) return
+
+  const circle = circleRefs.get(draggingArea.value.id)
+  if (!circle) return
+
+  // Calculate new position
+  const deltaLat = e.latlng.lat - dragStartPos.value.lat
+  const deltaLng = e.latlng.lng - dragStartPos.value.lng
+
+  const newLat = areaStartCenter.value.lat + deltaLat
+  const newLng = areaStartCenter.value.lng + deltaLng
+
+  // Mark that we actually moved
+  didActuallyDrag.value = true
+
+  // Move circle
+  circle.setLatLng([newLat, newLng])
+}
+
+function onAreaDragEnd(_e: LeafletMouseEvent) {
+  if (!draggingArea.value || !imageOverlay || !leafletMap || !L) return
+
+  const circle = circleRefs.get(draggingArea.value.id)
+  if (!circle) {
+    cleanupAreaDrag()
+    return
+  }
+
+  // Calculate final position as percentage
+  const bounds = imageOverlay.getBounds()
+  const width = bounds.getEast() - bounds.getWest()
+  const height = bounds.getNorth() - bounds.getSouth()
+
+  const finalLatLng = circle.getLatLng()
+  const newX = ((finalLatLng.lng - bounds.getWest()) / width) * 100
+  const newY = ((bounds.getNorth() - finalLatLng.lat) / height) * 100
+
+  // Emit drag event with new position
+  emit('areaDrag', {
+    area: draggingArea.value,
+    x: newX,
+    y: newY,
+  })
+
+  cleanupAreaDrag()
+}
+
+function cleanupAreaDrag() {
+  if (leafletMap) {
+    leafletMap.dragging.enable()
+    leafletMap.off('mousemove', onAreaDragMove)
+    leafletMap.off('mouseup', onAreaDragEnd)
+  }
+
+  // Only suppress click if we actually dragged (not just clicked)
+  if (didActuallyDrag.value) {
+    justFinishedDragging.value = true
+    setTimeout(() => {
+      justFinishedDragging.value = false
+    }, 100)
+  }
+
+  draggingArea.value = null
+  dragStartPos.value = null
+  areaStartCenter.value = null
+  didActuallyDrag.value = false
 }
 
 function updateMarkers() {
@@ -564,5 +672,19 @@ defineExpose({
 
 .marker-pin {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Area resize handle */
+.area-resize-handle {
+  cursor: ew-resize !important;
+}
+
+.area-resize-handle:hover {
+  transform: scale(1.2);
+}
+
+/* Leaflet circle hover for draggable areas */
+.leaflet-interactive.area-draggable {
+  cursor: move !important;
 }
 </style>

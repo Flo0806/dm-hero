@@ -1166,6 +1166,7 @@
     "details": "Details",
     "yes": "Ja",
     "no": "Nein",
+    "confirm": "Bestätigen",
     "uploading": "Wird hochgeladen...",
     "loading": "Wird geladen...",
     "images": "Bilder",
@@ -1561,7 +1562,9 @@
     "update": "Aktualisieren",
     "helpClick": "Klick = Anzeigen",
     "helpRightClick": "Rechtsklick = Bearbeiten",
-    "helpDrag": "Ziehen = Verschieben",
+    "helpDrag": "Ziehen = Verschieben (Marker)",
+    "helpDragArea": "Gedrückt halten + Bewegen = Verschieben (Bereiche)",
+    "helpResize": "Rand ziehen = Größe ändern",
     "addArea": "Bereich hinzufügen",
     "editArea": "Bereich bearbeiten",
     "selectLocation": "Ort auswählen",
@@ -1589,6 +1592,11 @@
     "measureTotal": "Gesamt: {distance} {unit}",
     "measureClick": "Klicke um Messpunkte zu setzen",
     "measureFinish": "Doppelklick oder ESC zum Beenden",
-    "measureNoScale": "Kein Maßstab definiert - bitte in den Karteneinstellungen setzen"
+    "measureNoScale": "Kein Maßstab definiert - bitte in den Karteneinstellungen setzen",
+    "areaConflict": "Markierungen außerhalb des Bereichs",
+    "areaConflictMessage": "{count} Markierung(en) würden nach dieser Änderung außerhalb von '{location}' liegen:",
+    "areaConflictMove": "Markierungen mit dem Bereich verschieben",
+    "areaConflictKeep": "Markierungen an aktueller Position belassen",
+    "areaConflictRemove": "Standort-Zuweisung der Markierungen entfernen"
   }
 }

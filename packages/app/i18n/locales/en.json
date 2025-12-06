@@ -1171,6 +1171,7 @@
     "details": "Details",
     "yes": "Yes",
     "no": "No",
+    "confirm": "Confirm",
     "uploading": "Uploading...",
     "loading": "Loading...",
     "images": "Images",
@@ -1566,7 +1567,9 @@
     "update": "Update",
     "helpClick": "Click = View",
     "helpRightClick": "Right-click = Edit",
-    "helpDrag": "Drag = Move",
+    "helpDrag": "Drag = Move (Markers)",
+    "helpDragArea": "Hold + Move = Drag (Areas)",
+    "helpResize": "Drag edge = Resize",
     "addArea": "Add Area",
     "editArea": "Edit Area",
     "selectLocation": "Select Location",
@@ -1594,6 +1597,11 @@
     "measureTotal": "Total: {distance} {unit}",
     "measureClick": "Click to add measurement points",
     "measureFinish": "Double-click or ESC to finish",
-    "measureNoScale": "No scale defined - please set in map settings"
+    "measureNoScale": "No scale defined - please set in map settings",
+    "areaConflict": "Markers Outside Area",
+    "areaConflictMessage": "{count} marker(s) would be outside '{location}' after this change:",
+    "areaConflictMove": "Move markers with the area",
+    "areaConflictKeep": "Keep markers at current position",
+    "areaConflictRemove": "Remove location assignment from markers"
   }
 }

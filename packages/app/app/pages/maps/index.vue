@@ -148,6 +148,7 @@
             @marker-drag-out-of-area="onMarkerDragOutOfArea"
             @area-click="onAreaClick"
             @area-right-click="onAreaRightClick"
+            @area-drag="onAreaDrag"
           />
         </ClientOnly>
         <!-- Help badges -->
@@ -196,6 +197,9 @@
             </v-chip>
             <v-chip size="small" variant="tonal" prepend-icon="mdi-cursor-move">
               {{ $t('maps.helpDrag') }}
+            </v-chip>
+            <v-chip size="small" variant="tonal" prepend-icon="mdi-gesture-tap-hold">
+              {{ $t('maps.helpDragArea') }}
             </v-chip>
           </template>
         </div>
@@ -422,6 +426,51 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Area Move/Resize Conflict Dialog (when markers fall outside area) -->
+    <v-dialog v-model="showAreaConflictDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon start color="warning">mdi-alert-circle</v-icon>
+          {{ $t('maps.areaConflict') }}
+        </v-card-title>
+        <v-card-text>
+          <p class="mb-4">
+            {{ $t('maps.areaConflictMessage', {
+              count: affectedMarkers.length,
+              location: pendingAreaChange?.area?.location_name
+            }) }}
+          </p>
+
+          <!-- List of affected markers -->
+          <v-list v-if="affectedMarkers.length > 0" density="compact" class="mb-4">
+            <v-list-item v-for="marker in affectedMarkers" :key="marker.id">
+              <template #prepend>
+                <v-icon :color="getEntityColor(marker.entity_type)">
+                  {{ getEntityIcon(marker.entity_type) }}
+                </v-icon>
+              </template>
+              <v-list-item-title>{{ marker.entity_name }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+
+          <v-radio-group v-model="areaConflictAction" hide-details>
+            <v-radio value="move" :label="$t('maps.areaConflictMove')" />
+            <v-radio value="keep" :label="$t('maps.areaConflictKeep')" />
+            <v-radio value="remove" :label="$t('maps.areaConflictRemove')" />
+          </v-radio-group>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="cancelAreaChange">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" :loading="applyingAreaChange" @click="confirmAreaChange">
+            {{ $t('common.confirm') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -589,6 +638,22 @@ const pendingLocationRemove = ref<{
   previousArea: MapArea
   x: number
   y: number
+} | null>(null)
+
+// Area move/resize conflict dialog state
+const showAreaConflictDialog = ref(false)
+const applyingAreaChange = ref(false)
+const areaConflictAction = ref<'move' | 'keep' | 'remove'>('move')
+const affectedMarkers = ref<MapMarker[]>([])
+const pendingAreaChange = ref<{
+  area: MapArea
+  type: 'drag' | 'resize'
+  newX?: number
+  newY?: number
+  newRadius?: number
+  oldX: number
+  oldY: number
+  oldRadius: number
 } | null>(null)
 
 // Load maps
@@ -826,6 +891,157 @@ async function confirmLocationRemove() {
 function cancelLocationRemove() {
   showLocationRemoveDialog.value = false
   pendingLocationRemove.value = null
+}
+
+// Helper functions for entity display
+function getEntityColor(entityType?: string): string {
+  if (!entityType) return 'grey'
+  return ENTITY_TYPE_COLORS[entityType] || 'grey'
+}
+
+function getEntityIcon(entityType?: string): string {
+  if (!entityType) return 'mdi-help'
+  return ENTITY_TYPE_ICONS[entityType] || 'mdi-help'
+}
+
+// Check if a marker is inside a circle area
+function isMarkerInsideArea(marker: MapMarker, centerX: number, centerY: number, radius: number): boolean {
+  const dx = marker.x - centerX
+  const dy = marker.y - centerY
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  return distance <= radius
+}
+
+// Find markers that are inside the area at the given position/radius
+function findMarkersInsideArea(centerX: number, centerY: number, radius: number): MapMarker[] {
+  return selectedMapMarkers.value.filter((marker) =>
+    isMarkerInsideArea(marker, centerX, centerY, radius),
+  )
+}
+
+// Handler: Area was dragged to new position
+function onAreaDrag(data: { area: MapArea; x: number; y: number }) {
+  const { area, x, y } = data
+
+  // Find markers that were inside the old position but are outside the new position
+  const oldMarkers = findMarkersInsideArea(area.center_x, area.center_y, area.radius)
+  const newMarkers = findMarkersInsideArea(x, y, area.radius)
+
+  // Markers that fall outside after the move
+  const markersOutside = oldMarkers.filter((m) => !newMarkers.some((nm) => nm.id === m.id))
+
+  if (markersOutside.length > 0) {
+    // Show conflict dialog
+    affectedMarkers.value = markersOutside
+    pendingAreaChange.value = {
+      area,
+      type: 'drag',
+      newX: x,
+      newY: y,
+      oldX: area.center_x,
+      oldY: area.center_y,
+      oldRadius: area.radius,
+    }
+    areaConflictAction.value = 'move'
+    showAreaConflictDialog.value = true
+  } else {
+    // No conflicts - apply directly
+    applyAreaUpdate(area.id, { center_x: x, center_y: y })
+  }
+}
+
+// Apply area update via API
+async function applyAreaUpdate(areaId: number, updates: { center_x?: number; center_y?: number; radius?: number }) {
+  try {
+    await $fetch(`/api/maps/${selectedMap.value?.id}/areas/${areaId}`, {
+      method: 'PATCH',
+      body: updates,
+    })
+    await reloadMapData()
+  } catch (error) {
+    console.error('Failed to update area:', error)
+  }
+}
+
+// Cancel area change - revert visually
+function cancelAreaChange() {
+  showAreaConflictDialog.value = false
+  affectedMarkers.value = []
+  pendingAreaChange.value = null
+  // Reload to revert any visual changes
+  reloadMapData()
+}
+
+// Confirm area change based on selected action
+async function confirmAreaChange() {
+  if (!pendingAreaChange.value) return
+
+  applyingAreaChange.value = true
+  try {
+    const { area, type, newX, newY, newRadius, oldX, oldY, oldRadius } = pendingAreaChange.value
+
+    // Build area update based on change type
+    const areaUpdate: { center_x?: number; center_y?: number; radius?: number } = {}
+    if (type === 'drag' && newX !== undefined && newY !== undefined) {
+      areaUpdate.center_x = newX
+      areaUpdate.center_y = newY
+    } else if (type === 'resize' && newRadius !== undefined) {
+      areaUpdate.radius = newRadius
+    }
+
+    // Handle markers based on selected action
+    if (areaConflictAction.value === 'move') {
+      // Move markers with the area
+      const dx = (newX ?? oldX) - oldX
+      const dy = (newY ?? oldY) - oldY
+      const radiusScale = newRadius !== undefined ? newRadius / oldRadius : 1
+
+      for (const marker of affectedMarkers.value) {
+        // Calculate new position relative to area center
+        if (type === 'drag') {
+          // Move markers by the same delta
+          await $fetch(`/api/maps/${selectedMap.value?.id}/markers/${marker.id}`, {
+            method: 'PATCH',
+            body: {
+              x: marker.x + dx,
+              y: marker.y + dy,
+            },
+          })
+        } else if (type === 'resize') {
+          // Scale marker position relative to center
+          const relX = marker.x - oldX
+          const relY = marker.y - oldY
+          await $fetch(`/api/maps/${selectedMap.value?.id}/markers/${marker.id}`, {
+            method: 'PATCH',
+            body: {
+              x: oldX + relX * radiusScale,
+              y: oldY + relY * radiusScale,
+            },
+          })
+        }
+      }
+    } else if (areaConflictAction.value === 'remove') {
+      // Remove location_id from affected entities
+      for (const marker of affectedMarkers.value) {
+        await $fetch(`/api/entities/${marker.entity_id}/location`, {
+          method: 'PATCH',
+          body: { location_id: null },
+        })
+      }
+    }
+    // 'keep' action: do nothing with markers, just update area
+
+    // Apply area update
+    await applyAreaUpdate(area.id, areaUpdate)
+
+    showAreaConflictDialog.value = false
+    affectedMarkers.value = []
+    pendingAreaChange.value = null
+  } catch (error) {
+    console.error('Failed to apply area change:', error)
+  } finally {
+    applyingAreaChange.value = false
+  }
 }
 
 // Area event handlers
