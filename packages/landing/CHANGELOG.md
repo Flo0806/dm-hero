@@ -1,5 +1,15 @@
 # @dm-hero/landing
 
+## 1.0.0-alpha.5
+
+### Minor Changes
+
+- [`8505772`](https://github.com/Flo0806/dm-hero/commit/8505772a3a2ec1ffaf707bb9811ebeaf71b02794) Thanks [@Flo0806](https://github.com/Flo0806)! - feat: add Buy Me a Coffee support integration
+  - Add SupportSection with official BMC button
+  - Add BMC button to navbar (desktop + mobile)
+  - Add particle animation to docs pages
+  - Add detailed explanations for non-tech users (EN/DE)
+
 ## 1.0.0-alpha.4
 
 ### Minor Changes

@@ -10,6 +10,7 @@
     "better-sqlite3-fix",
     "bindings-fix",
     "keyboard-shortcut-display",
-    "landing-docs-update"
+    "landing-docs-update",
+    "landing-support-bmc"
   ]
 }
