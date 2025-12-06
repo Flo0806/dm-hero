@@ -1,5 +1,15 @@
 # @dm-hero/landing
 
+## 1.0.0-alpha.6
+
+### Patch Changes
+
+- [`5246de2`](https://github.com/Flo0806/dm-hero/commit/5246de261644323eff07e994b5edb36d9e44d57b) Thanks [@Flo0806](https://github.com/Flo0806)! - Add feedback section, screenshots gallery, and mobile fixes
+  - Add FeedbackSection linking to GitHub Discussions
+  - Add screenshot auto-detection (finds highest numbered version)
+  - Fix mobile padding on docs pages
+  - Add particle animation to docs pages
+
 ## 1.0.0-alpha.5
 
 ### Minor Changes
