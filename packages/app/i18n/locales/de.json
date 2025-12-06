@@ -306,7 +306,9 @@
       "contact": "Kontakt",
       "informant": "Informant",
       "debtor": "Schuldner",
-      "creditor": "Gläubiger"
+      "creditor": "Gläubiger",
+      "believesIn": "glaubt an",
+      "worships": "verehrt"
     },
     "incomingRelationTooltip": "Verknüpfung wurde vom anderen NPC erstellt",
     "items": "Items",
@@ -923,17 +925,18 @@
       "guards": "bewacht",
       "stole": "hat gestohlen",
       "lost": "hat verloren",
-      "stored": "lagert",
-      "uses": "benutzt",
-      "sells": "verkauft",
-      "crafted": "hat hergestellt",
+      "created": "hat erschaffen",
+      "destroyed": "hat zerstört",
+      "sold": "hat verkauft",
+      "bought": "hat gekauft",
+      "borrowed": "hat geliehen",
+      "lent": "hat verliehen",
+      "hides": "versteckt",
+      "inherited": "hat geerbt",
+      "gifted": "hat geschenkt",
+      "found": "hat gefunden",
       "enchanted": "hat verzaubert",
-      "inherited": "geerbt",
-      "found": "gefunden",
-      "bought": "gekauft",
-      "gifted": "geschenkt bekommen",
-      "loaned": "geliehen",
-      "hidden": "versteckt"
+      "repaired": "hat repariert"
     },
     "locations": "Orte",
     "locationsList": "Orte & Aufenthaltsorte",
@@ -1348,7 +1351,9 @@
       "met": "Begegnet",
       "heard_of": "Gehört von",
       "researched": "Erforscht",
-      "forgotten": "Vergessen"
+      "forgotten": "Vergessen",
+      "believesIn": "Glaubt an",
+      "worships": "Verehrt"
     },
     "itemRelationTypes": {
       "owns": "Besitzt",
@@ -1384,7 +1389,9 @@
       "met": "Begegnet",
       "heard_of": "Gehört von",
       "researched": "Erforscht",
-      "forgotten": "Vergessen"
+      "forgotten": "Vergessen",
+      "believesIn": "Glaubt an",
+      "worships": "Verehrt"
     }
   },
   "calendar": {

@@ -94,12 +94,14 @@ interface Props {
   emptyMessage: string
   showRelationType?: boolean
   clickable?: boolean
+  relationTypeTranslationPath?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   showRelationType: true,
   clickable: true,
+  relationTypeTranslationPath: undefined,
 })
 
 defineEmits<{
@@ -144,6 +146,13 @@ function getRarityColor(rarity: string): string {
 }
 
 function getRelationTypeLabel(relationType: string): string {
+  // If custom translation path is provided, try that first
+  if (props.relationTypeTranslationPath) {
+    const customKey = `${props.relationTypeTranslationPath}.${relationType}`
+    const customTranslated = t(customKey)
+    if (customTranslated !== customKey) return customTranslated
+  }
+
   // Try entity-specific translation first
   const entitySpecificKey = `${props.entityType}s.relationTypes.${relationType}`
   const translated = t(entitySpecificKey)

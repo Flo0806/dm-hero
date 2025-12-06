@@ -12,6 +12,8 @@ export const PLAYER_RELATION_TYPES = [
   'heard_of',
   'researched',
   'forgotten',
+  'believesIn',
+  'worships',
 ] as const
 
 export type PlayerRelationType = (typeof PLAYER_RELATION_TYPES)[number]

@@ -98,6 +98,8 @@ export const NPC_RELATION_TYPES = [
   'informant',
   'debtor',
   'creditor',
+  'believesIn',
+  'worships',
 ] as const
 
 export type NpcRelationType = (typeof NPC_RELATION_TYPES)[number]

@@ -35,9 +35,9 @@
           <v-icon start>mdi-information</v-icon>
           {{ $t('common.details') }}
         </v-tab>
-        <v-tab value="owners">
+        <v-tab value="npcs">
           <v-icon start>mdi-account-group</v-icon>
-          {{ $t('items.owners') }}
+          {{ $t('npcs.title') }}
           <v-chip size="x-small" class="ml-2">{{ counts?.owners || 0 }}</v-chip>
         </v-tab>
         <v-tab value="locations">
@@ -145,14 +145,15 @@
             </div>
           </v-window-item>
 
-          <!-- Owners Tab -->
-          <v-window-item value="owners">
+          <!-- NPCs Tab -->
+          <v-window-item value="npcs">
             <EntityRelationsList
               :entities="owners || []"
               :loading="loadingOwners"
               entity-type="npc"
               :empty-message="$t('items.noOwners')"
               :show-relation-type="true"
+              relation-type-translation-path="items.ownerRelationTypes"
               :clickable="false"
             />
           </v-window-item>

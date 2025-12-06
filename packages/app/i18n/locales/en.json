@@ -306,7 +306,9 @@
       "contact": "Contact",
       "informant": "Informant",
       "debtor": "Debtor",
-      "creditor": "Creditor"
+      "creditor": "Creditor",
+      "believesIn": "believes in",
+      "worships": "worships"
     },
     "incomingRelationTooltip": "Relation created by the other NPC",
     "items": "Items",
@@ -928,17 +930,18 @@
       "guards": "guards",
       "stole": "stole",
       "lost": "lost",
-      "stored": "stored",
-      "uses": "uses",
-      "sells": "sells",
-      "crafted": "crafted",
-      "enchanted": "enchanted",
-      "inherited": "inherited",
-      "found": "found",
+      "created": "created",
+      "destroyed": "destroyed",
+      "sold": "sold",
       "bought": "bought",
-      "gifted": "received as gift",
-      "loaned": "borrowed",
-      "hidden": "hidden"
+      "borrowed": "borrowed",
+      "lent": "lent",
+      "hides": "hides",
+      "inherited": "inherited",
+      "gifted": "gifted",
+      "found": "found",
+      "enchanted": "enchanted",
+      "repaired": "repaired"
     },
     "locations": "Locations",
     "locationsList": "Locations & Whereabouts",
@@ -1353,7 +1356,9 @@
       "met": "Met",
       "heard_of": "Heard of",
       "researched": "Researched",
-      "forgotten": "Forgotten"
+      "forgotten": "Forgotten",
+      "believesIn": "Believes in",
+      "worships": "Worships"
     },
     "itemRelationTypes": {
       "owns": "Owns",
@@ -1389,7 +1394,9 @@
       "forgot": "Forgot",
       "misunderstands": "Misunderstands",
       "teaches": "Teaches",
-      "studies": "Studies"
+      "studies": "Studies",
+      "believesIn": "Believes in",
+      "worships": "Worships"
     }
   },
   "calendar": {

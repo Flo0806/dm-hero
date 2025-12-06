@@ -37,9 +37,9 @@
           {{ $t('documents.title') }}
           <v-badge v-if="counts.documents > 0" :content="counts.documents" color="primary" inline class="ml-1" />
         </v-tab>
-        <v-tab value="owners">
+        <v-tab value="npcs">
           <v-icon start>mdi-account</v-icon>
-          {{ $t('items.owners') }}
+          {{ $t('npcs.title') }}
           <v-badge v-if="linkedOwners.length > 0" :content="linkedOwners.length" color="primary" inline class="ml-1" />
         </v-tab>
         <v-tab value="locations">
@@ -241,11 +241,11 @@
             />
           </v-tabs-window-item>
 
-          <!-- Owners Tab -->
-          <v-tabs-window-item value="owners">
-            <div class="mb-4">
+          <!-- NPCs Tab -->
+          <v-tabs-window-item value="npcs">
+            <div class="mb-4 mt-4">
               <v-row align="center">
-                <v-col cols="12" md="6">
+                <v-col cols="12" md="4">
                   <v-autocomplete
                     v-model="newOwner.npcId"
                     :items="availableOwners"
@@ -257,6 +257,16 @@
                   />
                 </v-col>
                 <v-col cols="12" md="4">
+                  <v-select
+                    v-model="newOwner.relationType"
+                    :items="npcRelationTypeOptions"
+                    :label="$t('items.ownerRelationType')"
+                    variant="outlined"
+                    item-title="title"
+                    item-value="value"
+                  />
+                </v-col>
+                <v-col cols="12" md="2">
                   <v-text-field
                     v-model.number="newOwner.quantity"
                     :label="$t('items.quantity')"
@@ -269,7 +279,7 @@
                   <v-btn
                     color="primary"
                     block
-                    :disabled="!newOwner.npcId || !newOwner.quantity"
+                    :disabled="!newOwner.npcId || !newOwner.relationType"
                     :loading="addingOwner"
                     @click="addOwner"
                   >
@@ -301,7 +311,12 @@
 
                 <v-list-item-title>{{ owner.name }}</v-list-item-title>
                 <v-list-item-subtitle>
-                  {{ $t('items.quantity') }}: {{ owner.quantity ?? 1 }}
+                  <v-chip size="small" color="primary" variant="outlined" class="mr-2">
+                    {{ $t(`items.ownerRelationTypes.${owner.relation_type}`, owner.relation_type) }}
+                  </v-chip>
+                  <span v-if="owner.quantity && owner.quantity > 1">
+                    {{ $t('items.quantity') }}: {{ owner.quantity }}
+                  </span>
                   <span v-if="owner.equipped" class="ml-2">| {{ $t('items.equipped') }}</span>
                 </v-list-item-subtitle>
 
@@ -560,6 +575,7 @@
 <script setup lang="ts">
 import type { Item, ItemMetadata } from '~~/types/item'
 import { ITEM_TYPES, ITEM_RARITIES } from '~~/types/item'
+import { NPC_ITEM_RELATION_TYPES } from '~~/types/npc'
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityImageUpload from '~/components/shared/EntityImageUpload.vue'
@@ -580,6 +596,7 @@ interface LinkedOwner {
   name: string
   description?: string | null
   image_url?: string | null
+  relation_type: string
   quantity?: number | null
   equipped?: boolean | null
 }
@@ -629,6 +646,7 @@ interface ApiRelatedEntity {
   name: string
   description: string | null
   image_url: string | null
+  relation_type: string
   notes: { quantity?: number; equipped?: boolean } | null
   direction: 'outgoing' | 'incoming'
 }
@@ -742,7 +760,15 @@ const availableLore = computed(() => {
 })
 
 // New relation forms
-const newOwner = ref({ npcId: null as number | null, quantity: 1 })
+const newOwner = ref({ npcId: null as number | null, relationType: 'owns' as string, quantity: 1 })
+
+// Computed: NPC relation type options for dropdown
+const npcRelationTypeOptions = computed(() =>
+  NPC_ITEM_RELATION_TYPES.map((type) => ({
+    value: type,
+    title: t(`items.ownerRelationTypes.${type}`, type),
+  })),
+)
 const newLocation = ref({ locationId: null as number | null, quantity: 1 })
 const newFaction = ref({ factionId: null as number | null })
 
@@ -875,6 +901,7 @@ async function loadRelations(itemId: number) {
       name: o.name,
       description: o.description,
       image_url: o.image_url,
+      relation_type: o.relation_type || 'owns',
       quantity: o.notes?.quantity,
       equipped: o.notes?.equipped,
     }))
@@ -942,7 +969,7 @@ function resetForm() {
   linkedLocations.value = []
   linkedFactions.value = []
   linkedLore.value = []
-  newOwner.value = { npcId: null, quantity: 1 }
+  newOwner.value = { npcId: null, relationType: 'owns', quantity: 1 }
   newLocation.value = { locationId: null, quantity: 1 }
   newFaction.value = { factionId: null }
 }
@@ -1110,7 +1137,7 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
 // Relation Management - Owners
 // ============================================================================
 async function addOwner() {
-  if (!item.value || !newOwner.value.npcId) return
+  if (!item.value || !newOwner.value.npcId || !newOwner.value.relationType) return
 
   addingOwner.value = true
   try {
@@ -1119,7 +1146,7 @@ async function addOwner() {
       body: {
         fromEntityId: newOwner.value.npcId,
         toEntityId: item.value.id,
-        relationType: 'owns',
+        relationType: newOwner.value.relationType,
         notes: { quantity: newOwner.value.quantity },
       },
     })
@@ -1132,11 +1159,12 @@ async function addOwner() {
         name: npc.name,
         description: npc.description,
         image_url: npc.image_url || null,
+        relation_type: newOwner.value.relationType,
         quantity: newOwner.value.quantity,
       })
     }
 
-    newOwner.value = { npcId: null, quantity: 1 }
+    newOwner.value = { npcId: null, relationType: 'owns', quantity: 1 }
   } catch (e) {
     console.error('[ItemEditDialog] Failed to add owner:', e)
   } finally {
