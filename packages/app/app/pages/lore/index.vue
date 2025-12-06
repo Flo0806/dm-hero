@@ -124,6 +124,15 @@
 
     <!-- Image Preview Dialog -->
     <ImagePreviewDialog v-model="showImagePreview" :image-url="previewImageUrl" :title="previewImageName" />
+
+    <!-- Floating Action Button -->
+    <v-btn
+      color="primary"
+      icon="mdi-plus"
+      size="large"
+      class="fab-create"
+      @click="openCreateDialog"
+    />
   </v-container>
 </template>
 
@@ -420,5 +429,13 @@ function handlePreviewImage(imageUrl: string, title: string) {
   50% {
     box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.8);
   }
+}
+
+/* Floating Action Button */
+.fab-create {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
 }
 </style>

@@ -145,6 +145,15 @@
         @cancel="showDeleteDialog = false"
       />
     </ClientOnly>
+
+    <!-- Floating Action Button -->
+    <v-btn
+      color="primary"
+      icon="mdi-plus"
+      size="large"
+      class="fab-create"
+      @click="openCreateDialog"
+    />
   </v-container>
 </template>
 
@@ -598,5 +607,13 @@ async function confirmDelete() {
   50% {
     box-shadow: 0 0 20px 5px rgb(var(--v-theme-primary));
   }
+}
+
+/* Floating Action Button */
+.fab-create {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
 }
 </style>

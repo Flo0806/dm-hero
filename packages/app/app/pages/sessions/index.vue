@@ -576,6 +576,15 @@
       :image-url="previewImageUrl"
       :title="previewImageTitle"
     />
+
+    <!-- Floating Action Button -->
+    <v-btn
+      color="primary"
+      icon="mdi-plus"
+      size="large"
+      class="fab-create"
+      @click="showCreateDialog = true"
+    />
   </v-container>
 </template>
 
@@ -1224,6 +1233,14 @@ function closeDialog() {
 
 .image-card {
   cursor: pointer;
+}
+
+/* Floating Action Button */
+.fab-create {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
 }
 </style>
 >
