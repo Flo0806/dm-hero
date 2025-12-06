@@ -34,6 +34,7 @@ export default defineEventHandler((event) => {
       e.description,
       e.image_url,
       e.metadata,
+      e.parent_entity_id,
       e.created_at,
       e.updated_at
     FROM entities e
@@ -58,6 +59,7 @@ export default defineEventHandler((event) => {
     name: location.name,
     description: location.description,
     image_url: location.image_url,
+    parent_entity_id: location.parent_entity_id,
     created_at: location.created_at,
     updated_at: location.updated_at,
     metadata,
