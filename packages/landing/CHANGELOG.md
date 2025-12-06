@@ -1,5 +1,17 @@
 # @dm-hero/landing
 
+## 1.0.0-alpha.4
+
+### Minor Changes
+
+- [#79](https://github.com/Flo0806/dm-hero/pull/79) [`3f8f188`](https://github.com/Flo0806/dm-hero/commit/3f8f188ea68d475f3acefe1d44be6a512ccc748d) Thanks [@Flo0806](https://github.com/Flo0806)! - feat(docs): add comprehensive documentation section
+  - Add documentation pages with Nuxt Content
+  - Include Getting Started, Features, and Entities guides
+  - Support both German and English locales
+  - Filter docs by current locale
+  - Add DM Hero logo
+  - Simplify content configuration
+
 ## 1.0.0-alpha.3
 
 ### Patch Changes
