@@ -1,5 +1,13 @@
 # @dm-hero/app
 
+## 1.0.0-alpha.18
+
+### Patch Changes
+
+- [#85](https://github.com/Flo0806/dm-hero/pull/85) [`107c2c9`](https://github.com/Flo0806/dm-hero/commit/107c2c90213a84ae6d9c9dfa81d49bde2ef36654) Thanks [@Flo0806](https://github.com/Flo0806)! - fix: update NPC relation counts when deleting an NPC
+
+  When an NPC is deleted, all other NPCs that had relations to it now have their relation counts decremented automatically. This ensures the relation count badges on NPC cards stay accurate without requiring a page refresh.
+
 ## 1.0.0-alpha.17
 
 ### Minor Changes
