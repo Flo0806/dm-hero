@@ -1586,7 +1586,42 @@
     "goingBackInTime": "Warning: You are going back in time!",
     "goingBackInTimeHint": "The selected date is before the current in-game date. Are you sure?",
     "confirmSetAsToday": "Set as Today",
-    "todaySet": "In-game date updated"
+    "todaySet": "In-game date updated",
+    "weather": {
+      "title": "Weather",
+      "generate": "Generate Weather",
+      "generateMonth": "Generate Weather for Month",
+      "generateHint": "Generates random weather based on seasons",
+      "overwrite": "Overwrite existing",
+      "overwriteHint": "Overwrites already entered weather",
+      "temperature": "Temperature",
+      "notes": "Notes",
+      "noWeather": "No weather entered",
+      "editWeather": "Edit Weather",
+      "clearWeather": "Remove Weather",
+      "generated": "{count} days of weather generated",
+      "types": {
+        "sunny": "Sunny",
+        "partlyCloudy": "Partly Cloudy",
+        "cloudy": "Cloudy",
+        "rain": "Rain",
+        "heavyRain": "Heavy Rain",
+        "thunderstorm": "Thunderstorm",
+        "snow": "Snow",
+        "heavySnow": "Heavy Snow",
+        "fog": "Fog",
+        "windy": "Windy",
+        "hail": "Hail"
+      }
+    },
+    "seasonWeatherType": "Weather Type",
+    "seasonWeatherTypeHint": "Determines what weather will be generated for this season",
+    "seasonWeatherTypes": {
+      "winter": "Winter (cold, snow)",
+      "spring": "Spring (mild, rain)",
+      "summer": "Summer (warm, sunny)",
+      "autumn": "Autumn (cool, foggy)"
+    }
   },
   "chaos": {
     "title": "Chaos Graph",

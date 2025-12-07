@@ -9,6 +9,7 @@ interface SeasonInput {
   color?: string | null
   icon?: string | null
   sortOrder?: number
+  weatherType?: string // 'winter' | 'spring' | 'summer' | 'autumn'
 }
 
 export default defineEventHandler(async (event) => {
@@ -25,8 +26,8 @@ export default defineEventHandler(async (event) => {
   const result = db
     .prepare(
       `
-    INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, background_image, color, icon, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, background_image, color, icon, sort_order, weather_type)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     )
     .run(
@@ -38,6 +39,7 @@ export default defineEventHandler(async (event) => {
       body.color || null,
       body.icon || null,
       body.sortOrder ?? 0,
+      body.weatherType || 'summer',
     )
 
   return {

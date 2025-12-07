@@ -16,6 +16,14 @@
             </v-chip>
           </v-btn>
         </v-btn-toggle>
+        <v-btn
+          variant="tonal"
+          prepend-icon="mdi-weather-cloudy"
+          :loading="generatingWeather"
+          @click="generateWeatherForMonth"
+        >
+          {{ $t('calendar.weather.generate') }}
+        </v-btn>
         <v-btn variant="tonal" prepend-icon="mdi-cog" @click="openSettingsDialog">
           {{ $t('calendar.settings') }}
         </v-btn>
@@ -122,16 +130,37 @@
             >
               <div class="d-flex justify-space-between align-start">
                 <div class="day-number">{{ day }}</div>
-                <div v-if="calendarConfig.moons.length > 0" class="moon-phase">
-                  <v-icon
-                    v-for="moonPhase in getMoonPhasesForDay(day)"
-                    :key="moonPhase.name"
-                    size="14"
-                    :color="getMoonColor(moonPhase.name)"
-                    :title="moonPhase.name + ': ' + moonPhase.phase"
-                  >
-                    {{ getMoonIconForPhase(moonPhase.phaseIndex) }}
-                  </v-icon>
+                <div class="d-flex align-center ga-1">
+                  <!-- Weather Icon -->
+                  <v-tooltip v-if="getWeatherForDay(day)" location="top">
+                    <template #activator="{ props: weatherProps }">
+                      <v-icon
+                        v-bind="weatherProps"
+                        size="16"
+                        :color="getWeatherForDay(day)?.weather_type === 'sunny' ? 'amber' : 'blue-grey'"
+                      >
+                        {{ getWeatherIcon(getWeatherForDay(day)!.weather_type) }}
+                      </v-icon>
+                    </template>
+                    <div>
+                      {{ $t('calendar.weather.types.' + getWeatherForDay(day)!.weather_type) }}
+                      <span v-if="getWeatherForDay(day)!.temperature !== null">
+                        ({{ getWeatherForDay(day)!.temperature }}°C)
+                      </span>
+                    </div>
+                  </v-tooltip>
+                  <!-- Moon Phases -->
+                  <div v-if="calendarConfig.moons.length > 0" class="moon-phase">
+                    <v-icon
+                      v-for="moonPhase in getMoonPhasesForDay(day)"
+                      :key="moonPhase.name"
+                      size="14"
+                      :color="getMoonColor(moonPhase.name)"
+                      :title="moonPhase.name + ': ' + moonPhase.phase"
+                    >
+                      {{ getMoonIconForPhase(moonPhase.phaseIndex) }}
+                    </v-icon>
+                  </div>
                 </div>
               </div>
 
@@ -244,6 +273,38 @@
             <v-chip v-if="isSelectedDayToday" color="primary" size="small">
               {{ $t('calendar.today') }}
             </v-chip>
+            <!-- Weather chip for selected day (clickable to edit) -->
+            <v-tooltip location="top">
+              <template #activator="{ props: weatherTooltipProps }">
+                <v-chip
+                  v-if="selectedDay && getWeatherForDay(selectedDay)"
+                  v-bind="weatherTooltipProps"
+                  size="small"
+                  :color="getWeatherForDay(selectedDay)?.weather_type === 'sunny' ? 'amber' : 'blue-grey'"
+                  variant="tonal"
+                  class="cursor-pointer"
+                  @click="openWeatherDialog(selectedDay)"
+                >
+                  <v-icon start size="16">{{ getWeatherIcon(getWeatherForDay(selectedDay)!.weather_type) }}</v-icon>
+                  {{ $t('calendar.weather.types.' + getWeatherForDay(selectedDay)!.weather_type) }}
+                  <span v-if="getWeatherForDay(selectedDay)!.temperature !== null" class="ml-1">
+                    ({{ getWeatherForDay(selectedDay)!.temperature }}°C)
+                  </span>
+                </v-chip>
+                <v-chip
+                  v-else-if="selectedDay"
+                  v-bind="weatherTooltipProps"
+                  size="small"
+                  variant="outlined"
+                  class="cursor-pointer"
+                  @click="openWeatherDialog(selectedDay)"
+                >
+                  <v-icon start size="16">mdi-weather-cloudy</v-icon>
+                  {{ $t('calendar.weather.noWeather') }}
+                </v-chip>
+              </template>
+              {{ $t('calendar.weather.editWeather') }}
+            </v-tooltip>
           </div>
           <div class="d-flex ga-2">
             <v-btn
@@ -535,6 +596,19 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Weather Edit Dialog -->
+    <CalendarWeatherDialog
+      v-model:show="showWeatherDialog"
+      :campaign-id="campaignStore.activeCampaignId || 0"
+      :year="viewYear"
+      :month="viewMonth"
+      :day="weatherDialogDay || 1"
+      :month-name="currentMonthName"
+      :weather="weatherDialogDay ? getWeatherForDay(weatherDialogDay) : null"
+      @saved="onWeatherSaved"
+      @cleared="onWeatherCleared"
+    />
   </div>
 </template>
 
@@ -640,6 +714,22 @@ const calendarConfig = ref<CalendarConfig>({
 const events = ref<CalendarEvent[]>([])
 const sessions = ref<CalendarSession[]>([])
 const seasons = ref<CalendarSeason[]>([])
+
+// Weather
+interface CalendarWeather {
+  id: number
+  campaign_id: number
+  year: number
+  month: number
+  day: number
+  weather_type: string
+  temperature: number | null
+  notes: string | null
+}
+const weather = ref<Map<number, CalendarWeather>>(new Map()) // day -> weather
+const generatingWeather = ref(false)
+const showWeatherDialog = ref(false)
+const weatherDialogDay = ref<number | null>(null)
 const editingSeasons = ref<CalendarSeason[]>([])
 const showSessions = ref(true) // Toggle for session visibility
 const viewYear = ref(1)
@@ -1123,6 +1213,7 @@ function prevMonth() {
   }
   selectedDay.value = null
   loadEvents()
+  loadWeather()
 }
 
 function nextMonth() {
@@ -1134,16 +1225,19 @@ function nextMonth() {
   }
   selectedDay.value = null
   loadEvents()
+  loadWeather()
 }
 
 function prevYear() {
   viewYear.value--
   loadEvents()
+  loadWeather()
 }
 
 function nextYear() {
   viewYear.value++
   loadEvents()
+  loadWeather()
 }
 
 // Advance the current date by one day
@@ -1345,6 +1439,7 @@ async function saveSeasons() {
           startMonth: season.start_month,
           startDay: season.start_day,
           backgroundImage: season.background_image,
+          weatherType: season.weather_type,
           sortOrder: i,
         },
       })
@@ -1358,6 +1453,7 @@ async function saveSeasons() {
           startMonth: season.start_month,
           startDay: season.start_day,
           backgroundImage: season.background_image,
+          weatherType: season.weather_type,
           sortOrder: i,
         },
       })
@@ -1554,9 +1650,97 @@ async function loadSeasons() {
   }
 }
 
+async function loadWeather() {
+  if (!campaignStore.activeCampaignId) return
+  try {
+    const data = await $fetch<CalendarWeather[]>('/api/calendar/weather', {
+      query: {
+        campaignId: campaignStore.activeCampaignId,
+        year: viewYear.value,
+        month: viewMonth.value,
+      },
+    })
+    // Convert to map for efficient lookup
+    weather.value = new Map(data.map((w) => [w.day, w]))
+  } catch (error) {
+    console.error('Failed to load weather:', error)
+  }
+}
+
+// Get weather icon for weather type
+function getWeatherIcon(type: string): string {
+  const icons: Record<string, string> = {
+    sunny: 'mdi-weather-sunny',
+    partlyCloudy: 'mdi-weather-partly-cloudy',
+    cloudy: 'mdi-weather-cloudy',
+    rain: 'mdi-weather-rainy',
+    heavyRain: 'mdi-weather-pouring',
+    thunderstorm: 'mdi-weather-lightning-rainy',
+    snow: 'mdi-weather-snowy',
+    heavySnow: 'mdi-weather-snowy-heavy',
+    fog: 'mdi-weather-fog',
+    windy: 'mdi-weather-windy',
+    hail: 'mdi-weather-hail',
+  }
+  return icons[type] || 'mdi-weather-cloudy'
+}
+
+// Get weather for a specific day
+function getWeatherForDay(day: number): CalendarWeather | undefined {
+  return weather.value.get(day)
+}
+
+// Open weather edit dialog for a specific day
+function openWeatherDialog(day: number) {
+  weatherDialogDay.value = day
+  showWeatherDialog.value = true
+}
+
+// Handle weather saved from dialog
+function onWeatherSaved(savedWeather: CalendarWeather) {
+  weather.value.set(savedWeather.day, savedWeather)
+}
+
+// Handle weather cleared from dialog
+function onWeatherCleared() {
+  if (weatherDialogDay.value) {
+    weather.value.delete(weatherDialogDay.value)
+  }
+}
+
+// Generate weather for the current month
+async function generateWeatherForMonth() {
+  if (!campaignStore.activeCampaignId) return
+
+  generatingWeather.value = true
+  try {
+    const result = await $fetch<{ generated: number; weather: CalendarWeather[] }>('/api/calendar/weather/generate', {
+      method: 'POST',
+      body: {
+        campaignId: campaignStore.activeCampaignId,
+        year: viewYear.value,
+        month: viewMonth.value,
+        overwrite: false, // Don't overwrite existing
+      },
+    })
+    // Update weather map
+    for (const w of result.weather) {
+      weather.value.set(w.day, w)
+    }
+    if (result.generated > 0) {
+      snackbarStore.success(t('calendar.weather.generated', { count: result.generated }))
+    }
+  } catch (error) {
+    console.error('Failed to generate weather:', error)
+    snackbarStore.error(String(error))
+  } finally {
+    generatingWeather.value = false
+  }
+}
+
 onMounted(async () => {
   await loadConfig()
-  await Promise.all([loadEvents(), loadSessions(), loadEntities(), loadSeasons()])
+  await Promise.all([loadEvents(), loadSessions(), loadEntities(), loadSeasons(), loadWeather()])
 })
 </script>
 
@@ -1750,5 +1934,9 @@ onMounted(async () => {
 .event-more {
   padding: 2px 4px;
   text-align: center;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

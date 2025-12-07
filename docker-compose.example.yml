@@ -1,0 +1,17 @@
+services:
+  dm-hero:
+    image: ghcr.io/flo0806/dm-hero:latest
+    container_name: dm-hero
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist database and uploaded files
+      - dm-hero-data:/app/data
+    environment:
+      # Optional: Set timezone
+      - TZ=Europe/Berlin
+    restart: unless-stopped
+
+volumes:
+  dm-hero-data:
+    driver: local

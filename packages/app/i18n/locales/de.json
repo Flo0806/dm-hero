@@ -1581,7 +1581,42 @@
     "goingBackInTime": "Achtung: Du setzt in die Vergangenheit!",
     "goingBackInTimeHint": "Das ausgewählte Datum liegt vor dem aktuellen In-Game-Datum. Bist du sicher?",
     "confirmSetAsToday": "Als Heute setzen",
-    "todaySet": "In-Game-Datum wurde aktualisiert"
+    "todaySet": "In-Game-Datum wurde aktualisiert",
+    "weather": {
+      "title": "Wetter",
+      "generate": "Wetter generieren",
+      "generateMonth": "Wetter für Monat generieren",
+      "generateHint": "Generiert zufälliges Wetter basierend auf Jahreszeiten",
+      "overwrite": "Bestehendes überschreiben",
+      "overwriteHint": "Überschreibt bereits eingetragenes Wetter",
+      "temperature": "Temperatur",
+      "notes": "Notizen",
+      "noWeather": "Kein Wetter eingetragen",
+      "editWeather": "Wetter bearbeiten",
+      "clearWeather": "Wetter entfernen",
+      "generated": "{count} Tage Wetter generiert",
+      "types": {
+        "sunny": "Sonnig",
+        "partlyCloudy": "Teilweise bewölkt",
+        "cloudy": "Bewölkt",
+        "rain": "Regen",
+        "heavyRain": "Starkregen",
+        "thunderstorm": "Gewitter",
+        "snow": "Schnee",
+        "heavySnow": "Starker Schneefall",
+        "fog": "Nebel",
+        "windy": "Windig",
+        "hail": "Hagel"
+      }
+    },
+    "seasonWeatherType": "Wetter-Typ",
+    "seasonWeatherTypeHint": "Bestimmt welches Wetter in dieser Jahreszeit generiert wird",
+    "seasonWeatherTypes": {
+      "winter": "Winter (kalt, Schnee)",
+      "spring": "Frühling (mild, Regen)",
+      "summer": "Sommer (warm, sonnig)",
+      "autumn": "Herbst (kühl, nebelig)"
+    }
   },
   "chaos": {
     "title": "Chaos-Graph",

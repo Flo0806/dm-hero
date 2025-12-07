@@ -8,6 +8,7 @@ interface SeasonInput {
   color?: string | null
   icon?: string | null
   sortOrder?: number
+  weatherType?: string // 'winter' | 'spring' | 'summer' | 'autumn'
 }
 
 export default defineEventHandler(async (event) => {
@@ -52,6 +53,10 @@ export default defineEventHandler(async (event) => {
   if (body.sortOrder !== undefined) {
     updates.push('sort_order = ?')
     values.push(body.sortOrder)
+  }
+  if (body.weatherType !== undefined) {
+    updates.push('weather_type = ?')
+    values.push(body.weatherType)
   }
 
   if (updates.length === 0) {

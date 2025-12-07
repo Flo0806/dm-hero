@@ -1647,6 +1647,75 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 30: Calendar seasons and multi-entity events')
     },
   },
+  {
+    version: 31,
+    name: 'Calendar weather system',
+    up: (db: Database.Database) => {
+      // Create calendar_weather table for daily weather data
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS calendar_weather (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          year INTEGER NOT NULL,
+          month INTEGER NOT NULL,
+          day INTEGER NOT NULL,
+          weather_type TEXT NOT NULL,
+          temperature INTEGER,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          UNIQUE(campaign_id, year, month, day)
+        )
+      `)
+
+      // Create index for efficient weather lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_calendar_weather_campaign_date
+        ON calendar_weather(campaign_id, year, month, day)
+      `)
+
+      console.log('✅ Migration 31: Calendar weather system')
+    },
+  },
+  {
+    version: 32,
+    name: 'Add weather_type to calendar_seasons',
+    up: (db: Database.Database) => {
+      // Add weather_type column to calendar_seasons
+      // Values: 'winter', 'spring', 'summer', 'autumn'
+      db.exec(`
+        ALTER TABLE calendar_seasons ADD COLUMN weather_type TEXT DEFAULT 'summer'
+      `)
+
+      // Try to auto-detect weather type from existing season names
+      const seasons = db.prepare('SELECT id, name FROM calendar_seasons').all() as Array<{
+        id: number
+        name: string
+      }>
+
+      const updateStmt = db.prepare('UPDATE calendar_seasons SET weather_type = ? WHERE id = ?')
+
+      for (const season of seasons) {
+        const name = season.name.toLowerCase()
+        let weatherType = 'summer' // default
+
+        if (name.includes('winter') || name.includes('kalt')) {
+          weatherType = 'winter'
+        } else if (name.includes('spring') || name.includes('früh') || name.includes('lenz')) {
+          weatherType = 'spring'
+        } else if (name.includes('summer') || name.includes('sommer')) {
+          weatherType = 'summer'
+        } else if (name.includes('autumn') || name.includes('herbst') || name.includes('fall')) {
+          weatherType = 'autumn'
+        }
+
+        updateStmt.run(weatherType, season.id)
+      }
+
+      console.log('✅ Migration 32: Added weather_type to calendar_seasons')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

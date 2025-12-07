@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="modelValue" max-width="900" scrollable>
+  <v-dialog v-model="modelValue" max-width="1100" scrollable>
     <v-card>
       <v-card-title>{{ $t('calendar.settings') }}</v-card-title>
       <v-card-text style="max-height: 70vh">
@@ -174,91 +174,121 @@
               {{ $t('calendar.seasonsHint') }}
             </v-alert>
 
-            <v-table>
-              <thead>
-                <tr>
-                  <th>{{ $t('calendar.seasonName') }}</th>
-                  <th>{{ $t('calendar.seasonStart') }}</th>
-                  <th>{{ $t('calendar.seasonBackground') }}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(season, index) in seasons" :key="season.id || index">
-                  <td>
-                    <v-text-field
-                      v-model="season.name"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                      style="min-width: 150px"
-                    />
-                  </td>
-                  <td>
-                    <div class="d-flex ga-2 align-center">
-                      <v-select
-                        v-model="season.start_month"
-                        :items="monthOptions"
-                        density="compact"
-                        hide-details
-                        variant="outlined"
-                        style="min-width: 140px"
-                      />
-                      <v-text-field
-                        v-model.number="season.start_day"
-                        type="number"
-                        density="compact"
-                        hide-details
-                        variant="outlined"
-                        style="max-width: 80px"
-                        :min="1"
-                        :max="getMaxDaysForMonth(season.start_month)"
-                      />
-                    </div>
-                  </td>
-                  <td>
+            <!-- Season Cards -->
+            <div class="d-flex flex-column ga-3">
+              <v-card
+                v-for="(season, index) in seasons"
+                :key="season.id || index"
+                variant="outlined"
+                class="pa-3"
+              >
+                <div class="d-flex align-center ga-3">
+                  <!-- Season Name -->
+                  <v-text-field
+                    v-model="season.name"
+                    :label="$t('calendar.seasonName')"
+                    density="compact"
+                    hide-details
+                    variant="outlined"
+                    style="flex: 1; min-width: 150px"
+                  />
+
+                  <!-- Start Date -->
+                  <div class="d-flex ga-2 align-center">
                     <v-select
-                      v-model="season.background_image"
-                      :items="backgroundOptions"
+                      v-model="season.start_month"
+                      :label="$t('calendar.month')"
+                      :items="monthOptions"
                       density="compact"
                       hide-details
                       variant="outlined"
-                      style="min-width: 160px"
-                      clearable
-                    >
-                      <template #selection="{ item }">
-                        <div class="d-flex align-center ga-2">
-                          <v-avatar v-if="item.value" size="24" rounded="sm">
+                      style="width: 160px"
+                    />
+                    <v-text-field
+                      v-model.number="season.start_day"
+                      :label="$t('calendar.day')"
+                      type="number"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      style="width: 80px"
+                      :min="1"
+                      :max="getMaxDaysForMonth(season.start_month)"
+                    />
+                  </div>
+
+                  <!-- Weather Type -->
+                  <v-select
+                    v-model="season.weather_type"
+                    :label="$t('calendar.seasonWeatherType')"
+                    :items="weatherTypeOptions"
+                    density="compact"
+                    hide-details
+                    variant="outlined"
+                    style="width: 200px"
+                  >
+                    <template #selection="{ item }">
+                      <div class="d-flex align-center ga-2">
+                        <v-icon size="18" :color="getWeatherTypeColor(item.value)">
+                          {{ getWeatherTypeIcon(item.value) }}
+                        </v-icon>
+                        <span>{{ item.title }}</span>
+                      </div>
+                    </template>
+                    <template #item="{ item, props: itemProps }">
+                      <v-list-item v-bind="itemProps">
+                        <template #prepend>
+                          <v-icon :color="getWeatherTypeColor(item.value)" class="mr-2">
+                            {{ getWeatherTypeIcon(item.value) }}
+                          </v-icon>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
+
+                  <!-- Background Image -->
+                  <v-select
+                    v-model="season.background_image"
+                    :label="$t('calendar.seasonBackground')"
+                    :items="backgroundOptions"
+                    density="compact"
+                    hide-details
+                    variant="outlined"
+                    style="width: 180px"
+                    clearable
+                  >
+                    <template #selection="{ item }">
+                      <div class="d-flex align-center ga-2">
+                        <v-avatar v-if="item.value" size="20" rounded="sm">
+                          <v-img :src="item.value" />
+                        </v-avatar>
+                        <span>{{ item.title }}</span>
+                      </div>
+                    </template>
+                    <template #item="{ item, props: itemProps }">
+                      <v-list-item v-bind="itemProps">
+                        <template #prepend>
+                          <v-avatar v-if="item.value" size="28" rounded="sm" class="mr-2">
                             <v-img :src="item.value" />
                           </v-avatar>
-                          <span>{{ item.title }}</span>
-                        </div>
-                      </template>
-                      <template #item="{ item, props: itemProps }">
-                        <v-list-item v-bind="itemProps">
-                          <template #prepend>
-                            <v-avatar v-if="item.value" size="32" rounded="sm" class="mr-2">
-                              <v-img :src="item.value" />
-                            </v-avatar>
-                          </template>
-                        </v-list-item>
-                      </template>
-                    </v-select>
-                  </td>
-                  <td>
-                    <v-btn
-                      icon="mdi-delete"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click="removeSeason(index)"
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </v-table>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
 
-            <v-btn class="mt-2" variant="tonal" @click="addSeason">
+                  <!-- Delete Button -->
+                  <v-btn
+                    icon="mdi-delete"
+                    variant="text"
+                    size="small"
+                    color="error"
+                    @click="removeSeason(index)"
+                  />
+                </div>
+              </v-card>
+            </div>
+
+            <v-btn class="mt-4" variant="tonal" @click="addSeason">
               <v-icon start>mdi-plus</v-icon>
               {{ $t('calendar.addSeason') }}
             </v-btn>
@@ -521,6 +551,33 @@ const backgroundOptions = computed(() => [
   { title: t('calendar.seasonBackgrounds.winter'), value: '/images/seasons/winter.png' },
 ])
 
+const weatherTypeOptions = computed(() => [
+  { title: t('calendar.seasonWeatherTypes.winter'), value: 'winter' },
+  { title: t('calendar.seasonWeatherTypes.spring'), value: 'spring' },
+  { title: t('calendar.seasonWeatherTypes.summer'), value: 'summer' },
+  { title: t('calendar.seasonWeatherTypes.autumn'), value: 'autumn' },
+])
+
+function getWeatherTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    winter: 'mdi-snowflake',
+    spring: 'mdi-flower',
+    summer: 'mdi-white-balance-sunny',
+    autumn: 'mdi-leaf',
+  }
+  return icons[type] || 'mdi-weather-cloudy'
+}
+
+function getWeatherTypeColor(type: string): string {
+  const colors: Record<string, string> = {
+    winter: 'blue',
+    spring: 'green',
+    summer: 'amber',
+    autumn: 'orange',
+  }
+  return colors[type] || 'grey'
+}
+
 function getMaxDaysForMonth(monthNumber: number): number {
   const month = form.value.months[monthNumber - 1]
   return month?.days || 30
@@ -537,6 +594,7 @@ function addSeason() {
     color: null,
     icon: null,
     sort_order: seasons.value.length,
+    weather_type: 'summer', // Default weather type
     created_at: '',
     updated_at: '',
   }

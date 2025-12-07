@@ -1,5 +1,7 @@
 // Calendar types
 
+export type WeatherType = 'winter' | 'spring' | 'summer' | 'autumn'
+
 export interface CalendarSeason {
   id: number
   campaign_id: number
@@ -10,6 +12,7 @@ export interface CalendarSeason {
   color: string | null
   icon: string | null
   sort_order: number
+  weather_type: WeatherType
   created_at: string
   updated_at: string
 }
@@ -22,6 +25,7 @@ export interface CreateSeasonPayload {
   color?: string | null
   icon?: string | null
   sort_order?: number
+  weather_type?: WeatherType
 }
 
 export interface UpdateSeasonPayload {
@@ -32,6 +36,7 @@ export interface UpdateSeasonPayload {
   color?: string | null
   icon?: string | null
   sort_order?: number
+  weather_type?: WeatherType
 }
 
 // Calendar event entity linking
