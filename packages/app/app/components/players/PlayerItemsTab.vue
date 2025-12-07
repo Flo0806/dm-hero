@@ -10,7 +10,7 @@
             <v-img :src="`/uploads/${item.image_url}`" />
           </v-avatar>
           <v-avatar v-else size="48" rounded="lg" class="mr-3" color="surface-variant">
-            <v-icon icon="mdi-sword" />
+            <v-icon :icon="getItemTypeIcon(item.metadata?.type)" />
           </v-avatar>
         </template>
         <v-list-item-title>{{ item.name }}</v-list-item-title>
@@ -143,6 +143,7 @@ import { NPC_ITEM_RELATION_TYPES } from '~~/types/npc'
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const { getItemTypeIcon } = useEntityIcons()
 
 interface PlayerItem {
   relation_id: number
@@ -152,6 +153,7 @@ interface PlayerItem {
   image_url: string | null
   relation_type: string
   notes: string | null
+  metadata?: { type?: string | null; [key: string]: unknown } | null
 }
 
 interface Props {
@@ -244,15 +246,22 @@ async function loadItems() {
       }>
     >(`/api/entities/${props.entityId}/related/items`)
 
-    items.value = relations.map((rel) => ({
-      relation_id: rel.id,
-      id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
-      name: rel.name,
-      description: rel.description,
-      image_url: rel.image_url,
-      relation_type: rel.relation_type || 'owns',
-      notes: getNotesText(rel.notes),
-    }))
+    items.value = relations.map((rel) => {
+      // Get metadata from store if available
+      const itemFromStore = entitiesStore.items?.find(
+        (i) => i.id === (rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id),
+      )
+      return {
+        relation_id: rel.id,
+        id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
+        name: rel.name,
+        description: rel.description,
+        image_url: rel.image_url,
+        relation_type: rel.relation_type || 'owns',
+        notes: getNotesText(rel.notes),
+        metadata: itemFromStore?.metadata || null,
+      }
+    })
   } catch (error) {
     console.error('Failed to load items:', error)
     items.value = []
@@ -296,6 +305,7 @@ async function addItem() {
       image_url: itemFromStore?.image_url || null,
       relation_type: relationType,
       notes: selectedNotes.value || null,
+      metadata: itemFromStore?.metadata || null,
     })
 
     // Reset form

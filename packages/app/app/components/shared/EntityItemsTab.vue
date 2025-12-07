@@ -63,9 +63,9 @@
             <v-img :src="`/uploads/${item.image_url}`" />
           </v-avatar>
           <v-avatar v-else-if="showAvatar" size="48" rounded="lg" class="mr-3" color="surface-variant">
-            <v-icon icon="mdi-treasure-chest" />
+            <v-icon :icon="getItemTypeIcon(item.metadata?.type)" />
           </v-avatar>
-          <v-icon v-else icon="mdi-sword" color="primary" class="mr-3" />
+          <v-icon v-else :icon="getItemTypeIcon(item.metadata?.type)" color="primary" class="mr-3" />
         </template>
 
         <v-list-item-title>
@@ -121,7 +121,10 @@ interface LinkedItem {
   quantity?: number | null
   equipped?: boolean | null
   rarity?: string | null
+  metadata?: { type?: string } | null
 }
+
+const { getItemTypeIcon } = useEntityIcons()
 
 interface AvailableItem {
   id: number

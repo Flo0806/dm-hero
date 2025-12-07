@@ -234,6 +234,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const { getItemTypeIcon, getLocationTypeIcon } = useEntityIcons()
 
 // Dialog state
 const dialogOpen = computed({
@@ -266,7 +267,21 @@ const entityConfig: Record<
   player: { icon: 'mdi-account-star', color: 'pink', endpoint: '/api/players', route: '/players' },
 }
 
-const entityIcon = computed(() => entityConfig[props.entityType]?.icon || 'mdi-help')
+const entityIcon = computed(() => {
+  const baseIcon = entityConfig[props.entityType]?.icon || 'mdi-help'
+  if (!entity.value) return baseIcon
+
+  // Use type-specific icons for items and locations
+  if (props.entityType === 'item') {
+    const itemType = (entity.value.metadata as { type?: string } | null)?.type
+    return getItemTypeIcon(itemType)
+  }
+  if (props.entityType === 'location') {
+    const locationType = (entity.value.metadata as { type?: string } | null)?.type
+    return getLocationTypeIcon(locationType)
+  }
+  return baseIcon
+})
 const entityColor = computed(() => entityConfig[props.entityType]?.color || 'grey')
 
 // Load entity when ID changes

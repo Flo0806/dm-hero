@@ -347,6 +347,7 @@ defineEmits<{
 }>()
 
 const { getCounts } = useItemCounts()
+const { getItemTypeIcon } = useEntityIcons()
 const { t } = useI18n()
 
 // Get counts reactively from the composable
@@ -405,63 +406,7 @@ function getRarityColor(rarity: string) {
   return colors[rarity] || 'grey'
 }
 
-// Icon helper for item types
-function getItemTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    // Weapons & Armor
-    weapon: 'mdi-sword',
-    armor: 'mdi-shield',
-    ammunition: 'mdi-arrow-projectile-multiple',
-    // Magic Items
-    potion: 'mdi-bottle-tonic',
-    scroll: 'mdi-script-text',
-    artifact: 'mdi-star-circle',
-    magical: 'mdi-auto-fix',
-    // Quest & Special
-    quest_item: 'mdi-exclamation-thick',
-    key: 'mdi-key-variant',
-    map: 'mdi-map',
-    // Consumables
-    consumable: 'mdi-fire',
-    food: 'mdi-food-drumstick',
-    drink: 'mdi-glass-mug-variant',
-    poison: 'mdi-skull-crossbones',
-    // Tools & Equipment
-    tool: 'mdi-hammer-wrench',
-    lantern: 'mdi-flashlight',
-    rope: 'mdi-hook',
-    container: 'mdi-package-variant',
-    bag: 'mdi-bag-personal',
-    // Valuables
-    treasure: 'mdi-treasure-chest',
-    gem: 'mdi-diamond-stone',
-    jewelry: 'mdi-ring',
-    currency: 'mdi-currency-usd',
-    // Clothing & Accessories
-    clothing: 'mdi-tshirt-crew',
-    // Materials & Components
-    mundane: 'mdi-package-variant-closed',
-    component: 'mdi-beaker',
-    material: 'mdi-cube-outline',
-    // Vehicles & Mounts
-    mount: 'mdi-horse',
-    vehicle: 'mdi-carriage-passenger-door',
-    // Decorative & Religious
-    figurine: 'mdi-chess-knight',
-    idol: 'mdi-account-box',
-    totem: 'mdi-totem-pole',
-    relic: 'mdi-cross',
-    banner: 'mdi-flag',
-    // Magical Objects
-    orb: 'mdi-circle',
-    horn: 'mdi-bugle',
-    mirror: 'mdi-mirror-rectangle',
-    crystal: 'mdi-rhombus-medium',
-    // Traps & Dangers
-    trap: 'mdi-alert-circle',
-  }
-  return icons[type] || 'mdi-sword'
-}
+// Icon helper now comes from useEntityIcons composable
 </script>
 
 <style scoped>

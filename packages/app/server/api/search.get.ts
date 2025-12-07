@@ -2,6 +2,7 @@ import { getDb } from '../utils/db'
 import { createLevenshtein } from '../utils/levenshtein'
 import { normalizeText } from '../utils/normalize'
 import { getRaceKey, getClassKey, getLocaleFromEvent } from '../utils/i18n-lookup'
+import { getItemTypeIcon, getLocationTypeIcon } from '../utils/entity-icons'
 
 const levenshtein = createLevenshtein()
 
@@ -62,6 +63,7 @@ export default defineEventHandler(async (event) => {
           e.id,
           e.name,
           e.description,
+          e.metadata,
           ? as type,
           ? as icon,
           ? as color,
@@ -209,6 +211,7 @@ export default defineEventHandler(async (event) => {
           e.id,
           e.name,
           e.description,
+          e.metadata,
           ? as type,
           ? as icon,
           ? as color,
@@ -633,7 +636,7 @@ export default defineEventHandler(async (event) => {
     .slice(0, 20)
 
   // Parse linked_entities into clean array and return (exclude internal fields)
-  return scoredResults.map(({ _score, linked_entities, metadata: _metadata, ...result }) => {
+  return scoredResults.map(({ _score, linked_entities, metadata, ...result }) => {
     // Parse linked_entities string into unique, non-empty names
     const linkedNames: string[] = []
     if (linked_entities) {
@@ -644,8 +647,25 @@ export default defineEventHandler(async (event) => {
         }
       }
     }
+
+    // Override icon based on entity type from metadata
+    let icon = result.icon
+    if (metadata) {
+      try {
+        const meta = JSON.parse(metadata)
+        if (result.type === 'Item' && meta.type) {
+          icon = getItemTypeIcon(meta.type)
+        } else if (result.type === 'Location' && meta.type) {
+          icon = getLocationTypeIcon(meta.type)
+        }
+      } catch {
+        // Invalid JSON, keep default icon
+      }
+    }
+
     return {
       ...result,
+      icon,
       linkedEntities: linkedNames.slice(0, 5), // Limit to 5 for UI
     }
   })

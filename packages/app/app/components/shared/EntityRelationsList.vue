@@ -23,7 +23,7 @@
         <template #prepend>
           <v-avatar :color="getAvatarColor()" size="48">
             <v-img v-if="entity.image_url" :src="`/uploads/${entity.image_url}`" />
-            <v-icon v-else>{{ getIcon() }}</v-icon>
+            <v-icon v-else>{{ getIcon(entity) }}</v-icon>
           </v-avatar>
         </template>
 
@@ -82,10 +82,13 @@ interface Entity {
   rarity?: string
   quantity?: number
   equipped?: boolean
+  metadata?: { type?: string | null; [key: string]: unknown } | null
   // Location-specific
   type?: string
   region?: string
 }
+
+const { getItemTypeIcon, getLocationTypeIcon } = useEntityIcons()
 
 interface Props {
   entities: Entity[]
@@ -111,7 +114,15 @@ defineEmits<{
 const { t } = useI18n()
 
 // Helper functions
-function getIcon(): string {
+function getIcon(entity?: Entity): string {
+  // Use type-specific icons for items and locations
+  if (entity && props.entityType === 'item') {
+    return getItemTypeIcon(entity.metadata?.type)
+  }
+  if (entity && props.entityType === 'location') {
+    return getLocationTypeIcon(entity.type || entity.metadata?.type)
+  }
+
   const icons: Record<string, string> = {
     item: 'mdi-treasure-chest',
     location: 'mdi-map-marker',
