@@ -639,20 +639,63 @@ function getNodeIcon(item: TreeNode) {
   if (!type) return 'mdi-map-marker'
 
   const iconMap: Record<string, string> = {
+    // Settlements
     city: 'mdi-city',
-    stadt: 'mdi-city',
-    district: 'mdi-map-marker-radius',
-    viertel: 'mdi-map-marker-radius',
-    building: 'mdi-home',
-    gebäude: 'mdi-home',
-    tavern: 'mdi-beer',
-    taverne: 'mdi-beer',
-    shop: 'mdi-store',
-    laden: 'mdi-store',
-    temple: 'mdi-church',
-    tempel: 'mdi-church',
+    town: 'mdi-home-city',
+    village: 'mdi-home-group',
+    // Fortifications
+    castle: 'mdi-castle',
+    fortress: 'mdi-shield-home',
+    tower: 'mdi-tower-fire',
+    // Underground
     dungeon: 'mdi-gate',
-    verlies: 'mdi-gate',
+    cave: 'mdi-tunnel',
+    mine: 'mdi-pickaxe',
+    crypt: 'mdi-coffin',
+    // Nature
+    forest: 'mdi-pine-tree',
+    mountain: 'mdi-image-filter-hdr',
+    river: 'mdi-waves',
+    lake: 'mdi-water',
+    swamp: 'mdi-sprout',
+    desert: 'mdi-weather-sunny',
+    island: 'mdi-island',
+    valley: 'mdi-terrain',
+    coast: 'mdi-beach',
+    oasis: 'mdi-palm-tree',
+    glacier: 'mdi-snowflake',
+    volcano: 'mdi-fire',
+    canyon: 'mdi-image-filter-hdr',
+    plains: 'mdi-grass',
+    jungle: 'mdi-tree',
+    waterfall: 'mdi-waterfall',
+    // Religious
+    temple: 'mdi-temple-buddhist',
+    shrine: 'mdi-candelabra-fire',
+    monastery: 'mdi-church',
+    // Ruins & Historic
+    ruins: 'mdi-pillar',
+    monument: 'mdi-pillar',
+    graveyard: 'mdi-grave-stone',
+    battlefield: 'mdi-sword-cross',
+    arena: 'mdi-stadium',
+    // Commerce & Services
+    tavern: 'mdi-glass-mug-variant',
+    shop: 'mdi-store',
+    guild: 'mdi-account-group',
+    // Infrastructure
+    bridge: 'mdi-bridge',
+    road: 'mdi-road-variant',
+    lighthouse: 'mdi-lighthouse',
+    windmill: 'mdi-wind-turbine',
+    quarry: 'mdi-shovel',
+    // Residential
+    farm: 'mdi-barn',
+    manor: 'mdi-home-variant',
+    palace: 'mdi-domain',
+    // Special
+    camp: 'mdi-tent',
+    portal: 'mdi-creation',
   }
 
   return iconMap[type] || 'mdi-map-marker'
@@ -664,12 +707,63 @@ function getNodeColor(item: TreeNode) {
   if (!type) return 'primary'
 
   const colorMap: Record<string, string> = {
+    // Settlements - purple tones
     city: 'purple',
-    stadt: 'purple',
-    district: 'blue',
-    viertel: 'blue',
-    building: 'grey',
-    gebäude: 'grey',
+    town: 'purple-lighten-1',
+    village: 'purple-lighten-2',
+    // Fortifications - blue-grey
+    castle: 'blue-grey',
+    fortress: 'blue-grey-darken-1',
+    tower: 'blue-grey-lighten-1',
+    // Underground - brown/dark
+    dungeon: 'brown-darken-1',
+    cave: 'brown',
+    mine: 'brown-lighten-1',
+    crypt: 'grey-darken-2',
+    // Nature - green tones
+    forest: 'green-darken-2',
+    mountain: 'grey',
+    river: 'blue',
+    lake: 'blue-lighten-1',
+    swamp: 'teal-darken-2',
+    desert: 'amber',
+    island: 'cyan',
+    valley: 'green-lighten-2',
+    coast: 'light-blue',
+    oasis: 'teal',
+    glacier: 'light-blue-lighten-2',
+    volcano: 'deep-orange',
+    canyon: 'orange-darken-1',
+    plains: 'lime',
+    jungle: 'green-darken-3',
+    waterfall: 'blue-darken-1',
+    // Religious - gold/yellow
+    temple: 'amber-darken-1',
+    shrine: 'amber-lighten-1',
+    monastery: 'amber',
+    // Ruins & Historic - grey/brown
+    ruins: 'grey-darken-1',
+    monument: 'grey',
+    graveyard: 'grey-darken-3',
+    battlefield: 'red-darken-2',
+    arena: 'red',
+    // Commerce - teal
+    tavern: 'orange',
+    shop: 'teal-lighten-1',
+    guild: 'indigo',
+    // Infrastructure - grey
+    bridge: 'grey-darken-1',
+    road: 'grey-lighten-1',
+    lighthouse: 'yellow-darken-2',
+    windmill: 'brown-lighten-2',
+    quarry: 'grey',
+    // Residential - warm tones
+    farm: 'green-lighten-1',
+    manor: 'deep-purple-lighten-1',
+    palace: 'deep-purple',
+    // Special
+    camp: 'orange-lighten-1',
+    portal: 'pink',
   }
 
   return colorMap[type] || 'primary'
