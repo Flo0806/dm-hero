@@ -1081,6 +1081,8 @@
     "inGameDateEnd": "In-Game Enddatum",
     "inGameDateEndHint": "Leer lassen wenn gleicher Tag",
     "setToToday": "Heute setzen",
+    "smoothText": "Text glätten",
+    "smoothingText": "Text wird geglättet...",
     "inGameDatePlaceholder": "z.B. 15. Kalduin, Jahr 1492",
     "durationMinutes": "Dauer (Min)",
     "mentions": "Erwähnungen",
