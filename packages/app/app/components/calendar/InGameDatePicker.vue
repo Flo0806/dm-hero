@@ -16,6 +16,32 @@
     <!-- Date Picker -->
     <div v-else>
       <v-row dense>
+        <!-- Day Selector -->
+        <v-col cols="12" sm="3">
+          <v-label class="text-caption mb-1">{{ $t('calendar.day') }}</v-label>
+          <v-select
+            v-model="internalDay"
+            :items="dayItems"
+            density="compact"
+            hide-details
+            variant="outlined"
+          />
+        </v-col>
+
+        <!-- Month Selector -->
+        <v-col cols="12" sm="5">
+          <v-label class="text-caption mb-1">{{ $t('calendar.month') }}</v-label>
+          <v-select
+            v-model="internalMonth"
+            :items="monthItems"
+            item-title="title"
+            item-value="value"
+            density="compact"
+            hide-details
+            variant="outlined"
+          />
+        </v-col>
+
         <!-- Year Selector -->
         <v-col cols="12" sm="4">
           <v-label class="text-caption mb-1">{{ $t('calendar.year') }}</v-label>
@@ -45,32 +71,6 @@
               @click="internalYear++"
             />
           </div>
-        </v-col>
-
-        <!-- Month Selector -->
-        <v-col cols="12" sm="4">
-          <v-label class="text-caption mb-1">{{ $t('calendar.month') }}</v-label>
-          <v-select
-            v-model="internalMonth"
-            :items="monthItems"
-            item-title="title"
-            item-value="value"
-            density="compact"
-            hide-details
-            variant="outlined"
-          />
-        </v-col>
-
-        <!-- Day Selector -->
-        <v-col cols="12" sm="4">
-          <v-label class="text-caption mb-1">{{ $t('calendar.day') }}</v-label>
-          <v-select
-            v-model="internalDay"
-            :items="dayItems"
-            density="compact"
-            hide-details
-            variant="outlined"
-          />
         </v-col>
       </v-row>
 

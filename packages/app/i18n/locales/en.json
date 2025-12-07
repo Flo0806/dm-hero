@@ -1085,6 +1085,7 @@
     "inGameDateStart": "In-Game Start Date",
     "inGameDateEnd": "In-Game End Date",
     "inGameDateEndHint": "Leave empty if same day",
+    "setToToday": "Set to Today",
     "inGameDatePlaceholder": "e.g. 15th of Kalduin, Year 1492",
     "durationMinutes": "Duration (min)",
     "mentions": "Mentions",

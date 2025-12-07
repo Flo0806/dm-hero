@@ -131,7 +131,7 @@
     </template>
 
     <!-- Create/Edit Session Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="1000" scrollable :persistent="saving || uploadingAudio || generatingImage">
+    <v-dialog v-model="showCreateDialog" max-width="1200" scrollable :persistent="saving || uploadingAudio || generatingImage">
       <v-card>
         <v-card-title>
           {{ editingSession ? $t('sessions.edit') : $t('sessions.create') }}
@@ -185,61 +185,65 @@
                 </v-col>
               </v-row>
 
-              <v-text-field
-                v-model="sessionForm.date"
-                :label="$t('sessions.date')"
-                type="date"
-                variant="outlined"
-                class="mb-4"
-              />
+              <v-row>
+                <v-col cols="12" md="4">
+                  <v-text-field
+                    v-model="sessionForm.date"
+                    :label="$t('sessions.date')"
+                    type="date"
+                    variant="outlined"
+                  />
+                </v-col>
+                <v-col cols="12" md="2">
+                  <v-text-field
+                    v-model.number="sessionForm.duration_minutes"
+                    :label="$t('sessions.durationMinutes')"
+                    type="number"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-timer-outline"
+                  />
+                </v-col>
+              </v-row>
 
               <!-- In-Game Timeline Section -->
-              <v-expansion-panels variant="accordion" class="mb-4">
-                <v-expansion-panel>
-                  <v-expansion-panel-title>
-                    <v-icon start>mdi-clock-outline</v-icon>
-                    {{ $t('sessions.inGameTimeline') }}
-                    <template v-if="sessionForm.in_game_day_start">
-                      <v-chip size="small" class="ml-2" color="primary" variant="tonal">
-                        {{ formatAbsoluteDay(sessionForm.in_game_day_start) }}
-                        <span v-if="sessionForm.in_game_day_end && sessionForm.in_game_day_end !== sessionForm.in_game_day_start">
-                          → {{ formatAbsoluteDay(sessionForm.in_game_day_end) }}
-                        </span>
-                      </v-chip>
-                    </template>
-                  </v-expansion-panel-title>
-                  <v-expansion-panel-text>
-                    <v-row>
-                      <v-col cols="12" md="5">
-                        <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
-                        <CalendarInGameDatePicker
-                          v-model="sessionForm.in_game_day_start"
-                          :calendar-data="calendarData"
-                        />
-                      </v-col>
-                      <v-col cols="12" md="5">
-                        <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
-                        <CalendarInGameDatePicker
-                          v-model="sessionForm.in_game_day_end"
-                          :calendar-data="calendarData"
-                        />
-                        <p class="text-caption text-medium-emphasis mt-1">
-                          {{ $t('sessions.inGameDateEndHint') }}
-                        </p>
-                      </v-col>
-                      <v-col cols="12" md="2">
-                        <v-text-field
-                          v-model.number="sessionForm.duration_minutes"
-                          :label="$t('sessions.durationMinutes')"
-                          type="number"
-                          variant="outlined"
-                          prepend-inner-icon="mdi-timer-outline"
-                        />
-                      </v-col>
-                    </v-row>
-                  </v-expansion-panel-text>
-                </v-expansion-panel>
-              </v-expansion-panels>
+              <v-card variant="outlined" class="mb-4">
+                <v-card-title class="d-flex align-center py-2">
+                  <v-icon start size="small">mdi-sword-cross</v-icon>
+                  {{ $t('sessions.inGameTimeline') }}
+                  <v-spacer />
+                  <v-btn
+                    v-if="calendarData"
+                    size="small"
+                    variant="tonal"
+                    color="primary"
+                    prepend-icon="mdi-calendar-today"
+                    @click="setInGameDateToToday"
+                  >
+                    {{ $t('sessions.setToToday') }}
+                  </v-btn>
+                </v-card-title>
+                <v-card-text class="pt-0">
+                  <v-row>
+                    <v-col cols="12" md="6">
+                      <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
+                      <CalendarInGameDatePicker
+                        v-model="sessionForm.in_game_day_start"
+                        :calendar-data="calendarData"
+                      />
+                    </v-col>
+                    <v-col cols="12" md="6">
+                      <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
+                      <CalendarInGameDatePicker
+                        v-model="sessionForm.in_game_day_end"
+                        :calendar-data="calendarData"
+                      />
+                      <p class="text-caption text-medium-emphasis mt-1">
+                        {{ $t('sessions.inGameDateEndHint') }}
+                      </p>
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
 
               <v-textarea
                 v-model="sessionForm.summary"
@@ -404,13 +408,65 @@
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="sessionForm.date"
-              :label="$t('sessions.date')"
-              type="date"
-              variant="outlined"
-              class="mb-4"
-            />
+            <v-row>
+              <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="sessionForm.date"
+                  :label="$t('sessions.date')"
+                  type="date"
+                  variant="outlined"
+                />
+              </v-col>
+              <v-col cols="12" md="2">
+                <v-text-field
+                  v-model.number="sessionForm.duration_minutes"
+                  :label="$t('sessions.durationMinutes')"
+                  type="number"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-timer-outline"
+                />
+              </v-col>
+            </v-row>
+
+            <!-- In-Game Timeline Section -->
+            <v-card variant="outlined" class="mb-4">
+              <v-card-title class="d-flex align-center py-2">
+                <v-icon start size="small">mdi-sword-cross</v-icon>
+                {{ $t('sessions.inGameTimeline') }}
+                <v-spacer />
+                <v-btn
+                  v-if="calendarData"
+                  size="small"
+                  variant="tonal"
+                  color="primary"
+                  prepend-icon="mdi-calendar-today"
+                  @click="setInGameDateToToday"
+                >
+                  {{ $t('sessions.setToToday') }}
+                </v-btn>
+              </v-card-title>
+              <v-card-text class="pt-0">
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
+                    <CalendarInGameDatePicker
+                      v-model="sessionForm.in_game_day_start"
+                      :calendar-data="calendarData"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
+                    <CalendarInGameDatePicker
+                      v-model="sessionForm.in_game_day_end"
+                      :calendar-data="calendarData"
+                    />
+                    <p class="text-caption text-medium-emphasis mt-1">
+                      {{ $t('sessions.inGameDateEndHint') }}
+                    </p>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
 
             <v-textarea
               v-model="sessionForm.summary"
@@ -627,7 +683,17 @@ const {
   calendarData,
   loadCalendar,
   formatAbsoluteDay,
+  getCurrentAbsoluteDay,
 } = useInGameCalendar()
+
+// Set both start and end in-game dates to "today" from the calendar
+function setInGameDateToToday() {
+  const today = getCurrentAbsoluteDay()
+  if (today > 0) {
+    sessionForm.value.in_game_day_start = today
+    sessionForm.value.in_game_day_end = today
+  }
+}
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 const currentLocale = computed(() => (locale.value === 'de' ? 'de-DE' : 'en-US'))
