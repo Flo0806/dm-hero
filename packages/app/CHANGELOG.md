@@ -1,5 +1,25 @@
 # @dm-hero/app
 
+## 1.0.0-beta.20
+
+### Minor Changes
+
+- [`b104abc`](https://github.com/Flo0806/dm-hero/commit/b104abc602427a27832aa0e244b2f845e3e933cd) Thanks [@Flo0806](https://github.com/Flo0806)! - ## Calendar Weather System
+  - Add weather for calendar days (sunny, cloudy, rain, snow, etc.)
+  - Season-specific weather generation based on explicit weather_type field
+  - Manual weather editing per day via CalendarWeatherDialog
+  - Weather icons displayed on calendar days
+
+  ## Expanded Entity Icons
+  - 48 location type icons (settlements, nature, religious, ruins, etc.)
+  - 40 item type icons (weapons, magic, consumables, tools, etc.)
+  - Color coding for location types by category
+  - Type-specific icons in global search, entity previews, and relation lists
+
+  ## Other Improvements
+  - docker-compose.example.yml for easy deployment
+  - Season settings UI with weather type dropdown
+
 ## 1.0.0-alpha.19
 
 ### Minor Changes
