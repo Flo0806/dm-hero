@@ -7,6 +7,7 @@
           <v-tab value="months">{{ $t('calendar.months') }}</v-tab>
           <v-tab value="weekdays">{{ $t('calendar.weekdays') }}</v-tab>
           <v-tab value="moons">{{ $t('calendar.moons') }}</v-tab>
+          <v-tab value="seasons">{{ $t('calendar.seasons') }}</v-tab>
           <v-tab value="current">{{ $t('calendar.currentDate') }}</v-tab>
         </v-tabs>
 
@@ -167,6 +168,102 @@
             </v-btn>
           </v-window-item>
 
+          <!-- Seasons Tab -->
+          <v-window-item value="seasons">
+            <v-alert type="info" variant="tonal" class="mb-4">
+              {{ $t('calendar.seasonsHint') }}
+            </v-alert>
+
+            <v-table>
+              <thead>
+                <tr>
+                  <th>{{ $t('calendar.seasonName') }}</th>
+                  <th>{{ $t('calendar.seasonStart') }}</th>
+                  <th>{{ $t('calendar.seasonBackground') }}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(season, index) in seasons" :key="season.id || index">
+                  <td>
+                    <v-text-field
+                      v-model="season.name"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      style="min-width: 150px"
+                    />
+                  </td>
+                  <td>
+                    <div class="d-flex ga-2 align-center">
+                      <v-select
+                        v-model="season.start_month"
+                        :items="monthOptions"
+                        density="compact"
+                        hide-details
+                        variant="outlined"
+                        style="min-width: 140px"
+                      />
+                      <v-text-field
+                        v-model.number="season.start_day"
+                        type="number"
+                        density="compact"
+                        hide-details
+                        variant="outlined"
+                        style="max-width: 80px"
+                        :min="1"
+                        :max="getMaxDaysForMonth(season.start_month)"
+                      />
+                    </div>
+                  </td>
+                  <td>
+                    <v-select
+                      v-model="season.background_image"
+                      :items="backgroundOptions"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      style="min-width: 160px"
+                      clearable
+                    >
+                      <template #selection="{ item }">
+                        <div class="d-flex align-center ga-2">
+                          <v-avatar v-if="item.value" size="24" rounded="sm">
+                            <v-img :src="item.value" />
+                          </v-avatar>
+                          <span>{{ item.title }}</span>
+                        </div>
+                      </template>
+                      <template #item="{ item, props: itemProps }">
+                        <v-list-item v-bind="itemProps">
+                          <template #prepend>
+                            <v-avatar v-if="item.value" size="32" rounded="sm" class="mr-2">
+                              <v-img :src="item.value" />
+                            </v-avatar>
+                          </template>
+                        </v-list-item>
+                      </template>
+                    </v-select>
+                  </td>
+                  <td>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      color="error"
+                      @click="removeSeason(index)"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+
+            <v-btn class="mt-2" variant="tonal" @click="addSeason">
+              <v-icon start>mdi-plus</v-icon>
+              {{ $t('calendar.addSeason') }}
+            </v-btn>
+          </v-window-item>
+
           <!-- Current Date Tab -->
           <v-window-item value="current">
             <h3 class="text-h6 mb-4">{{ $t('calendar.currentDate') }}</h3>
@@ -258,6 +355,8 @@
 </template>
 
 <script setup lang="ts">
+import type { CalendarSeason } from '~~/types/calendar'
+
 interface CalendarMonth {
   id?: number
   name: string
@@ -300,6 +399,9 @@ defineProps<{
 const emit = defineEmits<{
   save: []
 }>()
+
+// Seasons are managed separately via two-way binding
+const seasons = defineModel<CalendarSeason[]>('seasons', { default: () => [] })
 
 // Two-way binding for dialog visibility
 const modelValue = defineModel<boolean>({ required: true })
@@ -402,5 +504,46 @@ function addMoon() {
 
 function removeMoon(index: number) {
   form.value.moons.splice(index, 1)
+}
+
+// Season functions
+const monthOptions = computed(() => {
+  return form.value.months.map((m, i) => ({
+    title: m.name || `${t('calendar.month')} ${i + 1}`,
+    value: i + 1,
+  }))
+})
+
+const backgroundOptions = computed(() => [
+  { title: t('calendar.seasonBackgrounds.spring'), value: '/images/seasons/spring.png' },
+  { title: t('calendar.seasonBackgrounds.summer'), value: '/images/seasons/summer.png' },
+  { title: t('calendar.seasonBackgrounds.autumn'), value: '/images/seasons/autumn.png' },
+  { title: t('calendar.seasonBackgrounds.winter'), value: '/images/seasons/winter.png' },
+])
+
+function getMaxDaysForMonth(monthNumber: number): number {
+  const month = form.value.months[monthNumber - 1]
+  return month?.days || 30
+}
+
+function addSeason() {
+  const newSeason: CalendarSeason = {
+    id: 0, // Will be assigned by backend
+    campaign_id: 0, // Will be set by parent component
+    name: '',
+    start_month: 1,
+    start_day: 1,
+    background_image: null,
+    color: null,
+    icon: null,
+    sort_order: seasons.value.length,
+    created_at: '',
+    updated_at: '',
+  }
+  seasons.value.push(newSeason)
+}
+
+function removeSeason(index: number) {
+  seasons.value.splice(index, 1)
 }
 </script>

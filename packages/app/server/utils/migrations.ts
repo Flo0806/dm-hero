@@ -1558,6 +1558,95 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 29: Currency names converted to i18n keys')
     },
   },
+  {
+    version: 30,
+    name: 'Calendar seasons and multi-entity events',
+    up: (db: Database.Database) => {
+      // Create calendar_seasons table for season definitions
+      // Seasons are defined by their start month/day and repeat yearly
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS calendar_seasons (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          start_month INTEGER NOT NULL,
+          start_day INTEGER NOT NULL,
+          background_image TEXT,
+          color TEXT,
+          icon TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Create calendar_event_entities junction table for multi-entity linking
+      // Replaces the single entity_id column on calendar_events
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS calendar_event_entities (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_id INTEGER NOT NULL,
+          entity_id INTEGER NOT NULL,
+          entity_type TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (event_id) REFERENCES calendar_events(id) ON DELETE CASCADE,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+          UNIQUE(event_id, entity_id)
+        )
+      `)
+
+      // Create indexes for performance
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_calendar_seasons_campaign ON calendar_seasons(campaign_id);
+        CREATE INDEX IF NOT EXISTS idx_calendar_event_entities_event ON calendar_event_entities(event_id);
+        CREATE INDEX IF NOT EXISTS idx_calendar_event_entities_entity ON calendar_event_entities(entity_id);
+      `)
+
+      // Migrate existing single entity_id links to the new junction table
+      db.exec(`
+        INSERT INTO calendar_event_entities (event_id, entity_id, entity_type)
+        SELECT ce.id, ce.entity_id, et.name
+        FROM calendar_events ce
+        JOIN entities e ON ce.entity_id = e.id
+        JOIN entity_types et ON e.type_id = et.id
+        WHERE ce.entity_id IS NOT NULL
+      `)
+
+      // Create default seasons for all campaigns with calendar_config
+      // Based on a 12-month calendar: Winter (month 1), Spring (month 4), Summer (month 7), Autumn (month 10)
+      const defaultSeasons = [
+        { name: 'Winter', start_month: 1, start_day: 1, background_image: '/images/seasons/winter.png', sort_order: 0 },
+        { name: 'Frühling', start_month: 4, start_day: 1, background_image: '/images/seasons/spring.png', sort_order: 1 },
+        { name: 'Sommer', start_month: 7, start_day: 1, background_image: '/images/seasons/summer.png', sort_order: 2 },
+        { name: 'Herbst', start_month: 10, start_day: 1, background_image: '/images/seasons/autumn.png', sort_order: 3 },
+      ]
+
+      const campaignsWithCalendar = db.prepare(`
+        SELECT DISTINCT campaign_id FROM calendar_config
+      `).all() as Array<{ campaign_id: number }>
+
+      const insertSeason = db.prepare(`
+        INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, background_image, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+
+      for (const campaign of campaignsWithCalendar) {
+        for (const season of defaultSeasons) {
+          insertSeason.run(
+            campaign.campaign_id,
+            season.name,
+            season.start_month,
+            season.start_day,
+            season.background_image,
+            season.sort_order,
+          )
+        }
+      }
+
+      console.log('✅ Migration 30: Calendar seasons and multi-entity events')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

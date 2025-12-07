@@ -8,7 +8,8 @@ interface EventInput {
   month?: number
   day?: number
   isRecurring?: boolean
-  entityId?: number | null
+  entityId?: number | null // Legacy single entity
+  entityIds?: number[] // New: multiple entities (replaces all)
   color?: string | null
 }
 
@@ -23,6 +24,8 @@ export default defineEventHandler(async (event) => {
       message: 'Event ID is required',
     })
   }
+
+  const eventId = Number(id)
 
   // Build dynamic update query
   const updates: string[] = []
@@ -65,21 +68,40 @@ export default defineEventHandler(async (event) => {
     values.push(body.color)
   }
 
-  if (updates.length === 0) {
-    throw createError({
-      statusCode: 400,
-      message: 'No fields to update',
-    })
+  // Update event fields if any
+  if (updates.length > 0) {
+    updates.push('updated_at = CURRENT_TIMESTAMP')
+    values.push(eventId)
+
+    db.prepare(
+      `
+      UPDATE calendar_events
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `,
+    ).run(...values)
   }
 
-  updates.push('updated_at = CURRENT_TIMESTAMP')
-  values.push(Number(id))
+  // Handle multi-entity linking (replaces all existing links)
+  if (body.entityIds !== undefined) {
+    // Delete existing links
+    db.prepare('DELETE FROM calendar_event_entities WHERE event_id = ?').run(eventId)
 
-  db.prepare(`
-    UPDATE calendar_events
-    SET ${updates.join(', ')}
-    WHERE id = ?
-  `).run(...values)
+    // Insert new links
+    if (body.entityIds.length > 0) {
+      const insertEntity = db.prepare(`
+        INSERT INTO calendar_event_entities (event_id, entity_id, entity_type)
+        SELECT ?, e.id, et.name
+        FROM entities e
+        JOIN entity_types et ON et.id = e.type_id
+        WHERE e.id = ? AND e.deleted_at IS NULL
+      `)
+
+      for (const entityId of body.entityIds) {
+        insertEntity.run(eventId, entityId)
+      }
+    }
+  }
 
   return { success: true }
 })

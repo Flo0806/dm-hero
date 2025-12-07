@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="modelValue" max-width="600">
+  <v-dialog v-model="modelValue" max-width="700">
     <v-card>
       <v-card-title>
         {{ isEditing ? $t('calendar.editEvent') : $t('calendar.newEvent') }}
@@ -55,16 +55,48 @@
         <v-checkbox
           v-model="form.isRecurring"
           :label="$t('calendar.isRecurring')"
+          class="mb-2"
         />
+
+        <!-- Multi-Entity Selection -->
         <v-autocomplete
-          v-model="form.entityId"
-          :label="$t('calendar.linkedEntity')"
-          :items="entityOptions"
+          v-model="form.entityIds"
+          :label="$t('calendar.linkedEntities')"
+          :items="groupedEntityOptions"
           item-title="name"
           item-value="id"
           variant="outlined"
-          clearable
-        />
+          multiple
+          chips
+          closable-chips
+          :hint="$t('calendar.linkedEntitiesHint')"
+          persistent-hint
+        >
+          <template #chip="{ props: chipProps, item }">
+            <v-chip
+              v-bind="chipProps"
+              :color="getEntityColor(item.raw.type)"
+              size="small"
+              :class="{ 'text-decoration-line-through': item.raw.deleted }"
+            >
+              <v-icon start size="small">{{ getEntityIcon(item.raw.type) }}</v-icon>
+              {{ item.raw.name }}
+            </v-chip>
+          </template>
+          <template #item="{ props: itemProps, item }">
+            <v-list-item
+              v-bind="itemProps"
+              :title="item.raw.name"
+              :subtitle="$t(`entityTypes.${item.raw.type}`)"
+            >
+              <template #prepend>
+                <v-icon :color="getEntityColor(item.raw.type)" size="small">
+                  {{ getEntityIcon(item.raw.type) }}
+                </v-icon>
+              </template>
+            </v-list-item>
+          </template>
+        </v-autocomplete>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -78,6 +110,8 @@
 </template>
 
 <script setup lang="ts">
+import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
+
 interface EventForm {
   title: string
   description: string
@@ -86,7 +120,8 @@ interface EventForm {
   month: number
   year: number
   isRecurring: boolean
-  entityId: number | null
+  entityId: number | null // Legacy
+  entityIds: number[] // New multi-entity
 }
 
 interface MonthOption {
@@ -98,9 +133,10 @@ interface EntityOption {
   id: number
   name: string
   type: string
+  deleted?: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   isEditing: boolean
   saving: boolean
   monthOptions: MonthOption[]
@@ -129,4 +165,24 @@ const eventTypeOptions = computed(() => [
   { title: t('calendar.eventTypes.war'), value: 'war' },
   { title: t('calendar.eventTypes.founding'), value: 'founding' },
 ])
+
+// Group entities by type for better UX
+const groupedEntityOptions = computed(() => {
+  // Create a copy to avoid mutating the prop
+  return [...props.entityOptions].sort((a, b) => {
+    // Sort by type first, then by name
+    if (a.type !== b.type) {
+      return a.type.localeCompare(b.type)
+    }
+    return a.name.localeCompare(b.name)
+  })
+})
+
+function getEntityIcon(type: string): string {
+  return ENTITY_TYPE_ICONS[type] || 'mdi-help-circle'
+}
+
+function getEntityColor(type: string): string {
+  return ENTITY_TYPE_COLORS[type] || '#888888'
+}
 </script>

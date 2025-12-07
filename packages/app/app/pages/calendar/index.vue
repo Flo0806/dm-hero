@@ -63,7 +63,13 @@
       </v-card>
 
       <!-- Month Navigation -->
-      <v-card class="mb-4">
+      <v-card class="mb-4 calendar-card">
+        <!-- Season Background Image -->
+        <div
+          v-if="seasonBackgroundUrl"
+          class="season-background"
+          :style="{ backgroundImage: `url(${seasonBackgroundUrl})` }"
+        />
         <v-card-title class="d-flex align-center justify-space-between">
           <v-btn icon="mdi-chevron-left" variant="text" @click="prevMonth" />
           <div class="text-center">
@@ -233,8 +239,23 @@
       <!-- Details for selected day -->
       <v-card v-if="selectedDay">
         <v-card-title class="d-flex align-center justify-space-between">
-          <span>{{ selectedDay }}. {{ currentMonthName }} {{ viewYear }}</span>
+          <div class="d-flex align-center ga-2">
+            <span>{{ selectedDay }}. {{ currentMonthName }} {{ viewYear }}</span>
+            <v-chip v-if="isSelectedDayToday" color="primary" size="small">
+              {{ $t('calendar.today') }}
+            </v-chip>
+          </div>
           <div class="d-flex ga-2">
+            <v-btn
+              v-if="!isSelectedDayToday"
+              size="small"
+              variant="tonal"
+              color="warning"
+              prepend-icon="mdi-calendar-today"
+              @click="showSetTodayDialog = true"
+            >
+              {{ $t('calendar.setAsToday') }}
+            </v-btn>
             <v-btn
               size="small"
               variant="tonal"
@@ -323,11 +344,24 @@
                 <v-list-item-title>{{ event.title }}</v-list-item-title>
                 <v-list-item-subtitle>
                   <span>{{ $t('calendar.eventTypes.' + event.event_type) }}</span>
-                  <span v-if="event.entity_name"> · {{ event.entity_name }}</span>
                   <v-chip v-if="event.is_recurring" size="x-small" class="ml-2">
                     {{ $t('calendar.isRecurring') }}
                   </v-chip>
                 </v-list-item-subtitle>
+                <!-- Linked entities as chips -->
+                <div v-if="event.linked_entities && event.linked_entities.length > 0" class="mt-1 d-flex flex-wrap ga-1">
+                  <v-chip
+                    v-for="le in event.linked_entities"
+                    :key="le.id"
+                    size="x-small"
+                    :color="getEntityColor(le.entity_type)"
+                    :class="{ 'text-decoration-line-through': le.entity_deleted }"
+                    @click.stop="navigateToEntity(le.entity_type, le.entity_id)"
+                  >
+                    <v-icon start size="x-small">{{ getEntityIcon(le.entity_type) }}</v-icon>
+                    {{ le.entity_name }}
+                  </v-chip>
+                </div>
                 <template #append>
                   <v-btn icon="mdi-delete" variant="text" color="error" @click.stop="deleteEvent(event)" />
                 </template>
@@ -346,7 +380,8 @@
     <!-- Settings Dialog -->
     <CalendarSettingsDialog
       v-model="showSettingsDialog"
-      :form="settingsForm"
+      v-model:form="settingsForm"
+      v-model:seasons="editingSeasons"
       :saving="saving"
       @save="saveSettings"
     />
@@ -398,10 +433,115 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Calendar Structure Change Warning Dialog -->
+    <v-dialog v-model="showStructureWarning" max-width="600" persistent>
+      <v-card>
+        <v-card-title class="d-flex align-center ga-2">
+          <v-icon color="warning">mdi-alert</v-icon>
+          {{ $t('calendar.structureChangeWarning') }}
+        </v-card-title>
+        <v-card-text>
+          <v-alert type="warning" variant="tonal" class="mb-4">
+            {{ $t('calendar.structureChangeInfo') }}
+          </v-alert>
+
+          <!-- Affected Events -->
+          <div v-if="validationResult?.affectedEvents.length" class="mb-4">
+            <div class="text-subtitle-2 mb-2">
+              <v-icon size="18" class="mr-1">mdi-calendar</v-icon>
+              {{ $t('calendar.affectedEvents', { count: validationResult.affectedEvents.length }) }}
+            </div>
+            <v-list density="compact" class="bg-surface-variant rounded">
+              <v-list-item v-for="evt in validationResult.affectedEvents.slice(0, 5)" :key="evt.id">
+                <template #prepend>
+                  <v-icon size="small" color="warning">mdi-calendar-alert</v-icon>
+                </template>
+                <v-list-item-title>{{ evt.title }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ evt.issue === 'month_deleted' ? $t('calendar.monthDeleted') : $t('calendar.dayOverflow') }}
+                  ({{ $t('calendar.month') }} {{ evt.month }}, {{ $t('calendar.day') }} {{ evt.day }})
+                </v-list-item-subtitle>
+              </v-list-item>
+              <v-list-item v-if="validationResult.affectedEvents.length > 5">
+                <v-list-item-title class="text-medium-emphasis">
+                  ... {{ $t('calendar.andMore', { count: validationResult.affectedEvents.length - 5 }) }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+            <div class="text-caption text-medium-emphasis mt-1">
+              {{ $t('calendar.eventsWillBeMoved') }}
+            </div>
+          </div>
+
+          <!-- Affected Sessions -->
+          <div v-if="validationResult?.affectedSessions.length">
+            <div class="text-subtitle-2 mb-2">
+              <v-icon size="18" class="mr-1">mdi-book-open-page-variant</v-icon>
+              {{ $t('calendar.affectedSessions', { count: validationResult.affectedSessions.length }) }}
+            </div>
+            <v-list density="compact" class="bg-surface-variant rounded">
+              <v-list-item v-for="sess in validationResult.affectedSessions.slice(0, 5)" :key="sess.id">
+                <template #prepend>
+                  <v-icon size="small" color="warning">mdi-book-alert</v-icon>
+                </template>
+                <v-list-item-title>
+                  {{ sess.session_number ? `#${sess.session_number}: ` : '' }}{{ sess.title }}
+                </v-list-item-title>
+                <v-list-item-subtitle>{{ $t('calendar.sessionDayOverflow') }}</v-list-item-subtitle>
+              </v-list-item>
+              <v-list-item v-if="validationResult.affectedSessions.length > 5">
+                <v-list-item-title class="text-medium-emphasis">
+                  ... {{ $t('calendar.andMore', { count: validationResult.affectedSessions.length - 5 }) }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+            <div class="text-caption text-medium-emphasis mt-1">
+              {{ $t('calendar.sessionsWillBeReset') }}
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="cancelStructureChange">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="warning" :loading="saving" @click="confirmStructureChange">
+            {{ $t('calendar.saveAnyway') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Set as Today Confirmation Dialog -->
+    <v-dialog v-model="showSetTodayDialog" max-width="450">
+      <v-card>
+        <v-card-title class="d-flex align-center ga-2">
+          <v-icon color="warning">mdi-calendar-today</v-icon>
+          {{ $t('calendar.setAsToday') }}
+        </v-card-title>
+        <v-card-text>
+          <p class="mb-3">{{ $t('calendar.setAsTodayConfirm', { date: `${selectedDay}. ${currentMonthName} ${viewYear}` }) }}</p>
+
+          <v-alert v-if="isSelectedDayInPast" type="warning" variant="tonal" class="mb-0">
+            <strong>{{ $t('calendar.goingBackInTime') }}</strong><br/>
+            {{ $t('calendar.goingBackInTimeHint') }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="showSetTodayDialog = false">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="warning" :loading="settingToday" @click="confirmSetAsToday">
+            {{ $t('calendar.confirmSetAsToday') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { CalendarSeason } from '~~/types/calendar'
+import { useSnackbarStore } from '~/stores/snackbar'
+
 interface CalendarMonth {
   id?: number
   name: string
@@ -424,6 +564,15 @@ interface CalendarMoon {
   phase_offset: number
 }
 
+interface LinkedEntity {
+  id: number
+  event_id: number
+  entity_id: number
+  entity_type: string | null
+  entity_name: string
+  entity_deleted: boolean
+}
+
 interface CalendarEvent {
   id: number
   campaign_id: number
@@ -438,6 +587,7 @@ interface CalendarEvent {
   color: string | null
   entity_name?: string
   entity_type?: string
+  linked_entities?: LinkedEntity[]
 }
 
 interface CalendarSession {
@@ -470,6 +620,7 @@ interface CalendarConfig {
 
 const { t } = useI18n()
 const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // State
 const calendarConfig = ref<CalendarConfig>({
@@ -488,6 +639,8 @@ const calendarConfig = ref<CalendarConfig>({
 })
 const events = ref<CalendarEvent[]>([])
 const sessions = ref<CalendarSession[]>([])
+const seasons = ref<CalendarSeason[]>([])
+const editingSeasons = ref<CalendarSeason[]>([])
 const showSessions = ref(true) // Toggle for session visibility
 const viewYear = ref(1)
 const viewMonth = ref(1)
@@ -501,6 +654,14 @@ const deleting = ref(false)
 const advancingDay = ref(false)
 const editingEvent = ref<CalendarEvent | null>(null)
 const eventToDelete = ref<CalendarEvent | null>(null)
+const showStructureWarning = ref(false)
+const showSetTodayDialog = ref(false)
+const settingToday = ref(false)
+const validationResult = ref<{
+  hasIssues: boolean
+  affectedEvents: Array<{ id: number; title: string; month: number; day: number; issue: string }>
+  affectedSessions: Array<{ id: number; title: string; session_number: number | null; issue: string }>
+} | null>(null)
 const router = useRouter()
 
 // Settings form
@@ -526,7 +687,8 @@ const eventForm = ref({
   month: 1,
   year: 1,
   isRecurring: false,
-  entityId: null as number | null,
+  entityId: null as number | null, // Legacy
+  entityIds: [] as number[], // New multi-entity
 })
 
 // Entity options for linking
@@ -583,6 +745,40 @@ const calendarGridStyle = computed(() => {
   }
 })
 
+// Get current season based on viewed month/day
+const currentSeason = computed(() => {
+  if (seasons.value.length === 0) return null
+
+  // Sort seasons by start date (month, then day)
+  const sortedSeasons = [...seasons.value].sort((a, b) => {
+    if (a.start_month !== b.start_month) return a.start_month - b.start_month
+    return a.start_day - b.start_day
+  })
+
+  // Find which season we're currently in (based on view month)
+  // We need to find the season whose start date is <= current view date
+  let activeSeason = sortedSeasons[sortedSeasons.length - 1] // Default to last season (wraps from previous year)
+
+  for (let i = 0; i < sortedSeasons.length; i++) {
+    const season = sortedSeasons[i]
+    if (!season) continue
+    // Check if current month/day is >= this season's start
+    if (viewMonth.value > season.start_month ||
+        (viewMonth.value === season.start_month && 15 >= season.start_day)) {
+      activeSeason = season
+    }
+  }
+
+  return activeSeason
+})
+
+// Season background image URL
+const seasonBackgroundUrl = computed(() => {
+  const season = currentSeason.value
+  if (!season?.background_image) return null
+  return season.background_image
+})
+
 // Functions
 function getTotalDays(year: number, month: number, day: number): number {
   let total = 0
@@ -635,6 +831,56 @@ function isToday(day: number): boolean {
     viewMonth.value === config.current_month &&
     day === config.current_day
   )
+}
+
+// Check if the selected day is the current "today"
+const isSelectedDayToday = computed(() => {
+  if (!selectedDay.value) return false
+  return isToday(selectedDay.value)
+})
+
+// Check if selected day is in the past compared to current "today"
+const isSelectedDayInPast = computed(() => {
+  if (!selectedDay.value) return false
+  const config = calendarConfig.value.config
+  const selectedAbsoluteDay = getTotalDays(viewYear.value, viewMonth.value, selectedDay.value)
+  const todayAbsoluteDay = getTotalDays(config.current_year, config.current_month, config.current_day)
+  return selectedAbsoluteDay < todayAbsoluteDay
+})
+
+// Set selected day as the new "today"
+async function confirmSetAsToday() {
+  if (!selectedDay.value) return
+
+  settingToday.value = true
+  try {
+    await $fetch('/api/calendar/config', {
+      method: 'POST',
+      body: {
+        campaignId: campaignStore.activeCampaignId,
+        currentYear: viewYear.value,
+        currentMonth: viewMonth.value,
+        currentDay: selectedDay.value,
+        // Keep other settings
+        yearZeroName: 'Jahr 0',
+        eraName: calendarConfig.value.config.era_name,
+        leapYearInterval: calendarConfig.value.config.leap_year_interval,
+        leapYearMonth: calendarConfig.value.config.leap_year_month,
+        leapYearExtraDays: calendarConfig.value.config.leap_year_extra_days,
+        months: calendarConfig.value.months,
+        weekdays: calendarConfig.value.weekdays,
+        moons: calendarConfig.value.moons,
+      },
+    })
+    await loadConfig()
+    showSetTodayDialog.value = false
+    snackbarStore.success(t('calendar.todaySet'))
+  } catch (error) {
+    console.error('Failed to set today:', error)
+    snackbarStore.error(String(error))
+  } finally {
+    settingToday.value = false
+  }
 }
 
 function getEventsForDay(day: number): CalendarEvent[] {
@@ -708,6 +954,47 @@ function getEventTypeColor(type: string): string {
     founding: 'purple',
   }
   return colors[type] || 'grey'
+}
+
+// Entity type helpers for linked entities display
+function getEntityColor(type: string | null): string {
+  const colors: Record<string, string> = {
+    NPC: 'blue',
+    Location: 'green',
+    Item: 'amber',
+    Faction: 'purple',
+    Lore: 'teal',
+    Player: 'orange',
+  }
+  return colors[type || ''] || 'grey'
+}
+
+function getEntityIcon(type: string | null): string {
+  const icons: Record<string, string> = {
+    NPC: 'mdi-account',
+    Location: 'mdi-map-marker',
+    Item: 'mdi-treasure-chest',
+    Faction: 'mdi-flag',
+    Lore: 'mdi-book-open-variant',
+    Player: 'mdi-account-group',
+  }
+  return icons[type || ''] || 'mdi-help-circle'
+}
+
+function navigateToEntity(type: string | null, entityId: number) {
+  if (!type) return
+  const routes: Record<string, string> = {
+    NPC: '/npcs',
+    Location: '/locations',
+    Item: '/items',
+    Faction: '/factions',
+    Lore: '/lore',
+    Player: '/players',
+  }
+  const basePath = routes[type]
+  if (basePath) {
+    router.push(`${basePath}/${entityId}`)
+  }
 }
 
 // Check if year is leap year
@@ -929,12 +1216,76 @@ function openSettingsDialog() {
     weekdays: calendarConfig.value.weekdays.map((w) => ({ ...w })),
     moons: calendarConfig.value.moons.map((moon) => ({ ...moon })),
   }
+  // Copy seasons for editing
+  editingSeasons.value = seasons.value.map((s) => ({ ...s }))
   showSettingsDialog.value = true
 }
 
 async function saveSettings() {
+  // First validate if there are breaking changes
+  const result = await validateCalendarChanges()
+
+  if (result && result.hasIssues) {
+    // Show warning dialog
+    validationResult.value = result
+    showStructureWarning.value = true
+    return
+  }
+
+  // No issues, save directly
+  await doSaveSettings()
+}
+
+async function validateCalendarChanges() {
+  try {
+    const result = await $fetch<{
+      hasIssues: boolean
+      affectedEvents: Array<{ id: number; title: string; month: number; day: number; issue: string }>
+      affectedSessions: Array<{ id: number; title: string; session_number: number | null; issue: string }>
+    }>('/api/calendar/validate-changes', {
+      method: 'POST',
+      body: {
+        campaignId: campaignStore.activeCampaignId,
+        months: settingsForm.value.months,
+      },
+    })
+    return result
+  } catch (error) {
+    console.error('Failed to validate calendar changes:', error)
+    return null
+  }
+}
+
+function cancelStructureChange() {
+  showStructureWarning.value = false
+  validationResult.value = null
+}
+
+async function confirmStructureChange() {
+  // Fix affected data first
+  try {
+    await $fetch('/api/calendar/fix-affected', {
+      method: 'POST',
+      body: {
+        campaignId: campaignStore.activeCampaignId,
+        months: settingsForm.value.months,
+      },
+    })
+  } catch (error) {
+    console.error('Failed to fix affected data:', error)
+  }
+
+  showStructureWarning.value = false
+  validationResult.value = null
+
+  // Now save the settings
+  await doSaveSettings()
+}
+
+async function doSaveSettings() {
   saving.value = true
   try {
+    // Save calendar config
     await $fetch('/api/calendar/config', {
       method: 'POST',
       body: {
@@ -952,12 +1303,65 @@ async function saveSettings() {
         moons: settingsForm.value.moons,
       },
     })
+
+    // Save seasons
+    await saveSeasons()
+
     await loadConfig()
+    await loadSeasons()
+    await loadEvents()
+    await loadSessions()
     showSettingsDialog.value = false
   } catch (error) {
     console.error('Failed to save calendar config:', error)
   } finally {
     saving.value = false
+  }
+}
+
+async function saveSeasons() {
+  const campaignId = campaignStore.activeCampaignId
+  if (!campaignId) return
+
+  // Find deleted seasons (in original but not in editing)
+  const editingIds = new Set(editingSeasons.value.filter((s) => s.id > 0).map((s) => s.id))
+  const deletedSeasons = seasons.value.filter((s) => !editingIds.has(s.id))
+
+  // Delete removed seasons
+  for (const season of deletedSeasons) {
+    await $fetch(`/api/calendar/seasons/${season.id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Update/create seasons
+  for (const [i, season] of editingSeasons.value.entries()) {
+    if (season.id > 0) {
+      // Update existing
+      await $fetch(`/api/calendar/seasons/${season.id}`, {
+        method: 'PATCH',
+        body: {
+          name: season.name,
+          startMonth: season.start_month,
+          startDay: season.start_day,
+          backgroundImage: season.background_image,
+          sortOrder: i,
+        },
+      })
+    } else {
+      // Create new
+      await $fetch('/api/calendar/seasons', {
+        method: 'POST',
+        body: {
+          campaignId,
+          name: season.name,
+          startMonth: season.start_month,
+          startDay: season.start_day,
+          backgroundImage: season.background_image,
+          sortOrder: i,
+        },
+      })
+    }
   }
 }
 
@@ -973,6 +1377,7 @@ function openNewEventDialog(day?: number) {
     year: viewYear.value,
     isRecurring: false,
     entityId: null,
+    entityIds: [],
   }
   showEventDialog.value = true
 }
@@ -988,6 +1393,7 @@ function editEvent(event: CalendarEvent) {
     year: event.year || viewYear.value,
     isRecurring: !!event.is_recurring,
     entityId: event.entity_id,
+    entityIds: event.linked_entities?.map((le) => le.entity_id) || [],
   }
   showEventDialog.value = true
 }
@@ -1006,7 +1412,7 @@ async function saveEvent() {
           month: eventForm.value.month,
           year: eventForm.value.isRecurring ? null : eventForm.value.year,
           isRecurring: eventForm.value.isRecurring,
-          entityId: eventForm.value.entityId,
+          entityIds: eventForm.value.entityIds, // New multi-entity
         },
       })
     } else {
@@ -1021,7 +1427,7 @@ async function saveEvent() {
           month: eventForm.value.month,
           year: eventForm.value.isRecurring ? null : eventForm.value.year,
           isRecurring: eventForm.value.isRecurring,
-          entityId: eventForm.value.entityId,
+          entityIds: eventForm.value.entityIds, // New multi-entity
         },
       })
     }
@@ -1090,12 +1496,15 @@ async function loadEvents() {
 async function loadEntities() {
   if (!campaignStore.activeCampaignId) return
   try {
-    // Load all entities for linking
-    const [npcs, locations, factions, lore] = await Promise.all([
+    // Load all entities for linking (NPCs, Locations, Items, Factions, Lore, Players)
+    const [npcs, locations, items, factions, lore, players] = await Promise.all([
       $fetch<Array<{ id: number; name: string }>>('/api/npcs', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
       $fetch<Array<{ id: number; name: string }>>('/api/locations', {
+        query: { campaignId: campaignStore.activeCampaignId },
+      }),
+      $fetch<Array<{ id: number; name: string }>>('/api/items', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
       $fetch<Array<{ id: number; name: string }>>('/api/factions', {
@@ -1104,10 +1513,15 @@ async function loadEntities() {
       $fetch<Array<{ id: number; name: string }>>('/api/lore', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
+      $fetch<Array<{ id: number; name: string }>>('/api/players', {
+        query: { campaignId: campaignStore.activeCampaignId },
+      }),
     ])
     entityOptions.value = [
       ...npcs.map((n) => ({ ...n, type: 'NPC' })),
+      ...players.map((p) => ({ ...p, type: 'Player' })),
       ...locations.map((l) => ({ ...l, type: 'Location' })),
+      ...items.map((i) => ({ ...i, type: 'Item' })),
       ...factions.map((f) => ({ ...f, type: 'Faction' })),
       ...lore.map((l) => ({ ...l, type: 'Lore' })),
     ]
@@ -1128,13 +1542,53 @@ async function loadSessions() {
   }
 }
 
+async function loadSeasons() {
+  if (!campaignStore.activeCampaignId) return
+  try {
+    const data = await $fetch<CalendarSeason[]>('/api/calendar/seasons', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+    seasons.value = data
+  } catch (error) {
+    console.error('Failed to load seasons:', error)
+  }
+}
+
 onMounted(async () => {
   await loadConfig()
-  await Promise.all([loadEvents(), loadSessions(), loadEntities()])
+  await Promise.all([loadEvents(), loadSessions(), loadEntities(), loadSeasons()])
 })
 </script>
 
 <style scoped>
+/* Season background image container */
+.calendar-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.season-background {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom right;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.5s ease, background-image 0.5s ease;
+}
+
+/* Ensure content stays above background */
+.calendar-card :deep(.v-card-title),
+.calendar-card :deep(.v-card-text) {
+  position: relative;
+  z-index: 1;
+}
+
 .calendar-grid {
   display: grid;
   /* grid-template-columns is set dynamically via :style binding */
@@ -1147,8 +1601,8 @@ onMounted(async () => {
 }
 
 .calendar-day {
-  min-height: 80px;
-  padding: 4px;
+  min-height: 100px;
+  padding: 6px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   border-radius: 4px;
   cursor: pointer;
