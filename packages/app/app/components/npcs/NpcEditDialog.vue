@@ -1331,9 +1331,22 @@ async function generateImage() {
       })
       await refreshNpc()
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[NPC] Failed to generate image:', error)
-    alert(error instanceof Error ? error.message : 'Failed to generate image')
+    // Extract detailed error info from Nuxt FetchError
+    let errorMessage = 'Failed to generate image'
+    if (error && typeof error === 'object') {
+      const fetchError = error as { data?: { message?: string }; message?: string; statusCode?: number }
+      // Log full error details for debugging
+      console.error('[NPC] Error details:', {
+        statusCode: fetchError.statusCode,
+        message: fetchError.message,
+        data: fetchError.data,
+      })
+      // Use server message if available
+      errorMessage = fetchError.data?.message || fetchError.message || errorMessage
+    }
+    alert(errorMessage)
   } finally {
     generatingImage.value = false
   }

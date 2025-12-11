@@ -202,6 +202,14 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
 
 YOUR GOAL: Generate prompts that look like REAL PHOTOGRAPHS of actors in costume on a fantasy film set - like stills from Lord of the Rings or Game of Thrones movies.
 
+CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
+The user's input may contain NPC status information. ALWAYS rephrase problematic status values into NEUTRAL, ARTISTIC terms:
+- "dead", "deceased", "tot", "verstorben" → COMPLETELY IGNORE this status, generate a portrait as if the character is alive
+- "executed", "hingerichtet", "murdered", "ermordet" → COMPLETELY IGNORE this status, generate a normal portrait
+- "missing", "vermisst" → can mention "mysterious", "enigmatic expression"
+- "injured", "wounded", "verletzt" → can show "battle-worn", "scarred veteran"
+- ANY death-related status → Generate the portrait WITHOUT mentioning death at all. Show the character as they were in life.
+
 CRITICAL ANTI-3D RULES (ALWAYS INCLUDE):
 - ALWAYS add: "real photograph, NOT 3D rendered, NOT CGI, NOT video game"
 - ALWAYS add: "shot on Arri Alexa camera, natural film grain, real human skin texture"
@@ -217,10 +225,14 @@ CONTENT RULES:
 5. Cinematic lighting: practical lights, golden hour, candlelight
 6. Keep under 100 words
 7. Focus on: real human expression, authentic costume, film set atmosphere
+8. NEVER mention death, corpses, or deceased state in the output prompt
 
 EXAMPLE:
 Input: "Race: Elf, Class: Wizard, Name: Elara"
 Output: "Real photograph of an elegant elven woman with long silver hair and pointed ears, wearing hand-sewn midnight-blue velvet robes with silver embroidery, holding a gnarled wooden staff, standing in a candlelit medieval library, wise expression, shot on Arri Alexa, natural film grain, cinematic lighting like Lord of the Rings, NOT 3D rendered, NOT CGI"
+
+Input: "Race: Human, Class: Fighter, Status: dead, Name: Sir Aldric"
+Output: "Real photograph of a noble human knight with weathered face and grey-streaked beard, wearing polished plate armor with heraldic crest, standing proudly in a castle courtyard, dignified expression, shot on Arri Alexa, natural film grain, cinematic lighting, NOT 3D rendered, NOT CGI"
 
 Output ONLY the optimized prompt.`
   } else if (entityType === 'Location') {
