@@ -43,3 +43,35 @@
 .v-theme--dark .md-editor code {
   background: var(--v-md-code-bg);
 }
+
+/* Fix: Prevent breaking words mid-character (override md-editor-v3 defaults) */
+.md-editor,
+.md-editor *,
+.md-editor .cm-editor,
+.md-editor .cm-editor .cm-scroller,
+.md-editor .cm-editor .cm-content,
+.md-editor .cm-editor .cm-line,
+.md-editor .md-editor-input-wrapper,
+.md-editor .md-editor-input-wrapper textarea,
+.md-editor-preview-wrapper,
+.md-editor-preview-wrapper *,
+.md-editor-preview,
+.md-editor-preview *,
+.md-editor-preview h1,
+.md-editor-preview h2,
+.md-editor-preview h3,
+.md-editor-preview h4,
+.md-editor-preview h5,
+.md-editor-preview h6,
+.md-editor-preview p,
+.md-editor-preview li,
+.md-editor-preview blockquote,
+.md-editor-preview td,
+.md-editor-preview th,
+.md-editor-catalog,
+.md-editor-catalog * {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  hyphens: auto;
+}
