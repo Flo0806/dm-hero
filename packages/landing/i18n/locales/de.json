@@ -114,6 +114,10 @@
     },
     "allReleases": "Alle Releases auf GitHub ansehen"
   },
+  "testimonials": {
+    "title": "Was andere sagen",
+    "subtitle": "Glaub nicht nur uns - hör, was Spielleiter und Entwickler über DM Hero sagen"
+  },
   "feedback": {
     "title": "Feedback oder Ideen?",
     "description": "Einen Bug gefunden? Eine Feature-Idee? Willst du teilen, wie du DM Hero nutzt? Schau bei den GitHub Discussions vorbei - zum Lesen brauchst du keinen Account, zum Mitmachen kannst du dir kostenlos einen erstellen!",

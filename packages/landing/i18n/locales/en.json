@@ -114,6 +114,10 @@
     },
     "allReleases": "View all releases on GitHub"
   },
+  "testimonials": {
+    "title": "What People Are Saying",
+    "subtitle": "Don't just take our word for it - hear from DMs and developers who use DM Hero"
+  },
   "feedback": {
     "title": "Got Feedback or Ideas?",
     "description": "Found a bug? Have a feature idea? Want to share how you use DM Hero? Join the discussion on GitHub - no account needed to browse, but you can create one for free to participate!",

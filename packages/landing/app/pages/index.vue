@@ -15,6 +15,7 @@ useSeoMeta({
 <template>
   <div class="landing-page">
     <HeroSection />
+    <TestimonialsSection />
     <FeaturesSection />
     <ScreenshotsSection />
     <DownloadSection />
