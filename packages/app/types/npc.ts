@@ -31,6 +31,7 @@ export const NPC_TYPES = [
   'knight',
   'assassin',
   'smuggler',
+  'deity',
 ] as const
 
 export type NpcType = (typeof NPC_TYPES)[number]

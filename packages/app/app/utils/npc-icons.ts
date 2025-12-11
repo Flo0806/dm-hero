@@ -35,6 +35,7 @@ export function getNpcTypeIcon(type: string): string {
     knight: 'mdi-shield-sword',
     assassin: 'mdi-knife-military',
     smuggler: 'mdi-sack',
+    deity: 'mdi-creation',
   }
   return icons[type] || 'mdi-account'
 }

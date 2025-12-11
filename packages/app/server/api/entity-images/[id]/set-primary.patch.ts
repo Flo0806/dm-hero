@@ -11,11 +11,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Get image info
-  const image = db.prepare('SELECT id, entity_id FROM entity_images WHERE id = ?').get(imageId) as
+  // Get image info including the image_url
+  const image = db.prepare('SELECT id, entity_id, image_url FROM entity_images WHERE id = ?').get(imageId) as
     | {
         id: number
         entity_id: number
+        image_url: string
       }
     | undefined
 
@@ -32,8 +33,9 @@ export default defineEventHandler(async (event) => {
   // Set this image as primary
   db.prepare('UPDATE entity_images SET is_primary = 1 WHERE id = ?').run(imageId)
 
-  // Update entity's updated_at
-  db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(
+  // Update entity's image_url and updated_at
+  db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?').run(
+    image.image_url,
     new Date().toISOString(),
     image.entity_id,
   )

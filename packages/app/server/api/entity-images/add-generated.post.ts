@@ -64,6 +64,15 @@ export default defineEventHandler(async (event) => {
     )
     .run(entityId, imageUrl, isPrimary, displayOrder, new Date().toISOString())
 
+  // If this is the first/primary image, also update entities.image_url
+  if (isPrimary === 1) {
+    db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?').run(
+      imageUrl,
+      new Date().toISOString(),
+      entityId,
+    )
+  }
+
   return {
     success: true,
     imageId: Number(result.lastInsertRowid),

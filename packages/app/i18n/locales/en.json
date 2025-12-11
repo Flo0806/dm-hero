@@ -225,7 +225,8 @@
       "mage": "Mage",
       "knight": "Knight",
       "assassin": "Assassin",
-      "smuggler": "Smuggler"
+      "smuggler": "Smuggler",
+      "deity": "Deity"
     },
     "status": "Status",
     "statuses": {
@@ -366,7 +367,9 @@
       "lore": "Linked Lore",
       "memberships": "Faction Memberships",
       "players": "Linked Players"
-    }
+    },
+    "noMemberships": "No Faction Memberships",
+    "noMembershipsText": "This NPC is not a member of any faction yet."
   },
   "factions": {
     "title": "Factions",

@@ -224,7 +224,8 @@
       "mage": "Magier",
       "knight": "Ritter",
       "assassin": "Assassine",
-      "smuggler": "Schmuggler"
+      "smuggler": "Schmuggler",
+      "deity": "Gottheit"
     },
     "status": "Status",
     "statuses": {
@@ -367,7 +368,9 @@
       "memberships": "Fraktionsmitgliedschaften",
       "players": "Verknüpfte Spieler"
     },
-    "noLore": "Kein verknüpftes Wissen vorhanden"
+    "noLore": "Kein verknüpftes Wissen vorhanden",
+    "noMemberships": "Keine Fraktionsmitgliedschaften",
+    "noMembershipsText": "Dieser NPC ist noch kein Mitglied einer Fraktion."
   },
   "factions": {
     "title": "Fraktionen",

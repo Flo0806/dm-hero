@@ -62,6 +62,8 @@ export default defineEventHandler(async (event) => {
     campaign_id: number
     name: string
     description: string | null
+    image_url: string | null
+    location_id: number | null
     metadata: string | null
     created_at: string
     updated_at: string
@@ -71,7 +73,8 @@ export default defineEventHandler(async (event) => {
   const lore = db
     .prepare<unknown[], DbEntity>(
       `
-    SELECT * FROM entities WHERE id = ? AND deleted_at IS NULL
+    SELECT id, type_id, campaign_id, name, description, image_url, location_id, metadata, created_at, updated_at, deleted_at
+    FROM entities WHERE id = ? AND deleted_at IS NULL
   `,
     )
     .get(id)

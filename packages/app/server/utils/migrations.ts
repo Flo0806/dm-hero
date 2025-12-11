@@ -1716,6 +1716,30 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 32: Added weather_type to calendar_seasons')
     },
   },
+  {
+    version: 33,
+    name: 'Sync entities.image_url from primary entity_images',
+    up: (db: Database.Database) => {
+      // Update entities.image_url from primary image in entity_images table
+      // This fixes entities where image_url was never set despite having images
+      const result = db.prepare(`
+        UPDATE entities
+        SET image_url = (
+          SELECT ei.image_url
+          FROM entity_images ei
+          WHERE ei.entity_id = entities.id AND ei.is_primary = 1
+          LIMIT 1
+        )
+        WHERE EXISTS (
+          SELECT 1 FROM entity_images ei
+          WHERE ei.entity_id = entities.id AND ei.is_primary = 1
+        )
+        AND (entities.image_url IS NULL OR entities.image_url = '')
+      `).run()
+
+      console.log(`✅ Migration 33: Synced ${result.changes} entities with their primary image`)
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
