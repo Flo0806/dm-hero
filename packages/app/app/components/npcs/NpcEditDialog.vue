@@ -518,6 +518,7 @@ import { useImageDownload } from '~/composables/useImageDownload'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and npcId needed!
@@ -1408,42 +1409,7 @@ async function generateName() {
   }
 }
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-function getNpcTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    friendly: 'mdi-account-heart',
-    neutral: 'mdi-account',
-    hostile: 'mdi-account-alert',
-    ally: 'mdi-account-check',
-    merchant: 'mdi-storefront',
-    quest_giver: 'mdi-script-text',
-    boss: 'mdi-crown',
-    companion: 'mdi-account-multiple',
-  }
-  return icons[type] || 'mdi-account'
-}
-
-function getNpcStatusIcon(status: string): string {
-  const icons: Record<string, string> = {
-    alive: 'mdi-heart-pulse',
-    dead: 'mdi-skull',
-    unknown: 'mdi-help-circle',
-    missing: 'mdi-magnify',
-  }
-  return icons[status] || 'mdi-help-circle'
-}
-
-function getNpcStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    alive: 'success',
-    dead: 'error',
-    unknown: 'grey',
-    missing: 'warning',
-  }
-  return colors[status] || 'grey'
-}
+// Icon helpers imported from ~/utils/npc-icons
 </script>
 
 <style scoped>

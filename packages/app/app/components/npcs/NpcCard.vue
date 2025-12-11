@@ -375,6 +375,7 @@
 <script setup lang="ts">
 import type { NPC } from '~~/types/npc'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
 
 interface Props {
   npc: NPC
@@ -470,48 +471,7 @@ function getClassDisplayName(className: string): string {
   return classData.name
 }
 
-// Icon helpers
-function getNpcTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    ally: 'mdi-handshake',
-    enemy: 'mdi-sword-cross',
-    neutral: 'mdi-minus-circle',
-    questgiver: 'mdi-exclamation',
-    merchant: 'mdi-cart',
-    guard: 'mdi-shield',
-    noble: 'mdi-crown',
-    commoner: 'mdi-account',
-    villain: 'mdi-skull',
-    mentor: 'mdi-school',
-    companion: 'mdi-account-multiple',
-    informant: 'mdi-eye',
-  }
-  return icons[type] || 'mdi-account'
-}
-
-function getNpcStatusIcon(status: string): string {
-  const icons: Record<string, string> = {
-    alive: 'mdi-heart-pulse',
-    dead: 'mdi-skull',
-    missing: 'mdi-help-circle',
-    imprisoned: 'mdi-lock',
-    unknown: 'mdi-help',
-    undead: 'mdi-zombie',
-  }
-  return icons[status] || 'mdi-help'
-}
-
-function getNpcStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    alive: 'success',
-    dead: 'error',
-    missing: 'warning',
-    imprisoned: 'grey-darken-2',
-    unknown: 'grey',
-    undead: 'purple',
-  }
-  return colors[status] || 'grey'
-}
+// Icon helpers imported from ~/utils/npc-icons
 </script>
 
 <style scoped>
