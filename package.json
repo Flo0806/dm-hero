@@ -16,12 +16,19 @@
     "electron:build:win": "pnpm --filter @dm-hero/app electron:build:win",
     "electron:rebuild": "pnpm --filter @dm-hero/app electron:rebuild",
     "electron:start": "pnpm --filter @dm-hero/app electron:start",
-    "version:bump": "node scripts/version-bump.js"
+    "version:bump": "node scripts/version-bump.js",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status"
   },
   "engines": {
     "node": ">=22.0.0"
   },
   "dependencies": {
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8"
   }
 }

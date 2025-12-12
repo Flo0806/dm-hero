@@ -98,7 +98,35 @@ This is a personal project, but contributions are welcome!
 2. Create a feature branch
 3. Make your changes (follow ESLint + Prettier rules)
 4. Run tests: `pnpm test`
-5. Submit a pull request
+5. **Add a changeset** (see below)
+6. Submit a pull request
+
+### Changesets
+
+We use [Changesets](https://github.com/changesets/changesets) to manage versioning and changelogs for the landing page. When you make changes that should be released:
+
+```bash
+# Create a changeset
+pnpm changeset
+
+# Follow the prompts:
+# 1. Select package(s) to include (currently only @dm-hero/landing)
+# 2. Choose version bump type (patch/minor/major)
+# 3. Write a summary of your changes
+```
+
+This creates a markdown file in `.changeset/` describing your change. Commit this file with your PR.
+
+**When to add a changeset:**
+- New features or enhancements
+- Bug fixes
+- Breaking changes
+- Documentation updates (for landing page)
+
+**When NOT to add a changeset:**
+- Internal refactoring with no user-visible changes
+- Test-only changes
+- CI/workflow updates
 
 ### Code Style
 
