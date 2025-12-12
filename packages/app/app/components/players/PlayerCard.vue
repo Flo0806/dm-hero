@@ -6,6 +6,15 @@
     style="height: 100%; cursor: pointer"
     @click="$emit('view', player)"
   >
+    <!-- Pin Button (top right) -->
+    <SharedPinButton
+      :entity-id="player.id"
+      variant="icon"
+      size="small"
+      class="pin-button"
+      @click.stop
+    />
+
     <!-- Card Header with Image -->
     <div class="d-flex align-start pa-4 pb-3">
       <!-- Avatar (clickable if image exists) -->
@@ -353,6 +362,14 @@ const previewSubtitle = computed(() => {
 <style scoped>
 .player-card {
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.pin-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
 }
 
 .player-description {

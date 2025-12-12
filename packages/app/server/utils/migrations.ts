@@ -1740,6 +1740,31 @@ export const migrations: Migration[] = [
       console.log(`✅ Migration 33: Synced ${result.changes} entities with their primary image`)
     },
   },
+  {
+    version: 34,
+    name: 'Add pinboard table for quick entity access',
+    up: (db: Database.Database) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS pinboard (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          entity_id INTEGER NOT NULL,
+          display_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+          UNIQUE(campaign_id, entity_id)
+        )
+      `)
+
+      // Index for fast lookups
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_pinboard_campaign_id ON pinboard(campaign_id)
+      `)
+
+      console.log('✅ Migration 34: Created pinboard table')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

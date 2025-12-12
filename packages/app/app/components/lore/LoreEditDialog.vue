@@ -10,8 +10,10 @@
 
       <!-- Content -->
       <template v-else>
-        <v-card-title>
+        <v-card-title class="d-flex align-center">
           {{ lore ? $t('lore.edit') : $t('lore.create') }}
+          <v-spacer />
+          <SharedPinButton v-if="lore?.id" :entity-id="lore.id" variant="icon" />
         </v-card-title>
 
         <v-tabs v-if="lore" v-model="activeTab" class="mb-4" show-arrows>

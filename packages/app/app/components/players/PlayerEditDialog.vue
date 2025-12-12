@@ -4,6 +4,7 @@
       <v-card-title class="d-flex align-center">
         {{ player ? $t('players.edit') : $t('players.create') }}
         <v-spacer />
+        <SharedPinButton v-if="player?.id" :entity-id="player.id" variant="icon" class="mr-1" />
         <v-btn icon="mdi-close" variant="text" @click="close" />
       </v-card-title>
 

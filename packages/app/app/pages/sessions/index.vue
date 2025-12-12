@@ -14,6 +14,11 @@
       </template>
     </UiPageHeader>
 
+    <!-- Global Campaign Pinboard -->
+    <div class="sticky-pinboard mb-4">
+      <SharedPinboard ref="pinboardRef" />
+    </div>
+
     <v-row v-if="pending">
       <v-col v-for="i in 3" :key="i" cols="12">
         <v-skeleton-loader type="article" />
@@ -131,7 +136,7 @@
     </template>
 
     <!-- Create/Edit Session Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="1200" scrollable :persistent="saving || uploadingAudio || generatingImage">
+    <v-dialog v-model="showCreateDialog" max-width="1200" scrollable persistent>
       <v-card>
         <v-card-title>
           {{ editingSession ? $t('sessions.edit') : $t('sessions.create') }}
@@ -755,6 +760,9 @@ onMounted(async () => {
 const sessions = ref<Session[]>([])
 const pending = ref(false)
 
+// Pinboard ref (exposed methods: refresh, addPin)
+const pinboardRef = ref<{ refresh: () => void; addPin: (entityId: number) => Promise<boolean | undefined> } | null>(null)
+
 // Form state
 const showCreateDialog = ref(false)
 const showViewDialog = ref(false)
@@ -1371,6 +1379,13 @@ function closeDialog() {
   bottom: 24px;
   right: 24px;
   z-index: 100;
+}
+
+/* Sticky Pinboard */
+.sticky-pinboard {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
 }
 </style>
 >

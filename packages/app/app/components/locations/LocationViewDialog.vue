@@ -12,9 +12,7 @@
             {{ $t(`locations.types.${location.metadata.type}`, location.metadata.type) }}
           </div>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="$emit('update:modelValue', false)">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="location?.id" :entity-id="location.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

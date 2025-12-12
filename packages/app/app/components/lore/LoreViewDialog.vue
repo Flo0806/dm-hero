@@ -15,9 +15,7 @@
             </v-chip>
           </div>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="$emit('update:modelValue', false)">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="lore?.id" :entity-id="lore.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

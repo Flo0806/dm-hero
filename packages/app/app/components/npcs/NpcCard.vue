@@ -6,6 +6,15 @@
     style="height: 100%; cursor: pointer"
     @click="$emit('view', npc)"
   >
+    <!-- Pin Button (top right) -->
+    <SharedPinButton
+      :entity-id="npc.id"
+      variant="icon"
+      size="small"
+      class="pin-button"
+      @click.stop
+    />
+
     <!-- Card Header with Image & Status -->
     <div class="d-flex align-start pa-4 pb-3">
       <!-- Avatar (clickable if image exists) -->
@@ -477,6 +486,14 @@ function getClassDisplayName(className: string): string {
 <style scoped>
 .npc-card {
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.pin-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
 }
 
 .npc-description {

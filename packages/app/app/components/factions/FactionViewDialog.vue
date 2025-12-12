@@ -13,9 +13,7 @@
             {{ $t('factions.leader') }}: {{ faction.leader_name }}
           </div>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="close">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="faction?.id" :entity-id="faction.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

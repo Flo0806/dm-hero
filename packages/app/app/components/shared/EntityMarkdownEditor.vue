@@ -737,11 +737,16 @@ function handleEditorClick(event: MouseEvent) {
   const badge = target.closest('.entity-badge')
 
   if (badge) {
-    event.preventDefault()
-    event.stopPropagation()
-
     const type = badge.getAttribute('data-type') as EntityType
     const id = badge.getAttribute('data-id')
+
+    // Sessions are not clickable - no preview available
+    if (type === 'session') {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
 
     if (type && id) {
       previewEntityId.value = Number.parseInt(id)
@@ -776,7 +781,9 @@ function sanitizeHtml(html: string): string {
       }
     }
 
-    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${displayHtml}</span>`
+    // Sessions are not clickable (no preview dialog), so no pointer cursor
+    const cursor = type === 'session' ? 'default' : 'pointer'
+    return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: ${cursor};"><i class="mdi ${icon}"></i>${displayHtml}</span>`
   }
 
   // Handle new format {{type:id}}

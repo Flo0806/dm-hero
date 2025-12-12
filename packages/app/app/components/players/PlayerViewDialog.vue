@@ -27,9 +27,7 @@
           <v-icon start>mdi-star</v-icon>
           {{ player.metadata?.inspiration || 0 }} {{ $t('players.inspiration') }}
         </v-chip>
-        <v-btn icon="mdi-close" variant="text" @click="close">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="player?.id" :entity-id="player.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

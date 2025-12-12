@@ -4,16 +4,18 @@
       <v-card-title class="d-flex align-center">
         <v-icon :icon="entityIcon" :color="entityColor" class="mr-2" />
         {{ entity.name }}
-        <template v-if="entityType === 'player' && entity.player_name">
+        <template v-if="normalizedEntityType === 'player' && entity.player_name">
           <span class="text-body-2 text-medium-emphasis ml-2">
             ({{ entity.player_name }})
           </span>
         </template>
+        <v-spacer />
+        <SharedPinButton v-if="entityId" :entity-id="entityId" variant="icon" size="small" />
       </v-card-title>
 
       <v-card-text style="max-height: 60vh">
         <!-- NPC Details -->
-        <template v-if="entityType === 'npc'">
+        <template v-if="normalizedEntityType === 'npc'">
           <v-img
             v-if="entity.image_url"
             :src="`/uploads/${entity.image_url}`"
@@ -44,7 +46,7 @@
         </template>
 
         <!-- Location Details -->
-        <template v-if="entityType === 'location'">
+        <template v-if="normalizedEntityType === 'location'">
           <v-img
             v-if="entity.image_url"
             :src="`/uploads/${entity.image_url}`"
@@ -72,7 +74,7 @@
         </template>
 
         <!-- Item Details -->
-        <template v-if="entityType === 'item'">
+        <template v-if="normalizedEntityType === 'item'">
           <div class="position-relative">
             <v-img
               v-if="entity.image_url"
@@ -112,7 +114,7 @@
         </template>
 
         <!-- Faction Details -->
-        <template v-if="entityType === 'faction'">
+        <template v-if="normalizedEntityType === 'faction'">
           <v-img
             v-if="entity.image_url"
             :src="`/uploads/${entity.image_url}`"
@@ -144,7 +146,7 @@
         </template>
 
         <!-- Lore Details -->
-        <template v-if="entityType === 'lore'">
+        <template v-if="normalizedEntityType === 'lore'">
           <v-img
             v-if="entity.image_url"
             :src="`/uploads/${entity.image_url}`"
@@ -173,7 +175,7 @@
         </template>
 
         <!-- Player Details -->
-        <template v-if="entityType === 'player'">
+        <template v-if="normalizedEntityType === 'player'">
           <v-img
             v-if="entity.image_url"
             :src="`/uploads/${entity.image_url}`"
@@ -267,27 +269,30 @@ const entityConfig: Record<
   player: { icon: 'mdi-account-star', color: 'pink', endpoint: '/api/players', route: '/players' },
 }
 
+// Normalized entity type for consistent lookups
+const normalizedEntityType = computed(() => props.entityType.toLowerCase() as EntityPreviewType)
+
 const entityIcon = computed(() => {
-  const baseIcon = entityConfig[props.entityType]?.icon || 'mdi-help'
+  const baseIcon = entityConfig[normalizedEntityType.value]?.icon || 'mdi-help'
   if (!entity.value) return baseIcon
 
   // Use type-specific icons for items and locations
-  if (props.entityType === 'item') {
+  if (normalizedEntityType.value === 'item') {
     const itemType = (entity.value.metadata as { type?: string } | null)?.type
     return getItemTypeIcon(itemType)
   }
-  if (props.entityType === 'location') {
+  if (normalizedEntityType.value === 'location') {
     const locationType = (entity.value.metadata as { type?: string } | null)?.type
     return getLocationTypeIcon(locationType)
   }
   return baseIcon
 })
-const entityColor = computed(() => entityConfig[props.entityType]?.color || 'grey')
+const entityColor = computed(() => entityConfig[normalizedEntityType.value]?.color || 'grey')
 
-// Load entity when ID changes
+// Load entity when ID or type changes
 watch(
-  () => [props.entityId, props.modelValue],
-  async ([newId, isOpen]) => {
+  () => [props.entityId, props.entityType, props.modelValue],
+  async ([newId, _type, isOpen]) => {
     if (newId && isOpen) {
       await loadEntity(newId as number)
     }
@@ -298,7 +303,12 @@ watch(
 async function loadEntity(id: number) {
   loading.value = true
   try {
-    const config = entityConfig[props.entityType]
+    const config = entityConfig[normalizedEntityType.value]
+    if (!config) {
+      console.error('Unknown entity type:', props.entityType)
+      entity.value = null
+      return
+    }
     entity.value = await $fetch<GenericEntity>(`${config.endpoint}/${id}`)
   } catch (error) {
     console.error('Failed to load entity:', error)
@@ -322,7 +332,8 @@ function getRarityColor(rarity: unknown): string {
 
 function goToPage() {
   if (!entity.value) return
-  const config = entityConfig[props.entityType]
+  const config = entityConfig[normalizedEntityType.value]
+  if (!config) return
   const entityName = entity.value.name as string
   // Use search + highlight params so the entity is visible and highlighted
   router.push(`${config.route}?search=${encodeURIComponent(entityName)}&highlight=${props.entityId}`)

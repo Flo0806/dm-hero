@@ -22,9 +22,7 @@
             </span>
           </div>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="$emit('update:modelValue', false)">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="item?.id" :entity-id="item.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

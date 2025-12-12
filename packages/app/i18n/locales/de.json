@@ -782,7 +782,16 @@
       "dock": "Dock",
       "alley": "Gasse",
       "plaza": "Platz",
-      "outpost": "Außenposten"
+      "outpost": "Außenposten",
+      "kingdom": "Königreich",
+      "empire": "Imperium",
+      "region": "Region",
+      "continent": "Kontinent",
+      "world": "Welt",
+      "plane": "Ebene",
+      "realm": "Reich",
+      "province": "Provinz",
+      "territory": "Territorium"
     },
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
@@ -1120,6 +1129,16 @@
     "coverImageDescription": "Bildbeschreibung",
     "coverImageDescriptionPlaceholder": "Beschreibe die Szene, z.B.: Eine Gruppe Abenteurer steht vor einem riesigen Drachen in einer Höhle voller Gold...",
     "coverImageSafetyError": "Die Beschreibung wurde vom KI-Sicherheitsfilter abgelehnt. Bitte formuliere die Szene anders - vermeide direkte Gewaltbeschreibungen und verwende stattdessen allgemeinere Begriffe wie 'epischer Kampf' oder 'dramatische Konfrontation'."
+  },
+  "pinboard": {
+    "title": "Pinboard",
+    "empty": "Keine gepinnten Entities",
+    "emptyHint": "Pinne NPCs, Orte oder Items für schnellen Zugriff",
+    "pin": "Pinnen",
+    "unpin": "Pin entfernen",
+    "alreadyPinned": "Bereits gepinnt",
+    "pinnedSuccess": "Erfolgreich gepinnt",
+    "unpinnedSuccess": "Pin entfernt"
   },
   "documents": {
     "title": "Dokumente",

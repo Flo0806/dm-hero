@@ -15,9 +15,7 @@
             <span v-if="npc.metadata?.class">{{ getClassDisplayName(npc.metadata.class) }}</span>
           </div>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="close">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        <SharedPinButton v-if="npc?.id" :entity-id="npc.id" variant="icon" size="small" />
       </v-card-title>
 
       <v-divider />

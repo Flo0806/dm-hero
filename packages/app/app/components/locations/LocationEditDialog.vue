@@ -9,6 +9,7 @@
       <v-card-title class="d-flex align-center">
         <span>{{ location ? $t('locations.edit') : $t('locations.create') }}</span>
         <v-spacer />
+        <SharedPinButton v-if="location?.id" :entity-id="location.id" variant="icon" class="mr-1" />
         <v-btn icon variant="text" @click="close">
           <v-icon>mdi-close</v-icon>
         </v-btn>

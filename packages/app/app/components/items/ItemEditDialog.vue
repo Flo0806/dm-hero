@@ -19,6 +19,7 @@
         <v-card-title class="d-flex align-center">
           <span>{{ item ? $t('items.edit') : $t('items.create') }}</span>
           <v-spacer />
+          <SharedPinButton v-if="item?.id" :entity-id="item.id" variant="icon" class="mr-1" />
           <v-btn icon="mdi-close" variant="text" density="compact" @click="close" />
         </v-card-title>
 

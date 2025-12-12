@@ -787,7 +787,16 @@
       "dock": "Dock",
       "alley": "Alley",
       "plaza": "Plaza",
-      "outpost": "Outpost"
+      "outpost": "Outpost",
+      "kingdom": "Kingdom",
+      "empire": "Empire",
+      "region": "Region",
+      "continent": "Continent",
+      "world": "World",
+      "plane": "Plane",
+      "realm": "Realm",
+      "province": "Province",
+      "territory": "Territory"
     },
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
@@ -1124,7 +1133,19 @@
     "generateCoverImage": "Generate Image with AI",
     "coverImageDescription": "Image Description",
     "coverImageDescriptionPlaceholder": "Describe the scene, e.g.: A group of adventurers standing before a huge dragon in a cave full of gold...",
-    "coverImageSafetyError": "The description was rejected by the AI safety filter. Please rephrase the scene - avoid direct violence descriptions and use more general terms like 'epic battle' or 'dramatic confrontation' instead."
+    "coverImageSafetyError": "The description was rejected by the AI safety filter. Please rephrase the scene - avoid direct violence descriptions and use more general terms like 'epic battle' or 'dramatic confrontation' instead.",
+    "pinboard": {
+      "title": "Pinboard",
+      "empty": "No pinned entities",
+      "emptyHint": "Pin NPCs, locations or items for quick access during the session",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "pinToSession": "Pin to Session",
+      "alreadyPinned": "Already pinned",
+      "pinned": "Pinned",
+      "pinnedSuccess": "Successfully pinned",
+      "unpinnedSuccess": "Pin removed"
+    }
   },
   "documents": {
     "title": "Documents",
@@ -1625,6 +1646,16 @@
       "summer": "Summer (warm, sunny)",
       "autumn": "Autumn (cool, foggy)"
     }
+  },
+  "pinboard": {
+    "title": "Pinboard",
+    "empty": "No pinned entities",
+    "emptyHint": "Pin NPCs, locations or items for quick access",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "alreadyPinned": "Already pinned",
+    "pinnedSuccess": "Successfully pinned",
+    "unpinnedSuccess": "Pin removed"
   },
   "chaos": {
     "title": "Chaos Graph",
