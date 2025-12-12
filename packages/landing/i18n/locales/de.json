@@ -146,5 +146,47 @@
     "loading": "Laden...",
     "error": "Etwas ist schiefgelaufen",
     "retry": "Erneut versuchen"
+  },
+  "privacyBanner": {
+    "title": "Deine Daten gehören dir.",
+    "message": "Diese Website verwendet keine Cookies und kein Tracking. Wir speichern nur das technisch Notwendige. Keine Zustimmung erforderlich.",
+    "learnMore": "Mehr erfahren",
+    "ok": "Alles klar"
+  },
+  "legal": {
+    "backToHome": "Zurück zur Startseite",
+    "imprint": {
+      "title": "Impressum",
+      "info": "DM Hero - Ein Open Source Projekt",
+      "owner": "Florian Heuberger",
+      "address": "Weickenricht 25, 92271 Freihung, Deutschland",
+      "contact": "E-Mail",
+      "vat": "Umsatzsteuer-ID",
+      "responsible": "Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV",
+      "note": "Für externe Links übernehmen wir keine Verantwortung. Die verlinkten Inhalte wurden zum Zeitpunkt der Verlinkung auf offensichtliche Rechtsverstöße geprüft."
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "intro": "Wir nehmen den Schutz Ihrer persönlichen Daten ernst. Nachfolgend informieren wir Sie über die Erhebung und Verwendung personenbezogener Daten auf dieser Website.",
+      "controllerTitle": "Verantwortlicher",
+      "controller": "Verantwortlich im Sinne der DSGVO ist:",
+      "name": "Florian Heuberger",
+      "address": "Weickenricht 25, 92271 Freihung, Deutschland",
+      "email": "E-Mail: info{'@'}fh-softdev.de",
+      "hostingTitle": "Hosting",
+      "hosting": "Diese Website wird auf einem eigenen Server gehostet, der über IONOS SE erreichbar ist. Der Server kann dabei technische Daten wie IP-Adressen in Server-Logfiles speichern. Diese Daten dienen ausschließlich der technischen Überwachung und Fehleranalyse.",
+      "dataCollectionTitle": "Welche Daten erfassen wir?",
+      "dataCollection": "Diese Website verwendet keine Cookies und kein Tracking. Es werden keine personenbezogenen Daten durch uns erhoben oder gespeichert. Es handelt sich um eine rein statische Informationsseite.",
+      "legalBasisTitle": "Rechtsgrundlagen der Verarbeitung",
+      "legalBasis": "Soweit technische Daten durch den Hosting-Anbieter verarbeitet werden, erfolgt dies auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer funktionierenden Website).",
+      "externalTitle": "Externe Inhalte",
+      "external": "Diese Website bindet externe Inhalte ein: Profilbilder von GitHub (github.com) für die Testimonials-Sektion sowie ein Bild von Buy Me a Coffee (cdn.buymeacoffee.com). Beim Laden dieser Inhalte kann Ihre IP-Adresse an die jeweiligen Anbieter übertragen werden.",
+      "githubTitle": "GitHub API",
+      "github": "Für die Anzeige von Release-Informationen wird die öffentliche GitHub API verwendet. Dabei können technische Daten an GitHub übertragen werden. Es gelten die Datenschutzbestimmungen von GitHub.",
+      "rightsTitle": "Ihre Rechte",
+      "rights": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Widerspruch gegen die Verarbeitung Ihrer personenbezogenen Daten. Zudem besteht ein Beschwerderecht bei der zuständigen Aufsichtsbehörde.",
+      "noteTitle": "Hinweis zur Datenübertragung",
+      "note": "Wir weisen darauf hin, dass die Datenübertragung im Internet Sicherheitslücken aufweisen kann. Ein vollständiger Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich."
+    }
   }
 }

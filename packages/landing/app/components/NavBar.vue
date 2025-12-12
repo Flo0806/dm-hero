@@ -41,12 +41,12 @@ function toggleLanguage() {
   >
     <v-container class="d-flex align-center">
       <!-- Logo -->
-      <a href="#" class="d-flex align-center text-decoration-none logo-link">
+      <NuxtLink to="/" class="d-flex align-center text-decoration-none logo-link">
         <img src="/logo.png" alt="DM Hero" class="nav-logo" />
         <span class="text-h6 font-weight-bold gradient-text d-none d-sm-inline">
           DM Hero
         </span>
-      </a>
+      </NuxtLink>
 
       <v-spacer />
 

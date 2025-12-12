@@ -16,6 +16,8 @@ useHead({
     <v-main>
       <NuxtPage />
     </v-main>
+
+    <PrivacyInfoBanner />
   </v-app>
 </template>
 

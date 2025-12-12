@@ -146,5 +146,47 @@
     "loading": "Loading...",
     "error": "Something went wrong",
     "retry": "Try again"
+  },
+  "privacyBanner": {
+    "title": "Your data belongs to you.",
+    "message": "This website uses no cookies and no tracking. We only store what's technically necessary. No consent required.",
+    "learnMore": "Learn more",
+    "ok": "Got it"
+  },
+  "legal": {
+    "backToHome": "Back to Home",
+    "imprint": {
+      "title": "Imprint",
+      "info": "DM Hero - An Open Source Project",
+      "owner": "Florian Heuberger",
+      "address": "Weickenricht 25, 92271 Freihung, Germany",
+      "contact": "Email",
+      "vat": "VAT ID",
+      "responsible": "Responsible for content according to § 55 (2) RStV",
+      "note": "We are not responsible for external links. Linked content was checked for obvious legal violations at the time of linking."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "We take the protection of your personal data seriously. Below you will find information about how we handle your personal data when you visit our website.",
+      "controllerTitle": "Data Controller",
+      "controller": "The responsible party within the meaning of the GDPR is:",
+      "name": "Florian Heuberger",
+      "address": "Weickenricht 25, 92271 Freihung, Germany",
+      "email": "Email: info{'@'}fh-softdev.de",
+      "hostingTitle": "Hosting",
+      "hosting": "This website is hosted on a private server accessible via IONOS SE. The server may store technical data such as IP addresses in server log files. This data is used exclusively for technical monitoring and troubleshooting.",
+      "dataCollectionTitle": "What data do we collect?",
+      "dataCollection": "This website does not use cookies or tracking. No personal data is collected or stored by us. This is a purely static informational website.",
+      "legalBasisTitle": "Legal Basis for Processing",
+      "legalBasis": "Insofar as technical data is processed by the hosting provider, this is done on the basis of Art. 6 (1) lit. f GDPR (legitimate interest in a functional website).",
+      "externalTitle": "External Content",
+      "external": "This website embeds external content: profile pictures from GitHub (github.com) for the testimonials section and an image from Buy Me a Coffee (cdn.buymeacoffee.com). When loading this content, your IP address may be transmitted to these providers.",
+      "githubTitle": "GitHub API",
+      "github": "The public GitHub API is used to display release information. Technical data may be transmitted to GitHub. GitHub's privacy policy applies.",
+      "rightsTitle": "Your Rights",
+      "rights": "You have the right to request access to, correction or deletion of your personal data, to restrict processing, and to object to the processing of your personal data. You also have the right to lodge a complaint with a supervisory authority.",
+      "noteTitle": "Note on Data Transmission",
+      "note": "Please note that data transmission over the Internet may have security vulnerabilities. Complete protection of data from access by third parties is not possible."
+    }
   }
 }

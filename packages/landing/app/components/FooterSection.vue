@@ -80,6 +80,16 @@ const links = [
         </v-col>
       </v-row>
 
+      <!-- Legal Links -->
+      <div class="text-center mt-4">
+        <NuxtLink to="/imprint" class="legal-link text-caption text-medium-emphasis mx-3">
+          {{ t('legal.imprint.title') }}
+        </NuxtLink>
+        <NuxtLink to="/privacy" class="legal-link text-caption text-medium-emphasis mx-3">
+          {{ t('legal.privacy.title') }}
+        </NuxtLink>
+      </div>
+
       <!-- Divider -->
       <v-divider class="my-8" color="primary" opacity="0.2" />
 
@@ -128,5 +138,14 @@ const links = [
   font-size: 1.1rem;
   font-weight: 600;
   color: #00DC82;
+}
+
+.legal-link {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.legal-link:hover {
+  color: rgb(var(--v-theme-primary)) !important;
 }
 </style>
