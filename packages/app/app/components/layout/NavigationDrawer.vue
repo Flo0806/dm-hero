@@ -100,6 +100,9 @@
     </v-list>
 
     <template #append>
+      <!-- Update Banner -->
+      <LayoutUpdateBanner :rail="rail" />
+
       <v-divider />
       <v-list density="compact" nav>
         <v-list-item

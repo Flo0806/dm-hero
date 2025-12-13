@@ -1732,5 +1732,10 @@
     "areaConflictMove": "Markierungen mit dem Bereich verschieben",
     "areaConflictKeep": "Markierungen an aktueller Position belassen",
     "areaConflictRemove": "Standort-Zuweisung der Markierungen entfernen"
+  },
+  "update": {
+    "newVersionAvailable": "Neue Version verfügbar",
+    "download": "Herunterladen",
+    "dismiss": "Später"
   }
 }

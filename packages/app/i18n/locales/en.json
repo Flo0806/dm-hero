@@ -1756,5 +1756,10 @@
     "areaConflictMove": "Move markers with the area",
     "areaConflictKeep": "Keep markers at current position",
     "areaConflictRemove": "Remove location assignment from markers"
+  },
+  "update": {
+    "newVersionAvailable": "New version available",
+    "download": "Download",
+    "dismiss": "Later"
   }
 }
