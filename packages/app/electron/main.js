@@ -1,6 +1,6 @@
 import { app, BrowserWindow, utilityProcess, ipcMain, dialog, shell } from 'electron'
 import path from 'path'
-import { existsSync, mkdirSync, copyFileSync } from 'fs'
+import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -286,6 +286,32 @@ ipcMain.handle('open-uploads-folder', async () => {
   try {
     await shell.openPath(paths.uploadPath)
     return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
+// Save file with dialog (for campaign exports)
+ipcMain.handle('save-file-dialog', async (event, options) => {
+  const { defaultFileName, fileData, filters } = options
+
+  const result = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: defaultFileName,
+    filters: filters || [
+      { name: 'DM Hero Campaign', extensions: ['dmhero'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  })
+
+  if (result.canceled || !result.filePath) {
+    return { success: false, canceled: true }
+  }
+
+  try {
+    // fileData is an ArrayBuffer from the renderer
+    const buffer = Buffer.from(fileData)
+    writeFileSync(result.filePath, buffer)
+    return { success: true, filePath: result.filePath }
   } catch (error) {
     return { success: false, error: error.message }
   }

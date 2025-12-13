@@ -9,8 +9,10 @@
     "Location": "Ort",
     "Item": "Item",
     "Faction": "Fraktion",
+    "Quest": "Quest",
     "Lore": "Wissen",
-    "Player": "Spieler"
+    "Player": "Spieler",
+    "Unknown": "Unbekannt"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -24,6 +26,7 @@
     "quests": "Quests",
     "sessions": "Sessions",
     "maps": "Karten",
+    "calendar": "Kalender",
     "notes": "Notizen",
     "referenceData": "Referenzdaten",
     "settings": "Einstellungen",
@@ -78,7 +81,9 @@
       "title": "Wähle eine Kampagne",
       "description": "Um loszulegen, wähle eine bestehende Kampagne oder erstelle eine neue.",
       "button": "Zu den Kampagnen"
-    }
+    },
+    "exportHint": "Speichere deine Kampagne als .dmhero Datei",
+    "importHint": "Lade eine Kampagne aus einer .dmhero Datei"
   },
   "campaigns": {
     "title": "Kampagnen",
@@ -120,6 +125,36 @@
         "gold": "Gold",
         "platinum": "Platin"
       }
+    },
+    "export": {
+      "title": "Kampagne exportieren",
+      "fullExport": "Vollständig",
+      "partialExport": "Teilweise",
+      "fullExportInfo": "Exportiere die komplette Kampagne inklusive aller Entitäten, Sessions, Kalender, Karten und Einstellungen.",
+      "fullExportDetails": "{entities} Entitäten, {sessions} Sessions, {maps} Karten",
+      "partialExportInfo": "Wähle bestimmte Entitäten zum Export. Verknüpfte Entitäten werden zur einfachen Auswahl angezeigt.",
+      "selectedCount": "{count} Entitäten ausgewählt",
+      "download": ".dmhero herunterladen"
+    },
+    "import": {
+      "title": "Kampagne importieren",
+      "selectFile": ".dmhero Datei auswählen",
+      "fileInfo": "Lade eine .dmhero Datei hoch um eine Kampagne oder Entitäten zu importieren.",
+      "contents": "Dateiinhalt",
+      "modeNew": "Als neue Kampagne importieren",
+      "modeNewHint": "Erstellt eine neue Kampagne mit allen Inhalten",
+      "modeMerge": "In aktuelle Kampagne integrieren:",
+      "modeMergeHint": "Fügt alle Entitäten zur ausgewählten Kampagne hinzu",
+      "modeMergeNoActive": "Keine aktive Kampagne ausgewählt",
+      "mergeInfo": "Entitäten werden zur aktuellen Kampagne hinzugefügt. Bestehende Entitäten werden nicht überschrieben.",
+      "campaignName": "Kampagnenname",
+      "nameHint": "Du kannst die Kampagne vor dem Import umbenennen",
+      "importing": "Importiere...",
+      "pleaseWait": "Das kann einen Moment dauern",
+      "success": "Import erfolgreich!",
+      "successDetails": "{entitiesImported} Entitäten, {relationsImported} Beziehungen importiert",
+      "importNow": "Importieren",
+      "openCampaign": "Kampagne öffnen"
     }
   },
   "npcs": {
@@ -1207,6 +1242,8 @@
     "create": "Erstellen",
     "add": "Hinzufügen",
     "back": "Zurück",
+    "selectAll": "Alle auswählen",
+    "deselectAll": "Alle abwählen",
     "search": "Suchen",
     "searching": "Suche läuft...",
     "actions": "Aktionen",

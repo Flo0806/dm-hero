@@ -9,8 +9,10 @@
     "Location": "Location",
     "Item": "Item",
     "Faction": "Faction",
+    "Quest": "Quest",
     "Lore": "Lore",
-    "Player": "Player"
+    "Player": "Player",
+    "Unknown": "Unknown"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -24,6 +26,7 @@
     "quests": "Quests",
     "sessions": "Sessions",
     "maps": "Maps",
+    "calendar": "Calendar",
     "notes": "Notes",
     "referenceData": "Reference Data",
     "settings": "Settings",
@@ -78,7 +81,9 @@
       "title": "Select a Campaign",
       "description": "To get started, select an existing campaign or create a new one.",
       "button": "Go to Campaigns"
-    }
+    },
+    "exportHint": "Save your campaign as a .dmhero file",
+    "importHint": "Load a campaign from a .dmhero file"
   },
   "campaigns": {
     "title": "Campaigns",
@@ -120,6 +125,36 @@
         "gold": "Gold",
         "platinum": "Platinum"
       }
+    },
+    "export": {
+      "title": "Export Campaign",
+      "fullExport": "Full Export",
+      "partialExport": "Partial Export",
+      "fullExportInfo": "Export the complete campaign including all entities, sessions, calendar, maps, and settings.",
+      "fullExportDetails": "{entities} entities, {sessions} sessions, {maps} maps",
+      "partialExportInfo": "Select specific entities to export. Linked entities are shown for easy inclusion.",
+      "selectedCount": "{count} entities selected",
+      "download": "Download .dmhero"
+    },
+    "import": {
+      "title": "Import Campaign",
+      "selectFile": "Select .dmhero file",
+      "fileInfo": "Upload a .dmhero file to import a campaign or entities.",
+      "contents": "File Contents",
+      "modeNew": "Import as new campaign",
+      "modeNewHint": "Creates a new campaign with all contents",
+      "modeMerge": "Merge into current campaign:",
+      "modeMergeHint": "Adds all entities to the selected campaign",
+      "modeMergeNoActive": "No active campaign selected",
+      "mergeInfo": "Entities will be added to the current campaign. Existing entities will not be overwritten.",
+      "campaignName": "Campaign Name",
+      "nameHint": "You can rename the campaign before importing",
+      "importing": "Importing...",
+      "pleaseWait": "This may take a moment",
+      "success": "Import successful!",
+      "successDetails": "Imported {entitiesImported} entities, {relationsImported} relations",
+      "importNow": "Import",
+      "openCampaign": "Open Campaign"
     }
   },
   "npcs": {
@@ -1214,6 +1249,8 @@
     "create": "Create",
     "add": "Add",
     "back": "Back",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
     "search": "Search",
     "searching": "Searching...",
     "actions": "Actions",

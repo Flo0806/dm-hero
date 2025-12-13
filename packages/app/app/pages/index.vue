@@ -59,7 +59,41 @@
         </v-col>
       </v-row>
 
+      <!-- Export/Import Actions -->
       <v-row class="mt-8">
+        <v-col cols="12" md="6">
+          <v-card hover @click="showExportDialog = true">
+            <v-card-text class="pa-6">
+              <div class="d-flex align-center">
+                <v-icon icon="mdi-export" size="32" color="primary" class="mr-4" />
+                <div>
+                  <div class="text-h6">{{ $t('campaigns.export.title') }}</div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    {{ $t('dashboard.exportHint') }}
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-card hover @click="showImportDialog = true">
+            <v-card-text class="pa-6">
+              <div class="d-flex align-center">
+                <v-icon icon="mdi-import" size="32" color="secondary" class="mr-4" />
+                <div>
+                  <div class="text-h6">{{ $t('campaigns.import.title') }}</div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    {{ $t('dashboard.importHint') }}
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <v-row class="mt-4">
         <v-col cols="12">
           <v-card>
             <v-card-title>
@@ -98,16 +132,40 @@
         </v-col>
       </v-row>
     </div>
+
+    <!-- Export Dialog -->
+    <CampaignExportDialog
+      v-model="showExportDialog"
+      :campaign-id="campaignStore.activeCampaignIdNumber!"
+    />
+
+    <!-- Import Dialog -->
+    <CampaignImportDialog
+      v-model="showImportDialog"
+      @imported="onCampaignImported"
+    />
   </v-container>
 </template>
 
 <script setup lang="ts">
+import CampaignExportDialog from '~/components/campaigns/CampaignExportDialog.vue'
+import CampaignImportDialog from '~/components/campaigns/CampaignImportDialog.vue'
+
 const router = useRouter()
 const campaignStore = useCampaignStore()
 
 // Get active campaign from campaign store
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 const activeCampaignName = useCookie('activeCampaignName')
+
+// Export/Import dialogs
+const showExportDialog = ref(false)
+const showImportDialog = ref(false)
+
+function onCampaignImported(_campaignId: number) {
+  // Refresh the page after import
+  router.push('/')
+}
 
 onMounted(() => {
   // Initialize campaign from cookie

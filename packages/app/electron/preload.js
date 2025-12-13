@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Get data paths info
   getDataPaths: () => ipcRenderer.invoke('get-data-paths'),
+
+  // Save file with dialog (for campaign exports)
+  saveFileDialog: (options) => ipcRenderer.invoke('save-file-dialog', options),
 })
