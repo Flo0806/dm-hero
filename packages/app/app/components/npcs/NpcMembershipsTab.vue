@@ -28,7 +28,7 @@
             icon="mdi-pencil"
             variant="text"
             size="small"
-            @click="$emit('edit', membership)"
+            @click="editMembership(membership)"
           />
           <v-btn
             icon="mdi-delete"
@@ -61,6 +61,7 @@
       item-value="id"
       :label="$t('npcs.selectFaction')"
       variant="outlined"
+      clearable
       class="mb-3"
     />
 
@@ -72,6 +73,7 @@
       :label="$t('npcs.membershipType')"
       :placeholder="$t('npcs.membershipTypePlaceholder')"
       variant="outlined"
+      clearable
       class="mb-3"
     />
 
@@ -93,12 +95,51 @@
     >
       {{ $t('npcs.addFactionMembership') }}
     </v-btn>
+
+    <!-- Edit Membership Dialog -->
+    <v-dialog v-model="showEditDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('npcs.editMembership') }}</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="editForm.relationType"
+            :items="membershipTypeSuggestions"
+            item-title="title"
+            item-value="value"
+            :label="$t('npcs.membershipType')"
+            variant="outlined"
+            clearable
+            class="mb-3"
+          />
+          <v-text-field
+            v-model="editForm.rank"
+            :label="$t('npcs.rank')"
+            :placeholder="$t('npcs.rankPlaceholder')"
+            variant="outlined"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeEditDialog">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" :loading="saving" @click="saveEdit">
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { FACTION_MEMBERSHIP_TYPES } from '~~/types/faction'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
 const { t, te } = useI18n()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('memberships', t('npcs.memberships'))
 
 // Translate membership type - check if translation exists, otherwise show raw value
 function translateMembershipType(type: string): string {
@@ -131,16 +172,35 @@ interface Props {
 
 interface Emits {
   (e: 'add', payload: { factionId: number; relationType: string; rank?: string }): void
-  (e: 'edit', membership: Membership): void
+  (e: 'update', payload: { membershipId: number; relationType: string; rank?: string }): void
   (e: 'remove', membershipId: number): void
 }
 
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+// Add form state
 const localFactionId = ref<number | null>(null)
 const localRelationType = ref('')
 const localRank = ref('')
+
+// Edit dialog state
+const showEditDialog = ref(false)
+const editingMembership = ref<Membership | null>(null)
+const editForm = ref({
+  relationType: '',
+  rank: '',
+})
+const saving = ref(false)
+
+// Track dirty state: form has data or edit dialog is open
+const isDirty = computed(() => {
+  const hasFormData = !!localFactionId.value || !!localRelationType.value || !!localRank.value
+  return hasFormData || showEditDialog.value
+})
+
+// Notify parent dialog about dirty state
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const membershipTypeSuggestions = computed(() =>
   FACTION_MEMBERSHIP_TYPES.map((type) => ({
@@ -162,5 +222,35 @@ function handleAdd() {
   localFactionId.value = null
   localRelationType.value = ''
   localRank.value = ''
+}
+
+function editMembership(membership: Membership) {
+  editingMembership.value = membership
+  editForm.value = {
+    relationType: membership.relation_type,
+    rank: (membership.notes as { rank?: string } | null)?.rank || '',
+  }
+  showEditDialog.value = true
+}
+
+function saveEdit() {
+  if (!editingMembership.value || !editForm.value.relationType) return
+
+  saving.value = true
+  emit('update', {
+    membershipId: editingMembership.value.id,
+    relationType: editForm.value.relationType,
+    rank: editForm.value.rank || undefined,
+  })
+
+  // Close dialog (parent will handle the API call and reload)
+  closeEditDialog()
+  saving.value = false
+}
+
+function closeEditDialog() {
+  showEditDialog.value = false
+  editingMembership.value = null
+  editForm.value = { relationType: '', rank: '' }
 }
 </script>

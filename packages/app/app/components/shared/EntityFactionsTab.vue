@@ -70,6 +70,7 @@
             item-value="id"
             :label="$t('common.selectFaction')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -80,6 +81,7 @@
             item-value="value"
             :label="$t('common.relationType')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -115,6 +117,7 @@
             item-value="value"
             :label="$t('common.relationType')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
           <v-textarea
@@ -140,8 +143,13 @@
 
 <script setup lang="ts">
 import { FACTION_MEMBERSHIP_TYPES } from '~~/types/faction'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
+
+// Dirty state tracking
+const { markDirty } = useTabDirtyState('factions', t('factions.title'))
 
 interface FactionRelation {
   id: number
@@ -180,6 +188,10 @@ const editForm = ref({
   relationType: '',
   notes: '',
 })
+
+// Track dirty state: form has unsaved selection or edit dialog is open
+const isDirty = computed(() => !!localFactionId.value || !!localRelationType.value || !!localNotes.value || showEditDialog.value)
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const relationTypeSuggestions = computed(() =>
   FACTION_MEMBERSHIP_TYPES.map((type) => ({

@@ -57,6 +57,7 @@
             item-value="id"
             :label="selectLabel"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -69,6 +70,7 @@
             :label="relationTypeLabel"
             :placeholder="relationTypePlaceholder"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 

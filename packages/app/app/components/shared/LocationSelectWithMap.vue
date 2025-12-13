@@ -59,6 +59,7 @@
             multiple
             chips
             closable-chips
+            clearable
             :hint="$t('entities.selectMapsHint')"
             persistent-hint
           >

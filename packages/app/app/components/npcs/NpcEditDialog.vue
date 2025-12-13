@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="internalShow" max-width="900" scrollable>
-    <v-card>
+  <v-dialog v-model="internalShow" max-width="900" scrollable persistent>
+    <v-card class="d-flex flex-column" style="max-height: 90vh">
       <!-- Loading State -->
       <template v-if="loading">
         <v-card-text class="d-flex justify-center align-center" style="min-height: 300px">
@@ -10,13 +10,13 @@
 
       <!-- Content -->
       <template v-else>
-        <v-card-title class="d-flex align-center">
+        <v-card-title class="d-flex align-center flex-shrink-0">
           {{ npc ? $t('npcs.edit') : $t('npcs.create') }}
           <v-spacer />
           <SharedPinButton v-if="npc?.id" :entity-id="npc.id" variant="icon" />
         </v-card-title>
 
-        <v-tabs v-if="npc" v-model="activeTab" class="mb-4" show-arrows>
+        <v-tabs v-if="npc" v-model="activeTab" class="mb-4 flex-shrink-0" show-arrows>
           <v-tab value="details">
             <v-icon start> mdi-account-details </v-icon>
             {{ $t('npcs.details') }}
@@ -63,7 +63,7 @@
           </v-tab>
         </v-tabs>
 
-        <v-card-text style="max-height: 600px">
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <v-tabs-window v-if="npc" v-model="activeTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
@@ -271,6 +271,7 @@
                 :factions="availableFactions"
                 :adding="addingMembership"
                 @add="addMembership"
+                @update="updateMembership"
                 @remove="removeMembership"
               />
             </v-tabs-window-item>
@@ -288,6 +289,7 @@
                 :show-rarity="true"
                 :relation-type-suggestions="npcItemRelationTypeSuggestions"
                 @add="addItem"
+                @update="updateItem"
                 @remove="removeItem"
               />
             </v-tabs-window-item>
@@ -471,7 +473,7 @@
           </div>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="flex-shrink-0">
           <v-spacer />
           <v-btn
             variant="text"
@@ -480,14 +482,20 @@
           >
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!form.name || uploadingImage || deletingImage || generatingImage"
-            :loading="saving"
-            @click="save"
-          >
-            {{ npc ? $t('common.save') : $t('common.create') }}
-          </v-btn>
+          <!-- Save button with wrapper for tooltip on disabled state -->
+          <div class="d-inline-block">
+            <v-btn
+              color="primary"
+              :disabled="!form.name || uploadingImage || deletingImage || generatingImage || hasDirtyTabs"
+              :loading="saving"
+              @click="save"
+            >
+              {{ npc ? $t('common.save') : $t('common.create') }}
+            </v-btn>
+            <v-tooltip v-if="hasDirtyTabs" activator="parent" location="top">
+              {{ $t('common.unsavedTabChanges', { tabs: dirtyTabLabels.join(', ') }) }}
+            </v-tooltip>
+          </div>
         </v-card-actions>
       </template>
     </v-card>
@@ -544,6 +552,9 @@ const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
 const { downloadImage: downloadImageFile } = useImageDownload()
+
+// Dirty state management for tabs
+const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 
 // ============================================================================
 // Internal State
@@ -881,9 +892,27 @@ async function loadRelations(npcId: number) {
         created_at: rel.created_at,
       }))
 
-    // Load items
-    const itemsData = await $fetch<NpcItem[]>(`/api/entities/${npcId}/related/items`)
-    npcItems.value = itemsData
+    // Load items and map notes to direct properties
+    const itemsData = await $fetch<Array<{
+      id: number
+      relation_type: string
+      notes: { quantity?: number; equipped?: boolean } | null
+      name: string
+      description: string | null
+      metadata: { rarity?: string; type?: string } | null
+      image_url: string | null
+    }>>(`/api/entities/${npcId}/related/items`)
+    npcItems.value = itemsData.map((item) => ({
+      id: item.id,
+      relation_id: item.id,
+      name: item.name,
+      description: item.description,
+      relation_type: item.relation_type,
+      quantity: item.notes?.quantity ?? null,
+      equipped: item.notes?.equipped ?? null,
+      rarity: item.metadata?.rarity ?? null,
+      image_url: item.image_url,
+    }))
 
     // Load lore
     const loreData = await $fetch<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>(`/api/entities/${npcId}/related/lore`)
@@ -1136,6 +1165,23 @@ async function addMembership(payload: { factionId: number; relationType: string;
   }
 }
 
+async function updateMembership(payload: { membershipId: number; relationType: string; rank?: string }) {
+  if (!npc.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.membershipId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.relationType,
+        notes: payload.rank ? JSON.stringify({ rank: payload.rank }) : null,
+      },
+    })
+    await loadRelations(npc.value.id)
+  } catch (e) {
+    console.error('[NpcEditDialog] Failed to update membership:', e)
+  }
+}
+
 async function removeMembership(id: number) {
   if (!npc.value) return
 
@@ -1209,6 +1255,27 @@ async function addItem(payload: { itemId: number; relationType?: string; quantit
     console.error('[NpcEditDialog] Failed to add item:', e)
   } finally {
     addingItem.value = false
+  }
+}
+
+async function updateItem(payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+  if (!npc.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.relationId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.relationType,
+        notes: JSON.stringify({
+          quantity: payload.quantity,
+          equipped: payload.equipped,
+        }),
+      },
+    })
+    await loadRelations(npc.value.id)
+    await loadCounts(npc.value.id)
+  } catch (e) {
+    console.error('[NpcEditDialog] Failed to update item:', e)
   }
 }
 

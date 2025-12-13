@@ -63,6 +63,7 @@
             item-value="value"
             :label="$t('npcs.npcRelationType')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
           <v-textarea
@@ -99,6 +100,7 @@
             item-value="id"
             :label="$t('npcs.selectNpc')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -110,6 +112,7 @@
             :label="$t('npcs.npcRelationType')"
             :placeholder="$t('npcs.npcRelationTypePlaceholder')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -140,8 +143,12 @@
 
 <script setup lang="ts">
 import { NPC_RELATION_TYPES } from '~~/types/npc'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('npcRelations', t('npcs.npcRelations'))
 
 interface NpcRelation {
   id: number
@@ -188,6 +195,19 @@ const editRelationId = ref<number | null>(null)
 const editRelationType = ref('')
 const editNotes = ref('')
 const saving = ref(false)
+
+// Track dirty state: form has data or edit dialog is open
+const isDirty = computed(() => {
+  // localRelationType can be string or {value, title} object from combobox
+  const hasRelationType = typeof localRelationType.value === 'string'
+    ? !!localRelationType.value
+    : !!(localRelationType.value as { value?: string } | null)?.value
+  const hasFormData = !!localNpcId.value || hasRelationType || !!localNotes.value
+  return hasFormData || editDialog.value
+})
+
+// Notify parent dialog about dirty state
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const npcRelationTypeSuggestions = computed(() =>
   NPC_RELATION_TYPES.map((type) => ({

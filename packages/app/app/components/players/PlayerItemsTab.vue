@@ -139,11 +139,15 @@
 
 <script setup lang="ts">
 import { NPC_ITEM_RELATION_TYPES } from '~~/types/npc'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const { getItemTypeIcon } = useEntityIcons()
+
+// Dirty state tracking
+const { markDirty } = useTabDirtyState('items', t('nav.items'))
 
 interface PlayerItem {
   relation_id: number
@@ -182,6 +186,10 @@ const editDialog = ref(false)
 const editRelationId = ref<number | null>(null)
 const editRelationType = ref<string | { value: string; title: string }>('')
 const editNotes = ref('')
+
+// Track dirty state: form has unsaved selection or edit dialog is open
+const isDirty = computed(() => !!selectedItemId.value || !!selectedRelationType.value || !!selectedNotes.value || editDialog.value)
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 // Relation type suggestions using NPC_ITEM_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>

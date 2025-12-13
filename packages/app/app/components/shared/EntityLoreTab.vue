@@ -59,6 +59,13 @@
 </template>
 
 <script setup lang="ts">
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
+const { t } = useI18n()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('lore', t('lore.title'))
+
 interface LinkedLore {
   id: number
   name: string
@@ -86,6 +93,10 @@ const emit = defineEmits<{
 }>()
 
 const localLoreId = ref<number | null>(null)
+
+// Track dirty state
+const isDirty = computed(() => !!localLoreId.value)
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 function handleAdd() {
   if (!localLoreId.value) return

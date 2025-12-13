@@ -65,6 +65,7 @@
             item-value="id"
             :label="$t('npcs.selectLocation')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -76,6 +77,7 @@
             :label="$t('npcs.relationType')"
             :placeholder="$t('npcs.relationTypePlaceholder')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
 
@@ -113,6 +115,7 @@
             item-value="value"
             :label="$t('npcs.relationType')"
             variant="outlined"
+            clearable
             class="mb-3"
           />
           <v-textarea
@@ -138,9 +141,13 @@
 
 <script setup lang="ts">
 import { NPC_LOCATION_RELATION_TYPES } from '~~/types/npc'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('locations', t('npcs.linkedLocations'))
 
 interface LocationRelation {
   id: number
@@ -194,6 +201,13 @@ const relationTypeSuggestions = computed(() =>
     title: t(`npcs.relationTypes.${type}`),
   })),
 )
+
+// Track dirty state: form has data or edit dialog is open
+const isDirty = computed(() => {
+  const hasFormData = !!localLocationId.value || !!localRelationType.value || !!localNotes.value
+  return hasFormData || showEditDialog.value
+})
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 // Load locations on mount and when entityId changes
 watch(

@@ -140,8 +140,14 @@
 </template>
 
 <script setup lang="ts">
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
+const { t } = useI18n()
 const campaignStore = useCampaignStore()
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('notes', t('npcs.notes'))
 
 interface Note {
   id: number
@@ -189,6 +195,10 @@ const filteredNotes = computed(() => {
       note.notes?.toLowerCase().includes(query),
   )
 })
+
+// Track dirty state: dialog is open (creating or editing)
+const isDirty = computed(() => showNoteDialog.value)
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 // Load notes on mount and when npcId changes
 watch(

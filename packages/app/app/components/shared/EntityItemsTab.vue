@@ -24,6 +24,7 @@
           item-value="value"
           :label="$t('common.relationType')"
           variant="outlined"
+          clearable
           class="mb-2"
         />
 
@@ -92,6 +93,12 @@
 
         <template #append>
           <v-btn
+            icon="mdi-pencil"
+            variant="text"
+            size="small"
+            @click="editItem(item)"
+          />
+          <v-btn
             icon="mdi-delete"
             variant="text"
             size="small"
@@ -108,10 +115,61 @@
       :title="$t('common.noLinkedItems')"
       :text="$t('common.noLinkedItemsText')"
     />
+
+    <!-- Edit Item Dialog -->
+    <v-dialog v-model="showEditDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('common.editItemLink') }}</v-card-title>
+        <v-card-text>
+          <v-select
+            v-if="showRelationType && relationTypeSuggestions.length > 0"
+            v-model="editForm.relationType"
+            :items="relationTypeSuggestions"
+            item-title="title"
+            item-value="value"
+            :label="$t('common.relationType')"
+            variant="outlined"
+            clearable
+            class="mb-3"
+          />
+          <v-text-field
+            v-if="showQuantity"
+            v-model.number="editForm.quantity"
+            :label="$t('common.quantity')"
+            variant="outlined"
+            type="number"
+            min="1"
+            class="mb-3"
+          />
+          <v-switch
+            v-if="showEquipped"
+            v-model="editForm.equipped"
+            :label="$t('common.equipped')"
+            color="primary"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeEditDialog">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" :loading="saving" @click="saveEdit">
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
+const { t } = useI18n()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('items', t('npcs.items'))
+
 interface LinkedItem {
   id: number
   name: string
@@ -162,6 +220,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   add: [payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean }]
+  update: [payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }]
   remove: [itemId: number]
 }>()
 
@@ -169,6 +228,25 @@ const localItemId = ref<number | null>(null)
 const localRelationType = ref<string>('')
 const localQuantity = ref<number | undefined>(undefined)
 const localEquipped = ref(false)
+
+// Edit dialog state
+const showEditDialog = ref(false)
+const editingItem = ref<LinkedItem | null>(null)
+const editForm = ref({
+  relationType: '',
+  quantity: 1,
+  equipped: false,
+})
+const saving = ref(false)
+
+// Track dirty state: form has data or edit dialog is open
+const isDirty = computed(() => {
+  const hasFormData = !!localItemId.value || !!localRelationType.value || !!localQuantity.value || localEquipped.value
+  return hasFormData || showEditDialog.value
+})
+
+// Notify parent dialog about dirty state
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const canAdd = computed(() => {
   if (!localItemId.value) return false
@@ -221,5 +299,37 @@ function handleAdd() {
   localRelationType.value = ''
   localQuantity.value = undefined
   localEquipped.value = false
+}
+
+function editItem(item: LinkedItem) {
+  editingItem.value = item
+  editForm.value = {
+    relationType: item.relation_type || '',
+    quantity: item.quantity || 1,
+    equipped: item.equipped || false,
+  }
+  showEditDialog.value = true
+}
+
+function saveEdit() {
+  if (!editingItem.value) return
+
+  saving.value = true
+  emit('update', {
+    relationId: editingItem.value.id,
+    relationType: editForm.value.relationType || undefined,
+    quantity: editForm.value.quantity || undefined,
+    equipped: editForm.value.equipped,
+  })
+
+  // Close dialog (parent will handle the API call and reload)
+  closeEditDialog()
+  saving.value = false
+}
+
+function closeEditDialog() {
+  showEditDialog.value = false
+  editingItem.value = null
+  editForm.value = { relationType: '', quantity: 1, equipped: false }
 }
 </script>

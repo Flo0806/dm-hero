@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="internalShow" max-width="900" scrollable>
-    <v-card>
+  <v-dialog v-model="internalShow" max-width="900" scrollable persistent>
+    <v-card class="d-flex flex-column" style="max-height: 90vh">
       <!-- Loading State -->
       <template v-if="loading">
         <v-card-text class="d-flex justify-center align-center" style="min-height: 300px">
@@ -10,13 +10,13 @@
 
       <!-- Content -->
       <template v-else>
-        <v-card-title class="d-flex align-center">
+        <v-card-title class="d-flex align-center flex-shrink-0">
           {{ lore ? $t('lore.edit') : $t('lore.create') }}
           <v-spacer />
           <SharedPinButton v-if="lore?.id" :entity-id="lore.id" variant="icon" />
         </v-card-title>
 
-        <v-tabs v-if="lore" v-model="activeTab" class="mb-4" show-arrows>
+        <v-tabs v-if="lore" v-model="activeTab" class="mb-4 flex-shrink-0" show-arrows>
           <v-tab value="details">
             <v-icon start>mdi-book-open-variant</v-icon>
             {{ $t('common.details') }}
@@ -58,7 +58,7 @@
           </v-tab>
         </v-tabs>
 
-        <v-card-text style="max-height: 600px">
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <v-tabs-window v-if="lore" v-model="activeTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
@@ -378,14 +378,25 @@
           </div>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="flex-shrink-0">
           <v-spacer />
           <v-btn variant="text" :disabled="saving || generatingImage" @click="close">
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn color="primary" :disabled="!form.name || generatingImage" :loading="saving" @click="save">
-            {{ lore ? $t('common.save') : $t('common.create') }}
-          </v-btn>
+          <!-- Save button with wrapper for tooltip on disabled state -->
+          <div class="d-inline-block">
+            <v-btn
+              color="primary"
+              :disabled="!form.name || generatingImage || hasDirtyTabs"
+              :loading="saving"
+              @click="save"
+            >
+              {{ lore ? $t('common.save') : $t('common.create') }}
+            </v-btn>
+            <v-tooltip v-if="hasDirtyTabs" activator="parent" location="top">
+              {{ $t('common.unsavedTabChanges', { tabs: dirtyTabLabels.join(', ') }) }}
+            </v-tooltip>
+          </div>
         </v-card-actions>
       </template>
     </v-card>
@@ -406,6 +417,7 @@ import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 // ============================================================================
 // Props & Emits
@@ -428,6 +440,9 @@ const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+
+// Dirty state management for tabs
+const { hasDirtyTabs, dirtyTabLabels, setDirty, registerTab } = useDialogDirtyStateProvider()
 
 // ============================================================================
 // Internal State
@@ -508,6 +523,23 @@ const selectedNpcId = ref<number | null>(null)
 const selectedFactionId = ref<number | null>(null)
 const selectedItemId = ref<number | null>(null)
 const selectedLocationId = ref<number | null>(null)
+
+// Track dirty state for inline tabs (form has unsaved selection)
+// Register tabs first, then watch for dirty state changes
+registerTab('npcs', t('npcs.title'))
+registerTab('factions', t('factions.title'))
+registerTab('items', t('items.title'))
+registerTab('locations', t('locations.title'))
+
+const npcsTabDirty = computed(() => !!selectedNpcId.value)
+const factionsTabDirty = computed(() => !!selectedFactionId.value)
+const itemsTabDirty = computed(() => !!selectedItemId.value)
+const locationsTabDirty = computed(() => !!selectedLocationId.value)
+
+watch(npcsTabDirty, (dirty) => setDirty('npcs', dirty), { immediate: true })
+watch(factionsTabDirty, (dirty) => setDirty('factions', dirty), { immediate: true })
+watch(itemsTabDirty, (dirty) => setDirty('items', dirty), { immediate: true })
+watch(locationsTabDirty, (dirty) => setDirty('locations', dirty), { immediate: true })
 
 // Image preview
 const showImagePreview = ref(false)

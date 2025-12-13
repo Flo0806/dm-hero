@@ -1,7 +1,7 @@
 <template>
   <v-dialog v-model="internalShow" max-width="900" scrollable persistent>
-    <v-card v-if="internalShow">
-      <v-card-title class="d-flex align-center">
+    <v-card v-if="internalShow" class="d-flex flex-column" style="max-height: 90vh">
+      <v-card-title class="d-flex align-center flex-shrink-0">
         {{ player ? $t('players.edit') : $t('players.create') }}
         <v-spacer />
         <SharedPinButton v-if="player?.id" :entity-id="player.id" variant="icon" class="mr-1" />
@@ -9,7 +9,7 @@
       </v-card-title>
 
       <!-- Tabs (only when editing) -->
-      <v-tabs v-if="player" v-model="activeTab" class="mb-4">
+      <v-tabs v-if="player" v-model="activeTab" class="mb-4 flex-shrink-0" show-arrows>
         <v-tab value="details">
           <v-icon start>mdi-account-details</v-icon>
           {{ $t('common.details') }}
@@ -51,7 +51,7 @@
         </v-tab>
       </v-tabs>
 
-      <v-card-text style="max-height: 600px">
+      <v-card-text class="flex-grow-1 overflow-y-auto">
         <!-- Edit Mode with Tabs -->
         <v-tabs-window v-if="player" v-model="activeTab">
           <!-- Details Tab -->
@@ -336,14 +336,25 @@
         </div>
       </v-card-text>
 
-      <v-card-actions>
+      <v-card-actions class="flex-shrink-0">
         <v-spacer />
         <v-btn variant="text" :disabled="saving || generatingImage || uploadingImage" @click="close">
           {{ $t('common.cancel') }}
         </v-btn>
-        <v-btn color="primary" :disabled="!form.name || generatingImage || uploadingImage" :loading="saving" @click="save">
-          {{ player ? $t('common.save') : $t('common.create') }}
-        </v-btn>
+        <!-- Save button with wrapper for tooltip on disabled state -->
+        <div class="d-inline-block">
+          <v-btn
+            color="primary"
+            :disabled="!form.name || generatingImage || uploadingImage || hasDirtyTabs"
+            :loading="saving"
+            @click="save"
+          >
+            {{ player ? $t('common.save') : $t('common.create') }}
+          </v-btn>
+          <v-tooltip v-if="hasDirtyTabs" activator="parent" location="top">
+            {{ $t('common.unsavedTabChanges', { tabs: dirtyTabLabels.join(', ') }) }}
+          </v-tooltip>
+        </div>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -370,6 +381,7 @@ import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 const props = defineProps<{
   show: boolean
@@ -387,6 +399,9 @@ const { downloadImage: downloadImageFile } = useImageDownload()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+
+// Dirty state management for tabs
+const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 
 // ============================================================================
 // State

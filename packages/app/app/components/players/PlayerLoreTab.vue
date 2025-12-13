@@ -139,10 +139,14 @@
 
 <script setup lang="ts">
 import { PLAYER_RELATION_TYPES } from '~~/types/player'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+
+// Dirty state tracking
+const { markDirty } = useTabDirtyState('lore', t('nav.lore'))
 
 interface LoreEntry {
   relation_id: number
@@ -180,6 +184,10 @@ const editDialog = ref(false)
 const editRelationId = ref<number | null>(null)
 const editRelationType = ref<string | { value: string; title: string }>('')
 const editNotes = ref('')
+
+// Track dirty state: form has unsaved selection or edit dialog is open
+const isDirty = computed(() => !!selectedLoreId.value || !!selectedRelationType.value || !!selectedNotes.value || editDialog.value)
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 // Relation type suggestions using PLAYER_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>

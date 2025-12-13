@@ -265,6 +265,7 @@
 
 <script setup lang="ts">
 import EntityMarkdownEditor from './EntityMarkdownEditor.vue'
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 // Lazy import VuePdfEmbed to avoid SSR issues
 const VuePdfEmbed = defineAsyncComponent(() => import('vue-pdf-embed'))
@@ -293,9 +294,13 @@ const emit = defineEmits<{
   changed: []
 }>()
 
+const { t } = useI18n()
 const { locale } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('documents', t('documents.title'))
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -327,6 +332,9 @@ const documentForm = ref({
 
 /* ---------- Computed ---------- */
 const isEditing = computed(() => !!editingDocument.value || creatingDocument.value)
+
+// Notify parent dialog about dirty state
+watch(isEditing, (dirty) => markDirty(dirty), { immediate: true })
 
 const filteredDocuments = computed(() => {
   if (!searchQuery.value) return documents.value

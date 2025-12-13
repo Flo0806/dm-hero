@@ -1,6 +1,6 @@
 <template>
-  <v-dialog v-model="internalShow" max-width="900" scrollable>
-    <v-card>
+  <v-dialog v-model="internalShow" max-width="900" scrollable persistent>
+    <v-card class="d-flex flex-column" style="max-height: 90vh">
       <!-- Loading State -->
       <template v-if="loading">
         <v-card-text class="d-flex justify-center align-center" style="min-height: 300px">
@@ -10,13 +10,13 @@
 
       <!-- Content -->
       <template v-else>
-        <v-card-title class="d-flex align-center">
+        <v-card-title class="d-flex align-center flex-shrink-0">
           {{ faction ? $t('factions.edit') : $t('factions.create') }}
           <v-spacer />
           <SharedPinButton v-if="faction?.id" :entity-id="faction.id" variant="icon" />
         </v-card-title>
 
-        <v-tabs v-if="faction" v-model="activeTab" class="mb-4" show-arrows>
+        <v-tabs v-if="faction" v-model="activeTab" class="mb-4 flex-shrink-0" show-arrows>
           <v-tab value="details">
             <v-icon start>mdi-shield-account</v-icon>
             {{ $t('common.details') }}
@@ -58,7 +58,7 @@
           </v-tab>
         </v-tabs>
 
-        <v-card-text style="max-height: 600px">
+        <v-card-text class="flex-grow-1 overflow-y-auto">
           <v-tabs-window v-if="faction" v-model="activeTab">
             <!-- Details Tab -->
             <v-tabs-window-item value="details">
@@ -219,6 +219,7 @@
                 :show-rank="true"
                 :membership-type-suggestions="membershipTypeSuggestions"
                 @add="addMember"
+                @update="updateMember"
                 @remove="removeMember"
               />
             </v-tabs-window-item>
@@ -230,7 +231,9 @@
                 :available-items="availableItems"
                 :loading="addingItem"
                 :show-avatar="true"
+                :show-quantity="true"
                 @add="addItem"
+                @update="updateItem"
                 @remove="removeItem"
               />
             </v-tabs-window-item>
@@ -243,6 +246,7 @@
                 :loading-locations="loadingLocations"
                 :adding="addingLocation"
                 @add="addLocation"
+                @update="updateLocation"
                 @remove="removeLocation"
               />
             </v-tabs-window-item>
@@ -352,7 +356,7 @@
           </div>
         </v-card-text>
 
-        <v-card-actions>
+        <v-card-actions class="flex-shrink-0">
           <v-spacer />
           <v-btn
             variant="text"
@@ -361,14 +365,20 @@
           >
             {{ $t('common.cancel') }}
           </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!form.name || uploadingImage || deletingImage || generatingImage"
-            :loading="saving"
-            @click="save"
-          >
-            {{ faction ? $t('common.save') : $t('common.create') }}
-          </v-btn>
+          <!-- Save button with wrapper for tooltip on disabled state -->
+          <div class="d-inline-block">
+            <v-btn
+              color="primary"
+              :disabled="!form.name || uploadingImage || deletingImage || generatingImage || hasDirtyTabs"
+              :loading="saving"
+              @click="save"
+            >
+              {{ faction ? $t('common.save') : $t('common.create') }}
+            </v-btn>
+            <v-tooltip v-if="hasDirtyTabs" activator="parent" location="top">
+              {{ $t('common.unsavedTabChanges', { tabs: dirtyTabLabels.join(', ') }) }}
+            </v-tooltip>
+          </div>
         </v-card-actions>
       </template>
     </v-card>
@@ -400,6 +410,7 @@ import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and factionId needed!
@@ -423,6 +434,9 @@ const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
 const { downloadImage: downloadImageFile } = useImageDownload()
+
+// Dirty state management for tabs
+const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 
 // ============================================================================
 // Internal State
@@ -484,9 +498,12 @@ interface FactionLocation {
 
 interface FactionItem {
   id: number
+  relation_id?: number
   name: string
   description: string | null
   image_url: string | null
+  quantity?: number | null
+  relation_type?: string | null
   direction?: 'outgoing' | 'incoming'
 }
 
@@ -725,7 +742,17 @@ async function loadRelations(factionId: number) {
 
     factionMembers.value = members
     factionLocations.value = locations
-    factionItems.value = items
+    // Map items with relation_id and quantity from notes
+    factionItems.value = items.map((item: { id: number; name: string; description: string | null; image_url: string | null; relation_type?: string | null; notes?: { quantity?: number } | null; direction?: 'outgoing' | 'incoming' }) => ({
+      id: item.id, // This is actually relation_id from the API
+      relation_id: item.id,
+      name: item.name,
+      description: item.description,
+      image_url: item.image_url,
+      relation_type: item.relation_type,
+      quantity: item.notes?.quantity ?? null,
+      direction: item.direction,
+    }))
     linkedLore.value = lore
   } catch (e) {
     console.error('[FactionEditDialog] Failed to load relations:', e)
@@ -958,6 +985,23 @@ async function addMember(payload: { npcId: number; membershipType?: string; rank
   }
 }
 
+async function updateMember(payload: { relationId: number; membershipType?: string; rank?: string }) {
+  if (!faction.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.relationId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.membershipType,
+        notes: JSON.stringify({ rank: payload.rank }),
+      },
+    })
+    await loadRelations(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to update member:', e)
+  }
+}
+
 async function removeMember(relationId: number) {
   if (!faction.value) return
 
@@ -994,6 +1038,22 @@ async function addLocation(payload: { locationId: number; relationType: string }
   }
 }
 
+async function updateLocation(payload: { relationId: number; relationType: string }) {
+  if (!faction.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.relationId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.relationType,
+      },
+    })
+    await loadRelations(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to update location:', e)
+  }
+}
+
 async function removeLocation(relationId: number) {
   if (!faction.value) return
 
@@ -1009,7 +1069,7 @@ async function removeLocation(relationId: number) {
 // ============================================================================
 // Item Management
 // ============================================================================
-async function addItem(payload: { itemId: number }) {
+async function addItem(payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
   if (!faction.value) return
 
   addingItem.value = true
@@ -1019,7 +1079,8 @@ async function addItem(payload: { itemId: number }) {
       body: {
         fromEntityId: faction.value.id,
         toEntityId: payload.itemId,
-        relationType: 'besitzt',
+        relationType: payload.relationType || 'besitzt',
+        notes: JSON.stringify({ quantity: payload.quantity }),
       },
     })
     await loadRelations(faction.value.id)
@@ -1028,6 +1089,23 @@ async function addItem(payload: { itemId: number }) {
     console.error('[FactionEditDialog] Failed to add item:', e)
   } finally {
     addingItem.value = false
+  }
+}
+
+async function updateItem(payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+  if (!faction.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.relationId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.relationType,
+        notes: JSON.stringify({ quantity: payload.quantity }),
+      },
+    })
+    await loadRelations(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to update item:', e)
   }
 }
 

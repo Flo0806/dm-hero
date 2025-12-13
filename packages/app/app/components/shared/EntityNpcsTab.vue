@@ -24,6 +24,7 @@
           item-value="value"
           :label="$t('common.membershipType')"
           variant="outlined"
+          clearable
           class="mb-2"
         />
 
@@ -72,6 +73,13 @@
 
         <template #append>
           <v-btn
+            v-if="showMembershipType || showRank"
+            icon="mdi-pencil"
+            variant="text"
+            size="small"
+            @click="editNpc(npc)"
+          />
+          <v-btn
             icon="mdi-delete"
             variant="text"
             size="small"
@@ -88,10 +96,53 @@
       :title="$t('common.noLinkedNpcs')"
       :text="$t('common.noLinkedNpcsText')"
     />
+
+    <!-- Edit NPC Link Dialog -->
+    <v-dialog v-model="showEditDialog" max-width="500">
+      <v-card>
+        <v-card-title>{{ $t('common.editMemberLink') }}</v-card-title>
+        <v-card-text>
+          <v-select
+            v-if="showMembershipType && membershipTypeSuggestions.length > 0"
+            v-model="editForm.membershipType"
+            :items="membershipTypeSuggestions"
+            item-title="title"
+            item-value="value"
+            :label="$t('common.membershipType')"
+            variant="outlined"
+            clearable
+            class="mb-3"
+          />
+          <v-text-field
+            v-if="showRank"
+            v-model="editForm.rank"
+            :label="$t('common.rank')"
+            :placeholder="$t('common.rankPlaceholder')"
+            variant="outlined"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeEditDialog">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" :loading="saving" @click="saveEdit">
+            {{ $t('common.save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+
+const { t } = useI18n()
+
+// Register with parent dialog's dirty state management
+const { markDirty } = useTabDirtyState('npcs', t('npcs.title'))
+
 interface LinkedNpc {
   id: number
   name: string
@@ -133,12 +184,29 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   add: [payload: { npcId: number; membershipType?: string; rank?: string }]
+  update: [payload: { relationId: number; membershipType?: string; rank?: string }]
   remove: [npcId: number]
 }>()
 
 const localNpcId = ref<number | null>(null)
 const localMembershipType = ref<string>('')
 const localRank = ref<string>('')
+
+// Edit dialog state
+const showEditDialog = ref(false)
+const editingNpc = ref<LinkedNpc | null>(null)
+const editForm = ref({
+  membershipType: '',
+  rank: '',
+})
+const saving = ref(false)
+
+// Track dirty state: form has selection or edit dialog is open
+const isDirty = computed(() => {
+  const hasFormData = !!localNpcId.value || !!localMembershipType.value || !!localRank.value
+  return hasFormData || showEditDialog.value
+})
+watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const canAdd = computed(() => {
   if (!localNpcId.value) return false
@@ -174,5 +242,35 @@ function handleAdd() {
   localNpcId.value = null
   localMembershipType.value = ''
   localRank.value = ''
+}
+
+function editNpc(npc: LinkedNpc) {
+  editingNpc.value = npc
+  editForm.value = {
+    membershipType: npc.relation_type || '',
+    rank: npc.notes?.rank || '',
+  }
+  showEditDialog.value = true
+}
+
+function saveEdit() {
+  if (!editingNpc.value) return
+
+  saving.value = true
+  emit('update', {
+    relationId: editingNpc.value.id,
+    membershipType: editForm.value.membershipType || undefined,
+    rank: editForm.value.rank || undefined,
+  })
+
+  // Close dialog (parent will handle the API call and reload)
+  closeEditDialog()
+  saving.value = false
+}
+
+function closeEditDialog() {
+  showEditDialog.value = false
+  editingNpc.value = null
+  editForm.value = { membershipType: '', rank: '' }
 }
 </script>
