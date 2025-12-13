@@ -73,6 +73,7 @@ const searchResults = ref<
 // Stores
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+const notesStore = useNotesStore()
 
 // Active campaign from cookies
 const activeCampaignName = useCookie('activeCampaignName')
@@ -102,6 +103,19 @@ onMounted(() => {
     setLocale(localeCookie.value)
   }
 })
+
+// Load notes when campaign changes (for badge in drawer)
+watch(
+  () => campaignStore.activeCampaignId,
+  (newId) => {
+    if (newId) {
+      notesStore.fetchNotes(Number(newId))
+    } else {
+      notesStore.clearNotes()
+    }
+  },
+  { immediate: true },
+)
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'

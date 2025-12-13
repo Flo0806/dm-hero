@@ -97,6 +97,20 @@
         value="maps"
         to="/maps"
       />
+      <v-list-item
+        prepend-icon="mdi-notebook-outline"
+        :title="$t('nav.notes')"
+        value="notes"
+        to="/notes"
+      >
+        <template v-if="notesStore.pendingCount > 0" #append>
+          <v-badge
+            :content="notesStore.pendingCount"
+            color="primary"
+            inline
+          />
+        </template>
+      </v-list-item>
     </v-list>
 
     <template #append>
@@ -127,6 +141,7 @@
 
 <script setup lang="ts">
 const router = useRouter()
+const notesStore = useNotesStore()
 
 interface Props {
   modelValue: boolean

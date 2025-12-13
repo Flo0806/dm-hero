@@ -24,6 +24,7 @@
     "quests": "Quests",
     "sessions": "Sessions",
     "maps": "Karten",
+    "notes": "Notizen",
     "referenceData": "Referenzdaten",
     "settings": "Einstellungen",
     "theme": "Theme",
@@ -1737,5 +1738,21 @@
     "newVersionAvailable": "Neue Version verfügbar",
     "download": "Herunterladen",
     "dismiss": "Später"
+  },
+  "notes": {
+    "title": "Notizen",
+    "subtitle": "Persönliche Notizen und To-Dos für deine Kampagne",
+    "noCampaign": {
+      "title": "Keine Kampagne ausgewählt",
+      "description": "Wähle zuerst eine Kampagne aus, um Notizen zu erstellen.",
+      "button": "Zu den Kampagnen"
+    },
+    "count": "Notizen",
+    "addPlaceholder": "Neue Notiz hinzufügen...",
+    "add": "Hinzufügen",
+    "empty": "Keine Notizen",
+    "emptyHint": "Erstelle deine erste Notiz mit dem Feld oben",
+    "completed": "erledigt",
+    "clearCompleted": "Erledigte löschen"
   }
 }

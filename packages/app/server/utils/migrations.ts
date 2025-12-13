@@ -1765,6 +1765,30 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 34: Created pinboard table')
     },
   },
+  {
+    version: 35,
+    name: 'Add campaign_notes table for DM todos',
+    up: (db: Database.Database) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS campaign_notes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          completed INTEGER NOT NULL DEFAULT 0,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        )
+      `)
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_campaign_notes_campaign_id ON campaign_notes(campaign_id)
+      `)
+
+      console.log('✅ Migration 35: Created campaign_notes table')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

@@ -24,6 +24,7 @@
     "quests": "Quests",
     "sessions": "Sessions",
     "maps": "Maps",
+    "notes": "Notes",
     "referenceData": "Reference Data",
     "settings": "Settings",
     "theme": "Theme",
@@ -1761,5 +1762,21 @@
     "newVersionAvailable": "New version available",
     "download": "Download",
     "dismiss": "Later"
+  },
+  "notes": {
+    "title": "Notes",
+    "subtitle": "Personal notes and to-dos for your campaign",
+    "noCampaign": {
+      "title": "No campaign selected",
+      "description": "Select a campaign first to create notes.",
+      "button": "Go to campaigns"
+    },
+    "count": "notes",
+    "addPlaceholder": "Add a new note...",
+    "add": "Add",
+    "empty": "No notes",
+    "emptyHint": "Create your first note using the field above",
+    "completed": "completed",
+    "clearCompleted": "Clear completed"
   }
 }
