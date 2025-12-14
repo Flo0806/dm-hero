@@ -7,6 +7,7 @@
         :has-active-campaign="hasActiveCampaign"
         :active-campaign-name="activeCampaignName"
         :is-dark="theme.global.current.value.dark"
+        :is-search-active="showSearch"
         @search-click="showSearch = true"
         @toggle-theme="toggleTheme"
       />
