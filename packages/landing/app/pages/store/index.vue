@@ -96,21 +96,54 @@
       </v-col>
     </v-row>
 
-    <!-- Coming Soon State -->
-    <v-card class="text-center pa-12" elevation="0" color="surface-variant">
-      <v-icon icon="mdi-treasure-chest" size="96" color="primary" class="mb-6" />
-      <h2 class="text-h4 mb-4">{{ $t('store.comingSoon.title') }}</h2>
+    <!-- Loading State -->
+    <v-row v-if="loading">
+      <v-col v-for="i in 6" :key="i" cols="12" sm="6" lg="4">
+        <StoreAdventureCardSkeleton />
+      </v-col>
+    </v-row>
+
+    <!-- Adventures Grid -->
+    <v-row v-else-if="adventures.length > 0">
+      <v-col v-for="adventure in adventures" :key="adventure.id" cols="12" sm="6" lg="4">
+        <StoreAdventureCard :adventure="adventure" />
+      </v-col>
+    </v-row>
+
+    <!-- Empty State -->
+    <v-card v-else class="text-center pa-12" elevation="0" color="surface-variant">
+      <v-icon icon="mdi-treasure-chest-outline" size="96" color="primary" class="mb-6" />
+      <h2 class="text-h4 mb-4">{{ $t('store.empty.title') }}</h2>
       <p class="text-body-1 text-medium-emphasis mb-6" style="max-width: 500px; margin: 0 auto">
-        {{ $t('store.comingSoon.description') }}
+        {{ $t('store.empty.description') }}
       </p>
-      <v-btn color="primary" variant="tonal" to="/" prepend-icon="mdi-arrow-left">
-        {{ $t('store.comingSoon.backHome') }}
+      <v-btn
+        v-if="isCreator"
+        color="primary"
+        variant="flat"
+        to="/store/upload"
+        prepend-icon="mdi-plus"
+      >
+        {{ $t('store.empty.createFirst') }}
       </v-btn>
     </v-card>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="d-flex justify-center mt-8">
+      <v-pagination
+        v-model="page"
+        :length="totalPages"
+        :total-visible="7"
+        rounded
+      />
+    </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
+import type { Adventure } from '~/components/store/AdventureCard.vue'
+
 const { t } = useI18n()
 const router = useRouter()
 const { user, isAuthenticated, isCreator, logout } = useAuth()
@@ -120,9 +153,16 @@ async function handleLogout() {
   router.push('/')
 }
 
+// Filter state
 const search = ref('')
 const sortBy = ref('newest')
 const language = ref<string | null>(null)
+const page = ref(1)
+
+// Data state
+const adventures = ref<Adventure[]>([])
+const loading = ref(true)
+const totalPages = ref(1)
 
 const sortOptions = computed(() => [
   { title: t('store.sort.newest'), value: 'newest' },
@@ -134,6 +174,51 @@ const languageOptions = computed(() => [
   { title: 'Deutsch', value: 'de' },
   { title: 'English', value: 'en' },
 ])
+
+// Fetch adventures
+async function fetchAdventures() {
+  loading.value = true
+  try {
+    const params = new URLSearchParams({
+      page: page.value.toString(),
+      sort: sortBy.value,
+    })
+    if (search.value) params.set('search', search.value)
+    if (language.value) params.set('language', language.value)
+
+    const response = await $fetch<{
+      adventures: Adventure[]
+      pagination: { totalPages: number }
+    }>(`/api/store/adventures?${params}`)
+
+    adventures.value = response.adventures
+    totalPages.value = response.pagination.totalPages
+  } catch (error) {
+    console.error('Failed to fetch adventures:', error)
+    adventures.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Debounced fetch
+const debouncedFetch = useDebounceFn(fetchAdventures, 300)
+
+// Watch filters and refetch
+watch(search, () => {
+  page.value = 1
+  debouncedFetch()
+})
+
+watch([sortBy, language], () => {
+  page.value = 1
+  fetchAdventures()
+})
+
+watch(page, fetchAdventures)
+
+// Initial fetch
+onMounted(fetchAdventures)
 </script>
 
 <style scoped>
