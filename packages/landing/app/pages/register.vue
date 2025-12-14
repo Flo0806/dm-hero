@@ -4,14 +4,32 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <v-icon icon="mdi-dice-d20" size="64" color="primary" class="mb-4" />
-        <h1 class="text-h4 font-weight-light">{{ $t('auth.register.title') }}</h1>
-        <p class="text-body-2 text-medium-emphasis mt-2">
+        <h1 class="text-h4 font-weight-light">
+          {{ registrationComplete ? $t('auth.registrationComplete.title') : $t('auth.register.title') }}
+        </h1>
+        <p v-if="!registrationComplete" class="text-body-2 text-medium-emphasis mt-2">
           {{ $t('auth.register.subtitle') }}
         </p>
       </div>
 
+      <!-- Registration Complete - Verification Notice -->
+      <v-card v-if="registrationComplete" class="auth-card" elevation="0">
+        <v-card-text class="pa-8 text-center">
+          <v-icon icon="mdi-email-check" size="64" color="success" class="mb-6" />
+          <p class="text-body-1 mb-4">
+            {{ $t('auth.registrationComplete.message', { email: registeredEmail }) }}
+          </p>
+          <p class="text-body-2 text-medium-emphasis mb-6">
+            {{ $t('auth.registrationComplete.spamHint') }}
+          </p>
+          <v-btn color="primary" variant="outlined" to="/store">
+            {{ $t('auth.registrationComplete.continueToStore') }}
+          </v-btn>
+        </v-card-text>
+      </v-card>
+
       <!-- Register Form -->
-      <v-card class="auth-card" elevation="0">
+      <v-card v-else class="auth-card" elevation="0">
         <v-card-text class="pa-8">
           <v-form ref="formRef" @submit.prevent="handleRegister">
             <v-text-field
@@ -108,7 +126,7 @@
       </v-card>
 
       <!-- Back to home -->
-      <div class="text-center mt-6">
+      <div v-if="!registrationComplete" class="text-center mt-6">
         <NuxtLink to="/" class="text-medium-emphasis text-decoration-none">
           <v-icon icon="mdi-arrow-left" size="small" class="mr-1" />
           {{ $t('auth.backToHome') }}
@@ -124,8 +142,7 @@ definePageMeta({
   layout: false,
 })
 
-const { t } = useI18n()
-const router = useRouter()
+const { t, locale } = useI18n()
 const { register, loading, error } = useAuth()
 
 const formRef = ref()
@@ -134,6 +151,8 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
+const registrationComplete = ref(false)
+const registeredEmail = ref('')
 
 const rules = {
   required: (v: string) => !!v || t('auth.validation.required'),
@@ -147,9 +166,10 @@ async function handleRegister() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
 
-  const success = await register(email.value, password.value, displayName.value)
+  const success = await register(email.value, password.value, displayName.value, locale.value)
   if (success) {
-    router.push('/store')
+    registeredEmail.value = email.value
+    registrationComplete.value = true
   }
 }
 </script>

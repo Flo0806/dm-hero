@@ -13,6 +13,7 @@ export function useAuth() {
   const error = useState<string | null>('auth-error', () => null)
 
   const isAuthenticated = computed(() => !!user.value)
+  const isEmailVerified = computed(() => user.value?.emailVerified ?? false)
   const isCreator = computed(() => user.value?.role === 'creator' || user.value?.role === 'admin')
   const isAdmin = computed(() => user.value?.role === 'admin')
 
@@ -51,16 +52,16 @@ export function useAuth() {
     }
   }
 
-  async function register(email: string, password: string, displayName: string) {
+  async function register(email: string, password: string, displayName: string, locale?: string) {
     loading.value = true
     error.value = null
 
     try {
-      const response = await $fetch<{ user: AuthUser }>('/api/auth/register', {
+      await $fetch('/api/auth/register', {
         method: 'POST',
-        body: { email, password, displayName },
+        body: { email, password, displayName, locale },
       })
-      user.value = response.user
+      // Don't set user - they need to verify email first
       return true
     } catch (err: unknown) {
       const fetchError = err as { data?: { message?: string } }
@@ -99,6 +100,7 @@ export function useAuth() {
     loading,
     error,
     isAuthenticated,
+    isEmailVerified,
     isCreator,
     isAdmin,
     fetchUser,

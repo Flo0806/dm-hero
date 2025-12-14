@@ -1,12 +1,6 @@
 import { randomBytes } from 'crypto'
 import { query, queryOne } from '../../utils/db'
-import {
-  hashPassword,
-  generateAccessToken,
-  generateRefreshToken,
-  setAuthCookies,
-  getUserById,
-} from '../../utils/auth'
+import { hashPassword, getUserById } from '../../utils/auth'
 import { sendVerificationEmail } from '../../utils/email'
 
 interface RegisterBody {
@@ -83,12 +77,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Generate tokens
-  const accessToken = generateAccessToken(user)
-  const refreshToken = await generateRefreshToken(user.id)
-
-  // Set cookies
-  setAuthCookies(event, accessToken, refreshToken)
+  // DON'T auto-login - user must verify email first
+  // No cookies are set here
 
   // Generate email verification token
   const verificationToken = randomBytes(32).toString('hex')

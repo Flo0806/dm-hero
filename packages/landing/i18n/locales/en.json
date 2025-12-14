@@ -198,6 +198,7 @@
     "upload": {
       "title": "Upload Adventure",
       "subtitle": "Share your one-shot or campaign with the community",
+      "verifyRequired": "Please verify your email address before uploading adventures.",
       "basicInfo": "Basic Information",
       "description": "Description",
       "highlights": "Highlights",
@@ -251,6 +252,7 @@
     },
     "rating": {
       "loginToRate": "Sign in to rate",
+      "verifyToRate": "Verify your email to rate",
       "yourRating": "Your rating: {rating} stars",
       "submitting": "Saving..."
     }
@@ -268,7 +270,8 @@
       "subtitle": "Sign in to your DM Hero account",
       "button": "Sign In",
       "noAccount": "Don't have an account?",
-      "registerLink": "Create one"
+      "registerLink": "Create one",
+      "emailNotVerified": "Please verify your email address before logging in."
     },
     "register": {
       "title": "Create Account",
@@ -287,6 +290,26 @@
       "minLength": "Must be at least {min} characters",
       "maxLength": "Must be at most {max} characters",
       "passwordMatch": "Passwords do not match"
+    },
+    "verifyEmail": {
+      "title": "Verify Email",
+      "verifying": "Verifying your email address...",
+      "success": "Email Verified!",
+      "successMessage": "Your email has been successfully verified. You can now access all features of DM Hero.",
+      "goToStore": "Go to Adventure Store",
+      "error": "Verification Failed",
+      "noToken": "Missing Verification Token",
+      "noTokenMessage": "No verification token was found. Please click the link in your verification email or request a new one.",
+      "goToLogin": "Go to Login",
+      "resendPrompt": "Need a new verification link?",
+      "resendButton": "Resend Verification Email",
+      "resendSuccess": "A new verification email has been sent. Please check your inbox."
+    },
+    "registrationComplete": {
+      "title": "Check Your Email",
+      "message": "We've sent a verification link to {email}. Please check your inbox and click the link to verify your account.",
+      "spamHint": "If you don't see it, check your spam folder.",
+      "continueToStore": "Continue to Store"
     }
   },
   "legal": {

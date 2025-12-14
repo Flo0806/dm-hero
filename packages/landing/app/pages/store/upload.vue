@@ -11,6 +11,37 @@
       </div>
     </div>
 
+    <!-- Email verification required alert -->
+    <v-alert
+      v-if="!isEmailVerified"
+      type="warning"
+      variant="tonal"
+      class="mb-6"
+      icon="mdi-email-alert"
+    >
+      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
+        <span>{{ $t('store.upload.verifyRequired') }}</span>
+        <v-btn
+          variant="outlined"
+          color="warning"
+          size="small"
+          :loading="resending"
+          @click="handleResend"
+        >
+          {{ $t('auth.verifyEmail.resendButton') }}
+        </v-btn>
+      </div>
+      <v-alert
+        v-if="resendSuccess"
+        type="success"
+        variant="tonal"
+        density="compact"
+        class="mt-3"
+      >
+        {{ $t('auth.verifyEmail.resendSuccess') }}
+      </v-alert>
+    </v-alert>
+
     <v-form ref="formRef" @submit.prevent="handleSubmit">
       <!-- Basic Info Card -->
       <v-card class="mb-6" elevation="0">
@@ -335,6 +366,7 @@
           variant="flat"
           size="large"
           :loading="submitting"
+          :disabled="!isEmailVerified"
           prepend-icon="mdi-upload"
         >
           {{ $t('store.upload.submit') }}
@@ -352,14 +384,36 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const adventureStore = useAdventureStore()
+const { user, isEmailVerified } = useAuth()
 
 const formRef = ref()
 const submitting = ref(false)
 const error = ref('')
 const coverPreview = ref<string | null>(null)
+const resending = ref(false)
+const resendSuccess = ref(false)
+
+async function handleResend() {
+  if (!user.value?.email) return
+
+  resending.value = true
+  resendSuccess.value = false
+
+  try {
+    await $fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      body: { email: user.value.email, locale: locale.value },
+    })
+    resendSuccess.value = true
+  } catch (err) {
+    console.error('Failed to resend verification email:', err)
+  } finally {
+    resending.value = false
+  }
+}
 
 const form = reactive({
   title: '',

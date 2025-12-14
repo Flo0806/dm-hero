@@ -198,6 +198,7 @@
     "upload": {
       "title": "Abenteuer hochladen",
       "subtitle": "Teile deinen One-Shot oder deine Kampagne mit der Community",
+      "verifyRequired": "Bitte bestätige deine E-Mail-Adresse, bevor du Abenteuer hochlädst.",
       "basicInfo": "Grundlegende Informationen",
       "description": "Beschreibung",
       "highlights": "Highlights",
@@ -251,6 +252,7 @@
     },
     "rating": {
       "loginToRate": "Anmelden um zu bewerten",
+      "verifyToRate": "Bestätige deine E-Mail um zu bewerten",
       "yourRating": "Deine Bewertung: {rating} Sterne",
       "submitting": "Wird gespeichert..."
     }
@@ -268,7 +270,8 @@
       "subtitle": "Melde dich bei deinem DM Hero Konto an",
       "button": "Anmelden",
       "noAccount": "Noch kein Konto?",
-      "registerLink": "Erstelle eins"
+      "registerLink": "Erstelle eins",
+      "emailNotVerified": "Bitte bestätige zuerst deine E-Mail-Adresse."
     },
     "register": {
       "title": "Konto erstellen",
@@ -287,6 +290,26 @@
       "minLength": "Muss mindestens {min} Zeichen haben",
       "maxLength": "Darf höchstens {max} Zeichen haben",
       "passwordMatch": "Passwörter stimmen nicht überein"
+    },
+    "verifyEmail": {
+      "title": "E-Mail bestätigen",
+      "verifying": "Deine E-Mail-Adresse wird überprüft...",
+      "success": "E-Mail bestätigt!",
+      "successMessage": "Deine E-Mail-Adresse wurde erfolgreich bestätigt. Du kannst jetzt alle Funktionen von DM Hero nutzen.",
+      "goToStore": "Zum Adventure Store",
+      "error": "Bestätigung fehlgeschlagen",
+      "noToken": "Bestätigungstoken fehlt",
+      "noTokenMessage": "Es wurde kein Bestätigungstoken gefunden. Bitte klicke auf den Link in deiner Bestätigungs-E-Mail oder fordere einen neuen an.",
+      "goToLogin": "Zur Anmeldung",
+      "resendPrompt": "Neuen Bestätigungslink benötigt?",
+      "resendButton": "Bestätigungs-E-Mail erneut senden",
+      "resendSuccess": "Eine neue Bestätigungs-E-Mail wurde gesendet. Bitte prüfe dein Postfach."
+    },
+    "registrationComplete": {
+      "title": "Prüfe dein Postfach",
+      "message": "Wir haben einen Bestätigungslink an {email} gesendet. Bitte prüfe dein Postfach und klicke auf den Link, um dein Konto zu bestätigen.",
+      "spamHint": "Falls du die E-Mail nicht siehst, prüfe deinen Spam-Ordner.",
+      "continueToStore": "Weiter zum Store"
     }
   },
   "legal": {

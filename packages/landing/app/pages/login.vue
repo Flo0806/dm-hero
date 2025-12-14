@@ -46,8 +46,37 @@
               </NuxtLink>
             </div>
 
+            <!-- Email not verified error -->
             <v-alert
-              v-if="error"
+              v-if="emailNotVerified"
+              type="warning"
+              variant="tonal"
+              class="mb-4"
+            >
+              <div class="mb-2">{{ $t('auth.login.emailNotVerified') }}</div>
+              <v-btn
+                size="small"
+                variant="outlined"
+                color="warning"
+                :loading="resending"
+                @click="handleResend"
+              >
+                {{ $t('auth.verifyEmail.resendButton') }}
+              </v-btn>
+              <v-alert
+                v-if="resendSuccess"
+                type="success"
+                variant="tonal"
+                density="compact"
+                class="mt-2"
+              >
+                {{ $t('auth.verifyEmail.resendSuccess') }}
+              </v-alert>
+            </v-alert>
+
+            <!-- Other errors -->
+            <v-alert
+              v-else-if="error"
               type="error"
               variant="tonal"
               density="compact"
@@ -100,7 +129,7 @@ definePageMeta({
   layout: false,
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const router = useRouter()
 const { login, loading, error } = useAuth()
 
@@ -108,6 +137,9 @@ const formRef = ref()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const emailNotVerified = ref(false)
+const resending = ref(false)
+const resendSuccess = ref(false)
 
 const rules = {
   required: (v: string) => !!v || t('auth.validation.required'),
@@ -118,9 +150,41 @@ async function handleLogin() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
 
-  const success = await login(email.value, password.value)
-  if (success) {
-    router.push('/store')
+  emailNotVerified.value = false
+  resendSuccess.value = false
+
+  try {
+    const success = await login(email.value, password.value)
+    if (success) {
+      router.push('/store')
+    }
+  } catch {
+    // Error is handled by useAuth
+  }
+
+  // Check if it's an email verification error
+  if (error.value?.includes('verify your email')) {
+    emailNotVerified.value = true
+    error.value = null
+  }
+}
+
+async function handleResend() {
+  if (!email.value) return
+
+  resending.value = true
+  resendSuccess.value = false
+
+  try {
+    await $fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      body: { email: email.value, locale: locale.value },
+    })
+    resendSuccess.value = true
+  } catch (err) {
+    console.error('Failed to resend verification email:', err)
+  } finally {
+    resending.value = false
   }
 }
 </script>

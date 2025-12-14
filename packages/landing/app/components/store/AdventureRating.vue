@@ -4,8 +4,8 @@
     <div class="d-flex align-center ga-2">
       <v-rating
         v-model="localRating"
-        :readonly="!isAuthenticated || submitting"
-        :hover="isAuthenticated && !submitting"
+        :readonly="!canRate || submitting"
+        :hover="canRate && !submitting"
         density="comfortable"
         color="amber"
         active-color="amber-darken-1"
@@ -26,6 +26,12 @@
       <NuxtLink to="/login" class="text-primary">
         {{ $t('store.rating.loginToRate') }}
       </NuxtLink>
+    </p>
+
+    <!-- Email not verified hint -->
+    <p v-else-if="!isEmailVerified" class="text-caption text-warning mt-1">
+      <v-icon icon="mdi-email-alert" size="small" />
+      {{ $t('store.rating.verifyToRate') }}
     </p>
 
     <!-- User's rating status -->
@@ -56,8 +62,11 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { isAuthenticated } = useAuth()
+const { isAuthenticated, isEmailVerified } = useAuth()
 const store = useAdventureStore()
+
+// Can rate only if authenticated AND email verified
+const canRate = computed(() => isAuthenticated.value && isEmailVerified.value)
 
 // Use storeToRefs for reactive state access
 const { adventures, adventureDetails, userRatings } = storeToRefs(store)
@@ -102,7 +111,7 @@ onMounted(async () => {
 })
 
 async function onRatingChange(newRating: string | number) {
-  if (!isAuthenticated.value || submitting.value) return
+  if (!canRate.value || submitting.value) return
 
   const ratingValue = Number(newRating)
   if (isNaN(ratingValue)) return

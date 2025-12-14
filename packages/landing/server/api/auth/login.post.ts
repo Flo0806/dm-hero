@@ -41,6 +41,15 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Check if email is verified
+  if (!user.email_verified) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'email_not_verified',
+      message: 'Please verify your email address before logging in',
+    })
+  }
+
   // Generate tokens
   const accessToken = generateAccessToken(user)
   const refreshToken = await generateRefreshToken(user.id)

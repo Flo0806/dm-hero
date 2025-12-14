@@ -106,6 +106,50 @@ const migrations: Migration[] = [
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     ],
   },
+  {
+    id: 2,
+    name: 'add_adventure_details',
+    up: [
+      // Add new adventure fields
+      `ALTER TABLE adventures
+        ADD COLUMN version_number INT NOT NULL DEFAULT 1 AFTER version,
+        ADD COLUMN \`system\` VARCHAR(50) DEFAULT 'dnd5e',
+        ADD COLUMN difficulty TINYINT DEFAULT 3,
+        ADD COLUMN players_min TINYINT DEFAULT 3,
+        ADD COLUMN players_max TINYINT DEFAULT 5,
+        ADD COLUMN level_min TINYINT DEFAULT 1,
+        ADD COLUMN level_max TINYINT DEFAULT 5,
+        ADD COLUMN duration_hours DECIMAL(4,1) DEFAULT 4.0,
+        ADD COLUMN highlights JSON,
+        ADD COLUMN author_name VARCHAR(100),
+        ADD COLUMN author_discord VARCHAR(100)`,
+
+      // Drop old version column (we use version_number now)
+      `ALTER TABLE adventures DROP COLUMN version`,
+
+      // Also update adventure_files to use integer version
+      `ALTER TABLE adventure_files
+        CHANGE COLUMN version version_number INT NOT NULL DEFAULT 1`,
+    ],
+  },
+  {
+    id: 3,
+    name: 'add_email_verification_tokens',
+    up: [
+      // Email verification tokens
+      `CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token VARCHAR(255) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        used_at TIMESTAMP NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_token (token),
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+    ],
+  },
 ]
 
 export async function runMigrations(): Promise<void> {
