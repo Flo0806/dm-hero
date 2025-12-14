@@ -146,7 +146,12 @@
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
-    "retry": "Try again"
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
   },
   "privacyBanner": {
     "title": "Your data belongs to you.",
@@ -173,6 +178,81 @@
       "title": "Coming Soon",
       "description": "The Adventure Store is under construction. Soon you'll be able to discover, share, and download campaigns created by the community.",
       "backHome": "Back to Home"
+    },
+    "empty": {
+      "title": "No Adventures Yet",
+      "description": "Be the first to share your adventure with the community!",
+      "createFirst": "Upload First Adventure"
+    },
+    "card": {
+      "free": "Free",
+      "by": "by"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "moderate": "Moderate",
+      "challenging": "Challenging",
+      "hard": "Hard",
+      "deadly": "Deadly"
+    },
+    "upload": {
+      "title": "Upload Adventure",
+      "subtitle": "Share your one-shot or campaign with the community",
+      "basicInfo": "Basic Information",
+      "description": "Description",
+      "highlights": "Highlights",
+      "gameDetails": "Game Details",
+      "authorInfo": "Author Information",
+      "adventureFile": "Adventure File",
+      "pricing": "Pricing",
+      "submit": "Upload Adventure",
+      "addHighlight": "Add Highlight",
+      "hours": "Hours",
+      "multiSession": "Multi-Session Campaign",
+      "fields": {
+        "title": "Title",
+        "shortDescription": "Short Description",
+        "coverImage": "Cover Image",
+        "descriptionPlaceholder": "Describe your adventure in detail...",
+        "highlightPlaceholder": "e.g., Epic boss fight, Unique puzzles",
+        "system": "Game System",
+        "language": "Language",
+        "difficulty": "Difficulty",
+        "players": "Number of Players",
+        "characterLevel": "Character Level",
+        "duration": "Estimated Duration",
+        "tags": "Tags",
+        "authorName": "Author Name",
+        "discord": "Discord Username",
+        "file": "Adventure File (.dmhero)",
+        "freeAdventure": "Free Adventure",
+        "price": "Price",
+        "min": "Min",
+        "max": "Max"
+      },
+      "hints": {
+        "shortDescription": "Shown in the store listing. Max 500 characters.",
+        "coverImage": "Recommended: 1920x1200 (16:10). JPG or PNG.",
+        "authorName": "Optional. Shown instead of your username.",
+        "discord": "Optional. For community contact.",
+        "file": "Export your campaign from DM Hero as .dmhero file",
+        "price": "Set to 0 for free. Payment integration coming soon.",
+        "freeOnly": "Currently only free adventures are supported. Payment integration coming soon!"
+      }
+    },
+    "detail": {
+      "backToStore": "Back to Store",
+      "highlights": "Highlights",
+      "description": "Description",
+      "gameDetails": "Game Details",
+      "download": "Download",
+      "downloads": "Downloads",
+      "otherSystem": "Other System"
+    },
+    "rating": {
+      "loginToRate": "Sign in to rate",
+      "yourRating": "Your rating: {rating} stars",
+      "submitting": "Saving..."
     }
   },
   "auth": {

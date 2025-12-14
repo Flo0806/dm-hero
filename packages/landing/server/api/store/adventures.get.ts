@@ -1,25 +1,47 @@
 import { query } from '../../utils/db'
 
-interface Adventure {
+// DB row type (snake_case from MySQL)
+interface AdventureRow {
   id: number
-  author_id: number
   title: string
   slug: string
   description: string | null
   short_description: string | null
   cover_image_url: string | null
-  version: string
   price_cents: number
   currency: string
   download_count: number
-  status: string
   language: string
   tags: string | null
-  created_at: string
-  published_at: string | null
-  author_name: string
+  author_name: string | null
+  display_name: string
   avg_rating: number | null
   rating_count: number
+}
+
+// Transform to camelCase for frontend
+function transformAdventure(row: AdventureRow) {
+  let tags: string[] = []
+  try {
+    tags = row.tags ? JSON.parse(row.tags) : []
+  } catch { /* ignore */ }
+
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description,
+    shortDescription: row.short_description,
+    coverImageUrl: row.cover_image_url,
+    priceCents: row.price_cents,
+    currency: row.currency,
+    downloadCount: row.download_count,
+    language: row.language,
+    tags,
+    authorName: row.author_name || row.display_name,
+    avgRating: row.avg_rating,
+    ratingCount: row.rating_count,
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -76,10 +98,11 @@ export default defineEventHandler(async (event) => {
       sql += ` ORDER BY a.published_at DESC`
   }
 
-  sql += ` LIMIT ? OFFSET ?`
-  params.push(limit, offset)
+  // LIMIT/OFFSET use string interpolation (safe - already validated integers)
+  // MySQL prepared statements have known issues with these parameters
+  sql += ` LIMIT ${limit} OFFSET ${offset}`
 
-  const adventures = await query<Adventure[]>(sql, params)
+  const rows = await query<AdventureRow[]>(sql, params)
 
   // Get total count
   let countSql = `SELECT COUNT(*) as total FROM adventures WHERE status = 'published'`
@@ -99,7 +122,7 @@ export default defineEventHandler(async (event) => {
   const total = countResult?.total || 0
 
   return {
-    adventures,
+    adventures: rows.map(transformAdventure),
     pagination: {
       page,
       limit,

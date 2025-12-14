@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
-  modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content'],
+  modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content', '@pinia/nuxt'],
 
   css: [
     '@/assets/css/main.css',
@@ -71,6 +71,14 @@ export default defineNuxtConfig({
         base: './uploads',
       },
     },
+    // Serve uploads directory
+    publicAssets: [
+      {
+        dir: 'uploads',
+        baseURL: '/uploads',
+        maxAge: 60 * 60 * 24 * 7, // 1 week cache
+      },
+    ],
   },
 
   runtimeConfig: {
@@ -81,9 +89,16 @@ export default defineNuxtConfig({
     dbUser: process.env.DB_USER || 'dmhero_user',
     dbPassword: process.env.DB_PASSWORD || '',
     jwtSecret: process.env.JWT_SECRET || 'change_me_in_production',
+    // SMTP config for email
+    smtpHost: process.env.SMTP_HOST || 'smtp.ionos.de',
+    smtpPort: process.env.SMTP_PORT || '587',
+    smtpUser: process.env.SMTP_USER || 'noreply@dm-hero.com',
+    smtpPassword: process.env.SMTP_PASSWORD || '',
+    smtpFrom: process.env.SMTP_FROM || 'DM Hero <noreply@dm-hero.com>',
     // Public env vars (exposed to client)
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3001',
     },
   },
 })

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { query, queryOne } from '../../utils/db'
 import {
   hashPassword,
@@ -6,11 +7,13 @@ import {
   setAuthCookies,
   getUserById,
 } from '../../utils/auth'
+import { sendVerificationEmail } from '../../utils/email'
 
 interface RegisterBody {
   email: string
   password: string
   displayName: string
+  locale?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -87,7 +90,19 @@ export default defineEventHandler(async (event) => {
   // Set cookies
   setAuthCookies(event, accessToken, refreshToken)
 
-  // TODO: Send verification email
+  // Generate email verification token
+  const verificationToken = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+  await query(
+    'INSERT INTO email_verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+    [userId, verificationToken, expiresAt],
+  )
+
+  // Send verification email (don't wait, don't fail registration if email fails)
+  sendVerificationEmail(user.email, verificationToken, body.locale || 'en').catch((err) => {
+    console.error('[Register] Failed to send verification email:', err)
+  })
 
   return {
     user: {
@@ -98,6 +113,7 @@ export default defineEventHandler(async (event) => {
       role: user.role,
       emailVerified: user.email_verified,
     },
-    message: 'Registration successful',
+    message: 'Registration successful. Please check your email to verify your account.',
+    requiresVerification: true,
   }
 })

@@ -1,5 +1,7 @@
 <template>
-  <v-container class="py-12">
+  <div>
+    <StoreBackground />
+    <v-container class="py-12 position-relative" style="z-index: 1">
     <!-- Header -->
     <div class="text-center mb-12">
       <img
@@ -17,7 +19,12 @@
 
     <!-- User Actions -->
     <div class="d-flex justify-center align-center mb-8">
-      <template v-if="isAuthenticated">
+      <!-- Loading state -->
+      <template v-if="authLoading">
+        <v-progress-circular indeterminate color="primary" size="32" />
+      </template>
+      <!-- Logged in -->
+      <template v-else-if="isAuthenticated">
         <div class="user-card d-flex align-center ga-4 px-6 py-3 rounded-pill">
           <v-avatar color="primary" size="40">
             <v-icon v-if="!user?.avatarUrl">mdi-account</v-icon>
@@ -29,7 +36,6 @@
           </div>
           <v-divider vertical class="mx-2" />
           <v-btn
-            v-if="isCreator"
             color="primary"
             variant="flat"
             prepend-icon="mdi-plus"
@@ -48,6 +54,7 @@
           </v-btn>
         </div>
       </template>
+      <!-- Not logged in -->
       <template v-else>
         <div class="d-flex ga-3">
           <v-btn color="primary" variant="flat" size="large" to="/login" prepend-icon="mdi-login">
@@ -106,7 +113,9 @@
     <!-- Adventures Grid -->
     <v-row v-else-if="adventures.length > 0">
       <v-col v-for="adventure in adventures" :key="adventure.id" cols="12" sm="6" lg="4">
-        <StoreAdventureCard :adventure="adventure" />
+        <StoreMagicCardBorder>
+          <StoreAdventureCard :adventure="adventure" />
+        </StoreMagicCardBorder>
       </v-col>
     </v-row>
 
@@ -118,7 +127,7 @@
         {{ $t('store.empty.description') }}
       </p>
       <v-btn
-        v-if="isCreator"
+        v-if="isAuthenticated"
         color="primary"
         variant="flat"
         to="/store/upload"
@@ -138,31 +147,33 @@
       />
     </div>
   </v-container>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-import type { Adventure } from '~/components/store/AdventureCard.vue'
+import { useAdventureStore } from '~/stores/adventureStore'
 
 const { t } = useI18n()
 const router = useRouter()
-const { user, isAuthenticated, isCreator, logout } = useAuth()
+const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
+const store = useAdventureStore()
 
 async function handleLogout() {
   await logout()
   router.push('/')
 }
 
-// Filter state
-const search = ref('')
-const sortBy = ref('newest')
-const language = ref<string | null>(null)
-const page = ref(1)
+// Local filter refs that sync with store
+const search = ref(store.filters.search)
+const sortBy = ref(store.filters.sortBy)
+const language = ref(store.filters.language)
+const page = ref(store.filters.page)
 
-// Data state
-const adventures = ref<Adventure[]>([])
-const loading = ref(true)
-const totalPages = ref(1)
+// Computed from store
+const adventures = computed(() => store.adventures)
+const loading = computed(() => store.loading)
+const totalPages = computed(() => store.totalPages)
 
 const sortOptions = computed(() => [
   { title: t('store.sort.newest'), value: 'newest' },
@@ -175,50 +186,36 @@ const languageOptions = computed(() => [
   { title: 'English', value: 'en' },
 ])
 
-// Fetch adventures
-async function fetchAdventures() {
-  loading.value = true
-  try {
-    const params = new URLSearchParams({
-      page: page.value.toString(),
-      sort: sortBy.value,
-    })
-    if (search.value) params.set('search', search.value)
-    if (language.value) params.set('language', language.value)
+// Debounced search
+const debouncedSearch = useDebounceFn((val: string) => {
+  store.setSearch(val)
+  store.fetchAdventures()
+}, 300)
 
-    const response = await $fetch<{
-      adventures: Adventure[]
-      pagination: { totalPages: number }
-    }>(`/api/store/adventures?${params}`)
-
-    adventures.value = response.adventures
-    totalPages.value = response.pagination.totalPages
-  } catch (error) {
-    console.error('Failed to fetch adventures:', error)
-    adventures.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-// Debounced fetch
-const debouncedFetch = useDebounceFn(fetchAdventures, 300)
-
-// Watch filters and refetch
-watch(search, () => {
-  page.value = 1
-  debouncedFetch()
+// Watch filters and update store
+watch(search, (val) => {
+  debouncedSearch(val)
 })
 
-watch([sortBy, language], () => {
-  page.value = 1
-  fetchAdventures()
+watch(sortBy, (val) => {
+  store.setSortBy(val as 'newest' | 'popular' | 'rating')
+  store.fetchAdventures()
 })
 
-watch(page, fetchAdventures)
+watch(language, (val) => {
+  store.setLanguage(val)
+  store.fetchAdventures()
+})
+
+watch(page, (val) => {
+  store.setPage(val)
+  store.fetchAdventures()
+})
 
 // Initial fetch
-onMounted(fetchAdventures)
+onMounted(() => {
+  store.fetchAdventures()
+})
 </script>
 
 <style scoped>

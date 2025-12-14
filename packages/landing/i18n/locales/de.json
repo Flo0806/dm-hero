@@ -146,7 +146,12 @@
   "common": {
     "loading": "Laden...",
     "error": "Etwas ist schiefgelaufen",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen"
   },
   "privacyBanner": {
     "title": "Deine Daten gehören dir.",
@@ -173,6 +178,81 @@
       "title": "Kommt bald",
       "description": "Der Adventure Store ist noch im Aufbau. Bald kannst du Kampagnen entdecken, teilen und herunterladen, die von der Community erstellt wurden.",
       "backHome": "Zurück zur Startseite"
+    },
+    "empty": {
+      "title": "Noch keine Abenteuer",
+      "description": "Sei der Erste, der sein Abenteuer mit der Community teilt!",
+      "createFirst": "Erstes Abenteuer hochladen"
+    },
+    "card": {
+      "free": "Kostenlos",
+      "by": "von"
+    },
+    "difficulty": {
+      "easy": "Einfach",
+      "moderate": "Moderat",
+      "challenging": "Herausfordernd",
+      "hard": "Schwer",
+      "deadly": "Tödlich"
+    },
+    "upload": {
+      "title": "Abenteuer hochladen",
+      "subtitle": "Teile deinen One-Shot oder deine Kampagne mit der Community",
+      "basicInfo": "Grundlegende Informationen",
+      "description": "Beschreibung",
+      "highlights": "Highlights",
+      "gameDetails": "Spieldetails",
+      "authorInfo": "Autor-Informationen",
+      "adventureFile": "Abenteuer-Datei",
+      "pricing": "Preisgestaltung",
+      "submit": "Abenteuer hochladen",
+      "addHighlight": "Highlight hinzufügen",
+      "hours": "Stunden",
+      "multiSession": "Mehrteilige Kampagne",
+      "fields": {
+        "title": "Titel",
+        "shortDescription": "Kurzbeschreibung",
+        "coverImage": "Titelbild",
+        "descriptionPlaceholder": "Beschreibe dein Abenteuer ausführlich...",
+        "highlightPlaceholder": "z.B. Epischer Bosskampf, Einzigartige Rätsel",
+        "system": "Spielsystem",
+        "language": "Sprache",
+        "difficulty": "Schwierigkeit",
+        "players": "Spieleranzahl",
+        "characterLevel": "Charakterlevel",
+        "duration": "Geschätzte Dauer",
+        "tags": "Tags",
+        "authorName": "Autorenname",
+        "discord": "Discord-Benutzername",
+        "file": "Abenteuer-Datei (.dmhero)",
+        "freeAdventure": "Kostenloses Abenteuer",
+        "price": "Preis",
+        "min": "Min",
+        "max": "Max"
+      },
+      "hints": {
+        "shortDescription": "Wird im Store angezeigt. Max. 500 Zeichen.",
+        "coverImage": "Empfohlen: 1920x1200 (16:10). JPG oder PNG.",
+        "authorName": "Optional. Wird statt deinem Benutzernamen angezeigt.",
+        "discord": "Optional. Für Community-Kontakt.",
+        "file": "Exportiere deine Kampagne aus DM Hero als .dmhero-Datei",
+        "price": "0 für kostenlos. Bezahlung kommt bald.",
+        "freeOnly": "Aktuell sind nur kostenlose Abenteuer möglich. Bezahlfunktion kommt bald!"
+      }
+    },
+    "detail": {
+      "backToStore": "Zurück zum Store",
+      "highlights": "Highlights",
+      "description": "Beschreibung",
+      "gameDetails": "Spieldetails",
+      "download": "Herunterladen",
+      "downloads": "Downloads",
+      "otherSystem": "Anderes System"
+    },
+    "rating": {
+      "loginToRate": "Anmelden um zu bewerten",
+      "yourRating": "Deine Bewertung: {rating} Sterne",
+      "submitting": "Wird gespeichert..."
     }
   },
   "auth": {

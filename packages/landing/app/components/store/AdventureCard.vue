@@ -106,25 +106,10 @@
 </template>
 
 <script setup lang="ts">
-export interface Adventure {
-  id: number
-  slug: string
-  title: string
-  description: string | null
-  shortDescription: string | null
-  coverImageUrl: string | null
-  authorName: string
-  priceCents: number
-  currency: string
-  downloadCount: number
-  avgRating: number | null
-  ratingCount: number
-  language: string
-  tags: string[] | null
-}
+import type { AdventureCard } from '~/stores/adventureStore'
 
 defineProps<{
-  adventure: Adventure
+  adventure: AdventureCard
 }>()
 
 function formatPrice(cents: number, currency: string): string {
