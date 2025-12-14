@@ -7,6 +7,7 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
+    "store": "Store",
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support"
@@ -152,6 +153,61 @@
     "message": "Diese Website verwendet keine Cookies und kein Tracking. Wir speichern nur das technisch Notwendige. Keine Zustimmung erforderlich.",
     "learnMore": "Mehr erfahren",
     "ok": "Alles klar"
+  },
+  "store": {
+    "title": "Adventure Store",
+    "subtitle": "Entdecke spielfertige Abenteuer, erstellt von der Community. Herunterladen, importieren und losspielen.",
+    "searchPlaceholder": "Abenteuer suchen...",
+    "sortBy": "Sortieren nach",
+    "language": "Sprache",
+    "login": "Anmelden",
+    "register": "Konto erstellen",
+    "logout": "Abmelden",
+    "uploadAdventure": "Abenteuer hochladen",
+    "sort": {
+      "newest": "Neueste",
+      "popular": "Beliebteste",
+      "rating": "Bestbewertet"
+    },
+    "comingSoon": {
+      "title": "Kommt bald",
+      "description": "Der Adventure Store ist noch im Aufbau. Bald kannst du Kampagnen entdecken, teilen und herunterladen, die von der Community erstellt wurden.",
+      "backHome": "Zurück zur Startseite"
+    }
+  },
+  "auth": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "displayName": "Anzeigename",
+    "forgotPassword": "Passwort vergessen?",
+    "or": "oder",
+    "backToHome": "Zurück zur Startseite",
+    "login": {
+      "title": "Willkommen zurück",
+      "subtitle": "Melde dich bei deinem DM Hero Konto an",
+      "button": "Anmelden",
+      "noAccount": "Noch kein Konto?",
+      "registerLink": "Erstelle eins"
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "subtitle": "Werde Teil der DM Hero Community",
+      "button": "Konto erstellen",
+      "hasAccount": "Schon ein Konto?",
+      "loginLink": "Anmelden",
+      "terms": "Mit der Erstellung eines Kontos stimmst du unseren",
+      "termsLink": "Nutzungsbedingungen",
+      "and": "und der",
+      "privacyLink": "Datenschutzerklärung zu"
+    },
+    "validation": {
+      "required": "Dieses Feld ist erforderlich",
+      "email": "Bitte gib eine gültige E-Mail ein",
+      "minLength": "Muss mindestens {min} Zeichen haben",
+      "maxLength": "Darf höchstens {max} Zeichen haben",
+      "passwordMatch": "Passwörter stimmen nicht überein"
+    }
   },
   "legal": {
     "backToHome": "Zurück zur Startseite",

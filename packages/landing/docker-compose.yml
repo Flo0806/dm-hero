@@ -1,0 +1,43 @@
+# Local development only - MySQL + phpMyAdmin
+# Landing page runs with: pnpm dev
+
+services:
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_local_pass
+      - MYSQL_DATABASE=dmhero
+      - MYSQL_USER=dmhero_user
+      - MYSQL_PASSWORD=dmhero_local_pass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_local_pass"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - dmhero-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=dmhero_user
+      - PMA_PASSWORD=dmhero_local_pass
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dmhero-network
+
+volumes:
+  mysql_data:
+
+networks:
+  dmhero-network:
+    driver: bridge

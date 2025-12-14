@@ -8,6 +8,7 @@ const navItems = [
   { key: 'features', href: '/#features' },
   { key: 'screenshots', href: '/#screenshots' },
   { key: 'download', href: '/#download' },
+  { key: 'store', href: '/store' },
   { key: 'docs', href: '/docs' },
   { key: 'support', href: 'https://buymeacoffee.com/flo0806', external: true, icon: 'mdi-coffee' },
 ]

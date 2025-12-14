@@ -7,6 +7,7 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
+    "store": "Store",
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support"
@@ -152,6 +153,61 @@
     "message": "This website uses no cookies and no tracking. We only store what's technically necessary. No consent required.",
     "learnMore": "Learn more",
     "ok": "Got it"
+  },
+  "store": {
+    "title": "Adventure Store",
+    "subtitle": "Discover ready-to-play adventures created by the community. Download, import, and start playing.",
+    "searchPlaceholder": "Search adventures...",
+    "sortBy": "Sort by",
+    "language": "Language",
+    "login": "Sign In",
+    "register": "Create Account",
+    "logout": "Sign Out",
+    "uploadAdventure": "Upload Adventure",
+    "sort": {
+      "newest": "Newest",
+      "popular": "Most Popular",
+      "rating": "Highest Rated"
+    },
+    "comingSoon": {
+      "title": "Coming Soon",
+      "description": "The Adventure Store is under construction. Soon you'll be able to discover, share, and download campaigns created by the community.",
+      "backHome": "Back to Home"
+    }
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "displayName": "Display Name",
+    "forgotPassword": "Forgot password?",
+    "or": "or",
+    "backToHome": "Back to Home",
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your DM Hero account",
+      "button": "Sign In",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Create one"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join the DM Hero community",
+      "button": "Create Account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "terms": "By creating an account, you agree to our",
+      "termsLink": "Terms of Service",
+      "and": "and",
+      "privacyLink": "Privacy Policy"
+    },
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email",
+      "minLength": "Must be at least {min} characters",
+      "maxLength": "Must be at most {max} characters",
+      "passwordMatch": "Passwords do not match"
+    }
   },
   "legal": {
     "backToHome": "Back to Home",

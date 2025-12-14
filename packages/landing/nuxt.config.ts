@@ -64,6 +64,26 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'static',
+    // No preset = node-server for API routes
+    storage: {
+      uploads: {
+        driver: 'fs',
+        base: './uploads',
+      },
+    },
+  },
+
+  runtimeConfig: {
+    // Server-only env vars
+    dbHost: process.env.DB_HOST || 'localhost',
+    dbPort: process.env.DB_PORT || '3306',
+    dbName: process.env.DB_NAME || 'dmhero',
+    dbUser: process.env.DB_USER || 'dmhero_user',
+    dbPassword: process.env.DB_PASSWORD || '',
+    jwtSecret: process.env.JWT_SECRET || 'change_me_in_production',
+    // Public env vars (exposed to client)
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
+    },
   },
 })

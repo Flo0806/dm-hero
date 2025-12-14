@@ -20,7 +20,10 @@
     "@nuxtjs/i18n": "^10.2.1",
     "@vueuse/core": "^14.1.0",
     "@vueuse/motion": "^3.0.3",
+    "bcryptjs": "^3.0.3",
     "eslint": "^9.39.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.14.1",
     "nuxt": "^4.2.1",
     "vite-plugin-vuetify": "^2.1.2",
     "vue": "^3.5.25",
@@ -28,6 +31,8 @@
     "vuetify": "^3.11.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "typescript": "^5.9.3"
   }
 }
