@@ -252,11 +252,11 @@
 
         <!-- Success Step -->
         <template v-else-if="step === 'success'">
+          <v-btn variant="text" @click="close">
+            {{ $t('common.close') }}
+          </v-btn>
           <v-btn v-if="importMode === 'new'" color="primary" variant="flat" @click="goToCampaign">
             {{ $t('campaigns.import.openCampaign') }}
-          </v-btn>
-          <v-btn v-else color="primary" variant="flat" @click="close">
-            {{ $t('common.close') }}
           </v-btn>
         </template>
       </v-card-actions>
