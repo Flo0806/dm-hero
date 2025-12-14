@@ -121,7 +121,14 @@ export const useCampaignStore = defineStore('campaign', {
         method: 'DELETE',
       })
       this.campaigns = this.campaigns.filter((c) => c.id !== id)
-      if (this.activeCampaignId === String(id)) {
+
+      // Check both store state AND cookie (store might not be initialized)
+      // Use Number() for comparison to avoid string/number type mismatch
+      const cookieId = useCookie('activeCampaignId')
+      const storeId = this.activeCampaignId ? Number(this.activeCampaignId) : null
+      const cookieIdNum = cookieId.value ? Number(cookieId.value) : null
+
+      if (storeId === id || cookieIdNum === id) {
         this.clearActiveCampaign()
       }
     },
