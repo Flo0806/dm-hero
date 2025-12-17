@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const { t, locale, setLocale } = useI18n()
+const { user, isAuthenticated, logout } = useAuth()
+const router = useRouter()
 
 const drawer = ref(false)
 const scrolled = ref(false)
@@ -12,6 +14,17 @@ const navItems = [
   { key: 'docs', href: '/docs' },
   { key: 'support', href: 'https://buymeacoffee.com/flo0806', external: true, icon: 'mdi-coffee' },
 ]
+
+// User initials for avatar fallback
+const initials = computed(() => {
+  if (!user.value?.displayName) return '?'
+  return user.value.displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+})
 
 // Handle scroll effect
 function handleScroll() {
@@ -30,6 +43,13 @@ onUnmounted(() => {
 function toggleLanguage() {
   const newLocale = locale.value === 'en' ? 'de' : 'en'
   setLocale(newLocale)
+}
+
+// Handle logout
+async function handleLogout() {
+  await logout()
+  drawer.value = false
+  router.push('/')
 }
 </script>
 
@@ -98,6 +118,61 @@ function toggleLanguage() {
         >
           {{ locale === 'en' ? 'DE' : 'EN' }}
         </v-btn>
+
+        <!-- Auth Section (client-only to prevent hydration mismatch) -->
+        <ClientOnly>
+          <!-- User Menu (when logged in) -->
+          <v-menu v-if="isAuthenticated" offset-y>
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                v-bind="menuProps"
+                variant="text"
+                class="ml-2 pa-0"
+                style="min-width: 40px"
+              >
+                <v-avatar size="36" color="primary">
+                  <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
+                  <span v-else class="text-body-2">{{ initials }}</span>
+                </v-avatar>
+              </v-btn>
+            </template>
+            <v-list density="compact" min-width="180">
+              <v-list-item class="px-4 py-2">
+                <v-list-item-title class="font-weight-medium">
+                  {{ user?.displayName }}
+                </v-list-item-title>
+                <v-list-item-subtitle class="text-caption">
+                  {{ user?.email }}
+                </v-list-item-subtitle>
+              </v-list-item>
+              <v-divider />
+              <v-list-item to="/profile" prepend-icon="mdi-account">
+                <v-list-item-title>{{ t('nav.profile') }}</v-list-item-title>
+              </v-list-item>
+              <v-divider />
+              <v-list-item prepend-icon="mdi-logout" base-color="error" @click="handleLogout">
+                <v-list-item-title>{{ t('store.logout') }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+
+          <!-- Login Button (when not logged in) -->
+          <v-btn
+            v-else
+            to="/login"
+            variant="tonal"
+            color="primary"
+            size="small"
+            class="ml-2"
+            prepend-icon="mdi-login"
+          >
+            {{ t('store.login') }}
+          </v-btn>
+
+          <template #fallback>
+            <v-skeleton-loader type="avatar" class="ml-2" width="36" height="36" />
+          </template>
+        </ClientOnly>
       </nav>
 
       <!-- Mobile Menu Button -->
@@ -113,13 +188,14 @@ function toggleLanguage() {
     </v-container>
   </v-app-bar>
 
-  <!-- Mobile Navigation Drawer -->
-  <v-navigation-drawer
-    v-model="drawer"
-    location="right"
-    temporary
-    width="280"
-  >
+  <!-- Mobile Navigation Drawer (client-only to prevent SSR mobile detection mismatch) -->
+  <ClientOnly>
+    <v-navigation-drawer
+      v-model="drawer"
+      location="right"
+      temporary
+      width="280"
+    >
     <v-list nav>
       <v-list-item class="mb-4">
         <template #prepend>
@@ -179,8 +255,52 @@ function toggleLanguage() {
           {{ locale === 'en' ? 'Deutsch' : 'English' }}
         </v-list-item-title>
       </v-list-item>
+
+      <v-divider class="my-2" />
+
+      <!-- User Section (Mobile) -->
+      <template v-if="isAuthenticated">
+        <v-list-item class="mb-2">
+          <template #prepend>
+            <v-avatar size="40" color="primary" class="mr-3">
+              <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
+              <span v-else class="text-body-2">{{ initials }}</span>
+            </v-avatar>
+          </template>
+          <v-list-item-title class="font-weight-medium">
+            {{ user?.displayName }}
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-caption">
+            {{ user?.email }}
+          </v-list-item-subtitle>
+        </v-list-item>
+
+        <v-list-item to="/profile" color="primary" @click="drawer = false">
+          <template #prepend>
+            <v-icon>mdi-account</v-icon>
+          </template>
+          <v-list-item-title>{{ t('nav.profile') }}</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item base-color="error" @click="handleLogout">
+          <template #prepend>
+            <v-icon>mdi-logout</v-icon>
+          </template>
+          <v-list-item-title>{{ t('store.logout') }}</v-list-item-title>
+        </v-list-item>
+      </template>
+
+      <template v-else>
+        <v-list-item to="/login" color="primary" @click="drawer = false">
+          <template #prepend>
+            <v-icon>mdi-login</v-icon>
+          </template>
+          <v-list-item-title>{{ t('store.login') }}</v-list-item-title>
+        </v-list-item>
+      </template>
     </v-list>
-  </v-navigation-drawer>
+    </v-navigation-drawer>
+  </ClientOnly>
 </template>
 
 <style scoped>

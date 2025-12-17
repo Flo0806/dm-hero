@@ -134,3 +134,5 @@ export function clearAuthCookies(event: H3Event): void {
   deleteCookie(event, 'access_token', { path: '/' })
   deleteCookie(event, 'refresh_token', { path: '/' })
 }
+
+// Note: requireAuth is exported from ./requireAuth.ts

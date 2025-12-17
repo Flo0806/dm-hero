@@ -1,13 +1,13 @@
 export default defineNuxtRouteMiddleware(async () => {
-  const { isAuthenticated, loading, fetchUser } = useAuth()
+  const { isAuthenticated, initialized, fetchUser } = useAuth()
 
-  // Fetch user if not already loaded
-  if (loading.value) {
+  // Fetch user if not already initialized
+  if (!initialized.value) {
     await fetchUser()
   }
 
-  // Redirect to home if already authenticated
+  // Redirect to store if already authenticated
   if (isAuthenticated.value) {
-    return navigateTo('/')
+    return navigateTo('/store')
   }
 })

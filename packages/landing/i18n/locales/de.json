@@ -10,7 +10,8 @@
     "store": "Store",
     "docs": "Docs",
     "github": "GitHub",
-    "support": "Support"
+    "support": "Support",
+    "profile": "Profil"
   },
   "docs": {
     "title": "Dokumentation",
@@ -310,6 +311,51 @@
       "message": "Wir haben einen Bestätigungslink an {email} gesendet. Bitte prüfe dein Postfach und klicke auf den Link, um dein Konto zu bestätigen.",
       "spamHint": "Falls du die E-Mail nicht siehst, prüfe deinen Spam-Ordner.",
       "continueToStore": "Weiter zum Store"
+    }
+  },
+  "profile": {
+    "verified": "Verifiziert",
+    "messages": {
+      "profileUpdated": "Profil wurde gespeichert",
+      "updateFailed": "Profil konnte nicht gespeichert werden",
+      "avatarUpdated": "Profilbild wurde aktualisiert",
+      "uploadFailed": "Upload fehlgeschlagen",
+      "fileTooLarge": "Datei zu groß. Maximale Größe: 2 MB",
+      "invalidFileType": "Ungültiges Dateiformat. Erlaubt: JPEG, PNG, GIF, WebP",
+      "adventureDeleted": "Abenteuer wurde gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen"
+    },
+    "stats": {
+      "title": "Statistiken",
+      "adventures": "Abenteuer",
+      "downloads": "Downloads",
+      "avgRating": "Ø Bewertung",
+      "ratings": "Bewertungen"
+    },
+    "info": {
+      "title": "Profileinstellungen",
+      "avatarHint": "Klicke, um ein neues Profilbild hochzuladen",
+      "emailReadonly": "E-Mail kann nicht geändert werden. Bei Bedarf Support kontaktieren."
+    },
+    "adventures": {
+      "title": "Meine Abenteuer",
+      "create": "Neues Abenteuer",
+      "empty": "Du hast noch keine Abenteuer hochgeladen.",
+      "createFirst": "Erstes Abenteuer hochladen",
+      "view": "Ansehen",
+      "edit": "Bearbeiten",
+      "comingSoon": "Kommt bald",
+      "status": {
+        "draft": "Entwurf",
+        "pending_review": "In Prüfung",
+        "published": "Veröffentlicht",
+        "rejected": "Abgelehnt",
+        "archived": "Archiviert"
+      },
+      "deleteConfirm": {
+        "title": "Abenteuer löschen?",
+        "message": "Bist du sicher, dass du \"{title}\" löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden."
+      }
     }
   },
   "legal": {

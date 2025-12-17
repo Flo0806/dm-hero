@@ -57,6 +57,7 @@ export default defineNuxtPlugin((app) => {
   const vuetify = createVuetify({
     components,
     directives,
+    ssr: true,
     icons: {
       defaultSet: 'mdi',
       aliases,

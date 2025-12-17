@@ -10,7 +10,8 @@
     "store": "Store",
     "docs": "Docs",
     "github": "GitHub",
-    "support": "Support"
+    "support": "Support",
+    "profile": "Profile"
   },
   "docs": {
     "title": "Documentation",
@@ -310,6 +311,51 @@
       "message": "We've sent a verification link to {email}. Please check your inbox and click the link to verify your account.",
       "spamHint": "If you don't see it, check your spam folder.",
       "continueToStore": "Continue to Store"
+    }
+  },
+  "profile": {
+    "verified": "Verified",
+    "messages": {
+      "profileUpdated": "Profile saved successfully",
+      "updateFailed": "Failed to save profile",
+      "avatarUpdated": "Profile picture updated",
+      "uploadFailed": "Upload failed",
+      "fileTooLarge": "File too large. Maximum size: 2 MB",
+      "invalidFileType": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
+      "adventureDeleted": "Adventure deleted",
+      "deleteFailed": "Failed to delete"
+    },
+    "stats": {
+      "title": "Statistics",
+      "adventures": "Adventures",
+      "downloads": "Downloads",
+      "avgRating": "Avg. Rating",
+      "ratings": "Ratings"
+    },
+    "info": {
+      "title": "Profile Settings",
+      "avatarHint": "Click to upload a new profile picture",
+      "emailReadonly": "Email cannot be changed. Contact support if needed."
+    },
+    "adventures": {
+      "title": "My Adventures",
+      "create": "New Adventure",
+      "empty": "You haven't uploaded any adventures yet.",
+      "createFirst": "Upload Your First Adventure",
+      "view": "View",
+      "edit": "Edit",
+      "comingSoon": "Coming soon",
+      "status": {
+        "draft": "Draft",
+        "pending_review": "Pending Review",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "deleteConfirm": {
+        "title": "Delete Adventure?",
+        "message": "Are you sure you want to delete \"{title}\"? This action cannot be undone."
+      }
     }
   },
   "legal": {
