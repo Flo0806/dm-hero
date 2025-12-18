@@ -1,0 +1,16 @@
+/* Shared styles for dashboard widgets */
+
+.dashboard-card {
+  background: rgba(var(--v-theme-surface-variant), 0.3);
+  border-color: rgba(var(--v-theme-primary), 0.2);
+  transition: all 0.2s ease;
+}
+
+.dashboard-card:hover {
+  border-color: rgba(var(--v-theme-primary), 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-info-box {
+  background: rgba(var(--v-theme-surface), 0.5);
+}

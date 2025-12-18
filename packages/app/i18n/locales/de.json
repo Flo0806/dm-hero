@@ -65,6 +65,17 @@
     "sessions": {
       "title": "Sessions",
       "description": "Session-Logs und Zusammenfassungen"
+    },
+    "lore": {
+      "title": "Wissen",
+      "description": "Weltwissen, Geschichte und Geheimnisse"
+    },
+    "players": {
+      "title": "Spieler",
+      "description": "Spieler und ihre Charaktere"
+    },
+    "calendar": {
+      "description": "In-Game Kalender und Zeitrechnung"
     }
   },
   "quickstart": {
@@ -78,6 +89,60 @@
       "title": "Wähle eine Kampagne",
       "description": "Um loszulegen, wähle eine bestehende Kampagne oder erstelle eine neue.",
       "button": "Zu den Kampagnen"
+    },
+    "categories": {
+      "title": "Kategorien"
+    },
+    "category": {
+      "entries": "Einträge",
+      "pinned": "angepinnt"
+    },
+    "stats": {
+      "title": "Statistiken",
+      "playtime": "Spielzeit",
+      "sessions": "Sessions",
+      "entities": "Entitäten",
+      "pinned": "Angepinnt"
+    },
+    "playtime": {
+      "none": "Noch keine Spielzeit",
+      "minutes": "{count} min",
+      "hours": "{count}h",
+      "hoursMinutes": "{hours}h {minutes}min",
+      "days": "{count}d",
+      "daysHours": "{days}d {hours}h",
+      "weeks": "{count}w",
+      "weeksDays": "{weeks}w {days}d",
+      "months": "{count} Mon.",
+      "monthsWeeks": "{months} Mon. {weeks}w",
+      "years": "{count} Jahr(e)",
+      "yearsMonths": "{years} Jahr(e) {months} Mon."
+    },
+    "calendar": {
+      "title": "Kalender",
+      "notConfigured": "Kalender noch nicht eingerichtet",
+      "setup": "Einrichten",
+      "month": "Monat",
+      "year": "Jahr",
+      "daysSinceStart": "Tag {days} der Kampagne"
+    },
+    "notes": {
+      "title": "Notizen",
+      "allDone": "Alle Notizen erledigt!",
+      "more": "+{count} weitere"
+    },
+    "pinboard": {
+      "title": "Angepinnt",
+      "empty": "Noch nichts angepinnt",
+      "more": "+{count} weitere"
+    },
+    "maps": {
+      "title": "Karten",
+      "empty": "Noch keine Karten",
+      "add": "Karte hinzufügen",
+      "count": "Karten",
+      "markers": "Marker",
+      "totalMarkers": "Marker gesamt"
     }
   },
   "campaigns": {

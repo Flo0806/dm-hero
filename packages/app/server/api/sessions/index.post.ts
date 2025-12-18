@@ -14,8 +14,12 @@ export default defineEventHandler(async (event) => {
     notes,
     in_game_date_start,
     in_game_date_end,
-    in_game_day_start,
-    in_game_day_end,
+    in_game_year_start,
+    in_game_month_start,
+    in_game_day_start, // Day of month (1-31)
+    in_game_year_end,
+    in_game_month_end,
+    in_game_day_end, // Day of month (1-31)
     duration_minutes,
   } = body
 
@@ -31,9 +35,12 @@ export default defineEventHandler(async (event) => {
       `
     INSERT INTO sessions (
       campaign_id, session_number, title, date, summary, notes,
-      in_game_date_start, in_game_date_end, in_game_day_start, in_game_day_end, duration_minutes
+      in_game_date_start, in_game_date_end,
+      in_game_year_start, in_game_month_start, in_game_day_start,
+      in_game_year_end, in_game_month_end, in_game_day_end,
+      duration_minutes
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     )
     .run(
@@ -45,7 +52,11 @@ export default defineEventHandler(async (event) => {
       notes || null,
       in_game_date_start || null,
       in_game_date_end || null,
+      in_game_year_start || null,
+      in_game_month_start || null,
       in_game_day_start || null,
+      in_game_year_end || null,
+      in_game_month_end || null,
       in_game_day_end || null,
       duration_minutes || null,
     )
@@ -67,7 +78,11 @@ export default defineEventHandler(async (event) => {
       notes,
       in_game_date_start,
       in_game_date_end,
+      in_game_year_start,
+      in_game_month_start,
       in_game_day_start,
+      in_game_year_end,
+      in_game_month_end,
       in_game_day_end,
       duration_minutes,
       created_at,

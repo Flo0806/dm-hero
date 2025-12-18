@@ -21,8 +21,12 @@ export default defineEventHandler(async (event) => {
     notes,
     in_game_date_start,
     in_game_date_end,
-    in_game_day_start,
-    in_game_day_end,
+    in_game_year_start,
+    in_game_month_start,
+    in_game_day_start, // Day of month (1-31)
+    in_game_year_end,
+    in_game_month_end,
+    in_game_day_end, // Day of month (1-31)
     duration_minutes,
   } = body
 
@@ -37,7 +41,11 @@ export default defineEventHandler(async (event) => {
       notes = ?,
       in_game_date_start = ?,
       in_game_date_end = ?,
+      in_game_year_start = ?,
+      in_game_month_start = ?,
       in_game_day_start = ?,
+      in_game_year_end = ?,
+      in_game_month_end = ?,
       in_game_day_end = ?,
       duration_minutes = ?,
       updated_at = CURRENT_TIMESTAMP
@@ -51,7 +59,11 @@ export default defineEventHandler(async (event) => {
     notes,
     in_game_date_start,
     in_game_date_end,
+    in_game_year_start,
+    in_game_month_start,
     in_game_day_start,
+    in_game_year_end,
+    in_game_month_end,
     in_game_day_end,
     duration_minutes,
     id,

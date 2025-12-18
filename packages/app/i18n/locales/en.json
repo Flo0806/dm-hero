@@ -65,6 +65,17 @@
     "sessions": {
       "title": "Sessions",
       "description": "Session logs and summaries"
+    },
+    "lore": {
+      "title": "Lore",
+      "description": "World knowledge, history and secrets"
+    },
+    "players": {
+      "title": "Players",
+      "description": "Players and their characters"
+    },
+    "calendar": {
+      "description": "In-game calendar and time tracking"
     }
   },
   "quickstart": {
@@ -78,6 +89,60 @@
       "title": "Select a Campaign",
       "description": "To get started, select an existing campaign or create a new one.",
       "button": "Go to Campaigns"
+    },
+    "categories": {
+      "title": "Categories"
+    },
+    "category": {
+      "entries": "entries",
+      "pinned": "pinned"
+    },
+    "stats": {
+      "title": "Statistics",
+      "playtime": "Playtime",
+      "sessions": "Sessions",
+      "entities": "Entities",
+      "pinned": "Pinned"
+    },
+    "playtime": {
+      "none": "No playtime yet",
+      "minutes": "{count} min",
+      "hours": "{count}h",
+      "hoursMinutes": "{hours}h {minutes}min",
+      "days": "{count}d",
+      "daysHours": "{days}d {hours}h",
+      "weeks": "{count}w",
+      "weeksDays": "{weeks}w {days}d",
+      "months": "{count} mo.",
+      "monthsWeeks": "{months} mo. {weeks}w",
+      "years": "{count} year(s)",
+      "yearsMonths": "{years} year(s) {months} mo."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "notConfigured": "Calendar not configured yet",
+      "setup": "Set up",
+      "month": "Month",
+      "year": "Year",
+      "daysSinceStart": "Day {days} of campaign"
+    },
+    "notes": {
+      "title": "Notes",
+      "allDone": "All notes done!",
+      "more": "+{count} more"
+    },
+    "pinboard": {
+      "title": "Pinned",
+      "empty": "Nothing pinned yet",
+      "more": "+{count} more"
+    },
+    "maps": {
+      "title": "Maps",
+      "empty": "No maps yet",
+      "add": "Add map",
+      "count": "maps",
+      "markers": "markers",
+      "totalMarkers": "total markers"
     }
   },
   "campaigns": {

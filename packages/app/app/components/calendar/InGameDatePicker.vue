@@ -114,23 +114,28 @@ import {
   type InGameDate,
 } from '~/composables/useInGameCalendar'
 
+// Date value object with year/month/day components
+export interface InGameDateValue {
+  year: number
+  month: number
+  day: number
+}
+
 interface Props {
-  modelValue: number | null // Absolute day number
+  modelValue: InGameDateValue | null // Year/month/day object
   calendarData?: CalendarData | null // Optional: pass calendar data directly
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: number | null]
+  'update:modelValue': [value: InGameDateValue | null]
 }>()
 
 const {
   calendarData: loadedCalendarData,
   loading,
   loadCalendar,
-  dateToAbsoluteDay,
-  absoluteDayToDate,
   formatDate,
   getCurrentDate,
   getDaysInMonth,
@@ -198,20 +203,17 @@ const formattedDate = computed(() => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue && calendarData.value) {
+    if (newValue) {
       isUpdatingFromProp = true
-      const date = absoluteDayToDate(newValue, calendarData.value)
-      if (date) {
-        internalYear.value = date.year
-        internalMonth.value = date.month
-        internalDay.value = date.day
-      }
+      internalYear.value = newValue.year
+      internalMonth.value = newValue.month
+      internalDay.value = newValue.day
       nextTick(() => {
         isUpdatingFromProp = false
       })
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 )
 
 // Watch internal values and emit updates
@@ -226,19 +228,17 @@ watch(
       internalDay.value = maxDaysInMonth.value
     }
 
-    const absoluteDay = dateToAbsoluteDay(
-      internalYear.value,
-      internalMonth.value,
-      internalDay.value,
-      calendarData.value,
-    )
-    emit('update:modelValue', absoluteDay)
+    emit('update:modelValue', {
+      year: internalYear.value,
+      month: internalMonth.value,
+      day: internalDay.value,
+    })
   },
   { deep: true },
 )
 
-// Watch month changes to clamp day
-watch(internalMonth, () => {
+// Watch month or year changes to clamp day (year matters for leap years)
+watch([internalMonth, internalYear], () => {
   if (internalDay.value > maxDaysInMonth.value) {
     internalDay.value = maxDaysInMonth.value
   }
@@ -266,13 +266,10 @@ onMounted(async () => {
   }
 
   // Initialize from prop or use current date
-  if (props.modelValue && calendarData.value) {
-    const date = absoluteDayToDate(props.modelValue, calendarData.value)
-    if (date) {
-      internalYear.value = date.year
-      internalMonth.value = date.month
-      internalDay.value = date.day
-    }
+  if (props.modelValue) {
+    internalYear.value = props.modelValue.year
+    internalMonth.value = props.modelValue.month
+    internalDay.value = props.modelValue.day
   } else if (calendarData.value) {
     // Default to current campaign date
     setToCurrentDate()

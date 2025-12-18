@@ -33,6 +33,15 @@ export const usePinboardStore = defineStore('pinboard', {
 
     // Get pin count
     pinCount: (state) => state.pins.length,
+
+    // Get pin counts by entity type (for dashboard cards)
+    countsByType: (state) => {
+      const counts: Record<string, number> = {}
+      for (const pin of state.pins) {
+        counts[pin.type] = (counts[pin.type] || 0) + 1
+      }
+      return counts
+    },
   },
 
   actions: {

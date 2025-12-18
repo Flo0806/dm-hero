@@ -36,14 +36,14 @@
           <div class="timeline-date-section text-right">
             <!-- Real Date -->
             <div class="text-body-2 font-weight-medium">
-              {{ formatDate(session.date) }}
+              {{ formatRealDate(session.date) }}
             </div>
             <!-- In-Game Date -->
-            <div v-if="session.in_game_day_start" class="text-caption text-primary mt-1">
+            <div v-if="session.in_game_year_start" class="text-caption text-primary mt-1">
               <v-icon size="x-small" class="mr-1">mdi-sword-cross</v-icon>
-              {{ formatAbsoluteDay(session.in_game_day_start) }}
-              <span v-if="session.in_game_day_end && session.in_game_day_end !== session.in_game_day_start">
-                <br/>→ {{ formatAbsoluteDay(session.in_game_day_end) }}
+              {{ formatSessionDate(session) }}
+              <span v-if="session.in_game_year_end && hasDateRange(session)">
+                <br/>→ {{ formatSessionEndDate(session) }}
               </span>
             </div>
           </div>
@@ -232,14 +232,14 @@
                     <v-col cols="12" md="6">
                       <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                       <CalendarInGameDatePicker
-                        v-model="sessionForm.in_game_day_start"
+                        v-model="inGameDateStart"
                         :calendar-data="calendarData"
                       />
                     </v-col>
                     <v-col cols="12" md="6">
                       <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
                       <CalendarInGameDatePicker
-                        v-model="sessionForm.in_game_day_end"
+                        v-model="inGameDateEnd"
                         :calendar-data="calendarData"
                       />
                       <p class="text-caption text-medium-emphasis mt-1">
@@ -470,14 +470,14 @@
                   <v-col cols="12" md="6">
                     <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                     <CalendarInGameDatePicker
-                      v-model="sessionForm.in_game_day_start"
+                      v-model="inGameDateStart"
                       :calendar-data="calendarData"
                     />
                   </v-col>
                   <v-col cols="12" md="6">
                     <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
                     <CalendarInGameDatePicker
-                      v-model="sessionForm.in_game_day_end"
+                      v-model="inGameDateEnd"
                       :calendar-data="calendarData"
                     />
                     <p class="text-caption text-medium-emphasis mt-1">
@@ -575,7 +575,7 @@
         </v-card-title>
 
         <v-card-subtitle v-if="viewingSession.date">
-          {{ formatDate(viewingSession.date) }}
+          {{ formatRealDate(viewingSession.date) }}
         </v-card-subtitle>
 
         <v-card-text style="max-height: 70vh">
@@ -693,12 +693,23 @@ interface Session {
   notes: string | null
   in_game_date_start: string | null
   in_game_date_end: string | null
-  in_game_day_start: number | null
-  in_game_day_end: number | null
+  in_game_year_start: number | null
+  in_game_month_start: number | null
+  in_game_day_start: number | null // Day of month (1-31)
+  in_game_year_end: number | null
+  in_game_month_end: number | null
+  in_game_day_end: number | null // Day of month (1-31)
   duration_minutes: number | null
   created_at: string
   updated_at: string
   cover_image_url: string | null
+}
+
+// Date value object for CalendarInGameDatePicker
+interface InGameDateValue {
+  year: number
+  month: number
+  day: number
 }
 
 interface EntityMention {
@@ -717,16 +728,56 @@ const { locale } = useI18n()
 const {
   calendarData,
   loadCalendar,
-  formatAbsoluteDay,
-  getCurrentAbsoluteDay,
+  formatDate,
+  getCurrentDate,
+  dateToAbsoluteDay,
 } = useInGameCalendar()
+
+// Format a session's in-game start date for display
+function formatSessionDate(session: Session): string {
+  if (!session.in_game_year_start || !session.in_game_month_start || !session.in_game_day_start) {
+    return ''
+  }
+  if (!calendarData.value) return ''
+  const monthData = calendarData.value.months[session.in_game_month_start - 1]
+  return formatDate({
+    year: session.in_game_year_start,
+    month: session.in_game_month_start,
+    day: session.in_game_day_start,
+    monthName: monthData?.name || '',
+  })
+}
+
+// Format a session's in-game end date for display
+function formatSessionEndDate(session: Session): string {
+  if (!session.in_game_year_end || !session.in_game_month_end || !session.in_game_day_end) {
+    return ''
+  }
+  if (!calendarData.value) return ''
+  const monthData = calendarData.value.months[session.in_game_month_end - 1]
+  return formatDate({
+    year: session.in_game_year_end,
+    month: session.in_game_month_end,
+    day: session.in_game_day_end,
+    monthName: monthData?.name || '',
+  })
+}
+
+// Check if session has a different end date than start
+function hasDateRange(session: Session): boolean {
+  return (
+    session.in_game_year_start !== session.in_game_year_end ||
+    session.in_game_month_start !== session.in_game_month_end ||
+    session.in_game_day_start !== session.in_game_day_end
+  )
+}
 
 // Set both start and end in-game dates to "today" from the calendar
 function setInGameDateToToday() {
-  const today = getCurrentAbsoluteDay()
-  if (today > 0) {
-    sessionForm.value.in_game_day_start = today
-    sessionForm.value.in_game_day_end = today
+  const today = getCurrentDate()
+  if (today) {
+    inGameDateStart.value = { year: today.year, month: today.month, day: today.day }
+    inGameDateEnd.value = { year: today.year, month: today.month, day: today.day }
   }
 }
 
@@ -844,39 +895,53 @@ const sessionForm = ref({
   notes: '',
   in_game_date_start: '',
   in_game_date_end: '',
-  in_game_day_start: null as number | null,
-  in_game_day_end: null as number | null,
   duration_minutes: null as number | null,
 })
 
+// Separate refs for in-game date objects (used by CalendarInGameDatePicker)
+const inGameDateStart = ref<InGameDateValue | null>(null)
+const inGameDateEnd = ref<InGameDateValue | null>(null)
+
+// Helper to convert date object to absolute day for comparison
+function dateToAbsolute(date: InGameDateValue | null): number {
+  if (!date || !calendarData.value) return 0
+  return dateToAbsoluteDay(date.year, date.month, date.day, calendarData.value)
+}
+
 // Validate in-game dates: start should never be after end
 watch(
-  () => sessionForm.value.in_game_day_start,
+  inGameDateStart,
   (newStart) => {
-    if (
-      newStart !== null &&
-      sessionForm.value.in_game_day_end !== null &&
-      newStart > sessionForm.value.in_game_day_end
-    ) {
-      // Start is after end - adjust end to match start
-      sessionForm.value.in_game_day_end = newStart
-    }
-  },
-)
-
-watch(
-  () => sessionForm.value.in_game_day_end,
-  (newEnd) => {
-    if (newEnd !== null) {
-      if (sessionForm.value.in_game_day_start === null) {
-        // End is set but start is not - set start to same as end
-        sessionForm.value.in_game_day_start = newEnd
-      } else if (newEnd < sessionForm.value.in_game_day_start) {
-        // End is before start - adjust start to match end
-        sessionForm.value.in_game_day_start = newEnd
+    if (newStart && inGameDateEnd.value) {
+      const startAbs = dateToAbsolute(newStart)
+      const endAbs = dateToAbsolute(inGameDateEnd.value)
+      if (startAbs > endAbs) {
+        // Start is after end - adjust end to match start
+        inGameDateEnd.value = { ...newStart }
       }
     }
   },
+  { deep: true },
+)
+
+watch(
+  inGameDateEnd,
+  (newEnd) => {
+    if (newEnd) {
+      if (!inGameDateStart.value) {
+        // End is set but start is not - set start to same as end
+        inGameDateStart.value = { ...newEnd }
+      } else {
+        const startAbs = dateToAbsolute(inGameDateStart.value)
+        const endAbs = dateToAbsolute(newEnd)
+        if (endAbs < startAbs) {
+          // End is before start - adjust start to match end
+          inGameDateStart.value = { ...newEnd }
+        }
+      }
+    }
+  },
+  { deep: true },
 )
 
 // Editor ref for image gallery insertion
@@ -981,7 +1046,7 @@ async function loadSessions() {
   }
 }
 
-function formatDate(dateString: string | null) {
+function formatRealDate(dateString: string | null) {
   if (!dateString) return '-'
 
   return new Date(dateString).toLocaleDateString('de-DE', {
@@ -1136,10 +1201,17 @@ async function editSession(session: Session) {
     notes: session.notes || '',
     in_game_date_start: session.in_game_date_start || '',
     in_game_date_end: session.in_game_date_end || '',
-    in_game_day_start: session.in_game_day_start,
-    in_game_day_end: session.in_game_day_end,
     duration_minutes: session.duration_minutes,
   }
+  // Set in-game date refs
+  inGameDateStart.value =
+    session.in_game_year_start && session.in_game_month_start && session.in_game_day_start
+      ? { year: session.in_game_year_start, month: session.in_game_month_start, day: session.in_game_day_start }
+      : null
+  inGameDateEnd.value =
+    session.in_game_year_end && session.in_game_month_end && session.in_game_day_end
+      ? { year: session.in_game_year_end, month: session.in_game_month_end, day: session.in_game_day_end }
+      : null
   showCreateDialog.value = true
   sessionDialogTab.value = 'details'
 
@@ -1177,11 +1249,22 @@ async function saveSession() {
 
   saving.value = true
 
+  // Build the session data with year/month/day fields
+  const sessionData = {
+    ...sessionForm.value,
+    in_game_year_start: inGameDateStart.value?.year || null,
+    in_game_month_start: inGameDateStart.value?.month || null,
+    in_game_day_start: inGameDateStart.value?.day || null,
+    in_game_year_end: inGameDateEnd.value?.year || null,
+    in_game_month_end: inGameDateEnd.value?.month || null,
+    in_game_day_end: inGameDateEnd.value?.day || null,
+  }
+
   try {
     if (editingSession.value) {
       await $fetch(`/api/sessions/${editingSession.value.id}`, {
         method: 'PATCH',
-        body: sessionForm.value,
+        body: sessionData,
       })
 
       // Save attendance
@@ -1197,7 +1280,7 @@ async function saveSession() {
       await $fetch('/api/sessions', {
         method: 'POST',
         body: {
-          ...sessionForm.value,
+          ...sessionData,
           campaignId: activeCampaignId.value,
         },
       })
@@ -1292,10 +1375,11 @@ function closeDialog() {
     notes: '',
     in_game_date_start: '',
     in_game_date_end: '',
-    in_game_day_start: null,
-    in_game_day_end: null,
     duration_minutes: null,
   }
+  // Reset in-game date refs
+  inGameDateStart.value = null
+  inGameDateEnd.value = null
   sessionAttendance.value = {}
   sessionDialogTab.value = 'details'
 }
