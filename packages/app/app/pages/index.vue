@@ -18,8 +18,13 @@
       <!-- Header -->
       <v-row>
         <v-col cols="12">
-          <div class="d-flex align-center justify-space-between mb-6">
-            <div>
+          <div class="d-flex align-center justify-space-between mb-2 position-relative">
+            <!-- 3D Dice Animation (absolute, doesn't take layout space) -->
+            <ClientOnly>
+              <DashboardDice notation="2d20" :width="260" :height="200" class="dice-overlay" />
+            </ClientOnly>
+            <!-- Title with left margin to make room for dice -->
+            <div style="margin-left: 230px;" class="mb-6 mt-4">
               <div class="text-h3 font-weight-bold mb-1">
                 {{ $t('app.welcome') }}
               </div>
@@ -32,7 +37,7 @@
               color="primary"
               size="large"
               prepend-icon="mdi-sword-cross"
-              class="cursor-pointer"
+              class="cursor-pointer campaign-chip"
               @click="router.push('/campaigns')"
             >
               {{ activeCampaignName }}
@@ -97,7 +102,7 @@
       <!-- Category Cards -->
       <v-row class="mb-4">
         <v-col cols="12">
-          <div class="text-h6 font-weight-medium mb-3">
+          <div class="text-h6 font-weight-medium">
             {{ $t('dashboard.categories.title') }}
           </div>
         </v-col>
@@ -149,7 +154,7 @@
     <SharedEntityPreviewDialog
       v-model="showEntityPreview"
       :entity-id="previewEntityId"
-      :entity-type="previewEntityType as EntityPreviewType"
+      :entity-type="previewEntityType"
     />
   </v-container>
 </template>
@@ -195,7 +200,7 @@ const currentWeather = ref<{ weatherType: string; temperature?: number } | null>
 // Entity preview dialog
 const showEntityPreview = ref(false)
 const previewEntityId = ref<number | null>(null)
-const previewEntityType = ref<string>('')
+const previewEntityType = ref<EntityPreviewType>('npc')
 
 // Computed: total playtime
 const totalPlaytimeMinutes = computed(() => {
@@ -449,7 +454,7 @@ async function fetchCurrentWeather(config: { current_year: number; current_month
 
 function openEntityPreview(pin: PinboardItem) {
   previewEntityId.value = pin.id
-  previewEntityType.value = pin.type
+  previewEntityType.value = pin.type as EntityPreviewType
   showEntityPreview.value = true
 }
 
@@ -472,6 +477,25 @@ watch(activeCampaignId, (newId) => {
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Dice overlay - positioned absolute so it doesn't take layout space */
+.dice-overlay {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Campaign chip - absolute position on smaller screens */
+@media (max-width: 1465px) {
+  .campaign-chip {
+    position: absolute;
+    top: -15px;
+    right: 0;
+  }
 }
 
 /* Widget grid for equal heights */

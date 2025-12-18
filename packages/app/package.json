@@ -114,6 +114,7 @@
     "npmRebuild": true
   },
   "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
     "@iconify/vue": "^5.0.0",
     "@mdi/font": "^7.4.47",
     "@nuxt/test-utils": "3.20.1",
