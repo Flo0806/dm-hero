@@ -198,7 +198,9 @@
     },
     "upload": {
       "title": "Upload Adventure",
+      "titleEdit": "Edit Adventure",
       "subtitle": "Share your one-shot or campaign with the community",
+      "subtitleEdit": "Update the details of your adventure",
       "verifyRequired": "Please verify your email address before uploading adventures.",
       "basicInfo": "Basic Information",
       "description": "Description",
@@ -208,6 +210,7 @@
       "adventureFile": "Adventure File",
       "pricing": "Pricing",
       "submit": "Upload Adventure",
+      "submitEdit": "Save Changes",
       "addHighlight": "Add Highlight",
       "hours": "Hours",
       "multiSession": "Multi-Session Campaign",
@@ -227,6 +230,7 @@
         "authorName": "Author Name",
         "discord": "Discord Username",
         "file": "Adventure File (.dmhero)",
+        "fileReplace": "Replace Adventure File (optional)",
         "freeAdventure": "Free Adventure",
         "price": "Price",
         "min": "Min",
@@ -238,8 +242,15 @@
         "authorName": "Optional. Shown instead of your username.",
         "discord": "Optional. For community contact.",
         "file": "Export your campaign from DM Hero as .dmhero file",
+        "fileExists": "A file is already uploaded. You can optionally upload a new version.",
         "price": "Set to 0 for free. Payment integration coming soon.",
-        "freeOnly": "Currently only free adventures are supported. Payment integration coming soon!"
+        "freeOnly": "Currently, and until further notice, only free adventures are available."
+      },
+      "errors": {
+        "coverRequired": "Please select a cover image",
+        "fileRequired": "Please select an adventure file",
+        "notOwner": "You can only edit your own adventures",
+        "notFound": "Adventure not found"
       }
     },
     "detail": {

@@ -162,9 +162,10 @@ onBeforeUnmount(() => {
 }
 
 .editor-content {
-  min-height: 200px;
-  max-height: 400px;
+  min-height: 250px;
+  max-height: 600px;
   overflow-y: auto;
+  resize: vertical;
 }
 
 .editor-content :deep(.tiptap) {

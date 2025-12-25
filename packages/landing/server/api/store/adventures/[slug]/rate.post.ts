@@ -3,7 +3,7 @@ import { requireAuth } from '../../../../utils/requireAuth'
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuth(event)
-  const adventureId = getRouterParam(event, 'id')
+  const adventureId = getRouterParam(event, 'slug')
   const body = await readBody<{ rating: number }>(event)
 
   if (!adventureId || isNaN(Number(adventureId))) {

@@ -13,6 +13,14 @@ interface AdventureRow {
   download_count: number
   language: string
   tags: string | null
+  system: string | null
+  difficulty: number
+  players_min: number
+  players_max: number
+  level_min: number
+  level_max: number
+  duration_hours: number
+  highlights: string | null
   author_name: string | null
   display_name: string
   avg_rating: number | null
@@ -22,8 +30,12 @@ interface AdventureRow {
 // Transform to camelCase for frontend
 function transformAdventure(row: AdventureRow) {
   let tags: string[] = []
+  let highlights: string[] = []
   try {
     tags = row.tags ? JSON.parse(row.tags) : []
+  } catch { /* ignore */ }
+  try {
+    highlights = row.highlights ? JSON.parse(row.highlights) : []
   } catch { /* ignore */ }
 
   return {
@@ -38,6 +50,14 @@ function transformAdventure(row: AdventureRow) {
     downloadCount: row.download_count,
     language: row.language,
     tags,
+    system: row.system || 'dnd5e',
+    difficulty: row.difficulty || 3,
+    playersMin: row.players_min || 3,
+    playersMax: row.players_max || 5,
+    levelMin: row.level_min || 1,
+    levelMax: row.level_max || 5,
+    durationHours: row.duration_hours || 4,
+    highlights,
     authorName: row.author_name || row.display_name,
     avgRating: row.avg_rating,
     ratingCount: row.rating_count,

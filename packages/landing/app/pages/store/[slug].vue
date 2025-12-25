@@ -249,11 +249,8 @@ const systemLabel = computed(() => {
   return systems[adventure.value?.system || 'dnd5e'] || adventure.value?.system
 })
 
-const difficultyLabel = computed(() => {
-  const levels = ['easy', 'moderate', 'challenging', 'hard', 'deadly']
-  const level = levels[Math.min((adventure.value?.difficulty || 3) - 1, 4)]
-  return t(`store.difficulty.${level}`)
-})
+const { getDifficultyLabel } = useDifficulty()
+const difficultyLabel = computed(() => getDifficultyLabel(adventure.value?.difficulty || 3))
 
 const durationLabel = computed(() => {
   const hours = adventure.value?.durationHours || 4

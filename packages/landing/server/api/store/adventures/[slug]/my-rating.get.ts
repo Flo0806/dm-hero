@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     return { rating: null }
   }
 
-  const adventureId = getRouterParam(event, 'id')
+  const adventureId = getRouterParam(event, 'slug')
   if (!adventureId || isNaN(Number(adventureId))) {
     throw createError({ statusCode: 400, message: 'Invalid adventure ID' })
   }

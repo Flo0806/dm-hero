@@ -33,6 +33,7 @@
           <ProfileAdventuresCard
             :adventures="userAdventures"
             :loading="loadingAdventures"
+            :highlight-id="highlightAdventureId"
             @delete="handleDeleteAdventure"
           />
         </v-col>
@@ -50,11 +51,18 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const route = useRoute()
 const { user, fetchUser } = useAuth()
 const profileStore = useProfileStore()
 const { showError, showSuccess } = useSnackbar()
 const api = useApiFetch()
 const saving = ref(false)
+
+// Highlight adventure from query param (after save)
+const highlightAdventureId = computed(() => {
+  const id = route.query.highlight
+  return id ? Number(id) : null
+})
 
 // Fetch profile data (SSR-compatible)
 const { pending: loadingAdventures } = await useAsyncData('profile-adventures', async () => {

@@ -6,11 +6,21 @@
     <div class="d-flex align-center mb-8">
       <v-btn icon="mdi-arrow-left" variant="text" to="/store" class="mr-4" />
       <div>
-        <h1 class="text-h4 font-weight-light">{{ $t('store.upload.title') }}</h1>
-        <p class="text-body-2 text-medium-emphasis">{{ $t('store.upload.subtitle') }}</p>
+        <h1 class="text-h4 font-weight-light">
+          {{ isEditMode ? $t('store.upload.titleEdit') : $t('store.upload.title') }}
+        </h1>
+        <p class="text-body-2 text-medium-emphasis">
+          {{ isEditMode ? $t('store.upload.subtitleEdit') : $t('store.upload.subtitle') }}
+        </p>
       </div>
     </div>
 
+    <!-- Loading state for edit mode -->
+    <div v-if="loading" class="d-flex justify-center py-12">
+      <v-progress-circular indeterminate color="primary" />
+    </div>
+
+    <template v-if="!loading">
     <!-- Email verification required alert -->
     <v-alert
       v-if="!isEmailVerified"
@@ -76,7 +86,7 @@
               />
             </v-col>
 
-            <!-- Cover Image -->
+            <!-- Cover Image (Required) -->
             <v-col cols="12">
               <div class="cover-upload">
                 <div
@@ -95,7 +105,8 @@
                 <v-file-input
                   v-else
                   v-model="form.coverImage"
-                  :label="$t('store.upload.fields.coverImage')"
+                  :label="$t('store.upload.fields.coverImage') + ' *'"
+                  :rules="[rules.requiredFile]"
                   accept="image/*"
                   prepend-icon="mdi-image"
                   variant="outlined"
@@ -306,9 +317,12 @@
                 :hint="$t('store.upload.hints.discord')"
                 variant="outlined"
                 density="comfortable"
-                prepend-inner-icon="mdi-discord"
                 persistent-hint
-              />
+              >
+                <template #prepend-inner>
+                  <IconsDiscordIcon :size="20" class="text-medium-emphasis" />
+                </template>
+              </v-text-field>
             </v-col>
           </v-row>
         </v-card-text>
@@ -321,10 +335,26 @@
           {{ $t('store.upload.adventureFile') }}
         </v-card-title>
         <v-card-text>
+          <!-- Show existing file in edit mode -->
+          <div v-if="isEditMode && existingFileName && !form.adventureFile" class="mb-4">
+            <v-chip
+              color="success"
+              variant="tonal"
+              prepend-icon="mdi-check-circle"
+              class="mb-2"
+            >
+              {{ existingFileName }}
+              <span v-if="existingVersion" class="ml-1 text-medium-emphasis">(v{{ existingVersion }})</span>
+            </v-chip>
+            <p class="text-caption text-medium-emphasis">
+              {{ $t('store.upload.hints.fileExists') }}
+            </p>
+          </div>
+
           <v-file-input
             v-model="form.adventureFile"
-            :label="$t('store.upload.fields.file')"
-            :rules="[rules.required]"
+            :label="isEditMode && existingFileName ? $t('store.upload.fields.fileReplace') : $t('store.upload.fields.file')"
+            :rules="isEditMode && existingFileName ? [] : [rules.required]"
             accept=".dmhero"
             prepend-icon="mdi-treasure-chest"
             variant="outlined"
@@ -367,12 +397,13 @@
           size="large"
           :loading="submitting"
           :disabled="!isEmailVerified"
-          prepend-icon="mdi-upload"
+          :prepend-icon="isEditMode ? 'mdi-content-save' : 'mdi-upload'"
         >
-          {{ $t('store.upload.submit') }}
+          {{ isEditMode ? $t('store.upload.submitEdit') : $t('store.upload.submit') }}
         </v-btn>
       </div>
     </v-form>
+    </template>
   </v-container>
   </div>
 </template>
@@ -386,17 +417,120 @@ definePageMeta({
 })
 
 const { t, locale } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const adventureStore = useAdventureStore()
 const { user, isEmailVerified } = useAuth()
 const api = useApiFetch()
 
+// Edit mode detection
+const editId = computed(() => {
+  const id = route.query.id
+  return id ? Number(id) : null
+})
+const isEditMode = computed(() => !!editId.value)
+// Initialize loading to true if in edit mode to avoid SSR hydration mismatch
+const loading = ref(!!route.query.id)
+
 const formRef = ref()
 const submitting = ref(false)
 const error = ref('')
 const coverPreview = ref<string | null>(null)
+const existingCoverUrl = ref<string | null>(null)
+const existingFileName = ref<string | null>(null)
+const existingVersion = ref<number | null>(null)
 const resending = ref(false)
 const resendSuccess = ref(false)
+
+// Load existing adventure for edit mode
+async function loadAdventure(id: number) {
+  loading.value = true
+  error.value = ''
+
+  try {
+    // Fetch adventure data - server will verify ownership
+    const adventure = await api.get<{
+      id: number
+      title: string
+      shortDescription: string
+      description: string
+      coverImageUrl: string | null
+      highlights: string[]
+      system: string
+      language: string
+      difficulty: number
+      playersMin: number
+      playersMax: number
+      levelMin: number
+      levelMax: number
+      durationHours: number
+      tags: string[]
+      authorName: string | null
+      authorDiscord: string | null
+      authorId: number
+      currentFileName: string | null
+      currentVersion: number | null
+    }>(`/api/store/adventures/${id}/edit`)
+
+    // Verify ownership on client side too (server already checked)
+    if (adventure.authorId !== user.value?.id) {
+      error.value = t('store.upload.errors.notOwner')
+      router.push('/store')
+      return
+    }
+
+    // Populate form
+    form.title = adventure.title
+    form.shortDescription = adventure.shortDescription
+    form.description = adventure.description || ''
+    form.highlights = adventure.highlights?.length ? adventure.highlights : ['']
+    form.system = adventure.system || 'dnd5e'
+    form.language = adventure.language || 'de'
+    form.difficulty = adventure.difficulty || 3
+    form.playersMin = adventure.playersMin || 3
+    form.playersMax = adventure.playersMax || 5
+    form.levelMin = adventure.levelMin || 1
+    form.levelMax = adventure.levelMax || 5
+    form.durationHours = adventure.durationHours || 5
+    form.tags = adventure.tags || []
+    form.authorName = adventure.authorName || ''
+    form.authorDiscord = adventure.authorDiscord || ''
+
+    // Store existing cover URL for display
+    if (adventure.coverImageUrl) {
+      existingCoverUrl.value = adventure.coverImageUrl
+      coverPreview.value = adventure.coverImageUrl
+    }
+
+    // Store existing file info for display
+    if (adventure.currentFileName) {
+      existingFileName.value = adventure.currentFileName
+      existingVersion.value = adventure.currentVersion
+    }
+  } catch (err: unknown) {
+    const fetchError = err as { statusCode?: number; data?: { message?: string } }
+    if (fetchError.statusCode === 403) {
+      error.value = t('store.upload.errors.notOwner')
+      router.push('/store')
+    } else if (fetchError.statusCode === 404) {
+      error.value = t('store.upload.errors.notFound')
+      router.push('/store')
+    } else {
+      error.value = fetchError.data?.message || t('common.error')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// Watch for edit mode and load data - client only to avoid SSR hydration issues
+if (import.meta.client) {
+  watch(editId, (id) => {
+    if (id) {
+      loadAdventure(id)
+    }
+  }, { immediate: true })
+}
 
 async function handleResend() {
   if (!user.value?.email) return
@@ -441,6 +575,11 @@ const form = reactive({
 
 const rules = {
   required: (v: unknown) => !!v || t('auth.validation.required'),
+  requiredFile: (v: File | File[] | null) => {
+    if (!v) return t('auth.validation.required')
+    if (Array.isArray(v) && v.length === 0) return t('auth.validation.required')
+    return true
+  },
   maxLength: (max: number) => (v: string) => !v || v.length <= max || t('auth.validation.maxLength', { max }),
 }
 
@@ -488,6 +627,7 @@ function onCoverSelected(files: File | File[] | null) {
 
 function removeCover() {
   coverPreview.value = null
+  existingCoverUrl.value = null
   form.coverImage = null
 }
 
@@ -508,6 +648,19 @@ async function handleSubmit() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
 
+  // Check for cover image - required for new uploads, optional for edits if existing
+  const hasCover = form.coverImage || existingCoverUrl.value
+  if (!hasCover) {
+    error.value = t('store.upload.errors.coverRequired')
+    return
+  }
+
+  // Adventure file required for new uploads, optional for edits
+  if (!isEditMode.value && !form.adventureFile) {
+    error.value = t('store.upload.errors.fileRequired')
+    return
+  }
+
   submitting.value = true
   error.value = ''
 
@@ -519,7 +672,7 @@ async function handleSubmit() {
     formData.append('shortDescription', form.shortDescription)
     formData.append('description', form.description)
 
-    // Cover image
+    // Cover image - only send if new one selected
     if (form.coverImage) {
       formData.append('coverImage', form.coverImage)
     }
@@ -543,7 +696,7 @@ async function handleSubmit() {
     formData.append('authorName', form.authorName)
     formData.append('authorDiscord', form.authorDiscord)
 
-    // Adventure file
+    // Adventure file - only send if new one selected
     const file = Array.isArray(form.adventureFile) ? form.adventureFile[0] : form.adventureFile
     if (file) {
       formData.append('adventureFile', file)
@@ -552,14 +705,27 @@ async function handleSubmit() {
     // Pricing
     formData.append('priceCents', form.isFree ? '0' : Math.round(form.priceEur * 100).toString())
 
-    await api.fetch('/api/store/adventures', {
-      method: 'POST',
-      body: formData,
-    })
+    let adventureId: number
 
-    // Refresh store data and redirect
+    if (isEditMode.value && editId.value) {
+      // Update existing adventure
+      const result = await api.fetch<{ adventureId: number }>(`/api/store/adventures/${editId.value}`, {
+        method: 'PUT',
+        body: formData,
+      })
+      adventureId = result.adventureId
+    } else {
+      // Create new adventure
+      const result = await api.fetch<{ adventureId: number }>('/api/store/adventures', {
+        method: 'POST',
+        body: formData,
+      })
+      adventureId = result.adventureId
+    }
+
+    // Refresh store data and redirect to profile with highlight
     await adventureStore.refresh()
-    router.push('/store')
+    router.push(`/profile?highlight=${adventureId}`)
   } catch (err: unknown) {
     const fetchError = err as { data?: { message?: string } }
     error.value = fetchError.data?.message || t('common.error')

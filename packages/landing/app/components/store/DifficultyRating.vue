@@ -31,26 +31,10 @@ const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
 
-const { t } = useI18n()
+const { getDifficultyColor, getDifficultyLabel } = useDifficulty()
 
-const difficultyColor = computed(() => {
-  if (props.modelValue <= 1) return 'success'
-  if (props.modelValue <= 2) return 'light-green'
-  if (props.modelValue <= 3) return 'warning'
-  if (props.modelValue <= 4) return 'orange'
-  return 'error'
-})
-
-const difficultyLabel = computed(() => {
-  const labels = [
-    t('store.difficulty.easy'),
-    t('store.difficulty.moderate'),
-    t('store.difficulty.challenging'),
-    t('store.difficulty.hard'),
-    t('store.difficulty.deadly'),
-  ]
-  return labels[props.modelValue - 1] || ''
-})
+const difficultyColor = computed(() => getDifficultyColor(props.modelValue))
+const difficultyLabel = computed(() => getDifficultyLabel(props.modelValue))
 </script>
 
 <style scoped>

@@ -37,8 +37,9 @@
       <v-list v-else class="adventures-list">
         <v-list-item
           v-for="adventure in adventures"
+          :id="`adventure-${adventure.id}`"
           :key="adventure.id"
-          class="adventure-item mb-3"
+          :class="['adventure-item', 'mb-3', { 'highlight-blink': highlightedId === adventure.id }]"
           rounded
         >
           <template #prepend>
@@ -99,10 +100,9 @@
                 </v-list-item>
                 <v-list-item
                   prepend-icon="mdi-pencil"
-                  disabled
+                  :to="`/store/upload?id=${adventure.id}`"
                 >
                   <v-list-item-title>{{ $t('profile.adventures.edit') }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ $t('profile.adventures.comingSoon') }}</v-list-item-subtitle>
                 </v-list-item>
                 <v-divider />
                 <v-list-item
@@ -151,9 +151,10 @@ interface Adventure {
   status: 'draft' | 'pending_review' | 'published' | 'rejected' | 'archived'
 }
 
-defineProps<{
+const props = defineProps<{
   adventures: Adventure[]
   loading: boolean
+  highlightId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -162,6 +163,41 @@ const emit = defineEmits<{
 
 const deleteDialog = ref(false)
 const adventureToDelete = ref<Adventure | null>(null)
+const highlightedId = ref<number | null>(null)
+
+// Scroll to and highlight adventure when highlightId changes
+watch(() => props.highlightId, (id) => {
+  if (id && props.adventures.length > 0) {
+    // Wait for DOM to be ready
+    nextTick(() => {
+      const element = document.getElementById(`adventure-${id}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        highlightedId.value = id
+        // Remove highlight after animation completes (3 blinks = 1.5s)
+        setTimeout(() => {
+          highlightedId.value = null
+        }, 1500)
+      }
+    })
+  }
+}, { immediate: true })
+
+// Also watch adventures in case they load after highlightId is set
+watch(() => props.adventures, (adventures) => {
+  if (props.highlightId && adventures.length > 0 && !highlightedId.value) {
+    nextTick(() => {
+      const element = document.getElementById(`adventure-${props.highlightId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        highlightedId.value = props.highlightId ?? null
+        setTimeout(() => {
+          highlightedId.value = null
+        }, 1500)
+      }
+    })
+  }
+})
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -207,5 +243,20 @@ function handleDelete() {
   width: 80px;
   height: 50px;
   background: rgba(var(--v-theme-surface-variant), 0.5);
+}
+
+.highlight-blink {
+  animation: highlight-pulse 0.5s ease-in-out 3;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    background: rgba(var(--v-theme-surface), 0.5);
+    border-color: rgba(var(--v-theme-outline), 0.1);
+  }
+  50% {
+    background: rgba(var(--v-theme-primary), 0.2);
+    border-color: rgba(var(--v-theme-primary), 0.5);
+  }
 }
 </style>

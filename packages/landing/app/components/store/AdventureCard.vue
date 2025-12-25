@@ -98,7 +98,7 @@
           <v-rating
             :model-value="adventure.avgRating || 0"
             density="compact"
-            size="x-small"
+            size="small"
             color="amber"
             half-increments
             readonly
@@ -110,7 +110,7 @@
 
         <!-- Downloads -->
         <div class="d-flex align-center text-medium-emphasis">
-          <v-icon icon="mdi-download" size="x-small" class="mr-1" />
+          <v-icon icon="mdi-download" size="small" class="mr-1" />
           <span class="text-caption">{{ formatDownloads(adventure.downloadCount) }}</span>
         </div>
       </div>
@@ -171,6 +171,7 @@ const props = defineProps<{
 
 const { isAuthenticated } = useAuth()
 const favoritesStore = useFavoritesStore()
+const { getDifficultyKey, getDifficultyColor, getDifficultyIcon } = useDifficulty()
 
 const showImagePreview = ref(false)
 const favoriteLoading = ref(false)
@@ -223,26 +224,6 @@ function formatPlayers(min: number, max: number): string {
   return `${min}-${max}`
 }
 
-function getDifficultyKey(level: number): string {
-  if (level <= 1) return 'easy'
-  if (level <= 2) return 'moderate'
-  if (level <= 3) return 'hard'
-  return 'deadly'
-}
-
-function getDifficultyColor(level: number): string {
-  if (level <= 1) return 'success'
-  if (level <= 2) return 'warning'
-  if (level <= 3) return 'orange'
-  return 'error'
-}
-
-function getDifficultyIcon(level: number): string {
-  if (level <= 1) return 'mdi-shield-outline'
-  if (level <= 2) return 'mdi-shield-half-full'
-  if (level <= 3) return 'mdi-shield'
-  return 'mdi-skull'
-}
 </script>
 
 <style scoped>
