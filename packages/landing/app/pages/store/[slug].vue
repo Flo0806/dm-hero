@@ -28,17 +28,34 @@
     <!-- Content -->
     <template v-else-if="adventure">
       <!-- Hero Image -->
-      <v-img
-        v-if="adventure.coverImageUrl"
-        :src="adventure.coverImageUrl"
-        :aspect-ratio="16 / 10"
-        cover
-        class="rounded-xl mb-6 hero-image"
+      <div v-if="adventure.coverImageUrl" class="hero-image-wrapper mb-6" @click="openImagePreview">
+        <v-img
+          :src="adventure.coverImageUrl"
+          :aspect-ratio="16 / 9"
+          cover
+          class="rounded-xl hero-image"
+        >
+          <template #placeholder>
+            <v-skeleton-loader type="image" height="100%" />
+          </template>
+        </v-img>
+
+        <!-- Zoom Icon Overlay (positioned over the image) -->
+        <div class="image-zoom-overlay">
+          <v-icon icon="mdi-magnify-plus" size="32" color="white" />
+        </div>
+      </div>
+
+      <!-- Placeholder when no image -->
+      <div
+        v-else
+        class="hero-placeholder rounded-xl mb-6 d-flex align-center justify-center"
       >
-        <template #placeholder>
-          <v-skeleton-loader type="image" height="100%" />
-        </template>
-      </v-img>
+        <div class="text-center">
+          <v-icon icon="mdi-treasure-chest" size="80" color="primary" class="mb-2" />
+          <p class="text-medium-emphasis">{{ $t('store.detail.noImage') }}</p>
+        </div>
+      </div>
 
       <v-row>
         <!-- Main Content -->
@@ -128,8 +145,8 @@
                 size="x-large"
                 block
                 prepend-icon="mdi-download"
-                :href="latestFile?.filePath"
-                :download="adventure.title + '.dmhero'"
+                :loading="downloading"
+                @click="handleDownload"
               >
                 {{ $t('store.detail.download') }}
               </v-btn>
@@ -210,6 +227,25 @@
       </v-row>
     </template>
   </v-container>
+
+  <!-- Image Preview Dialog -->
+  <v-dialog v-model="showImagePreview" max-width="1200" content-class="image-preview-dialog">
+    <v-card class="bg-transparent" elevation="0">
+      <v-img
+        :src="adventure?.coverImageUrl || '/images/store/default-cover.png'"
+        :alt="adventure?.title"
+        max-height="85vh"
+        contain
+        class="rounded-lg"
+        @click="showImagePreview = false"
+      />
+      <v-card-actions class="justify-center pt-4">
+        <v-btn variant="tonal" color="white" prepend-icon="mdi-close" @click="showImagePreview = false">
+          {{ $t('common.close') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </div>
 </template>
 
@@ -222,6 +258,14 @@ const store = useAdventureStore()
 
 const pending = ref(true)
 const error = ref<Error | null>(null)
+const downloading = ref(false)
+const showImagePreview = ref(false)
+
+function openImagePreview() {
+  if (adventure.value?.coverImageUrl) {
+    showImagePreview.value = true
+  }
+}
 
 // Fetch adventure detail from store
 onMounted(async () => {
@@ -267,11 +311,72 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
+
+async function handleDownload() {
+  if (!adventure.value) return
+
+  downloading.value = true
+  try {
+    const filePath = await store.downloadAdventure(adventure.value.slug)
+    // Trigger browser download
+    const link = document.createElement('a')
+    link.href = filePath
+    link.download = adventure.value.title + '.dmhero'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (err) {
+    console.error('Download failed:', err)
+  } finally {
+    downloading.value = false
+  }
+}
 </script>
 
 <style scoped>
+.hero-image-wrapper {
+  position: relative;
+  cursor: zoom-in;
+}
+
 .hero-image {
   max-height: 500px;
+  transition: transform 0.3s ease;
+}
+
+.hero-image-wrapper:hover .hero-image {
+  transform: scale(1.01);
+}
+
+.hero-placeholder {
+  aspect-ratio: 16 / 9;
+  max-height: 500px;
+  background: rgba(var(--v-theme-surface-variant), 0.5);
+  border: 2px dashed rgba(var(--v-theme-outline), 0.3);
+  cursor: default;
+}
+
+.image-zoom-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  padding: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.hero-image-wrapper:hover .image-zoom-overlay {
+  opacity: 1;
+}
+
+/* Dialog styling */
+:deep(.image-preview-dialog) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .download-card {

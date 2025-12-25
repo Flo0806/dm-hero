@@ -77,10 +77,12 @@ const PATTERNS: Map<ViolationCategory, RegExp[]> = new Map()
 
 for (const [category, terms] of Object.entries(FORBIDDEN_TERMS)) {
   const patterns = terms.map((term) => {
-    // Escape special regex characters and create word boundary pattern
+    // Escape special regex characters
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    // Allow for common obfuscation (spaces, numbers for letters)
-    return new RegExp(`\\b${escaped}\\b`, 'i')
+    // Use word boundary at START only - allows matching German compound words
+    // e.g., "vergewaltigung" matches in "Vergewaltigungsding"
+    // But still prevents false positives like "grapefruit" matching "rape"
+    return new RegExp(`\\b${escaped}`, 'i')
   })
   PATTERNS.set(category as ViolationCategory, patterns)
 }

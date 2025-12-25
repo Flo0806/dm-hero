@@ -42,6 +42,21 @@ export async function requireAuth(event: H3Event): Promise<User> {
   return user
 }
 
+/**
+ * Get authenticated user if logged in, returns null otherwise.
+ * Use this for optional user tracking (e.g., download counting).
+ */
+export async function getAuthUser(event: H3Event): Promise<User | null> {
+  const accessToken = getCookie(event, 'access_token')
+  if (!accessToken) return null
+
+  const payload = verifyAccessToken(accessToken)
+  if (!payload) return null
+
+  const user = await getUserById(payload.userId)
+  return user || null
+}
+
 export async function requireRole(event: H3Event, roles: Array<'user' | 'creator' | 'admin'>): Promise<User> {
   const user = await requireAuth(event)
 

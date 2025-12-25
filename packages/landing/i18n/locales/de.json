@@ -260,7 +260,8 @@
       "gameDetails": "Spieldetails",
       "download": "Herunterladen",
       "downloads": "Downloads",
-      "otherSystem": "Anderes System"
+      "otherSystem": "Anderes System",
+      "noImage": "Kein Titelbild vorhanden"
     },
     "rating": {
       "loginToRate": "Anmelden um zu bewerten",

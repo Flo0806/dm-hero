@@ -389,5 +389,38 @@ export const useAdventureStore = defineStore('adventure', {
       this.clearDetailCache()
       await this.fetchAdventures()
     },
+
+    // Download adventure and track count
+    async downloadAdventure(slug: string): Promise<string> {
+      try {
+        const response = await $fetch<{ downloadCount: number; filePath: string }>(
+          `/api/store/adventures/${slug}/download`,
+          { method: 'POST' },
+        )
+
+        // Update download count in list (replace array item to trigger reactivity)
+        const adventureIndex = this.adventures.findIndex((a) => a.slug === slug)
+        if (adventureIndex !== -1) {
+          const current = this.adventures[adventureIndex]
+          this.adventures[adventureIndex] = {
+            ...current,
+            downloadCount: response.downloadCount,
+          } as AdventureCard
+        }
+
+        // Update download count in detail cache
+        if (this.adventureDetails[slug]) {
+          this.adventureDetails[slug] = {
+            ...this.adventureDetails[slug],
+            downloadCount: response.downloadCount,
+          } as AdventureDetail
+        }
+
+        return response.filePath
+      } catch (error) {
+        console.error('Failed to download adventure:', error)
+        throw error
+      }
+    },
   },
 })

@@ -260,7 +260,8 @@
       "gameDetails": "Game Details",
       "download": "Download",
       "downloads": "Downloads",
-      "otherSystem": "Other System"
+      "otherSystem": "Other System",
+      "noImage": "No cover image available"
     },
     "rating": {
       "loginToRate": "Sign in to rate",
