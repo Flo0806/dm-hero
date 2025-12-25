@@ -1,6 +1,6 @@
 {
   "name": "@dm-hero/app",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.5",
   "description": "A personal D&D campaign management tool for Dungeon Masters with fuzzy search, entity management, and session tracking",
   "author": "Florian Heuberger",
   "license": "MIT",
@@ -114,6 +114,7 @@
     "npmRebuild": true
   },
   "dependencies": {
+    "@3d-dice/dice-box": "^1.1.4",
     "@iconify/vue": "^5.0.0",
     "@mdi/font": "^7.4.47",
     "@nuxt/test-utils": "3.20.1",

@@ -1789,6 +1789,175 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 35: Created campaign_notes table')
     },
   },
+  {
+    version: 36,
+    name: 'Add year/month fields to sessions for calendar recalculation',
+    up: (db: Database.Database) => {
+      // Add new columns for storing year/month separately
+      // This allows recalculating absolute days when calendar config changes (e.g., leap years)
+      db.exec('ALTER TABLE sessions ADD COLUMN in_game_year_start INTEGER')
+      db.exec('ALTER TABLE sessions ADD COLUMN in_game_month_start INTEGER')
+      db.exec('ALTER TABLE sessions ADD COLUMN in_game_year_end INTEGER')
+      db.exec('ALTER TABLE sessions ADD COLUMN in_game_month_end INTEGER')
+
+      // Rename existing columns to be clearer (day of month, not absolute day)
+      // Note: SQLite doesn't support RENAME COLUMN in older versions, so we keep the names
+      // in_game_day_start now represents day-of-month (1-31), not absolute day
+
+      // Convert existing absolute days to year/month/day
+      // We need to do this per-campaign since each has its own calendar
+      interface SessionRow {
+        id: number
+        campaign_id: number
+        in_game_day_start: number | null
+        in_game_day_end: number | null
+      }
+
+      interface CalendarConfig {
+        current_year: number
+        current_month: number
+        current_day: number
+        leap_year_interval: number
+        leap_year_month: number
+        leap_year_extra_days: number
+      }
+
+      interface CalendarMonth {
+        days: number
+      }
+
+      const sessions = db
+        .prepare(
+          `SELECT id, campaign_id, in_game_day_start, in_game_day_end
+           FROM sessions
+           WHERE in_game_day_start IS NOT NULL`,
+        )
+        .all() as SessionRow[]
+
+      if (sessions.length === 0) {
+        console.log('  No sessions with in_game_day_start to migrate')
+        console.log('✅ Migration 36: Added year/month fields to sessions')
+        return
+      }
+
+      // Group sessions by campaign
+      const sessionsByCampaign = new Map<number, SessionRow[]>()
+      for (const session of sessions) {
+        const list = sessionsByCampaign.get(session.campaign_id) || []
+        list.push(session)
+        sessionsByCampaign.set(session.campaign_id, list)
+      }
+
+      const updateStmt = db.prepare(`
+        UPDATE sessions
+        SET in_game_year_start = ?,
+            in_game_month_start = ?,
+            in_game_day_start = ?,
+            in_game_year_end = ?,
+            in_game_month_end = ?,
+            in_game_day_end = ?
+        WHERE id = ?
+      `)
+
+      // Helper function to convert absolute day to date
+      function absoluteDayToDate(
+        absoluteDay: number,
+        months: CalendarMonth[],
+        config: CalendarConfig,
+      ): { year: number; month: number; day: number } | null {
+        if (absoluteDay <= 0 || months.length === 0) return null
+
+        const getDaysInYear = (year: number): number => {
+          let total = months.reduce((sum, m) => sum + m.days, 0)
+          if (config.leap_year_interval > 0 && year % config.leap_year_interval === 0) {
+            total += config.leap_year_extra_days
+          }
+          return total
+        }
+
+        const getDaysInMonth = (year: number, monthIndex: number): number => {
+          const month = months[monthIndex]
+          if (!month) return 30
+          let days = month.days
+          if (
+            config.leap_year_interval > 0 &&
+            year % config.leap_year_interval === 0 &&
+            config.leap_year_month > 0 &&
+            monthIndex === config.leap_year_month - 1
+          ) {
+            days += config.leap_year_extra_days
+          }
+          return days
+        }
+
+        let remainingDays = absoluteDay
+        let year = 1
+
+        // Find the year
+        while (true) {
+          const daysInYear = getDaysInYear(year)
+          if (remainingDays <= daysInYear) break
+          remainingDays -= daysInYear
+          year++
+        }
+
+        // Find the month
+        let month = 1
+        for (let m = 0; m < months.length; m++) {
+          const daysInMonth = getDaysInMonth(year, m)
+          if (remainingDays <= daysInMonth) {
+            month = m + 1
+            break
+          }
+          remainingDays -= daysInMonth
+          month = m + 2
+        }
+
+        return { year, month, day: remainingDays }
+      }
+
+      // Process each campaign
+      for (const [campaignId, campaignSessions] of sessionsByCampaign) {
+        // Get calendar config for this campaign
+        const config = db
+          .prepare('SELECT * FROM calendar_config WHERE campaign_id = ?')
+          .get(campaignId) as CalendarConfig | undefined
+
+        const months = db
+          .prepare('SELECT days FROM calendar_months WHERE campaign_id = ? ORDER BY sort_order')
+          .all(campaignId) as CalendarMonth[]
+
+        if (!config || months.length === 0) {
+          console.log(`  Skipping campaign ${campaignId}: no calendar configured`)
+          continue
+        }
+
+        // Convert each session
+        for (const session of campaignSessions) {
+          const startDate = session.in_game_day_start
+            ? absoluteDayToDate(session.in_game_day_start, months, config)
+            : null
+          const endDate = session.in_game_day_end
+            ? absoluteDayToDate(session.in_game_day_end, months, config)
+            : null
+
+          updateStmt.run(
+            startDate?.year || null,
+            startDate?.month || null,
+            startDate?.day || null, // Now stores day-of-month instead of absolute day
+            endDate?.year || null,
+            endDate?.month || null,
+            endDate?.day || null,
+            session.id,
+          )
+        }
+
+        console.log(`  Converted ${campaignSessions.length} sessions for campaign ${campaignId}`)
+      }
+
+      console.log('✅ Migration 36: Added year/month fields and converted existing sessions')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

@@ -203,20 +203,6 @@ function createWindow() {
     mainWindow.show()
   })
 
-  // Inject CSS variables for Electron-specific styling (persistent)
-  mainWindow.webContents.on('dom-ready', () => {
-    // macOS has window controls on the left, Windows/Linux on the right
-    const isMac = process.platform === 'darwin'
-    mainWindow.webContents.insertCSS(`:root {
-      --electron-hide-inline: none !important;
-      --electron-show-badge: inline-flex !important;
-      --electron-badge-offset: ${isMac ? '0px' : '18px'} !important;
-      --electron-btn-margin: ${isMac ? '0px' : '40px'} !important;
-    }
-
-`)
-  })
-
   mainWindow.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
     console.error(`[Electron] Failed to load: ${errorCode} ${errorDescription}`)
   })

@@ -35,17 +35,28 @@
     </v-menu>
 
     <v-btn icon="mdi-magnify" class="search-btn" @click="$emit('search-click')" />
-
-    <!-- Version badge in Electron (next to window controls) -->
-    <v-chip size="x-small" variant="outlined" class="version-badge-electron">
-      v{{ version }}
-    </v-chip>
   </v-app-bar>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import packageJson from '../../../package.json'
+
+interface WindowControlsOverlay extends EventTarget {
+  visible: boolean
+  getTitlebarAreaRect(): DOMRect
+  ongeometrychange: (ev: GeometryChangeEvent) => void
+}
+
+interface GeometryChangeEvent extends Event {
+  titlebarAreaRect: DOMRect
+}
+
+declare global {
+  interface Navigator {
+    windowControlsOverlay?: WindowControlsOverlay
+  }
+}
 
 interface Props {
   currentLocale: string
@@ -68,12 +79,29 @@ const locales = [
 const currentLocaleData = computed(() => {
   return locales.find((l) => l.value === props.currentLocale) ?? locales[0]
 })
+
+// Set to 100% by default, meaning the right edge of the window controls is at the far right of the window
+const windowControlsRightEdge = ref('100%')
+
+if (import.meta.client && window.electronAPI?.isElectron) {
+  const controlsOverlay = navigator.windowControlsOverlay
+  if (controlsOverlay) {
+    if (controlsOverlay?.visible) {
+      const titlebarAreaRect = controlsOverlay.getTitlebarAreaRect()
+      windowControlsRightEdge.value = `${titlebarAreaRect.x + titlebarAreaRect.width}px`
+    }
+    controlsOverlay.ongeometrychange = (e: GeometryChangeEvent) => {
+      windowControlsRightEdge.value = `${e.titlebarAreaRect.x + e.titlebarAreaRect.width}px`
+    }
+  }
+}
 </script>
 
 <style scoped>
 /* Make app bar draggable in Electron (allows window dragging) */
 .app-bar-draggable {
   -webkit-app-region: drag;
+  padding-right: calc(100% - v-bind(windowControlsRightEdge));
 }
 
 /* Make interactive elements clickable (not draggable) */
@@ -82,22 +110,5 @@ const currentLocaleData = computed(() => {
 .app-bar-draggable :deep(.v-chip),
 .app-bar-draggable :deep(.v-menu) {
   -webkit-app-region: no-drag;
-}
-
-/* Version badge: show inline in Web, hide in Electron */
-.version-badge-inline {
-  display: var(--electron-hide-inline, inline-flex);
-}
-
-/* Version badge: hide in Web, show in Electron (next to window controls) */
-.version-badge-electron {
-  display: var(--electron-show-badge, none);
-  margin-right: 8px;
-  margin-top: var(--electron-badge-offset, 0px);
-}
-
-/* Extra margin for search button in Electron (Windows/Linux) */
-.search-btn {
-  margin-right: var(--electron-btn-margin, 0px);
 }
 </style>

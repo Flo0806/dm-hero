@@ -9,8 +9,12 @@ interface SessionRow {
   notes: string | null
   in_game_date_start: string | null
   in_game_date_end: string | null
-  in_game_day_start: number | null
-  in_game_day_end: number | null
+  in_game_year_start: number | null
+  in_game_month_start: number | null
+  in_game_day_start: number | null // Day of month (1-31)
+  in_game_year_end: number | null
+  in_game_month_end: number | null
+  in_game_day_end: number | null // Day of month (1-31)
   duration_minutes: number | null
   created_at: string
   updated_at: string
@@ -44,7 +48,11 @@ export default defineEventHandler((event) => {
       s.notes,
       s.in_game_date_start,
       s.in_game_date_end,
+      s.in_game_year_start,
+      s.in_game_month_start,
       s.in_game_day_start,
+      s.in_game_year_end,
+      s.in_game_month_end,
       s.in_game_day_end,
       s.duration_minutes,
       s.created_at,

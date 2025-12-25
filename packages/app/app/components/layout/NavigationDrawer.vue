@@ -46,6 +46,7 @@
         prepend-icon="mdi-magnify"
         :title="$t('nav.search')"
         value="search"
+        :active="isSearchActive"
         @click="$emit('search-click')"
       />
       <v-list-item
@@ -149,6 +150,7 @@ interface Props {
   hasActiveCampaign: boolean
   activeCampaignName?: string | null
   isDark: boolean
+  isSearchActive: boolean
 }
 
 defineProps<Props>()
