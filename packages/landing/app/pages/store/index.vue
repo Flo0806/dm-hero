@@ -105,14 +105,14 @@
 
     <!-- Loading State -->
     <v-row v-if="loading">
-      <v-col v-for="i in 6" :key="i" cols="12" sm="6" lg="4">
+      <v-col v-for="i in 8" :key="i" cols="12" sm="6" md="4" xl="3">
         <StoreAdventureCardSkeleton />
       </v-col>
     </v-row>
 
     <!-- Adventures Grid -->
     <v-row v-else-if="adventures.length > 0">
-      <v-col v-for="adventure in adventures" :key="adventure.id" cols="12" sm="6" lg="4">
+      <v-col v-for="adventure in adventures" :key="adventure.id" cols="12" sm="6" md="4" xl="3">
         <StoreMagicCardBorder>
           <StoreAdventureCard :adventure="adventure" />
         </StoreMagicCardBorder>

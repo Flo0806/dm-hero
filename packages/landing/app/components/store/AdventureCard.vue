@@ -1,25 +1,32 @@
 <template>
   <v-card
-    class="adventure-card h-100"
+    class="adventure-card d-flex flex-column"
     :to="`/store/${adventure.slug}`"
     elevation="0"
     hover
   >
-    <!-- Cover Image -->
-    <div class="cover-container">
-      <v-img
-        :src="adventure.coverImageUrl || '/images/store/default-cover.png'"
-        :alt="adventure.title"
-        aspect-ratio="16/10"
-        cover
-        class="cover-image"
-      >
-        <template #placeholder>
-          <div class="d-flex align-center justify-center fill-height bg-surface-variant">
-            <v-icon icon="mdi-treasure-chest" size="48" color="primary" />
+    <!-- Cover Image - Fixed 16:9 -->
+    <div class="cover-wrapper flex-shrink-0">
+      <div class="cover-frame" @click.prevent="openImagePreview">
+        <v-img
+          :src="adventure.coverImageUrl || '/images/store/default-cover.png'"
+          :alt="adventure.title"
+          aspect-ratio="16/9"
+          cover
+          class="cover-image"
+        >
+          <template #placeholder>
+            <div class="d-flex align-center justify-center fill-height bg-surface-variant">
+              <v-icon icon="mdi-treasure-chest" size="48" color="primary" />
+            </div>
+          </template>
+
+          <!-- Zoom Icon Overlay -->
+          <div class="image-zoom-overlay">
+            <v-icon icon="mdi-magnify-plus" size="24" color="white" />
           </div>
-        </template>
-      </v-img>
+        </v-img>
+      </div>
 
       <!-- Price Badge -->
       <div class="price-badge">
@@ -40,31 +47,46 @@
       </div>
     </div>
 
-    <v-card-text class="pa-4">
-      <!-- Title -->
-      <h3 class="text-h6 font-weight-medium mb-1 text-truncate-2">
+    <v-card-text class="card-content pa-3 d-flex flex-column flex-grow-1">
+      <!-- Title - Fixed height -->
+      <h3 class="text-subtitle-1 font-weight-medium mb-1 title-text">
         {{ adventure.title }}
       </h3>
 
       <!-- Author -->
       <div class="d-flex align-center mb-2">
-        <v-icon icon="mdi-account" size="small" class="mr-1 text-medium-emphasis" />
-        <span class="text-body-2 text-medium-emphasis">{{ adventure.authorName }}</span>
+        <v-icon icon="mdi-account" size="x-small" class="mr-1 text-medium-emphasis" />
+        <span class="text-caption text-medium-emphasis">{{ adventure.authorName }}</span>
       </div>
 
-      <!-- Short Description -->
-      <p class="text-body-2 text-medium-emphasis mb-3 text-truncate-3">
-        {{ adventure.shortDescription || adventure.description }}
-      </p>
+      <!-- Players & Difficulty Row -->
+      <div class="d-flex align-center ga-3 mb-2">
+        <!-- Players -->
+        <div class="d-flex align-center text-medium-emphasis">
+          <v-icon icon="mdi-account-group" size="small" class="mr-1" />
+          <span class="text-caption">{{ formatPlayers(adventure.playersMin, adventure.playersMax) }}</span>
+        </div>
+
+        <!-- Difficulty -->
+        <div class="d-flex align-center">
+          <v-icon :icon="getDifficultyIcon(adventure.difficulty)" :color="getDifficultyColor(adventure.difficulty)" size="small" class="mr-1" />
+          <span class="text-caption" :class="`text-${getDifficultyColor(adventure.difficulty)}`">
+            {{ $t(`store.difficulty.${getDifficultyKey(adventure.difficulty)}`) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Spacer to push bottom content down -->
+      <div class="flex-grow-1" />
 
       <!-- Stats Row -->
-      <div class="d-flex align-center justify-space-between">
+      <div class="d-flex align-center justify-space-between mb-2">
         <!-- Rating -->
         <div class="d-flex align-center">
           <v-rating
             :model-value="adventure.avgRating || 0"
             density="compact"
-            size="small"
+            size="x-small"
             color="amber"
             half-increments
             readonly
@@ -76,33 +98,55 @@
 
         <!-- Downloads -->
         <div class="d-flex align-center text-medium-emphasis">
-          <v-icon icon="mdi-download" size="small" class="mr-1" />
+          <v-icon icon="mdi-download" size="x-small" class="mr-1" />
           <span class="text-caption">{{ formatDownloads(adventure.downloadCount) }}</span>
         </div>
       </div>
 
-      <!-- Tags -->
-      <div v-if="adventure.tags?.length" class="mt-3 d-flex flex-wrap ga-1">
-        <v-chip
-          v-for="tag in adventure.tags.slice(0, 3)"
-          :key="tag"
-          size="x-small"
-          variant="outlined"
-          color="primary"
-        >
-          {{ tag }}
-        </v-chip>
-        <v-chip
-          v-if="adventure.tags.length > 3"
-          size="x-small"
-          variant="text"
-          color="primary"
-        >
-          +{{ adventure.tags.length - 3 }}
-        </v-chip>
+      <!-- Tags - Always show container for consistent height -->
+      <div class="tags-container d-flex flex-wrap ga-1">
+        <template v-if="adventure.tags?.length">
+          <v-chip
+            v-for="tag in adventure.tags.slice(0, 2)"
+            :key="tag"
+            size="x-small"
+            variant="outlined"
+            color="primary"
+          >
+            {{ tag }}
+          </v-chip>
+          <v-chip
+            v-if="adventure.tags.length > 2"
+            size="x-small"
+            variant="text"
+            color="primary"
+          >
+            +{{ adventure.tags.length - 2 }}
+          </v-chip>
+        </template>
+        <span v-else class="text-caption">&nbsp;</span>
       </div>
     </v-card-text>
   </v-card>
+
+  <!-- Image Preview Dialog -->
+  <v-dialog v-model="showImagePreview" max-width="900" content-class="image-preview-dialog">
+    <v-card class="bg-transparent" elevation="0">
+      <v-img
+        :src="adventure.coverImageUrl || '/images/store/default-cover.png'"
+        :alt="adventure.title"
+        max-height="80vh"
+        contain
+        class="rounded-lg"
+        @click="showImagePreview = false"
+      />
+      <v-card-actions class="justify-center pt-4">
+        <v-btn variant="tonal" color="white" prepend-icon="mdi-close" @click="showImagePreview = false">
+          {{ $t('common.close') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
@@ -111,6 +155,14 @@ import type { AdventureCard } from '~/stores/adventureStore'
 defineProps<{
   adventure: AdventureCard
 }>()
+
+const showImagePreview = ref(false)
+
+function openImagePreview(event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+  showImagePreview.value = true
+}
 
 function formatPrice(cents: number, currency: string): string {
   const amount = cents / 100
@@ -129,13 +181,42 @@ function formatDownloads(count: number): string {
   }
   return count.toString()
 }
+
+function formatPlayers(min: number, max: number): string {
+  if (!min && !max) return '?'
+  if (min === max) return `${min}`
+  if (!min) return `1-${max}`
+  if (!max) return `${min}+`
+  return `${min}-${max}`
+}
+
+function getDifficultyKey(level: number): string {
+  if (level <= 1) return 'easy'
+  if (level <= 2) return 'moderate'
+  if (level <= 3) return 'hard'
+  return 'deadly'
+}
+
+function getDifficultyColor(level: number): string {
+  if (level <= 1) return 'success'
+  if (level <= 2) return 'warning'
+  if (level <= 3) return 'orange'
+  return 'error'
+}
+
+function getDifficultyIcon(level: number): string {
+  if (level <= 1) return 'mdi-shield-outline'
+  if (level <= 2) return 'mdi-shield-half-full'
+  if (level <= 3) return 'mdi-shield'
+  return 'mdi-skull'
+}
 </script>
 
 <style scoped>
 .adventure-card {
   background: rgba(var(--v-theme-surface-variant), 0.3);
   border: 1px solid rgba(var(--v-theme-outline), 0.1);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -146,9 +227,25 @@ function formatDownloads(count: number): string {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
-.cover-container {
+.cover-wrapper {
   position: relative;
+  padding: 0.75rem;
+  padding-bottom: 0;
+}
+
+.cover-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(var(--v-theme-primary), 0.2);
+  cursor: zoom-in;
+}
+
+.cover-frame :deep(.v-img) {
+  width: 100%;
+  height: 100%;
 }
 
 .cover-image {
@@ -159,16 +256,32 @@ function formatDownloads(count: number): string {
   transform: scale(1.05);
 }
 
+.image-zoom-overlay {
+  position: absolute;
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  padding: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cover-image:hover .image-zoom-overlay {
+  opacity: 1;
+}
+
 .price-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 1rem;
+  right: 1rem;
 }
 
 .language-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 1rem;
+  left: 1rem;
 }
 
 .text-truncate-2 {
@@ -177,17 +290,13 @@ function formatDownloads(count: number): string {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
-  min-height: 2.8em;
+  line-height: 1.3;
+  min-height: 2.6em;
 }
 
-.text-truncate-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
-  min-height: 4.5em;
+/* Dialog styling */
+:deep(.image-preview-dialog) {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 </style>
