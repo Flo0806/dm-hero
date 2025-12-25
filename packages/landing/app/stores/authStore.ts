@@ -138,5 +138,9 @@ export const useAuthStore = defineStore('auth', {
     setUser(user: AuthUser | null) {
       this.user = user
     },
+
+    clearError() {
+      this.error = null
+    },
   },
 })

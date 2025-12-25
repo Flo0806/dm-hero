@@ -274,7 +274,30 @@
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "displayName": "Display Name",
-    "forgotPassword": "Forgot password?",
+    "forgotPassword": {
+      "link": "Forgot password?",
+      "title": "Forgot Password",
+      "subtitle": "Enter your email and we'll send you a reset link",
+      "button": "Send Reset Link",
+      "backToLogin": "Back to Login",
+      "successTitle": "Check Your Email",
+      "successMessage": "If an account exists with this email, you'll receive a password reset link shortly.",
+      "error": "Something went wrong. Please try again."
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "button": "Reset Password",
+      "successTitle": "Password Reset!",
+      "successMessage": "Your password has been successfully reset. You can now sign in with your new password.",
+      "goToLogin": "Go to Login",
+      "invalidLink": "Invalid Link",
+      "invalidLinkMessage": "This password reset link is invalid or has expired.",
+      "requestNew": "Request New Link",
+      "error": "Something went wrong. Please try again."
+    },
     "or": "or",
     "backToHome": "Back to Home",
     "login": {
@@ -301,6 +324,7 @@
       "email": "Please enter a valid email",
       "minLength": "Must be at least {min} characters",
       "maxLength": "Must be at most {max} characters",
+      "passwordLength": "Must be at least 8 characters",
       "passwordMatch": "Passwords do not match"
     },
     "verifyEmail": {

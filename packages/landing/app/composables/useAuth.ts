@@ -46,5 +46,6 @@ export function useAuth() {
     register: store.register.bind(store),
     logout: store.logout.bind(store),
     refreshToken: store.refreshToken.bind(store),
+    clearError: store.clearError.bind(store),
   }
 }

@@ -125,7 +125,7 @@ const migrations: Migration[] = [
         ADD COLUMN author_discord VARCHAR(100)`,
 
       // Drop old version column (we use version_number now)
-      `ALTER TABLE adventures DROP COLUMN version`,
+      'ALTER TABLE adventures DROP COLUMN version',
 
       // Also update adventure_files to use integer version
       `ALTER TABLE adventure_files
@@ -165,6 +165,24 @@ const migrations: Migration[] = [
         UNIQUE KEY unique_user_favorite (user_id, adventure_id),
         INDEX idx_user (user_id),
         INDEX idx_adventure (adventure_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+    ],
+  },
+  {
+    id: 5,
+    name: 'add_password_reset_tokens',
+    up: [
+      // Password reset tokens
+      `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token VARCHAR(255) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        used_at TIMESTAMP NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_token (token),
+        INDEX idx_user (user_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     ],
   },

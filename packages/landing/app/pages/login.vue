@@ -42,7 +42,7 @@
 
             <div class="d-flex justify-end mb-6">
               <NuxtLink to="/forgot-password" class="text-primary text-decoration-none text-body-2">
-                {{ $t('auth.forgotPassword') }}
+                {{ $t('auth.forgotPassword.link') }}
               </NuxtLink>
             </div>
 
@@ -82,7 +82,7 @@
               density="compact"
               class="mb-4"
               closable
-              @click:close="error = null"
+              @click:close="clearError"
             >
               {{ error }}
             </v-alert>
@@ -131,7 +131,7 @@ definePageMeta({
 
 const { t, locale } = useI18n()
 const router = useRouter()
-const { login, loading, error } = useAuth()
+const { login, loading, error, clearError } = useAuth()
 
 const formRef = ref()
 const email = ref('')
@@ -165,7 +165,7 @@ async function handleLogin() {
   // Check if it's an email verification error
   if (error.value?.includes('verify your email')) {
     emailNotVerified.value = true
-    error.value = null
+    clearError()
   }
 }
 

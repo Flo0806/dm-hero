@@ -274,7 +274,30 @@
     "password": "Passwort",
     "confirmPassword": "Passwort bestätigen",
     "displayName": "Anzeigename",
-    "forgotPassword": "Passwort vergessen?",
+    "forgotPassword": {
+      "link": "Passwort vergessen?",
+      "title": "Passwort vergessen",
+      "subtitle": "Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen",
+      "button": "Link senden",
+      "backToLogin": "Zurück zur Anmeldung",
+      "successTitle": "Prüfe dein Postfach",
+      "successMessage": "Falls ein Konto mit dieser E-Mail existiert, erhältst du in Kürze einen Link zum Zurücksetzen.",
+      "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    },
+    "resetPassword": {
+      "title": "Passwort zurücksetzen",
+      "subtitle": "Gib dein neues Passwort ein",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "button": "Passwort zurücksetzen",
+      "successTitle": "Passwort zurückgesetzt!",
+      "successMessage": "Dein Passwort wurde erfolgreich zurückgesetzt. Du kannst dich jetzt mit deinem neuen Passwort anmelden.",
+      "goToLogin": "Zur Anmeldung",
+      "invalidLink": "Ungültiger Link",
+      "invalidLinkMessage": "Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen.",
+      "requestNew": "Neuen Link anfordern",
+      "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    },
     "or": "oder",
     "backToHome": "Zurück zur Startseite",
     "login": {
@@ -301,6 +324,7 @@
       "email": "Bitte gib eine gültige E-Mail ein",
       "minLength": "Muss mindestens {min} Zeichen haben",
       "maxLength": "Darf höchstens {max} Zeichen haben",
+      "passwordLength": "Muss mindestens 8 Zeichen haben",
       "passwordMatch": "Passwörter stimmen nicht überein"
     },
     "verifyEmail": {
