@@ -6,6 +6,14 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt'],
 
+  eslint: {
+    config: {
+      // Disable stylistic - too strict for existing codebase
+      // We use basic ESLint rules instead
+      stylistic: false,
+    },
+  },
+
   runtimeConfig: {
     public: {
       appVersion: pkg.version,

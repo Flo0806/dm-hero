@@ -1,13 +1,12 @@
 {
-  // Editor settings
-  "editor.formatOnSave": false,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // ESLint as formatter (no Prettier conflict)
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.formatDocument": "explicit"
+    "source.fixAll.eslint": "explicit"
   },
 
-  // ESLint
+  // ESLint validates and formats these file types
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -16,17 +15,31 @@
     "vue"
   ],
 
+  // ESLint flat config (Nuxt uses this)
+  "eslint.useFlatConfig": true,
+
+  // Working directory for monorepo
+  "eslint.workingDirectories": [
+    { "pattern": "packages/*" }
+  ],
+
   // File-specific formatters
   "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 

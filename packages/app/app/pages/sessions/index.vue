@@ -953,23 +953,23 @@ const editorRef = ref<EditorExpose | null>(null)
 // Helper to resolve entity name from stores
 function resolveEntityName(type: string, id: number): string {
   switch (type) {
-  case 'npc':
-    return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
-  case 'location':
-    return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
-  case 'item':
-    return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
-  case 'faction':
-    return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
-  case 'lore':
-    return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
-  case 'player': {
-    const player = entitiesStore.players?.find((e) => e.id === id)
-    // Return character name (name field), human name is shown separately
-    return player?.name || `Player #${id}`
-  }
-  default:
-    return `Entity #${id}`
+    case 'npc':
+      return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
+    case 'location':
+      return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
+    case 'item':
+      return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
+    case 'faction':
+      return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
+    case 'lore':
+      return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
+    case 'player': {
+      const player = entitiesStore.players?.find((e) => e.id === id)
+      // Return character name (name field), human name is shown separately
+      return player?.name || `Player #${id}`
+    }
+    default:
+      return `Entity #${id}`
   }
 }
 

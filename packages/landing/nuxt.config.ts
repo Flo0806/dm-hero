@@ -9,6 +9,12 @@ export default defineNuxtConfig({
 
   modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content', '@pinia/nuxt'],
 
+  eslint: {
+    config: {
+      stylistic: false,
+    },
+  },
+
   css: [
     '@/assets/css/main.css',
     '@/assets/css/animations.css',
