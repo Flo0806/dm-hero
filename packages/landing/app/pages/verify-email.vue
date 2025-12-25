@@ -22,7 +22,7 @@
             <p class="text-body-1 text-medium-emphasis mb-6">
               {{ $t('auth.verifyEmail.successMessage') }}
             </p>
-            <v-btn color="primary" size="large" to="/store" prepend-icon="mdi-store">
+            <v-btn color="primary" size="large" to="/store" prepend-icon="mdi-storefront">
               {{ $t('auth.verifyEmail.goToStore') }}
             </v-btn>
           </template>

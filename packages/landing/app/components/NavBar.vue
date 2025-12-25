@@ -170,7 +170,9 @@ async function handleLogout() {
           </v-btn>
 
           <template #fallback>
-            <v-skeleton-loader type="avatar" class="ml-2" width="36" height="36" />
+            <div class="ml-2 d-flex align-center">
+              <v-skeleton-loader type="avatar" width="36" height="36" />
+            </div>
           </template>
         </ClientOnly>
       </nav>

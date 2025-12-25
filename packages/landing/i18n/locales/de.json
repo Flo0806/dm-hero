@@ -7,7 +7,7 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
-    "store": "Store",
+    "store": "Hero Basar",
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support",
@@ -161,7 +161,7 @@
     "ok": "Alles klar"
   },
   "store": {
-    "title": "Adventure Store",
+    "title": "Hero Basar",
     "subtitle": "Entdecke spielfertige Abenteuer, erstellt von der Community. Herunterladen, importieren und losspielen.",
     "searchPlaceholder": "Abenteuer suchen...",
     "sortBy": "Sortieren nach",
@@ -237,7 +237,7 @@
         "max": "Max"
       },
       "hints": {
-        "shortDescription": "Wird im Store angezeigt. Max. 500 Zeichen.",
+        "shortDescription": "Wird im Hero Basar angezeigt. Max. 500 Zeichen.",
         "coverImage": "Empfohlen: 1920x1200 (16:10). JPG oder PNG.",
         "authorName": "Optional. Wird statt deinem Benutzernamen angezeigt.",
         "discord": "Optional. Für Community-Kontakt.",
@@ -254,7 +254,7 @@
       }
     },
     "detail": {
-      "backToStore": "Zurück zum Store",
+      "backToStore": "Zurück zum Hero Basar",
       "highlights": "Highlights",
       "description": "Beschreibung",
       "gameDetails": "Spieldetails",
@@ -332,7 +332,7 @@
       "verifying": "Deine E-Mail-Adresse wird überprüft...",
       "success": "E-Mail bestätigt!",
       "successMessage": "Deine E-Mail-Adresse wurde erfolgreich bestätigt. Du kannst jetzt alle Funktionen von DM Hero nutzen.",
-      "goToStore": "Zum Adventure Store",
+      "goToStore": "Zum Hero Basar",
       "error": "Bestätigung fehlgeschlagen",
       "noToken": "Bestätigungstoken fehlt",
       "noTokenMessage": "Es wurde kein Bestätigungstoken gefunden. Bitte klicke auf den Link in deiner Bestätigungs-E-Mail oder fordere einen neuen an.",
@@ -345,7 +345,7 @@
       "title": "Prüfe dein Postfach",
       "message": "Wir haben einen Bestätigungslink an {email} gesendet. Bitte prüfe dein Postfach und klicke auf den Link, um dein Konto zu bestätigen.",
       "spamHint": "Falls du die E-Mail nicht siehst, prüfe deinen Spam-Ordner.",
-      "continueToStore": "Weiter zum Store"
+      "continueToStore": "Weiter zum Hero Basar"
     }
   },
   "profile": {

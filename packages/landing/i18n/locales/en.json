@@ -7,7 +7,7 @@
     "features": "Features",
     "screenshots": "Screenshots",
     "download": "Download",
-    "store": "Store",
+    "store": "Hero Basar",
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support",
@@ -161,7 +161,7 @@
     "ok": "Got it"
   },
   "store": {
-    "title": "Adventure Store",
+    "title": "Hero Basar",
     "subtitle": "Discover ready-to-play adventures created by the community. Download, import, and start playing.",
     "searchPlaceholder": "Search adventures...",
     "sortBy": "Sort by",
@@ -254,7 +254,7 @@
       }
     },
     "detail": {
-      "backToStore": "Back to Store",
+      "backToStore": "Back to Hero Basar",
       "highlights": "Highlights",
       "description": "Description",
       "gameDetails": "Game Details",
@@ -332,7 +332,7 @@
       "verifying": "Verifying your email address...",
       "success": "Email Verified!",
       "successMessage": "Your email has been successfully verified. You can now access all features of DM Hero.",
-      "goToStore": "Go to Adventure Store",
+      "goToStore": "Go to Hero Basar",
       "error": "Verification Failed",
       "noToken": "Missing Verification Token",
       "noTokenMessage": "No verification token was found. Please click the link in your verification email or request a new one.",
@@ -345,7 +345,7 @@
       "title": "Check Your Email",
       "message": "We've sent a verification link to {email}. Please check your inbox and click the link to verify your account.",
       "spamHint": "If you don't see it, check your spam folder.",
-      "continueToStore": "Continue to Store"
+      "continueToStore": "Continue to Hero Basar"
     }
   },
   "profile": {

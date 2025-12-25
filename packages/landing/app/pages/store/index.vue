@@ -5,8 +5,8 @@
     <!-- Header -->
     <div class="text-center mb-12">
       <img
-        src="/images/store/store-logo.png"
-        alt="Adventure Store"
+        src="/images/store/basar-logo.png"
+        alt="Hero Basar"
         class="store-logo mb-6"
       />
       <h1 class="text-h2 font-weight-light mb-4">
@@ -237,9 +237,9 @@ watch(isAuthenticated, (loggedIn) => {
 
 <style scoped>
 .store-logo {
-  width: 180px;
-  height: 180px;
-  border-radius: 24px;
+  width: 240px;
+  height: auto;
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   transition: transform 0.3s ease;
 }
