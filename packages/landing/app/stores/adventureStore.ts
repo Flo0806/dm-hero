@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { getApi } from '~/composables/useApiFetch'
 
 // Frontend-friendly adventure type (camelCase)
 export interface AdventureCard {
@@ -283,10 +284,11 @@ export const useAdventureStore = defineStore('adventure', {
       }
     },
 
-    // Rate an adventure
+    // Rate an adventure (requires auth)
     async rateAdventure(adventureId: number, rating: number) {
       try {
-        const response = await $fetch<{ avgRating: string | number; ratingCount: number }>(
+        const $api = getApi()
+        const response = await $api<{ avgRating: string | number; ratingCount: number }>(
           `/api/store/adventures/${adventureId}/rate`,
           {
             method: 'POST',
@@ -340,10 +342,11 @@ export const useAdventureStore = defineStore('adventure', {
       }
     },
 
-    // Fetch user's rating for an adventure
+    // Fetch user's rating for an adventure (requires auth)
     async fetchUserRating(adventureId: number) {
       try {
-        const response = await $fetch<{ rating: number | null }>(
+        const $api = getApi()
+        const response = await $api<{ rating: number | null }>(
           `/api/store/adventures/${adventureId}/my-rating`,
         )
         if (response.rating !== null) {

@@ -379,6 +379,7 @@
 
 <script setup lang="ts">
 import { useAdventureStore } from '~/stores/adventureStore'
+import { useApiFetch } from '~/composables/useApiFetch'
 
 definePageMeta({
   middleware: 'auth',
@@ -388,6 +389,7 @@ const { t, locale } = useI18n()
 const router = useRouter()
 const adventureStore = useAdventureStore()
 const { user, isEmailVerified } = useAuth()
+const api = useApiFetch()
 
 const formRef = ref()
 const submitting = ref(false)
@@ -550,7 +552,7 @@ async function handleSubmit() {
     // Pricing
     formData.append('priceCents', form.isFree ? '0' : Math.round(form.priceEur * 100).toString())
 
-    await $fetch('/api/store/adventures', {
+    await api.fetch('/api/store/adventures', {
       method: 'POST',
       body: formData,
     })

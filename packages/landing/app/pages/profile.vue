@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import { useProfileStore } from '~/stores/profileStore'
+import { useApiFetch } from '~/composables/useApiFetch'
 
 definePageMeta({
   middleware: 'auth',
@@ -52,6 +53,7 @@ const { t } = useI18n()
 const { user, fetchUser } = useAuth()
 const profileStore = useProfileStore()
 const { showError, showSuccess } = useSnackbar()
+const api = useApiFetch()
 const saving = ref(false)
 
 // Fetch profile data (SSR-compatible)
@@ -71,14 +73,11 @@ const { pending: loadingAdventures } = await useAsyncData('profile-adventures', 
 const userAdventures = computed(() => profileStore.adventures)
 const stats = computed(() => profileStore.stats)
 
-// Update profile
+// Update profile (uses $api for auto token refresh)
 async function handleUpdateProfile(data: { displayName: string }) {
   saving.value = true
   try {
-    await $fetch('/api/profile', {
-      method: 'PUT',
-      body: data,
-    })
+    await api.put('/api/profile', data)
     await fetchUser()
     showSuccess(t('profile.messages.profileUpdated'))
   } catch (err) {
@@ -89,35 +88,33 @@ async function handleUpdateProfile(data: { displayName: string }) {
   }
 }
 
-// Upload avatar - use native fetch for FormData (ofetch can have issues with multipart)
+// Upload avatar (uses $api for auto token refresh)
 async function handleAvatarUpload(file: File) {
   saving.value = true
   try {
     const formData = new FormData()
     formData.append('avatar', file)
 
-    const response = await fetch('/api/profile/avatar', {
+    await api.fetch('/api/profile/avatar', {
       method: 'POST',
       body: formData,
-      credentials: 'include',
     })
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Upload failed' }))
-      // Map known error messages to i18n keys
-      if (error.message?.includes('too large')) {
-        throw new Error(t('profile.messages.fileTooLarge'))
-      } else if (error.message?.includes('Invalid file type')) {
-        throw new Error(t('profile.messages.invalidFileType'))
-      }
-      throw new Error(error.message || t('profile.messages.uploadFailed'))
-    }
 
     await fetchUser()
     showSuccess(t('profile.messages.avatarUpdated'))
   } catch (err) {
     console.error('Failed to upload avatar:', err)
-    showError(err instanceof Error ? err.message : t('profile.messages.uploadFailed'))
+    const fetchError = err as { data?: { message?: string } }
+    const message = fetchError.data?.message || ''
+
+    // Map known error messages to i18n keys
+    if (message.includes('too large')) {
+      showError(t('profile.messages.fileTooLarge'))
+    } else if (message.includes('Invalid file type')) {
+      showError(t('profile.messages.invalidFileType'))
+    } else {
+      showError(t('profile.messages.uploadFailed'))
+    }
   } finally {
     saving.value = false
   }

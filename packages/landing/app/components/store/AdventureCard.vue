@@ -45,6 +45,18 @@
           {{ adventure.language?.toUpperCase() }}
         </v-chip>
       </div>
+
+      <!-- Favorite Star (only if logged in) -->
+      <div v-if="isAuthenticated" class="favorite-badge">
+        <v-btn
+          :icon="isFavorite ? 'mdi-star' : 'mdi-star-outline'"
+          :color="isFavorite ? 'amber' : 'white'"
+          size="small"
+          variant="text"
+          :loading="favoriteLoading"
+          @click.prevent="toggleFavorite"
+        />
+      </div>
     </div>
 
     <v-card-text class="card-content pa-3 d-flex flex-column flex-grow-1">
@@ -151,12 +163,33 @@
 
 <script setup lang="ts">
 import type { AdventureCard } from '~/stores/adventureStore'
+import { useFavoritesStore } from '~/stores/favoritesStore'
 
-defineProps<{
+const props = defineProps<{
   adventure: AdventureCard
 }>()
 
+const { isAuthenticated } = useAuth()
+const favoritesStore = useFavoritesStore()
+
 const showImagePreview = ref(false)
+const favoriteLoading = ref(false)
+
+const isFavorite = computed(() => favoritesStore.isFavorite(props.adventure.id))
+
+async function toggleFavorite(event: Event) {
+  event.preventDefault()
+  event.stopPropagation()
+
+  favoriteLoading.value = true
+  try {
+    await favoritesStore.toggleFavorite(props.adventure.id)
+  } catch (error) {
+    console.error('Failed to toggle favorite:', error)
+  } finally {
+    favoriteLoading.value = false
+  }
+}
 
 function openImagePreview(event: Event) {
   event.preventDefault()
@@ -282,6 +315,17 @@ function getDifficultyIcon(level: number): string {
   position: absolute;
   top: 1rem;
   left: 1rem;
+}
+
+.favorite-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
+
+.favorite-badge :deep(.v-btn) {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
 
 .text-truncate-2 {

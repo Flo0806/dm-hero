@@ -153,14 +153,17 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import { useAdventureStore } from '~/stores/adventureStore'
+import { useFavoritesStore } from '~/stores/favoritesStore'
 
 const { t } = useI18n()
 const router = useRouter()
 const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
 const store = useAdventureStore()
+const favoritesStore = useFavoritesStore()
 
 async function handleLogout() {
   await logout()
+  favoritesStore.clear()
   router.push('/')
 }
 
@@ -213,8 +216,22 @@ watch(page, (val) => {
 })
 
 // Initial fetch
-onMounted(() => {
+onMounted(async () => {
   store.fetchAdventures()
+
+  // Fetch favorites if logged in
+  if (isAuthenticated.value) {
+    favoritesStore.fetchFavorites()
+  }
+})
+
+// Also fetch favorites when auth state changes (e.g., after login)
+watch(isAuthenticated, (loggedIn) => {
+  if (loggedIn) {
+    favoritesStore.fetchFavorites()
+  } else {
+    favoritesStore.clear()
+  }
 })
 </script>
 

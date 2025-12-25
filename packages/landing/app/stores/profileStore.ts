@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { getApi } from '~/composables/useApiFetch'
 
 export interface UserAdventure {
   id: number
@@ -38,15 +39,25 @@ export const useProfileStore = defineStore('profile', {
   }),
 
   actions: {
+    // Fetch user's adventures (works on SSR with headers or client with $api)
     async fetchAdventures(headers?: Record<string, string>) {
       this.loading = true
       this.error = null
 
       try {
-        const response = await $fetch<{ adventures: UserAdventure[]; stats: UserStats }>(
-          '/api/profile/adventures',
-          { headers },
-        )
+        // Use $fetch with headers for SSR, $api for client (auto-refresh)
+        let response: { adventures: UserAdventure[]; stats: UserStats }
+        if (headers) {
+          response = await $fetch<{ adventures: UserAdventure[]; stats: UserStats }>(
+            '/api/profile/adventures',
+            { headers },
+          )
+        } else {
+          const $api = getApi()
+          response = await $api<{ adventures: UserAdventure[]; stats: UserStats }>(
+            '/api/profile/adventures',
+          )
+        }
         this.adventures = response.adventures
         this.stats = response.stats
       } catch (err) {
@@ -57,9 +68,11 @@ export const useProfileStore = defineStore('profile', {
       }
     },
 
+    // Delete an adventure (client-only, uses $api for auto-refresh)
     async deleteAdventure(adventureId: number) {
       try {
-        await $fetch(`/api/profile/adventures/${adventureId}`, {
+        const $api = getApi()
+        await $api(`/api/profile/adventures/${adventureId}`, {
           method: 'POST',
           body: { action: 'delete' },
         })
