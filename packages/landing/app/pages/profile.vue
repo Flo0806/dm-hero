@@ -35,10 +35,84 @@
             :loading="loadingAdventures"
             :highlight-id="highlightAdventureId"
             @delete="handleDeleteAdventure"
+            class="mb-6"
           />
+
+          <!-- Danger Zone -->
+          <v-card class="danger-zone-card" elevation="0">
+            <v-card-title class="text-error d-flex align-center">
+              <v-icon icon="mdi-alert-circle" class="mr-2" />
+              {{ $t('profile.dangerZone.title') }}
+            </v-card-title>
+            <v-card-text>
+              <p class="text-body-2 text-medium-emphasis mb-4">
+                {{ $t('profile.dangerZone.description') }}
+              </p>
+              <v-btn
+                color="error"
+                variant="outlined"
+                prepend-icon="mdi-delete-forever"
+                @click="showDeleteDialog = true"
+              >
+                {{ $t('profile.dangerZone.deleteButton') }}
+              </v-btn>
+            </v-card-text>
+          </v-card>
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- Delete Account Dialog -->
+    <v-dialog v-model="showDeleteDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="text-error d-flex align-center">
+          <v-icon icon="mdi-alert" class="mr-2" />
+          {{ $t('profile.deleteAccount.title') }}
+        </v-card-title>
+        <v-card-text>
+          <v-alert type="error" variant="tonal" class="mb-4">
+            <div class="font-weight-medium mb-2">{{ $t('profile.deleteAccount.warning') }}</div>
+            <ul class="text-body-2 pl-4">
+              <li>{{ $t('profile.deleteAccount.consequence1') }}</li>
+              <li>{{ $t('profile.deleteAccount.consequence2') }}</li>
+              <li>{{ $t('profile.deleteAccount.consequence3') }}</li>
+            </ul>
+          </v-alert>
+
+          <p class="text-body-2 mb-4">
+            {{ $t('profile.deleteAccount.confirmText') }}
+          </p>
+
+          <v-text-field
+            v-model="deleteConfirmEmail"
+            :label="$t('auth.email')"
+            :placeholder="user?.email"
+            variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-email-outline"
+            :error-messages="deleteEmailError"
+          />
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="closeDeleteDialog"
+          >
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            :loading="deleting"
+            :disabled="!deleteConfirmEmail"
+            @click="handleDeleteAccount"
+          >
+            {{ $t('profile.deleteAccount.confirmButton') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -52,11 +126,18 @@ definePageMeta({
 
 const { t } = useI18n()
 const route = useRoute()
-const { user, fetchUser } = useAuth()
+const router = useRouter()
+const { user, fetchUser, logout } = useAuth()
 const profileStore = useProfileStore()
 const { showError, showSuccess } = useSnackbar()
 const api = useApiFetch()
 const saving = ref(false)
+
+// Delete account state
+const showDeleteDialog = ref(false)
+const deleteConfirmEmail = ref('')
+const deleteEmailError = ref('')
+const deleting = ref(false)
 
 // Highlight adventure from query param (after save)
 const highlightAdventureId = computed(() => {
@@ -138,4 +219,51 @@ async function handleDeleteAdventure(adventureId: number) {
     showError(t('profile.messages.deleteFailed'))
   }
 }
+
+// Delete account
+function closeDeleteDialog() {
+  showDeleteDialog.value = false
+  deleteConfirmEmail.value = ''
+  deleteEmailError.value = ''
+}
+
+async function handleDeleteAccount() {
+  deleteEmailError.value = ''
+
+  // Validate email matches
+  if (deleteConfirmEmail.value.toLowerCase().trim() !== user.value?.email?.toLowerCase()) {
+    deleteEmailError.value = t('profile.deleteAccount.emailMismatch')
+    return
+  }
+
+  deleting.value = true
+  try {
+    await api.post('/api/auth/delete-account', {
+      email: deleteConfirmEmail.value,
+    })
+
+    // Close dialog first
+    showDeleteDialog.value = false
+
+    // Clear local auth state
+    await logout()
+
+    // Redirect to home with success message
+    router.push('/')
+    showSuccess(t('profile.deleteAccount.success'))
+  } catch (err) {
+    console.error('Failed to delete account:', err)
+    const fetchError = err as { data?: { message?: string } }
+    deleteEmailError.value = fetchError.data?.message || t('profile.deleteAccount.error')
+  } finally {
+    deleting.value = false
+  }
+}
 </script>
+
+<style scoped>
+.danger-zone-card {
+  background: rgba(var(--v-theme-error), 0.05);
+  border: 1px solid rgba(var(--v-theme-error), 0.2);
+}
+</style>

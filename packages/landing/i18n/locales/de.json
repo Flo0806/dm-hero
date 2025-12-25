@@ -391,6 +391,23 @@
         "title": "Abenteuer löschen?",
         "message": "Bist du sicher, dass du \"{title}\" löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden."
       }
+    },
+    "dangerZone": {
+      "title": "Gefahrenzone",
+      "description": "Wenn du deinen Account löschst, gibt es kein Zurück. Bitte sei dir sicher.",
+      "deleteButton": "Account löschen"
+    },
+    "deleteAccount": {
+      "title": "Account löschen",
+      "warning": "Diese Aktion ist unwiderruflich!",
+      "consequence1": "Alle deine Abenteuer werden dauerhaft gelöscht",
+      "consequence2": "Alle deine Bewertungen werden entfernt",
+      "consequence3": "Deine E-Mail-Adresse wird für neue Registrierungen verfügbar",
+      "confirmText": "Zur Bestätigung gib bitte deine E-Mail-Adresse ein:",
+      "confirmButton": "Meinen Account löschen",
+      "emailMismatch": "E-Mail stimmt nicht mit deinem Account überein",
+      "success": "Dein Account wurde gelöscht",
+      "error": "Account konnte nicht gelöscht werden"
     }
   },
   "legal": {

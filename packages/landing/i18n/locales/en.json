@@ -391,6 +391,23 @@
         "title": "Delete Adventure?",
         "message": "Are you sure you want to delete \"{title}\"? This action cannot be undone."
       }
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Once you delete your account, there is no going back. Please be certain.",
+      "deleteButton": "Delete Account"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "warning": "This action is irreversible!",
+      "consequence1": "All your adventures will be permanently deleted",
+      "consequence2": "All your ratings and reviews will be removed",
+      "consequence3": "Your email address will become available for new registrations",
+      "confirmText": "To confirm, please enter your email address:",
+      "confirmButton": "Delete My Account",
+      "emailMismatch": "Email does not match your account",
+      "success": "Your account has been deleted",
+      "error": "Failed to delete account"
     }
   },
   "legal": {
