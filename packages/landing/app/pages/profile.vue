@@ -31,11 +31,12 @@
 
           <!-- Adventures Card -->
           <ProfileAdventuresCard
+            ref="adventuresCardRef"
             :adventures="userAdventures"
             :loading="loadingAdventures"
             :highlight-id="highlightAdventureId"
-            @delete="handleDeleteAdventure"
             class="mb-6"
+            @delete="handleDeleteAdventure"
           />
 
           <!-- Danger Zone -->
@@ -119,10 +120,14 @@
 <script setup lang="ts">
 import { useProfileStore } from '~/stores/profileStore'
 import { useApiFetch } from '~/composables/useApiFetch'
+import confetti from 'canvas-confetti'
 
 definePageMeta({
   middleware: 'auth',
 })
+
+// Ref to adventures card component
+const adventuresCardRef = ref<{ isValidationDialogOpen: boolean } | null>(null)
 
 const { t } = useI18n()
 const route = useRoute()
@@ -161,6 +166,93 @@ const { pending: loadingAdventures } = await useAsyncData('profile-adventures', 
 
 const userAdventures = computed(() => profileStore.adventures)
 const stats = computed(() => profileStore.stats)
+
+// Poll for status updates every 60 seconds when there are pending adventures (client-only)
+let pollInterval: ReturnType<typeof setInterval> | null = null
+
+if (import.meta.client) {
+  onMounted(() => {
+    if (profileStore.hasPendingAdventures) {
+      startPolling()
+    }
+  })
+
+  onUnmounted(() => {
+    stopPolling()
+  })
+
+  // Watch for pending adventures to start/stop polling
+  watch(() => profileStore.hasPendingAdventures, (hasPending) => {
+    if (hasPending) {
+      startPolling()
+    } else {
+      stopPolling()
+    }
+  })
+}
+
+function triggerConfetti() {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: ['#D4A574', '#8B7355', '#FFD700', '#4CAF50'],
+  })
+  // Second burst from sides
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: ['#D4A574', '#8B7355', '#FFD700'],
+    })
+    confetti({
+      particleCount: 50,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors: ['#D4A574', '#8B7355', '#FFD700'],
+    })
+  }, 250)
+}
+
+function startPolling() {
+  if (pollInterval) return // Already polling
+  pollInterval = setInterval(async () => {
+    const now = new Date().toLocaleString('de-DE')
+    console.log(`[Profile] Polling for status updates... (${now})`)
+
+    // Store previous statuses to detect changes
+    const previousStatuses = new Map(
+      profileStore.adventures.map((a) => [a.id, a.status]),
+    )
+
+    await profileStore.fetchAdventures()
+
+    // Check if validation dialog is open (confetti is triggered there instead)
+    if (adventuresCardRef.value?.isValidationDialogOpen) {
+      return
+    }
+
+    // Check if any adventure changed to 'published'
+    for (const adventure of profileStore.adventures) {
+      const prevStatus = previousStatuses.get(adventure.id)
+      if (prevStatus && prevStatus !== 'published' && adventure.status === 'published') {
+        console.log(`[Profile] Adventure published: ${adventure.title}`)
+        triggerConfetti()
+        break // Only one confetti burst even if multiple published
+      }
+    }
+  }, 60 * 1000) // Every 60 seconds
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+}
 
 // Update profile (uses $api for auto token refresh)
 async function handleUpdateProfile(data: { displayName: string }) {

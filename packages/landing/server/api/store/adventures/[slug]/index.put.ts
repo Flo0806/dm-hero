@@ -1,5 +1,6 @@
 import { query, queryOne } from '../../../../utils/db'
-import { requireAuth } from '../../../../utils/requireAuth'
+import { requireAuthWithTos } from '../../../../utils/requireAuth'
+import { ADVENTURE_STATUS } from '../../../../utils/adventureStatus'
 import { createHash } from 'crypto'
 import { writeFile, mkdir, unlink } from 'fs/promises'
 import { join } from 'path'
@@ -13,7 +14,8 @@ interface Adventure {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await requireAuth(event)
+  // Require ToS acceptance for updating content
+  const user = await requireAuthWithTos(event)
   const id = Number(getRouterParam(event, 'slug'))
 
   if (!id || isNaN(id)) {
@@ -106,13 +108,14 @@ export default defineEventHandler(async (event) => {
     await writeFile(adventurePath, adventureFile.data)
     const checksum = createHash('sha256').update(adventureFile.data).digest('hex')
 
-    // Insert new file version
+    // Insert new file version (store original filename for content validation)
     await query(
-      `INSERT INTO adventure_files (adventure_id, file_path, file_size, version_number, checksum)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO adventure_files (adventure_id, file_path, original_filename, file_size, version_number, checksum)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         adventure.id,
         `/api/uploads/adventures/${adventureFilename}`,
+        adventureFile.filename,
         adventureFile.data.length,
         newVersion,
         checksum,
@@ -130,7 +133,9 @@ export default defineEventHandler(async (event) => {
     // Ignore parse errors
   }
 
-  // Update adventure
+  // Always reset to pending_review on any edit (text changes also need re-validation)
+  const newStatus = ADVENTURE_STATUS.PENDING_REVIEW
+
   await query(
     `UPDATE adventures SET
       title = ?,
@@ -151,6 +156,9 @@ export default defineEventHandler(async (event) => {
       author_discord = ?,
       price_cents = ?,
       language = ?,
+      status = ?,
+      validation_result = NULL,
+      validated_at = NULL,
       updated_at = NOW()
     WHERE id = ?`,
     [
@@ -172,6 +180,7 @@ export default defineEventHandler(async (event) => {
       fields.authorDiscord || null,
       Number(fields.priceCents) || 0,
       fields.language || 'de',
+      newStatus,
       adventure.id,
     ],
   )

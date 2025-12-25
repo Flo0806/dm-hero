@@ -8,6 +8,8 @@ interface AdventureRow {
   cover_image_url: string | null
   download_count: number
   status: string
+  validation_result: string | null
+  validated_at: Date | null
   created_at: Date
 }
 
@@ -22,7 +24,8 @@ export default defineEventHandler(async (event) => {
 
   // Get user's adventures
   const adventures = await query<AdventureRow[]>(
-    `SELECT id, title, slug, cover_image_url, download_count, status, created_at
+    `SELECT id, title, slug, cover_image_url, download_count, status,
+            validation_result, validated_at, created_at
      FROM adventures
      WHERE author_id = ?
      ORDER BY created_at DESC`,
@@ -57,6 +60,22 @@ export default defineEventHandler(async (event) => {
   return {
     adventures: adventures.map((a) => {
       const ratingInfo = ratingsMap.get(a.id)
+
+      // Parse validation_result JSON (MySQL might return object or string)
+      let validationResult = null
+      if (a.validation_result) {
+        if (typeof a.validation_result === 'string') {
+          try {
+            validationResult = JSON.parse(a.validation_result)
+          } catch {
+            // Ignore parse errors
+          }
+        } else {
+          // Already an object (MySQL JSON type)
+          validationResult = a.validation_result
+        }
+      }
+
       return {
         id: a.id,
         title: a.title,
@@ -65,6 +84,8 @@ export default defineEventHandler(async (event) => {
         downloadCount: a.download_count,
         avgRating: ratingInfo ? Number(ratingInfo.avg_rating) : null,
         status: a.status,
+        validationResult,
+        validatedAt: a.validated_at,
       }
     }),
     stats: {

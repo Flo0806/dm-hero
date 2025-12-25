@@ -101,6 +101,10 @@ export default defineNuxtConfig({
     smtpUser: process.env.SMTP_USER || 'noreply@dm-hero.com',
     smtpPassword: process.env.SMTP_PASSWORD || '',
     smtpFrom: process.env.SMTP_FROM || 'DM Hero <noreply@dm-hero.com>',
+    // Admin email for validation notifications
+    adminEmail: process.env.ADMIN_EMAIL || 'fh@flogersoft.de',
+    // Uploads directory
+    uploadsDir: process.env.UPLOADS_DIR || './uploads',
     // Public env vars (exposed to client)
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',

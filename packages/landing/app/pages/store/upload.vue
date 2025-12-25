@@ -4,7 +4,7 @@
     <v-container class="py-8 position-relative" style="max-width: 900px; z-index: 1">
     <!-- Header -->
     <div class="d-flex align-center mb-8">
-      <v-btn icon="mdi-arrow-left" variant="text" to="/store" class="mr-4" />
+      <v-btn icon="mdi-arrow-left" variant="text" @click="goBack" class="mr-4" />
       <div>
         <h1 class="text-h4 font-weight-light">
           {{ isEditMode ? $t('store.upload.titleEdit') : $t('store.upload.title') }}
@@ -50,6 +50,27 @@
       >
         {{ $t('auth.verifyEmail.resendSuccess') }}
       </v-alert>
+    </v-alert>
+
+    <!-- ToS acceptance required alert -->
+    <v-alert
+      v-if="!tosAccepted && isEmailVerified"
+      type="error"
+      variant="tonal"
+      class="mb-6"
+      icon="mdi-file-document-alert"
+    >
+      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
+        <span>{{ $t('tos.acceptRequired') }}</span>
+        <v-btn
+          variant="outlined"
+          color="error"
+          size="small"
+          @click="showTosDialog = true"
+        >
+          {{ $t('tos.readAndAccept') }}
+        </v-btn>
+      </div>
     </v-alert>
 
     <v-form ref="formRef" @submit.prevent="handleSubmit">
@@ -185,6 +206,8 @@
               <v-select
                 v-model="form.system"
                 :items="systemOptions"
+                item-title="title"
+                item-value="value"
                 :label="$t('store.upload.fields.system')"
                 variant="outlined"
                 density="comfortable"
@@ -196,6 +219,8 @@
               <v-select
                 v-model="form.language"
                 :items="languageOptions"
+                item-title="title"
+                item-value="value"
                 :label="$t('store.upload.fields.language')"
                 variant="outlined"
                 density="comfortable"
@@ -218,6 +243,7 @@
                   :label="$t('store.upload.fields.min')"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   style="max-width: 100px"
                   min="1"
                   max="20"
@@ -229,6 +255,7 @@
                   :label="$t('store.upload.fields.max')"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   style="max-width: 100px"
                   min="1"
                   max="20"
@@ -246,6 +273,7 @@
                   :label="$t('store.upload.fields.min')"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   style="max-width: 100px"
                   min="1"
                   max="20"
@@ -257,6 +285,7 @@
                   :label="$t('store.upload.fields.max')"
                   variant="outlined"
                   density="compact"
+                  hide-details
                   style="max-width: 100px"
                   min="1"
                   max="20"
@@ -269,6 +298,8 @@
               <v-select
                 v-model="form.durationHours"
                 :items="durationOptions"
+                item-title="title"
+                item-value="value"
                 :label="$t('store.upload.fields.duration')"
                 variant="outlined"
                 density="comfortable"
@@ -387,7 +418,7 @@
 
       <!-- Actions -->
       <div class="d-flex justify-end ga-4">
-        <v-btn variant="text" to="/store" size="large">
+        <v-btn variant="text" size="large" @click="goBack">
           {{ $t('common.cancel') }}
         </v-btn>
         <v-btn
@@ -396,7 +427,7 @@
           variant="flat"
           size="large"
           :loading="submitting"
-          :disabled="!isEmailVerified"
+          :disabled="!isEmailVerified || !tosAccepted"
           :prepend-icon="isEditMode ? 'mdi-content-save' : 'mdi-upload'"
         >
           {{ isEditMode ? $t('store.upload.submitEdit') : $t('store.upload.submit') }}
@@ -405,6 +436,13 @@
     </v-form>
     </template>
   </v-container>
+
+  <!-- ToS Acceptance Dialog -->
+  <TosAcceptanceDialog
+    v-model="showTosDialog"
+    :tos-version="tosVersion"
+    @accepted="onTosAccepted"
+  />
   </div>
 </template>
 
@@ -419,9 +457,45 @@ definePageMeta({
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
+
+function goBack() {
+  // Go back to previous page, or fallback to store
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/store')
+  }
+}
+
 const adventureStore = useAdventureStore()
 const { user, isEmailVerified } = useAuth()
 const api = useApiFetch()
+
+// ToS state
+const showTosDialog = ref(false)
+const tosAccepted = ref(false)
+const tosVersion = ref('1.0.0')
+
+// Fetch ToS status on mount (client-only to avoid SSR issues)
+if (import.meta.client) {
+  onMounted(async () => {
+    try {
+      const status = await api.get<{
+        currentVersion: string
+        needsAcceptance: boolean
+      }>('/api/tos/status')
+      tosVersion.value = status.currentVersion
+      tosAccepted.value = !status.needsAcceptance
+    } catch {
+      // If fetch fails, assume ToS not accepted
+      tosAccepted.value = false
+    }
+  })
+}
+
+function onTosAccepted() {
+  tosAccepted.value = true
+}
 
 // Edit mode detection
 const editId = computed(() => {
@@ -491,7 +565,7 @@ async function loadAdventure(id: number) {
     form.playersMax = adventure.playersMax || 5
     form.levelMin = adventure.levelMin || 1
     form.levelMax = adventure.levelMax || 5
-    form.durationHours = adventure.durationHours || 5
+    form.durationHours = Number(adventure.durationHours) || 5
     form.tags = adventure.tags || []
     form.authorName = adventure.authorName || ''
     form.authorDiscord = adventure.authorDiscord || ''

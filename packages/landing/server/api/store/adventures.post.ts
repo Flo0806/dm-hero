@@ -1,5 +1,6 @@
 import { query } from '../../utils/db'
-import { requireAuth } from '../../utils/requireAuth'
+import { requireAuthWithTos } from '../../utils/requireAuth'
+import { ADVENTURE_STATUS } from '../../utils/adventureStatus'
 import { createHash } from 'crypto'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
@@ -15,7 +16,8 @@ function generateSlug(title: string): string {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await requireAuth(event)
+  // Require ToS acceptance for uploading content
+  const user = await requireAuthWithTos(event)
 
   // Parse multipart form data
   const formData = await readMultipartFormData(event)
@@ -127,19 +129,20 @@ export default defineEventHandler(async (event) => {
       Number(fields.priceCents) || 0,
       'EUR',
       fields.language || 'de',
-      'published', // TODO: Add review workflow later
+      ADVENTURE_STATUS.PENDING_REVIEW,
     ],
   )
 
   const adventureId = (insertResult as unknown as { insertId: number }).insertId
 
-  // Insert adventure file record
+  // Insert adventure file record (store original filename for content validation)
   await query(
-    `INSERT INTO adventure_files (adventure_id, file_path, file_size, version_number, checksum)
-     VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO adventure_files (adventure_id, file_path, original_filename, file_size, version_number, checksum)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       adventureId,
       `/api/uploads/adventures/${adventureFilename}`,
+      adventureFile.filename,
       adventureFile.data.length,
       1,
       checksum,

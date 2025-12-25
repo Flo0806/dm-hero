@@ -267,6 +267,34 @@
       "verifyToRate": "Bestätige deine E-Mail um zu bewerten",
       "yourRating": "Deine Bewertung: {rating} Sterne",
       "submitting": "Wird gespeichert..."
+    },
+    "status": {
+      "draft": "Entwurf",
+      "pendingReview": "Überprüfung ausstehend",
+      "validating": "Wird geprüft...",
+      "published": "Veröffentlicht",
+      "rejected": "Abgelehnt",
+      "archived": "Archiviert",
+      "unknown": "Unbekannt"
+    },
+    "validation": {
+      "errorsTitle": "Validierung fehlgeschlagen ({count} Fehler)",
+      "warningsTitle": "Warnungen ({count})",
+      "showMore": "{count} weitere anzeigen...",
+      "showDetails": "Details anzeigen",
+      "detailsTitle": "Validierungsdetails",
+      "statusTitle": "Validierungsstatus",
+      "fixHint": "Bitte behebe die Fehler und lade eine neue Version deiner Abenteuer-Datei hoch.",
+      "pendingHint": "Dein Abenteuer wird gerade überprüft. Das dauert normalerweise weniger als 10 Minuten.",
+      "editAdventure": "Abenteuer bearbeiten"
+    },
+    "timeline": {
+      "uploaded": "Hochgeladen",
+      "inReview": "In Prüfung",
+      "reviewingNow": "Wird gerade überprüft...",
+      "published": "Veröffentlicht",
+      "rejected": "Abgelehnt",
+      "actionRequired": "Nacharbeit erforderlich"
     }
   },
   "auth": {
@@ -378,6 +406,7 @@
       "empty": "Du hast noch keine Abenteuer hochgeladen.",
       "createFirst": "Erstes Abenteuer hochladen",
       "view": "Ansehen",
+      "notPublishedYet": "Noch nicht veröffentlicht",
       "edit": "Bearbeiten",
       "comingSoon": "Kommt bald",
       "status": {
@@ -445,5 +474,29 @@
       "noteTitle": "Hinweis zur Datenübertragung",
       "note": "Wir weisen darauf hin, dass die Datenübertragung im Internet Sicherheitslücken aufweisen kann. Ein vollständiger Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich."
     }
+  },
+  "tos": {
+    "title": "Allgemeine Geschäftsbedingungen",
+    "version": "Version",
+    "lastUpdated": "Letzte Aktualisierung",
+    "lastUpdatedDate": "25. Dezember 2025",
+    "registerNow": "Jetzt registrieren",
+    "backToProfile": "Zurück zum Profil",
+    "acceptTitle": "Nutzungsbedingungen akzeptieren",
+    "acceptSubtitle": "Bevor du Inhalte im Hero Basar hochladen kannst, musst du unseren Nutzungsbedingungen zustimmen.",
+    "keyPointsTitle": "Wichtige Punkte",
+    "keyPoint1": "Du bist allein verantwortlich für alle von dir hochgeladenen Inhalte (Texte, Bilder, Geschichten)",
+    "keyPoint2": "Du garantierst, dass deine Inhalte keine Rechte Dritter verletzen",
+    "keyPoint3": "Der Betreiber kann Inhalte jederzeit ohne Angabe von Gründen löschen",
+    "keyPoint4": "Du stellst den Betreiber von allen Ansprüchen Dritter frei",
+    "readFullText": "Bitte lies die vollständigen Nutzungsbedingungen:",
+    "fullTermsLink": "Nutzungsbedingungen lesen",
+    "checkboxLabel": "Ich habe die Nutzungsbedingungen gelesen und stimme ihnen zu",
+    "decline": "Ablehnen",
+    "accept": "Akzeptieren",
+    "acceptRequired": "Du musst den Nutzungsbedingungen zustimmen, bevor du Inhalte hochladen kannst.",
+    "readAndAccept": "Jetzt lesen & akzeptieren",
+    "acceptedSuccess": "Nutzungsbedingungen akzeptiert!",
+    "acceptError": "Fehler beim Akzeptieren. Bitte versuche es erneut."
   }
 }

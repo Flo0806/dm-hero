@@ -12,6 +12,8 @@ export interface User {
   role: 'user' | 'creator' | 'admin'
   email_verified: boolean
   created_at: string
+  tos_accepted_version: string | null
+  tos_accepted_at: string | null
 }
 
 export interface JwtPayload {
@@ -92,14 +94,14 @@ export async function revokeAllUserTokens(userId: number): Promise<void> {
 
 export async function getUserById(id: number): Promise<User | null> {
   return queryOne<User>(
-    'SELECT id, email, display_name, avatar_url, role, email_verified, created_at FROM users WHERE id = ?',
+    'SELECT id, email, display_name, avatar_url, role, email_verified, created_at, tos_accepted_version, tos_accepted_at FROM users WHERE id = ?',
     [id],
   )
 }
 
 export async function getUserByEmail(email: string): Promise<(User & { password_hash: string }) | null> {
   return queryOne<User & { password_hash: string }>(
-    'SELECT id, email, password_hash, display_name, avatar_url, role, email_verified, created_at FROM users WHERE email = ?',
+    'SELECT id, email, password_hash, display_name, avatar_url, role, email_verified, created_at, tos_accepted_version, tos_accepted_at FROM users WHERE email = ?',
     [email],
   )
 }

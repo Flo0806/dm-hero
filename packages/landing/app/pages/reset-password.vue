@@ -1,5 +1,6 @@
 <template>
   <div class="auth-page">
+    <StoreBackground />
     <div class="auth-container">
       <!-- Logo -->
       <div class="text-center mb-8">
@@ -169,13 +170,14 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgb(var(--v-theme-background)) 0%, rgb(var(--v-theme-surface)) 100%);
   padding: 24px;
 }
 
 .auth-container {
   width: 100%;
   max-width: 420px;
+  position: relative;
+  z-index: 1;
 }
 
 .auth-card {

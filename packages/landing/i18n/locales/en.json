@@ -267,6 +267,34 @@
       "verifyToRate": "Verify your email to rate",
       "yourRating": "Your rating: {rating} stars",
       "submitting": "Saving..."
+    },
+    "status": {
+      "draft": "Draft",
+      "pendingReview": "Pending Review",
+      "validating": "Validating...",
+      "published": "Published",
+      "rejected": "Rejected",
+      "archived": "Archived",
+      "unknown": "Unknown"
+    },
+    "validation": {
+      "errorsTitle": "Validation failed ({count} errors)",
+      "warningsTitle": "Warnings ({count})",
+      "showMore": "Show {count} more...",
+      "showDetails": "Show details",
+      "detailsTitle": "Validation Details",
+      "statusTitle": "Validation Status",
+      "fixHint": "Please fix the errors and upload a new version of your adventure file.",
+      "pendingHint": "Your adventure is being validated. This usually takes less than 10 minutes.",
+      "editAdventure": "Edit Adventure"
+    },
+    "timeline": {
+      "uploaded": "Uploaded",
+      "inReview": "In Review",
+      "reviewingNow": "Currently validating...",
+      "published": "Published",
+      "rejected": "Rejected",
+      "actionRequired": "Action required"
     }
   },
   "auth": {
@@ -378,6 +406,7 @@
       "empty": "You haven't uploaded any adventures yet.",
       "createFirst": "Upload Your First Adventure",
       "view": "View",
+      "notPublishedYet": "Not published yet",
       "edit": "Edit",
       "comingSoon": "Coming soon",
       "status": {
@@ -445,5 +474,29 @@
       "noteTitle": "Note on Data Transmission",
       "note": "Please note that data transmission over the Internet may have security vulnerabilities. Complete protection of data from access by third parties is not possible."
     }
+  },
+  "tos": {
+    "title": "Terms of Service",
+    "version": "Version",
+    "lastUpdated": "Last updated",
+    "lastUpdatedDate": "December 25, 2025",
+    "registerNow": "Register now",
+    "backToProfile": "Back to profile",
+    "acceptTitle": "Accept Terms of Service",
+    "acceptSubtitle": "Before you can upload content to Hero Basar, you must agree to our Terms of Service.",
+    "keyPointsTitle": "Key Points",
+    "keyPoint1": "You are solely responsible for all content you upload (texts, images, stories)",
+    "keyPoint2": "You warrant that your content does not infringe any third-party rights",
+    "keyPoint3": "The operator may delete content at any time without stating reasons",
+    "keyPoint4": "You indemnify the operator from all third-party claims",
+    "readFullText": "Please read the full Terms of Service:",
+    "fullTermsLink": "Read Terms of Service",
+    "checkboxLabel": "I have read and agree to the Terms of Service",
+    "decline": "Decline",
+    "accept": "Accept",
+    "acceptRequired": "You must accept the Terms of Service before you can upload content.",
+    "readAndAccept": "Read & Accept",
+    "acceptedSuccess": "Terms of Service accepted!",
+    "acceptError": "Error accepting. Please try again."
   }
 }

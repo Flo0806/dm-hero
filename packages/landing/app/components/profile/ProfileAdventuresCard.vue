@@ -40,6 +40,7 @@
           :id="`adventure-${adventure.id}`"
           :key="adventure.id"
           :class="['adventure-item', 'mb-3', { 'highlight-blink': highlightedId === adventure.id }]"
+          :ripple="false"
           rounded
         >
           <template #prepend>
@@ -72,13 +73,13 @@
               <v-icon icon="mdi-star" size="x-small" color="amber" />
               {{ adventure.avgRating?.toFixed(1) || '0.0' }}
             </span>
-            <v-chip
-              :color="getStatusColor(adventure.status)"
+            <!-- Clickable status badge for non-published -->
+            <StoreAdventureStatusBadge
+              :status="adventure.status"
               size="x-small"
-              variant="tonal"
-            >
-              {{ $t(`profile.adventures.status.${adventure.status}`) }}
-            </v-chip>
+              :clickable="adventure.status !== 'published'"
+              @click.stop="onBadgeClick(adventure)"
+            />
           </v-list-item-subtitle>
 
           <template #append>
@@ -94,9 +95,13 @@
               <v-list density="compact">
                 <v-list-item
                   prepend-icon="mdi-eye"
-                  :to="`/store/${adventure.slug}`"
+                  :to="adventure.status === 'published' ? `/store/${adventure.slug}` : undefined"
+                  :disabled="adventure.status !== 'published'"
                 >
                   <v-list-item-title>{{ $t('profile.adventures.view') }}</v-list-item-title>
+                  <v-tooltip v-if="adventure.status !== 'published'" activator="parent" location="start">
+                    {{ $t('profile.adventures.notPublishedYet') }}
+                  </v-tooltip>
                 </v-list-item>
                 <v-list-item
                   prepend-icon="mdi-pencil"
@@ -137,22 +142,93 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Validation Details Dialog -->
+    <v-dialog v-model="validationDialog" max-width="600">
+      <v-card v-if="selectedAdventure">
+        <v-card-title class="d-flex align-center text-h5">
+          <v-icon
+            :icon="selectedAdventure.status === 'rejected' ? 'mdi-file-document-alert' : 'mdi-file-clock'"
+            :color="selectedAdventure.status === 'rejected' ? 'error' : 'warning'"
+            size="28"
+            class="mr-3"
+          />
+          {{ selectedAdventure.title }}
+          <v-progress-circular
+            v-if="loadingDetails"
+            indeterminate
+            size="18"
+            width="2"
+            class="ml-3"
+          />
+        </v-card-title>
+        <v-card-subtitle class="pb-0 text-body-1">
+          {{ selectedAdventure.status === 'rejected' ? $t('store.validation.detailsTitle') : $t('store.validation.statusTitle') }}
+        </v-card-subtitle>
+        <v-card-text class="pt-4">
+          <!-- Timeline -->
+          <StoreValidationTimeline
+            :status="selectedAdventure.status"
+            :validated-at="selectedAdventure.validatedAt"
+            class="mb-6"
+          />
+
+          <!-- Validation Errors & Warnings -->
+          <StoreValidationResultAlert
+            v-if="selectedAdventure.validationResult"
+            :errors="selectedAdventure.validationResult.errors || []"
+            :warnings="selectedAdventure.validationResult.warnings || []"
+          />
+
+          <!-- Fix hint (only for rejected) -->
+          <v-alert
+            v-if="selectedAdventure.status === 'rejected'"
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
+            {{ $t('store.validation.fixHint') }}
+          </v-alert>
+
+          <!-- Pending info -->
+          <v-alert
+            v-else-if="selectedAdventure.status === 'pending_review' || selectedAdventure.status === 'validating'"
+            type="info"
+            variant="tonal"
+            class="mt-4"
+          >
+            {{ $t('store.validation.pendingHint') }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions class="pa-4 pt-0">
+          <v-spacer />
+          <v-btn variant="text" @click="validationDialog = false">
+            {{ $t('common.close') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-pencil"
+            :to="`/store/upload?id=${selectedAdventure.id}`"
+            @click="validationDialog = false"
+          >
+            {{ $t('store.validation.editAdventure') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-interface Adventure {
-  id: number
-  title: string
-  slug: string
-  coverImageUrl: string | null
-  downloadCount: number
-  avgRating: number | null
-  status: 'draft' | 'pending_review' | 'published' | 'rejected' | 'archived'
-}
+import type { UserAdventure } from '~/stores/profileStore'
+import { useProfileStore } from '~/stores/profileStore'
+import confetti from 'canvas-confetti'
+
+const profileStore = useProfileStore()
 
 const props = defineProps<{
-  adventures: Adventure[]
+  adventures: UserAdventure[]
   loading: boolean
   highlightId?: number | null
 }>()
@@ -162,55 +238,142 @@ const emit = defineEmits<{
 }>()
 
 const deleteDialog = ref(false)
-const adventureToDelete = ref<Adventure | null>(null)
+const adventureToDelete = ref<UserAdventure | null>(null)
 const highlightedId = ref<number | null>(null)
 
-// Scroll to and highlight adventure when highlightId changes
-watch(() => props.highlightId, (id) => {
-  if (id && props.adventures.length > 0) {
-    // Wait for DOM to be ready
-    nextTick(() => {
-      const element = document.getElementById(`adventure-${id}`)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        highlightedId.value = id
-        // Remove highlight after animation completes (3 blinks = 1.5s)
-        setTimeout(() => {
-          highlightedId.value = null
-        }, 1500)
-      }
-    })
-  }
-}, { immediate: true })
+// Validation details
+const validationDialog = ref(false)
+const selectedAdventure = ref<UserAdventure | null>(null)
+const loadingDetails = ref(false)
+let dialogPollInterval: ReturnType<typeof setInterval> | null = null
 
-// Also watch adventures in case they load after highlightId is set
-watch(() => props.adventures, (adventures) => {
-  if (props.highlightId && adventures.length > 0 && !highlightedId.value) {
-    nextTick(() => {
-      const element = document.getElementById(`adventure-${props.highlightId}`)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        highlightedId.value = props.highlightId ?? null
-        setTimeout(() => {
-          highlightedId.value = null
-        }, 1500)
-      }
+// Trigger confetti when status changes to published
+function triggerConfetti() {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: ['#D4A574', '#8B7355', '#FFD700', '#4CAF50'],
+  })
+  // Second burst
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors: ['#D4A574', '#8B7355', '#FFD700'],
     })
+    confetti({
+      particleCount: 50,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors: ['#D4A574', '#8B7355', '#FFD700'],
+    })
+  }, 250)
+}
+
+// Poll while dialog is open (every 20 seconds)
+watch(validationDialog, (isOpen) => {
+  if (isOpen && selectedAdventure.value) {
+    // Start polling
+    dialogPollInterval = setInterval(async () => {
+      if (!selectedAdventure.value) return
+      const adventureId = selectedAdventure.value.id
+      const previousStatus = selectedAdventure.value.status
+      console.log(`[ValidationDialog] Polling status... (${new Date().toLocaleString('de-DE')})`)
+      loadingDetails.value = true
+      try {
+        await profileStore.fetchAdventures()
+        const fresh = profileStore.getAdventureById(adventureId)
+        if (fresh) {
+          // Check if status changed to published
+          if (previousStatus !== 'published' && fresh.status === 'published') {
+            triggerConfetti()
+          }
+          selectedAdventure.value = fresh
+        }
+      } finally {
+        loadingDetails.value = false
+      }
+    }, 20 * 1000) // Every 20 seconds
+  } else {
+    // Stop polling
+    if (dialogPollInterval) {
+      clearInterval(dialogPollInterval)
+      dialogPollInterval = null
+    }
   }
 })
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'published': return 'success'
-    case 'draft': return 'grey'
-    case 'pending_review': return 'warning'
-    case 'rejected': return 'error'
-    case 'archived': return 'grey'
-    default: return 'grey'
+async function showValidationDetails(adventure: UserAdventure) {
+  // Show dialog with current data first
+  selectedAdventure.value = adventure
+  validationDialog.value = true
+
+  // Fetch fresh data in background
+  loadingDetails.value = true
+  try {
+    await profileStore.fetchAdventures()
+    // Update selectedAdventure with fresh data
+    const fresh = profileStore.getAdventureById(adventure.id)
+    if (fresh) {
+      selectedAdventure.value = fresh
+    }
+  } finally {
+    loadingDetails.value = false
   }
 }
 
-function confirmDelete(adventure: Adventure) {
+function onBadgeClick(adventure: UserAdventure) {
+  if (adventure.status !== 'published') {
+    showValidationDetails(adventure)
+  }
+}
+
+// Track if we've already highlighted (prevent re-highlight on data refresh)
+const hasHighlighted = ref(false)
+
+// Scroll to and highlight adventure when highlightId changes (client-only)
+if (import.meta.client) {
+  watch(() => props.highlightId, (id) => {
+    if (id && props.adventures.length > 0 && !hasHighlighted.value) {
+      hasHighlighted.value = true
+      // Wait for DOM to be ready
+      nextTick(() => {
+        const element = document.getElementById(`adventure-${id}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          highlightedId.value = id
+          // Remove highlight after animation completes (3 blinks = 1.5s)
+          setTimeout(() => {
+            highlightedId.value = null
+          }, 1500)
+        }
+      })
+    }
+  }, { immediate: true })
+
+  // Also watch adventures in case they load after highlightId is set
+  watch(() => props.adventures, (adventures) => {
+    if (props.highlightId && adventures.length > 0 && !hasHighlighted.value) {
+      hasHighlighted.value = true
+      nextTick(() => {
+        const element = document.getElementById(`adventure-${props.highlightId}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          highlightedId.value = props.highlightId ?? null
+          setTimeout(() => {
+            highlightedId.value = null
+          }, 1500)
+        }
+      })
+    }
+  })
+}
+
+function confirmDelete(adventure: UserAdventure) {
   adventureToDelete.value = adventure
   deleteDialog.value = true
 }
@@ -222,6 +385,11 @@ function handleDelete() {
   deleteDialog.value = false
   adventureToDelete.value = null
 }
+
+// Expose dialog state so parent can check before triggering confetti
+defineExpose({
+  isValidationDialogOpen: computed(() => validationDialog.value),
+})
 </script>
 
 <style scoped>

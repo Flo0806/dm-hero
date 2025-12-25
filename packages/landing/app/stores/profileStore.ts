@@ -1,6 +1,27 @@
 import { defineStore } from 'pinia'
 import { getApi } from '~/composables/useApiFetch'
 
+// Validation types
+export interface ValidationError {
+  type: 'structure' | 'filetype' | 'size' | 'content' | 'format'
+  field?: string
+  message: string
+  details?: string
+}
+
+export interface ValidationWarning {
+  type: 'size' | 'content'
+  message: string
+}
+
+export interface ValidationResult {
+  errors: ValidationError[]
+  warnings: ValidationWarning[]
+}
+
+// Adventure status type
+export type AdventureStatus = 'draft' | 'pending_review' | 'validating' | 'published' | 'rejected' | 'archived'
+
 export interface UserAdventure {
   id: number
   title: string
@@ -8,7 +29,9 @@ export interface UserAdventure {
   coverImageUrl: string | null
   downloadCount: number
   avgRating: number | null
-  status: 'draft' | 'pending_review' | 'published' | 'rejected' | 'archived'
+  status: AdventureStatus
+  validationResult: ValidationResult | null
+  validatedAt: string | null
 }
 
 export interface UserStats {
@@ -37,6 +60,51 @@ export const useProfileStore = defineStore('profile', {
     loading: false,
     error: null,
   }),
+
+  getters: {
+    // Get adventure by ID
+    getAdventureById: (state) => (id: number) => {
+      return state.adventures.find((a) => a.id === id)
+    },
+
+    // Adventures by status
+    pendingAdventures: (state) => {
+      return state.adventures.filter((a) => a.status === 'pending_review' || a.status === 'validating')
+    },
+
+    publishedAdventures: (state) => {
+      return state.adventures.filter((a) => a.status === 'published')
+    },
+
+    rejectedAdventures: (state) => {
+      return state.adventures.filter((a) => a.status === 'rejected')
+    },
+
+    // Has any adventures needing attention
+    hasRejectedAdventures: (state) => {
+      return state.adventures.some((a) => a.status === 'rejected')
+    },
+
+    hasPendingAdventures: (state) => {
+      return state.adventures.some((a) => a.status === 'pending_review' || a.status === 'validating')
+    },
+
+    // Count by status
+    statusCounts: (state) => {
+      const counts: Record<AdventureStatus, number> = {
+        draft: 0,
+        pending_review: 0,
+        validating: 0,
+        published: 0,
+        rejected: 0,
+        archived: 0,
+      }
+      for (const a of state.adventures) {
+        counts[a.status]++
+      }
+      return counts
+    },
+  },
 
   actions: {
     // Fetch user's adventures (works on SSR with headers or client with $api)

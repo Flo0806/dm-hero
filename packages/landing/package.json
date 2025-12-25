@@ -26,7 +26,9 @@
     "@tiptap/vue-3": "^3.13.0",
     "@vueuse/core": "^14.1.0",
     "@vueuse/motion": "^3.0.3",
+    "adm-zip": "^0.5.16",
     "bcryptjs": "^3.0.3",
+    "canvas-confetti": "^1.9.4",
     "eslint": "^9.39.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.14.1",
@@ -39,7 +41,9 @@
     "vuetify": "^3.11.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
     "@types/bcryptjs": "^3.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^7.0.4",
     "typescript": "^5.9.3"

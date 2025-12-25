@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import { verifyAccessToken, getUserById, type User } from './auth'
+import { hasAcceptedCurrentTos } from './tos'
 
 export interface AuthenticatedEvent extends H3Event {
   context: H3Event['context'] & {
@@ -48,6 +49,24 @@ export async function requireRole(event: H3Event, roles: Array<'user' | 'creator
     throw createError({
       statusCode: 403,
       message: 'Insufficient permissions',
+    })
+  }
+
+  return user
+}
+
+/**
+ * Require authentication AND ToS acceptance.
+ * Use this for actions that require legal agreement (e.g., uploading content).
+ */
+export async function requireAuthWithTos(event: H3Event): Promise<User> {
+  const user = await requireAuth(event)
+
+  if (!hasAcceptedCurrentTos(user.tos_accepted_version)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'TOS_NOT_ACCEPTED',
+      message: 'You must accept the Terms of Service before performing this action',
     })
   }
 

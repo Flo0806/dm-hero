@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
     playersMax: adventure.players_max,
     levelMin: adventure.level_min,
     levelMax: adventure.level_max,
-    durationHours: adventure.duration_hours,
+    durationHours: Number(adventure.duration_hours),
     tags,
     authorName: adventure.author_name,
     authorDiscord: adventure.author_discord,

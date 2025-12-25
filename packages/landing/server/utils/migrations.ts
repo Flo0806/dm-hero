@@ -186,6 +186,49 @@ const migrations: Migration[] = [
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
     ],
   },
+  {
+    id: 6,
+    name: 'add_adventure_validation_fields',
+    up: [
+      // validation_result stores JSON: { errors: [], warnings: [] }
+      `ALTER TABLE adventures
+        ADD COLUMN validation_result JSON NULL,
+        ADD COLUMN validated_at TIMESTAMP NULL`,
+    ],
+  },
+  {
+    id: 7,
+    name: 'add_original_filename',
+    up: [
+      // Store original filename from upload for content validation
+      `ALTER TABLE adventure_files
+        ADD COLUMN original_filename VARCHAR(255) NULL AFTER file_path`,
+    ],
+  },
+  {
+    id: 8,
+    name: 'add_tos_acceptance',
+    up: [
+      // Track Terms of Service acceptance per user with version
+      `CREATE TABLE IF NOT EXISTS tos_acceptances (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        tos_version VARCHAR(20) NOT NULL,
+        accepted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user (user_id),
+        INDEX idx_version (tos_version),
+        UNIQUE KEY unique_user_version (user_id, tos_version)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+      // Add tos_accepted_version to users for quick lookup
+      `ALTER TABLE users
+        ADD COLUMN tos_accepted_version VARCHAR(20) NULL,
+        ADD COLUMN tos_accepted_at TIMESTAMP NULL`,
+    ],
+  },
 ]
 
 export async function runMigrations(): Promise<void> {

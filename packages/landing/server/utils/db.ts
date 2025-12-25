@@ -15,6 +15,7 @@ export function getPool(): mysql.Pool {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+      timezone: 'Z', // Force UTC - MySQL stores TIMESTAMP in UTC
     })
   }
 

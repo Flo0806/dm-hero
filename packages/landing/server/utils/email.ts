@@ -313,3 +313,151 @@ The DM Hero Team`,
     html: htmls[lang],
   })
 }
+
+interface ValidationNotificationOptions {
+  adventureTitle: string
+  adventureId: number
+  authorEmail: string
+  authorName: string
+  uploadedAt: string
+  validatedAt: string
+  status: 'published' | 'rejected'
+  errors?: Array<{ message: string; field?: string }>
+  warnings?: Array<{ message: string }>
+}
+
+export async function sendValidationNotificationEmail(
+  options: ValidationNotificationOptions,
+): Promise<boolean> {
+  const config = useRuntimeConfig()
+  const adminEmail = config.adminEmail || 'fh@flogersoft.de'
+
+  const statusEmoji = options.status === 'published' ? '✅' : '❌'
+  const statusText = options.status === 'published' ? 'Published / Veröffentlicht' : 'Rejected / Abgelehnt'
+
+  const errorsList = options.errors && options.errors.length > 0
+    ? options.errors.map((e) => `• ${e.field ? `[${e.field}] ` : ''}${e.message}`).join('\n')
+    : 'None / Keine'
+
+  const warningsList = options.warnings && options.warnings.length > 0
+    ? options.warnings.map((w) => `• ${w.message}`).join('\n')
+    : 'None / Keine'
+
+  const subject = `${statusEmoji} Adventure Validation: ${options.adventureTitle}`
+
+  const text = `Adventure Validation Result / Abenteuer-Validierungsergebnis
+═══════════════════════════════════════════════════════════
+
+Adventure / Abenteuer: ${options.adventureTitle}
+ID: ${options.adventureId}
+Author / Autor: ${options.authorName} (${options.authorEmail})
+
+Uploaded / Hochgeladen: ${options.uploadedAt}
+Validated / Validiert: ${options.validatedAt}
+
+Status: ${statusText}
+
+${options.status === 'rejected' ? `Errors / Fehler:
+${errorsList}
+
+Warnings / Warnungen:
+${warningsList}` : `The adventure has been published successfully.
+Das Abenteuer wurde erfolgreich veröffentlicht.`}
+
+---
+DM Hero - Hero Basar
+${config.public.appUrl}/store`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+    .logo { font-size: 28px; font-weight: bold; color: #D4A574; }
+    .status { font-size: 24px; font-weight: bold; margin: 20px 0; padding: 16px; border-radius: 8px; text-align: center; }
+    .status.published { background: #e8f5e9; color: #2e7d32; }
+    .status.rejected { background: #ffebee; color: #c62828; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .info-table td { padding: 8px 0; border-bottom: 1px solid #eee; }
+    .info-table td:first-child { font-weight: 600; color: #666; width: 40%; }
+    .errors { background: #fff3e0; border-left: 4px solid #ff9800; padding: 16px; margin: 16px 0; border-radius: 4px; }
+    .errors h4 { margin: 0 0 8px 0; color: #e65100; }
+    .errors ul { margin: 0; padding-left: 20px; }
+    .success-msg { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 16px; margin: 16px 0; border-radius: 4px; color: #2e7d32; }
+    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">🎲 DM Hero - Hero Basar</div>
+      </div>
+
+      <div class="status ${options.status}">${statusEmoji} ${statusText}</div>
+
+      <table class="info-table">
+        <tr>
+          <td>Adventure / Abenteuer</td>
+          <td><strong>${options.adventureTitle}</strong></td>
+        </tr>
+        <tr>
+          <td>ID</td>
+          <td>${options.adventureId}</td>
+        </tr>
+        <tr>
+          <td>Author / Autor</td>
+          <td>${options.authorName}<br><small>${options.authorEmail}</small></td>
+        </tr>
+        <tr>
+          <td>Uploaded / Hochgeladen</td>
+          <td>${options.uploadedAt}</td>
+        </tr>
+        <tr>
+          <td>Validated / Validiert</td>
+          <td>${options.validatedAt}</td>
+        </tr>
+      </table>
+
+      ${options.status === 'rejected' ? `
+      <div class="errors">
+        <h4>❌ Errors / Fehler</h4>
+        <ul>
+          ${options.errors?.map((e) => `<li>${e.field ? `<strong>[${e.field}]</strong> ` : ''}${e.message}</li>`).join('') || '<li>-</li>'}
+        </ul>
+      </div>
+      ${options.warnings && options.warnings.length > 0 ? `
+      <div class="errors" style="background: #fff8e1; border-color: #ffc107;">
+        <h4>⚠️ Warnings / Warnungen</h4>
+        <ul>
+          ${options.warnings.map((w) => `<li>${w.message}</li>`).join('')}
+        </ul>
+      </div>
+      ` : ''}
+      ` : `
+      <div class="success-msg">
+        ✅ The adventure has been published successfully and is now visible in the store.<br>
+        Das Abenteuer wurde erfolgreich veröffentlicht und ist jetzt im Store sichtbar.
+      </div>
+      `}
+
+      <div class="footer">
+        <p>© ${new Date().getFullYear()} DM Hero - Your D&D Campaign Companion</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+  return sendEmail({
+    to: adminEmail,
+    subject,
+    text,
+    html,
+  })
+}
