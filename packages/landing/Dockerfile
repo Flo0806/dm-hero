@@ -15,19 +15,28 @@ COPY packages/landing ./packages/landing
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build the static site
+# Build the SSR app
 WORKDIR /app/packages/landing
 RUN pnpm build
 
-# Stage 2: Serve with Nginx
-FROM nginx:stable-alpine
+# Stage 2: Production runtime
+FROM node:22-bookworm-slim
 
-# Copy built static files
-COPY --from=builder /app/packages/landing/.output/public /usr/share/nginx/html
+WORKDIR /app
 
-# Copy custom nginx config for SPA routing
-COPY packages/landing/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built output from builder
+COPY --from=builder /app/packages/landing/.output ./.output
 
-EXPOSE 80
+# Create uploads directory
+RUN mkdir -p ./uploads
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port
+EXPOSE 3000
+
+# Set environment
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Run the Nitro server
+CMD ["node", ".output/server/index.mjs"]
