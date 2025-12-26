@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.2
+
+### Patch Changes
+
+- [#147](https://github.com/Flo0806/dm-hero/pull/147) [`c7b3f41`](https://github.com/Flo0806/dm-hero/commit/c7b3f413ab3f867aa8b4539466bb5234a890843d) Thanks [@Flo0806](https://github.com/Flo0806)! - fix: Dockerfile now uses Node.js server instead of nginx for SSR support, skip plugins during prerender
+
 ## 1.0.0
 
 ### Major Changes
