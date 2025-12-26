@@ -76,6 +76,7 @@ export default defineEventHandler(async (event) => {
   const sortBy = queryParams.sort as string || 'newest'
 
   // Build query
+  // Show adventures that have at least one published version (even if current status is pending_review for a new update)
   let sql = `
     SELECT
       a.*,
@@ -85,37 +86,37 @@ export default defineEventHandler(async (event) => {
     FROM adventures a
     JOIN users u ON a.author_id = u.id
     LEFT JOIN adventure_ratings r ON a.id = r.adventure_id
-    WHERE a.status = 'published'
+    WHERE a.published_file_version IS NOT NULL
   `
 
   const params: unknown[] = []
 
   if (search) {
-    sql += ` AND MATCH(a.title, a.description) AGAINST(? IN NATURAL LANGUAGE MODE)`
+    sql += ' AND MATCH(a.title, a.description) AGAINST(? IN NATURAL LANGUAGE MODE)'
     params.push(search)
   }
 
   if (language) {
-    sql += ` AND a.language = ?`
+    sql += ' AND a.language = ?'
     params.push(language)
   }
 
-  sql += ` GROUP BY a.id`
+  sql += ' GROUP BY a.id'
 
   // Sorting
   switch (sortBy) {
     case 'popular':
-      sql += ` ORDER BY a.download_count DESC`
+      sql += ' ORDER BY a.download_count DESC'
       break
     case 'rating':
-      sql += ` ORDER BY avg_rating DESC, rating_count DESC`
+      sql += ' ORDER BY avg_rating DESC, rating_count DESC'
       break
     case 'oldest':
-      sql += ` ORDER BY a.published_at ASC`
+      sql += ' ORDER BY a.published_at ASC'
       break
     case 'newest':
     default:
-      sql += ` ORDER BY a.published_at DESC`
+      sql += ' ORDER BY a.published_at DESC'
   }
 
   // LIMIT/OFFSET use string interpolation (safe - already validated integers)
@@ -125,16 +126,16 @@ export default defineEventHandler(async (event) => {
   const rows = await query<AdventureRow[]>(sql, params)
 
   // Get total count
-  let countSql = `SELECT COUNT(*) as total FROM adventures WHERE status = 'published'`
+  let countSql = 'SELECT COUNT(*) as total FROM adventures WHERE published_file_version IS NOT NULL'
   const countParams: unknown[] = []
 
   if (search) {
-    countSql += ` AND MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE)`
+    countSql += ' AND MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE)'
     countParams.push(search)
   }
 
   if (language) {
-    countSql += ` AND language = ?`
+    countSql += ' AND language = ?'
     countParams.push(language)
   }
 

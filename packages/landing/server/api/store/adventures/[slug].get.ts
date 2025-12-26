@@ -9,6 +9,7 @@ export default defineEventHandler(async (event): Promise<AdventureDetailResponse
   }
 
   // Fetch adventure with author info and ratings
+  // Show adventure if it has a published_file_version (even if current status is pending_review for a new update)
   const adventure = await queryOne<AdventureWithAuthor>(
     `SELECT
       a.*,
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event): Promise<AdventureDetailResponse
     FROM adventures a
     JOIN users u ON a.author_id = u.id
     LEFT JOIN adventure_ratings r ON a.id = r.adventure_id
-    WHERE a.slug = ? AND a.status = 'published'
+    WHERE a.slug = ? AND a.published_file_version IS NOT NULL
     GROUP BY a.id`,
     [slug],
   )
@@ -27,13 +28,13 @@ export default defineEventHandler(async (event): Promise<AdventureDetailResponse
     throw createError({ statusCode: 404, message: 'Adventure not found' })
   }
 
-  // Fetch adventure files
+  // Fetch only published adventure files (version <= published_file_version)
   const files = await query<Pick<AdventureFile, 'id' | 'file_path' | 'file_size' | 'version_number'>[]>(
     `SELECT id, file_path, file_size, version_number
      FROM adventure_files
-     WHERE adventure_id = ?
+     WHERE adventure_id = ? AND version_number <= ?
      ORDER BY version_number DESC`,
-    [adventure.id],
+    [adventure.id, adventure.published_file_version],
   )
 
   // Parse JSON fields

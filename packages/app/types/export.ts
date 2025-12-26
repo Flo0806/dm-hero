@@ -109,6 +109,12 @@ export interface CampaignExportManifest {
   // Export type
   exportType: 'full' | 'partial'
 
+  // Store adventure identifier (set when downloading from store)
+  sourceAdventureSlug?: string
+
+  // Store adventure version (set when downloading from store)
+  sourceVersion?: number
+
   // Entity type mapping from source database
   // Import uses this to map type_name -> local type_id
   entityTypes?: ExportEntityType[]
@@ -444,6 +450,42 @@ export interface ExportOptions {
 }
 
 // =============================================================================
+// IMPORT TRACKING (stored in entity metadata)
+// =============================================================================
+
+/**
+ * Tracking data stored in entity metadata._importTracking
+ * Used to detect re-imports of the same adventure and handle version updates
+ */
+export interface ImportTracking {
+  sourceAdventureSlug?: string // Store adventure slug (e.g., "das-raetsel-um-steinrast")
+  sourceVersion?: number // Version from store (e.g., 1, 2, 3)
+  importedAt: string // ISO timestamp of import
+  importVersion: number // 1, 2, 3... increments on re-import
+}
+
+// =============================================================================
+// IMPORT CONFLICT INFO (for UI warnings)
+// =============================================================================
+
+/**
+ * Information about entities that will be overwritten during import
+ */
+export interface ImportConflictInfo {
+  // Store-Update scenario: all entities from same adventure will be replaced
+  isStoreUpdate: boolean
+  sourceAdventureSlug?: string
+  existingCount: number // Number of entities that will be deleted
+
+  // Merge scenario: individual duplicates by name+type
+  duplicates: Array<{
+    name: string
+    typeName: string
+    existingId: number
+  }>
+}
+
+// =============================================================================
 // IMPORT OPTIONS (for API)
 // =============================================================================
 
@@ -456,8 +498,11 @@ export interface ImportOptions {
   // For merge mode: target campaign
   targetCampaignId?: number
 
-  // Conflict handling for merge
-  onNameConflict?: 'skip' | 'rename' | 'replace'
+  // Store adventure slug for tracking (from .dmhero manifest or store download)
+  sourceAdventureSlug?: string
+
+  // User confirmed they want to proceed despite conflicts
+  confirmedOverwrite?: boolean
 }
 
 // =============================================================================
@@ -476,8 +521,13 @@ export interface ImportResult {
     documentsImported: number
     skipped: number
     warnings: string[]
+    entitiesDeleted?: number // How many were soft-deleted before import
   }
   errors?: string[]
+
+  // If conflicts detected and user hasn't confirmed, return this for UI warning
+  conflictInfo?: ImportConflictInfo
+  requiresConfirmation?: boolean
 }
 
 // =============================================================================

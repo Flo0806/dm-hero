@@ -229,6 +229,30 @@ const migrations: Migration[] = [
         ADD COLUMN tos_accepted_at TIMESTAMP NULL`,
     ],
   },
+  {
+    id: 9,
+    name: 'fix_rating_decimal',
+    up: [
+      // Change rating from TINYINT (integer, rounds 3.5 to 4) to DECIMAL(2,1) for half-star support
+      `ALTER TABLE adventure_ratings
+        MODIFY COLUMN rating DECIMAL(2,1) NOT NULL`,
+    ],
+  },
+  {
+    id: 10,
+    name: 'add_published_file_version',
+    up: [
+      // Track which file version is currently published
+      // This allows showing an adventure while a new version is pending review
+      `ALTER TABLE adventures
+        ADD COLUMN published_file_version INT NULL AFTER version_number`,
+
+      // Migrate existing published adventures: set published_file_version = version_number
+      `UPDATE adventures
+        SET published_file_version = version_number
+        WHERE status = 'published'`,
+    ],
+  },
 ]
 
 export async function runMigrations(): Promise<void> {

@@ -15,10 +15,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Rating must be between 1 and 5' })
   }
 
-  // Check adventure exists and is published
+  // Check adventure exists and has a published version
   const adventure = await queryOne<{ id: number }>(
-    'SELECT id FROM adventures WHERE id = ? AND status = ?',
-    [adventureId, 'published'],
+    'SELECT id FROM adventures WHERE id = ? AND published_file_version IS NOT NULL',
+    [adventureId],
   )
 
   if (!adventure) {

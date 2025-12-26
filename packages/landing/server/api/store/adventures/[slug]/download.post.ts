@@ -1,14 +1,20 @@
+import { readFile } from 'fs/promises'
+import { join } from 'path'
+import JSZip from 'jszip'
 import { query, queryOne } from '../../../../utils/db'
 import { getAuthUser } from '../../../../utils/requireAuth'
 
 interface Adventure {
   id: number
+  slug: string
   download_count: number
+  published_file_version: number | null
 }
 
 interface AdventureFile {
   id: number
   file_path: string
+  version_number: number
 }
 
 export default defineEventHandler(async (event) => {
@@ -18,9 +24,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Slug is required' })
   }
 
-  // Get adventure
+  // Get adventure (allow download if any version has been published)
   const adventure = await queryOne<Adventure>(
-    'SELECT id, download_count FROM adventures WHERE slug = ? AND status = \'published\'',
+    'SELECT id, slug, download_count, published_file_version FROM adventures WHERE slug = ? AND published_file_version IS NOT NULL',
     [slug],
   )
 
@@ -28,13 +34,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Adventure not found' })
   }
 
-  // Get latest file
+  // Get the latest PUBLISHED file (version <= published_file_version)
   const file = await queryOne<AdventureFile>(
-    `SELECT id, file_path FROM adventure_files
-     WHERE adventure_id = ?
+    `SELECT id, file_path, version_number FROM adventure_files
+     WHERE adventure_id = ? AND version_number <= ?
      ORDER BY version_number DESC
      LIMIT 1`,
-    [adventure.id],
+    [adventure.id, adventure.published_file_version],
   )
 
   if (!file) {
@@ -51,7 +57,6 @@ export default defineEventHandler(async (event) => {
   const user = await getAuthUser(event)
   if (user) {
     try {
-      // Get IP address
       const ip = getHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim()
         || getHeader(event, 'x-real-ip')
         || event.node.req.socket.remoteAddress
@@ -63,13 +68,58 @@ export default defineEventHandler(async (event) => {
         [user.id, adventure.id, ip],
       )
     } catch {
-      // Ignore tracking errors - download should still work
+      // Ignore tracking errors
     }
   }
 
-  // Return updated count and file path
-  return {
-    downloadCount: adventure.download_count + 1,
-    filePath: file.file_path,
+  // Read the original .dmhero file
+  // file_path is like "/api/uploads/adventures/slug-v1.dmhero"
+  // We need to convert to actual file path
+  const uploadsDir = process.env.UPLOADS_DIR || './uploads'
+  const relativePath = file.file_path.replace('/api/uploads/', '')
+  const absolutePath = join(uploadsDir, relativePath)
+
+  try {
+    const fileBuffer = await readFile(absolutePath)
+
+    // Parse the ZIP and modify manifest
+    const zip = await JSZip.loadAsync(fileBuffer)
+    const manifestFile = zip.file('manifest.json')
+
+    if (!manifestFile) {
+      throw createError({ statusCode: 500, message: 'Invalid .dmhero file: no manifest' })
+    }
+
+    // Read and modify manifest
+    const manifestContent = await manifestFile.async('string')
+    const manifest = JSON.parse(manifestContent)
+
+    // Inject sourceAdventureSlug and version info
+    manifest.sourceAdventureSlug = adventure.slug
+    manifest.sourceVersion = file.version_number
+
+    // Update manifest in ZIP
+    zip.file('manifest.json', JSON.stringify(manifest, null, 2))
+
+    // Generate modified ZIP
+    const modifiedBuffer = await zip.generateAsync({
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 },
+    })
+
+    // Set response headers for file download
+    setHeader(event, 'Content-Type', 'application/octet-stream')
+    setHeader(event, 'Content-Disposition', `attachment; filename="${adventure.slug}-v${file.version_number}.dmhero"`)
+    setHeader(event, 'Content-Length', modifiedBuffer.length)
+
+    // Return the modified file
+    return modifiedBuffer
+  } catch (err) {
+    console.error('[Download] Error processing file:', err)
+    throw createError({
+      statusCode: 500,
+      message: 'Failed to process download file',
+    })
   }
 })

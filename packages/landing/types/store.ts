@@ -9,6 +9,7 @@ export interface Adventure {
   short_description: string | null
   cover_image_url: string | null
   version_number: number
+  published_file_version: number | null
   system: string
   difficulty: number
   players_min: number

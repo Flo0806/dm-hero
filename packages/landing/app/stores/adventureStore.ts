@@ -390,21 +390,48 @@ export const useAdventureStore = defineStore('adventure', {
       await this.fetchAdventures()
     },
 
-    // Download adventure and track count
-    async downloadAdventure(slug: string): Promise<string> {
+    // Download adventure - returns blob for direct download
+    async downloadAdventure(slug: string, _title: string): Promise<void> {
       try {
-        const response = await $fetch<{ downloadCount: number; filePath: string }>(
-          `/api/store/adventures/${slug}/download`,
-          { method: 'POST' },
-        )
+        // Fetch as blob (file is streamed directly from server)
+        const response = await fetch(`/api/store/adventures/${slug}/download`, {
+          method: 'POST',
+          credentials: 'include',
+        })
 
-        // Update download count in list (replace array item to trigger reactivity)
+        if (!response.ok) {
+          throw new Error('Download failed')
+        }
+
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get('Content-Disposition')
+        let filename = `${slug}.dmhero`
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="(.+)"/)
+          if (match) {
+            filename = match[1]!
+          }
+        }
+
+        // Create blob and trigger download
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
+        // Update download count locally (increment by 1)
         const adventureIndex = this.adventures.findIndex((a) => a.slug === slug)
         if (adventureIndex !== -1) {
           const current = this.adventures[adventureIndex]
+          if (!current) return
           this.adventures[adventureIndex] = {
             ...current,
-            downloadCount: response.downloadCount,
+            downloadCount: current.downloadCount + 1,
           } as AdventureCard
         }
 
@@ -412,11 +439,9 @@ export const useAdventureStore = defineStore('adventure', {
         if (this.adventureDetails[slug]) {
           this.adventureDetails[slug] = {
             ...this.adventureDetails[slug],
-            downloadCount: response.downloadCount,
+            downloadCount: this.adventureDetails[slug].downloadCount + 1,
           } as AdventureDetail
         }
-
-        return response.filePath
       } catch (error) {
         console.error('Failed to download adventure:', error)
         throw error

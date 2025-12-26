@@ -231,14 +231,16 @@ async function updateAdventureStatus(
   validationResult: { errors: unknown[]; warnings: unknown[] },
 ): Promise<boolean> {
   // MySQL returns ResultSetHeader for UPDATE with affectedRows
+  // When publishing, also set published_file_version to track the validated version
   const result = await query<{ affectedRows: number }>(
     `UPDATE adventures
      SET status = ?,
          validation_result = ?,
          validated_at = NOW(),
-         published_at = IF(? = 'published', NOW(), published_at)
+         published_at = IF(? = 'published', NOW(), published_at),
+         published_file_version = IF(? = 'published', ?, published_file_version)
      WHERE id = ? AND version_number = ?`,
-    [status, JSON.stringify(validationResult), status, adventureId, expectedVersion],
+    [status, JSON.stringify(validationResult), status, status, expectedVersion, adventureId, expectedVersion],
   )
 
   // If 0 rows affected, the version changed during validation

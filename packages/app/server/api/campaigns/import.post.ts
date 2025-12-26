@@ -12,6 +12,8 @@ import type {
   ImportResult,
   IdMapping,
   ExportEntity,
+  ImportConflictInfo,
+  ImportTracking,
 } from '~~/types/export'
 import { isExportCompatible } from '~~/types/export'
 
@@ -71,6 +73,7 @@ export default defineEventHandler(async (event) => {
     documentsImported: 0,
     skipped: 0,
     warnings: [],
+    entitiesDeleted: 0,
   }
 
   const idMapping: IdMapping = {
@@ -183,6 +186,144 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'Invalid import options' })
     }
 
+    // ==========================================================================
+    // CONFLICT DETECTION (for merge mode only)
+    // ==========================================================================
+
+    const conflictInfo: ImportConflictInfo = {
+      isStoreUpdate: false,
+      existingCount: 0,
+      duplicates: [],
+    }
+
+    // Get sourceAdventureSlug from manifest or options
+    const sourceAdventureSlug = options.sourceAdventureSlug || manifest.sourceAdventureSlug
+
+    if (options.mode === 'merge' && manifest.entities && manifest.entities.length > 0) {
+      // Check 1: Store-Update scenario (same adventure slug)
+      if (sourceAdventureSlug) {
+        const existingFromSameAdventure = db
+          .prepare(
+            `
+          SELECT id, name FROM entities
+          WHERE campaign_id = ?
+          AND deleted_at IS NULL
+          AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
+        `,
+          )
+          .all(campaignId, sourceAdventureSlug) as Array<{ id: number; name: string }>
+
+        if (existingFromSameAdventure.length > 0) {
+          conflictInfo.isStoreUpdate = true
+          conflictInfo.sourceAdventureSlug = sourceAdventureSlug
+          conflictInfo.existingCount = existingFromSameAdventure.length
+        }
+      }
+
+      // Check 2: Name+Type duplicates (only if not a store update)
+      if (!conflictInfo.isStoreUpdate) {
+        for (const entity of manifest.entities) {
+          const localTypeId = resolveTypeId(entity)
+          const typeName = entity.type_name || fallbackTypeIdToName[entity.type_id] || 'Unknown'
+
+          const existing = db
+            .prepare(
+              `
+            SELECT id, name FROM entities
+            WHERE campaign_id = ?
+            AND type_id = ?
+            AND LOWER(name) = LOWER(?)
+            AND deleted_at IS NULL
+          `,
+            )
+            .get(campaignId, localTypeId, entity.name) as { id: number; name: string } | undefined
+
+          if (existing) {
+            conflictInfo.duplicates.push({
+              name: entity.name,
+              typeName,
+              existingId: existing.id,
+            })
+          }
+        }
+      }
+
+      // If conflicts detected and user hasn't confirmed, return early
+      const hasConflicts = conflictInfo.isStoreUpdate || conflictInfo.duplicates.length > 0
+      if (hasConflicts && !options.confirmedOverwrite) {
+        // Clean up temp directory
+        await rm(tempDir, { recursive: true, force: true })
+
+        return {
+          success: false,
+          campaignId,
+          stats,
+          conflictInfo,
+          requiresConfirmation: true,
+        } as ImportResult
+      }
+
+      // User confirmed: soft-delete conflicting entities
+      if (hasConflicts && options.confirmedOverwrite) {
+        const softDelete = db.prepare(`
+          UPDATE entities SET deleted_at = datetime('now') WHERE id = ?
+        `)
+
+        if (conflictInfo.isStoreUpdate && sourceAdventureSlug) {
+          // Delete ALL entities from the same adventure
+          const toDelete = db
+            .prepare(
+              `
+            SELECT id FROM entities
+            WHERE campaign_id = ?
+            AND deleted_at IS NULL
+            AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
+          `,
+            )
+            .all(campaignId, sourceAdventureSlug) as Array<{ id: number }>
+
+          for (const entity of toDelete) {
+            softDelete.run(entity.id)
+          }
+          stats.entitiesDeleted = toDelete.length
+        } else {
+          // Delete only duplicates by name+type
+          for (const dup of conflictInfo.duplicates) {
+            softDelete.run(dup.existingId)
+          }
+          stats.entitiesDeleted = conflictInfo.duplicates.length
+        }
+      }
+    }
+
+    // Determine import version for tracking
+    let importVersion = 1
+    if (sourceAdventureSlug && options.mode === 'merge') {
+      // Check if we've imported this adventure before (get max version)
+      const maxVersion = db
+        .prepare(
+          `
+        SELECT MAX(CAST(json_extract(metadata, '$._importTracking.importVersion') AS INTEGER)) as maxVer
+        FROM entities
+        WHERE campaign_id = ?
+        AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
+      `,
+        )
+        .get(campaignId, sourceAdventureSlug) as { maxVer: number | null } | undefined
+
+      if (maxVersion?.maxVer) {
+        importVersion = maxVersion.maxVer + 1
+      }
+    }
+
+    // Build import tracking object
+    const importTracking: ImportTracking = {
+      sourceAdventureSlug: sourceAdventureSlug || undefined,
+      sourceVersion: manifest.sourceVersion || undefined,
+      importedAt: new Date().toISOString(),
+      importVersion,
+    }
+
     // Helper to copy file from temp to data directory
     const copyFile = async (archivePath: string | undefined, targetFolder: string): Promise<string | null> => {
       if (!archivePath) return null
@@ -230,12 +371,18 @@ export default defineEventHandler(async (event) => {
         // Resolve type_id from type_name (v1.1+) or use fallback mapping (v1.0)
         const localTypeId = resolveTypeId(entity)
 
+        // Merge import tracking into metadata
+        const metadataWithTracking = {
+          ...(entity.metadata || {}),
+          _importTracking: importTracking,
+        }
+
         const result = insertEntity.run(
           campaignId,
           localTypeId,
           entity.name,
           entity.description || null,
-          entity.metadata ? JSON.stringify(entity.metadata) : null,
+          JSON.stringify(metadataWithTracking),
           imageUrl,
           null, // location_id - set in second pass
           null, // parent_entity_id - set in second pass

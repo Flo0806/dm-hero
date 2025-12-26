@@ -212,7 +212,7 @@
       "modeMerge": "In aktuelle Kampagne integrieren:",
       "modeMergeHint": "Fügt alle Entitäten zur ausgewählten Kampagne hinzu",
       "modeMergeNoActive": "Keine aktive Kampagne ausgewählt",
-      "mergeInfo": "Entitäten werden zur aktuellen Kampagne hinzugefügt. Bestehende Entitäten werden nicht überschrieben.",
+      "mergeInfo": "Entitäten werden zur aktuellen Kampagne hinzugefügt. Bei gleichen Namen werden bestehende Entitäten ersetzt.",
       "campaignName": "Kampagnenname",
       "nameHint": "Du kannst die Kampagne vor dem Import umbenennen",
       "importing": "Importiere...",
@@ -220,7 +220,14 @@
       "success": "Import erfolgreich!",
       "successDetails": "{entitiesImported} Entitäten, {relationsImported} Beziehungen importiert",
       "importNow": "Importieren",
-      "openCampaign": "Kampagne öffnen"
+      "openCampaign": "Kampagne öffnen",
+      "storeUpdateWarning": "{count} Entitäten dieser Version werden ersetzt",
+      "storeUpdateDetails": "Du importierst eine neue Version dieses Adventures. Alle Entitäten der vorherigen Version werden entfernt und durch die neue Version ersetzt.",
+      "duplicateWarning": "{count} Entitäten existieren bereits",
+      "duplicateDetails": "Folgende Entitäten haben den gleichen Namen wie existierende Entitäten und werden ersetzt:",
+      "entitiesWillBeReplaced": "Entitäten werden ersetzt",
+      "confirmHint": "Lokale Änderungen an diesen Entitäten gehen verloren.",
+      "confirmOverwrite": "Trotzdem importieren"
     }
   },
   "npcs": {

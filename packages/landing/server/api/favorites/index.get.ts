@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
        f.created_at as createdAt
      FROM user_favorites f
      JOIN adventures a ON a.id = f.adventure_id
-     WHERE f.user_id = ? AND a.status = 'published'
+     WHERE f.user_id = ? AND a.published_file_version IS NOT NULL
      ORDER BY f.created_at DESC`,
     [user.id],
   )

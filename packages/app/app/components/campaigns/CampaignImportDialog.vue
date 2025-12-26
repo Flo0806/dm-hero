@@ -200,7 +200,51 @@
           </div>
         </div>
 
-        <!-- Step 3: Importing -->
+        <!-- Step 3: Conflict Confirmation -->
+        <div v-else-if="step === 'confirm'">
+          <v-alert type="warning" variant="tonal" class="mb-4">
+            <v-icon start>mdi-alert</v-icon>
+            {{ conflictInfo?.isStoreUpdate
+              ? $t('campaigns.import.storeUpdateWarning', { count: conflictInfo.existingCount })
+              : $t('campaigns.import.duplicateWarning', { count: conflictInfo?.duplicates.length || 0 })
+            }}
+          </v-alert>
+
+          <!-- Store Update: Show count -->
+          <div v-if="conflictInfo?.isStoreUpdate" class="mb-4">
+            <p class="text-body-2 mb-2">
+              {{ $t('campaigns.import.storeUpdateDetails') }}
+            </p>
+            <v-chip color="primary" variant="tonal">
+              {{ conflictInfo.existingCount }} {{ $t('campaigns.import.entitiesWillBeReplaced') }}
+            </v-chip>
+          </div>
+
+          <!-- Duplicates: Show list -->
+          <div v-else-if="conflictInfo?.duplicates.length" class="mb-4">
+            <p class="text-body-2 mb-2">
+              {{ $t('campaigns.import.duplicateDetails') }}
+            </p>
+            <v-list density="compact" max-height="200" class="overflow-y-auto">
+              <v-list-item
+                v-for="dup in conflictInfo.duplicates"
+                :key="dup.existingId"
+              >
+                <template #prepend>
+                  <v-icon size="small" color="warning">mdi-content-duplicate</v-icon>
+                </template>
+                <v-list-item-title>{{ dup.name }}</v-list-item-title>
+                <v-list-item-subtitle>{{ $t(`entityTypes.${dup.typeName}`) }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+          </div>
+
+          <v-alert type="info" variant="tonal" density="compact">
+            {{ $t('campaigns.import.confirmHint') }}
+          </v-alert>
+        </div>
+
+        <!-- Step 4: Importing -->
         <div v-else-if="step === 'importing'" class="text-center py-8">
           <v-progress-circular indeterminate size="64" class="mb-4" />
           <div class="text-h6">{{ $t('campaigns.import.importing') }}</div>
@@ -243,10 +287,25 @@
             color="primary"
             variant="flat"
             :disabled="!preview || parsing"
-            @click="doImport"
+            @click="doImport(false)"
           >
             <v-icon start>mdi-import</v-icon>
             {{ $t('campaigns.import.importNow') }}
+          </v-btn>
+        </template>
+
+        <!-- Confirm Step -->
+        <template v-else-if="step === 'confirm'">
+          <v-btn variant="text" @click="goBackFromConfirm">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="warning"
+            variant="flat"
+            @click="doImport(true)"
+          >
+            <v-icon start>mdi-alert</v-icon>
+            {{ $t('campaigns.import.confirmOverwrite') }}
           </v-btn>
         </template>
 
@@ -265,7 +324,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ImportResult } from '~~/types/export'
+import type { ImportResult, ImportConflictInfo } from '~~/types/export'
 
 interface ImportPreview {
   campaignName: string
@@ -296,7 +355,7 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value),
 })
 
-type Step = 'upload' | 'preview' | 'importing' | 'success'
+type Step = 'upload' | 'preview' | 'confirm' | 'importing' | 'success'
 type ImportMode = 'new' | 'merge'
 
 const step = ref<Step>('upload')
@@ -309,6 +368,8 @@ const campaignName = ref('')
 const importMode = ref<ImportMode>('new')
 const importResult = ref<ImportResult | null>(null)
 const importedCampaignId = ref<number | null>(null)
+const conflictInfo = ref<ImportConflictInfo | null>(null)
+const sourceAdventureSlug = ref<string | null>(null)
 
 // Get current campaign for merge option
 const activeCampaign = computed(() => campaignStore.currentCampaign)
@@ -412,6 +473,9 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
     }
 
     campaignName.value = preview.value.campaignName
+
+    // Store sourceAdventureSlug if present (from store downloads)
+    sourceAdventureSlug.value = manifest.sourceAdventureSlug || null
     console.log('[Import] Preview ready:', preview.value)
   } catch (err) {
     console.error('[Import] Error parsing file:', err)
@@ -423,7 +487,7 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
 }
 
 // Perform the import
-async function doImport() {
+async function doImport(confirmedOverwrite: boolean = false) {
   if (!selectedFile.value) return
 
   // Handle both File and File[]
@@ -448,6 +512,8 @@ async function doImport() {
         mode: importMode.value,
         campaignName: importMode.value === 'new' ? campaignName.value : undefined,
         targetCampaignId: importMode.value === 'merge' ? activeCampaign.value?.id : undefined,
+        sourceAdventureSlug: sourceAdventureSlug.value || undefined,
+        confirmedOverwrite,
       }),
     )
 
@@ -455,6 +521,13 @@ async function doImport() {
       method: 'POST',
       body: formData,
     })
+
+    // Check if confirmation is required
+    if (result.requiresConfirmation && result.conflictInfo) {
+      conflictInfo.value = result.conflictInfo
+      step.value = 'confirm'
+      return
+    }
 
     if (result.success) {
       importResult.value = result
@@ -485,6 +558,12 @@ function goBack() {
   error.value = ''
 }
 
+function goBackFromConfirm() {
+  step.value = 'preview'
+  conflictInfo.value = null
+  error.value = ''
+}
+
 function close() {
   dialogVisible.value = false
   step.value = 'upload'
@@ -497,5 +576,7 @@ function close() {
   importMode.value = 'new'
   importResult.value = null
   importedCampaignId.value = null
+  conflictInfo.value = null
+  sourceAdventureSlug.value = null
 }
 </script>

@@ -212,7 +212,7 @@
       "modeMerge": "Merge into current campaign:",
       "modeMergeHint": "Adds all entities to the selected campaign",
       "modeMergeNoActive": "No active campaign selected",
-      "mergeInfo": "Entities will be added to the current campaign. Existing entities will not be overwritten.",
+      "mergeInfo": "Entities will be added to the current campaign. Entities with the same name will be replaced.",
       "campaignName": "Campaign Name",
       "nameHint": "You can rename the campaign before importing",
       "importing": "Importing...",
@@ -220,7 +220,14 @@
       "success": "Import successful!",
       "successDetails": "Imported {entitiesImported} entities, {relationsImported} relations",
       "importNow": "Import",
-      "openCampaign": "Open Campaign"
+      "openCampaign": "Open Campaign",
+      "storeUpdateWarning": "{count} entities from this version will be replaced",
+      "storeUpdateDetails": "You are importing a new version of this adventure. All entities from the previous version will be removed and replaced with the new version.",
+      "duplicateWarning": "{count} entities already exist",
+      "duplicateDetails": "The following entities have the same name as existing entities and will be replaced:",
+      "entitiesWillBeReplaced": "entities will be replaced",
+      "confirmHint": "Local changes to these entities will be lost.",
+      "confirmOverwrite": "Import anyway"
     }
   },
   "npcs": {

@@ -317,14 +317,8 @@ async function handleDownload() {
 
   downloading.value = true
   try {
-    const filePath = await store.downloadAdventure(adventure.value.slug)
-    // Trigger browser download
-    const link = document.createElement('a')
-    link.href = filePath
-    link.download = adventure.value.title + '.dmhero'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    // Store handles the full download process now (blob + trigger)
+    await store.downloadAdventure(adventure.value.slug, adventure.value.title)
   } catch (err) {
     console.error('Download failed:', err)
   } finally {
