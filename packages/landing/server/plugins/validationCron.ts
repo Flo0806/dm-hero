@@ -33,9 +33,9 @@ interface VersionFile {
 const VALIDATION_INTERVAL = 10 * 60 * 1000 // 10 minutes
 
 export default defineNitroPlugin((_nitroApp) => {
-  // Don't run during build
-  if (process.env.NUXT_BUILD) {
-    console.log('[ValidationCron] Skipping during build')
+  // Don't run during build or prerender
+  if (process.env.NUXT_BUILD || process.env.NITRO_PRERENDER || import.meta.prerender) {
+    console.log('[ValidationCron] Skipping during build/prerender')
     return
   }
 
