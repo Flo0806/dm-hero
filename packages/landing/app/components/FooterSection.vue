@@ -88,6 +88,9 @@ const links = [
         <NuxtLink to="/privacy" class="legal-link text-caption text-medium-emphasis mx-3">
           {{ t('legal.privacy.title') }}
         </NuxtLink>
+        <NuxtLink to="/terms" class="legal-link text-caption text-medium-emphasis mx-3">
+          {{ t('legal.terms.title') }}
+        </NuxtLink>
       </div>
 
       <!-- Divider -->
@@ -111,8 +114,10 @@ const links = [
 
 <style scoped>
 .footer-section {
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
-  border-top: 1px solid rgba(var(--v-theme-primary), 0.1);
+  background: linear-gradient(180deg, rgba(26, 29, 41, 0.95) 0%, rgba(19, 21, 29, 1) 100%);
+  border-top: 1px solid rgba(var(--v-theme-primary), 0.2);
+  position: relative;
+  z-index: 2;
 }
 
 .powered-by-nuxt {

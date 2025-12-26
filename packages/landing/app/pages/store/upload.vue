@@ -454,6 +454,9 @@
     :tos-version="tosVersion"
     @accepted="onTosAccepted"
   />
+
+  <!-- Footer -->
+  <FooterSection />
   </div>
 </template>
 

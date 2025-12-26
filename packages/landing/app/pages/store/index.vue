@@ -147,6 +147,9 @@
       />
     </div>
   </v-container>
+
+  <!-- Footer -->
+  <FooterSection />
   </div>
 </template>
 

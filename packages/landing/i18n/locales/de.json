@@ -478,6 +478,9 @@
       "rights": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Widerspruch gegen die Verarbeitung Ihrer personenbezogenen Daten. Zudem besteht ein Beschwerderecht bei der zuständigen Aufsichtsbehörde.",
       "noteTitle": "Hinweis zur Datenübertragung",
       "note": "Wir weisen darauf hin, dass die Datenübertragung im Internet Sicherheitslücken aufweisen kann. Ein vollständiger Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich."
+    },
+    "terms": {
+      "title": "AGB"
     }
   },
   "tos": {

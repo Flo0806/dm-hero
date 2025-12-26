@@ -478,6 +478,9 @@
       "rights": "You have the right to request access to, correction or deletion of your personal data, to restrict processing, and to object to the processing of your personal data. You also have the right to lodge a complaint with a supervisory authority.",
       "noteTitle": "Note on Data Transmission",
       "note": "Please note that data transmission over the Internet may have security vulnerabilities. Complete protection of data from access by third parties is not possible."
+    },
+    "terms": {
+      "title": "Terms"
     }
   },
   "tos": {
