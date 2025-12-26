@@ -254,6 +254,13 @@
         "fileRequired": "Please select an adventure file",
         "notOwner": "You can only edit your own adventures",
         "notFound": "Adventure not found"
+      },
+      "beta": {
+        "title": "BETA",
+        "message": "The Hero Basar is still in beta. Errors may occur.",
+        "feedback": "Feedback and bug reports are very welcome!",
+        "thanks": "Thank you for your understanding and support.",
+        "reportIssue": "Report Issue"
       }
     },
     "detail": {

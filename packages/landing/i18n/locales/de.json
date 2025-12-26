@@ -254,6 +254,13 @@
         "fileRequired": "Bitte wähle eine Abenteuer-Datei aus",
         "notOwner": "Du kannst nur eigene Abenteuer bearbeiten",
         "notFound": "Abenteuer nicht gefunden"
+      },
+      "beta": {
+        "title": "BETA",
+        "message": "Der Hero Basar befindet sich noch in der Beta-Phase. Fehler können auftreten.",
+        "feedback": "Feedback und Fehlerberichte sind herzlich willkommen!",
+        "thanks": "Vielen Dank für dein Verständnis und deine Unterstützung.",
+        "reportIssue": "Problem melden"
       }
     },
     "detail": {

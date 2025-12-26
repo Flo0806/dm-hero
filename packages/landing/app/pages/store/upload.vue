@@ -15,6 +15,42 @@
       </div>
     </div>
 
+    <!-- BETA Banner -->
+    <v-alert
+      color="warning"
+      variant="tonal"
+      class="mb-6"
+      border="start"
+      prominent
+    >
+      <template #prepend>
+        <div class="beta-badge mr-4">
+          <span class="beta-text">{{ $t('store.upload.beta.title') }}</span>
+        </div>
+      </template>
+      <div>
+        <div class="text-body-1 font-weight-medium mb-1">
+          {{ $t('store.upload.beta.message') }}
+        </div>
+        <div class="text-body-2 mb-2">
+          {{ $t('store.upload.beta.feedback') }}
+        </div>
+        <div class="text-body-2 text-medium-emphasis mb-3">
+          {{ $t('store.upload.beta.thanks') }}
+        </div>
+        <v-btn
+          href="https://github.com/Flo0806/dm-hero/issues"
+          target="_blank"
+          variant="outlined"
+          color="warning"
+          size="small"
+          prepend-icon="mdi-github"
+        >
+          {{ $t('store.upload.beta.reportIssue') }}
+        </v-btn>
+      </div>
+    </v-alert>
+
     <!-- Loading state for edit mode -->
     <div v-if="loading" class="d-flex justify-center py-12">
       <v-progress-circular indeterminate color="primary" />
@@ -868,5 +904,23 @@ async function handleSubmit() {
   text-align: center;
   padding: 2rem;
   color: rgb(var(--v-theme-on-surface));
+}
+
+.beta-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.beta-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 2px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 </style>
