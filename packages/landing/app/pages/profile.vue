@@ -150,15 +150,15 @@ const highlightAdventureId = computed(() => {
   return id ? Number(id) : null
 })
 
+// Get request headers for SSR (must be called in setup context, not in async callback)
+const requestHeaders = import.meta.server ? useRequestHeaders(['cookie']) : null
+
 // Fetch profile data (SSR-compatible)
 const { pending: loadingAdventures } = await useAsyncData('profile-adventures', async () => {
   // Forward cookies on server
   let headers: Record<string, string> | undefined
-  if (import.meta.server) {
-    const requestHeaders = useRequestHeaders(['cookie'])
-    if (requestHeaders.cookie) {
-      headers = { cookie: requestHeaders.cookie }
-    }
+  if (import.meta.server && requestHeaders?.cookie) {
+    headers = { cookie: requestHeaders.cookie }
   }
   await profileStore.fetchAdventures(headers)
   return true
