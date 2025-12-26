@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.3
+
+### Patch Changes
+
+- [#149](https://github.com/Flo0806/dm-hero/pull/149) [`a789693`](https://github.com/Flo0806/dm-hero/commit/a789693863cb5e16f6bea9855465420edb214352) Thanks [@Flo0806](https://github.com/Flo0806)! - fix: remove import.meta.prerender from migrations check (compile-time constant breaks runtime)
+
 ## 1.1.2
 
 ### Patch Changes
