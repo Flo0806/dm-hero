@@ -103,7 +103,7 @@ export default defineEventHandler(async (event): Promise<AdventureDetailResponse
     [adventure.version_id],
   )
 
-  // Parse JSON fields
+  // Parse JSON fields (MySQL may return as object or string)
   let highlights: string[] = []
   let tags: string[] = []
   try {

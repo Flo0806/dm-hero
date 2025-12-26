@@ -83,12 +83,16 @@ export default defineEventHandler(async (event) => {
     [latestVersion.id],
   )
 
-  // Parse JSON fields
+  // Parse JSON fields (MySQL may return as object or string)
   let highlights: string[] = []
   let tags: string[] = []
   try {
-    highlights = latestVersion.highlights ? JSON.parse(latestVersion.highlights) : []
-    tags = latestVersion.tags ? JSON.parse(latestVersion.tags) : []
+    highlights = typeof latestVersion.highlights === 'string'
+      ? JSON.parse(latestVersion.highlights)
+      : (latestVersion.highlights || [])
+    tags = typeof latestVersion.tags === 'string'
+      ? JSON.parse(latestVersion.tags)
+      : (latestVersion.tags || [])
   } catch {
     // Ignore parse errors
   }
