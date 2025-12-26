@@ -1,8 +1,8 @@
 import { runMigrations } from '../utils/migrations'
 
 export default defineNitroPlugin(async () => {
-  // Don't run during build or prerender
-  if (process.env.NUXT_BUILD || process.env.NITRO_PRERENDER || import.meta.prerender) {
+  // Don't run during build (process.env checks are runtime, import.meta.prerender is compile-time and breaks runtime)
+  if (process.env.NUXT_BUILD || process.env.NITRO_PRERENDER) {
     console.log('[Plugin] Skipping migrations during build/prerender')
     return
   }
