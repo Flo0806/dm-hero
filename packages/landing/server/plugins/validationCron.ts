@@ -1,27 +1,30 @@
 /**
  * Validation CRON Job
  *
- * Runs every 10 minutes to validate pending adventures
+ * Runs every 10 minutes to validate pending adventure versions
  */
 
 import { query, queryOne } from '../utils/db'
 import { validateAdventure } from '../utils/validateAdventure'
 import { sendValidationNotificationEmail } from '../utils/email'
 
-interface PendingAdventure {
+interface PendingVersion {
   id: number
-  slug: string
+  adventure_id: number
+  version_number: number
   title: string
   description: string | null
   short_description: string | null
   language: string
-  version_number: number
   created_at: Date | string
+  // From adventure
+  slug: string
+  // From user
   author_email: string
   author_name: string
 }
 
-interface AdventureFile {
+interface VersionFile {
   file_path: string
   version_number: number
   original_filename: string | null
@@ -64,30 +67,33 @@ export default defineNitroPlugin((_nitroApp) => {
 
 async function runValidation() {
   const now = new Date().toLocaleString('de-DE')
-  console.log(`[ValidationCron] Checking for pending adventures... (${now})`)
+  console.log(`[ValidationCron] Checking for pending versions... (${now})`)
 
   try {
-    // Get all adventures with status 'pending_review'
-    // Include version_number for optimistic locking + author info for email
-    const pendingAdventures = await query<PendingAdventure[]>(
-      `SELECT a.id, a.slug, a.title, a.description, a.short_description, a.language, a.version_number, a.created_at,
-              u.email as author_email, COALESCE(u.display_name, u.email) as author_name
-       FROM adventures a
+    // Get all adventure versions with status 'pending_review'
+    const pendingVersions = await query<PendingVersion[]>(
+      `SELECT
+        av.id, av.adventure_id, av.version_number, av.title, av.description,
+        av.short_description, av.language, av.created_at,
+        a.slug,
+        u.email as author_email, COALESCE(u.display_name, u.email) as author_name
+       FROM adventure_versions av
+       JOIN adventures a ON av.adventure_id = a.id
        JOIN users u ON a.author_id = u.id
-       WHERE a.status = 'pending_review'
-       ORDER BY a.created_at ASC
+       WHERE av.status = 'pending_review'
+       ORDER BY av.created_at ASC
        LIMIT 10`,
     )
 
-    if (pendingAdventures.length === 0) {
-      console.log('[ValidationCron] No pending adventures')
+    if (pendingVersions.length === 0) {
+      console.log('[ValidationCron] No pending versions')
       return
     }
 
-    console.log(`[ValidationCron] Found ${pendingAdventures.length} pending adventure(s)`)
+    console.log(`[ValidationCron] Found ${pendingVersions.length} pending version(s)`)
 
-    for (const adventure of pendingAdventures) {
-      await validateSingleAdventure(adventure)
+    for (const version of pendingVersions) {
+      await validateSingleVersion(version)
     }
 
     console.log('[ValidationCron] Validation run complete')
@@ -96,153 +102,149 @@ async function runValidation() {
   }
 }
 
-async function validateSingleAdventure(adventure: PendingAdventure) {
-  const expectedVersion = adventure.version_number
-  console.log(`[ValidationCron] Validating: ${adventure.title} (ID: ${adventure.id}, v${expectedVersion})`)
+async function validateSingleVersion(version: PendingVersion) {
+  console.log(`[ValidationCron] Validating: ${version.title} (Version ID: ${version.id}, v${version.version_number})`)
 
   try {
-    // Get the latest file for this adventure (with version number and original filename)
-    const file = await queryOne<AdventureFile>(
+    // Get the file for this version
+    const file = await queryOne<VersionFile>(
       `SELECT file_path, version_number, original_filename FROM adventure_files
-       WHERE adventure_id = ?
+       WHERE version_id = ?
        ORDER BY version_number DESC
        LIMIT 1`,
-      [adventure.id],
+      [version.id],
     )
 
     if (!file) {
-      // No file uploaded - reject (with version check)
-      const updated = await updateAdventureStatus(adventure.id, expectedVersion, 'rejected', {
+      // No file uploaded - reject
+      await updateVersionStatus(version.id, version.adventure_id, 'rejected', {
         errors: [{
           type: 'structure',
-          message: adventure.language === 'de'
+          message: version.language === 'de'
             ? 'Keine .dmhero Datei hochgeladen'
             : 'No .dmhero file uploaded',
         }],
         warnings: [],
       })
-      if (!updated) {
-        console.log(`[ValidationCron] ⏭ Skipped: ${adventure.title} - newer version uploaded during validation`)
-      }
+      console.log(`[ValidationCron] ✗ Rejected (no file): ${version.title}`)
       return
     }
 
-    console.log(`[ValidationCron] Validating file v${file.version_number} for adventure v${expectedVersion}`)
+    console.log(`[ValidationCron] Validating file v${file.version_number} for version ${version.id}`)
 
     // Get the full file path
-    // file_path in DB is URL path like "/api/uploads/adventures/slug-v1.dmhero"
-    // We need file system path like "./uploads/adventures/slug-v1.dmhero"
     const config = useRuntimeConfig()
     const uploadsDir = config.uploadsDir || './uploads'
     const relativePath = file.file_path.replace('/api/uploads/', '')
     const filePath = `${uploadsDir}/${relativePath}`
 
-    // Run validation (including original filename check)
+    // Run validation
     const result = await validateAdventure(
       filePath,
       {
-        title: adventure.title,
-        description: adventure.description || undefined,
-        shortDescription: adventure.short_description || undefined,
+        title: version.title,
+        description: version.description || undefined,
+        shortDescription: version.short_description || undefined,
       },
-      adventure.language || 'en',
+      version.language || 'en',
       file.original_filename || undefined,
     )
 
-    // Update adventure status based on result (with version check!)
+    // Prepare timestamps for email
     const tzOptions = { timeZone: 'Europe/Berlin' }
     const validatedAt = new Date().toLocaleString('de-DE', tzOptions)
-    // MySQL can return Date object or string - handle both
-    const createdAtDate = adventure.created_at instanceof Date
-      ? adventure.created_at
-      : new Date(adventure.created_at.replace(' ', 'T') + 'Z')
+    const createdAtDate = version.created_at instanceof Date
+      ? version.created_at
+      : new Date(String(version.created_at).replace(' ', 'T') + 'Z')
     const uploadedAt = createdAtDate.toLocaleString('de-DE', tzOptions)
 
     if (result.valid) {
-      const updated = await updateAdventureStatus(adventure.id, expectedVersion, 'published', {
+      await updateVersionStatus(version.id, version.adventure_id, 'published', {
         errors: [],
         warnings: result.warnings,
       })
-      if (updated) {
-        console.log(`[ValidationCron] ✓ Published: ${adventure.title} (v${expectedVersion})`)
-        // Send email notification
-        await sendValidationNotificationEmail({
-          adventureTitle: adventure.title,
-          adventureId: adventure.id,
-          authorEmail: adventure.author_email,
-          authorName: adventure.author_name,
-          uploadedAt,
-          validatedAt,
-          status: 'published',
-          warnings: result.warnings,
-        })
-      } else {
-        console.log(`[ValidationCron] ⏭ Skipped: ${adventure.title} - newer version uploaded during validation`)
-      }
+      console.log(`[ValidationCron] ✓ Published: ${version.title} (v${version.version_number})`)
+
+      // Send email notification
+      await sendValidationNotificationEmail({
+        adventureTitle: version.title,
+        adventureId: version.adventure_id,
+        authorEmail: version.author_email,
+        authorName: version.author_name,
+        uploadedAt,
+        validatedAt,
+        status: 'published',
+        warnings: result.warnings,
+      })
     } else {
-      const updated = await updateAdventureStatus(adventure.id, expectedVersion, 'rejected', {
+      await updateVersionStatus(version.id, version.adventure_id, 'rejected', {
         errors: result.errors,
         warnings: result.warnings,
       })
-      if (updated) {
-        console.log(`[ValidationCron] ✗ Rejected: ${adventure.title} (v${expectedVersion}, ${result.errors.length} errors)`)
-        // Send email notification
-        await sendValidationNotificationEmail({
-          adventureTitle: adventure.title,
-          adventureId: adventure.id,
-          authorEmail: adventure.author_email,
-          authorName: adventure.author_name,
-          uploadedAt,
-          validatedAt,
-          status: 'rejected',
-          errors: result.errors,
-          warnings: result.warnings,
-        })
-      } else {
-        console.log(`[ValidationCron] ⏭ Skipped: ${adventure.title} - newer version uploaded during validation`)
-      }
+      console.log(`[ValidationCron] ✗ Rejected: ${version.title} (v${version.version_number}, ${result.errors.length} errors)`)
+
+      // Send email notification
+      await sendValidationNotificationEmail({
+        adventureTitle: version.title,
+        adventureId: version.adventure_id,
+        authorEmail: version.author_email,
+        authorName: version.author_name,
+        uploadedAt,
+        validatedAt,
+        status: 'rejected',
+        errors: result.errors,
+        warnings: result.warnings,
+      })
     }
   } catch (error) {
-    console.error(`[ValidationCron] Error validating adventure ${adventure.id}:`, error)
+    console.error(`[ValidationCron] Error validating version ${version.id}:`, error)
 
-    // Mark as rejected with error (with version check)
-    const updated = await updateAdventureStatus(adventure.id, expectedVersion, 'rejected', {
+    // Mark as rejected with error
+    await updateVersionStatus(version.id, version.adventure_id, 'rejected', {
       errors: [{
         type: 'structure',
         message: 'Internal validation error - please try uploading again',
       }],
       warnings: [],
     })
-    if (!updated) {
-      console.log(`[ValidationCron] ⏭ Skipped error update: ${adventure.title} - newer version uploaded`)
-    }
   }
 }
 
 /**
- * Update adventure status with optimistic locking.
- * Only updates if version_number matches (no newer version was uploaded).
- * @returns true if update succeeded, false if version changed
+ * Update version status and optionally update adventure's published_version_id
  */
-async function updateAdventureStatus(
+async function updateVersionStatus(
+  versionId: number,
   adventureId: number,
-  expectedVersion: number,
   status: 'published' | 'rejected',
   validationResult: { errors: unknown[]; warnings: unknown[] },
-): Promise<boolean> {
-  // MySQL returns ResultSetHeader for UPDATE with affectedRows
-  // When publishing, also set published_file_version to track the validated version
-  const result = await query<{ affectedRows: number }>(
-    `UPDATE adventures
+): Promise<void> {
+  // Update version status
+  await query(
+    `UPDATE adventure_versions
      SET status = ?,
          validation_result = ?,
          validated_at = NOW(),
-         published_at = IF(? = 'published', NOW(), published_at),
-         published_file_version = IF(? = 'published', ?, published_file_version)
-     WHERE id = ? AND version_number = ?`,
-    [status, JSON.stringify(validationResult), status, status, expectedVersion, adventureId, expectedVersion],
+         published_at = IF(? = 'published', NOW(), published_at)
+     WHERE id = ?`,
+    [status, JSON.stringify(validationResult), status, versionId],
   )
 
-  // If 0 rows affected, the version changed during validation
-  return result.affectedRows > 0
+  // If published, update adventure's published_version_id
+  if (status === 'published') {
+    await query(
+      `UPDATE adventures
+       SET published_version_id = ?
+       WHERE id = ?`,
+      [versionId, adventureId],
+    )
+
+    // Archive previous published versions (optional - keep history clean)
+    await query(
+      `UPDATE adventure_versions
+       SET status = 'archived'
+       WHERE adventure_id = ? AND id != ? AND status = 'published'`,
+      [adventureId, versionId],
+    )
+  }
 }

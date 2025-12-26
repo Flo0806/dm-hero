@@ -138,6 +138,17 @@
         </template>
         <span v-else class="text-caption">&nbsp;</span>
       </div>
+
+      <!-- Version & Date Row -->
+      <div class="d-flex align-center justify-space-between mt-2 text-caption text-medium-emphasis">
+        <span class="d-flex align-center">
+          <v-icon icon="mdi-tag-outline" size="x-small" class="mr-1" />
+          v{{ adventure.versionNumber || 1 }}
+        </span>
+        <span v-if="adventure.publishedAt">
+          {{ formatDate(adventure.publishedAt) }}
+        </span>
+      </div>
     </v-card-text>
   </v-card>
 
@@ -224,6 +235,14 @@ function formatPlayers(min: number, max: number): string {
   return `${min}-${max}`
 }
 
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
 </script>
 
 <style scoped>

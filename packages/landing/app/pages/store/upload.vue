@@ -73,7 +73,18 @@
       </div>
     </v-alert>
 
-    <v-form ref="formRef" @submit.prevent="handleSubmit">
+    <v-form ref="formRef" @submit.prevent="handleSubmit" class="position-relative">
+      <!-- Disabled overlay when ToS not accepted or email not verified -->
+      <div v-if="formDisabled" class="form-disabled-overlay">
+        <div class="overlay-content">
+          <v-icon icon="mdi-lock" size="48" class="mb-4" />
+          <div class="text-h6 mb-2">{{ $t('store.upload.formLocked') }}</div>
+          <div class="text-body-2 text-medium-emphasis">
+            {{ !isEmailVerified ? $t('store.upload.verifyFirst') : $t('store.upload.acceptTosFirst') }}
+          </div>
+        </div>
+      </div>
+
       <!-- Basic Info Card -->
       <v-card class="mb-6" elevation="0">
         <v-card-title class="d-flex align-center">
@@ -476,6 +487,9 @@ const showTosDialog = ref(false)
 const tosAccepted = ref(false)
 const tosVersion = ref('1.0.0')
 
+// Form is disabled until email verified AND ToS accepted
+const formDisabled = computed(() => !isEmailVerified.value || !tosAccepted.value)
+
 // Fetch ToS status on mount (client-only to avoid SSR issues)
 if (import.meta.client) {
   onMounted(async () => {
@@ -830,5 +844,26 @@ async function handleSubmit() {
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+.form-disabled-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(var(--v-theme-surface), 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.overlay-content {
+  text-align: center;
+  padding: 2rem;
+  color: rgb(var(--v-theme-on-surface));
 }
 </style>

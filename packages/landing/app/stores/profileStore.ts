@@ -22,6 +22,16 @@ export interface ValidationResult {
 // Adventure status type
 export type AdventureStatus = 'draft' | 'pending_review' | 'validating' | 'published' | 'rejected' | 'archived'
 
+export interface VersionInfo {
+  id: number
+  versionNumber: number
+  title: string
+  coverImageUrl: string | null
+  status?: AdventureStatus
+  validationResult?: ValidationResult | null
+  validatedAt?: string | null
+}
+
 export interface UserAdventure {
   id: number
   title: string
@@ -32,6 +42,8 @@ export interface UserAdventure {
   status: AdventureStatus
   validationResult: ValidationResult | null
   validatedAt: string | null
+  latestVersion: VersionInfo | null
+  publishedVersion: Omit<VersionInfo, 'status' | 'validationResult' | 'validatedAt'> | null
 }
 
 export interface UserStats {

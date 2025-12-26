@@ -202,6 +202,9 @@
       "subtitle": "Teile deinen One-Shot oder deine Kampagne mit der Community",
       "subtitleEdit": "Aktualisiere die Details deines Abenteuers",
       "verifyRequired": "Bitte bestätige deine E-Mail-Adresse, bevor du Abenteuer hochlädst.",
+      "formLocked": "Formular gesperrt",
+      "verifyFirst": "Bitte bestätige zuerst deine E-Mail-Adresse.",
+      "acceptTosFirst": "Bitte akzeptiere zuerst die Nutzungsbedingungen.",
       "basicInfo": "Grundlegende Informationen",
       "description": "Beschreibung",
       "highlights": "Highlights",
@@ -261,7 +264,8 @@
       "download": "Herunterladen",
       "downloads": "Downloads",
       "otherSystem": "Anderes System",
-      "noImage": "Kein Titelbild vorhanden"
+      "noImage": "Kein Titelbild vorhanden",
+      "publishedAt": "Veröffentlicht am"
     },
     "rating": {
       "loginToRate": "Anmelden um zu bewerten",

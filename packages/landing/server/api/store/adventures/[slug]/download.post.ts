@@ -4,14 +4,19 @@ import JSZip from 'jszip'
 import { query, queryOne } from '../../../../utils/db'
 import { getAuthUser } from '../../../../utils/requireAuth'
 
-interface Adventure {
+interface AdventureRow {
   id: number
   slug: string
   download_count: number
-  published_file_version: number | null
+  published_version_id: number
 }
 
-interface AdventureFile {
+interface VersionRow {
+  id: number
+  version_number: number
+}
+
+interface FileRow {
   id: number
   file_path: string
   version_number: number
@@ -24,9 +29,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Slug is required' })
   }
 
-  // Get adventure (allow download if any version has been published)
-  const adventure = await queryOne<Adventure>(
-    'SELECT id, slug, download_count, published_file_version FROM adventures WHERE slug = ? AND published_file_version IS NOT NULL',
+  // Get adventure with published version
+  const adventure = await queryOne<AdventureRow>(
+    `SELECT id, slug, download_count, published_version_id
+     FROM adventures
+     WHERE slug = ? AND published_version_id IS NOT NULL`,
     [slug],
   )
 
@@ -34,13 +41,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Adventure not found' })
   }
 
-  // Get the latest PUBLISHED file (version <= published_file_version)
-  const file = await queryOne<AdventureFile>(
+  // Get published version info
+  const version = await queryOne<VersionRow>(
+    'SELECT id, version_number FROM adventure_versions WHERE id = ?',
+    [adventure.published_version_id],
+  )
+
+  if (!version) {
+    throw createError({ statusCode: 404, message: 'No published version found' })
+  }
+
+  // Get the file for this version
+  const file = await queryOne<FileRow>(
     `SELECT id, file_path, version_number FROM adventure_files
-     WHERE adventure_id = ? AND version_number <= ?
+     WHERE version_id = ?
      ORDER BY version_number DESC
      LIMIT 1`,
-    [adventure.id, adventure.published_file_version],
+    [version.id],
   )
 
   if (!file) {
@@ -73,8 +90,6 @@ export default defineEventHandler(async (event) => {
   }
 
   // Read the original .dmhero file
-  // file_path is like "/api/uploads/adventures/slug-v1.dmhero"
-  // We need to convert to actual file path
   const uploadsDir = process.env.UPLOADS_DIR || './uploads'
   const relativePath = file.file_path.replace('/api/uploads/', '')
   const absolutePath = join(uploadsDir, relativePath)
@@ -96,7 +111,7 @@ export default defineEventHandler(async (event) => {
 
     // Inject sourceAdventureSlug and version info
     manifest.sourceAdventureSlug = adventure.slug
-    manifest.sourceVersion = file.version_number
+    manifest.sourceVersion = version.version_number
 
     // Update manifest in ZIP
     zip.file('manifest.json', JSON.stringify(manifest, null, 2))
@@ -110,7 +125,7 @@ export default defineEventHandler(async (event) => {
 
     // Set response headers for file download
     setHeader(event, 'Content-Type', 'application/octet-stream')
-    setHeader(event, 'Content-Disposition', `attachment; filename="${adventure.slug}-v${file.version_number}.dmhero"`)
+    setHeader(event, 'Content-Disposition', `attachment; filename="${adventure.slug}-v${version.version_number}.dmhero"`)
     setHeader(event, 'Content-Length', modifiedBuffer.length)
 
     // Return the modified file

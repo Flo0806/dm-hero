@@ -137,9 +137,14 @@
           <!-- Download Card -->
           <v-card class="mb-4 download-card" elevation="0">
             <v-card-text class="text-center py-6">
-              <v-chip color="success" variant="flat" size="large" class="mb-4">
-                {{ $t('store.card.free') }}
-              </v-chip>
+              <div class="d-flex justify-center ga-2 mb-4">
+                <v-chip color="success" variant="flat" size="large">
+                  {{ $t('store.card.free') }}
+                </v-chip>
+                <v-chip color="primary" variant="tonal" size="large" prepend-icon="mdi-tag-outline">
+                  v{{ adventure.versionNumber || latestFile?.versionNumber || 1 }}
+                </v-chip>
+              </div>
               <v-btn
                 color="primary"
                 size="x-large"
@@ -150,11 +155,14 @@
               >
                 {{ $t('store.detail.download') }}
               </v-btn>
-              <p class="text-caption text-medium-emphasis mt-2">
-                {{ formatFileSize(latestFile?.fileSize || 0) }} · v{{ latestFile?.versionNumber || 1 }}
+              <p class="text-caption text-medium-emphasis mt-3">
+                {{ formatFileSize(latestFile?.fileSize || 0) }}
               </p>
               <p class="text-caption text-medium-emphasis">
                 {{ adventure.downloadCount }} {{ $t('store.detail.downloads') }}
+              </p>
+              <p v-if="adventure.publishedAt" class="text-caption text-medium-emphasis mt-1">
+                {{ $t('store.detail.publishedAt') }}: {{ formatDate(adventure.publishedAt) }}
               </p>
             </v-card-text>
           </v-card>
@@ -310,6 +318,15 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
 async function handleDownload() {

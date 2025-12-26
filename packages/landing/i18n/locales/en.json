@@ -202,6 +202,9 @@
       "subtitle": "Share your one-shot or campaign with the community",
       "subtitleEdit": "Update the details of your adventure",
       "verifyRequired": "Please verify your email address before uploading adventures.",
+      "formLocked": "Form Locked",
+      "verifyFirst": "Please verify your email address first.",
+      "acceptTosFirst": "Please accept the Terms of Service first.",
       "basicInfo": "Basic Information",
       "description": "Description",
       "highlights": "Highlights",
@@ -261,7 +264,8 @@
       "download": "Download",
       "downloads": "Downloads",
       "otherSystem": "Other System",
-      "noImage": "No cover image available"
+      "noImage": "No cover image available",
+      "publishedAt": "Published on"
     },
     "rating": {
       "loginToRate": "Sign in to rate",

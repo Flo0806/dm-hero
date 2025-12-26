@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
   // Check adventure exists and has a published version
   const adventure = await queryOne<{ id: number }>(
-    'SELECT id FROM adventures WHERE id = ? AND published_file_version IS NOT NULL',
+    'SELECT id FROM adventures WHERE id = ? AND published_version_id IS NOT NULL',
     [adventureId],
   )
 

@@ -26,6 +26,8 @@ export interface AdventureCard {
   levelMax: number
   durationHours: number
   highlights: string[] | null
+  versionNumber: number
+  publishedAt: string | null
 }
 
 export interface AdventureDetail extends AdventureCard {
@@ -85,6 +87,8 @@ interface ApiAdventure {
   levelMax?: number
   durationHours?: number
   highlights?: string[] | null
+  versionNumber?: number
+  publishedAt?: string | null
 }
 
 interface ApiListResponse {
@@ -124,6 +128,8 @@ interface ApiDetailAdventure {
   highlights: string[] | null
   author: string
   display_name?: string
+  version_number?: number
+  published_at?: string | null
 }
 
 interface ApiDetailResponse {
@@ -162,6 +168,8 @@ function transformDetailAdventure(row: ApiDetailAdventure): AdventureCard {
     levelMax: row.level_max || 5,
     durationHours: Number(row.duration_hours) || 4,
     highlights: row.highlights || null,
+    versionNumber: row.version_number || 1,
+    publishedAt: row.published_at || null,
   }
 }
 
@@ -191,6 +199,8 @@ function transformAdventure(row: ApiAdventure): AdventureCard {
     levelMax: row.levelMax || 5,
     durationHours: row.durationHours || 4,
     highlights: row.highlights || null,
+    versionNumber: row.versionNumber || 1,
+    publishedAt: row.publishedAt || null,
   }
 }
 

@@ -99,22 +99,28 @@ export default defineEventHandler(async (event) => {
     // Ignore parse errors
   }
 
-  // Insert adventure
-  const insertResult = await query<{ insertId: number }>(
-    `INSERT INTO adventures (
-      author_id, title, slug, description, short_description, cover_image_url,
-      version_number, \`system\`, difficulty, players_min, players_max,
-      level_min, level_max, duration_hours, highlights, tags,
-      author_name, author_discord, price_cents, currency, language, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  // Step 1: Insert adventure (identity only)
+  const adventureResult = await query<{ insertId: number }>(
+    `INSERT INTO adventures (author_id, slug)
+     VALUES (?, ?)`,
+    [user.id, slug],
+  )
+  const adventureId = (adventureResult as unknown as { insertId: number }).insertId
+
+  // Step 2: Insert adventure version (all content)
+  const versionResult = await query<{ insertId: number }>(
+    `INSERT INTO adventure_versions (
+      adventure_id, version_number, title, description, short_description, cover_image_url,
+      \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
+      highlights, tags, price_cents, currency, language, author_name, author_discord, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      user.id,
+      adventureId,
+      1, // version_number starts at 1
       fields.title,
-      slug,
       fields.description || null,
       fields.shortDescription || null,
       coverImageUrl,
-      1, // version_number starts at 1
       fields.system || 'dnd5e',
       Number(fields.difficulty) || 3,
       Number(fields.playersMin) || 3,
@@ -124,23 +130,22 @@ export default defineEventHandler(async (event) => {
       Number(fields.durationHours) || 4,
       JSON.stringify(highlights),
       JSON.stringify(tags),
-      fields.authorName || null,
-      fields.authorDiscord || null,
       Number(fields.priceCents) || 0,
       'EUR',
       fields.language || 'de',
+      fields.authorName || null,
+      fields.authorDiscord || null,
       ADVENTURE_STATUS.PENDING_REVIEW,
     ],
   )
+  const versionId = (versionResult as unknown as { insertId: number }).insertId
 
-  const adventureId = (insertResult as unknown as { insertId: number }).insertId
-
-  // Insert adventure file record (store original filename for content validation)
+  // Step 3: Insert adventure file record (linked to version)
   await query(
-    `INSERT INTO adventure_files (adventure_id, file_path, original_filename, file_size, version_number, checksum)
+    `INSERT INTO adventure_files (version_id, file_path, original_filename, file_size, version_number, checksum)
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
-      adventureId,
+      versionId,
       `/api/uploads/adventures/${adventureFilename}`,
       adventureFile.filename,
       adventureFile.data.length,

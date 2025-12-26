@@ -73,6 +73,15 @@
               <v-icon icon="mdi-star" size="x-small" color="amber" />
               {{ adventure.avgRating?.toFixed(1) || '0.0' }}
             </span>
+            <!-- Version chip -->
+            <v-chip
+              size="x-small"
+              variant="tonal"
+              color="primary"
+              prepend-icon="mdi-tag-outline"
+            >
+              v{{ adventure.latestVersion?.versionNumber || 1 }}
+            </v-chip>
             <!-- Clickable status badge for non-published -->
             <StoreAdventureStatusBadge
               :status="adventure.status"

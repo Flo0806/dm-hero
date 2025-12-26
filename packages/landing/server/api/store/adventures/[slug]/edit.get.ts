@@ -1,13 +1,20 @@
 import { queryOne } from '../../../../utils/db'
 import { requireAuth } from '../../../../utils/requireAuth'
 
-interface Adventure {
+interface AdventureRow {
   id: number
+  slug: string
+  author_id: number
+}
+
+interface VersionRow {
+  id: number
+  version_number: number
   title: string
-  short_description: string
-  description: string
+  short_description: string | null
+  description: string | null
   cover_image_url: string | null
-  highlights: string
+  highlights: string | null
   system: string
   language: string
   difficulty: number
@@ -16,13 +23,12 @@ interface Adventure {
   level_min: number
   level_max: number
   duration_hours: number
-  tags: string
+  tags: string | null
   author_name: string | null
   author_discord: string | null
-  author_id: number
 }
 
-interface AdventureFile {
+interface FileRow {
   file_path: string
   version_number: number
 }
@@ -35,15 +41,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Invalid adventure ID' })
   }
 
-  // Fetch adventure with author check
-  const adventure = await queryOne<Adventure>(
-    `SELECT
-      id, title, short_description, description, cover_image_url,
-      highlights, \`system\`, language, difficulty,
-      players_min, players_max, level_min, level_max,
-      duration_hours, tags, author_name, author_discord, author_id
-    FROM adventures
-    WHERE id = ?`,
+  // Fetch adventure identity
+  const adventure = await queryOne<AdventureRow>(
+    'SELECT id, slug, author_id FROM adventures WHERE id = ?',
     [id],
   )
 
@@ -56,26 +56,44 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'You can only edit your own adventures' })
   }
 
-  // Get the latest adventure file
-  const latestFile = await queryOne<AdventureFile>(
+  // Get the latest version (for editing)
+  const latestVersion = await queryOne<VersionRow>(
+    `SELECT
+      id, version_number, title, short_description, description, cover_image_url,
+      highlights, \`system\`, language, difficulty,
+      players_min, players_max, level_min, level_max,
+      duration_hours, tags, author_name, author_discord
+    FROM adventure_versions
+    WHERE adventure_id = ?
+    ORDER BY version_number DESC
+    LIMIT 1`,
+    [id],
+  )
+
+  if (!latestVersion) {
+    throw createError({ statusCode: 404, message: 'No version found for this adventure' })
+  }
+
+  // Get the latest file for this version
+  const latestFile = await queryOne<FileRow>(
     `SELECT file_path, version_number FROM adventure_files
-     WHERE adventure_id = ?
+     WHERE version_id = ?
      ORDER BY version_number DESC
      LIMIT 1`,
-    [id],
+    [latestVersion.id],
   )
 
   // Parse JSON fields
   let highlights: string[] = []
   let tags: string[] = []
   try {
-    highlights = JSON.parse(adventure.highlights || '[]')
-    tags = JSON.parse(adventure.tags || '[]')
+    highlights = latestVersion.highlights ? JSON.parse(latestVersion.highlights) : []
+    tags = latestVersion.tags ? JSON.parse(latestVersion.tags) : []
   } catch {
     // Ignore parse errors
   }
 
-  // Extract filename from file path (e.g., "/api/uploads/adventures/slug-v1.dmhero" -> "slug-v1.dmhero")
+  // Extract filename from file path
   let currentFileName: string | null = null
   let currentVersion: number | null = null
   if (latestFile) {
@@ -86,24 +104,25 @@ export default defineEventHandler(async (event) => {
 
   return {
     id: adventure.id,
-    title: adventure.title,
-    shortDescription: adventure.short_description,
-    description: adventure.description,
-    coverImageUrl: adventure.cover_image_url,
+    title: latestVersion.title,
+    shortDescription: latestVersion.short_description || '',
+    description: latestVersion.description || '',
+    coverImageUrl: latestVersion.cover_image_url,
     highlights,
-    system: adventure.system,
-    language: adventure.language,
-    difficulty: adventure.difficulty,
-    playersMin: adventure.players_min,
-    playersMax: adventure.players_max,
-    levelMin: adventure.level_min,
-    levelMax: adventure.level_max,
-    durationHours: Number(adventure.duration_hours),
+    system: latestVersion.system,
+    language: latestVersion.language,
+    difficulty: latestVersion.difficulty,
+    playersMin: latestVersion.players_min,
+    playersMax: latestVersion.players_max,
+    levelMin: latestVersion.level_min,
+    levelMax: latestVersion.level_max,
+    durationHours: Number(latestVersion.duration_hours),
     tags,
-    authorName: adventure.author_name,
-    authorDiscord: adventure.author_discord,
+    authorName: latestVersion.author_name,
+    authorDiscord: latestVersion.author_discord,
     authorId: adventure.author_id,
     currentFileName,
     currentVersion,
+    versionNumber: latestVersion.version_number,
   }
 })

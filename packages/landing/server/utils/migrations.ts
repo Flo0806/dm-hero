@@ -253,6 +253,126 @@ const migrations: Migration[] = [
         WHERE status = 'published'`,
     ],
   },
+  {
+    id: 11,
+    name: 'adventure_versions_table',
+    up: [
+      // Step 1: Create adventure_versions table with all content fields
+      `CREATE TABLE adventure_versions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        adventure_id INT NOT NULL,
+        version_number INT NOT NULL DEFAULT 1,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        short_description VARCHAR(500),
+        cover_image_url VARCHAR(500),
+        \`system\` VARCHAR(50) DEFAULT 'dnd5e',
+        difficulty TINYINT DEFAULT 3,
+        players_min TINYINT DEFAULT 3,
+        players_max TINYINT DEFAULT 5,
+        level_min TINYINT DEFAULT 1,
+        level_max TINYINT DEFAULT 5,
+        duration_hours DECIMAL(4,1) DEFAULT 4.0,
+        highlights JSON,
+        tags JSON,
+        price_cents INT DEFAULT 0,
+        currency VARCHAR(3) DEFAULT 'EUR',
+        language VARCHAR(5) DEFAULT 'de',
+        author_name VARCHAR(100),
+        author_discord VARCHAR(100),
+        status ENUM('draft', 'pending_review', 'published', 'rejected', 'archived') DEFAULT 'draft',
+        validation_result JSON NULL,
+        validated_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        published_at TIMESTAMP NULL,
+        INDEX idx_adventure (adventure_id),
+        INDEX idx_status (status),
+        UNIQUE KEY unique_adventure_version (adventure_id, version_number),
+        FULLTEXT idx_search (title, description)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+      // Step 2: Migrate existing adventures to adventure_versions
+      `INSERT INTO adventure_versions (
+        adventure_id, version_number, title, description, short_description, cover_image_url,
+        \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
+        highlights, tags, price_cents, currency, language, author_name, author_discord,
+        status, validation_result, validated_at, created_at, published_at
+      )
+      SELECT
+        id, version_number, title, description, short_description, cover_image_url,
+        \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
+        highlights, tags, price_cents, currency, language, author_name, author_discord,
+        status, validation_result, validated_at, created_at, published_at
+      FROM adventures`,
+
+      // Step 3: Add version_id column to adventure_files (nullable first)
+      'ALTER TABLE adventure_files ADD COLUMN version_id INT NULL AFTER adventure_id',
+
+      // Step 4: Update adventure_files to point to the correct version
+      `UPDATE adventure_files af
+       JOIN adventure_versions av ON af.adventure_id = av.adventure_id AND af.version_number = av.version_number
+       SET af.version_id = av.id`,
+
+      // Step 5: Add published_version_id to adventures (nullable first)
+      'ALTER TABLE adventures ADD COLUMN published_version_id INT NULL',
+
+      // Step 6: Set published_version_id for adventures that have a published version
+      `UPDATE adventures a
+       JOIN adventure_versions av ON a.id = av.adventure_id AND av.status = 'published'
+       SET a.published_version_id = av.id`,
+
+      // Step 7: Drop old content columns from adventures
+      // Keep: id, author_id, slug, download_count, published_version_id, created_at
+      `ALTER TABLE adventures
+        DROP COLUMN title,
+        DROP COLUMN description,
+        DROP COLUMN short_description,
+        DROP COLUMN cover_image_url,
+        DROP COLUMN version_number,
+        DROP COLUMN published_file_version,
+        DROP COLUMN \`system\`,
+        DROP COLUMN difficulty,
+        DROP COLUMN players_min,
+        DROP COLUMN players_max,
+        DROP COLUMN level_min,
+        DROP COLUMN level_max,
+        DROP COLUMN duration_hours,
+        DROP COLUMN highlights,
+        DROP COLUMN tags,
+        DROP COLUMN price_cents,
+        DROP COLUMN currency,
+        DROP COLUMN language,
+        DROP COLUMN author_name,
+        DROP COLUMN author_discord,
+        DROP COLUMN status,
+        DROP COLUMN validation_result,
+        DROP COLUMN validated_at,
+        DROP COLUMN updated_at,
+        DROP COLUMN published_at`,
+
+      // Step 8: Drop adventure_id from adventure_files and make version_id required
+      `ALTER TABLE adventure_files
+        DROP FOREIGN KEY adventure_files_ibfk_1`,
+
+      `ALTER TABLE adventure_files
+        DROP COLUMN adventure_id`,
+
+      `ALTER TABLE adventure_files
+        MODIFY COLUMN version_id INT NOT NULL`,
+
+      // Step 9: Add foreign keys
+      `ALTER TABLE adventure_versions
+        ADD CONSTRAINT fk_version_adventure
+        FOREIGN KEY (adventure_id) REFERENCES adventures(id) ON DELETE CASCADE`,
+
+      `ALTER TABLE adventure_files
+        ADD CONSTRAINT fk_file_version
+        FOREIGN KEY (version_id) REFERENCES adventure_versions(id) ON DELETE CASCADE`,
+
+      // Step 10: Drop old indexes from adventures that reference removed columns
+      'ALTER TABLE adventures DROP INDEX idx_status',
+    ],
+  },
 ]
 
 export async function runMigrations(): Promise<void> {
