@@ -131,8 +131,51 @@ jobs:
           path: packages/app/dist-electron/*.zip
           if-no-files-found: warn
 
+  build-electron-linux:
+    needs: check
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Nuxt
+        run: pnpm --filter @dm-hero/app build
+
+      - name: Rebuild better-sqlite3 for Electron
+        run: pnpm --filter @dm-hero/app electron:rebuild
+
+      - name: Build Electron app
+        working-directory: packages/app
+        run: pnpm exec electron-builder --linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dm-hero-linux
+          path: packages/app/dist-electron/*.AppImage
+          if-no-files-found: warn
+
   create-release:
-    needs: [check, build-docker, build-electron-windows]
+    needs: [check, build-docker, build-electron-windows, build-electron-linux]
     if: needs.check.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -147,6 +190,15 @@ jobs:
         with:
           name: dm-hero-windows
           path: ./artifacts
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dm-hero-linux
+          path: ./artifacts
+
+      - name: List artifacts
+        run: ls -la ./artifacts/
 
       - name: Read changelog
         id: changelog

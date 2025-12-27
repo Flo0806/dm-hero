@@ -180,23 +180,39 @@ function stopServer() {
 function createWindow() {
   console.log('[Electron] Creating window...')
   console.log('[Electron] isDev:', isDev)
+  console.log('[Electron] Platform:', process.platform)
 
   // Start with dark theme (default)
   const currentTheme = THEME.dark
 
-  mainWindow = new BrowserWindow({
+  // Platform-specific window options
+  // Windows: Custom titlebar with overlay controls
+  // Linux/macOS: Native titlebar (titleBarOverlay not supported on Linux)
+  const isWindows = process.platform === 'win32'
+
+  const windowOptions = {
     width: 1400,
     height: 900,
     backgroundColor: currentTheme.background,
     show: false,
-    titleBarStyle: 'hidden',
-    titleBarOverlay: currentTheme.titleBarOverlay,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
     },
-  })
+  }
+
+  if (isWindows) {
+    windowOptions.titleBarStyle = 'hidden'
+    windowOptions.titleBarOverlay = currentTheme.titleBarOverlay
+  } else {
+    // Linux/macOS: Hide menu bar for cleaner look
+    windowOptions.autoHideMenuBar = true
+    // Set window icon (Linux needs this explicitly, Windows/macOS use app bundle icon)
+    windowOptions.icon = path.join(__dirname, 'icons', 'icon.png')
+  }
+
+  mainWindow = new BrowserWindow(windowOptions)
 
   mainWindow.once('ready-to-show', () => {
     console.log('[Electron] Window ready to show')

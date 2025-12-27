@@ -36,5 +36,10 @@ uploads/
 /uploads/
 packages/*/uploads/
 
+# Electron build outputs
+dist-electron/
+packages/*/dist-electron/
+squashfs-root/
+
 # Private project documentation (keep local only)
 CLAUDE.md
