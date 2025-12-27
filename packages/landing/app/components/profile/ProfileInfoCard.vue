@@ -93,6 +93,13 @@ const emit = defineEmits<{
 const fileInputRef = ref<HTMLInputElement>()
 const displayName = ref(props.user?.displayName || '')
 
+// Sync displayName when user changes
+watch(() => props.user?.displayName, (newVal) => {
+  if (newVal && !displayName.value) {
+    displayName.value = newVal
+  }
+})
+
 const initials = computed(() => {
   if (!props.user?.displayName) return '?'
   return props.user.displayName
@@ -103,13 +110,17 @@ const initials = computed(() => {
     .slice(0, 2)
 })
 
+// Track if we're on client (for consistent SSR)
+const isClient = ref(false)
+onMounted(() => { isClient.value = true })
+
 const hasChanges = computed(() => {
-  return displayName.value !== props.user?.displayName
+  // On server, always return false to prevent hydration mismatch
+  if (!isClient.value) return false
+  if (!props.user) return false
+  return displayName.value !== props.user.displayName
 })
 
-watch(() => props.user?.displayName, (newVal) => {
-  if (newVal) displayName.value = newVal
-})
 
 function triggerFileInput() {
   fileInputRef.value?.click()

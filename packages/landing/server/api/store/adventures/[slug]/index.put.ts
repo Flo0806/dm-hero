@@ -1,6 +1,6 @@
 import { query, queryOne } from '../../../../utils/db'
 import { requireAuthWithTos } from '../../../../utils/requireAuth'
-import { ADVENTURE_STATUS } from '../../../../utils/adventureStatus'
+import { ADVENTURE_STATUS, determineVersionAction } from '../../../../utils/adventureStatus'
 import { createHash } from 'crypto'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
@@ -15,6 +15,8 @@ interface LatestVersionRow {
   id: number
   version_number: number
   cover_image_url: string | null
+  status: string
+  validated_at: Date | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -41,9 +43,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'You can only edit your own adventures' })
   }
 
-  // Get the latest version to determine next version number
+  // Get the latest version to determine next version number and status
   const latestVersion = await queryOne<LatestVersionRow>(
-    `SELECT id, version_number, cover_image_url
+    `SELECT id, version_number, cover_image_url, status, validated_at
      FROM adventure_versions
      WHERE adventure_id = ?
      ORDER BY version_number DESC
@@ -95,16 +97,6 @@ export default defineEventHandler(async (event) => {
   await mkdir(coversDir, { recursive: true })
   await mkdir(filesDir, { recursive: true })
 
-  // Handle cover image (save with version suffix for versioning)
-  let coverImageUrl = latestVersion?.cover_image_url || null
-  if (coverImageFile) {
-    const ext = coverImageFile.filename.split('.').pop() || 'jpg'
-    const coverFilename = `${adventure.slug}-v${newVersionNumber}.${ext}`
-    const coverPath = join(coversDir, coverFilename)
-    await writeFile(coverPath, coverImageFile.data)
-    coverImageUrl = `/api/uploads/covers/${coverFilename}`
-  }
-
   // Parse JSON fields
   let highlights: string[] = []
   let tags: string[] = []
@@ -115,61 +107,144 @@ export default defineEventHandler(async (event) => {
     // Ignore parse errors
   }
 
-  // Create new version with pending_review status
-  const versionResult = await query<{ insertId: number }>(
-    `INSERT INTO adventure_versions (
-      adventure_id, version_number, title, description, short_description, cover_image_url,
-      \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
-      highlights, tags, price_cents, currency, language, author_name, author_discord, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      adventure.id,
-      newVersionNumber,
-      fields.title,
-      fields.description || null,
-      fields.shortDescription || null,
-      coverImageUrl,
-      fields.system || 'dnd5e',
-      Number(fields.difficulty) || 3,
-      Number(fields.playersMin) || 3,
-      Number(fields.playersMax) || 5,
-      Number(fields.levelMin) || 1,
-      Number(fields.levelMax) || 5,
-      Number(fields.durationHours) || 4,
-      JSON.stringify(highlights),
-      JSON.stringify(tags),
-      Number(fields.priceCents) || 0,
-      'EUR',
-      fields.language || 'de',
-      fields.authorName || null,
-      fields.authorDiscord || null,
-      ADVENTURE_STATUS.PENDING_REVIEW,
-    ],
+  // Determine version action using extracted logic (single source of truth, tested)
+  const versionAction = determineVersionAction(
+    latestVersion?.status || ADVENTURE_STATUS.DRAFT,
+    latestVersion?.validated_at !== null,
   )
-  const versionId = (versionResult as unknown as { insertId: number }).insertId
+
+  // Determine which version number to use for file names
+  const targetVersionNumber = versionAction.action === 'update'
+    ? (latestVersion?.version_number || 1)  // Keep same version for updates
+    : newVersionNumber                       // New version for creates
+
+  // Handle cover image (save with version suffix for versioning)
+  let coverImageUrl = latestVersion?.cover_image_url || null
+  if (coverImageFile) {
+    const ext = coverImageFile.filename.split('.').pop() || 'jpg'
+    const coverFilename = `${adventure.slug}-v${targetVersionNumber}.${ext}`
+    const coverPath = join(coversDir, coverFilename)
+    await writeFile(coverPath, coverImageFile.data)
+    coverImageUrl = `/api/uploads/covers/${coverFilename}`
+  }
+
+  let versionId: number
+  let finalVersionNumber: number
+  const isDraftUpdate = versionAction.action === 'update'
+
+  if (versionAction.action === 'update' && latestVersion) {
+    // UPDATE same version (subsequent draft edits)
+    await query(
+      `UPDATE adventure_versions SET
+        title = ?, description = ?, short_description = ?, cover_image_url = ?,
+        \`system\` = ?, difficulty = ?, players_min = ?, players_max = ?,
+        level_min = ?, level_max = ?, duration_hours = ?,
+        highlights = ?, tags = ?, price_cents = ?, currency = ?, language = ?,
+        author_name = ?, author_discord = ?
+      WHERE id = ?`,
+      [
+        fields.title,
+        fields.description || null,
+        fields.shortDescription || null,
+        coverImageUrl,
+        fields.system || 'dnd5e',
+        Number(fields.difficulty) || 3,
+        Number(fields.playersMin) || 3,
+        Number(fields.playersMax) || 5,
+        Number(fields.levelMin) || 1,
+        Number(fields.levelMax) || 5,
+        Number(fields.durationHours) || 4,
+        JSON.stringify(highlights),
+        JSON.stringify(tags),
+        Number(fields.priceCents) || 0,
+        'EUR',
+        fields.language || 'de',
+        fields.authorName || null,
+        fields.authorDiscord || null,
+        latestVersion.id,
+      ],
+    )
+    versionId = latestVersion.id
+    finalVersionNumber = latestVersion.version_number
+  } else {
+    // CREATE new version (first draft edit after unpublish, or published/pending/rejected)
+    const insertValidatedAt = versionAction.clearValidatedAt ? ', validated_at' : ''
+    const insertValidatedAtValue = versionAction.clearValidatedAt ? ', NULL' : ''
+    const versionResult = await query<{ insertId: number }>(
+      `INSERT INTO adventure_versions (
+        adventure_id, version_number, title, description, short_description, cover_image_url,
+        \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
+        highlights, tags, price_cents, currency, language, author_name, author_discord, status${insertValidatedAt}
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?${insertValidatedAtValue})`,
+      [
+        adventure.id,
+        newVersionNumber,
+        fields.title,
+        fields.description || null,
+        fields.shortDescription || null,
+        coverImageUrl,
+        fields.system || 'dnd5e',
+        Number(fields.difficulty) || 3,
+        Number(fields.playersMin) || 3,
+        Number(fields.playersMax) || 5,
+        Number(fields.levelMin) || 1,
+        Number(fields.levelMax) || 5,
+        Number(fields.durationHours) || 4,
+        JSON.stringify(highlights),
+        JSON.stringify(tags),
+        Number(fields.priceCents) || 0,
+        'EUR',
+        fields.language || 'de',
+        fields.authorName || null,
+        fields.authorDiscord || null,
+        versionAction.resultStatus,
+      ],
+    )
+    versionId = (versionResult as unknown as { insertId: number }).insertId
+    finalVersionNumber = newVersionNumber
+  }
 
   // Handle adventure file
+  // isDraftUpdate is already set above based on the update mode
+
   if (adventureFile) {
     // New file uploaded - save it
-    const adventureFilename = `${adventure.slug}-v${newVersionNumber}.dmhero`
+    const adventureFilename = `${adventure.slug}-v${finalVersionNumber}.dmhero`
     const adventurePath = join(filesDir, adventureFilename)
     await writeFile(adventurePath, adventureFile.data)
     const checksum = createHash('sha256').update(adventureFile.data).digest('hex')
 
-    await query(
-      `INSERT INTO adventure_files (version_id, file_path, original_filename, file_size, version_number, checksum)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        versionId,
-        `/api/uploads/adventures/${adventureFilename}`,
-        adventureFile.filename,
-        adventureFile.data.length,
-        newVersionNumber,
-        checksum,
-      ],
-    )
-  } else if (latestVersion) {
-    // No new file - copy file reference from previous version
+    if (isDraftUpdate) {
+      // Update existing file record for draft
+      await query(
+        `UPDATE adventure_files SET
+          file_path = ?, original_filename = ?, file_size = ?, checksum = ?
+        WHERE version_id = ?`,
+        [
+          `/api/uploads/adventures/${adventureFilename}`,
+          adventureFile.filename,
+          adventureFile.data.length,
+          checksum,
+          versionId,
+        ],
+      )
+    } else {
+      // Insert new file record for new version
+      await query(
+        `INSERT INTO adventure_files (version_id, file_path, original_filename, file_size, version_number, checksum)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          versionId,
+          `/api/uploads/adventures/${adventureFilename}`,
+          adventureFile.filename,
+          adventureFile.data.length,
+          finalVersionNumber,
+          checksum,
+        ],
+      )
+    }
+  } else if (!isDraftUpdate && latestVersion) {
+    // No new file and creating new version - copy file reference from previous version
     const previousFile = await queryOne<{
       file_path: string
       original_filename: string | null
@@ -193,18 +268,25 @@ export default defineEventHandler(async (event) => {
           previousFile.file_path,
           previousFile.original_filename,
           previousFile.file_size,
-          newVersionNumber,
+          finalVersionNumber,
           previousFile.checksum,
         ],
       )
     }
   }
+  // If draft update with no new file, keep existing file reference (no action needed)
+
+  // versionAction.resultStatus already contains the correct final status
+  const finalStatus = versionAction.resultStatus
 
   return {
     success: true,
     slug: adventure.slug,
     adventureId: adventure.id,
-    versionNumber: newVersionNumber,
-    message: 'Adventure updated successfully. The new version will be reviewed before publishing.',
+    versionNumber: finalVersionNumber,
+    status: finalStatus,
+    message: finalStatus === ADVENTURE_STATUS.DRAFT
+      ? 'Adventure saved as draft.'
+      : 'Adventure updated successfully. The new version will be reviewed before publishing.',
   }
 })

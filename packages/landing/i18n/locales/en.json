@@ -106,8 +106,8 @@
       },
       "linux": {
         "title": "Linux",
-        "description": "Coming Soon",
-        "button": "Coming Soon"
+        "description": "AppImage for all distributions",
+        "button": "Download for Linux"
       }
     },
     "docker": {
@@ -390,6 +390,7 @@
   },
   "profile": {
     "verified": "Verified",
+    "memberSince": "Member since",
     "messages": {
       "profileUpdated": "Profile saved successfully",
       "updateFailed": "Failed to save profile",
@@ -398,7 +399,11 @@
       "fileTooLarge": "File too large. Maximum size: 2 MB",
       "invalidFileType": "Invalid file type. Allowed: JPEG, PNG, GIF, WebP",
       "adventureDeleted": "Adventure deleted",
-      "deleteFailed": "Failed to delete"
+      "deleteFailed": "Failed to delete",
+      "unpublishSuccess": "Adventure unpublished",
+      "unpublishFailed": "Failed to unpublish",
+      "republishSuccess": "Adventure submitted for review",
+      "republishFailed": "Failed to republish"
     },
     "stats": {
       "title": "Statistics",
@@ -420,6 +425,8 @@
       "view": "View",
       "notPublishedYet": "Not published yet",
       "edit": "Edit",
+      "unpublish": "Unpublish",
+      "republish": "Republish",
       "comingSoon": "Coming soon",
       "status": {
         "draft": "Draft",

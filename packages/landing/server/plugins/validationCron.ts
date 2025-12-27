@@ -30,7 +30,9 @@ interface VersionFile {
   original_filename: string | null
 }
 
-const VALIDATION_INTERVAL = 10 * 60 * 1000 // 10 minutes
+// 30 seconds in dev, 10 minutes in production
+const isDev = process.env.NODE_ENV !== 'production'
+const VALIDATION_INTERVAL = isDev ? 30 * 1000 : 10 * 60 * 1000
 
 export default defineNitroPlugin((_nitroApp) => {
   // Don't run during build or prerender

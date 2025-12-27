@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
           avatarUrl: user.avatar_url,
           role: user.role,
           emailVerified: user.email_verified,
+          createdAt: user.created_at,
         },
       }
     }
@@ -91,6 +92,7 @@ export default defineEventHandler(async (event) => {
       avatarUrl: user.avatar_url,
       role: user.role,
       emailVerified: user.email_verified,
+      createdAt: user.created_at,
     },
   }
 })

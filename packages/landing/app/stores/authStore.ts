@@ -7,6 +7,7 @@ export interface AuthUser {
   avatarUrl: string | null
   role: 'user' | 'creator' | 'admin'
   emailVerified: boolean
+  createdAt: string
 }
 
 interface AuthState {

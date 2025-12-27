@@ -258,7 +258,7 @@ const migrations: Migration[] = [
     name: 'adventure_versions_table',
     up: [
       // Step 1: Create adventure_versions table with all content fields
-      `CREATE TABLE adventure_versions (
+      `CREATE TABLE IF NOT EXISTS adventure_versions (
         id INT AUTO_INCREMENT PRIMARY KEY,
         adventure_id INT NOT NULL,
         version_number INT NOT NULL DEFAULT 1,
@@ -291,8 +291,8 @@ const migrations: Migration[] = [
         FULLTEXT idx_search (title, description)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 
-      // Step 2: Migrate existing adventures to adventure_versions
-      `INSERT INTO adventure_versions (
+      // Step 2: Migrate existing adventures to adventure_versions (IGNORE duplicates)
+      `INSERT IGNORE INTO adventure_versions (
         adventure_id, version_number, title, description, short_description, cover_image_url,
         \`system\`, difficulty, players_min, players_max, level_min, level_max, duration_hours,
         highlights, tags, price_cents, currency, language, author_name, author_discord,
@@ -401,7 +401,18 @@ export async function runMigrations(): Promise<void> {
     try {
       // Execute all statements in the migration
       for (const sql of migration.up) {
-        await pool.execute(sql)
+        try {
+          await pool.execute(sql)
+        } catch (stmtError: unknown) {
+          const err = stmtError as { code?: string; message?: string }
+          // Ignore "already exists" and "doesn't exist" errors for idempotent migrations
+          const ignorableCodes = ['ER_TABLE_EXISTS_ERROR', 'ER_DUP_FIELDNAME', 'ER_CANT_DROP_FIELD_OR_KEY', 'ER_DUP_ENTRY', 'ER_BAD_FIELD_ERROR', 'ER_INVALID_USE_OF_NULL']
+          if (err.code && ignorableCodes.includes(err.code)) {
+            console.log(`[Migration] Skipping (already applied): ${err.message}`)
+          } else {
+            throw stmtError
+          }
+        }
       }
 
       await pool.execute('INSERT INTO migrations (id, name) VALUES (?, ?)', [

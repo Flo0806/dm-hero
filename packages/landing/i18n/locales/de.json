@@ -106,8 +106,8 @@
       },
       "linux": {
         "title": "Linux",
-        "description": "Kommt bald",
-        "button": "Kommt bald"
+        "description": "AppImage für alle Distributionen",
+        "button": "Für Linux herunterladen"
       }
     },
     "docker": {
@@ -390,6 +390,7 @@
   },
   "profile": {
     "verified": "Verifiziert",
+    "memberSince": "Mitglied seit",
     "messages": {
       "profileUpdated": "Profil wurde gespeichert",
       "updateFailed": "Profil konnte nicht gespeichert werden",
@@ -398,7 +399,11 @@
       "fileTooLarge": "Datei zu groß. Maximale Größe: 2 MB",
       "invalidFileType": "Ungültiges Dateiformat. Erlaubt: JPEG, PNG, GIF, WebP",
       "adventureDeleted": "Abenteuer wurde gelöscht",
-      "deleteFailed": "Löschen fehlgeschlagen"
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "unpublishSuccess": "Abenteuer wurde deaktiviert",
+      "unpublishFailed": "Deaktivieren fehlgeschlagen",
+      "republishSuccess": "Abenteuer wurde zur Prüfung eingereicht",
+      "republishFailed": "Erneutes Veröffentlichen fehlgeschlagen"
     },
     "stats": {
       "title": "Statistiken",
@@ -420,6 +425,8 @@
       "view": "Ansehen",
       "notPublishedYet": "Noch nicht veröffentlicht",
       "edit": "Bearbeiten",
+      "unpublish": "Deaktivieren",
+      "republish": "Erneut veröffentlichen",
       "comingSoon": "Kommt bald",
       "status": {
         "draft": "Entwurf",

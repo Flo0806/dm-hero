@@ -120,3 +120,33 @@ export function isProcessing(status: AdventureStatus): boolean {
   ]
   return processingStatuses.includes(status)
 }
+
+/**
+ * Determines how a version should be handled on edit.
+ *
+ * Version logic:
+ * - Published/Pending/Rejected → CREATE new version (pending_review)
+ * - Draft + validated_at set (first edit after unpublish) → CREATE new version (draft)
+ * - Draft + validated_at null (subsequent edits) → UPDATE same version (draft)
+ *
+ * @param currentStatus Current adventure version status
+ * @param hasValidatedAt Whether the version has validated_at set (was previously published)
+ * @returns Action to take and resulting status
+ */
+export function determineVersionAction(
+  currentStatus: string,
+  hasValidatedAt: boolean,
+): { action: 'create' | 'update'; resultStatus: string; clearValidatedAt: boolean } {
+  const isDraft = currentStatus === ADVENTURE_STATUS.DRAFT
+
+  if (isDraft && !hasValidatedAt) {
+    // Subsequent draft edits → UPDATE same version
+    return { action: 'update', resultStatus: ADVENTURE_STATUS.DRAFT, clearValidatedAt: false }
+  } else if (isDraft && hasValidatedAt) {
+    // First edit after unpublish → CREATE new version, clear validated_at
+    return { action: 'create', resultStatus: ADVENTURE_STATUS.DRAFT, clearValidatedAt: true }
+  } else {
+    // Published/pending/rejected → CREATE new version, go to pending_review
+    return { action: 'create', resultStatus: ADVENTURE_STATUS.PENDING_REVIEW, clearValidatedAt: false }
+  }
+}

@@ -119,6 +119,23 @@
                   <v-list-item-title>{{ $t('profile.adventures.edit') }}</v-list-item-title>
                 </v-list-item>
                 <v-divider />
+                <!-- Unpublish (only for published) -->
+                <v-list-item
+                  v-if="adventure.status === 'published'"
+                  prepend-icon="mdi-eye-off"
+                  @click="handleStatusChange(adventure, 'unpublish')"
+                >
+                  <v-list-item-title>{{ $t('profile.adventures.unpublish') }}</v-list-item-title>
+                </v-list-item>
+                <!-- Republish (only for draft) -->
+                <v-list-item
+                  v-if="adventure.status === 'draft'"
+                  prepend-icon="mdi-publish"
+                  @click="handleStatusChange(adventure, 'republish')"
+                >
+                  <v-list-item-title>{{ $t('profile.adventures.republish') }}</v-list-item-title>
+                </v-list-item>
+                <v-divider />
                 <v-list-item
                   prepend-icon="mdi-delete"
                   base-color="error"
@@ -244,6 +261,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   delete: [adventureId: number]
+  statusChange: [adventureId: number, action: 'unpublish' | 'republish']
 }>()
 
 const deleteDialog = ref(false)
@@ -393,6 +411,10 @@ function handleDelete() {
   }
   deleteDialog.value = false
   adventureToDelete.value = null
+}
+
+function handleStatusChange(adventure: UserAdventure, action: 'unpublish' | 'republish') {
+  emit('statusChange', adventure.id, action)
 }
 
 // Expose dialog state so parent can check before triggering confetti

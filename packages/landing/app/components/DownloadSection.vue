@@ -23,7 +23,7 @@ async function fetchLatestRelease() {
 
     // Get all releases (includes pre-releases)
     const response = await fetch(
-      'https://api.github.com/repos/Flo0806/dm-hero/releases'
+      'https://api.github.com/repos/Flo0806/dm-hero/releases',
     )
 
     if (!response.ok) {
@@ -33,7 +33,7 @@ async function fetchLatestRelease() {
     const releases = await response.json()
     // Filter to only app releases (tag starts with "v", not "landing-v")
     const appReleases = releases.filter(
-      (r: Release) => r.tag_name.startsWith('v') && !r.tag_name.startsWith('landing-v')
+      (r: Release) => r.tag_name.startsWith('v') && !r.tag_name.startsWith('landing-v'),
     )
     if (appReleases.length > 0) {
       latestRelease.value = appReleases[0]
@@ -108,7 +108,7 @@ const platforms = [
   {
     key: 'linux',
     icon: 'mdi-linux',
-    available: false, // Coming soon
+    available: true,
   },
 ]
 

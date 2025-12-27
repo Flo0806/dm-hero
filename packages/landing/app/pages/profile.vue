@@ -4,7 +4,7 @@
     <v-container class="py-8 position-relative" style="max-width: 1000px; z-index: 1">
       <!-- Header (client-only due to Vuetify VChip SSR issue) -->
       <ClientOnly>
-        <ProfileHeader :user="user" :stats="stats" class="mb-8" />
+        <ProfileHeader :user="user" class="mb-8" />
         <template #fallback>
           <div class="profile-header-skeleton mb-8">
             <v-skeleton-loader type="avatar" />
@@ -37,6 +37,7 @@
             :highlight-id="highlightAdventureId"
             class="mb-6"
             @delete="handleDeleteAdventure"
+            @status-change="handleStatusChange"
           />
 
           <!-- Danger Zone -->
@@ -312,6 +313,21 @@ async function handleDeleteAdventure(adventureId: number) {
   } catch (err) {
     console.error('Failed to delete adventure:', err)
     showError(t('profile.messages.deleteFailed'))
+  }
+}
+
+// Change adventure status (unpublish/republish)
+async function handleStatusChange(adventureId: number, action: 'unpublish' | 'republish') {
+  try {
+    await api.fetch(`/api/store/adventures/${adventureId}/status`, {
+      method: 'PATCH',
+      body: { action },
+    })
+    await profileStore.fetchAdventures()
+    showSuccess(t(`profile.messages.${action}Success`))
+  } catch (err) {
+    console.error('Failed to change status:', err)
+    showError(t(`profile.messages.${action}Failed`))
   }
 }
 
