@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.4
+
+### Patch Changes
+
+- [#153](https://github.com/Flo0806/dm-hero/pull/153) [`3c1a683`](https://github.com/Flo0806/dm-hero/commit/3c1a683fed84313c4c9065a822947da523a2c435) Thanks [@Flo0806](https://github.com/Flo0806)! - fix: draft versioning logic with unpublish/republish support
+
 ## 1.1.3
 
 ### Patch Changes
