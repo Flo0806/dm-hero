@@ -68,6 +68,13 @@ export function useLoreCounts() {
   }
 
   /**
+   * Set counts for a specific Lore entry directly (used by store after API fetch)
+   */
+  function setCounts(loreId: number, counts: LoreCounts): void {
+    countsMap[loreId] = counts
+  }
+
+  /**
    * Force reload counts for a specific Lore entry (ignores cache)
    * Use this after operations that change counts (e.g., adding/deleting relations)
    */
@@ -95,6 +102,7 @@ export function useLoreCounts() {
     loadLoreCounts,
     loadLoreCountsBatch,
     getCounts,
+    setCounts,
     reloadLoreCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),

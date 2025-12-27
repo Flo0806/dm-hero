@@ -4,6 +4,11 @@ import type { Item } from '../../types/item'
 import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
 import type { Faction } from '../../types/faction'
+import { useNpcCounts } from '../composables/useNpcCounts'
+import { useFactionCounts } from '../composables/useFactionCounts'
+import { useItemCounts } from '../composables/useItemCounts'
+import { useLoreCounts } from '../composables/useLoreCounts'
+import { usePlayerCounts } from '../composables/usePlayerCounts'
 
 interface Location {
   id: number
@@ -189,6 +194,10 @@ export const useEntitiesStore = defineStore('entities', {
             _counts: counts,
           }
         }
+
+        // Also update the composable's countsMap for reactive UI updates
+        const { setCounts } = useNpcCounts()
+        setCounts(id, counts)
       } catch (error) {
         console.error(`Failed to load counts for NPC ${id}:`, error)
       }
@@ -282,6 +291,10 @@ export const useEntitiesStore = defineStore('entities', {
             _counts: counts,
           }
         }
+
+        // Also update the composable's countsMap for reactive UI updates
+        const { setCounts } = useFactionCounts()
+        setCounts(id, counts)
       } catch (error) {
         console.error(`Failed to load counts for faction ${id}:`, error)
       }
@@ -432,6 +445,10 @@ export const useEntitiesStore = defineStore('entities', {
             _counts: counts,
           }
         }
+
+        // Also update the composable's countsMap for reactive UI updates
+        const { setCounts } = useItemCounts()
+        setCounts(id, counts)
       } catch (error) {
         console.error(`Failed to load counts for Item ${id}:`, error)
       }
@@ -547,6 +564,10 @@ export const useEntitiesStore = defineStore('entities', {
             _counts: counts,
           }
         }
+
+        // Also update the composable's countsMap for reactive UI updates
+        const { setCounts } = useLoreCounts()
+        setCounts(id, counts)
       } catch (error) {
         console.error(`Failed to load counts for Lore ${id}:`, error)
       }
@@ -679,6 +700,10 @@ export const useEntitiesStore = defineStore('entities', {
             _counts: counts,
           }
         }
+
+        // Also update the composable's countsMap for reactive UI updates
+        const { setCounts } = usePlayerCounts()
+        setCounts(id, counts)
       } catch (error) {
         console.error(`Failed to load counts for Player ${id}:`, error)
       }

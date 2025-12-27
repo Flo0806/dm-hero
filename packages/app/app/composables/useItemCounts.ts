@@ -55,6 +55,13 @@ export function useItemCounts() {
   }
 
   /**
+   * Set counts for a specific Item directly (used by store after API fetch)
+   */
+  function setCounts(itemId: number, counts: ItemCounts): void {
+    countsMap[itemId] = counts
+  }
+
+  /**
    * Force reload counts for a specific Item (ignores cache)
    * Use this after operations that change counts (e.g., adding/deleting relations)
    */
@@ -82,6 +89,7 @@ export function useItemCounts() {
     loadItemCounts,
     loadItemCountsBatch,
     getCounts,
+    setCounts,
     reloadItemCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),

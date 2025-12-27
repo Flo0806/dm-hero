@@ -55,6 +55,13 @@ export function usePlayerCounts() {
   }
 
   /**
+   * Set counts for a specific Player directly (used by store after API fetch)
+   */
+  function setCounts(playerId: number, counts: PlayerCounts): void {
+    countsMap[playerId] = counts
+  }
+
+  /**
    * Force reload counts for a specific Player (ignores cache)
    * Use this after operations that change counts (e.g., adding/deleting relations)
    */
@@ -82,6 +89,7 @@ export function usePlayerCounts() {
     loadPlayerCounts,
     loadPlayerCountsBatch,
     getCounts,
+    setCounts,
     reloadPlayerCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),

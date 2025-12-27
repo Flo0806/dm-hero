@@ -13,14 +13,15 @@ interface FactionCounts {
   locations: number
 }
 
+// SHARED STATE - outside the function so all components share the same cache
+const loadingCounts = ref<Set<number>>(new Set())
+const countsMap = reactive<Record<number, FactionCounts | undefined>>({})
+
 /**
  * Composable to load Faction counts asynchronously
  * Updates the Faction object reactively with _counts property
  */
 export function useFactionCounts() {
-  const loadingCounts = ref<Set<number>>(new Set())
-  // Store counts as reactive object (not Map - Vue can't track Map.get())
-  const countsMap = reactive<Record<number, FactionCounts | undefined>>({})
 
   async function loadFactionCounts(faction: Faction): Promise<void> {
     // Skip if already loading
@@ -67,6 +68,13 @@ export function useFactionCounts() {
   }
 
   /**
+   * Set counts for a specific Faction directly (used by store after API fetch)
+   */
+  function setCounts(factionId: number, counts: FactionCounts): void {
+    countsMap[factionId] = counts
+  }
+
+  /**
    * Force reload counts for a specific Faction (ignores cache)
    * Use this after operations that change counts (e.g., adding/deleting relations)
    */
@@ -94,6 +102,7 @@ export function useFactionCounts() {
     loadFactionCounts,
     loadFactionCountsBatch,
     getCounts,
+    setCounts,
     reloadFactionCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),

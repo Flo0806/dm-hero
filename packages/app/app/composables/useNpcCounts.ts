@@ -55,6 +55,13 @@ export function useNpcCounts() {
   }
 
   /**
+   * Set counts for a specific NPC directly (used by store after API fetch)
+   */
+  function setCounts(npcId: number, counts: NpcCounts): void {
+    countsMap[npcId] = counts
+  }
+
+  /**
    * Force reload counts for a specific NPC (ignores cache)
    * Use this after operations that change counts (e.g., adding/deleting relations)
    */
@@ -112,6 +119,7 @@ export function useNpcCounts() {
     loadNpcCounts,
     loadNpcCountsBatch,
     getCounts,
+    setCounts,
     reloadNpcCounts,
     clearCountsCache,
     invalidateCountsFor,
