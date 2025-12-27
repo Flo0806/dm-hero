@@ -10,6 +10,188 @@
  * - "Wizard" → "wizard"
  */
 
+// =============================================================================
+// SINGLE SOURCE OF TRUTH: Standard Races & Classes
+// All lookups and key sets are derived from these definitions.
+// Add new races/classes HERE - everything else is auto-generated.
+// =============================================================================
+
+interface StandardRace {
+  key: string
+  de: string | string[] // German name(s) - can have aliases
+  en: string | string[] // English name(s)
+}
+
+interface StandardClass {
+  key: string
+  de: string | string[]
+  en: string | string[]
+}
+
+/**
+ * Standard fantasy races from D&D 5e, D&D 2024, Pathfinder, DSA, and other TTRPGs.
+ * Sorted alphabetically by key for easy maintenance.
+ */
+const STANDARD_RACES_DEFINITION: StandardRace[] = [
+  // D&D 5e Core
+  { key: 'human', de: 'Mensch', en: 'Human' },
+  { key: 'elf', de: 'Elf', en: 'Elf' },
+  { key: 'dwarf', de: 'Zwerg', en: 'Dwarf' },
+  { key: 'halfling', de: 'Halbling', en: 'Halfling' },
+  { key: 'gnome', de: 'Gnom', en: 'Gnome' },
+  { key: 'halfelf', de: 'Halbelf', en: ['Half-Elf', 'Half Elf', 'Halfelf'] },
+  { key: 'halforc', de: 'Halbork', en: ['Half-Orc', 'Half Orc', 'Halforc'] },
+  { key: 'tiefling', de: 'Tiefling', en: 'Tiefling' },
+  { key: 'dragonborn', de: 'Drachenblütiger', en: 'Dragonborn' },
+
+  // D&D 5e Subraces
+  { key: 'drow', de: ['Zwergelf (Drow)', 'Drow', 'Dunkelelf'], en: ['Drow', 'Dark Elf'] },
+  { key: 'woodelf', de: 'Waldelf', en: ['Wood Elf', 'Woodelf'] },
+  { key: 'highelf', de: 'Hochelf', en: ['High Elf', 'Highelf'] },
+  { key: 'mountaindwarf', de: 'Bergzwerg', en: ['Mountain Dwarf', 'Mountaindwarf'] },
+  { key: 'hilldwarf', de: 'Hügelzwerg', en: ['Hill Dwarf', 'Hilldwarf'] },
+  { key: 'lightfoothalfling', de: 'Leichtfuß-Halbling', en: ['Lightfoot Halfling', 'Lightfoothalfling'] },
+  { key: 'stouthalfling', de: 'Robuster Halbling', en: ['Stout Halfling', 'Stouthalfling'] },
+
+  // D&D 5e Supplements & D&D 2024 Core
+  { key: 'aasimar', de: 'Aasimar', en: 'Aasimar' },
+  { key: 'goliath', de: 'Goliath', en: 'Goliath' },
+  { key: 'orc', de: 'Ork', en: 'Orc' },
+  { key: 'genasi', de: 'Genasi', en: 'Genasi' },
+  { key: 'firegenasi', de: 'Feuergenasi', en: ['Fire Genasi', 'Firegenasi'] },
+  { key: 'watergenasi', de: 'Wassergenasi', en: ['Water Genasi', 'Watergenasi'] },
+  { key: 'earthgenasi', de: 'Erdgenasi', en: ['Earth Genasi', 'Earthgenasi'] },
+  { key: 'airgenasi', de: 'Luftgenasi', en: ['Air Genasi', 'Airgenasi'] },
+  { key: 'tabaxi', de: 'Tabaxi', en: 'Tabaxi' },
+  { key: 'kenku', de: 'Kenku', en: 'Kenku' },
+  { key: 'triton', de: 'Triton', en: 'Triton' },
+  { key: 'firbolg', de: 'Firbolg', en: 'Firbolg' },
+  { key: 'aarakocra', de: 'Aarakocra', en: 'Aarakocra' },
+  { key: 'tortle', de: 'Tortle', en: 'Tortle' },
+  { key: 'changeling', de: 'Wechselbalg', en: 'Changeling' },
+  { key: 'warforged', de: 'Kriegsgeschmiedeter', en: 'Warforged' },
+  { key: 'shifter', de: 'Gestaltwandler', en: 'Shifter' },
+  { key: 'kalashtar', de: 'Kalashtar', en: 'Kalashtar' },
+
+  // Monster Races
+  { key: 'kobold', de: 'Kobold', en: 'Kobold' },
+  { key: 'goblin', de: 'Goblin', en: 'Goblin' },
+  { key: 'hobgoblin', de: 'Hobgoblin', en: 'Hobgoblin' },
+  { key: 'bugbear', de: 'Bugbär', en: 'Bugbear' },
+  { key: 'lizardfolk', de: 'Echsenmensch', en: 'Lizardfolk' },
+  { key: 'yuanti', de: 'Yuan-Ti', en: ['Yuan-Ti', 'Yuan-Ti Pureblood'] },
+
+  // Pathfinder
+  { key: 'catfolk', de: 'Katzenvolk', en: 'Catfolk' },
+  { key: 'ratfolk', de: 'Rattenvolk', en: 'Ratfolk' },
+  { key: 'tengu', de: 'Tengu', en: 'Tengu' },
+  { key: 'kitsune', de: 'Kitsune', en: 'Kitsune' },
+
+  // Das Schwarze Auge (DSA)
+  { key: 'thorwaler', de: 'Thorwaler', en: 'Thorwaler' },
+  { key: 'achaz', de: 'Achaz', en: 'Achaz' },
+  { key: 'ogre', de: 'Oger', en: 'Ogre' },
+  { key: 'troll', de: 'Troll', en: 'Troll' },
+
+  // Generic Fantasy
+  { key: 'vampire', de: 'Vampir', en: 'Vampire' },
+  { key: 'dhampir', de: 'Dhampir', en: 'Dhampir' },
+  { key: 'werewolf', de: 'Werwolf', en: 'Werewolf' },
+  { key: 'centaur', de: 'Zentaur', en: 'Centaur' },
+  { key: 'minotaur', de: 'Minotaurus', en: 'Minotaur' },
+  { key: 'satyr', de: 'Satyr', en: 'Satyr' },
+  { key: 'fairy', de: 'Fee', en: 'Fairy' },
+  { key: 'harengon', de: 'Harengon', en: 'Harengon' },
+]
+
+/**
+ * Standard fantasy classes from D&D 5e, D&D 2024, Pathfinder, and other TTRPGs.
+ * Sorted alphabetically by key for easy maintenance.
+ */
+const STANDARD_CLASSES_DEFINITION: StandardClass[] = [
+  // D&D 5e Core
+  { key: 'barbarian', de: 'Barbar', en: 'Barbarian' },
+  { key: 'bard', de: 'Barde', en: 'Bard' },
+  { key: 'cleric', de: 'Kleriker', en: 'Cleric' },
+  { key: 'druid', de: 'Druide', en: 'Druid' },
+  { key: 'fighter', de: 'Kämpfer', en: 'Fighter' },
+  { key: 'monk', de: 'Mönch', en: 'Monk' },
+  { key: 'paladin', de: 'Paladin', en: 'Paladin' },
+  { key: 'ranger', de: 'Waldläufer', en: 'Ranger' },
+  { key: 'rogue', de: 'Schurke', en: 'Rogue' },
+  { key: 'sorcerer', de: 'Zauberer', en: 'Sorcerer' },
+  { key: 'warlock', de: 'Hexenmeister', en: 'Warlock' },
+  { key: 'wizard', de: 'Magier', en: 'Wizard' },
+
+  // D&D 5e Supplements
+  { key: 'artificer', de: 'Konstrukteur', en: 'Artificer' },
+  { key: 'bloodhunter', de: 'Blutjäger', en: ['Blood Hunter', 'Bloodhunter'] },
+
+  // Generic/Pathfinder
+  { key: 'alchemist', de: 'Alchemist', en: 'Alchemist' },
+  { key: 'necromancer', de: 'Nekromant', en: 'Necromancer' },
+  { key: 'witch', de: 'Hexe', en: 'Witch' },
+  { key: 'oracle', de: 'Orakel', en: 'Oracle' },
+  { key: 'inquisitor', de: 'Inquisitor', en: 'Inquisitor' },
+  { key: 'summoner', de: 'Beschwörer', en: 'Summoner' },
+  { key: 'gunslinger', de: 'Revolverheld', en: 'Gunslinger' },
+  { key: 'swashbuckler', de: 'Swashbuckler', en: 'Swashbuckler' },
+  { key: 'magus', de: 'Magus', en: 'Magus' },
+
+  // NPC/Monster Classes
+  { key: 'knight', de: 'Ritter', en: 'Knight' },
+  { key: 'assassin', de: 'Assassine', en: 'Assassin' },
+  { key: 'priest', de: 'Priester', en: 'Priest' },
+  { key: 'shaman', de: 'Schamane', en: 'Shaman' },
+  { key: 'merchant', de: 'Händler', en: 'Merchant' },
+  { key: 'noble', de: 'Adliger', en: 'Noble' },
+  { key: 'commoner', de: 'Bürger', en: 'Commoner' },
+  { key: 'soldier', de: 'Soldat', en: 'Soldier' },
+  { key: 'guard', de: 'Wache', en: 'Guard' },
+  { key: 'thief', de: 'Dieb', en: 'Thief' },
+  { key: 'pirate', de: 'Pirat', en: 'Pirate' },
+  { key: 'hunter', de: 'Jäger', en: 'Hunter' },
+  { key: 'beastmaster', de: 'Tiermeister', en: 'Beastmaster' },
+]
+
+// =============================================================================
+// DERIVED: Sets of standard keys (for checking if a key is custom)
+// =============================================================================
+
+/** Set of all standard race keys - any key NOT in this set is a custom race */
+export const STANDARD_RACE_KEYS = new Set(STANDARD_RACES_DEFINITION.map((r) => r.key))
+
+/** Set of all standard class keys - any key NOT in this set is a custom class */
+export const STANDARD_CLASS_KEYS = new Set(STANDARD_CLASSES_DEFINITION.map((c) => c.key))
+
+// =============================================================================
+// DERIVED: Lookup tables (name → key, built once at module load)
+// =============================================================================
+
+function buildLookup(
+  definitions: Array<{ key: string; de: string | string[]; en: string | string[] }>,
+  locale: 'de' | 'en',
+): Record<string, string> {
+  const lookup: Record<string, string> = {}
+  for (const def of definitions) {
+    const names = locale === 'de' ? def.de : def.en
+    const nameArray = Array.isArray(names) ? names : [names]
+    for (const name of nameArray) {
+      lookup[name.toLowerCase()] = def.key
+    }
+  }
+  return lookup
+}
+
+const RACES_DE = buildLookup(STANDARD_RACES_DEFINITION, 'de')
+const RACES_EN = buildLookup(STANDARD_RACES_DEFINITION, 'en')
+const CLASSES_DE = buildLookup(STANDARD_CLASSES_DEFINITION, 'de')
+const CLASSES_EN = buildLookup(STANDARD_CLASSES_DEFINITION, 'en')
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
 export interface RaceClassLookup {
   races: Record<string, string>
   classes: Record<string, string>
@@ -62,93 +244,12 @@ export function getLocaleFromEvent(event: {
 /**
  * Create lookup tables for race and class names to keys.
  * Locale-specific to support language-aware fuzzy matching.
+ * Uses pre-built lookups from STANDARD_RACES_DEFINITION and STANDARD_CLASSES_DEFINITION.
  */
 export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
-  const racesDE: Record<string, string> = {
-    mensch: 'human',
-    elf: 'elf',
-    zwerg: 'dwarf',
-    halbling: 'halfling',
-    gnom: 'gnome',
-    halbelf: 'halfelf',
-    halbork: 'halforc',
-    tiefling: 'tiefling',
-    drachenblütiger: 'dragonborn',
-    'zwergelf (drow)': 'drow',
-    drow: 'drow',
-    waldelf: 'woodelf',
-    hochelf: 'highelf',
-    bergzwerg: 'mountaindwarf',
-    hügelzwerg: 'hilldwarf',
-    'leichtfuß-halbling': 'lightfoothalfling',
-    'robuster halbling': 'stouthalfling',
-  }
-
-  const racesEN: Record<string, string> = {
-    // English names (NOT keys - keys are language-neutral and should not be directly searchable)
-    // If user searches "human" in EN, we want to find it. But NOT in DE.
-    human: 'human',
-    elf: 'elf',
-    dwarf: 'dwarf',
-    halfling: 'halfling',
-    gnome: 'gnome',
-    'half-elf': 'halfelf',
-    'half elf': 'halfelf',
-    halfelf: 'halfelf',
-    'half-orc': 'halforc',
-    'half orc': 'halforc',
-    halforc: 'halforc',
-    tiefling: 'tiefling',
-    dragonborn: 'dragonborn',
-    drow: 'drow',
-    'wood elf': 'woodelf',
-    woodelf: 'woodelf',
-    'high elf': 'highelf',
-    highelf: 'highelf',
-    'mountain dwarf': 'mountaindwarf',
-    mountaindwarf: 'mountaindwarf',
-    'hill dwarf': 'hilldwarf',
-    hilldwarf: 'hilldwarf',
-    'lightfoot halfling': 'lightfoothalfling',
-    lightfoothalfling: 'lightfoothalfling',
-    'stout halfling': 'stouthalfling',
-    stouthalfling: 'stouthalfling',
-  }
-
-  const classesDE: Record<string, string> = {
-    barbar: 'barbarian',
-    barde: 'bard',
-    druide: 'druid',
-    hexenmeister: 'warlock',
-    kämpfer: 'fighter',
-    kleriker: 'cleric',
-    magier: 'wizard',
-    mönch: 'monk',
-    paladin: 'paladin',
-    schurke: 'rogue',
-    waldläufer: 'ranger',
-    zauberer: 'sorcerer',
-  }
-
-  const classesEN: Record<string, string> = {
-    // English names (keys happen to match English names for classes)
-    barbarian: 'barbarian',
-    bard: 'bard',
-    druid: 'druid',
-    warlock: 'warlock',
-    fighter: 'fighter',
-    cleric: 'cleric',
-    wizard: 'wizard',
-    monk: 'monk',
-    paladin: 'paladin',
-    rogue: 'rogue',
-    ranger: 'ranger',
-    sorcerer: 'sorcerer',
-  }
-
   return {
-    races: locale === 'en' ? racesEN : racesDE,
-    classes: locale === 'en' ? classesEN : classesDE,
+    races: locale === 'en' ? RACES_EN : RACES_DE,
+    classes: locale === 'en' ? CLASSES_EN : CLASSES_DE,
   }
 }
 

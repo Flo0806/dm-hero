@@ -354,6 +354,7 @@
           {{ $t('common.download') }}
         </v-tooltip>
       </v-btn>
+
       <v-spacer />
       <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', npc)">
         <v-icon>mdi-pencil</v-icon>

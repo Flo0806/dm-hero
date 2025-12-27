@@ -28,6 +28,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Prevent deleting standard races
+  if (race.is_standard) {
+    throw createError({
+      statusCode: 403,
+      message: 'Standard races cannot be deleted',
+    })
+  }
+
   // Check if race is in use by any NPCs
   const npcTypeId = db
     .prepare<unknown[], EntityTypeRow>(
@@ -50,7 +58,8 @@ export default defineEventHandler(async (event) => {
   if (inUse && inUse.count > 0) {
     throw createError({
       statusCode: 409,
-      message: `Cannot delete race '${race.name}' because it is used by ${inUse.count} NPC(s)`,
+      data: { code: 'RACE_IN_USE', count: inUse.count, name: race.name },
+      message: `RACE_IN_USE:${inUse.count}`,
     })
   }
 

@@ -28,6 +28,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Prevent deleting standard classes
+  if (classData.is_standard) {
+    throw createError({
+      statusCode: 403,
+      message: 'Standard classes cannot be deleted',
+    })
+  }
+
   // Check if class is in use by any NPCs
   const npcTypeId = db
     .prepare<unknown[], EntityTypeRow>(
@@ -50,7 +58,8 @@ export default defineEventHandler(async (event) => {
   if (inUse && inUse.count > 0) {
     throw createError({
       statusCode: 409,
-      message: `Cannot delete class '${classData.name}' because it is used by ${inUse.count} NPC(s)`,
+      data: { code: 'CLASS_IN_USE', count: inUse.count, name: classData.name },
+      message: `CLASS_IN_USE:${inUse.count}`,
     })
   }
 

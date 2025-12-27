@@ -239,6 +239,77 @@
             </v-list>
           </div>
 
+          <!-- Race/Class Conflicts -->
+          <div v-if="conflictInfo?.raceClassConflicts?.length" class="mb-4">
+            <v-alert type="warning" variant="tonal" class="mb-3" density="compact">
+              <v-icon start size="small">mdi-account-multiple</v-icon>
+              {{ $t('campaigns.import.raceClassConflictWarning') }}
+            </v-alert>
+
+            <v-card v-for="conflict in conflictInfo.raceClassConflicts" :key="`${conflict.type}-${conflict.key}`" variant="outlined" class="mb-2">
+              <v-card-text class="pa-3">
+                <div class="d-flex align-center mb-2">
+                  <v-chip
+                    :color="conflict.type === 'race' ? 'primary' : 'secondary'"
+                    size="small"
+                    class="mr-2"
+                  >
+                    {{ conflict.type === 'race' ? $t('npcs.race') : $t('npcs.class') }}
+                  </v-chip>
+                  <span class="font-weight-medium">{{ conflict.key }}</span>
+                  <v-chip v-if="conflict.isStandard" size="x-small" color="success" class="ml-2">
+                    {{ $t('campaigns.import.nowStandard') }}
+                  </v-chip>
+                </div>
+
+                <!-- Show imported vs existing -->
+                <div v-if="!conflict.isStandard" class="d-flex flex-column flex-sm-row gap-2 mb-2">
+                  <div class="flex-grow-1">
+                    <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.imported') }}</div>
+                    <div class="text-body-2">
+                      DE: {{ conflict.imported.name_de || '-' }}<br/>
+                      EN: {{ conflict.imported.name_en || '-' }}
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.existing') }}</div>
+                    <div class="text-body-2">
+                      DE: {{ conflict.existing.name_de || '-' }}<br/>
+                      EN: {{ conflict.existing.name_en || '-' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resolution options -->
+                <v-radio-group
+                  :model-value="getResolution(conflict)"
+                  density="compact"
+                  hide-details
+                  class="mt-2"
+                  @update:model-value="setResolution(conflict, $event)"
+                >
+                  <v-radio v-if="conflict.isStandard" value="skip">
+                    <template #label>
+                      <span class="text-body-2">{{ $t('campaigns.import.skipStandard') }}</span>
+                    </template>
+                  </v-radio>
+                  <template v-else>
+                    <v-radio value="keep">
+                      <template #label>
+                        <span class="text-body-2">{{ $t('campaigns.import.keepExisting') }}</span>
+                      </template>
+                    </v-radio>
+                    <v-radio value="overwrite">
+                      <template #label>
+                        <span class="text-body-2">{{ $t('campaigns.import.overwriteExisting') }}</span>
+                      </template>
+                    </v-radio>
+                  </template>
+                </v-radio-group>
+              </v-card-text>
+            </v-card>
+          </div>
+
           <v-alert type="info" variant="tonal" density="compact">
             {{ $t('campaigns.import.confirmHint') }}
           </v-alert>
@@ -302,6 +373,7 @@
           <v-btn
             color="warning"
             variant="flat"
+            :disabled="!allRaceClassResolved"
             @click="doImport(true)"
           >
             <v-icon start>mdi-alert</v-icon>
@@ -324,7 +396,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ImportResult, ImportConflictInfo } from '~~/types/export'
+import type { ImportResult, ImportConflictInfo, RaceClassConflict } from '~~/types/export'
 
 interface ImportPreview {
   campaignName: string
@@ -349,6 +421,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const campaignStore = useCampaignStore()
+const entitiesStore = useEntitiesStore()
 
 const dialogVisible = computed({
   get: () => props.modelValue,
@@ -370,9 +443,51 @@ const importResult = ref<ImportResult | null>(null)
 const importedCampaignId = ref<number | null>(null)
 const conflictInfo = ref<ImportConflictInfo | null>(null)
 const sourceAdventureSlug = ref<string | null>(null)
+const raceResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
+const classResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
 
 // Get current campaign for merge option
 const activeCampaign = computed(() => campaignStore.currentCampaign)
+
+// Check if all race/class conflicts have resolutions
+const allRaceClassResolved = computed(() => {
+  if (!conflictInfo.value?.raceClassConflicts?.length) return true
+  return conflictInfo.value.raceClassConflicts.every((c) => {
+    const res = c.type === 'race' ? raceResolutions.value[c.key] : classResolutions.value[c.key]
+    return !!res
+  })
+})
+
+// Helper to get resolution for a conflict
+function getResolution(conflict: RaceClassConflict): string | undefined {
+  return conflict.type === 'race'
+    ? raceResolutions.value[conflict.key]
+    : classResolutions.value[conflict.key]
+}
+
+// Helper to set resolution for a conflict
+function setResolution(conflict: RaceClassConflict, value: string | null) {
+  if (!value) return
+  const resolution = value as 'overwrite' | 'keep' | 'skip'
+  if (conflict.type === 'race') {
+    raceResolutions.value[conflict.key] = resolution
+  } else {
+    classResolutions.value[conflict.key] = resolution
+  }
+}
+
+// Initialize resolutions when conflicts are detected
+function initializeResolutions() {
+  if (!conflictInfo.value?.raceClassConflicts) return
+  for (const conflict of conflictInfo.value.raceClassConflicts) {
+    if (conflict.type === 'race' && !raceResolutions.value[conflict.key]) {
+      // Default: keep existing for custom, skip for standard
+      raceResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
+    } else if (conflict.type === 'class' && !classResolutions.value[conflict.key]) {
+      classResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
+    }
+  }
+}
 
 // Parse the uploaded file to show preview
 async function onFileSelected(filesOrFile: File[] | File | null) {
@@ -514,6 +629,8 @@ async function doImport(confirmedOverwrite: boolean = false) {
         targetCampaignId: importMode.value === 'merge' ? activeCampaign.value?.id : undefined,
         sourceAdventureSlug: sourceAdventureSlug.value || undefined,
         confirmedOverwrite,
+        raceResolutions: Object.keys(raceResolutions.value).length > 0 ? raceResolutions.value : undefined,
+        classResolutions: Object.keys(classResolutions.value).length > 0 ? classResolutions.value : undefined,
       }),
     )
 
@@ -525,6 +642,7 @@ async function doImport(confirmedOverwrite: boolean = false) {
     // Check if confirmation is required
     if (result.requiresConfirmation && result.conflictInfo) {
       conflictInfo.value = result.conflictInfo
+      initializeResolutions()
       step.value = 'confirm'
       return
     }
@@ -532,6 +650,13 @@ async function doImport(confirmedOverwrite: boolean = false) {
     if (result.success) {
       importResult.value = result
       importedCampaignId.value = result.campaignId
+
+      // Refresh stores after import
+      if (importMode.value === 'merge' && activeCampaign.value) {
+        // Merge mode: refresh entities in current campaign
+        await entitiesStore.refreshAll(activeCampaign.value.id)
+      }
+
       step.value = 'success'
     } else {
       throw new Error(result.errors?.join(', ') || 'Import failed')
@@ -578,5 +703,7 @@ function close() {
   importedCampaignId.value = null
   conflictInfo.value = null
   sourceAdventureSlug.value = null
+  raceResolutions.value = {}
+  classResolutions.value = {}
 }
 </script>

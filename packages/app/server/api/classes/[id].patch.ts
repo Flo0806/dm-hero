@@ -1,5 +1,10 @@
 import { getDb } from '../../utils/db'
 
+interface ClassRow {
+  id: number
+  is_standard: number
+}
+
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const id = getRouterParam(event, 'id')
@@ -16,9 +21,9 @@ export default defineEventHandler(async (event) => {
 
   // Check if class exists
   const existing = db
-    .prepare(
+    .prepare<unknown[], ClassRow>(
       `
-    SELECT id FROM classes WHERE id = ? AND deleted_at IS NULL
+    SELECT id, is_standard FROM classes WHERE id = ? AND deleted_at IS NULL
   `,
     )
     .get(id)
@@ -27,6 +32,14 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       message: 'Class not found',
+    })
+  }
+
+  // Prevent editing standard classes
+  if (existing.is_standard) {
+    throw createError({
+      statusCode: 403,
+      message: 'Standard classes cannot be edited',
     })
   }
 

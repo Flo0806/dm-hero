@@ -26,6 +26,7 @@ export interface ClassRow {
   name: string
   name_de: string | null
   name_en: string | null
+  is_standard: number
   created_at: string
   deleted_at: string | null
 }
@@ -35,6 +36,7 @@ export interface RaceRow {
   name: string
   name_de: string | null
   name_en: string | null
+  is_standard: number
   created_at: string
   deleted_at: string | null
 }

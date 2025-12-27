@@ -88,7 +88,7 @@
             <div class="d-flex align-center gap-2">
               <span>{{ item.name }}</span>
               <v-chip
-                v-if="!item.name_de && !item.name_en"
+                v-if="item.is_standard"
                 size="x-small"
                 color="primary"
                 variant="tonal"
@@ -101,25 +101,27 @@
             </div>
           </template>
           <template #[`item.actions`]="{ item }">
-            <!-- Standard races (no name_de/name_en) cannot be edited/deleted -->
-            <template v-if="item.name_de && item.name_en">
-              <v-btn icon="mdi-pencil" variant="text" size="small" @click="openRaceDialog(item)" />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                size="small"
-                color="error"
-                @click="deleteRace(item)"
-              />
-            </template>
-            <template v-else>
-              <v-tooltip location="top">
-                <template #activator="{ props }">
-                  <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" />
-                </template>
-                {{ $t('referenceData.standardProtected') }}
-              </v-tooltip>
-            </template>
+            <div class="d-flex justify-end">
+              <!-- Standard races cannot be edited/deleted -->
+              <template v-if="!item.is_standard">
+                <v-btn icon="mdi-pencil" variant="text" size="small" @click="openRaceDialog(item)" />
+                <v-btn
+                  icon="mdi-delete"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click="deleteRace(item)"
+                />
+              </template>
+              <template v-else>
+                <v-tooltip location="top">
+                  <template #activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" class="mr-2" />
+                  </template>
+                  {{ $t('referenceData.standardProtected') }}
+                </v-tooltip>
+              </template>
+            </div>
           </template>
         </v-data-table>
       </v-tabs-window-item>
@@ -137,7 +139,7 @@
             <div class="d-flex align-center gap-2">
               <span>{{ item.name }}</span>
               <v-chip
-                v-if="!item.name_de && !item.name_en"
+                v-if="item.is_standard"
                 size="x-small"
                 color="primary"
                 variant="tonal"
@@ -150,25 +152,27 @@
             </div>
           </template>
           <template #[`item.actions`]="{ item }">
-            <!-- Standard classes (no name_de/name_en) cannot be edited/deleted -->
-            <template v-if="item.name_de && item.name_en">
-              <v-btn icon="mdi-pencil" variant="text" size="small" @click="openClassDialog(item)" />
-              <v-btn
-                icon="mdi-delete"
-                variant="text"
-                size="small"
-                color="error"
-                @click="deleteClass(item)"
-              />
-            </template>
-            <template v-else>
-              <v-tooltip location="top">
-                <template #activator="{ props }">
-                  <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" />
-                </template>
-                {{ $t('referenceData.standardProtected') }}
-              </v-tooltip>
-            </template>
+            <div class="d-flex justify-end">
+              <!-- Standard classes cannot be edited/deleted -->
+              <template v-if="!item.is_standard">
+                <v-btn icon="mdi-pencil" variant="text" size="small" @click="openClassDialog(item)" />
+                <v-btn
+                  icon="mdi-delete"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  @click="deleteClass(item)"
+                />
+              </template>
+              <template v-else>
+                <v-tooltip location="top">
+                  <template #activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-lock" size="small" color="grey" class="mr-2" />
+                  </template>
+                  {{ $t('referenceData.standardProtected') }}
+                </v-tooltip>
+              </template>
+            </div>
           </template>
         </v-data-table>
       </v-tabs-window-item>
@@ -184,11 +188,13 @@
           <v-text-field
             v-model="raceForm.name"
             :label="$t('referenceData.name')"
-            :rules="[(v) => !!v || $t('referenceData.nameRequired')]"
+            :rules="keyRules"
             variant="outlined"
-            hint="Internal key (e.g., 'drachling') - lowercase, no spaces"
+            :hint="$t('referenceData.keyHint')"
             persistent-hint
+            maxlength="20"
             class="mb-4"
+            @input="raceForm.name = sanitizeKey(raceForm.name)"
           />
 
           <v-divider class="my-4" />
@@ -244,11 +250,13 @@
           <v-text-field
             v-model="classForm.name"
             :label="$t('referenceData.name')"
-            :rules="[(v) => !!v || $t('referenceData.nameRequired')]"
+            :rules="keyRules"
             variant="outlined"
-            hint="Internal key (e.g., 'battlemage') - lowercase, no spaces"
+            :hint="$t('referenceData.keyHint')"
             persistent-hint
+            maxlength="20"
             class="mb-4"
+            @input="classForm.name = sanitizeKey(classForm.name)"
           />
 
           <v-divider class="my-4" />
@@ -419,6 +427,7 @@ interface ReferenceData {
   name: string
   name_de?: string | null
   name_en?: string | null
+  is_standard?: number
   description: string | null
   created_at: string
 }
@@ -438,6 +447,20 @@ interface Currency {
 const { t } = useI18n()
 const campaignStore = useCampaignStore()
 const tab = ref('currencies')
+
+// Key validation: lowercase letters and underscores only, max 20 chars
+function sanitizeKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z_]/g, '') // Only allow a-z and underscore
+    .slice(0, 20)
+}
+
+const keyRules = [
+  (v: string) => !!v || t('referenceData.nameRequired'),
+  (v: string) => /^[a-z_]+$/.test(v) || t('referenceData.keyInvalid'),
+  (v: string) => v.length <= 20 || t('referenceData.keyTooLong'),
+]
 
 // Campaign-specific data
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
@@ -868,8 +891,17 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     deletingId.value = null
   } catch (error) {
-    const err = error as { data?: { message?: string } }
-    errorMessage.value = err.data?.message || t('referenceData.deleteError')
+    const err = error as { data?: { message?: string; data?: { code?: string; count?: number } } }
+    const errData = err.data?.data
+
+    // Translate specific error codes
+    if (errData?.code === 'RACE_IN_USE') {
+      errorMessage.value = t('referenceData.raceInUse', { count: errData.count })
+    } else if (errData?.code === 'CLASS_IN_USE') {
+      errorMessage.value = t('referenceData.classInUse', { count: errData.count })
+    } else {
+      errorMessage.value = t('referenceData.deleteError')
+    }
     showError.value = true
   } finally {
     deleting.value = false

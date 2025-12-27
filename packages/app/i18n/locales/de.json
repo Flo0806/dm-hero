@@ -95,6 +95,7 @@
     },
     "exportHint": "Speichere deine Kampagne als .dmhero Datei",
     "importHint": "Lade eine Kampagne aus einer .dmhero Datei",
+    "copyHint": "Kopiere Entitäten in eine andere Kampagne",
     "dataManagement": "Datenverwaltung",
     "categories": {
       "title": "Kategorien"
@@ -227,7 +228,14 @@
       "duplicateDetails": "Folgende Entitäten haben den gleichen Namen wie existierende Entitäten und werden ersetzt:",
       "entitiesWillBeReplaced": "Entitäten werden ersetzt",
       "confirmHint": "Lokale Änderungen an diesen Entitäten gehen verloren.",
-      "confirmOverwrite": "Trotzdem importieren"
+      "confirmOverwrite": "Trotzdem importieren",
+      "raceClassConflictWarning": "Völker/Klassen mit gleichem Key existieren bereits",
+      "nowStandard": "Jetzt Standard",
+      "imported": "Importiert",
+      "existing": "Vorhanden",
+      "skipStandard": "Überspringen (ist jetzt Standard-Volk/-Klasse)",
+      "keepExisting": "Behalten (meine Version behalten)",
+      "overwriteExisting": "Überschreiben (mit importierter Version)"
     }
   },
   "npcs": {
@@ -1137,6 +1145,9 @@
     "name": "Name",
     "description": "Beschreibung",
     "nameRequired": "Name ist erforderlich",
+    "keyHint": "Interner Schlüssel - nur Kleinbuchstaben (a-z) und Unterstriche, max. 20 Zeichen",
+    "keyInvalid": "Nur Kleinbuchstaben (a-z) und Unterstriche erlaubt",
+    "keyTooLong": "Maximal 20 Zeichen erlaubt",
     "translations": "Übersetzungen",
     "translationRequired": "Beide Übersetzungen (DE & EN) sind erforderlich",
     "translationHint": "Standard-Völker (Mensch, Elf, etc.) nutzen eingebaute Übersetzungen. Eigene Völker benötigen deutsche und englische Namen.",
@@ -1153,6 +1164,8 @@
     "deleteClassConfirm": "Möchtest du die Klasse '{name}' wirklich löschen?",
     "saveError": "Fehler beim Speichern",
     "deleteError": "Fehler beim Löschen",
+    "raceInUse": "Dieses Volk wird noch von {count} NPC(s) verwendet und kann nicht gelöscht werden.",
+    "classInUse": "Diese Klasse wird noch von {count} NPC(s) verwendet und kann nicht gelöscht werden.",
     "noCampaignSelected": "Bitte wähle zuerst eine Kampagne aus, um Währungen zu verwalten.",
     "raceNames": {
       "human": "Mensch",
@@ -1320,6 +1333,7 @@
     "search": "Suchen",
     "searching": "Suche läuft...",
     "actions": "Aktionen",
+    "moreActions": "Weitere Aktionen",
     "view": "Ansehen",
     "close": "Schließen",
     "saveInTabHint": "Änderungen in diesem Tab direkt speichern",
@@ -1385,7 +1399,9 @@
     "addPlayerLink": "Spieler verknüpfen",
     "selectPlayer": "Spieler auswählen",
     "editRelation": "Beziehung bearbeiten",
-    "relationNotes": "Notizen zur Beziehung"
+    "relationNotes": "Notizen zur Beziehung",
+    "betaWarning": "Diese Funktionen sind in der Beta-Phase. Bitte erstelle vorher ein Backup deiner Datenbank.",
+    "backupSettings": "Zu Backup-Einstellungen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -1769,7 +1785,25 @@
     "currentLocationHint": "Der Ort, an dem sich diese Entität gerade befindet",
     "updateOnMaps": "Auf Karten aktualisieren",
     "selectMaps": "Karten auswählen",
-    "selectMapsHint": "Wähle die Karten, auf denen der Standort aktualisiert werden soll"
+    "selectMapsHint": "Wähle die Karten, auf denen der Standort aktualisiert werden soll",
+    "copyToCampaign": {
+      "title": "In Kampagne kopieren",
+      "selectEntities": "Wähle die Entitäten, die du in eine andere Kampagne kopieren möchtest.",
+      "selectedCount": "{count} Entität(en) ausgewählt",
+      "summary": "{count} Entität(en) zum Kopieren ausgewählt",
+      "targetCampaign": "Ziel-Kampagne",
+      "duplicatesFound": "{count} bereits vorhanden",
+      "howToHandle": "Wie sollen Duplikate behandelt werden?",
+      "modeSkip": "Überspringen",
+      "modeUpdate": "Aktualisieren",
+      "modeDuplicate": "Duplizieren",
+      "copy": "Kopieren",
+      "copyWithMode": "Kopieren",
+      "success": "Erfolgreich kopiert",
+      "successDetails": "{copied} kopiert, {skipped} übersprungen, {updated} aktualisiert",
+      "successMessage": "{count} Entität(en) erfolgreich kopiert",
+      "error": "Fehler beim Kopieren"
+    }
   },
   "maps": {
     "title": "Karten",

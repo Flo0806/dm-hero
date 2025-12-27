@@ -125,14 +125,31 @@
       <!-- Export/Import Actions -->
       <v-row class="mb-4 mt-6">
         <v-col cols="12">
-          <div class="text-h6 font-weight-medium">
-            {{ $t('dashboard.dataManagement') }}
+          <div class="d-flex align-center flex-wrap ga-2 mb-2">
+            <div class="text-h6 font-weight-medium">
+              {{ $t('dashboard.dataManagement') }}
+            </div>
+            <v-chip color="warning" size="small">Beta</v-chip>
           </div>
+          <v-alert type="warning" variant="tonal" density="compact" class="mt-2">
+            <div class="d-flex align-center flex-wrap">
+              <span>{{ $t('common.betaWarning') }}</span>
+              <v-btn
+                variant="text"
+                size="small"
+                color="warning"
+                class="ml-2"
+                to="/settings"
+              >
+                {{ $t('common.backupSettings') }}
+              </v-btn>
+            </div>
+          </v-alert>
         </v-col>
       </v-row>
 
       <v-row class="mb-4">
-        <v-col cols="12" sm="6">
+        <v-col cols="12" sm="6" md="4">
           <v-card hover class="h-100" @click="showExportDialog = true">
             <v-card-text class="pa-4">
               <div class="d-flex align-center">
@@ -147,7 +164,7 @@
             </v-card-text>
           </v-card>
         </v-col>
-        <v-col cols="12" sm="6">
+        <v-col cols="12" sm="6" md="4">
           <v-card hover class="h-100" @click="showImportDialog = true">
             <v-card-text class="pa-4">
               <div class="d-flex align-center">
@@ -156,6 +173,21 @@
                   <div class="text-subtitle-1 font-weight-medium">{{ $t('campaigns.import.title') }}</div>
                   <div class="text-body-2 text-medium-emphasis">
                     {{ $t('dashboard.importHint') }}
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" sm="6" md="4">
+          <v-card hover class="h-100" @click="showCopyDialog = true">
+            <v-card-text class="pa-4">
+              <div class="d-flex align-center">
+                <v-icon icon="mdi-content-copy" size="28" color="info" class="mr-3" />
+                <div>
+                  <div class="text-subtitle-1 font-weight-medium">{{ $t('entities.copyToCampaign.title') }}</div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    {{ $t('dashboard.copyHint') }}
                   </div>
                 </div>
               </div>
@@ -201,6 +233,7 @@
 
     <!-- Export Dialog -->
     <CampaignExportDialog
+      v-if="activeCampaignId"
       v-model="showExportDialog"
       :campaign-id="campaignStore.activeCampaignIdNumber!"
     />
@@ -209,6 +242,13 @@
     <CampaignImportDialog
       v-model="showImportDialog"
       @imported="onCampaignImported"
+    />
+
+    <!-- Copy to Campaign Dialog -->
+    <CopyToCampaignDialog
+      v-if="activeCampaignId"
+      v-model="showCopyDialog"
+      :current-campaign-id="campaignStore.activeCampaignIdNumber!"
     />
   </v-container>
 </template>
@@ -219,6 +259,7 @@ import type { PinboardItem } from '~~/types/pinboard'
 import type { EntityPreviewType } from '../components/shared/EntityPreviewDialog.vue'
 import CampaignExportDialog from '~/components/campaigns/CampaignExportDialog.vue'
 import CampaignImportDialog from '~/components/campaigns/CampaignImportDialog.vue'
+import CopyToCampaignDialog from '~/components/entities/CopyToCampaignDialog.vue'
 
 interface Session {
   id: number
@@ -258,9 +299,10 @@ const showEntityPreview = ref(false)
 const previewEntityId = ref<number | null>(null)
 const previewEntityType = ref<EntityPreviewType>('npc')
 
-// Export/Import dialogs
+// Export/Import/Copy dialogs
 const showExportDialog = ref(false)
 const showImportDialog = ref(false)
+const showCopyDialog = ref(false)
 
 function onCampaignImported(_campaignId: number) {
   // Refresh the page after import

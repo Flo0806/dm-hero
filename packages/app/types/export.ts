@@ -58,7 +58,9 @@ export function isExportCompatible(exportVersion: string, appVersion: string): b
 function compareVersions(a: string, b: string): number {
   // Strip pre-release suffix for comparison (1.0.0-beta.1 -> 1.0.0.1)
   const normalize = (v: string) => {
-    const [base, pre] = v.split('-')
+    const splitParts = v.split('-')
+    const base = splitParts[0] || v
+    const pre = splitParts[1]
     const parts = base.split('.').map(Number)
     if (pre) {
       // Extract number from pre-release (beta.1 -> 1)
@@ -153,6 +155,11 @@ export interface CampaignExportManifest {
   currencies?: ExportCurrency[]
   notes?: ExportNote[]
   pinboard?: ExportPinboardItem[]
+
+  // Custom races & classes - exported if NPCs use them
+  // These are GLOBAL (not campaign-scoped), so import may cause conflicts
+  races?: ExportRace[]
+  classes?: ExportClass[]
 }
 
 // =============================================================================
@@ -436,6 +443,54 @@ export interface ExportPinboardItem {
 }
 
 // =============================================================================
+// CUSTOM RACES & CLASSES (global, not campaign-scoped)
+// =============================================================================
+
+/**
+ * Custom race for export.
+ * Only custom races are exported - standard races (human, elf, etc.) have fixed i18n keys.
+ * On import, races are matched by KEY (name field), not by translations.
+ */
+export interface ExportRace {
+  name: string // Key (e.g., "halfdragon") - PRIMARY identifier for conflict detection
+  name_de?: string // German display name
+  name_en?: string // English display name
+  description?: string
+}
+
+/**
+ * Custom class for export.
+ * Only custom classes are exported - standard classes (wizard, fighter, etc.) have fixed i18n keys.
+ * On import, classes are matched by KEY (name field), not by translations.
+ */
+export interface ExportClass {
+  name: string // Key (e.g., "shadowdancer") - PRIMARY identifier for conflict detection
+  name_de?: string // German display name
+  name_en?: string // English display name
+  description?: string
+}
+
+/**
+ * Conflict info for a single race or class during import.
+ * Shown to user so they can decide: overwrite, keep existing, or abort.
+ */
+export interface RaceClassConflict {
+  type: 'race' | 'class'
+  key: string // The conflicting key (e.g., "halfdragon")
+  imported: {
+    name_de?: string
+    name_en?: string
+    description?: string
+  }
+  existing: {
+    name_de?: string
+    name_en?: string
+    description?: string
+  }
+  isStandard: boolean // True if this is now a standard race/class (no import needed)
+}
+
+// =============================================================================
 // EXPORT OPTIONS (for API)
 // =============================================================================
 
@@ -483,6 +538,9 @@ export interface ImportConflictInfo {
     typeName: string
     existingId: number
   }>
+
+  // Race/Class conflicts (global data - requires user decision)
+  raceClassConflicts?: RaceClassConflict[]
 }
 
 // =============================================================================
@@ -503,6 +561,14 @@ export interface ImportOptions {
 
   // User confirmed they want to proceed despite conflicts
   confirmedOverwrite?: boolean
+
+  // Race/Class conflict resolution (user's decisions)
+  // Key = race/class key, Value = 'overwrite' | 'keep' | 'skip'
+  // 'overwrite' = replace existing with imported
+  // 'keep' = keep existing, don't import
+  // 'skip' = skip this race/class (same as keep, but for standard races)
+  raceResolutions?: Record<string, 'overwrite' | 'keep' | 'skip'>
+  classResolutions?: Record<string, 'overwrite' | 'keep' | 'skip'>
 }
 
 // =============================================================================
@@ -519,6 +585,8 @@ export interface ImportResult {
     mapsImported: number
     imagesImported: number
     documentsImported: number
+    racesImported: number
+    classesImported: number
     skipped: number
     warnings: string[]
     entitiesDeleted?: number // How many were soft-deleted before import

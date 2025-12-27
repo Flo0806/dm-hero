@@ -1,5 +1,10 @@
 import { getDb } from '../../utils/db'
 
+interface RaceRow {
+  id: number
+  is_standard: number
+}
+
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const id = getRouterParam(event, 'id')
@@ -16,9 +21,9 @@ export default defineEventHandler(async (event) => {
 
   // Check if race exists
   const existing = db
-    .prepare(
+    .prepare<unknown[], RaceRow>(
       `
-    SELECT id FROM races WHERE id = ? AND deleted_at IS NULL
+    SELECT id, is_standard FROM races WHERE id = ? AND deleted_at IS NULL
   `,
     )
     .get(id)
@@ -27,6 +32,14 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       message: 'Race not found',
+    })
+  }
+
+  // Prevent editing standard races
+  if (existing.is_standard) {
+    throw createError({
+      statusCode: 403,
+      message: 'Standard races cannot be edited',
     })
   }
 

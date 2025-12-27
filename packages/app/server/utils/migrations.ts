@@ -1958,6 +1958,192 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 36: Added year/month fields and converted existing sessions')
     },
   },
+  {
+    version: 37,
+    name: 'add_is_standard_and_sync_races_classes',
+    up: (db) => {
+      console.log('📦 Migration 37: Adding is_standard field and syncing standard races/classes...')
+
+      // Step 1: Add is_standard column to races and classes tables
+      db.exec('ALTER TABLE races ADD COLUMN is_standard INTEGER DEFAULT 0')
+      db.exec('ALTER TABLE classes ADD COLUMN is_standard INTEGER DEFAULT 0')
+      console.log('  Added is_standard column to races and classes')
+
+      // Standard races with DE/EN translations
+      // Key is stored in `name` column, translations in `name_de`/`name_en`
+      const standardRaces = [
+        // D&D 5e Core
+        { key: 'human', de: 'Mensch', en: 'Human' },
+        { key: 'elf', de: 'Elf', en: 'Elf' },
+        { key: 'dwarf', de: 'Zwerg', en: 'Dwarf' },
+        { key: 'halfling', de: 'Halbling', en: 'Halfling' },
+        { key: 'gnome', de: 'Gnom', en: 'Gnome' },
+        { key: 'halfelf', de: 'Halbelf', en: 'Half-Elf' },
+        { key: 'halforc', de: 'Halbork', en: 'Half-Orc' },
+        { key: 'tiefling', de: 'Tiefling', en: 'Tiefling' },
+        { key: 'dragonborn', de: 'Drachenblütiger', en: 'Dragonborn' },
+        // Elf subraces
+        { key: 'drow', de: 'Drow', en: 'Drow' },
+        { key: 'woodelf', de: 'Waldelf', en: 'Wood Elf' },
+        { key: 'highelf', de: 'Hochelf', en: 'High Elf' },
+        { key: 'eladrin', de: 'Eladrin', en: 'Eladrin' },
+        { key: 'seaelf', de: 'Seeelf', en: 'Sea Elf' },
+        { key: 'shadarkai', de: 'Shadar-kai', en: 'Shadar-kai' },
+        // Dwarf subraces
+        { key: 'mountaindwarf', de: 'Bergzwerg', en: 'Mountain Dwarf' },
+        { key: 'hilldwarf', de: 'Hügelzwerg', en: 'Hill Dwarf' },
+        { key: 'duergar', de: 'Duergar', en: 'Duergar' },
+        // Halfling subraces
+        { key: 'lightfoothalfling', de: 'Leichtfuß-Halbling', en: 'Lightfoot Halfling' },
+        { key: 'stouthalfling', de: 'Robuster Halbling', en: 'Stout Halfling' },
+        // Gnome subraces
+        { key: 'forestgnome', de: 'Waldgnom', en: 'Forest Gnome' },
+        { key: 'rockgnome', de: 'Felsgnom', en: 'Rock Gnome' },
+        { key: 'deepgnome', de: 'Tiefengnom', en: 'Deep Gnome' },
+        // D&D 5e/2024 Supplement Races
+        { key: 'aasimar', de: 'Aasimar', en: 'Aasimar' },
+        { key: 'goliath', de: 'Goliath', en: 'Goliath' },
+        { key: 'orc', de: 'Ork', en: 'Orc' },
+        { key: 'genasi', de: 'Genasi', en: 'Genasi' },
+        { key: 'firegenasi', de: 'Feuer-Genasi', en: 'Fire Genasi' },
+        { key: 'watergenasi', de: 'Wasser-Genasi', en: 'Water Genasi' },
+        { key: 'earthgenasi', de: 'Erd-Genasi', en: 'Earth Genasi' },
+        { key: 'airgenasi', de: 'Luft-Genasi', en: 'Air Genasi' },
+        { key: 'tabaxi', de: 'Tabaxi', en: 'Tabaxi' },
+        { key: 'kenku', de: 'Kenku', en: 'Kenku' },
+        { key: 'firbolg', de: 'Firbolg', en: 'Firbolg' },
+        { key: 'triton', de: 'Triton', en: 'Triton' },
+        { key: 'yuan-ti', de: 'Yuan-ti', en: 'Yuan-ti' },
+        { key: 'tortle', de: 'Tortle', en: 'Tortle' },
+        { key: 'aarakocra', de: 'Aarakocra', en: 'Aarakocra' },
+        { key: 'warforged', de: 'Kriegsgeschmiedeter', en: 'Warforged' },
+        { key: 'changeling', de: 'Wechselbalg', en: 'Changeling' },
+        { key: 'shifter', de: 'Gestaltwandler', en: 'Shifter' },
+        { key: 'kalashtar', de: 'Kalashtar', en: 'Kalashtar' },
+        { key: 'gith', de: 'Gith', en: 'Gith' },
+        { key: 'githyanki', de: 'Githyanki', en: 'Githyanki' },
+        { key: 'githzerai', de: 'Githzerai', en: 'Githzerai' },
+        { key: 'satyr', de: 'Satyr', en: 'Satyr' },
+        { key: 'centaur', de: 'Zentaur', en: 'Centaur' },
+        { key: 'minotaur', de: 'Minotaurus', en: 'Minotaur' },
+        { key: 'loxodon', de: 'Loxodon', en: 'Loxodon' },
+        { key: 'vedalken', de: 'Vedalken', en: 'Vedalken' },
+        { key: 'simic', de: 'Simic-Hybrid', en: 'Simic Hybrid' },
+        { key: 'fairy', de: 'Fee', en: 'Fairy' },
+        { key: 'harengon', de: 'Harengon', en: 'Harengon' },
+        { key: 'owlin', de: 'Eulin', en: 'Owlin' },
+        { key: 'autognome', de: 'Autognom', en: 'Autognome' },
+        { key: 'hadozee', de: 'Hadozee', en: 'Hadozee' },
+        { key: 'plasmoid', de: 'Plasmoid', en: 'Plasmoid' },
+        { key: 'thrikreen', de: 'Thri-kreen', en: 'Thri-kreen' },
+        // Monster Races
+        { key: 'goblin', de: 'Goblin', en: 'Goblin' },
+        { key: 'kobold', de: 'Kobold', en: 'Kobold' },
+        { key: 'hobgoblin', de: 'Hobgoblin', en: 'Hobgoblin' },
+        { key: 'bugbear', de: 'Bugbär', en: 'Bugbear' },
+        { key: 'lizardfolk', de: 'Echsenvolk', en: 'Lizardfolk' },
+        { key: 'grung', de: 'Grung', en: 'Grung' },
+      ]
+
+      // Standard classes with DE/EN translations
+      const standardClasses = [
+        // D&D 5e Core
+        { key: 'barbarian', de: 'Barbar', en: 'Barbarian' },
+        { key: 'bard', de: 'Barde', en: 'Bard' },
+        { key: 'cleric', de: 'Kleriker', en: 'Cleric' },
+        { key: 'druid', de: 'Druide', en: 'Druid' },
+        { key: 'fighter', de: 'Kämpfer', en: 'Fighter' },
+        { key: 'monk', de: 'Mönch', en: 'Monk' },
+        { key: 'paladin', de: 'Paladin', en: 'Paladin' },
+        { key: 'ranger', de: 'Waldläufer', en: 'Ranger' },
+        { key: 'rogue', de: 'Schurke', en: 'Rogue' },
+        { key: 'sorcerer', de: 'Zauberer', en: 'Sorcerer' },
+        { key: 'warlock', de: 'Hexenmeister', en: 'Warlock' },
+        { key: 'wizard', de: 'Magier', en: 'Wizard' },
+        // D&D Supplements
+        { key: 'artificer', de: 'Konstrukteur', en: 'Artificer' },
+        { key: 'bloodhunter', de: 'Blutjäger', en: 'Blood Hunter' },
+        // NPC/Profession classes
+        { key: 'knight', de: 'Ritter', en: 'Knight' },
+        { key: 'assassin', de: 'Assassine', en: 'Assassin' },
+        { key: 'priest', de: 'Priester', en: 'Priest' },
+        { key: 'acolyte', de: 'Akolyth', en: 'Acolyte' },
+        { key: 'merchant', de: 'Händler', en: 'Merchant' },
+        { key: 'noble', de: 'Adliger', en: 'Noble' },
+        { key: 'guard', de: 'Wache', en: 'Guard' },
+        { key: 'soldier', de: 'Soldat', en: 'Soldier' },
+        { key: 'spy', de: 'Spion', en: 'Spy' },
+        { key: 'thief', de: 'Dieb', en: 'Thief' },
+        { key: 'commoner', de: 'Bürger', en: 'Commoner' },
+        { key: 'scholar', de: 'Gelehrter', en: 'Scholar' },
+        { key: 'alchemist', de: 'Alchemist', en: 'Alchemist' },
+        { key: 'necromancer', de: 'Nekromant', en: 'Necromancer' },
+        { key: 'battlemage', de: 'Kampfmagier', en: 'Battle Mage' },
+        { key: 'healer', de: 'Heiler', en: 'Healer' },
+        { key: 'blacksmith', de: 'Schmied', en: 'Blacksmith' },
+        { key: 'innkeeper', de: 'Wirt', en: 'Innkeeper' },
+        { key: 'hunter', de: 'Jäger', en: 'Hunter' },
+        { key: 'sailor', de: 'Seemann', en: 'Sailor' },
+        { key: 'pirate', de: 'Pirat', en: 'Pirate' },
+        { key: 'cultist', de: 'Kultist', en: 'Cultist' },
+        { key: 'bandit', de: 'Bandit', en: 'Bandit' },
+      ]
+
+      // Step 2: Upsert all standard races with is_standard = 1
+      const upsertRace = db.prepare(`
+        INSERT INTO races (name, name_de, name_en, is_standard, created_at)
+        VALUES (?, ?, ?, 1, datetime('now'))
+        ON CONFLICT(name) DO UPDATE SET
+          name_de = excluded.name_de,
+          name_en = excluded.name_en,
+          is_standard = 1
+      `)
+
+      for (const race of standardRaces) {
+        upsertRace.run(race.key, race.de, race.en)
+      }
+      console.log(`  Upserted ${standardRaces.length} standard races (is_standard = 1)`)
+
+      // Step 3: Upsert all standard classes with is_standard = 1
+      const upsertClass = db.prepare(`
+        INSERT INTO classes (name, name_de, name_en, is_standard, created_at)
+        VALUES (?, ?, ?, 1, datetime('now'))
+        ON CONFLICT(name) DO UPDATE SET
+          name_de = excluded.name_de,
+          name_en = excluded.name_en,
+          is_standard = 1
+      `)
+
+      for (const cls of standardClasses) {
+        upsertClass.run(cls.key, cls.de, cls.en)
+      }
+      console.log(`  Upserted ${standardClasses.length} standard classes (is_standard = 1)`)
+
+      console.log('✅ Migration 37: Standard races and classes synced with protection')
+    },
+  },
+  {
+    version: 38,
+    name: 'add_source_entity_id_for_copy',
+    up: (db) => {
+      console.log('📦 Migration 38: Adding source_entity_id for cross-campaign copy tracking...')
+
+      // Add source_entity_id to track copied entities
+      // When an entity is copied to another campaign, this references the original
+      // Used for duplicate detection on subsequent copies
+      db.exec(`
+        ALTER TABLE entities ADD COLUMN source_entity_id INTEGER REFERENCES entities(id) ON DELETE SET NULL
+      `)
+
+      // Index for fast lookup when checking for duplicates
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_entities_source_entity_id ON entities(source_entity_id)
+        WHERE source_entity_id IS NOT NULL
+      `)
+
+      console.log('✅ Migration 38: source_entity_id column added to entities')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

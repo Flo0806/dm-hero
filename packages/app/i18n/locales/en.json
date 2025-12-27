@@ -95,6 +95,7 @@
     },
     "exportHint": "Save your campaign as a .dmhero file",
     "importHint": "Load a campaign from a .dmhero file",
+    "copyHint": "Copy entities to another campaign",
     "dataManagement": "Data Management",
     "categories": {
       "title": "Categories"
@@ -227,7 +228,14 @@
       "duplicateDetails": "The following entities have the same name as existing entities and will be replaced:",
       "entitiesWillBeReplaced": "entities will be replaced",
       "confirmHint": "Local changes to these entities will be lost.",
-      "confirmOverwrite": "Import anyway"
+      "confirmOverwrite": "Import anyway",
+      "raceClassConflictWarning": "Races/Classes with the same key already exist",
+      "nowStandard": "Now Standard",
+      "imported": "Imported",
+      "existing": "Existing",
+      "skipStandard": "Skip (is now a standard race/class)",
+      "keepExisting": "Keep (keep my version)",
+      "overwriteExisting": "Overwrite (use imported version)"
     }
   },
   "npcs": {
@@ -1142,6 +1150,9 @@
     "name": "Name",
     "description": "Description",
     "nameRequired": "Name is required",
+    "keyHint": "Internal key - lowercase letters (a-z) and underscores only, max 20 characters",
+    "keyInvalid": "Only lowercase letters (a-z) and underscores allowed",
+    "keyTooLong": "Maximum 20 characters allowed",
     "translations": "Translations",
     "translationRequired": "Both translations (DE & EN) are required",
     "translationHint": "Standard races (Human, Elf, etc.) use built-in translations. Custom races need both German and English names.",
@@ -1158,6 +1169,8 @@
     "deleteClassConfirm": "Do you really want to delete the class '{name}'?",
     "saveError": "Error saving",
     "deleteError": "Error deleting",
+    "raceInUse": "This race is still used by {count} NPC(s) and cannot be deleted.",
+    "classInUse": "This class is still used by {count} NPC(s) and cannot be deleted.",
     "noCampaignSelected": "Please select a campaign first to manage currencies.",
     "raceNames": {
       "human": "Human",
@@ -1327,6 +1340,7 @@
     "search": "Search",
     "searching": "Searching...",
     "actions": "Actions",
+    "moreActions": "More Actions",
     "view": "View",
     "close": "Close",
     "saveInTabHint": "Save changes directly in this tab",
@@ -1392,7 +1406,9 @@
     "addPlayerLink": "Link Player",
     "selectPlayer": "Select Player",
     "editRelation": "Edit Relation",
-    "relationNotes": "Relation Notes"
+    "relationNotes": "Relation Notes",
+    "betaWarning": "These features are in beta. Please create a backup of your database first.",
+    "backupSettings": "Go to Backup Settings"
   },
   "settings": {
     "title": "Settings",
@@ -1793,7 +1809,25 @@
     "currentLocationHint": "The place where this entity is currently located",
     "updateOnMaps": "Update on Maps",
     "selectMaps": "Select Maps",
-    "selectMapsHint": "Choose the maps where the location should be updated"
+    "selectMapsHint": "Choose the maps where the location should be updated",
+    "copyToCampaign": {
+      "title": "Copy to Campaign",
+      "selectEntities": "Select the entities you want to copy to another campaign.",
+      "selectedCount": "{count} entity(ies) selected",
+      "summary": "{count} entity(ies) selected for copying",
+      "targetCampaign": "Target Campaign",
+      "duplicatesFound": "{count} already exist",
+      "howToHandle": "How should duplicates be handled?",
+      "modeSkip": "Skip",
+      "modeUpdate": "Update",
+      "modeDuplicate": "Duplicate",
+      "copy": "Copy",
+      "copyWithMode": "Copy",
+      "success": "Successfully copied",
+      "successDetails": "{copied} copied, {skipped} skipped, {updated} updated",
+      "successMessage": "{count} entity(ies) successfully copied",
+      "error": "Error copying"
+    }
   },
   "maps": {
     "title": "Maps",

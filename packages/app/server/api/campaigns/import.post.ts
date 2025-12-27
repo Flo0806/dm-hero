@@ -6,7 +6,9 @@ import { randomUUID } from 'crypto'
 import { pipeline } from 'stream/promises'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
+import { STANDARD_RACE_KEYS, STANDARD_CLASS_KEYS } from '~~/server/utils/i18n-lookup'
 import type {
+  RaceClassConflict,
   CampaignExportManifest,
   ImportOptions,
   ImportResult,
@@ -71,6 +73,8 @@ export default defineEventHandler(async (event) => {
     mapsImported: 0,
     imagesImported: 0,
     documentsImported: 0,
+    racesImported: 0,
+    classesImported: 0,
     skipped: 0,
     warnings: [],
     entitiesDeleted: 0,
@@ -247,10 +251,106 @@ export default defineEventHandler(async (event) => {
           }
         }
       }
+    }
 
-      // If conflicts detected and user hasn't confirmed, return early
-      const hasConflicts = conflictInfo.isStoreUpdate || conflictInfo.duplicates.length > 0
-      if (hasConflicts && !options.confirmedOverwrite) {
+    // ==========================================================================
+    // RACE/CLASS CONFLICT DETECTION (global, always checked)
+    // ==========================================================================
+
+    const raceClassConflicts: RaceClassConflict[] = []
+
+    // Check races from manifest
+    if (manifest.races && manifest.races.length > 0) {
+      for (const race of manifest.races) {
+        const key = race.name.toLowerCase().replace(/\s+/g, '')
+
+        // Standard races are already in the DB - skip silently (no conflict)
+        if (STANDARD_RACE_KEYS.has(key)) {
+          continue
+        }
+
+        // Check if key exists in user's races table (not soft-deleted)
+        const existing = db.prepare('SELECT name, name_de, name_en, description FROM races WHERE name = ? AND deleted_at IS NULL').get(key) as {
+          name: string
+          name_de: string | null
+          name_en: string | null
+          description: string | null
+        } | undefined
+
+        if (existing) {
+          // Custom race exists → show conflict dialog
+          raceClassConflicts.push({
+            type: 'race',
+            key,
+            imported: { name_de: race.name_de, name_en: race.name_en, description: race.description },
+            existing: { name_de: existing.name_de || undefined, name_en: existing.name_en || undefined, description: existing.description || undefined },
+            isStandard: false,
+          })
+        }
+      }
+    }
+
+    // Check classes from manifest
+    if (manifest.classes && manifest.classes.length > 0) {
+      for (const cls of manifest.classes) {
+        const key = cls.name.toLowerCase().replace(/\s+/g, '')
+
+        // Standard classes are already in the DB - skip silently (no conflict)
+        if (STANDARD_CLASS_KEYS.has(key)) {
+          continue
+        }
+
+        // Check if key exists in user's classes table (not soft-deleted)
+        const existing = db.prepare('SELECT name, name_de, name_en, description FROM classes WHERE name = ? AND deleted_at IS NULL').get(key) as {
+          name: string
+          name_de: string | null
+          name_en: string | null
+          description: string | null
+        } | undefined
+
+        if (existing) {
+          // Custom class exists → show conflict dialog
+          raceClassConflicts.push({
+            type: 'class',
+            key,
+            imported: { name_de: cls.name_de, name_en: cls.name_en, description: cls.description },
+            existing: { name_de: existing.name_de || undefined, name_en: existing.name_en || undefined, description: existing.description || undefined },
+            isStandard: false,
+          })
+        }
+      }
+    }
+
+    if (raceClassConflicts.length > 0) {
+      conflictInfo.raceClassConflicts = raceClassConflicts
+    }
+
+    // Check if user has provided resolutions for all race/class conflicts
+    // Only check conflicts that actually exist - don't require both raceResolutions AND classResolutions
+    const hasUnresolvedRaceClassConflicts = raceClassConflicts.length > 0 &&
+      raceClassConflicts.some((c) => {
+        const resolutions = c.type === 'race' ? options.raceResolutions : options.classResolutions
+        return !resolutions || !(c.key in resolutions)
+      })
+
+    // Race/class conflicts apply to ALL modes (they are global, not campaign-scoped)
+    if (hasUnresolvedRaceClassConflicts) {
+      // Clean up temp directory
+      await rm(tempDir, { recursive: true, force: true })
+
+      return {
+        success: false,
+        campaignId,
+        stats,
+        conflictInfo,
+        requiresConfirmation: true,
+      } as ImportResult
+    }
+
+    if (options.mode === 'merge' && manifest.entities && manifest.entities.length > 0) {
+      // If entity conflicts detected and user hasn't confirmed, return early
+      const hasEntityConflicts = conflictInfo.isStoreUpdate || conflictInfo.duplicates.length > 0
+      if (hasEntityConflicts && !options.confirmedOverwrite) {
         // Clean up temp directory
         await rm(tempDir, { recursive: true, force: true })
 
@@ -264,7 +364,7 @@ export default defineEventHandler(async (event) => {
       }
 
       // User confirmed: soft-delete conflicting entities
-      if (hasConflicts && options.confirmedOverwrite) {
+      if (hasEntityConflicts && options.confirmedOverwrite) {
         const softDelete = db.prepare(`
           UPDATE entities SET deleted_at = datetime('now') WHERE id = ?
         `)
@@ -972,6 +1072,84 @@ export default defineEventHandler(async (event) => {
           insertPin.run(campaignId, entityId, pin.display_order)
         } else {
           stats.skipped++
+        }
+      }
+    }
+
+    // ==========================================================================
+    // IMPORT RACES (global, not campaign-scoped)
+    // ==========================================================================
+
+    if (manifest.races && manifest.races.length > 0) {
+      for (const race of manifest.races) {
+        const key = race.name.toLowerCase().replace(/\s+/g, '')
+
+        // Standard races - skip
+        if (STANDARD_RACE_KEYS.has(key)) {
+          continue
+        }
+
+        // Check if race exists at all (including soft-deleted)
+        const existing = db.prepare('SELECT id, deleted_at FROM races WHERE name = ?').get(key) as { id: number; deleted_at: string | null } | undefined
+
+        if (existing && existing.deleted_at) {
+          // Soft-deleted: restore it with new data
+          db.prepare('UPDATE races SET name_de = ?, name_en = ?, description = ?, deleted_at = NULL WHERE name = ?')
+            .run(race.name_de || null, race.name_en || null, race.description || null, key)
+          stats.racesImported++
+        } else if (existing) {
+          // Active: check if conflict resolution provided
+          const resolution = options.raceResolutions?.[key]
+          if (resolution === 'overwrite') {
+            db.prepare('UPDATE races SET name_de = ?, name_en = ?, description = ? WHERE name = ?')
+              .run(race.name_de || null, race.name_en || null, race.description || null, key)
+            stats.racesImported++
+          }
+          // 'keep' or identical = do nothing, already exists
+        } else {
+          // Doesn't exist: insert new
+          db.prepare('INSERT INTO races (name, name_de, name_en, description) VALUES (?, ?, ?, ?)')
+            .run(key, race.name_de || null, race.name_en || null, race.description || null)
+          stats.racesImported++
+        }
+      }
+    }
+
+    // ==========================================================================
+    // IMPORT CLASSES (global, not campaign-scoped)
+    // ==========================================================================
+
+    if (manifest.classes && manifest.classes.length > 0) {
+      for (const cls of manifest.classes) {
+        const key = cls.name.toLowerCase().replace(/\s+/g, '')
+
+        // Standard classes - skip
+        if (STANDARD_CLASS_KEYS.has(key)) {
+          continue
+        }
+
+        // Check if class exists at all (including soft-deleted)
+        const existing = db.prepare('SELECT id, deleted_at FROM classes WHERE name = ?').get(key) as { id: number; deleted_at: string | null } | undefined
+
+        if (existing && existing.deleted_at) {
+          // Soft-deleted: restore it with new data
+          db.prepare('UPDATE classes SET name_de = ?, name_en = ?, description = ?, deleted_at = NULL WHERE name = ?')
+            .run(cls.name_de || null, cls.name_en || null, cls.description || null, key)
+          stats.classesImported++
+        } else if (existing) {
+          // Active: check if conflict resolution provided
+          const resolution = options.classResolutions?.[key]
+          if (resolution === 'overwrite') {
+            db.prepare('UPDATE classes SET name_de = ?, name_en = ?, description = ? WHERE name = ?')
+              .run(cls.name_de || null, cls.name_en || null, cls.description || null, key)
+            stats.classesImported++
+          }
+          // 'keep' or identical = do nothing, already exists
+        } else {
+          // Doesn't exist: insert new
+          db.prepare('INSERT INTO classes (name, name_de, name_en, description) VALUES (?, ?, ?, ?)')
+            .run(key, cls.name_de || null, cls.name_en || null, cls.description || null)
+          stats.classesImported++
         }
       }
     }

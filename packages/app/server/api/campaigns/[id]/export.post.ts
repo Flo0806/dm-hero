@@ -4,6 +4,7 @@ import archiver from 'archiver'
 import { PassThrough } from 'stream'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
+import { STANDARD_RACE_KEYS, STANDARD_CLASS_KEYS } from '~~/server/utils/i18n-lookup'
 import type {
   CampaignExportManifest,
   ExportOptions,
@@ -25,6 +26,8 @@ import type {
   ExportNote,
   ExportPinboardItem,
   ExportEntityType,
+  ExportRace,
+  ExportClass,
 } from '~~/types/export'
 import { EXPORT_FORMAT_VERSION } from '~~/types/export'
 
@@ -831,6 +834,47 @@ export default defineEventHandler(async (event) => {
   }
 
   // ==========================================================================
+  // CUSTOM RACES & CLASSES (from NPC metadata)
+  // ==========================================================================
+
+  const customRaceKeys = new Set<string>()
+  const customClassKeys = new Set<string>()
+  const npcTypeId = entityTypes.find((t) => t.name === 'NPC')?.id
+
+  for (const entity of exportEntities) {
+    if (entity.type_id !== npcTypeId) continue
+    const metadata = entity.metadata as Record<string, unknown> | undefined
+    if (!metadata) continue
+
+    if (typeof metadata.race === 'string' && metadata.race) {
+      const raceKey = metadata.race.toLowerCase().replace(/\s+/g, '')
+      if (!STANDARD_RACE_KEYS.has(raceKey)) {
+        customRaceKeys.add(raceKey)
+      }
+    }
+    if (typeof metadata.class === 'string' && metadata.class) {
+      const classKey = metadata.class.toLowerCase().replace(/\s+/g, '')
+      if (!STANDARD_CLASS_KEYS.has(classKey)) {
+        customClassKeys.add(classKey)
+      }
+    }
+  }
+
+  let exportRaces: ExportRace[] = []
+  if (customRaceKeys.size > 0) {
+    const placeholders = Array.from(customRaceKeys).map(() => '?').join(',')
+    const races = db.prepare(`SELECT name, name_de, name_en, description FROM races WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customRaceKeys) as Array<{ name: string; name_de: string | null; name_en: string | null; description: string | null }>
+    exportRaces = races.map((r) => ({ name: r.name, name_de: r.name_de || undefined, name_en: r.name_en || undefined, description: r.description || undefined }))
+  }
+
+  let exportClasses: ExportClass[] = []
+  if (customClassKeys.size > 0) {
+    const placeholders = Array.from(customClassKeys).map(() => '?').join(',')
+    const classes = db.prepare(`SELECT name, name_de, name_en, description FROM classes WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customClassKeys) as Array<{ name: string; name_de: string | null; name_en: string | null; description: string | null }>
+    exportClasses = classes.map((c) => ({ name: c.name, name_de: c.name_de || undefined, name_en: c.name_en || undefined, description: c.description || undefined }))
+  }
+
+  // ==========================================================================
   // BUILD MANIFEST
   // ==========================================================================
 
@@ -863,6 +907,8 @@ export default defineEventHandler(async (event) => {
     currencies: exportCurrencies.length > 0 ? exportCurrencies : undefined,
     notes: exportNotes.length > 0 ? exportNotes : undefined,
     pinboard: exportPinboard.length > 0 ? exportPinboard : undefined,
+    races: exportRaces.length > 0 ? exportRaces : undefined,
+    classes: exportClasses.length > 0 ? exportClasses : undefined,
   }
 
   // ==========================================================================
