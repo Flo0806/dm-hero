@@ -390,13 +390,13 @@ watch(locale, () => {
 
 // Show search results OR cached NPCs
 const filteredNpcs = computed(() => {
-  // If user is actively searching, show search results
+  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
 
-  // Otherwise show all cached NPCs
-  return npcs.value || []
+  // Otherwise show all cached NPCs sorted alphabetically
+  return [...(npcs.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================

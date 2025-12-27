@@ -218,10 +218,12 @@ watch(searchQuery, async (query) => {
 })
 
 const filteredItems = computed(() => {
+  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  return items.value || []
+  // Otherwise show all cached items sorted alphabetically
+  return [...(items.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================
@@ -340,6 +342,20 @@ async function handleItemCreated(item: Item) {
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     executeSearch(searchQuery.value)
   }
+
+  // Highlight and scroll to the newly created item
+  highlightedId.value = item.id
+  await nextTick()
+  setTimeout(() => {
+    const element = document.getElementById(`item-${item.id}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Clear highlight after a few seconds
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000)
+  }, 100)
 }
 
 // ============================================================================

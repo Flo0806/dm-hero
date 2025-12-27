@@ -154,12 +154,12 @@ const loading = computed(() => entitiesStore.playersLoading)
 const players = computed(() => entitiesStore.players)
 
 const filteredPlayers = computed(() => {
-  // If searching, use search results from API
+  // If searching, use search results from API (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  // Otherwise return cached players
-  return players.value
+  // Otherwise return cached players sorted alphabetically
+  return [...(players.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Watch search query with debounce - API-based search for cross-entity support
@@ -251,6 +251,20 @@ async function handlePlayerSaved(player: Player) {
 async function handlePlayerCreated(player: Player) {
   // Load counts for the new player
   await reloadPlayerCounts(player)
+
+  // Highlight and scroll to the newly created player
+  highlightedId.value = player.id
+  await nextTick()
+  setTimeout(() => {
+    const element = document.getElementById(`player-${player.id}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Clear highlight after a few seconds
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000)
+  }, 100)
 }
 
 function confirmDelete(player: Player) {

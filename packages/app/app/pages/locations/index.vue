@@ -481,13 +481,13 @@ watch(searchQuery, async (query) => {
 
 // Show search results OR cached locations
 const filteredLocations = computed(() => {
-  // If user is actively searching, show search results
+  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
 
-  // Otherwise show all cached locations
-  return locations.value || []
+  // Otherwise show all cached locations sorted alphabetically
+  return [...(locations.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Build tree structure from flat location list

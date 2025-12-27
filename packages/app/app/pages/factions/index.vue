@@ -205,10 +205,12 @@ watch(searchQuery, async (query) => {
 })
 
 const filteredFactions = computed(() => {
+  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  return factions.value || []
+  // Otherwise show all cached factions sorted alphabetically
+  return [...(factions.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================
@@ -328,6 +330,20 @@ async function handleFactionCreated(faction: Faction) {
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     executeSearch(searchQuery.value)
   }
+
+  // Highlight and scroll to the newly created faction
+  highlightedId.value = faction.id
+  await nextTick()
+  setTimeout(() => {
+    const element = document.getElementById(`faction-${faction.id}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Clear highlight after a few seconds
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000)
+  }, 100)
 }
 
 // ============================================================================

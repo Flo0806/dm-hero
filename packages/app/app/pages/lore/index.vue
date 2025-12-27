@@ -274,10 +274,12 @@ watch(searchQuery, async (query) => {
 
 // Computed filtered lore (search results OR cached data)
 const filteredLore = computed(() => {
+  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  return lore.value || []
+  // Otherwise show all cached lore sorted alphabetically
+  return [...(lore.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Open create dialog
@@ -372,6 +374,20 @@ async function handleLoreCreated(createdLore: Lore) {
     })
     searchResults.value = results
   }
+
+  // Highlight and scroll to the newly created lore
+  highlightedId.value = createdLore.id
+  await nextTick()
+  setTimeout(() => {
+    const element = document.getElementById(`lore-${createdLore.id}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Clear highlight after a few seconds
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000)
+  }, 100)
 }
 
 // Confirm delete
