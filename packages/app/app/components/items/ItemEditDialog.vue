@@ -751,12 +751,13 @@ const linkedLocations = ref<LinkedLocation[]>([])
 const linkedFactions = ref<LinkedFaction[]>([])
 const linkedLore = ref<LinkedLoreItem[]>([])
 
-// Available entities for dropdowns
+// Available entities for dropdowns (sorted alphabetically)
 const availableOwners = computed(() => {
   const linkedIds = new Set(linkedOwners.value.map((o) => o.entity_id))
   return (entitiesStore.npcs || [])
     .filter((npc) => !linkedIds.has(npc.id))
     .map((npc) => ({ id: npc.id, name: npc.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLocations = computed(() => {
@@ -764,6 +765,7 @@ const availableLocations = computed(() => {
   return (entitiesStore.locations || [])
     .filter((loc) => !linkedIds.has(loc.id))
     .map((loc) => ({ id: loc.id, name: loc.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableFactions = computed(() => {
@@ -771,6 +773,7 @@ const availableFactions = computed(() => {
   return (entitiesStore.factions || [])
     .filter((f) => !linkedIds.has(f.id))
     .map((f) => ({ id: f.id, name: f.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLore = computed(() => {
@@ -778,6 +781,7 @@ const availableLore = computed(() => {
   return (entitiesStore.lore || [])
     .filter((l) => !linkedIds.has(l.id))
     .map((l) => ({ id: l.id, name: l.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // New relation forms

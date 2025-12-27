@@ -547,22 +547,30 @@ const previewImageUrl = ref('')
 const previewImageTitle = ref('')
 
 // ============================================================================
-// Computed: Available entities from store
+// Computed: Available entities from store (sorted alphabetically)
 // ============================================================================
 const availableNpcs = computed(() =>
-  entitiesStore.npcs.map((n) => ({ id: n.id, name: n.name, image_url: n.image_url })),
+  entitiesStore.npcs
+    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableFactions = computed(() =>
-  entitiesStore.factions.map((f) => ({ id: f.id, name: f.name, image_url: f.image_url })),
+  entitiesStore.factions
+    .map((f) => ({ id: f.id, name: f.name, image_url: f.image_url }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const itemsForSelect = computed(() =>
-  entitiesStore.items.map((i) => ({ title: i.name, value: i.id })),
+  entitiesStore.items
+    .map((i) => ({ title: i.name, value: i.id }))
+    .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const locationsForSelect = computed(() =>
-  entitiesStore.locations.map((l) => ({ title: l.name, value: l.id })),
+  entitiesStore.locations
+    .map((l) => ({ title: l.name, value: l.id }))
+    .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const loreTypeItems = computed(() =>

@@ -700,23 +700,30 @@ const npcStatuses = computed(() =>
   })),
 )
 
-// Available entities from store
+// Available entities from store (sorted alphabetically)
 const availableNpcs = computed(() =>
   entitiesStore.npcs
     .filter((n) => n.id !== npc.value?.id)
-    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url })),
+    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableFactions = computed(() =>
-  entitiesStore.factions.map((f) => ({ id: f.id, name: f.name })),
+  entitiesStore.factions
+    .map((f) => ({ id: f.id, name: f.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableItems = computed(() =>
-  entitiesStore.items.map((i) => ({ id: i.id, name: i.name })),
+  entitiesStore.items
+    .map((i) => ({ id: i.id, name: i.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLore = computed(() =>
-  entitiesStore.lore.map((l) => ({ id: l.id, name: l.name })),
+  entitiesStore.lore
+    .map((l) => ({ id: l.id, name: l.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 // Item relation type suggestions from TypeScript types
@@ -864,7 +871,10 @@ async function loadRelations(npcId: number) {
   try {
     // Load NPC relations (other NPCs + locations)
     const relationsData = await $fetch<NpcRelation[]>(`/api/npcs/${npcId}/relations`)
-    npcRelations.value = relationsData
+    // Sort alphabetically by related NPC name
+    npcRelations.value = relationsData.sort((a, b) =>
+      a.related_npc_name.localeCompare(b.related_npc_name),
+    )
 
     // Load all entity relations (includes faction memberships)
     interface AllRelation {

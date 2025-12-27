@@ -383,13 +383,14 @@ const linkedNpcs = ref<LinkedNpc[]>([])
 const linkedItems = ref<LinkedItem[]>([])
 const linkedLore = ref<LinkedLore[]>([])
 
-// Available entities for dropdowns (from store)
+// Available entities for dropdowns (from store, sorted alphabetically)
 // Use entity_id to filter out already linked entities
 const availableNpcs = computed(() => {
   const linkedEntityIds = new Set(linkedNpcs.value.map((n) => n.entity_id))
   return (entitiesStore.npcs || [])
     .filter((npc) => !linkedEntityIds.has(npc.id))
     .map((npc) => ({ id: npc.id, name: npc.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableItems = computed(() => {
@@ -397,6 +398,7 @@ const availableItems = computed(() => {
   return (entitiesStore.items || [])
     .filter((item) => !linkedEntityIds.has(item.id))
     .map((item) => ({ id: item.id, name: item.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLore = computed(() => {
@@ -404,15 +406,16 @@ const availableLore = computed(() => {
   return (entitiesStore.lore || [])
     .filter((lore) => !linkedEntityIds.has(lore.id))
     .map((lore) => ({ id: lore.id, name: lore.name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableParentLocations = computed(() => {
   if (!entitiesStore.locations) return []
   // Exclude current location to prevent circular reference
-  if (location.value) {
-    return entitiesStore.locations.filter((loc) => loc.id !== location.value?.id)
-  }
-  return entitiesStore.locations
+  const filtered = location.value
+    ? entitiesStore.locations.filter((loc) => loc.id !== location.value?.id)
+    : entitiesStore.locations
+  return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Item relation type suggestions from TypeScript types

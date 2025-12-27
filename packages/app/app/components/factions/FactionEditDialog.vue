@@ -588,22 +588,30 @@ const factionAlignments = computed(() =>
 )
 
 // ============================================================================
-// Computed: Available entities from store
+// Computed: Available entities from store (sorted alphabetically)
 // ============================================================================
 const availableNpcs = computed(() =>
-  entitiesStore.npcs.map((n) => ({ id: n.id, name: n.name, image_url: n.image_url })),
+  entitiesStore.npcs
+    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLocations = computed(() =>
-  entitiesStore.locations.map((l) => ({ id: l.id, name: l.name, image_url: l.image_url })),
+  entitiesStore.locations
+    .map((l) => ({ id: l.id, name: l.name, image_url: l.image_url }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableItems = computed(() =>
-  entitiesStore.items.map((i) => ({ id: i.id, name: i.name })),
+  entitiesStore.items
+    .map((i) => ({ id: i.id, name: i.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLore = computed(() =>
-  entitiesStore.lore.map((l) => ({ id: l.id, name: l.name })),
+  entitiesStore.lore
+    .map((l) => ({ id: l.id, name: l.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 // ============================================================================

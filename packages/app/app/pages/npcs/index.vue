@@ -433,11 +433,25 @@ async function handleNpcSaved(_npc: NPC) {
 }
 
 // Handle created NPC (create mode) - Store already loaded counts
-async function handleNpcCreated(_npc: NPC) {
+async function handleNpcCreated(npc: NPC) {
   // If user is searching, re-execute search
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     await executeSearch(searchQuery.value)
   }
+
+  // Highlight and scroll to the newly created NPC
+  highlightedId.value = npc.id
+  await nextTick()
+  setTimeout(() => {
+    const element = document.getElementById(`npc-${npc.id}`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // Clear highlight after a few seconds
+    setTimeout(() => {
+      highlightedId.value = null
+    }, 3000)
+  }, 100)
 }
 
 // ============================================================================
