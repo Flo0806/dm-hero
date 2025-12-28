@@ -425,6 +425,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // Helper to copy file from temp to data directory
+    // Different target folders store paths differently:
+    // - 'entities', 'sessions': files go to uploads/, DB stores just filename
+    // - 'maps': files go to uploads/maps/, DB stores 'maps/filename'
+    // - 'documents': files go to uploads/documents/, DB stores 'documents/filename'
+    // - 'audio': files go to uploads/audio/, DB stores 'audio/filename'
     const copyFile = async (archivePath: string | undefined, targetFolder: string): Promise<string | null> => {
       if (!archivePath) return null
 
@@ -435,7 +440,23 @@ export default defineEventHandler(async (event) => {
       }
 
       const fileName = `${randomUUID()}${extname(archivePath)}`
-      const targetDir = join(uploadPath, targetFolder)
+
+      // Determine actual target directory and return format based on folder type
+      let targetDir: string
+      let returnPath: string
+
+      if (targetFolder === 'entities' || targetFolder === 'sessions') {
+        // Entity and session images are stored directly in uploads/ folder
+        // DB stores just the filename (e.g., 'abc123.png')
+        targetDir = uploadPath
+        returnPath = fileName
+      } else {
+        // Maps, documents, audio are stored in subfolders
+        // DB stores 'folder/filename' (e.g., 'maps/abc123.png')
+        targetDir = join(uploadPath, targetFolder)
+        returnPath = `${targetFolder}/${fileName}`
+      }
+
       mkdirSync(targetDir, { recursive: true })
 
       const targetPath = join(targetDir, fileName)
@@ -450,7 +471,7 @@ export default defineEventHandler(async (event) => {
         writeStream.end()
       })
 
-      return `/api/uploads/${targetFolder}/${fileName}`
+      return returnPath
     }
 
     // ==========================================================================
@@ -580,13 +601,15 @@ export default defineEventHandler(async (event) => {
 
         const filePath = await copyFile(doc.file_path, 'documents')
 
+        // Note: content and date are NOT NULL in the DB schema
+        // For PDF documents, content may be empty; date may be undefined in export
         const result = insertDoc.run(
           entityId,
           doc.title,
-          doc.content || null,
+          doc.content || '',  // NOT NULL - use empty string as default
           filePath,
           doc.file_type,
-          doc.date || null,
+          doc.date || new Date().toISOString().split('T')[0],  // NOT NULL - use today as default
           doc.sort_order,
         )
 
@@ -1150,6 +1173,67 @@ export default defineEventHandler(async (event) => {
           db.prepare('INSERT INTO classes (name, name_de, name_en, description) VALUES (?, ?, ?, ?)')
             .run(key, cls.name_de || null, cls.name_en || null, cls.description || null)
           stats.classesImported++
+        }
+      }
+    }
+
+    // ==========================================================================
+    // POST-PROCESSING: Transform entity links to new IDs
+    // ==========================================================================
+
+    // Helper to transform entity links: {{npc:entity:1}} -> {{npc:567}}
+    const transformEntityLinks = (text: string | null): string | null => {
+      if (!text) return null
+
+      return text.replace(/\{\{(npc|location|item|faction|lore|player|quest|session):(entity:\d+)\}\}/g, (match, type, exportId) => {
+        const newId = idMapping.entities.get(exportId)
+        if (newId) {
+          return `{{${type}:${newId}}}`
+        }
+        // If not found, remove the link (entity wasn't imported)
+        return match.replace(/\{\{|\}\}/g, '')
+      })
+    }
+
+    // Update entity descriptions with new IDs
+    if (idMapping.entities.size > 0) {
+      const updateDescription = db.prepare('UPDATE entities SET description = ? WHERE id = ?')
+      for (const [_exportId, newId] of idMapping.entities) {
+        const entity = db.prepare('SELECT description FROM entities WHERE id = ?').get(newId) as { description: string | null } | undefined
+        if (entity?.description) {
+          const transformed = transformEntityLinks(entity.description)
+          if (transformed !== entity.description) {
+            updateDescription.run(transformed, newId)
+          }
+        }
+      }
+    }
+
+    // Update session notes and summaries with new IDs
+    if (idMapping.sessions.size > 0) {
+      const updateSession = db.prepare('UPDATE sessions SET notes = ?, summary = ? WHERE id = ?')
+      for (const [_exportId, newId] of idMapping.sessions) {
+        const session = db.prepare('SELECT notes, summary FROM sessions WHERE id = ?').get(newId) as { notes: string | null; summary: string | null } | undefined
+        if (session) {
+          const transformedNotes = transformEntityLinks(session.notes)
+          const transformedSummary = transformEntityLinks(session.summary)
+          if (transformedNotes !== session.notes || transformedSummary !== session.summary) {
+            updateSession.run(transformedNotes, transformedSummary, newId)
+          }
+        }
+      }
+    }
+
+    // Update entity document content with new IDs
+    if (idMapping.documents.size > 0) {
+      const updateDocument = db.prepare('UPDATE entity_documents SET content = ? WHERE id = ?')
+      for (const [_exportId, newId] of idMapping.documents) {
+        const doc = db.prepare('SELECT content FROM entity_documents WHERE id = ?').get(newId) as { content: string | null } | undefined
+        if (doc?.content) {
+          const transformed = transformEntityLinks(doc.content)
+          if (transformed !== doc.content) {
+            updateDocument.run(transformed, newId)
+          }
         }
       }
     }

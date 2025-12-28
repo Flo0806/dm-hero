@@ -154,6 +154,30 @@ export default defineEventHandler(async (event) => {
     entityExportIdMap.set(e.id, `entity:${i + 1}`)
   })
 
+  // Create entity ID to type name mapping for link transformation
+  const entityIdToTypeName = new Map<number, string>()
+  entities.forEach((e) => {
+    const typeName = typeIdToName.get(e.type_id)?.toLowerCase() || 'unknown'
+    entityIdToTypeName.set(e.id, typeName)
+  })
+
+  // Helper to transform entity links in text: {{npc:123}} -> {{npc:entity:1}}
+  // This ensures links are portable across export/import cycles
+  const transformEntityLinks = (text: string | null | undefined): string | undefined => {
+    if (!text) return undefined
+
+    // Match patterns like {{npc:123}}, {{location:456}}, etc.
+    return text.replace(/\{\{(npc|location|item|faction|lore|player|quest|session):(\d+)\}\}/g, (match, type, idStr) => {
+      const id = parseInt(idStr, 10)
+      const exportId = entityExportIdMap.get(id)
+      if (exportId) {
+        return `{{${type}:${exportId}}}`
+      }
+      // If entity not found in export, keep original (might be from different campaign)
+      return match
+    })
+  }
+
   // Transform entities
   const exportEntities: ExportEntity[] = entities.map((e) => {
     const exportId = entityExportIdMap.get(e.id)!
@@ -164,7 +188,7 @@ export default defineEventHandler(async (event) => {
       type_id: e.type_id,
       type_name: typeIdToName.get(e.type_id) || 'Unknown',
       name: e.name,
-      description: e.description || undefined,
+      description: transformEntityLinks(e.description),
       metadata: e.metadata ? JSON.parse(e.metadata) : undefined,
       image_url: imageArchivePath,
       location_id: e.location_id && entityIdSet.has(e.location_id) ? entityExportIdMap.get(e.location_id) : undefined,
@@ -269,7 +293,7 @@ export default defineEventHandler(async (event) => {
         _exportId: exportId,
         entity: entityExportIdMap.get(doc.entity_id)!,
         title: doc.title,
-        content: doc.content || undefined,
+        content: transformEntityLinks(doc.content),
         file_path: archivePath,
         file_type: doc.file_type as 'markdown' | 'pdf',
         date: doc.date || undefined,
@@ -339,8 +363,8 @@ export default defineEventHandler(async (event) => {
       session_number: s.session_number,
       title: s.title || undefined,
       date: s.date || undefined,
-      summary: s.summary || undefined,
-      notes: s.notes || undefined,
+      summary: transformEntityLinks(s.summary),
+      notes: transformEntityLinks(s.notes),
       in_game_date_start: s.in_game_date_start || undefined,
       in_game_date_end: s.in_game_date_end || undefined,
       in_game_day_start: s.in_game_day_start || undefined,

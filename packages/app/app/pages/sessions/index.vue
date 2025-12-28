@@ -1096,13 +1096,22 @@ function sanitizeHtml(html: string): string {
     return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;"><i class="mdi ${icon}"></i>${displayHtml}</span>`
   }
 
-  // First: Handle new format {{type:id}} - resolve name dynamically
-  let result = html.replace(/\{\{(\w+):(\d+)\}\}/g, (_match, type, id) => {
+  // First: Remove entity links from heading IDs to prevent broken HTML
+  // The markdown parser generates IDs like id="heading-npc123" from "### Heading {{npc:123}}"
+  // If we replace {{npc:123}} everywhere, the ID becomes invalid HTML
+  let result = html.replace(/(<h[1-6][^>]*id=")([^"]*)(">)/g, (_match, prefix, idContent, suffix) => {
+    // Remove any {{type:id}} patterns from the ID
+    const cleanedId = idContent.replace(/\{\{\w+:\d+\}\}/g, '').replace(/--+/g, '-').replace(/-$/g, '')
+    return prefix + cleanedId + suffix
+  })
+
+  // Second: Handle new format {{type:id}} - resolve name dynamically
+  result = result.replace(/\{\{(\w+):(\d+)\}\}/g, (_match, type, id) => {
     const entityId = parseInt(id, 10)
     return buildBadge(type, id, entityId)
   })
 
-  // Second: Handle legacy format [Name](type:id) - keep for backwards compatibility
+  // Third: Handle legacy format [Name](type:id) - keep for backwards compatibility
   result = result.replace(/<a[^>]*href="(\w+):(\d+)"[^>]*>([^<]+)<\/a>/g, (_match, type, id, _name) => {
     const entityId = parseInt(id, 10)
     return buildBadge(type, id, entityId)

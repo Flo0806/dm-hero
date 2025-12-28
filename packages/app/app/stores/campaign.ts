@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { useEntitiesStore } from './entities'
+import { useNotesStore } from './notes'
 
 interface Campaign {
   id: number
@@ -34,6 +36,12 @@ export const useCampaignStore = defineStore('campaign', {
 
     // Set active campaign
     async setActiveCampaign(campaignId: number | string, campaignName?: string) {
+      // Clear cached data from previous campaign
+      const entitiesStore = useEntitiesStore()
+      entitiesStore.clearAll()
+      const notesStore = useNotesStore()
+      notesStore.clearNotes()
+
       this.activeCampaignId = String(campaignId)
       const activeCampaignId = useCookie('activeCampaignId', {
         maxAge: 60 * 60 * 24 * 365, // 1 year

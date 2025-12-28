@@ -507,32 +507,32 @@ function getEntitiesForType(
   type: EntityType,
 ): Array<{ id: number; name: string; displayName?: string; subtitle?: string }> {
   switch (type) {
-  case 'npc':
-    return entitiesStore.npcsForSelect || []
-  case 'location':
-    return entitiesStore.locationsForSelect || []
-  case 'item':
-    return entitiesStore.items || []
-  case 'faction':
-    return entitiesStore.factions || []
-  case 'lore':
-    return entitiesStore.loreForSelect || []
-  case 'player':
-    return (entitiesStore.players || []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      displayName: p.metadata?.player_name || p.name,
-      subtitle: p.metadata?.player_name ? p.name : undefined,
-    }))
-  case 'session':
-    return (props.sessions || []).map((s: SessionItem) => ({
-      id: s.id,
-      name: s.title || `Session #${s.session_number}`,
-      displayName: s.title || `Session #${s.session_number}`,
-      subtitle: s.date ? new Date(s.date).toLocaleDateString() : undefined,
-    }))
-  default:
-    return []
+    case 'npc':
+      return entitiesStore.npcsForSelect || []
+    case 'location':
+      return entitiesStore.locationsForSelect || []
+    case 'item':
+      return entitiesStore.items || []
+    case 'faction':
+      return entitiesStore.factions || []
+    case 'lore':
+      return entitiesStore.loreForSelect || []
+    case 'player':
+      return (entitiesStore.players || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        displayName: p.metadata?.player_name || p.name,
+        subtitle: p.metadata?.player_name ? p.name : undefined,
+      }))
+    case 'session':
+      return (props.sessions || []).map((s: SessionItem) => ({
+        id: s.id,
+        name: s.title || `Session #${s.session_number}`,
+        displayName: s.title || `Session #${s.session_number}`,
+        subtitle: s.date ? new Date(s.date).toLocaleDateString() : undefined,
+      }))
+    default:
+      return []
   }
 }
 
@@ -564,26 +564,26 @@ function getEntityColor(type: EntityType | string): string {
 
 function resolveEntityName(type: string, id: number): string {
   switch (type) {
-  case 'npc':
-    return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
-  case 'location':
-    return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
-  case 'item':
-    return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
-  case 'faction':
-    return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
-  case 'lore':
-    return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
-  case 'player': {
-    const player = entitiesStore.players?.find((e) => e.id === id)
-    return player?.name || `Player #${id}`
-  }
-  case 'session': {
-    const session = props.sessions?.find((s: SessionItem) => s.id === id)
-    return session?.title || `Session #${id}`
-  }
-  default:
-    return `Entity #${id}`
+    case 'npc':
+      return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
+    case 'location':
+      return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
+    case 'item':
+      return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
+    case 'faction':
+      return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
+    case 'lore':
+      return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
+    case 'player': {
+      const player = entitiesStore.players?.find((e) => e.id === id)
+      return player?.name || `Player #${id}`
+    }
+    case 'session': {
+      const session = props.sessions?.find((s: SessionItem) => s.id === id)
+      return session?.title || `Session #${id}`
+    }
+    default:
+      return `Entity #${id}`
   }
 }
 
@@ -786,13 +786,22 @@ function sanitizeHtml(html: string): string {
     return `<span class="entity-badge" data-type="${type}" data-id="${id}" style="background-color: ${color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 4px; cursor: ${cursor};"><i class="mdi ${icon}"></i>${displayHtml}</span>`
   }
 
-  // Handle new format {{type:id}}
-  let result = html.replace(/\{\{(\w+):(\d+)\}\}/g, (_match, type, id) => {
+  // First: Remove entity links from heading IDs to prevent broken HTML
+  // The markdown parser generates IDs like id="heading-npc123" from "### Heading {{npc:123}}"
+  // If we replace {{npc:123}} everywhere, the ID becomes invalid HTML
+  let result = html.replace(/(<h[1-6][^>]*id=")([^"]*)(">)/g, (_match, prefix, idContent, suffix) => {
+    // Remove any {{type:id}} patterns from the ID
+    const cleanedId = idContent.replace(/\{\{\w+:\d+\}\}/g, '').replace(/--+/g, '-').replace(/-$/g, '')
+    return prefix + cleanedId + suffix
+  })
+
+  // Second: Handle new format {{type:id}}
+  result = result.replace(/\{\{(\w+):(\d+)\}\}/g, (_match, type, id) => {
     const entityId = parseInt(id, 10)
     return buildBadge(type, id, entityId)
   })
 
-  // Handle legacy format [Name](type:id)
+  // Third: Handle legacy format [Name](type:id)
   result = result.replace(/<a[^>]*href="(\w+):(\d+)"[^>]*>([^<]+)<\/a>/g, (_match, type, id) => {
     const entityId = parseInt(id, 10)
     return buildBadge(type, id, entityId)
