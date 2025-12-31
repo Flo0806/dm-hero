@@ -155,14 +155,21 @@ export function useUpdateChecker() {
   }
 
   async function downloadUpdate(): Promise<boolean> {
-    if (!electronAPI) return false
+    console.log('[UpdateChecker] downloadUpdate called, electronAPI:', !!electronAPI)
+    if (!electronAPI) {
+      console.error('[UpdateChecker] electronAPI is null!')
+      return false
+    }
 
     updateState.value = 'downloading'
     downloadProgress.value = { percent: 0, bytesPerSecond: 0, transferred: 0, total: 0 }
+    console.log('[UpdateChecker] State set to downloading, calling electronAPI.downloadUpdate()')
 
     try {
       const result = await electronAPI.downloadUpdate()
+      console.log('[UpdateChecker] downloadUpdate result:', result)
       if (result.error) {
+        console.error('[UpdateChecker] Download error:', result.error)
         error.value = result.error
         updateState.value = 'error'
         return false
@@ -170,6 +177,7 @@ export function useUpdateChecker() {
       // Progress events will update state to 'ready' when done
       return result.started
     } catch (e) {
+      console.error('[UpdateChecker] Download exception:', e)
       error.value = e instanceof Error ? e.message : 'Download failed'
       updateState.value = 'error'
       return false
