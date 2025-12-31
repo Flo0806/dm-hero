@@ -187,6 +187,42 @@ export default defineEventHandler((event) => {
     )
     .get(Number(factionId)) as { count: number }
 
+  // Get faction-to-faction relations count (bidirectional)
+  const factionTypeId = db.prepare("SELECT id FROM entity_types WHERE name = 'Faction'").get() as
+    | { id: number }
+    | undefined
+
+  let relationsCount = 0
+  if (factionTypeId) {
+    const relationsResult = db
+      .prepare(
+        `
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
+    `,
+      )
+      .get(Number(factionId), factionTypeId.id, Number(factionId), factionTypeId.id) as {
+        count: number
+      }
+    relationsCount = relationsResult.count
+  }
+
   return {
     members: membersCount,
     items: itemsCount,
@@ -195,5 +231,6 @@ export default defineEventHandler((event) => {
     players: playersCount,
     documents: documentsCount.count,
     images: imagesCount.count,
+    relations: relationsCount,
   }
 })

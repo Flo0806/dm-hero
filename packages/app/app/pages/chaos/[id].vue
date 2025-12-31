@@ -812,23 +812,23 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     viewingLore.value = null
 
     switch (entType.name) {
-    case 'NPC':
-      viewingNpc.value = data as NPC
-      break
-    case 'Item':
-      viewingItem.value = data as Item
-      break
-    case 'Location':
-      viewingLocation.value = data as Location
-      break
-    case 'Faction':
-      viewingFaction.value = data as Faction
-      break
-    case 'Lore':
-      viewingLore.value = data as Lore
-      // Load additional data for Lore view dialog
-      loadLoreViewData(ent.id)
-      break
+      case 'NPC':
+        viewingNpc.value = data as NPC
+        break
+      case 'Item':
+        viewingItem.value = data as Item
+        break
+      case 'Location':
+        viewingLocation.value = data as Location
+        break
+      case 'Faction':
+        viewingFaction.value = data as Faction
+        break
+      case 'Lore':
+        viewingLore.value = data as Lore
+        // Load additional data for Lore view dialog
+        loadLoreViewData(ent.id)
+        break
     }
 
     viewDialogTypeName.value = entType.name
@@ -936,6 +936,7 @@ function translateRelationType(relationType: string): string {
     `npcs.relationTypes.${relationType}`,
     `npcs.itemRelationTypes.${relationType}`,
     `factions.relationTypes.${relationType}`,
+    `factions.factionRelationTypes.${relationType}`,
     `items.relationTypes.${relationType}`,
     `items.ownerRelationTypes.${relationType}`,
     `locations.relationTypes.${relationType}`,

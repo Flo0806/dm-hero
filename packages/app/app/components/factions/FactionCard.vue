@@ -275,6 +275,33 @@
           </template>
           <span>{{ $t('factions.badgeTooltips.images') }}</span>
         </v-tooltip>
+
+        <!-- Relations Count Badge -->
+        <v-tooltip location="top">
+          <template #activator="{ props: tooltipProps }">
+            <v-chip
+              v-if="counts"
+              v-bind="tooltipProps"
+              prepend-icon="mdi-handshake"
+              size="small"
+              variant="outlined"
+              :color="counts.relations > 0 ? 'primary' : undefined"
+            >
+              {{ counts.relations }}
+            </v-chip>
+            <v-chip
+              v-else
+              v-bind="tooltipProps"
+              prepend-icon="mdi-handshake"
+              size="small"
+              variant="outlined"
+              disabled
+            >
+              <v-progress-circular indeterminate size="12" width="2" />
+            </v-chip>
+          </template>
+          <span>{{ $t('factions.badgeTooltips.relations') }}</span>
+        </v-tooltip>
       </div>
     </v-card-text>
 
@@ -364,6 +391,7 @@ interface Faction {
     images: number
     items: number
     locations: number
+    relations: number
   }
 }
 
@@ -494,6 +522,7 @@ function getAlignmentColor(alignment: string): string {
 
 .faction-description {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;

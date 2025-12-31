@@ -599,6 +599,30 @@
       "embassy": "Botschaft",
       "stronghold": "Festung"
     },
+    "factionRelationTypes": {
+      "allied": "Verbündet",
+      "hostile": "Feindlich",
+      "neutral": "Neutral",
+      "rival": "Rivale",
+      "vassal": "Vasall",
+      "overlord": "Oberherr",
+      "trade_partner": "Handelspartner",
+      "at_war": "Im Krieg",
+      "truce": "Waffenstillstand",
+      "secret_ally": "Geheimer Verbündeter",
+      "former_ally": "Ehemaliger Verbündeter",
+      "splinter": "Splitterfraktion",
+      "parent_org": "Mutterorganisation",
+      "subsidiary": "Tochterorganisation"
+    },
+    "factionRelations": "Fraktionsbeziehungen",
+    "factionRelationsList": "Beziehungen zu anderen Fraktionen",
+    "noFactionRelations": "Keine Fraktionsbeziehungen",
+    "noFactionRelationsText": "Diese Fraktion hat noch keine Beziehungen zu anderen Fraktionen.",
+    "addFactionRelation": "Beziehung hinzufügen",
+    "selectTargetFaction": "Fraktion auswählen",
+    "factionRelationType": "Beziehungstyp",
+    "factionRelationTypePlaceholder": "z.B. Verbündet, Feindlich",
     "relationTypes": {
       "member": "Mitglied",
       "ally": "Verbündeter",
@@ -621,7 +645,8 @@
       "lore": "Verknüpftes Wissen",
       "players": "Verknüpfte Spieler",
       "documents": "Dokumente & Notizen",
-      "images": "Bildergalerie"
+      "images": "Bildergalerie",
+      "relations": "Fraktionsbeziehungen"
     },
     "types": {
       "guild": "Gilde",

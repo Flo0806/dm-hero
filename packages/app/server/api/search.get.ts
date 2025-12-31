@@ -277,7 +277,7 @@ export default defineEventHandler(async (event) => {
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
     } else if (type.name === 'Faction') {
-      // Factions: Include linked NPCs, Items, Locations, Lore, Players (bidirectional)
+      // Factions: Include linked NPCs, Items, Locations, Lore, Players, AND other Factions (bidirectional)
       typeResults = db
         .prepare(
           `
@@ -339,6 +339,16 @@ export default defineEventHandler(async (event) => {
               SELECT x.name FROM entity_relations r
               JOIN entities x ON x.id = r.to_entity_id AND x.deleted_at IS NULL
                 AND x.type_id = (SELECT id FROM entity_types WHERE name = 'Player')
+              WHERE r.from_entity_id = e.id
+              UNION ALL
+              SELECT x.name FROM entity_relations r
+              JOIN entities x ON x.id = r.from_entity_id AND x.deleted_at IS NULL
+                AND x.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
+              WHERE r.to_entity_id = e.id
+              UNION ALL
+              SELECT x.name FROM entity_relations r
+              JOIN entities x ON x.id = r.to_entity_id AND x.deleted_at IS NULL
+                AND x.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
               WHERE r.from_entity_id = e.id
             ) linked
           ) as linked_entities

@@ -96,6 +96,26 @@ export const FACTION_LOCATION_TYPES = [
 
 export type FactionLocationType = (typeof FACTION_LOCATION_TYPES)[number]
 
+// Faction-to-Faction relation types
+export const FACTION_RELATION_TYPES = [
+  'allied',
+  'hostile',
+  'neutral',
+  'rival',
+  'vassal',
+  'overlord',
+  'trade_partner',
+  'at_war',
+  'truce',
+  'secret_ally',
+  'former_ally',
+  'splinter',
+  'parent_org',
+  'subsidiary',
+] as const
+
+export type FactionRelationType = (typeof FACTION_RELATION_TYPES)[number]
+
 export interface FactionMetadata {
   type?: FactionType | string
   alignment?: FactionAlignment | string
@@ -112,6 +132,7 @@ export interface FactionCounts {
   players: number
   documents: number
   images: number
+  relations: number
 }
 
 export interface Faction {

@@ -598,6 +598,30 @@
       "embassy": "Embassy",
       "stronghold": "Stronghold"
     },
+    "factionRelationTypes": {
+      "allied": "Allied",
+      "hostile": "Hostile",
+      "neutral": "Neutral",
+      "rival": "Rival",
+      "vassal": "Vassal",
+      "overlord": "Overlord",
+      "trade_partner": "Trade Partner",
+      "at_war": "At War",
+      "truce": "Truce",
+      "secret_ally": "Secret Ally",
+      "former_ally": "Former Ally",
+      "splinter": "Splinter Faction",
+      "parent_org": "Parent Organization",
+      "subsidiary": "Subsidiary"
+    },
+    "factionRelations": "Faction Relations",
+    "factionRelationsList": "Relations to Other Factions",
+    "noFactionRelations": "No Faction Relations",
+    "noFactionRelationsText": "This faction has no relations to other factions yet.",
+    "addFactionRelation": "Add Relation",
+    "selectTargetFaction": "Select Faction",
+    "factionRelationType": "Relation Type",
+    "factionRelationTypePlaceholder": "e.g. Allied, Hostile",
     "relationTypes": {
       "member": "Member",
       "ally": "Ally",
@@ -620,7 +644,8 @@
       "lore": "Linked Lore",
       "players": "Linked Players",
       "documents": "Documents & Notes",
-      "images": "Image Gallery"
+      "images": "Image Gallery",
+      "relations": "Faction Relations"
     },
     "types": {
       "guild": "Guild",

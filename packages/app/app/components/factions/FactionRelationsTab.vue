@@ -1,31 +1,25 @@
 <template>
   <div>
-    <!-- NPC Relations List -->
-    <v-list
-      v-if="
-        npcRelations.filter(
-          (r) => (r.related_npc_type || r.to_entity_type) === 'NPC',
-        ).length > 0
-      "
-      class="mb-3"
-    >
+    <!-- Faction Relations List -->
+    <v-list v-if="factionRelations.length > 0" class="mb-3">
       <v-list-item
-        v-for="relation in npcRelations.filter(
-          (r) => (r.related_npc_type || r.to_entity_type) === 'NPC',
-        )"
+        v-for="relation in factionRelations"
         :key="relation.id"
         class="mb-2"
         border
       >
         <template #prepend>
-          <v-icon icon="mdi-account" color="primary" />
+          <v-avatar v-if="relation.image_url" size="40" class="mr-3">
+            <v-img :src="`/uploads/${relation.image_url}`" />
+          </v-avatar>
+          <v-icon v-else icon="mdi-account-group" color="primary" />
         </template>
         <v-list-item-title>
-          {{ relation.related_npc_name || relation.to_entity_name }}
+          {{ relation.related_faction_name }}
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip size="small" class="mr-1" color="primary" variant="tonal">
-            {{ $t(`npcs.npcRelationTypes.${relation.relation_type}`, relation.relation_type) }}
+            {{ $t(`factions.factionRelationTypes.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
           <span v-if="getNotesText(relation.notes)" class="text-caption">
             {{ getNotesText(relation.notes) }}
@@ -51,24 +45,29 @@
       </v-list-item>
     </v-list>
 
+    <!-- Empty State -->
+    <v-alert v-else type="info" variant="tonal" class="mb-3">
+      {{ $t('factions.noFactionRelationsText') }}
+    </v-alert>
+
     <!-- Edit Relation Dialog -->
     <v-dialog v-model="editDialog" max-width="500">
       <v-card>
-        <v-card-title>{{ $t('npcs.editRelation') }}</v-card-title>
+        <v-card-title>{{ $t('common.edit') }}</v-card-title>
         <v-card-text>
           <v-combobox
             v-model="editRelationType"
-            :items="npcRelationTypeSuggestions"
+            :items="factionRelationTypeSuggestions"
             item-title="title"
             item-value="value"
-            :label="$t('npcs.npcRelationType')"
+            :label="$t('factions.factionRelationType')"
             variant="outlined"
             clearable
             class="mb-3"
           />
           <v-textarea
             v-model="editNotes"
-            :label="$t('npcs.relationNotes')"
+            :label="$t('common.notes')"
             variant="outlined"
             rows="2"
           />
@@ -85,20 +84,20 @@
       </v-card>
     </v-dialog>
 
-    <!-- Add NPC Relation Form -->
+    <!-- Add Faction Relation Form -->
     <v-expansion-panels class="mb-3">
       <v-expansion-panel>
         <v-expansion-panel-title>
-          <v-icon start> mdi-plus </v-icon>
-          {{ $t('npcs.addNpcRelation') }}
+          <v-icon start>mdi-plus</v-icon>
+          {{ $t('factions.addFactionRelation') }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
           <v-select
-            v-model="localNpcId"
-            :items="availableNpcs || []"
+            v-model="localFactionId"
+            :items="availableFactions"
             item-title="name"
             item-value="id"
-            :label="$t('npcs.selectNpc')"
+            :label="$t('factions.selectTargetFaction')"
             variant="outlined"
             clearable
             class="mb-3"
@@ -106,11 +105,11 @@
 
           <v-combobox
             v-model="localRelationType"
-            :items="npcRelationTypeSuggestions"
+            :items="factionRelationTypeSuggestions"
             item-title="title"
             item-value="value"
-            :label="$t('npcs.npcRelationType')"
-            :placeholder="$t('npcs.npcRelationTypePlaceholder')"
+            :label="$t('factions.factionRelationType')"
+            :placeholder="$t('factions.factionRelationTypePlaceholder')"
             variant="outlined"
             clearable
             class="mb-3"
@@ -118,22 +117,20 @@
 
           <v-textarea
             v-model="localNotes"
-            :label="$t('npcs.relationNotes')"
-            :placeholder="$t('npcs.relationNotesPlaceholder')"
+            :label="$t('common.notes')"
             variant="outlined"
             rows="2"
             class="mb-3"
-            persistent-placeholder
           />
 
           <v-btn
             color="primary"
             prepend-icon="mdi-link"
-            :disabled="!localNpcId || !localRelationType"
+            :disabled="!localFactionId || !localRelationType"
             :loading="adding"
             @click="handleAdd"
           >
-            {{ $t('npcs.addNpcRelation') }}
+            {{ $t('factions.addFactionRelation') }}
           </v-btn>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -142,42 +139,37 @@
 </template>
 
 <script setup lang="ts">
-import { NPC_RELATION_TYPES } from '~~/types/npc'
+import { FACTION_RELATION_TYPES } from '~~/types/faction'
 import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
 
 // Register with parent dialog's dirty state management
-const { markDirty } = useTabDirtyState('npcRelations', t('npcs.npcRelations'))
+const { markDirty } = useTabDirtyState('factionRelations', t('factions.factionRelations'))
 
-interface NpcRelation {
+interface FactionRelation {
   id: number
-  related_npc_id: number
-  related_npc_name: string
-  related_npc_type: string
+  related_faction_id: number
+  related_faction_name: string
   relation_type: string
   notes: string | Record<string, unknown> | null
   image_url: string | null
   direction: 'outgoing' | 'incoming'
-  // Legacy fields for backwards compat with locations
-  to_entity_id?: number
-  to_entity_name?: string
-  to_entity_type?: string
 }
 
-interface AvailableNpc {
+interface AvailableFaction {
   id: number
   name: string
 }
 
 interface Props {
-  npcRelations: NpcRelation[]
-  availableNpcs: AvailableNpc[]
+  factionRelations: FactionRelation[]
+  availableFactions: AvailableFaction[]
   adding: boolean
 }
 
 interface Emits {
-  (e: 'add', payload: { npcId: number; relationType: string; notes?: string }): void
+  (e: 'add', payload: { factionId: number; relationType: string; notes?: string }): void
   (e: 'update', payload: { relationId: number; relationType: string; notes?: string }): void
   (e: 'remove', relationId: number): void
 }
@@ -185,7 +177,7 @@ interface Emits {
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const localNpcId = ref<number | null>(null)
+const localFactionId = ref<number | null>(null)
 const localRelationType = ref('')
 const localNotes = ref('')
 
@@ -196,39 +188,38 @@ const editRelationType = ref('')
 const editNotes = ref('')
 const saving = ref(false)
 
-// Track dirty state: form has data or edit dialog is open
+// Track dirty state
 const isDirty = computed(() => {
-  // localRelationType can be string or {value, title} object from combobox
   const hasRelationType = typeof localRelationType.value === 'string'
     ? !!localRelationType.value
     : !!(localRelationType.value as { value?: string } | null)?.value
-  const hasFormData = !!localNpcId.value || hasRelationType || !!localNotes.value
-  return hasFormData || editDialog.value
+  return !!localFactionId.value || hasRelationType || !!localNotes.value || editDialog.value
 })
 
-// Notify parent dialog about dirty state
 watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
-const npcRelationTypeSuggestions = computed(() =>
-  NPC_RELATION_TYPES.map((type) => ({
+const factionRelationTypeSuggestions = computed(() =>
+  FACTION_RELATION_TYPES.map((type) => ({
     value: type,
-    title: t(`npcs.npcRelationTypes.${type}`),
+    title: t(`factions.factionRelationTypes.${type}`),
   })),
 )
 
-// Extract text from notes (can be string, JSON string, object with text property, or null)
 function getNotesText(notes: string | Record<string, unknown> | null): string {
   if (!notes) return ''
 
   // If it's a string, try to parse as JSON first
   if (typeof notes === 'string') {
+    // Try to parse as JSON (might be '{"text":"bla"}')
     try {
       const parsed = JSON.parse(notes)
       if (typeof parsed === 'object' && parsed !== null && 'text' in parsed) {
         return String(parsed.text)
       }
+      // If parsed but no text property, return original string
       return notes
     } catch {
+      // Not JSON, return as plain text
       return notes
     }
   }
@@ -241,23 +232,22 @@ function getNotesText(notes: string | Record<string, unknown> | null): string {
   return ''
 }
 
-function openEditDialog(relation: NpcRelation) {
-  editRelationId.value = relation.id
-  editRelationType.value = relation.relation_type
-  editNotes.value = getNotesText(relation.notes)
-  editDialog.value = true
-}
-
-// Extract value from combobox selection (can be string or {value, title} object)
-function getRelationTypeValue(val: string | { value: string; title: string } | null): string {
+function getComboboxValue(val: string | { value: string; title: string } | null): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
   return ''
 }
 
+function openEditDialog(relation: FactionRelation) {
+  editRelationId.value = relation.id
+  editRelationType.value = relation.relation_type
+  editNotes.value = getNotesText(relation.notes)
+  editDialog.value = true
+}
+
 function saveEdit() {
-  const relationType = getRelationTypeValue(editRelationType.value as string | { value: string; title: string })
+  const relationType = getComboboxValue(editRelationType.value as string | { value: string; title: string })
   if (!editRelationId.value || !relationType) return
 
   saving.value = true
@@ -266,24 +256,21 @@ function saveEdit() {
     relationType,
     notes: editNotes.value || undefined,
   })
-
-  // Close dialog (parent will reload data)
   editDialog.value = false
   saving.value = false
 }
 
 function handleAdd() {
-  const relationType = getRelationTypeValue(localRelationType.value as string | { value: string; title: string })
-  if (!localNpcId.value || !relationType) return
+  const relationType = getComboboxValue(localRelationType.value as string | { value: string; title: string })
+  if (!localFactionId.value || !relationType) return
 
   emit('add', {
-    npcId: localNpcId.value,
+    factionId: localFactionId.value,
     relationType,
     notes: localNotes.value || undefined,
   })
 
-  // Reset form
-  localNpcId.value = null
+  localFactionId.value = null
   localRelationType.value = ''
   localNotes.value = ''
 }

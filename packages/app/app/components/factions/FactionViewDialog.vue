@@ -226,35 +226,10 @@
 </template>
 
 <script setup lang="ts">
+import type { Faction, FactionCounts } from '~~/types/faction'
 import EntityRelationsList from '~/components/shared/EntityRelationsList.vue'
 import EntityDocumentsView from '~/components/shared/EntityDocumentsView.vue'
 import EntityImageGalleryView from '~/components/shared/EntityImageGalleryView.vue'
-
-interface Faction {
-  id: number
-  name: string
-  description: string | null
-  image_url?: string | null
-  leader_name?: string | null
-  metadata: {
-    type?: string
-    alignment?: string
-    headquarters?: string
-    goals?: string
-    notes?: string
-  } | null
-  created_at: string
-  updated_at: string
-  _counts?: {
-    members: number
-    items: number
-    locations: number
-    lore: number
-    players: number
-    documents: number
-    images: number
-  }
-}
 
 interface Image {
   id: number
@@ -288,7 +263,7 @@ const internalShow = computed({
 
 const activeTab = ref('overview')
 const loading = ref(false)
-const counts = ref<Faction['_counts'] | null>(null)
+const counts = ref<FactionCounts | null>(null)
 
 // Data refs
 const members = ref<
@@ -315,7 +290,7 @@ watch(
       try {
         const [countsData, membersData, itemsData, locationsData, loreData, documentsData, imagesData] =
           await Promise.all([
-            $fetch<Faction['_counts']>(`/api/factions/${newFactionId}/counts`),
+            $fetch<FactionCounts>(`/api/factions/${newFactionId}/counts`),
             $fetch<typeof members.value>(`/api/entities/${newFactionId}/related/npcs`).catch(() => []),
             $fetch<typeof items.value>(`/api/entities/${newFactionId}/related/items`).catch(() => []),
             $fetch<typeof locations.value>(`/api/entities/${newFactionId}/related/locations`).catch(

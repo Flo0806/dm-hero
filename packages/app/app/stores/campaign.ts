@@ -77,9 +77,8 @@ export const useCampaignStore = defineStore('campaign', {
         this.currentCampaign = campaign
       } catch (error) {
         console.error('Failed to load current campaign:', error)
-        // If campaign doesn't exist, clear it from state only
-        this.activeCampaignId = null
-        this.currentCampaign = null
+        // If campaign doesn't exist, clear everything including cookies
+        this.clearActiveCampaign()
       }
     },
 

@@ -81,8 +81,8 @@ const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
 const notesStore = useNotesStore()
 
-// Active campaign from cookies
-const activeCampaignName = useCookie('activeCampaignName')
+// Active campaign from store (not cookie - store is the source of truth)
+const activeCampaignName = computed(() => campaignStore.currentCampaign?.name || null)
 const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
 // Language

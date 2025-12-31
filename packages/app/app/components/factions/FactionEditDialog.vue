@@ -56,6 +56,11 @@
             {{ $t('players.title') }}
             <v-chip size="x-small" class="ml-2">{{ counts.players }}</v-chip>
           </v-tab>
+          <v-tab value="relations">
+            <v-icon start>mdi-handshake</v-icon>
+            {{ $t('factions.factionRelations') }}
+            <v-chip size="x-small" class="ml-2">{{ counts.relations }}</v-chip>
+          </v-tab>
         </v-tabs>
 
         <v-card-text class="flex-grow-1 overflow-y-auto">
@@ -270,6 +275,18 @@
                 @changed="refreshFaction"
               />
             </v-tabs-window-item>
+
+            <!-- Faction Relations Tab -->
+            <v-tabs-window-item value="relations">
+              <FactionRelationsTab
+                :faction-relations="factionRelations"
+                :available-factions="availableFactions"
+                :adding="addingRelation"
+                @add="addFactionRelation"
+                @update="updateFactionRelation"
+                @remove="removeFactionRelation"
+              />
+            </v-tabs-window-item>
           </v-tabs-window>
 
           <!-- Create Form (no tabs) -->
@@ -398,6 +415,7 @@ import type { Lore } from '~~/types/lore'
 import { FACTION_TYPES, FACTION_ALIGNMENTS, FACTION_MEMBERSHIP_TYPES } from '~~/types/faction'
 import EntityNpcsTab from '~/components/shared/EntityNpcsTab.vue'
 import FactionLocationsTab from './FactionLocationsTab.vue'
+import FactionRelationsTab from './FactionRelationsTab.vue'
 import EntityItemsTab from '~/components/shared/EntityItemsTab.vue'
 import EntityLoreTab from '~/components/shared/EntityLoreTab.vue'
 import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
@@ -411,6 +429,7 @@ import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
 import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
+import { useFactionCounts } from '~/composables/useFactionCounts'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and factionId needed!
@@ -434,6 +453,7 @@ const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
 const { downloadImage: downloadImageFile } = useImageDownload()
+const { setCounts: setGlobalCounts } = useFactionCounts()
 
 // Dirty state management for tabs
 const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
@@ -512,6 +532,18 @@ const factionLocations = ref<FactionLocation[]>([])
 const factionItems = ref<FactionItem[]>([])
 const linkedLore = ref<Array<Pick<Lore, 'id' | 'name' | 'description' | 'image_url'>>>([])
 
+// Faction-to-Faction relations
+interface FactionRelation {
+  id: number
+  related_faction_id: number
+  related_faction_name: string
+  relation_type: string
+  notes: string | Record<string, unknown> | null
+  image_url: string | null
+  direction: 'outgoing' | 'incoming'
+}
+const factionRelations = ref<FactionRelation[]>([])
+
 // Counts for tab badges
 const counts = ref({
   members: 0,
@@ -521,6 +553,7 @@ const counts = ref({
   players: 0,
   documents: 0,
   images: 0,
+  relations: 0,
 })
 
 // Loading states
@@ -530,6 +563,7 @@ const loadingLore = ref(false)
 const addingMember = ref(false)
 const addingLocation = ref(false)
 const addingItem = ref(false)
+const addingRelation = ref(false)
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -611,6 +645,14 @@ const availableItems = computed(() =>
 const availableLore = computed(() =>
   entitiesStore.lore
     .map((l) => ({ id: l.id, name: l.name }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
+)
+
+// Available factions for relations (exclude current faction)
+const availableFactions = computed(() =>
+  entitiesStore.factions
+    .filter((f) => f.id !== faction.value?.id)
+    .map((f) => ({ id: f.id, name: f.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
@@ -728,8 +770,11 @@ async function loadCounts(factionId: number) {
       players: number
       documents: number
       images: number
+      relations: number
     }>(`/api/factions/${factionId}/counts`)
     counts.value = data
+    // Also update global counts so FactionCard updates reactively
+    setGlobalCounts(factionId, data)
   } catch (e) {
     console.error('[FactionEditDialog] Failed to load counts:', e)
   }
@@ -741,11 +786,12 @@ async function loadRelations(factionId: number) {
   loadingLore.value = true
 
   try {
-    const [members, locations, items, lore] = await Promise.all([
+    const [members, locations, items, lore, relations] = await Promise.all([
       $fetch<FactionMember[]>(`/api/entities/${factionId}/related/npcs`).catch(() => []),
       $fetch<FactionLocation[]>(`/api/entities/${factionId}/related/locations`).catch(() => []),
       $fetch<FactionItem[]>(`/api/entities/${factionId}/related/items`).catch(() => []),
       $fetch<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>(`/api/entities/${factionId}/related/lore`).catch(() => []),
+      $fetch<FactionRelation[]>(`/api/factions/${factionId}/relations`).catch(() => []),
     ])
 
     factionMembers.value = members
@@ -762,6 +808,7 @@ async function loadRelations(factionId: number) {
       direction: item.direction,
     }))
     linkedLore.value = lore
+    factionRelations.value = relations
   } catch (e) {
     console.error('[FactionEditDialog] Failed to load relations:', e)
   } finally {
@@ -801,6 +848,7 @@ function resetForm() {
   factionLocations.value = []
   factionItems.value = []
   linkedLore.value = []
+  factionRelations.value = []
   counts.value = {
     members: 0,
     items: 0,
@@ -809,6 +857,7 @@ function resetForm() {
     players: 0,
     documents: 0,
     images: 0,
+    relations: 0,
   }
 }
 
@@ -1163,6 +1212,61 @@ async function removeLore(relationId: number) {
     await loadCounts(faction.value.id)
   } catch (e) {
     console.error('[FactionEditDialog] Failed to remove lore:', e)
+  }
+}
+
+// ============================================================================
+// Faction-to-Faction Relation Management
+// ============================================================================
+async function addFactionRelation(payload: { factionId: number; relationType: string; notes?: string }) {
+  if (!faction.value) return
+
+  addingRelation.value = true
+  try {
+    await $fetch('/api/entity-relations', {
+      method: 'POST',
+      body: {
+        fromEntityId: faction.value.id,
+        toEntityId: payload.factionId,
+        relationType: payload.relationType,
+        notes: payload.notes ? JSON.stringify({ text: payload.notes }) : null,
+      },
+    })
+    await loadRelations(faction.value.id)
+    await loadCounts(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to add faction relation:', e)
+  } finally {
+    addingRelation.value = false
+  }
+}
+
+async function updateFactionRelation(payload: { relationId: number; relationType: string; notes?: string }) {
+  if (!faction.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${payload.relationId}`, {
+      method: 'PATCH',
+      body: {
+        relationType: payload.relationType,
+        notes: payload.notes ? JSON.stringify({ text: payload.notes }) : null,
+      },
+    })
+    await loadRelations(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to update faction relation:', e)
+  }
+}
+
+async function removeFactionRelation(relationId: number) {
+  if (!faction.value) return
+
+  try {
+    await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
+    await loadRelations(faction.value.id)
+    await loadCounts(faction.value.id)
+  } catch (e) {
+    console.error('[FactionEditDialog] Failed to remove faction relation:', e)
   }
 }
 

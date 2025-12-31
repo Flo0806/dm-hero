@@ -1,6 +1,5 @@
 <template>
   <v-navigation-drawer
-    v-if="hasActiveCampaign"
     :model-value="modelValue"
     :rail="rail"
     permanent

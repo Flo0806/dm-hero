@@ -11,6 +11,7 @@ interface FactionCounts {
   images: number
   items: number
   locations: number
+  relations: number
 }
 
 // SHARED STATE - outside the function so all components share the same cache
