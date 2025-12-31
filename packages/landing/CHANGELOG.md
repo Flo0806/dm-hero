@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.5
+
+### Patch Changes
+
+- [`74e758c`](https://github.com/Flo0806/dm-hero/commit/74e758c1cb7340ed408d06ce31dedc21f3751498) Thanks [@Flo0806](https://github.com/Flo0806)! - Prefer .exe installer for Windows downloads and add auto-update info hint
+
 ## 1.1.4
 
 ### Patch Changes
