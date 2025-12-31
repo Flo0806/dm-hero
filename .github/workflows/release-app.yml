@@ -128,7 +128,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dm-hero-windows
-          path: packages/app/dist-electron/*.zip
+          path: |
+            packages/app/dist-electron/*.zip
+            packages/app/dist-electron/*.exe
+            packages/app/dist-electron/latest.yml
           if-no-files-found: warn
 
   build-electron-linux:
@@ -171,7 +174,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dm-hero-linux
-          path: packages/app/dist-electron/*.AppImage
+          path: |
+            packages/app/dist-electron/*.AppImage
+            packages/app/dist-electron/latest-linux.yml
           if-no-files-found: warn
 
   create-release:

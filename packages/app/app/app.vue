@@ -43,6 +43,11 @@
     >
       {{ snackbarStore.message }}
     </v-snackbar>
+
+    <!-- Announcements Dialog -->
+    <ClientOnly>
+      <SharedAnnouncementDialog />
+    </ClientOnly>
   </v-app>
 </template>
 

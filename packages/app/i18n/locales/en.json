@@ -1356,6 +1356,7 @@
     "moreActions": "More Actions",
     "view": "View",
     "close": "Close",
+    "ok": "OK",
     "saveInTabHint": "Save changes directly in this tab",
     "unsavedTabChanges": "Save or cancel changes first: {tabs}",
     "clear": "Clear",
@@ -1429,7 +1430,12 @@
     "sections": {
       "openai": "OpenAI Integration",
       "preferences": "Preferences",
-      "campaign": "Campaign"
+      "campaign": "Campaign",
+      "announcements": "Announcements"
+    },
+    "announcements": {
+      "alreadySeen": "You have already seen the latest announcements",
+      "notSeen": "There are unread announcements"
     },
     "campaign": {
       "title": "Campaign Settings",
@@ -1940,5 +1946,16 @@
     "emptyHint": "Create your first note using the field above",
     "completed": "completed",
     "clearCompleted": "Clear completed"
+  },
+  "announcements": {
+    "installer": {
+      "title": "New: Automatic Updates!",
+      "content": "DM Hero is now available as an installer. If you install the app using the installer, you'll automatically receive all future updates - no action required!"
+    },
+    "installerPath": "Installation path ({os}):",
+    "autoUpdateHint": "After installation via the installer, the app will automatically update whenever a new version is available.",
+    "dontShowAgain": "Don't show again",
+    "resetButton": "Show announcements again",
+    "resetSuccess": "Announcements will be shown on next start"
   }
 }

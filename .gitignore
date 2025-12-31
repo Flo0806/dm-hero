@@ -43,4 +43,4 @@ squashfs-root/
 
 # Private project documentation (keep local only)
 CLAUDE.md
-scripts
+/scripts/

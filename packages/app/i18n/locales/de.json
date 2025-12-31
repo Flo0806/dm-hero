@@ -1349,6 +1349,7 @@
     "moreActions": "Weitere Aktionen",
     "view": "Ansehen",
     "close": "Schließen",
+    "ok": "OK",
     "saveInTabHint": "Änderungen in diesem Tab direkt speichern",
     "unsavedTabChanges": "Erst Änderungen speichern oder abbrechen: {tabs}",
     "clear": "Löschen",
@@ -1422,7 +1423,12 @@
     "sections": {
       "openai": "OpenAI Integration",
       "preferences": "Präferenzen",
-      "campaign": "Kampagne"
+      "campaign": "Kampagne",
+      "announcements": "Neuigkeiten"
+    },
+    "announcements": {
+      "alreadySeen": "Du hast die neuesten Ankündigungen bereits gesehen",
+      "notSeen": "Es gibt ungelesene Neuigkeiten"
     },
     "campaign": {
       "title": "Kampagnen-Einstellungen",
@@ -1916,5 +1922,16 @@
     "emptyHint": "Erstelle deine erste Notiz mit dem Feld oben",
     "completed": "erledigt",
     "clearCompleted": "Erledigte löschen"
+  },
+  "announcements": {
+    "installer": {
+      "title": "Neu: Automatische Updates!",
+      "content": "Ab sofort kannst du DM Hero als Installer herunterladen. Wenn du die App über den Installer installierst, erhältst du automatisch alle zukünftigen Updates - du musst nichts weiter tun!"
+    },
+    "installerPath": "Installationspfad ({os}):",
+    "autoUpdateHint": "Nach der Installation über den Installer wird die App automatisch aktualisiert, sobald eine neue Version verfügbar ist.",
+    "dontShowAgain": "Nicht mehr anzeigen",
+    "resetButton": "Neuigkeiten erneut anzeigen",
+    "resetSuccess": "Neuigkeiten werden beim nächsten Start wieder angezeigt"
   }
 }

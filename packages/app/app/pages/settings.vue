@@ -167,6 +167,31 @@
       </v-card-text>
     </v-card>
 
+    <!-- Announcements Section -->
+    <v-card class="mt-6">
+      <v-card-text>
+        <div class="mb-4">
+          <h2 class="text-h6 mb-2">
+            {{ $t('settings.sections.announcements') }}
+          </h2>
+        </div>
+
+        <v-btn
+          color="secondary"
+          variant="outlined"
+          :disabled="!hasSeenLatest"
+          @click="resetAnnouncements"
+        >
+          <v-icon start>mdi-bell-ring</v-icon>
+          {{ $t('announcements.resetButton') }}
+        </v-btn>
+
+        <div class="mt-2 text-caption text-medium-emphasis">
+          {{ hasSeenLatest ? $t('settings.announcements.alreadySeen') : $t('settings.announcements.notSeen') }}
+        </div>
+      </v-card-text>
+    </v-card>
+
     <!-- Success/Error Snackbar -->
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
       {{ snackbar.message }}
@@ -175,6 +200,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAnnouncements } from '~/composables/useAnnouncements'
+
 // Type declaration for Electron API exposed via preload
 interface ElectronAPI {
   isElectron: boolean
@@ -190,6 +217,24 @@ declare global {
 }
 
 const { t } = useI18n()
+
+// Announcements
+const { resetAnnouncements: doResetAnnouncements, hasSeenLatest: checkHasSeenLatest } = useAnnouncements()
+const hasSeenLatest = ref(true)
+
+function resetAnnouncements() {
+  doResetAnnouncements()
+  hasSeenLatest.value = false
+  snackbar.value = {
+    show: true,
+    message: t('announcements.resetSuccess'),
+    color: 'success',
+  }
+}
+
+function checkAnnouncementState() {
+  hasSeenLatest.value = checkHasSeenLatest()
+}
 
 // Electron API detection
 const isElectron = ref(false)
@@ -221,6 +266,7 @@ const snackbar = ref({
 onMounted(() => {
   loadSettings()
   checkElectron()
+  checkAnnouncementState()
 })
 
 // Check if running in Electron and load data paths
