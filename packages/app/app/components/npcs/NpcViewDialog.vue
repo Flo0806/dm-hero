@@ -378,11 +378,11 @@ function getNotesText(notes: string | Record<string, unknown> | null | undefined
   return ''
 }
 
-// Load data when NPC changes
+// Load data when NPC changes OR dialog becomes visible (to refresh after edit)
 watch(
-  () => props.npc,
-  async (newNpc) => {
-    if (!newNpc) return
+  () => [props.show, props.npc] as const,
+  async ([isVisible, newNpc]) => {
+    if (!isVisible || !newNpc) return
 
     loading.value = true
     try {

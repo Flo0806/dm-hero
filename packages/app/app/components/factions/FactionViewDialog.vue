@@ -263,7 +263,10 @@ const internalShow = computed({
 
 const activeTab = ref('overview')
 const loading = ref(false)
-const counts = ref<FactionCounts | null>(null)
+
+// Use reactive counts from composable (updated by EditDialog via setCounts)
+const { getCounts, setCounts } = useFactionCounts()
+const counts = computed(() => (props.faction ? getCounts(props.faction.id) || props.faction._counts : null))
 
 // Data refs
 const members = ref<
@@ -281,11 +284,11 @@ const loreEntries = ref<
 const documents = ref<Document[]>([])
 const images = ref<Image[]>([])
 
-// Load data when faction changes
+// Load data when faction changes OR dialog becomes visible (to refresh after edit)
 watch(
-  () => props.faction?.id,
-  async (newFactionId) => {
-    if (newFactionId) {
+  () => [props.modelValue, props.faction?.id] as const,
+  async ([isVisible, newFactionId]) => {
+    if (isVisible && newFactionId) {
       loading.value = true
       try {
         const [countsData, membersData, itemsData, locationsData, loreData, documentsData, imagesData] =
@@ -303,7 +306,8 @@ watch(
             $fetch<Image[]>(`/api/entity-images/${newFactionId}`).catch(() => []),
           ])
 
-        counts.value = countsData
+        // Update global counts so they're reactive everywhere
+        setCounts(newFactionId, countsData)
         members.value = membersData
         items.value = itemsData
         locations.value = locationsData

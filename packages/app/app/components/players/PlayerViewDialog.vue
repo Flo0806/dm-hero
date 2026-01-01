@@ -332,11 +332,11 @@ function openImagePreview(image: { id: number; image_url: string; is_primary: bo
   showImagePreview.value = true
 }
 
-// Load data when player changes
+// Load data when player changes OR dialog becomes visible (to refresh after edit)
 watch(
-  () => props.player,
-  async (newPlayer) => {
-    if (!newPlayer) return
+  () => [props.show, props.player] as const,
+  async ([isVisible, newPlayer]) => {
+    if (!isVisible || !newPlayer) return
 
     loading.value = true
     try {
