@@ -201,7 +201,9 @@
       "fullExportDetails": "{entities} entities, {sessions} sessions, {maps} maps",
       "partialExportInfo": "Select specific entities to export. Linked entities are shown for easy inclusion.",
       "selectedCount": "{count} entities selected",
-      "download": "Download .dmhero"
+      "download": "Download .dmhero",
+      "compressImages": "Compress images",
+      "compressImagesHint": "Reduces file size by resizing and compressing images (max 1920px, recommended)"
     },
     "import": {
       "title": "Import Campaign",

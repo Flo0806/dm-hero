@@ -1,10 +1,11 @@
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join, basename } from 'path'
 import archiver from 'archiver'
 import { PassThrough } from 'stream'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
 import { STANDARD_RACE_KEYS, STANDARD_CLASS_KEYS } from '~~/server/utils/i18n-lookup'
+import { isCompressibleImage, compressImage } from '~~/server/utils/image-compression'
 import type {
   CampaignExportManifest,
   ExportOptions,
@@ -50,6 +51,7 @@ export default defineEventHandler(async (event) => {
   const mode = body?.mode || 'full'
   const selectedEntityIds = body?.entityIds || []
   const meta = body?.meta
+  const compressImages = body?.compressImages ?? false
 
   const db = getDb()
 
@@ -947,11 +949,49 @@ export default defineEventHandler(async (event) => {
   // Add manifest
   archive.append(JSON.stringify(manifest, null, 2), { name: 'manifest.json' })
 
-  // Add files
+  // Add files (with optional image compression)
+  let totalOriginalSize = 0
+  let totalCompressedSize = 0
+  let imagesCompressed = 0
+  const compressionWarnings: string[] = []
+
   for (const file of filesToInclude) {
-    if (existsSync(file.sourcePath)) {
+    if (!existsSync(file.sourcePath)) {
+      continue
+    }
+
+    // Check if this is an image that should be compressed
+    if (compressImages && isCompressibleImage(file.sourcePath)) {
+      try {
+        const originalBuffer = readFileSync(file.sourcePath)
+        const result = await compressImage(originalBuffer, file.sourcePath)
+
+        // Use compressed buffer
+        archive.append(result.buffer, { name: file.archivePath })
+
+        totalOriginalSize += result.originalSize
+        totalCompressedSize += result.compressedSize
+        imagesCompressed++
+      } catch (err) {
+        // Fallback to original file if compression fails
+        console.warn(`[Export] Image compression failed for ${file.sourcePath}:`, err)
+        compressionWarnings.push(basename(file.sourcePath))
+        archive.file(file.sourcePath, { name: file.archivePath })
+      }
+    } else {
+      // Non-image or compression disabled: add original file
       archive.file(file.sourcePath, { name: file.archivePath })
     }
+  }
+
+  // Log compression stats
+  if (compressImages && imagesCompressed > 0) {
+    const savedMB = ((totalOriginalSize - totalCompressedSize) / 1024 / 1024).toFixed(2)
+    const percentage = (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1)
+    console.log(`[Export] Compressed ${imagesCompressed} images: saved ${savedMB}MB (${percentage}%)`)
+  }
+  if (compressionWarnings.length > 0) {
+    console.warn(`[Export] ${compressionWarnings.length} images could not be compressed`)
   }
 
   // Finalize

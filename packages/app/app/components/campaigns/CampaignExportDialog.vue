@@ -134,6 +134,17 @@
             </v-alert>
           </div>
         </div>
+
+        <!-- Image Compression Option -->
+        <v-divider class="my-4" />
+        <v-checkbox
+          v-model="compressImages"
+          :label="$t('campaigns.export.compressImages')"
+          :hint="$t('campaigns.export.compressImagesHint')"
+          persistent-hint
+          density="compact"
+          hide-details="auto"
+        />
       </v-card-text>
 
       <v-card-actions>
@@ -193,6 +204,7 @@ const exportMode = ref<'full' | 'partial'>('full')
 const loading = ref(false)
 const exporting = ref(false)
 const expandedPanel = ref<string | null>(null)
+const compressImages = ref(true) // Enabled by default
 
 const allEntities = ref<EntityWithLinks[]>([])
 const selectedIds = ref<Set<number>>(new Set())
@@ -328,6 +340,7 @@ async function doExport() {
       body: {
         mode: exportMode.value,
         entityIds: exportMode.value === 'partial' ? Array.from(selectedIds.value) : undefined,
+        compressImages: compressImages.value,
       },
       responseType: 'blob',
     })

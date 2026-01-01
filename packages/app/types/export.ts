@@ -502,6 +502,9 @@ export interface ExportOptions {
 
   // Meta data (mainly for full export / store)
   meta?: ExportMeta
+
+  // Image compression options
+  compressImages?: boolean
 }
 
 // =============================================================================
