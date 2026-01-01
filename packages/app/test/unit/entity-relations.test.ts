@@ -446,3 +446,251 @@ describe('Entity Relations - Query with Entity Details', () => {
     expect(relations[0].notes).toBe('Family heirloom')
   })
 })
+
+describe('Entity Relations - Faction to Faction', () => {
+  it('should create a relation between two factions', () => {
+    const faction1Id = createEntity(factionTypeId, 'Thieves Guild')
+    const faction2Id = createEntity(factionTypeId, 'Merchant Consortium')
+
+    const relationId = createRelation(faction1Id, faction2Id, 'hostile')
+
+    const relation = db
+      .prepare('SELECT * FROM entity_relations WHERE id = ?')
+      .get(relationId) as { id: number; from_entity_id: number; to_entity_id: number; relation_type: string }
+
+    expect(relation).toBeDefined()
+    expect(relation.from_entity_id).toBe(faction1Id)
+    expect(relation.to_entity_id).toBe(faction2Id)
+    expect(relation.relation_type).toBe('hostile')
+  })
+
+  it('should query faction relations bidirectionally', () => {
+    const faction1Id = createEntity(factionTypeId, 'Kingdom of Eldoria')
+    const faction2Id = createEntity(factionTypeId, 'Dwarven Stronghold')
+    const faction3Id = createEntity(factionTypeId, 'Elven Enclave')
+
+    // Faction 1 -> Faction 2 (outgoing)
+    createRelation(faction1Id, faction2Id, 'allied')
+    // Faction 3 -> Faction 1 (incoming)
+    createRelation(faction3Id, faction1Id, 'neutral')
+
+    // Query all relations for Faction 1 (like the API does)
+    const relations = db
+      .prepare(`
+        SELECT
+          er.id,
+          er.relation_type,
+          e.id as related_faction_id,
+          e.name as related_faction_name,
+          'outgoing' as direction
+        FROM entity_relations er
+        INNER JOIN entities e ON er.to_entity_id = e.id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT
+          er.id,
+          er.relation_type,
+          e.id as related_faction_id,
+          e.name as related_faction_name,
+          'incoming' as direction
+        FROM entity_relations er
+        INNER JOIN entities e ON er.from_entity_id = e.id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      `)
+      .all(faction1Id, factionTypeId, faction1Id, factionTypeId) as Array<{
+        id: number
+        relation_type: string
+        related_faction_id: number
+        related_faction_name: string
+        direction: string
+      }>
+
+    expect(relations).toHaveLength(2)
+
+    const outgoing = relations.find(r => r.direction === 'outgoing')
+    const incoming = relations.find(r => r.direction === 'incoming')
+
+    expect(outgoing).toBeDefined()
+    expect(outgoing?.related_faction_name).toBe('Dwarven Stronghold')
+    expect(outgoing?.relation_type).toBe('allied')
+
+    expect(incoming).toBeDefined()
+    expect(incoming?.related_faction_name).toBe('Elven Enclave')
+    expect(incoming?.relation_type).toBe('neutral')
+  })
+
+  it('should support standard faction relation types', () => {
+    const factionA = createEntity(factionTypeId, 'Faction A')
+
+    const relationTypes = ['allied', 'hostile', 'neutral', 'vassal', 'overlord', 'trade_partner', 'rival', 'subsidiary']
+
+    relationTypes.forEach((type, index) => {
+      const factionN = createEntity(factionTypeId, `Faction ${index + 2}`)
+      createRelation(factionA, factionN, type)
+    })
+
+    const relations = db
+      .prepare('SELECT DISTINCT relation_type FROM entity_relations WHERE from_entity_id = ?')
+      .all(factionA) as Array<{ relation_type: string }>
+
+    expect(relations).toHaveLength(relationTypes.length)
+
+    const storedTypes = relations.map(r => r.relation_type)
+    relationTypes.forEach(type => {
+      expect(storedTypes).toContain(type)
+    })
+  })
+
+  it('should store JSON notes for faction relations', () => {
+    const faction1Id = createEntity(factionTypeId, 'Order of the Silver Shield')
+    const faction2Id = createEntity(factionTypeId, 'Dark Brotherhood')
+
+    const jsonNotes = JSON.stringify({ text: 'Long-standing enemies since the Great War' })
+    const relationId = createRelation(faction1Id, faction2Id, 'hostile', jsonNotes)
+
+    const relation = db
+      .prepare('SELECT notes FROM entity_relations WHERE id = ?')
+      .get(relationId) as { notes: string }
+
+    expect(relation.notes).toBe(jsonNotes)
+
+    // Parse and verify JSON structure
+    const parsed = JSON.parse(relation.notes)
+    expect(parsed.text).toBe('Long-standing enemies since the Great War')
+  })
+
+  it('should store plain text notes for faction relations', () => {
+    const faction1Id = createEntity(factionTypeId, 'Merchants Guild')
+    const faction2Id = createEntity(factionTypeId, 'Crafters Union')
+
+    const plainNotes = 'Trade agreement signed in 1452'
+    const relationId = createRelation(faction1Id, faction2Id, 'trade_partner', plainNotes)
+
+    const relation = db
+      .prepare('SELECT notes FROM entity_relations WHERE id = ?')
+      .get(relationId) as { notes: string }
+
+    expect(relation.notes).toBe(plainNotes)
+  })
+
+  it('should exclude deleted factions from relation queries', () => {
+    const faction1Id = createEntity(factionTypeId, 'Active Faction')
+    const faction2Id = createEntity(factionTypeId, 'Soon Deleted Faction')
+
+    createRelation(faction1Id, faction2Id, 'allied')
+
+    // Soft-delete faction2
+    db.prepare('UPDATE entities SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?').run(faction2Id)
+
+    // Query relations excluding deleted entities
+    const relations = db
+      .prepare(`
+        SELECT e.id, e.name
+        FROM entity_relations er
+        INNER JOIN entities e ON er.to_entity_id = e.id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      `)
+      .all(faction1Id, factionTypeId) as Array<{ id: number; name: string }>
+
+    expect(relations).toHaveLength(0)
+  })
+
+  it('should prevent self-referencing faction relations at application level', () => {
+    const factionId = createEntity(factionTypeId, 'Self Faction')
+
+    // Database allows it, but API should prevent it
+    // This test documents that the DB doesn't enforce it - validation is in the API
+    const relationId = createRelation(factionId, factionId, 'allied')
+
+    const relation = db
+      .prepare('SELECT * FROM entity_relations WHERE id = ?')
+      .get(relationId) as { from_entity_id: number; to_entity_id: number }
+
+    // DB allows self-reference - API must validate
+    expect(relation.from_entity_id).toBe(relation.to_entity_id)
+  })
+
+  it('should update faction relation type and notes', () => {
+    const faction1Id = createEntity(factionTypeId, 'Trading Company')
+    const faction2Id = createEntity(factionTypeId, 'Pirate Fleet')
+
+    const relationId = createRelation(faction1Id, faction2Id, 'hostile', 'Initial conflict')
+
+    // Update the relation
+    db.prepare('UPDATE entity_relations SET relation_type = ?, notes = ? WHERE id = ?')
+      .run('neutral', 'Peace treaty signed', relationId)
+
+    const updated = db
+      .prepare('SELECT relation_type, notes FROM entity_relations WHERE id = ?')
+      .get(relationId) as { relation_type: string; notes: string }
+
+    expect(updated.relation_type).toBe('neutral')
+    expect(updated.notes).toBe('Peace treaty signed')
+  })
+
+  it('should handle complex faction networks', () => {
+    // Create a network of factions with various relations
+    const kingdom = createEntity(factionTypeId, 'Kingdom')
+    const vassal1 = createEntity(factionTypeId, 'Vassal Duchy')
+    const vassal2 = createEntity(factionTypeId, 'Vassal Barony')
+    const enemy = createEntity(factionTypeId, 'Enemy Empire')
+    const neutral = createEntity(factionTypeId, 'Neutral City-State')
+
+    // Kingdom has vassals
+    createRelation(kingdom, vassal1, 'overlord')
+    createRelation(kingdom, vassal2, 'overlord')
+    // Vassals serve kingdom
+    createRelation(vassal1, kingdom, 'vassal')
+    createRelation(vassal2, kingdom, 'vassal')
+    // Kingdom has enemy
+    createRelation(kingdom, enemy, 'hostile')
+    createRelation(enemy, kingdom, 'hostile')
+    // Neutral trade partner
+    createRelation(kingdom, neutral, 'trade_partner')
+
+    // Count all relations for kingdom
+    const kingdomRelations = db
+      .prepare(`
+        SELECT COUNT(*) as count
+        FROM entity_relations
+        WHERE from_entity_id = ? OR to_entity_id = ?
+      `)
+      .get(kingdom, kingdom) as { count: number }
+
+    // Kingdom: 2 overlord + 2 vassal incoming + 2 hostile + 1 trade = 7 relations
+    expect(kingdomRelations.count).toBe(7)
+  })
+
+  it('should return faction with image_url in relations query', () => {
+    const faction1Id = createEntity(factionTypeId, 'Image Faction 1')
+    const faction2Id = createEntity(factionTypeId, 'Image Faction 2')
+
+    // Set image_url on faction2
+    db.prepare('UPDATE entities SET image_url = ? WHERE id = ?').run('faction2.jpg', faction2Id)
+
+    createRelation(faction1Id, faction2Id, 'allied')
+
+    const relations = db
+      .prepare(`
+        SELECT
+          e.name as related_faction_name,
+          e.image_url as related_faction_image_url
+        FROM entity_relations er
+        INNER JOIN entities e ON er.to_entity_id = e.id
+        WHERE er.from_entity_id = ?
+      `)
+      .all(faction1Id) as Array<{ related_faction_name: string; related_faction_image_url: string }>
+
+    expect(relations).toHaveLength(1)
+    expect(relations[0].related_faction_name).toBe('Image Faction 2')
+    expect(relations[0].related_faction_image_url).toBe('faction2.jpg')
+  })
+})

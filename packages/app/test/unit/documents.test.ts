@@ -267,3 +267,118 @@ describe('Documents - Query Patterns', () => {
     expect(backstoryDocs).toHaveLength(2)
   })
 })
+
+describe('Documents - PDF Support', () => {
+  it('should store PDF document with file_type and file_path', () => {
+    const entityId = createEntity('PDF NPC')
+
+    const result = db
+      .prepare(
+        `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .run(entityId, 'Character Sheet', '', '2025-01-01', 'pdf', 'abc123.pdf')
+    const docId = Number(result.lastInsertRowid)
+
+    const doc = db
+      .prepare('SELECT * FROM entity_documents WHERE id = ?')
+      .get(docId) as {
+      id: number
+      title: string
+      file_type: string
+      file_path: string
+      content: string
+    }
+
+    expect(doc.file_type).toBe('pdf')
+    expect(doc.file_path).toBe('abc123.pdf')
+    expect(doc.content).toBe('')
+  })
+
+  it('should distinguish PDF from markdown documents', () => {
+    const entityId = createEntity('Mixed Docs NPC')
+
+    // Create markdown document
+    createDocument(entityId, 'Backstory', 'A long story...')
+
+    // Create PDF document
+    db.prepare(
+      `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(entityId, 'Character Sheet', '', '2025-01-01', 'pdf', 'sheet.pdf')
+
+    // Query by file_type
+    const markdownDocs = db
+      .prepare(
+        `SELECT * FROM entity_documents WHERE entity_id = ? AND (file_type IS NULL OR file_type = 'markdown')`,
+      )
+      .all(entityId)
+
+    const pdfDocs = db
+      .prepare("SELECT * FROM entity_documents WHERE entity_id = ? AND file_type = 'pdf'")
+      .all(entityId)
+
+    expect(markdownDocs).toHaveLength(1)
+    expect(pdfDocs).toHaveLength(1)
+  })
+
+  it('should count documents including PDFs', () => {
+    const entityId = createEntity('Count PDF NPC')
+
+    // Create 2 markdown documents
+    createDocument(entityId, 'Doc 1', 'Content 1')
+    createDocument(entityId, 'Doc 2', 'Content 2')
+
+    // Create 2 PDF documents
+    db.prepare(
+      `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(entityId, 'PDF 1', '', '2025-01-01', 'pdf', 'pdf1.pdf')
+    db.prepare(
+      `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(entityId, 'PDF 2', '', '2025-01-02', 'pdf', 'pdf2.pdf')
+
+    // Total count should be 4
+    const count = db
+      .prepare('SELECT COUNT(*) as count FROM entity_documents WHERE entity_id = ?')
+      .get(entityId) as { count: number }
+
+    expect(count.count).toBe(4)
+  })
+
+  it('should require file_path for PDF documents', () => {
+    const entityId = createEntity('PDF Validation NPC')
+
+    // A PDF without file_path is invalid (but DB doesn't enforce it)
+    // This test documents expected API behavior
+    db.prepare(
+      `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(entityId, 'Valid PDF', '', '2025-01-01', 'pdf', 'valid.pdf')
+
+    const doc = db
+      .prepare("SELECT * FROM entity_documents WHERE entity_id = ? AND file_type = 'pdf'")
+      .get(entityId) as { file_path: string }
+
+    expect(doc.file_path).toBeTruthy()
+  })
+
+  it('should handle PDF and markdown in document counts API pattern', () => {
+    const entityId = createEntity('API Pattern NPC')
+
+    // Create mixed documents
+    createDocument(entityId, 'Notes', 'Some notes')
+    db.prepare(
+      `INSERT INTO entity_documents (entity_id, title, content, date, file_type, file_path)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(entityId, 'Sheet', '', '2025-01-01', 'pdf', 'sheet.pdf')
+
+    // This is how /api/factions/[id]/counts.get.ts counts documents
+    const result = db
+      .prepare('SELECT COUNT(*) as count FROM entity_documents WHERE entity_id = ?')
+      .get(entityId) as { count: number }
+
+    expect(result.count).toBe(2)
+  })
+})

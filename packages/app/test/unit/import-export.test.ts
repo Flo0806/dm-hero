@@ -785,3 +785,349 @@ describe('Conflict Detection Logic', () => {
     expect(conflicts.length).toBe(0)
   })
 })
+
+// =============================================================================
+// PDF DOCUMENT EXPORT/IMPORT TESTS
+// =============================================================================
+
+describe('Export - PDF Documents', () => {
+  interface ExportDocument {
+    _exportId: string
+    title: string
+    content?: string
+    file_path?: string
+    file_type: 'markdown' | 'pdf'
+    date?: string
+    sort_order: number
+  }
+
+  it('should correctly distinguish PDF from markdown documents', () => {
+    const documents: ExportDocument[] = [
+      {
+        _exportId: 'doc:1',
+        title: 'Backstory',
+        content: '# Character Backstory\n\nLong story...',
+        file_type: 'markdown',
+        sort_order: 0,
+      },
+      {
+        _exportId: 'doc:2',
+        title: 'Character Sheet',
+        file_path: 'documents/npc-1-sheet.pdf',
+        file_type: 'pdf',
+        sort_order: 1,
+      },
+    ]
+
+    const markdownDocs = documents.filter(d => d.file_type === 'markdown')
+    const pdfDocs = documents.filter(d => d.file_type === 'pdf')
+
+    expect(markdownDocs.length).toBe(1)
+    expect(markdownDocs[0].content).toContain('# Character Backstory')
+
+    expect(pdfDocs.length).toBe(1)
+    expect(pdfDocs[0].file_path).toBe('documents/npc-1-sheet.pdf')
+    expect(pdfDocs[0].content).toBeUndefined()
+  })
+
+  it('should require file_path for PDF documents', () => {
+    const validateDocument = (doc: ExportDocument): boolean => {
+      if (doc.file_type === 'pdf') {
+        return !!doc.file_path
+      }
+      return true
+    }
+
+    const validPdf: ExportDocument = {
+      _exportId: 'doc:1',
+      title: 'Valid PDF',
+      file_path: 'documents/valid.pdf',
+      file_type: 'pdf',
+      sort_order: 0,
+    }
+
+    const invalidPdf: ExportDocument = {
+      _exportId: 'doc:2',
+      title: 'Invalid PDF',
+      file_type: 'pdf',
+      sort_order: 1,
+    }
+
+    expect(validateDocument(validPdf)).toBe(true)
+    expect(validateDocument(invalidPdf)).toBe(false)
+  })
+
+  it('should handle PDF file path extraction for export', () => {
+    // Simulates extracting filename from database file_path
+    const extractFilename = (filePath: string): string => {
+      const parts = filePath.split('/')
+      return parts[parts.length - 1] || filePath
+    }
+
+    expect(extractFilename('abc123.pdf')).toBe('abc123.pdf')
+    expect(extractFilename('documents/abc123.pdf')).toBe('abc123.pdf')
+    expect(extractFilename('/uploads/documents/abc123.pdf')).toBe('abc123.pdf')
+  })
+})
+
+describe('Import - PDF Documents', () => {
+  it('should restore PDF file_path correctly during import', () => {
+    interface ImportDocument {
+      title: string
+      content: string
+      date: string
+      file_type: 'markdown' | 'pdf' | null
+      file_path: string | null
+    }
+
+    // Simulates creating document record from import
+    const createDocumentFromImport = (
+      exportDoc: { title: string; content?: string; file_path?: string; file_type: 'markdown' | 'pdf'; date?: string },
+    ): ImportDocument => {
+      if (exportDoc.file_type === 'pdf') {
+        return {
+          title: exportDoc.title,
+          content: '', // PDFs have empty content
+          date: exportDoc.date || new Date().toISOString().split('T')[0]!,
+          file_type: 'pdf',
+          file_path: exportDoc.file_path || null,
+        }
+      }
+      return {
+        title: exportDoc.title,
+        content: exportDoc.content || '',
+        date: exportDoc.date || new Date().toISOString().split('T')[0]!,
+        file_type: null, // markdown is default/null
+        file_path: null,
+      }
+    }
+
+    const pdfImport = createDocumentFromImport({
+      title: 'Sheet',
+      file_path: 'abc123.pdf',
+      file_type: 'pdf',
+      date: '2025-01-01',
+    })
+
+    const mdImport = createDocumentFromImport({
+      title: 'Notes',
+      content: '# Notes',
+      file_type: 'markdown',
+    })
+
+    expect(pdfImport.file_type).toBe('pdf')
+    expect(pdfImport.file_path).toBe('abc123.pdf')
+    expect(pdfImport.content).toBe('')
+
+    expect(mdImport.file_type).toBeNull()
+    expect(mdImport.file_path).toBeNull()
+    expect(mdImport.content).toBe('# Notes')
+  })
+
+  it('should handle date NOT NULL constraint for PDF documents', () => {
+    // PDF documents must have a date (NOT NULL in database)
+    const ensureDate = (date?: string): string => {
+      return date || new Date().toISOString().split('T')[0]!
+    }
+
+    expect(ensureDate('2025-01-15')).toBe('2025-01-15')
+    expect(ensureDate(undefined)).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+// =============================================================================
+// ENTITY LINK REMAPPING TESTS
+// =============================================================================
+
+describe('Export - Entity Link Conversion', () => {
+  /**
+   * During export, internal entity IDs are converted to export IDs:
+   * {{npc:123}} -> {{npc:entity:1}}
+   */
+  function convertLinksForExport(
+    content: string,
+    entityIdToExportId: Map<number, string>,
+  ): string {
+    // Pattern: {{type:id}} where type is npc, location, item, faction, lore, player
+    return content.replace(
+      /\{\{(npc|location|item|faction|lore|player):(\d+)\}\}/g,
+      (match, type, id) => {
+        const entityId = parseInt(id, 10)
+        const exportId = entityIdToExportId.get(entityId)
+        if (exportId) {
+          return `{{${type}:${exportId}}}`
+        }
+        // Entity not in export - keep original (will be broken link)
+        return match
+      },
+    )
+  }
+
+  it('should convert entity IDs to export IDs', () => {
+    const content = 'This NPC knows {{npc:123}} and lives at {{location:456}}.'
+    const mapping = new Map<number, string>([
+      [123, 'entity:1'],
+      [456, 'entity:2'],
+    ])
+
+    const result = convertLinksForExport(content, mapping)
+
+    expect(result).toBe('This NPC knows {{npc:entity:1}} and lives at {{location:entity:2}}.')
+  })
+
+  it('should preserve links to entities not in export', () => {
+    const content = 'Knows {{npc:999}} who is not exported.'
+    const mapping = new Map<number, string>()
+
+    const result = convertLinksForExport(content, mapping)
+
+    expect(result).toBe('Knows {{npc:999}} who is not exported.')
+  })
+
+  it('should handle all entity types', () => {
+    const content = `
+      NPC: {{npc:1}}
+      Location: {{location:2}}
+      Item: {{item:3}}
+      Faction: {{faction:4}}
+      Lore: {{lore:5}}
+      Player: {{player:6}}
+    `
+    const mapping = new Map<number, string>([
+      [1, 'entity:1'],
+      [2, 'entity:2'],
+      [3, 'entity:3'],
+      [4, 'entity:4'],
+      [5, 'entity:5'],
+      [6, 'entity:6'],
+    ])
+
+    const result = convertLinksForExport(content, mapping)
+
+    expect(result).toContain('{{npc:entity:1}}')
+    expect(result).toContain('{{location:entity:2}}')
+    expect(result).toContain('{{item:entity:3}}')
+    expect(result).toContain('{{faction:entity:4}}')
+    expect(result).toContain('{{lore:entity:5}}')
+    expect(result).toContain('{{player:entity:6}}')
+  })
+})
+
+describe('Import - Entity Link Remapping', () => {
+  /**
+   * During import, export IDs are converted back to new entity IDs:
+   * {{npc:entity:1}} -> {{npc:789}}
+   */
+  function remapLinksForImport(
+    content: string,
+    exportIdToNewId: Map<string, number>,
+  ): string {
+    // Pattern: {{type:entity:n}} where type is npc, location, item, faction, lore, player
+    return content.replace(
+      /\{\{(npc|location|item|faction|lore|player):(entity:\d+)\}\}/g,
+      (match, type, exportId) => {
+        const newId = exportIdToNewId.get(exportId)
+        if (newId !== undefined) {
+          return `{{${type}:${newId}}}`
+        }
+        // Export ID not found - remove link or keep broken
+        return match
+      },
+    )
+  }
+
+  it('should remap export IDs to new entity IDs', () => {
+    const content = 'This NPC knows {{npc:entity:1}} and lives at {{location:entity:2}}.'
+    const mapping = new Map<string, number>([
+      ['entity:1', 789],
+      ['entity:2', 790],
+    ])
+
+    const result = remapLinksForImport(content, mapping)
+
+    expect(result).toBe('This NPC knows {{npc:789}} and lives at {{location:790}}.')
+  })
+
+  it('should preserve unmapped export IDs', () => {
+    const content = 'Knows {{npc:entity:999}} who was not imported.'
+    const mapping = new Map<string, number>()
+
+    const result = remapLinksForImport(content, mapping)
+
+    // Unmapped links stay as export format (will be broken)
+    expect(result).toBe('Knows {{npc:entity:999}} who was not imported.')
+  })
+
+  it('should handle multiple links to same entity', () => {
+    const content = 'First mention: {{npc:entity:1}}. Second mention: {{npc:entity:1}}.'
+    const mapping = new Map<string, number>([
+      ['entity:1', 500],
+    ])
+
+    const result = remapLinksForImport(content, mapping)
+
+    expect(result).toBe('First mention: {{npc:500}}. Second mention: {{npc:500}}.')
+  })
+
+  it('should handle content with no links', () => {
+    const content = 'Just plain text without any entity links.'
+    const mapping = new Map<string, number>()
+
+    const result = remapLinksForImport(content, mapping)
+
+    expect(result).toBe('Just plain text without any entity links.')
+  })
+
+  it('should not modify regular IDs (non-export format)', () => {
+    const content = 'Old format: {{npc:123}}. Should not change.'
+    const mapping = new Map<string, number>([
+      ['entity:1', 789],
+    ])
+
+    const result = remapLinksForImport(content, mapping)
+
+    // Old format IDs are not remapped
+    expect(result).toBe('Old format: {{npc:123}}. Should not change.')
+  })
+})
+
+describe('Round-trip Link Conversion', () => {
+  it('should correctly round-trip entity links through export and import', () => {
+    const originalContent = 'The wizard {{npc:100}} found {{item:200}} at {{location:300}}.'
+
+    // Step 1: Export - convert to export IDs
+    const exportMapping = new Map<number, string>([
+      [100, 'entity:1'],
+      [200, 'entity:2'],
+      [300, 'entity:3'],
+    ])
+
+    const exportContent = originalContent.replace(
+      /\{\{(npc|location|item|faction|lore|player):(\d+)\}\}/g,
+      (match, type, id) => {
+        const entityId = parseInt(id, 10)
+        const exportId = exportMapping.get(entityId)
+        return exportId ? `{{${type}:${exportId}}}` : match
+      },
+    )
+
+    expect(exportContent).toBe('The wizard {{npc:entity:1}} found {{item:entity:2}} at {{location:entity:3}}.')
+
+    // Step 2: Import - convert back to new IDs
+    const importMapping = new Map<string, number>([
+      ['entity:1', 500], // NPC got new ID 500
+      ['entity:2', 501], // Item got new ID 501
+      ['entity:3', 502], // Location got new ID 502
+    ])
+
+    const importedContent = exportContent.replace(
+      /\{\{(npc|location|item|faction|lore|player):(entity:\d+)\}\}/g,
+      (match, type, exportId) => {
+        const newId = importMapping.get(exportId)
+        return newId !== undefined ? `{{${type}:${newId}}}` : match
+      },
+    )
+
+    expect(importedContent).toBe('The wizard {{npc:500}} found {{item:501}} at {{location:502}}.')
+  })
+})
