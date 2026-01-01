@@ -167,6 +167,43 @@
       </v-card-text>
     </v-card>
 
+    <!-- Logs Section -->
+    <v-card class="mt-6">
+      <v-card-text>
+        <div class="mb-4">
+          <h2 class="text-h6 mb-2">
+            {{ $t('settings.sections.logs') }}
+          </h2>
+          <p class="text-medium-emphasis text-body-2">
+            {{ $t('settings.logs.subtitle') }}
+          </p>
+        </div>
+
+        <!-- Log Path Info -->
+        <v-alert v-if="logPath" type="info" variant="tonal" density="compact" class="mb-4">
+          <div class="text-caption">
+            <strong>{{ $t('settings.logs.logPath') }}:</strong><br />
+            {{ logPath }}
+          </div>
+        </v-alert>
+
+        <!-- Open Logs Folder Button (Electron only) -->
+        <v-btn
+          v-if="isElectron"
+          color="secondary"
+          variant="outlined"
+          @click="openLogsFolder"
+        >
+          <v-icon start>mdi-folder-text</v-icon>
+          {{ $t('settings.logs.openFolder') }}
+        </v-btn>
+
+        <div class="mt-2 text-caption text-medium-emphasis">
+          {{ $t('settings.logs.hint') }}
+        </div>
+      </v-card-text>
+    </v-card>
+
     <!-- Announcements Section -->
     <v-card class="mt-6">
       <v-card-text>
@@ -201,20 +238,7 @@
 
 <script setup lang="ts">
 import { useAnnouncements } from '~/composables/useAnnouncements'
-
-// Type declaration for Electron API exposed via preload
-interface ElectronAPI {
-  isElectron: boolean
-  exportDatabase: () => Promise<{ success: boolean; canceled?: boolean; filePath?: string; error?: string }>
-  openUploadsFolder: () => Promise<{ success: boolean; error?: string }>
-  getDataPaths: () => Promise<{ databasePath: string; uploadPath: string }>
-}
-
-declare global {
-  interface Window {
-    electronAPI?: ElectronAPI
-  }
-}
+import { useElectron } from '~/composables/useElectron'
 
 const { t } = useI18n()
 
@@ -237,9 +261,11 @@ function checkAnnouncementState() {
 }
 
 // Electron API detection
-const isElectron = ref(false)
-const dataPaths = ref<{ databasePath: string; uploadPath: string } | null>(null)
+const electron = useElectron()
+const dataPaths = ref<{ databasePath: string; uploadPath: string; logsPath: string } | null>(null)
 const exporting = ref(false)
+const logPath = ref<string | null>(null)
+const isElectron = computed(() => electron.isElectron)
 
 // Settings state
 const apiKey = ref('')
@@ -267,14 +293,14 @@ onMounted(() => {
   loadSettings()
   checkElectron()
   checkAnnouncementState()
+  loadLogPath()
 })
 
-// Check if running in Electron and load data paths
+// Load data paths (Electron only)
 async function checkElectron() {
-  if (typeof window !== 'undefined' && window.electronAPI) {
-    isElectron.value = true
+  if (electron.isElectron) {
     try {
-      dataPaths.value = await window.electronAPI.getDataPaths()
+      dataPaths.value = await electron.getDataPaths()
     } catch (error) {
       console.error('[Settings] Failed to get data paths:', error)
     }
@@ -283,11 +309,11 @@ async function checkElectron() {
 
 // Export database (Electron only)
 async function exportDatabase() {
-  if (!isElectron.value || !window.electronAPI) return
+  if (!electron.isElectron) return
 
   exporting.value = true
   try {
-    const result = await window.electronAPI.exportDatabase()
+    const result = await electron.exportDatabase()
 
     if (result.success) {
       snackbar.value = {
@@ -322,10 +348,10 @@ async function exportDatabase() {
 
 // Open uploads folder (Electron only)
 async function openUploadsFolder() {
-  if (!isElectron.value || !window.electronAPI) return
+  if (!electron.isElectron) return
 
   try {
-    const result = await window.electronAPI.openUploadsFolder()
+    const result = await electron.openUploadsFolder()
 
     if (!result.success) {
       snackbar.value = {
@@ -339,6 +365,40 @@ async function openUploadsFolder() {
     snackbar.value = {
       show: true,
       message: t('settings.dataManagement.openFolderFailed'),
+      color: 'error',
+    }
+  }
+}
+
+// Load log path from backend
+async function loadLogPath() {
+  try {
+    const result = await $fetch<{ logPath: string; logDir: string }>('/api/log-info/path')
+    logPath.value = result.logPath
+  } catch (error) {
+    console.error('[Settings] Failed to load log path:', error)
+  }
+}
+
+// Open logs folder (Electron only)
+async function openLogsFolder() {
+  if (!electron.isElectron) return
+
+  try {
+    const result = await electron.openLogsFolder()
+
+    if (!result.success) {
+      snackbar.value = {
+        show: true,
+        message: `${t('settings.logs.openFolderFailed')}: ${result.error}`,
+        color: 'error',
+      }
+    }
+  } catch (error) {
+    console.error('[Settings] Open logs folder failed:', error)
+    snackbar.value = {
+      show: true,
+      message: t('settings.logs.openFolderFailed'),
       color: 'error',
     }
   }

@@ -37,9 +37,10 @@ export interface UpdateDownloadProgress {
 
 export interface ElectronAPI {
   isElectron: boolean
-  exportDatabase: () => Promise<{ success: boolean; filePath?: string; error?: string }>
+  exportDatabase: () => Promise<{ success: boolean; canceled?: boolean; filePath?: string; error?: string }>
   openUploadsFolder: () => Promise<{ success: boolean; error?: string }>
-  getDataPaths: () => Promise<{ databasePath: string; uploadPath: string }>
+  openLogsFolder: () => Promise<{ success: boolean; error?: string }>
+  getDataPaths: () => Promise<{ databasePath: string; uploadPath: string; logsPath: string }>
   saveFileDialog: (options: SaveFileOptions) => Promise<SaveFileResult>
   openExternalUrl: (url: string) => Promise<{ success: boolean; error?: string }>
 
@@ -130,7 +131,7 @@ export function useElectron() {
     /**
      * Export the database (Electron only)
      */
-    async exportDatabase(): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    async exportDatabase(): Promise<{ success: boolean; canceled?: boolean; filePath?: string; error?: string }> {
       if (!electronAPI) {
         return { success: false, error: 'Not running in Electron' }
       }
@@ -148,9 +149,19 @@ export function useElectron() {
     },
 
     /**
-     * Get data paths (database and uploads)
+     * Open the logs folder in file explorer (Electron only)
      */
-    async getDataPaths(): Promise<{ databasePath: string; uploadPath: string } | null> {
+    async openLogsFolder(): Promise<{ success: boolean; error?: string }> {
+      if (!electronAPI) {
+        return { success: false, error: 'Not running in Electron' }
+      }
+      return electronAPI.openLogsFolder()
+    },
+
+    /**
+     * Get data paths (database, uploads, and logs)
+     */
+    async getDataPaths(): Promise<{ databasePath: string; uploadPath: string; logsPath: string } | null> {
       if (!electronAPI) return null
       return electronAPI.getDataPaths()
     },

@@ -1,9 +1,9 @@
 import { app, BrowserWindow, utilityProcess, ipcMain, dialog, shell } from 'electron'
 import pkg from 'electron-updater'
-const { autoUpdater } = pkg
 import path from 'path'
-import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, copyFileSync, writeFileSync, appendFileSync } from 'fs'
 import { fileURLToPath } from 'url'
+const { autoUpdater } = pkg
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -46,7 +46,7 @@ let mainWindow = null
 let serverProcess = null
 
 /**
- * Get user data paths for database and uploads
+ * Get user data paths for database, uploads, and logs
  * In production, these are in app.getPath('userData')
  * In dev mode, these are not used (Nuxt dev server uses default paths)
  */
@@ -58,6 +58,7 @@ function getDataPaths() {
   const userDataPath = app.getPath('userData')
   const dataDir = path.join(userDataPath, 'data')
   const uploadsDir = path.join(userDataPath, 'uploads')
+  const logsDir = path.join(userDataPath, 'logs')
 
   const audioDir = path.join(uploadsDir, 'audio')
 
@@ -71,10 +72,14 @@ function getDataPaths() {
   if (!existsSync(audioDir)) {
     mkdirSync(audioDir, { recursive: true })
   }
+  if (!existsSync(logsDir)) {
+    mkdirSync(logsDir, { recursive: true })
+  }
 
   return {
     databasePath: path.join(dataDir, 'dm-hero.db'),
     uploadPath: uploadsDir,
+    logsPath: logsDir,
   }
 }
 
@@ -125,6 +130,7 @@ async function startServer() {
   console.log('[Electron]   Output dir:', outputDir)
   console.log('[Electron]   DATABASE_PATH:', paths.databasePath)
   console.log('[Electron]   UPLOAD_PATH:', paths.uploadPath)
+  console.log('[Electron]   LOG_PATH:', paths.logsPath)
 
   // Start server as utility process with environment variables
   serverProcess = utilityProcess.fork(serverPath, [], {
@@ -135,6 +141,7 @@ async function startServer() {
       PORT: String(PROD_SERVER_PORT),
       DATABASE_PATH: paths.databasePath,
       UPLOAD_PATH: paths.uploadPath,
+      LOG_PATH: paths.logsPath,
       NITRO_OUTPUT_DIR: outputDir,
     },
     cwd: outputDir,
@@ -255,6 +262,7 @@ ipcMain.handle('get-data-paths', () => {
     return {
       databasePath: path.join(process.cwd(), 'data', 'dm-hero.db'),
       uploadPath: path.join(process.cwd(), 'uploads'),
+      logsPath: path.join(process.cwd(), 'data', 'logs'),
     }
   }
   return getDataPaths()
@@ -302,6 +310,23 @@ ipcMain.handle('open-uploads-folder', async () => {
 
   try {
     await shell.openPath(paths.uploadPath)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('open-logs-folder', async () => {
+  const paths = isDev
+    ? { logsPath: path.join(process.cwd(), 'data', 'logs') }
+    : getDataPaths()
+
+  if (!existsSync(paths.logsPath)) {
+    mkdirSync(paths.logsPath, { recursive: true })
+  }
+
+  try {
+    await shell.openPath(paths.logsPath)
     return { success: true }
   } catch (error) {
     return { success: false, error: error.message }
@@ -486,6 +511,42 @@ ipcMain.handle('save-file-dialog', async (event, options) => {
   } catch (error) {
     return { success: false, error: error.message }
   }
+})
+
+// ============================================================================
+// UNCAUGHT EXCEPTION HANDLER
+// ============================================================================
+
+function logToFile(message) {
+  try {
+    const paths = getDataPaths()
+    const logsDir = paths?.logsPath || path.join(process.cwd(), 'data', 'logs')
+
+    if (!existsSync(logsDir)) {
+      mkdirSync(logsDir, { recursive: true })
+    }
+
+    const logFile = path.join(logsDir, 'dm-hero.log')
+    const now = new Date()
+    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+    const logLine = `[${timestamp}] [FATAL] [Electron Main] ${message}\n`
+
+    appendFileSync(logFile, logLine, 'utf-8')
+  } catch (err) {
+    console.error('[Electron] Failed to write to log file:', err)
+  }
+}
+
+process.on('uncaughtException', (error) => {
+  const message = `Uncaught Exception: ${error.message}\n${error.stack || ''}`
+  console.error('[Electron]', message)
+  logToFile(message)
+})
+
+process.on('unhandledRejection', (reason) => {
+  const message = `Unhandled Rejection: ${reason instanceof Error ? reason.message + '\n' + reason.stack : String(reason)}`
+  console.error('[Electron]', message)
+  logToFile(message)
 })
 
 // App lifecycle

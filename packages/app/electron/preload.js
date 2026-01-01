@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Open uploads folder in file explorer
   openUploadsFolder: () => ipcRenderer.invoke('open-uploads-folder'),
 
+  // Open logs folder in file explorer
+  openLogsFolder: () => ipcRenderer.invoke('open-logs-folder'),
+
   // Get data paths info
   getDataPaths: () => ipcRenderer.invoke('get-data-paths'),
 

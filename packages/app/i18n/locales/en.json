@@ -1458,7 +1458,8 @@
       "openai": "OpenAI Integration",
       "preferences": "Preferences",
       "campaign": "Campaign",
-      "announcements": "Announcements"
+      "announcements": "Announcements",
+      "logs": "Logs"
     },
     "announcements": {
       "alreadySeen": "You have already seen the latest announcements",
@@ -1497,6 +1498,13 @@
       "exportCanceled": "Export canceled",
       "exportFailed": "Export failed",
       "openFolderFailed": "Could not open folder"
+    },
+    "logs": {
+      "subtitle": "Errors and warnings are written to a log file",
+      "logPath": "Log File",
+      "openFolder": "Open Logs Folder",
+      "hint": "Log files help with troubleshooting. Max 5 MB per file, 3 files are retained.",
+      "openFolderFailed": "Could not open logs folder"
     }
   },
   "players": {

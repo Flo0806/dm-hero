@@ -1451,7 +1451,8 @@
       "openai": "OpenAI Integration",
       "preferences": "Präferenzen",
       "campaign": "Kampagne",
-      "announcements": "Neuigkeiten"
+      "announcements": "Neuigkeiten",
+      "logs": "Protokolle"
     },
     "announcements": {
       "alreadySeen": "Du hast die neuesten Ankündigungen bereits gesehen",
@@ -1490,6 +1491,13 @@
       "exportCanceled": "Export abgebrochen",
       "exportFailed": "Export fehlgeschlagen",
       "openFolderFailed": "Ordner konnte nicht geöffnet werden"
+    },
+    "logs": {
+      "subtitle": "Fehler und Warnungen werden in eine Log-Datei geschrieben",
+      "logPath": "Log-Datei",
+      "openFolder": "Log-Ordner öffnen",
+      "hint": "Log-Dateien helfen bei der Fehlersuche. Max. 5 MB pro Datei, 3 Dateien werden aufbewahrt.",
+      "openFolderFailed": "Log-Ordner konnte nicht geöffnet werden"
     }
   },
   "players": {

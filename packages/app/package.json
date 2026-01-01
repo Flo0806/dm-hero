@@ -158,6 +158,7 @@
     "@types/archiver": "^7.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/leaflet": "^1.9.21",
+    "@types/node": "^25.0.3",
     "@types/unzipper": "^0.10.11",
     "@typescript-eslint/eslint-plugin": "^8.46.3",
     "@typescript-eslint/parser": "^8.46.3",
