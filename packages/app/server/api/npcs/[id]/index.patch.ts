@@ -1,5 +1,5 @@
 import { getDb } from '../../../utils/db'
-import { convertMetadataToKeys } from '../../../utils/i18n-lookup'
+import { convertMetadataToKeys, getLocaleFromEvent } from '../../../utils/i18n-lookup'
 import type { NpcMetadata } from '../../../../types/npc'
 
 export default defineEventHandler(async (event) => {
@@ -22,8 +22,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Convert localized race/class names to keys before saving
+  const locale = getLocaleFromEvent(event)
   const metadataWithKeys = metadata
-    ? await convertMetadataToKeys(metadata as Record<string, unknown>, 'npc')
+    ? await convertMetadataToKeys(metadata as Record<string, unknown>, 'npc', locale)
     : null
 
   // Build UPDATE dynamically - only update fields that are provided

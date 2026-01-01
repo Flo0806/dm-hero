@@ -236,8 +236,16 @@ export function useUpdateChecker() {
         return updateInfo.value
       }
 
+      // No update available - still set updateInfo with available: false
+      updateInfo.value = {
+        available: false,
+        currentVersion: APP_VERSION,
+        latestVersion,
+        releaseUrl: 'https://dm-hero.com/#download',
+        releaseName: appRelease.name || `DM Hero ${latestVersion}`,
+      }
       updateState.value = 'idle'
-      return null
+      return updateInfo.value
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
       updateState.value = 'error'

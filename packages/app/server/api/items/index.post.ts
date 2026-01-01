@@ -1,5 +1,5 @@
 import { getDb } from '../../utils/db'
-import { convertMetadataToKeys } from '../../utils/i18n-lookup'
+import { convertMetadataToKeys, getLocaleFromEvent } from '../../utils/i18n-lookup'
 import type { ItemMetadata } from '../../../types/item'
 
 export default defineEventHandler(async (event) => {
@@ -34,7 +34,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Convert localized type/rarity names to keys (e.g., "waffe" → "weapon")
-  const convertedMetadata = metadata ? await convertMetadataToKeys(metadata, 'item') : null
+  const locale = getLocaleFromEvent(event)
+  const convertedMetadata = metadata ? await convertMetadataToKeys(metadata, 'item', locale) : null
 
   const result = db
     .prepare(

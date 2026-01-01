@@ -719,6 +719,7 @@ export function getItemRarityKey(
 export async function convertMetadataToKeys(
   metadata: Record<string, unknown> | null | undefined,
   entityType: 'npc' | 'item' = 'npc',
+  locale: 'de' | 'en' = 'de',
 ): Promise<Record<string, unknown> | null | undefined> {
   if (!metadata) return metadata
 
@@ -786,7 +787,8 @@ export async function convertMetadataToKeys(
       } else if (typeof typeValue === 'string') {
         // Try exact match first, then fuzzy
         const typeKey =
-          (await getItemTypeKey(typeValue, false)) || (await getItemTypeKey(typeValue, true))
+          (await getItemTypeKey(typeValue, false, locale)) ||
+          (await getItemTypeKey(typeValue, true, locale))
         if (typeKey) converted.type = typeKey
       }
     }
@@ -809,8 +811,8 @@ export async function convertMetadataToKeys(
       } else if (typeof rarityValue === 'string') {
         // Try exact match first, then fuzzy
         const rarityKey =
-          (await getItemRarityKey(rarityValue, false)) ||
-          (await getItemRarityKey(rarityValue, true))
+          (await getItemRarityKey(rarityValue, false, locale)) ||
+          (await getItemRarityKey(rarityValue, true, locale))
         if (rarityKey) converted.rarity = rarityKey
       }
     }
