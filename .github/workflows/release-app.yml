@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'packages/app/package.json'
+      - 'packages/app/CHANGELOG.md'
   workflow_dispatch:
 
 env:
