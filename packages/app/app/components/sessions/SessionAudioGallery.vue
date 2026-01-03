@@ -136,7 +136,7 @@ const emit = defineEmits<{
   uploading: [isUploading: boolean]
 }>()
 
-const { t } = useI18n()
+const { showUploadError } = useErrorHandler()
 
 // State
 const audioFiles = ref<SessionAudio[]>([])
@@ -208,7 +208,7 @@ async function handleAudioUpload(event: Event) {
     emit('audio-updated')
   } catch (error) {
     console.error('Failed to upload audio:', error)
-    alert(t('audio.uploadError'))
+    showUploadError('audio')
   } finally {
     uploadingAudio.value = false
     emit('uploading', false)

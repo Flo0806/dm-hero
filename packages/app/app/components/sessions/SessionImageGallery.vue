@@ -192,6 +192,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { downloadImage } = useImageDownload()
+const { showUploadError } = useErrorHandler()
 
 // Image state
 const images = ref<SessionImage[]>([])
@@ -278,7 +279,7 @@ async function handleImageUpload(event: Event) {
     emit('images-updated')
   } catch (error) {
     console.error('Failed to upload session images:', error)
-    alert(t('common.uploadImageError'))
+    showUploadError('image')
   } finally {
     uploadingImage.value = false
     if (target) target.value = ''

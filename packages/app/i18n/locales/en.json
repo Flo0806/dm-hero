@@ -1992,5 +1992,27 @@
     "dontShowAgain": "Don't show again",
     "resetButton": "Show announcements again",
     "resetSuccess": "Announcements will be shown on next start"
+  },
+  "errors": {
+    "openai": {
+      "insufficientQuota": "OpenAI credits exhausted. Please check your billing at platform.openai.com.",
+      "invalidApiKey": "Invalid API key. Please check your settings.",
+      "rateLimitExceeded": "Too many requests. Please wait a moment and try again.",
+      "contentPolicyViolation": "Content violates OpenAI policies. Please adjust the description.",
+      "billingHardLimitReached": "OpenAI billing limit reached. Please check your limits at platform.openai.com.",
+      "serverError": "OpenAI server unavailable. Please try again later.",
+      "modelNotFound": "The selected AI model is not available.",
+      "unknown": "An error occurred during the AI request."
+    },
+    "upload": {
+      "imageFailed": "Image upload failed. Please try again.",
+      "pdfFailed": "PDF upload failed. Please try again.",
+      "audioFailed": "Audio upload failed. Please try again.",
+      "downloadFailed": "Download failed. Please try again."
+    },
+    "image": {
+      "generateFailed": "Image generation failed.",
+      "deleteFailed": "Could not delete image."
+    }
   }
 }

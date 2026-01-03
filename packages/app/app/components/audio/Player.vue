@@ -285,6 +285,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { showError } = useErrorHandler()
 
 // Audio element ref
 const audioElement = ref<HTMLAudioElement | null>(null)
@@ -577,7 +578,7 @@ async function saveMarker() {
     emit('markers-updated')
   } catch (error) {
     console.error('Failed to save marker:', error)
-    alert(t('audio.saveMarkerError'))
+    showError(error, 'audio.saveMarkerError')
   } finally {
     savingMarker.value = false
   }

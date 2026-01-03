@@ -177,8 +177,8 @@ const emit = defineEmits<{
   generating: [isGenerating: boolean]
 }>()
 
-const { t } = useI18n()
 const { downloadImage } = useImageDownload()
+const { showError, showUploadError } = useErrorHandler()
 
 // Image state
 const images = ref<EntityImage[]>([])
@@ -252,7 +252,7 @@ async function handleImageUpload(event: Event) {
     emit('images-updated') // Notify parent that images changed
   } catch (error) {
     console.error('Failed to upload images:', error)
-    alert(t('common.uploadImageError'))
+    showUploadError('image')
   } finally {
     uploadingImage.value = false
     if (target) target.value = ''
@@ -301,7 +301,7 @@ async function generateImage() {
     }
   } catch (error) {
     console.error('Failed to generate image:', error)
-    alert(t('common.generateImageError'))
+    showError(error, 'errors.image.generateFailed')
   } finally {
     generatingImage.value = false
     emit('generating', false)

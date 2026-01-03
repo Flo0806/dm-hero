@@ -528,6 +528,7 @@ import { useImageDownload } from '~/composables/useImageDownload'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { useErrorHandler } from '~/composables/useErrorHandler'
 import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
 
 // ============================================================================
@@ -551,6 +552,7 @@ const { locale, t } = useI18n()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+const { showError, showUploadError, showImageError } = useErrorHandler()
 const { downloadImage: downloadImageFile } = useImageDownload()
 
 // Dirty state management for tabs
@@ -1371,7 +1373,7 @@ async function handleImageUpload(event: Event) {
     await refreshNpc()
   } catch (error) {
     console.error('Failed to upload image:', error)
-    alert(t('npcs.uploadImageError'))
+    showUploadError('image')
   } finally {
     uploadingImage.value = false
     if (target) target.value = ''
@@ -1413,20 +1415,19 @@ async function generateImage() {
     }
   } catch (error: unknown) {
     console.error('[NPC] Failed to generate image:', error)
-    // Extract detailed error info from Nuxt FetchError
-    let errorMessage = 'Failed to generate image'
+    // Extract error message from Nuxt FetchError for logging
     if (error && typeof error === 'object') {
       const fetchError = error as { data?: { message?: string }; message?: string; statusCode?: number }
-      // Log full error details for debugging
       console.error('[NPC] Error details:', {
         statusCode: fetchError.statusCode,
         message: fetchError.message,
         data: fetchError.data,
       })
-      // Use server message if available
-      errorMessage = fetchError.data?.message || fetchError.message || errorMessage
+      // Show translated error via error handler
+      showError(fetchError.data?.message || fetchError.message, 'errors.image.generateFailed')
+    } else {
+      showImageError('generate')
     }
-    alert(errorMessage)
   } finally {
     generatingImage.value = false
   }
@@ -1441,7 +1442,7 @@ async function deleteImage() {
     await refreshNpc()
   } catch (error) {
     console.error('Failed to delete image:', error)
-    alert(t('npcs.deleteImageError'))
+    showImageError('delete')
   } finally {
     deletingImage.value = false
   }
@@ -1483,6 +1484,7 @@ async function generateName() {
     }
   } catch (error) {
     console.error('[NPC] Failed to generate name:', error)
+    showError(error)
   } finally {
     generatingName.value = false
   }

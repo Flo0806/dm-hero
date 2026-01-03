@@ -296,6 +296,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { locale } = useI18n()
+const { showUploadError, showDownloadError } = useErrorHandler()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 
@@ -523,7 +524,7 @@ async function handlePdfUpload(event: Event) {
     emit('changed') // Notify parent that document count changed
   } catch (error) {
     console.error('PDF upload failed:', error)
-    alert('PDF Upload fehlgeschlagen. Bitte versuche es erneut.')
+    showUploadError('pdf')
   } finally {
     uploadingPdf.value = false
   }
@@ -559,7 +560,7 @@ function downloadPdf(doc: Document) {
     document.body.removeChild(link)
   } catch (error) {
     console.error('Failed to download PDF:', error)
-    alert('Download fehlgeschlagen. Bitte versuche es erneut.')
+    showDownloadError()
   }
 }
 

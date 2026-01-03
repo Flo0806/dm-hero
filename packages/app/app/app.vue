@@ -42,6 +42,11 @@
       location="top"
     >
       {{ snackbarStore.message }}
+      <template v-if="snackbarStore.persistent" #actions>
+        <v-btn variant="text" @click="snackbarStore.hide()">
+          {{ $t('common.close') }}
+        </v-btn>
+      </template>
     </v-snackbar>
 
     <!-- Announcements Dialog -->

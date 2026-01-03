@@ -1968,5 +1968,27 @@
     "dontShowAgain": "Nicht mehr anzeigen",
     "resetButton": "Neuigkeiten erneut anzeigen",
     "resetSuccess": "Neuigkeiten werden beim nächsten Start wieder angezeigt"
+  },
+  "errors": {
+    "openai": {
+      "insufficientQuota": "OpenAI-Guthaben aufgebraucht. Bitte Zahlungsmethode unter platform.openai.com prüfen.",
+      "invalidApiKey": "Ungültiger API-Schlüssel. Bitte in den Einstellungen prüfen.",
+      "rateLimitExceeded": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen.",
+      "contentPolicyViolation": "Der Inhalt verstößt gegen die OpenAI-Richtlinien. Bitte Beschreibung anpassen.",
+      "billingHardLimitReached": "OpenAI-Kostenlimit erreicht. Bitte Limits unter platform.openai.com prüfen.",
+      "serverError": "OpenAI-Server nicht erreichbar. Bitte später erneut versuchen.",
+      "modelNotFound": "Das ausgewählte KI-Modell ist nicht verfügbar.",
+      "unknown": "Ein Fehler bei der KI-Anfrage ist aufgetreten."
+    },
+    "upload": {
+      "imageFailed": "Bild-Upload fehlgeschlagen. Bitte erneut versuchen.",
+      "pdfFailed": "PDF-Upload fehlgeschlagen. Bitte erneut versuchen.",
+      "audioFailed": "Audio-Upload fehlgeschlagen. Bitte erneut versuchen.",
+      "downloadFailed": "Download fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "image": {
+      "generateFailed": "Bildgenerierung fehlgeschlagen.",
+      "deleteFailed": "Bild konnte nicht gelöscht werden."
+    }
   }
 }

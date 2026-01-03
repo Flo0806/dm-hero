@@ -381,6 +381,7 @@ import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { useErrorHandler } from '~/composables/useErrorHandler'
 import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 const props = defineProps<{
@@ -399,6 +400,7 @@ const { downloadImage: downloadImageFile } = useImageDownload()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+const { showError, showUploadError, showImageError } = useErrorHandler()
 
 // Dirty state management for tabs
 const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
@@ -752,7 +754,7 @@ async function handleImageUpload(event: Event) {
     await loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to upload image:', error)
-    alert(t('players.uploadImageError'))
+    showUploadError('image')
   } finally {
     uploadingImage.value = false
     if (target) target.value = ''
@@ -803,8 +805,7 @@ async function generateImage() {
     }
   } catch (error: unknown) {
     console.error('[PlayerEditDialog] Failed to generate image:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
-    alert(errorMessage)
+    showError(error, 'errors.image.generateFailed')
   } finally {
     generatingImage.value = false
   }
@@ -826,7 +827,7 @@ async function deleteImage() {
     await loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to delete image:', error)
-    alert(t('players.deleteImageError'))
+    showImageError('delete')
   } finally {
     deletingImage.value = false
   }
