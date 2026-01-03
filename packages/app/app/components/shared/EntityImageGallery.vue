@@ -142,6 +142,7 @@
 
 <script setup lang="ts">
 import { useImageDownload } from '~/composables/useImageDownload'
+import { useErrorHandler } from '../../composables/useErrorHandler.js'
 
 interface EntityImage {
   id: number

@@ -103,6 +103,8 @@
 </template>
 
 <script setup lang="ts">
+import { useErrorHandler } from '../../composables/useErrorHandler.js'
+
 interface AudioMarker {
   id: number
   timestampSeconds: number
