@@ -669,8 +669,12 @@ interface CalendarSession {
   session_number: number | null
   title: string
   summary: string | null
-  in_game_day_start: number | null
-  in_game_day_end: number | null
+  in_game_year_start: number | null
+  in_game_month_start: number | null
+  in_game_day_start: number | null // Day of month (1-31)
+  in_game_year_end: number | null
+  in_game_month_end: number | null
+  in_game_day_end: number | null // Day of month (1-31)
   date: string | null
   duration_minutes: number | null
   attendance_count: number
@@ -981,24 +985,47 @@ function getEventsForDay(day: number): CalendarEvent[] {
   })
 }
 
+// Helper to compare two dates (year, month, day) - returns -1, 0, or 1
+function compareDates(y1: number, m1: number, d1: number, y2: number, m2: number, d2: number): number {
+  if (y1 !== y2) return y1 < y2 ? -1 : 1
+  if (m1 !== m2) return m1 < m2 ? -1 : 1
+  if (d1 !== d2) return d1 < d2 ? -1 : 1
+  return 0
+}
+
 // Get sessions that are active on a specific day (supports multi-day sessions)
 function getSessionsForDay(day: number): Array<CalendarSession & { isStart: boolean; isEnd: boolean; isContinuation: boolean }> {
   if (!showSessions.value) return []
 
-  const absoluteDay = getTotalDays(viewYear.value, viewMonth.value, day)
+  const viewY = viewYear.value
+  const viewM = viewMonth.value
 
   return sessions.value
     .filter((s) => {
-      if (s.in_game_day_start === null) return false
-      const endDay = s.in_game_day_end ?? s.in_game_day_start
-      return absoluteDay >= s.in_game_day_start && absoluteDay <= endDay
+      if (s.in_game_year_start === null || s.in_game_month_start === null || s.in_game_day_start === null) return false
+
+      // Get end date (defaults to start if not set)
+      const endY = s.in_game_year_end ?? s.in_game_year_start
+      const endM = s.in_game_month_end ?? s.in_game_month_start
+      const endD = s.in_game_day_end ?? s.in_game_day_start
+
+      // Check if the current view day is within the session's date range
+      const afterStart = compareDates(viewY, viewM, day, s.in_game_year_start, s.in_game_month_start, s.in_game_day_start) >= 0
+      const beforeEnd = compareDates(viewY, viewM, day, endY, endM, endD) <= 0
+
+      return afterStart && beforeEnd
     })
-    .map((s) => ({
-      ...s,
-      isStart: s.in_game_day_start === absoluteDay,
-      isEnd: (s.in_game_day_end ?? s.in_game_day_start) === absoluteDay,
-      isContinuation: s.in_game_day_start !== null && s.in_game_day_start < absoluteDay,
-    }))
+    .map((s) => {
+      const endY = s.in_game_year_end ?? s.in_game_year_start!
+      const endM = s.in_game_month_end ?? s.in_game_month_start!
+      const endD = s.in_game_day_end ?? s.in_game_day_start!
+
+      const isStart = viewY === s.in_game_year_start && viewM === s.in_game_month_start && day === s.in_game_day_start
+      const isEnd = viewY === endY && viewM === endM && day === endD
+      const isContinuation = compareDates(viewY, viewM, day, s.in_game_year_start!, s.in_game_month_start!, s.in_game_day_start!) > 0
+
+      return { ...s, isStart, isEnd, isContinuation }
+    })
     .sort((a, b) => (a.session_number ?? 0) - (b.session_number ?? 0))
 }
 

@@ -5,8 +5,12 @@ interface CalendarSession {
   session_number: number | null
   title: string
   summary: string | null
-  in_game_day_start: number | null
-  in_game_day_end: number | null
+  in_game_year_start: number | null
+  in_game_month_start: number | null
+  in_game_day_start: number | null // Day of month (1-31)
+  in_game_year_end: number | null
+  in_game_month_end: number | null
+  in_game_day_end: number | null // Day of month (1-31)
   date: string | null // Real-world date
   duration_minutes: number | null
   attendance_count: number
@@ -35,7 +39,11 @@ export default defineEventHandler((event) => {
       s.session_number,
       s.title,
       s.summary,
+      s.in_game_year_start,
+      s.in_game_month_start,
       s.in_game_day_start,
+      s.in_game_year_end,
+      s.in_game_month_end,
       s.in_game_day_end,
       s.date,
       s.duration_minutes,
@@ -45,7 +53,7 @@ export default defineEventHandler((event) => {
     WHERE s.campaign_id = ?
       AND s.deleted_at IS NULL
       AND s.in_game_day_start IS NOT NULL
-    ORDER BY s.in_game_day_start ASC, s.session_number ASC
+    ORDER BY s.in_game_year_start ASC, s.in_game_month_start ASC, s.in_game_day_start ASC, s.session_number ASC
   `,
     )
     .all(campaignId) as CalendarSession[]
