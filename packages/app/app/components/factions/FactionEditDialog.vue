@@ -601,7 +601,7 @@ const membershipTypeSuggestions = computed(() =>
   FACTION_MEMBERSHIP_TYPES.map((type) => ({
     value: type,
     title: t(`factions.membershipTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Faction type options from TypeScript types
@@ -610,7 +610,7 @@ const factionTypes = computed((): Array<{ value: string; title: string }> =>
   FACTION_TYPES.map((type) => ({
     value: type,
     title: t(`factions.types.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Faction alignment options from TypeScript types
@@ -618,7 +618,7 @@ const factionAlignments = computed(() =>
   FACTION_ALIGNMENTS.map((alignment) => ({
     value: alignment,
     title: t(`factions.alignments.${alignment}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // ============================================================================

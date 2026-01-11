@@ -423,14 +423,14 @@ const itemRelationTypeSuggestions = computed(() =>
   LOCATION_ITEM_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`locations.itemRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const locationTypes = computed(() =>
   LOCATION_TYPES.map((type) => ({
     value: type,
     title: t(`locations.types.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Snapshot of original values for image-critical fields

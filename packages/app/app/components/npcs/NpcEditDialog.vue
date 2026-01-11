@@ -667,17 +667,21 @@ const previewImageTitle = ref('')
 // Computed: Reference data for selects
 // ============================================================================
 const raceItems = computed(() =>
-  races.value.map((race) => ({
-    title: locale.value === 'de' ? (race.name_de || race.name) : (race.name_en || race.name),
-    value: race.name,
-  })),
+  races.value
+    .map((race) => ({
+      title: locale.value === 'de' ? (race.name_de || race.name) : (race.name_en || race.name),
+      value: race.name,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const classItems = computed(() =>
-  classes.value.map((cls) => ({
-    title: locale.value === 'de' ? (cls.name_de || cls.name) : (cls.name_en || cls.name),
-    value: cls.name,
-  })),
+  classes.value
+    .map((cls) => ({
+      title: locale.value === 'de' ? (cls.name_de || cls.name) : (cls.name_en || cls.name),
+      value: cls.name,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const genderItems = computed(() => [
@@ -692,14 +696,14 @@ const npcTypes = computed(() =>
   NPC_TYPES.map((type) => ({
     value: type,
     title: t(`npcs.types.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const npcStatuses = computed(() =>
   NPC_STATUSES.map((status) => ({
     value: status,
     title: t(`npcs.statuses.${status}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Available entities from store (sorted alphabetically)
@@ -733,7 +737,7 @@ const npcItemRelationTypeSuggestions = computed(() =>
   NPC_ITEM_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`npcs.itemRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // ============================================================================

@@ -188,7 +188,7 @@ const relationTypeSuggestions = computed(() =>
   FACTION_LOCATION_TYPES.map((type) => ({
     value: type,
     title: t(`factions.locationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 function handleAdd() {

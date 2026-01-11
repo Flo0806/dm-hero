@@ -193,7 +193,7 @@ const relationTypeSuggestions = computed(() =>
   PLAYER_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`players.relationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Track dirty state: form has data or edit dialog is open

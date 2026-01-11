@@ -206,7 +206,7 @@ const membershipTypeSuggestions = computed(() =>
   FACTION_MEMBERSHIP_TYPES.map((type) => ({
     value: type,
     title: t(`factions.membershipTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 function handleAdd() {

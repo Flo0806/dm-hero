@@ -121,7 +121,7 @@
               <v-col cols="12" md="6">
                 <v-select
                   v-model="form.metadata.type"
-                  :items="ITEM_TYPES"
+                  :items="sortedItemTypes"
                   :label="$t('items.type')"
                   variant="outlined"
                   clearable
@@ -137,7 +137,7 @@
               <v-col cols="12" md="6">
                 <v-select
                   v-model="form.metadata.rarity"
-                  :items="ITEM_RARITIES"
+                  :items="sortedItemRarities"
                   :label="$t('items.rarity')"
                   variant="outlined"
                   clearable
@@ -523,7 +523,7 @@
             <v-col cols="12" md="6">
               <v-select
                 v-model="form.metadata.type"
-                :items="ITEM_TYPES"
+                :items="sortedItemTypes"
                 :label="$t('items.type')"
                 variant="outlined"
                 clearable
@@ -539,7 +539,7 @@
             <v-col cols="12" md="6">
               <v-select
                 v-model="form.metadata.rarity"
-                :items="ITEM_RARITIES"
+                :items="sortedItemRarities"
                 :label="$t('items.rarity')"
                 variant="outlined"
                 clearable
@@ -792,7 +792,15 @@ const npcRelationTypeOptions = computed(() =>
   NPC_ITEM_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`items.ownerRelationTypes.${type}`, type),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
+)
+
+// Sorted item types and rarities
+const sortedItemTypes = computed(() =>
+  [...ITEM_TYPES].sort((a, b) => t(`items.types.${a}`).localeCompare(t(`items.types.${b}`))),
+)
+const sortedItemRarities = computed(() =>
+  [...ITEM_RARITIES].sort((a, b) => t(`items.rarities.${a}`).localeCompare(t(`items.rarities.${b}`))),
 )
 const newLocation = ref({ locationId: null as number | null, quantity: 1 })
 const newFaction = ref({ factionId: null as number | null })

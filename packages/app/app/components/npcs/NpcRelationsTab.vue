@@ -213,7 +213,7 @@ const npcRelationTypeSuggestions = computed(() =>
   NPC_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`npcs.npcRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Extract text from notes (can be string, JSON string, object with text property, or null)

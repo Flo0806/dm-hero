@@ -194,7 +194,7 @@ const relationTypeSuggestions = computed(() =>
   PLAYER_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`players.loreRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 watch(

@@ -202,7 +202,7 @@ const factionRelationTypeSuggestions = computed(() =>
   FACTION_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`factions.factionRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 function getNotesText(notes: string | Record<string, unknown> | null): string {

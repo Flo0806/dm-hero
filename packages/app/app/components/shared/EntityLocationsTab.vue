@@ -199,7 +199,7 @@ const relationTypeSuggestions = computed(() =>
   NPC_LOCATION_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`npcs.relationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // Track dirty state: form has data or edit dialog is open

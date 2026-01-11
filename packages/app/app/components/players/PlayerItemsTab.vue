@@ -196,7 +196,7 @@ const relationTypeSuggestions = computed(() =>
   NPC_ITEM_RELATION_TYPES.map((type) => ({
     value: type,
     title: t(`players.itemRelationTypes.${type}`),
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 watch(

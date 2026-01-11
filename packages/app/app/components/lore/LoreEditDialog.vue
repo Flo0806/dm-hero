@@ -577,7 +577,7 @@ const loreTypeItems = computed(() =>
   LORE_TYPES.map((type) => ({
     title: t(`lore.types.${type}`),
     value: type,
-  })),
+  })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 // ============================================================================
