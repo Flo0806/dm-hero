@@ -203,9 +203,18 @@ export const useEntitiesStore = defineStore('entities', {
       }
     },
 
-    // Load counts for all NPCs in the store
-    async loadAllNpcCounts() {
-      await Promise.all(this.npcs.map((npc) => this.loadNpcCounts(npc.id)))
+    // Load counts for all NPCs in the store (uses batch endpoint - 1 request instead of N)
+    async loadAllNpcCounts(campaignId: string | number) {
+      const { loadAllCountsForCampaign, getCounts } = useNpcCounts()
+      await loadAllCountsForCampaign(campaignId)
+
+      // Update store NPCs with counts from cache
+      for (const npc of this.npcs) {
+        const counts = getCounts(npc.id)
+        if (counts) {
+          npc._counts = counts
+        }
+      }
     },
 
     // ==================== Factions ====================
@@ -454,9 +463,18 @@ export const useEntitiesStore = defineStore('entities', {
       }
     },
 
-    // Load counts for all Items in the store
-    async loadAllItemCounts() {
-      await Promise.all(this.items.map((item) => this.loadItemCounts(item.id)))
+    // Load counts for all Items in the store (uses batch endpoint - 1 request instead of N)
+    async loadAllItemCounts(campaignId: string | number) {
+      const { loadAllCountsForCampaign, getCounts } = useItemCounts()
+      await loadAllCountsForCampaign(campaignId)
+
+      // Update store Items with counts from cache
+      for (const item of this.items) {
+        const counts = getCounts(item.id)
+        if (counts) {
+          item._counts = counts
+        }
+      }
     },
 
     // ==================== Lore ====================
@@ -573,9 +591,18 @@ export const useEntitiesStore = defineStore('entities', {
       }
     },
 
-    // Load counts for all Lore entries in the store
-    async loadAllLoreCounts() {
-      await Promise.all(this.lore.map((l) => this.loadLoreCounts(l.id)))
+    // Load counts for all Lore entries in the store (uses batch endpoint - 1 request instead of N)
+    async loadAllLoreCounts(campaignId: string | number) {
+      const { loadAllCountsForCampaign, getCounts } = useLoreCounts()
+      await loadAllCountsForCampaign(campaignId)
+
+      // Update store Lore entries with counts from cache
+      for (const loreEntry of this.lore) {
+        const counts = getCounts(loreEntry.id)
+        if (counts) {
+          loreEntry._counts = counts
+        }
+      }
     },
 
     // Set counts directly (without fetching) - used when we already have the data

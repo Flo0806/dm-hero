@@ -16,6 +16,7 @@ interface LoreCounts {
 // SHARED STATE - outside the function so all components share the same cache
 const loadingCounts = ref<Set<number>>(new Set())
 const countsMap = reactive<Record<number, LoreCounts | undefined>>({})
+const batchLoading = ref(false)
 
 /**
  * Composable to load Lore counts asynchronously
@@ -53,11 +54,36 @@ export function useLoreCounts() {
   }
 
   /**
-   * Load counts for multiple Lore entries in parallel
+   * Load counts for multiple Lore entries in parallel (legacy - uses individual requests)
    */
   async function loadLoreCountsBatch(loreEntries: Lore[]): Promise<void> {
     const promises = loreEntries.map((lore) => loadLoreCounts(lore))
     await Promise.all(promises)
+  }
+
+  /**
+   * Load ALL counts for a campaign in ONE request (efficient!)
+   * Replaces N individual requests with 1 batch request
+   */
+  async function loadAllCountsForCampaign(campaignId: string | number): Promise<void> {
+    if (batchLoading.value) return
+
+    batchLoading.value = true
+    try {
+      const allCounts = await $fetch<Record<number, LoreCounts>>('/api/lore/batch-counts', {
+        query: { campaignId },
+      })
+
+      // Store all counts in the cache
+      for (const [loreIdStr, counts] of Object.entries(allCounts)) {
+        const loreId = Number(loreIdStr)
+        countsMap[loreId] = counts
+      }
+    } catch (error) {
+      console.error('Failed to load Lore counts batch:', error)
+    } finally {
+      batchLoading.value = false
+    }
   }
 
   /**
@@ -101,10 +127,12 @@ export function useLoreCounts() {
   return {
     loadLoreCounts,
     loadLoreCountsBatch,
+    loadAllCountsForCampaign,
     getCounts,
     setCounts,
     reloadLoreCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
+    batchLoading: computed(() => batchLoading.value),
   }
 }

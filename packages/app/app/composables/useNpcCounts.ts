@@ -3,6 +3,7 @@ import type { NPC, NpcCounts } from '../../types/npc.js'
 // SHARED STATE - outside the function so all components share the same cache
 const loadingCounts = ref<Set<number>>(new Set())
 const countsMap = reactive<Record<number, NpcCounts | undefined>>({})
+const batchLoading = ref(false)
 
 /**
  * Composable to load NPC counts asynchronously
@@ -40,11 +41,36 @@ export function useNpcCounts() {
   }
 
   /**
-   * Load counts for multiple NPCs in parallel
+   * Load counts for multiple NPCs in parallel (legacy - uses individual requests)
    */
   async function loadNpcCountsBatch(npcs: NPC[]): Promise<void> {
     const promises = npcs.map((npc) => loadNpcCounts(npc))
     await Promise.all(promises)
+  }
+
+  /**
+   * Load ALL counts for a campaign in ONE request (efficient!)
+   * Replaces N individual requests with 1 batch request
+   */
+  async function loadAllCountsForCampaign(campaignId: string | number): Promise<void> {
+    if (batchLoading.value) return
+
+    batchLoading.value = true
+    try {
+      const allCounts = await $fetch<Record<number, NpcCounts>>('/api/npcs/batch-counts', {
+        query: { campaignId },
+      })
+
+      // Store all counts in the cache
+      for (const [npcIdStr, counts] of Object.entries(allCounts)) {
+        const npcId = Number(npcIdStr)
+        countsMap[npcId] = counts
+      }
+    } catch (error) {
+      console.error('Failed to load NPC counts batch:', error)
+    } finally {
+      batchLoading.value = false
+    }
   }
 
   /**
@@ -118,6 +144,7 @@ export function useNpcCounts() {
   return {
     loadNpcCounts,
     loadNpcCountsBatch,
+    loadAllCountsForCampaign,
     getCounts,
     setCounts,
     reloadNpcCounts,
@@ -125,5 +152,6 @@ export function useNpcCounts() {
     invalidateCountsFor,
     reloadCountsFor,
     loadingCounts: computed(() => loadingCounts.value),
+    batchLoading: computed(() => batchLoading.value),
   }
 }

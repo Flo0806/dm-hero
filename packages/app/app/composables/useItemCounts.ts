@@ -3,6 +3,7 @@ import type { ItemCounts, Item } from '../../types/item.js'
 // SHARED STATE - outside the function so all components share the same cache
 const loadingCounts = ref<Set<number>>(new Set())
 const countsMap = reactive<Record<number, ItemCounts | undefined>>({})
+const batchLoading = ref(false)
 
 /**
  * Composable to load Item counts asynchronously
@@ -40,11 +41,36 @@ export function useItemCounts() {
   }
 
   /**
-   * Load counts for multiple Items in parallel
+   * Load counts for multiple Items in parallel (legacy - uses individual requests)
    */
   async function loadItemCountsBatch(items: Item[]): Promise<void> {
     const promises = items.map((item) => loadItemCounts(item))
     await Promise.all(promises)
+  }
+
+  /**
+   * Load ALL counts for a campaign in ONE request (efficient!)
+   * Replaces N individual requests with 1 batch request
+   */
+  async function loadAllCountsForCampaign(campaignId: string | number): Promise<void> {
+    if (batchLoading.value) return
+
+    batchLoading.value = true
+    try {
+      const allCounts = await $fetch<Record<number, ItemCounts>>('/api/items/batch-counts', {
+        query: { campaignId },
+      })
+
+      // Store all counts in the cache
+      for (const [itemIdStr, counts] of Object.entries(allCounts)) {
+        const itemId = Number(itemIdStr)
+        countsMap[itemId] = counts
+      }
+    } catch (error) {
+      console.error('Failed to load Item counts batch:', error)
+    } finally {
+      batchLoading.value = false
+    }
   }
 
   /**
@@ -88,10 +114,12 @@ export function useItemCounts() {
   return {
     loadItemCounts,
     loadItemCountsBatch,
+    loadAllCountsForCampaign,
     getCounts,
     setCounts,
     reloadItemCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
+    batchLoading: computed(() => batchLoading.value),
   }
 }

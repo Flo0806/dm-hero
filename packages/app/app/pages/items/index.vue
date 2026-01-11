@@ -285,7 +285,7 @@ onMounted(async () => {
   await entitiesStore.fetchItems(activeCampaignId.value!)
 
   if (items.value && items.value.length > 0) {
-    await entitiesStore.loadAllItemCounts()
+    await entitiesStore.loadAllItemCounts(activeCampaignId.value!)
   }
 
   initializeFromQuery()

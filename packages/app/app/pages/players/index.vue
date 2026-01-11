@@ -129,7 +129,7 @@ const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
 const { downloadImage } = useImageDownload()
-const { loadPlayerCountsBatch, reloadPlayerCounts } = usePlayerCounts()
+const { loadAllCountsForCampaign, loadPlayerCountsBatch, reloadPlayerCounts } = usePlayerCounts()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -199,9 +199,9 @@ watch(searchQuery, async (query) => {
 onMounted(async () => {
   if (activeCampaignId.value) {
     await entitiesStore.fetchPlayers(activeCampaignId.value)
-    // Load counts for all players using the shared composable
+    // Load counts for all players using batch endpoint - 1 request instead of N
     if (players.value.length > 0) {
-      loadPlayerCountsBatch(players.value)
+      await loadAllCountsForCampaign(activeCampaignId.value)
     }
   }
 })

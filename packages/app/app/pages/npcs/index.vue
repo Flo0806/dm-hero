@@ -191,8 +191,8 @@ onMounted(async () => {
   // Load races and classes for view dialog
   await loadReferenceData()
 
-  // Load counts for all NPCs via store
-  await entitiesStore.loadAllNpcCounts()
+  // Load counts for all NPCs via store (uses batch endpoint - 1 request instead of N)
+  await entitiesStore.loadAllNpcCounts(activeCampaignId.value!)
 })
 
 // Search with FTS5

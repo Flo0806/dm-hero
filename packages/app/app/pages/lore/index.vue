@@ -205,13 +205,9 @@ const previewImageName = ref('')
 onMounted(async () => {
   await entitiesStore.fetchLore(activeCampaignId.value!)
 
-  // Load counts for all lore entries in background using store
+  // Load counts for all lore entries using batch endpoint - 1 request instead of N
   if (lore.value && lore.value.length > 0) {
-    lore.value.forEach((l) => {
-      if (!l._counts) {
-        entitiesStore.loadLoreCounts(l.id)
-      }
-    })
+    await entitiesStore.loadAllLoreCounts(activeCampaignId.value!)
   }
 
   // Handle highlight query parameter

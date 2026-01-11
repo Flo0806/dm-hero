@@ -17,6 +17,7 @@ interface FactionCounts {
 // SHARED STATE - outside the function so all components share the same cache
 const loadingCounts = ref<Set<number>>(new Set())
 const countsMap = reactive<Record<number, FactionCounts | undefined>>({})
+const batchLoading = ref(false)
 
 /**
  * Composable to load Faction counts asynchronously
@@ -54,11 +55,36 @@ export function useFactionCounts() {
   }
 
   /**
-   * Load counts for multiple Factions in parallel
+   * Load counts for multiple Factions in parallel (legacy - uses individual requests)
    */
   async function loadFactionCountsBatch(factions: Faction[]): Promise<void> {
     const promises = factions.map((faction) => loadFactionCounts(faction))
     await Promise.all(promises)
+  }
+
+  /**
+   * Load ALL counts for a campaign in ONE request (efficient!)
+   * Replaces N individual requests with 1 batch request
+   */
+  async function loadAllCountsForCampaign(campaignId: string | number): Promise<void> {
+    if (batchLoading.value) return
+
+    batchLoading.value = true
+    try {
+      const allCounts = await $fetch<Record<number, FactionCounts>>('/api/factions/batch-counts', {
+        query: { campaignId },
+      })
+
+      // Store all counts in the cache
+      for (const [factionIdStr, counts] of Object.entries(allCounts)) {
+        const factionId = Number(factionIdStr)
+        countsMap[factionId] = counts
+      }
+    } catch (error) {
+      console.error('Failed to load Faction counts batch:', error)
+    } finally {
+      batchLoading.value = false
+    }
   }
 
   /**
@@ -102,10 +128,12 @@ export function useFactionCounts() {
   return {
     loadFactionCounts,
     loadFactionCountsBatch,
+    loadAllCountsForCampaign,
     getCounts,
     setCounts,
     reloadFactionCounts,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
+    batchLoading: computed(() => batchLoading.value),
   }
 }

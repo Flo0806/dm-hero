@@ -263,7 +263,7 @@ watch(searchQuery, () => {
 // ============================================================================
 // Data Loading
 // ============================================================================
-const { loadFactionCountsBatch } = useFactionCounts()
+const { loadAllCountsForCampaign, loadFactionCountsBatch } = useFactionCounts()
 const { downloadImage } = useImageDownload()
 
 const factions = computed(() => entitiesStore.factions)
@@ -273,7 +273,8 @@ onMounted(async () => {
   await entitiesStore.fetchFactions(activeCampaignId.value!)
 
   if (factions.value && factions.value.length > 0) {
-    loadFactionCountsBatch(factions.value)
+    // Use batch endpoint - 1 request instead of N
+    await loadAllCountsForCampaign(activeCampaignId.value!)
   }
 
   initializeFromQuery()
