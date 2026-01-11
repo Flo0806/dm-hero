@@ -1930,7 +1930,13 @@
     "areaConflictMessage": "{count} Markierung(en) würden nach dieser Änderung außerhalb von '{location}' liegen:",
     "areaConflictMove": "Markierungen mit dem Bereich verschieben",
     "areaConflictKeep": "Markierungen an aktueller Position belassen",
-    "areaConflictRemove": "Standort-Zuweisung der Markierungen entfernen"
+    "areaConflictRemove": "Standort-Zuweisung der Markierungen entfernen",
+    "errors": {
+      "invalidFileType": "Ungültiger Dateityp. Erlaubt: JPG, PNG, GIF, WebP, BMP",
+      "fileTooLarge": "Datei zu groß. Maximale Größe: 50MB",
+      "uploadFailed": "Karte konnte nicht hochgeladen werden",
+      "updateFailed": "Karte konnte nicht aktualisiert werden"
+    }
   },
   "update": {
     "newVersionAvailable": "Neue Version verfügbar",

@@ -1,5 +1,6 @@
 import { join } from 'node:path'
-import { readFile, stat } from 'node:fs/promises'
+import { stat } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
 import { getUploadPath } from '../utils/paths'
 
 /**
@@ -49,9 +50,6 @@ export default defineEventHandler(async (event) => {
       return // Let it fall through to 404
     }
 
-    // Read and serve the file
-    const fileBuffer = await readFile(fullPath)
-
     // Set content type based on extension
     const ext = filename.split('.').pop()?.toLowerCase()
     const contentTypes: Record<string, string> = {
@@ -60,16 +58,21 @@ export default defineEventHandler(async (event) => {
       png: 'image/png',
       gif: 'image/gif',
       webp: 'image/webp',
+      bmp: 'image/bmp',
       pdf: 'application/pdf',
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
     }
 
     const contentType = contentTypes[ext || ''] || 'application/octet-stream'
 
     setHeader(event, 'Content-Type', contentType)
-    setHeader(event, 'Content-Length', fileBuffer.length)
+    setHeader(event, 'Content-Length', stats.size)
     setHeader(event, 'Cache-Control', 'public, max-age=31536000') // 1 year cache
 
-    return fileBuffer
+    // Stream file instead of loading into memory (crucial for large maps 25MB+)
+    return sendStream(event, createReadStream(fullPath))
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return // Let it fall through to 404

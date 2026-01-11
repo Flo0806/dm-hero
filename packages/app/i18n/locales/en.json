@@ -1954,7 +1954,13 @@
     "areaConflictMessage": "{count} marker(s) would be outside '{location}' after this change:",
     "areaConflictMove": "Move markers with the area",
     "areaConflictKeep": "Keep markers at current position",
-    "areaConflictRemove": "Remove location assignment from markers"
+    "areaConflictRemove": "Remove location assignment from markers",
+    "errors": {
+      "invalidFileType": "Invalid file type. Allowed: JPG, PNG, GIF, WebP, BMP",
+      "fileTooLarge": "File too large. Maximum size: 50MB",
+      "uploadFailed": "Failed to upload map",
+      "updateFailed": "Failed to update map"
+    }
   },
   "update": {
     "newVersionAvailable": "New version available",

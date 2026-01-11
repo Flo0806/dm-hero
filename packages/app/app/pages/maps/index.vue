@@ -478,7 +478,10 @@
 import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
 import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
 import type { EntityPreviewType } from '~/components/shared/EntityPreviewDialog.vue'
+import { useSnackbarStore } from '~/stores/snackbar'
 
+const { t } = useI18n()
+const snackbarStore = useSnackbarStore()
 const campaignStore = useCampaignStore()
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -734,8 +737,17 @@ async function uploadMap() {
 
     // Open the newly created map directly
     await selectMap(map)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to upload map:', error)
+    // Show translated error message
+    const errorMessage = (error as { statusMessage?: string })?.statusMessage
+    if (errorMessage === 'INVALID_FILE_TYPE') {
+      snackbarStore.error(t('maps.errors.invalidFileType'))
+    } else if (errorMessage === 'FILE_TOO_LARGE') {
+      snackbarStore.error(t('maps.errors.fileTooLarge'))
+    } else {
+      snackbarStore.error(t('maps.errors.uploadFailed'))
+    }
   } finally {
     uploading.value = false
   }
@@ -1138,8 +1150,17 @@ async function saveMapEdit() {
 
     showEditDialog.value = false
     editingMap.value = null
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to update map:', error)
+    // Show translated error message
+    const errorMessage = (error as { statusMessage?: string })?.statusMessage
+    if (errorMessage === 'INVALID_FILE_TYPE') {
+      snackbarStore.error(t('maps.errors.invalidFileType'))
+    } else if (errorMessage === 'FILE_TOO_LARGE') {
+      snackbarStore.error(t('maps.errors.fileTooLarge'))
+    } else {
+      snackbarStore.error(t('maps.errors.updateFailed'))
+    }
   } finally {
     saving.value = false
   }
