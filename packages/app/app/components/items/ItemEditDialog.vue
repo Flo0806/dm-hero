@@ -229,7 +229,7 @@
               entity-type="Item"
               :generate-disabled="hasUnsavedImageChanges"
               :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
-              @images-updated="loadCounts(item!.id)"
+              @images-updated="onImagesUpdated"
               @preview-image="openImagePreview"
               @generating="generatingImage = $event"
             />
@@ -1014,6 +1014,13 @@ async function loadCounts(itemId: number) {
   }
 }
 
+// Handle images-updated event from EntityImageGallery (e.g., when primary image is changed)
+async function onImagesUpdated() {
+  if (!item.value) return
+  await loadItem(item.value.id)
+  await loadCounts(item.value.id)
+}
+
 function resetForm() {
   item.value = null
 
@@ -1460,11 +1467,15 @@ async function generateImage() {
     if (result.imageUrl) {
       await $fetch(`/api/entities/${item.value.id}/add-generated-image`, {
         method: 'POST',
-        body: { imageUrl: result.imageUrl.replace('/uploads/', '') },
+        body: { imageUrl: result.imageUrl.replace('/uploads/', ''), makePrimary: true },
       })
+
+      // Notify other components (Gallery) that images changed
+      entitiesStore.incrementImageVersion(item.value.id)
 
       await entitiesStore.refreshItem(item.value.id)
       await loadItem(item.value.id)
+      await loadCounts(item.value.id)
     }
   } catch (error) {
     console.error('[ItemEditDialog] Failed to generate image:', error)

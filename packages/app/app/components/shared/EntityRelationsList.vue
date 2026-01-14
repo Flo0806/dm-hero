@@ -56,7 +56,7 @@
 
             <!-- Location-specific metadata -->
             <v-chip v-if="entityType === 'location' && entity.type" size="x-small" variant="outlined">
-              {{ $t(`locations.types.${entity.type}`) }}
+              {{ $t(`locations.types.${entity.type}`, entity.type) }}
             </v-chip>
 
             <!-- Description -->

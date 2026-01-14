@@ -56,6 +56,10 @@ export const useEntitiesStore = defineStore('entities', {
     players: [] as Player[],
     playersLoaded: false,
     playersLoading: false,
+
+    // Image versions - incremented when images change for an entity
+    // Components can watch this to know when to reload images
+    entityImageVersions: {} as Record<number, number>,
   }),
 
   getters: {
@@ -764,6 +768,18 @@ export const useEntitiesStore = defineStore('entities', {
       ])
     },
 
+    // ==================== Entity Images ====================
+
+    // Increment image version for an entity (triggers watchers to reload)
+    incrementImageVersion(entityId: number) {
+      this.entityImageVersions[entityId] = (this.entityImageVersions[entityId] || 0) + 1
+    },
+
+    // Get current image version for an entity
+    getImageVersion(entityId: number): number {
+      return this.entityImageVersions[entityId] || 0
+    },
+
     // Clear all data (e.g., when switching campaigns)
     clearAll() {
       this.npcs = []
@@ -778,6 +794,7 @@ export const useEntitiesStore = defineStore('entities', {
       this.loreLoaded = false
       this.players = []
       this.playersLoaded = false
+      this.entityImageVersions = {}
     },
   },
 })

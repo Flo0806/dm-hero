@@ -308,3 +308,111 @@ describe('Entity Images - Timestamps', () => {
     expect(new Date(image.created_at)).toBeInstanceOf(Date)
   })
 })
+
+describe('Entity Images - makePrimary Logic', () => {
+  // Helper to simulate add-generated-image with makePrimary option
+  function addGeneratedImage(entityId: number, imageUrl: string, makePrimary?: boolean): number {
+    // Get current image count
+    const count = db
+      .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
+      .get(entityId) as { count: number }
+
+    // Determine if should be primary: explicitly requested OR first image
+    const shouldBePrimary = makePrimary === true || count.count === 0
+
+    // If making primary and other images exist, unset their primary status
+    if (shouldBePrimary && count.count > 0) {
+      db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(entityId)
+    }
+
+    // Insert new image
+    const result = db
+      .prepare(`
+        INSERT INTO entity_images (entity_id, image_url, is_primary, display_order)
+        VALUES (?, ?, ?, ?)
+      `)
+      .run(entityId, imageUrl, shouldBePrimary ? 1 : 0, count.count)
+
+    // Update entity's image_url if primary
+    if (shouldBePrimary) {
+      db.prepare('UPDATE entities SET image_url = ? WHERE id = ?').run(imageUrl, entityId)
+    }
+
+    return Number(result.lastInsertRowid)
+  }
+
+  it('should set first image as primary automatically', () => {
+    const entityId = createEntity('First Image NPC')
+
+    const imageId = addGeneratedImage(entityId, 'images/first.jpg')
+
+    const image = db
+      .prepare('SELECT is_primary FROM entity_images WHERE id = ?')
+      .get(imageId) as { is_primary: number }
+
+    expect(image.is_primary).toBe(1)
+  })
+
+  it('should NOT set subsequent images as primary by default', () => {
+    const entityId = createEntity('Second Image NPC')
+
+    addGeneratedImage(entityId, 'images/first.jpg') // Auto-primary
+    const secondId = addGeneratedImage(entityId, 'images/second.jpg') // Should NOT be primary
+
+    const second = db
+      .prepare('SELECT is_primary FROM entity_images WHERE id = ?')
+      .get(secondId) as { is_primary: number }
+
+    expect(second.is_primary).toBe(0)
+  })
+
+  it('should set image as primary when makePrimary=true even if other images exist', () => {
+    const entityId = createEntity('Make Primary NPC')
+
+    const firstId = addGeneratedImage(entityId, 'images/first.jpg') // Auto-primary
+    const secondId = addGeneratedImage(entityId, 'images/second.jpg', true) // Force primary
+
+    const first = db
+      .prepare('SELECT is_primary FROM entity_images WHERE id = ?')
+      .get(firstId) as { is_primary: number }
+    const second = db
+      .prepare('SELECT is_primary FROM entity_images WHERE id = ?')
+      .get(secondId) as { is_primary: number }
+
+    expect(first.is_primary).toBe(0) // Should be unset
+    expect(second.is_primary).toBe(1) // Should be new primary
+  })
+
+  it('should update entity image_url when makePrimary=true', () => {
+    const entityId = createEntity('Entity URL NPC')
+
+    addGeneratedImage(entityId, 'images/first.jpg') // primary
+    addGeneratedImage(entityId, 'images/second.jpg', true) // force primary
+
+    const entity = db
+      .prepare('SELECT image_url FROM entities WHERE id = ?')
+      .get(entityId) as { image_url: string }
+
+    expect(entity.image_url).toBe('images/second.jpg')
+  })
+
+  it('should only have one primary image after makePrimary', () => {
+    const entityId = createEntity('Single Primary NPC')
+
+    addGeneratedImage(entityId, 'images/img1.jpg')
+    addGeneratedImage(entityId, 'images/img2.jpg')
+    addGeneratedImage(entityId, 'images/img3.jpg', true) // Force this one
+
+    const primaryCount = db
+      .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ? AND is_primary = 1')
+      .get(entityId) as { count: number }
+
+    expect(primaryCount.count).toBe(1)
+
+    const primary = db
+      .prepare('SELECT image_url FROM entity_images WHERE entity_id = ? AND is_primary = 1')
+      .get(entityId) as { image_url: string }
+
+    expect(primary.image_url).toBe('images/img3.jpg')
+  })
+})

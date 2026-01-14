@@ -77,6 +77,9 @@ export const LOCATION_TYPES = [
   'alley',
   'plaza',
   'outpost',
+  'ship',
+  'building',
+  'landmark',
 ] as const
 
 export type LocationType = (typeof LOCATION_TYPES)[number]

@@ -1335,7 +1335,12 @@ async function generateImage() {
         method: 'POST',
         body: { imageUrl: result.imageUrl.replace('/uploads/', '') },
       })
+
+      // Notify other components (Gallery) that images changed
+      entitiesStore.incrementImageVersion(faction.value.id)
+
       await refreshFaction()
+      await loadCounts(faction.value.id)
     }
   } catch (error) {
     console.error('[FactionEditDialog] Failed to generate image:', error)

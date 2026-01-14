@@ -797,9 +797,11 @@ async function generateImage() {
       )
 
       if (response.success) {
+        // Notify other components (Gallery) that images changed
+        entitiesStore.incrementImageVersion(player.value.id)
+
         await loadPlayer(player.value.id)
         await entitiesStore.refreshPlayer(player.value.id)
-        await imageGalleryRef.value?.refresh()
         await loadCounts(player.value.id)
       }
     }

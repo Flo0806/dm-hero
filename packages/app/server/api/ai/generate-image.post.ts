@@ -55,13 +55,20 @@ interface SessionData {
   notes?: string // First part of session notes for context
 }
 
+interface LoreData {
+  name: string
+  type?: string // legend, history, religion, etc.
+  era?: string // ancient, current, etc.
+  description?: string
+}
+
 interface GenerateImageRequest {
   prompt: string // User-provided description (can be empty if entityData provided)
   entityName?: string // Entity name for better prompts
-  entityType?: 'NPC' | 'Location' | 'Item' | 'Faction' | 'Player' | 'Session'
+  entityType?: 'NPC' | 'Location' | 'Item' | 'Faction' | 'Player' | 'Session' | 'Lore'
   style?: 'realistic' | 'fantasy-art' | 'sketch' | 'oil-painting'
   // Structured entity data for richer prompts
-  entityData?: NpcData | LocationData | ItemData | FactionData | PlayerData | SessionData
+  entityData?: NpcData | LocationData | ItemData | FactionData | PlayerData | SessionData | LoreData
 }
 
 interface GenerateImageResponse {
@@ -72,7 +79,7 @@ interface GenerateImageResponse {
 // Build a detailed description from structured entity data
 function buildEntityDescription(
   entityType: string,
-  entityData: NpcData | LocationData | ItemData | FactionData | PlayerData | SessionData | undefined,
+  entityData: NpcData | LocationData | ItemData | FactionData | PlayerData | SessionData | LoreData | undefined,
   fallbackPrompt: string,
 ): string {
   if (!entityData) return fallbackPrompt
@@ -122,6 +129,12 @@ function buildEntityDescription(
     parts.push(`Session Title: ${data.title}`)
     if (data.summary) parts.push(`Summary: ${data.summary}`)
     if (data.notes) parts.push(`Scene Notes: ${data.notes}`)
+  } else if (entityType === 'Lore') {
+    const data = entityData as LoreData
+    if (data.type) parts.push(`Lore Type: ${data.type}`)
+    if (data.era) parts.push(`Era: ${data.era}`)
+    parts.push(`Name: ${data.name}`)
+    if (data.description) parts.push(`Description: ${data.description}`)
   }
 
   // Combine structured data with any additional user prompt
@@ -181,16 +194,17 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   )
 
   // Style definitions for GPT-4 to use
-  // IMPORTANT: Explicitly avoid 3D/CGI look which DALL-E 3 tends to produce
-  const style = body.style || 'realistic'
+  // IMPORTANT: Use "detailed fantasy illustration" instead of "photograph" to avoid 3D/CGI look
+  const style = body.style || 'fantasy-art' // Changed default from 'realistic' to 'fantasy-art'
   const styleMap: Record<string, string> = {
     realistic:
-      'real photograph, NOT 3D rendered, NOT CGI, NOT computer generated, NOT video game graphics. Shot on professional camera, natural film grain, real human features, cinematic movie still quality, like a photo from a high-budget fantasy film set',
+      'detailed fantasy illustration with realistic rendering, professional digital painting, lifelike details and textures, cinematic lighting, like concept art for a fantasy film or AAA video game, NOT 3D render, NOT video game screenshot',
     'fantasy-art':
-      'traditional oil painting on canvas, visible brushstrokes, NOT digital art, NOT 3D, classic fantasy art style like Alan Lee or John Howe, painterly texture',
-    sketch: 'hand-drawn pencil sketch on paper, visible paper texture, crosshatching, NOT digital, traditional artist drawing',
+      'detailed fantasy illustration in the style of official D&D 5e artwork, like Baldur\'s Gate 3 character art or Critical Role character commissions, rich colors, dramatic painterly lighting, professional fantasy art',
+    sketch:
+      'hand-drawn pencil sketch on textured paper, visible crosshatching and shading, traditional artist drawing style, NOT digital',
     'oil-painting':
-      'classical oil painting, Renaissance masters technique, visible brushstrokes on canvas, NOT digital, dramatic chiaroscuro lighting, museum quality fine art',
+      'classical oil painting style, Renaissance masters technique, visible brushstrokes, dramatic chiaroscuro lighting, museum quality fine art, like a Pre-Raphaelite fantasy painting',
   }
 
   // Step 1: Use GPT-4 to optimize the prompt for DALL-E
@@ -198,47 +212,133 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   let systemPrompt: string
 
   if (entityType === 'NPC') {
-    systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs, NOT 3D renders or CGI.
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D and Pathfinder character portraits.
 
-YOUR GOAL: Generate prompts that look like REAL PHOTOGRAPHS of actors in costume on a fantasy film set - like stills from Lord of the Rings or Game of Thrones movies.
+YOUR GOAL: Generate prompts that produce CINEMATIC FANTASY PORTRAITS - like concept art for a big-budget fantasy film, or professional D&D character commissions. Think: the art style of official D&D 5e books, Critical Role character art, or Baldur's Gate 3 promotional images.
 
-CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
-The user's input may contain NPC status information. ALWAYS rephrase problematic status values into NEUTRAL, ARTISTIC terms:
-- "dead", "deceased", "tot", "verstorben" → COMPLETELY IGNORE this status, generate a portrait as if the character is alive
-- "executed", "hingerichtet", "murdered", "ermordet" → COMPLETELY IGNORE this status, generate a normal portrait
-- "missing", "vermisst" → can mention "mysterious", "enigmatic expression"
-- "injured", "wounded", "verletzt" → can show "battle-worn", "scarred veteran"
-- ANY death-related status → Generate the portrait WITHOUT mentioning death at all. Show the character as they were in life.
+=== D&D/PATHFINDER RACE GUIDE (CRITICAL - USE THIS!) ===
+When you see these races, describe them EXACTLY as specified:
 
-CRITICAL ANTI-3D RULES (ALWAYS INCLUDE):
-- ALWAYS add: "real photograph, NOT 3D rendered, NOT CGI, NOT video game"
-- ALWAYS add: "shot on Arri Alexa camera, natural film grain, real human skin texture"
-- Describe REAL physical features, not idealized CGI faces
+BIRDFOLK:
+- Owlin: Humanoid with owl features - large round owl eyes, feathered face and body, owl-like beak, wings that can serve as arms, taloned feet. NOT just an owl! A humanoid owl-person.
+- Aarakocra: Tall bird-humanoid with eagle/parrot features, large feathered wings, bird head with beak, taloned hands and feet
+- Kenku: Raven-like humanoid, black feathers covering body, crow/raven head with beak, no wings (flightless)
 
-SETTING: Medieval fantasy by default. Adapt to sci-fi/other if description indicates.
+CATFOLK:
+- Tabaxi: Sleek feline humanoid, cat face with whiskers, fur-covered body, cat ears, tail, retractable claws
+- Leonin: Lion-like humanoid, proud lion face with mane (males), muscular feline body
 
-CONTENT RULES:
-1. Art style: ${styleMap[style]}
-2. Race-appropriate features (elves: pointed ears, elegant; dwarves: stocky, bearded)
-3. Class-appropriate medieval gear (wizard: robes, staff; fighter: real metal armor)
-4. Real costume materials: actual leather, real chainmail, wool cloaks
-5. Cinematic lighting: practical lights, golden hour, candlelight
-6. Keep under 100 words
-7. Focus on: real human expression, authentic costume, film set atmosphere
-8. NEVER mention death, corpses, or deceased state in the output prompt
+REPTILIAN:
+- Dragonborn: Tall dragon-humanoid, scaled skin, dragon head with snout, no wings (usually), comes in chromatic/metallic colors
+- Kobold: Small reptilian humanoid, scaled skin, dog-like snout, small horns
+- Lizardfolk: Reptilian humanoid with iguana/crocodile features, scaled green/brown skin, tail
+- Yuan-ti: Snake-human hybrid, scales, possibly snake lower body or just snake features on humanoid body
 
-EXAMPLE:
-Input: "Race: Elf, Class: Wizard, Name: Elara"
-Output: "Real photograph of an elegant elven woman with long silver hair and pointed ears, wearing hand-sewn midnight-blue velvet robes with silver embroidery, holding a gnarled wooden staff, standing in a candlelit medieval library, wise expression, shot on Arri Alexa, natural film grain, cinematic lighting like Lord of the Rings, NOT 3D rendered, NOT CGI"
+SMALL FOLK:
+- Halfling: Small human-like, 3 feet tall, curly hair, bare furry feet, cheerful appearance
+- Gnome: Very small humanoid, 3 feet, large nose, wild hair, curious expression
+- Goblin: Small green-skinned humanoid, large pointed ears, sharp teeth, mischievous
 
-Input: "Race: Human, Class: Fighter, Status: dead, Name: Sir Aldric"
-Output: "Real photograph of a noble human knight with weathered face and grey-streaked beard, wearing polished plate armor with heraldic crest, standing proudly in a castle courtyard, dignified expression, shot on Arri Alexa, natural film grain, cinematic lighting, NOT 3D rendered, NOT CGI"
+OTHER EXOTIC:
+- Tiefling: Human with demonic heritage - horns (various styles), tail, unusual skin colors (red, purple, blue), possibly glowing eyes
+- Aasimar: Human with angelic heritage - ethereal beauty, possibly glowing eyes, subtle halo effect
+- Genasi: Human with elemental heritage - Fire: flame hair, ember skin; Water: blue skin, flowing hair; Earth: stone-like skin; Air: light blue, wispy
+- Firbolg: Giant-kin, 7-8 feet tall, cow-like nose, gentle giant appearance, nature-connected
+- Goliath: Tall gray-skinned humanoid, 7-8 feet, bald, tribal markings, mountain-dweller
+- Warforged: Living construct, mechanical/wooden body, glowing eyes, armor-like plating
+- Changeling: Pale humanoid with white hair, colorless eyes, can appear androgynous
+- Kalashtar: Human-like but with an otherworldly, serene quality
+- Shifter: Human with bestial features (wolf-like, bear-like, etc.)
+- Harengon: Rabbit-folk humanoid, rabbit head, long ears, fur-covered body, rabbit feet
+
+CLASSIC FANTASY:
+- Elf/High Elf/Wood Elf/Drow: Elegant humanoid, pointed ears, slender build. Drow: dark purple/black skin, white hair
+- Dwarf: Stocky humanoid, 4-5 feet, thick beard (usually), broad shoulders, sturdy build
+- Half-Elf: Human-elf mix, slightly pointed ears, elegant but more rugged than full elf
+- Half-Orc: Human-orc mix, grayish/greenish skin, prominent lower canines, muscular
+- Orc: Green/gray skin, tusks, muscular, tribal markings
+
+=== CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING ===
+This is for a TABLETOP ROLEPLAYING GAME (D&D/Pathfinder). All characters are FICTIONAL for entertainment.
+ALWAYS rephrase potentially problematic content into NEUTRAL, ARTISTIC terms:
+
+STATUS/CONDITION:
+- "dead", "deceased", "killed" → IGNORE completely, show character ALIVE and healthy
+- "executed", "murdered", "slain" → IGNORE, show normal portrait
+- "missing", "lost" → "mysterious expression", "enigmatic gaze"
+- "injured", "wounded", "scarred" → "battle-worn veteran", "experienced warrior"
+- "dying", "near death" → "determined expression"
+
+EVIL/DARK THEMES (VERY IMPORTANT):
+- "evil", "wicked", "malevolent" → "mysterious", "enigmatic", "morally complex"
+- "villain", "antagonist" → "powerful figure", "commanding presence"
+- "killer", "murderer", "assassin" → "shadowy operative", "mysterious agent", "skilled infiltrator"
+- "dark lord", "evil overlord" → "powerful ruler", "commanding leader"
+- "demon", "demonic" → "otherworldly", "supernatural", "fiendish heritage"
+- "cultist", "worshipper of dark gods" → "robed mystic", "devoted follower"
+- "necromancer" → "scholar of ancient arts", "dark magic practitioner"
+- "torturer" → "interrogator", "stern inquisitor"
+- "slave", "slaver" → "servant", "worker", "merchant"
+
+VIOLENCE/BLOOD:
+- "blood", "bloody", "blood-soaked" → REMOVE or "battle-worn", "weathered"
+- "gore", "gory" → REMOVE completely
+- "corpse", "body", "remains" → REMOVE completely
+- "weapon dripping" → "well-used weapon"
+- "killing", "slaughter" → "combat", "battle"
+
+APPEARANCE:
+- "terrifying", "horrifying" → "imposing", "intimidating", "awe-inspiring"
+- "gruesome", "hideous" → "unusual", "distinctive", "striking"
+- "rotting", "decaying" → "ancient", "weathered"
+
+ALWAYS focus on: character design, costume, expression, pose - NOT violence or darkness
+
+=== STYLE RULES ===
+Art style: ${styleMap[style]}
+
+CRITICAL STYLE GUIDANCE:
+- Describe as "fantasy character portrait", "D&D character art", "tabletop RPG illustration"
+- Reference: "in the style of official D&D artwork", "like a character from Baldur's Gate 3"
+- Lighting: dramatic, cinematic, painterly
+- Composition: portrait or 3/4 view, focused on the character
+- AVOID: "photograph", "real photo" (these make it look like cosplay)
+- INCLUDE: "detailed fantasy illustration", "professional character art", "rich colors and textures"
+
+=== CONTENT RULES ===
+1. Race features MUST match the race guide above - be SPECIFIC about non-human features
+2. Class-appropriate gear: wizard (robes, staff, spellbook), fighter (armor, weapons), rogue (leather, daggers), etc.
+3. Keep under 120 words
+4. Focus on: distinctive race features, class identity, personality through expression
+5. FORBIDDEN WORDS (never include in output): "blood", "gore", "corpse", "dead body", "murder", "kill", "torture", "execution", "violence", "gruesome", "horrifying", "terrifying", "evil" (use alternatives above)
+
+=== EXAMPLES ===
+Input: "Race: Owlin, Class: Wizard"
+Output: "Fantasy character portrait of an Owlin wizard, a humanoid owl-person with large round amber owl eyes, feathered face and body in brown and white plumage, small curved beak, wearing elegant purple robes with silver arcane symbols, holding an ancient tome, wise and mysterious expression, detailed fantasy illustration in the style of official D&D 5e artwork, dramatic magical lighting, rich colors, NOT a photograph"
+
+Input: "Race: Tiefling, Class: Warlock, Gender: Female"
+Output: "Fantasy character portrait of a female Tiefling warlock, crimson skin, elegant curved horns, glowing amber eyes, long black hair, wearing dark leather armor with eldritch symbols, mysterious smirk, swirling dark magic around her hands, detailed D&D character art style like Baldur's Gate 3, dramatic purple and orange lighting, professional fantasy illustration"
+
+Input: "Race: Tabaxi, Class: Rogue"
+Output: "Fantasy character portrait of a Tabaxi rogue, sleek feline humanoid with orange and black striped fur, cat face with bright green eyes and whiskers, pointed cat ears, wearing dark leather armor with many hidden pockets, twin daggers at belt, confident predatory grin, detailed fantasy illustration, warm torchlight, in the style of official D&D artwork"
 
 Output ONLY the optimized prompt.`
   } else if (entityType === 'Location') {
     systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs, NOT 3D renders or CGI.
 
+CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All locations are FICTIONAL FANTASY settings for entertainment - medieval castles, enchanted forests, mysterious dungeons. Like movie set photography.
+
 YOUR GOAL: Generate prompts that look like REAL PHOTOGRAPHS of actual locations - like movie set photography from Lord of the Rings or Game of Thrones, or National Geographic travel photos.
+
+CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
+The user's input may contain dramatic location descriptions. ALWAYS rephrase into NEUTRAL, ARTISTIC terms:
+- "torture chamber", "execution site" → "ancient stone chamber", "historical dungeon"
+- "battlefield", "war zone" → "dramatic landscape", "historic plains"
+- "blood-stained", "gore" → "weathered", "ancient", "mysterious stains"
+- "prison", "cell" → "medieval tower room", "stone chamber"
+- "slaughterhouse" → "rustic building", "old barn"
+- "graveyard of corpses" → "ancient cemetery", "peaceful memorial grounds"
+- Any violent/dark descriptions → focus on ATMOSPHERE and ARCHITECTURE, not horror
 
 CRITICAL ANTI-3D RULES (ALWAYS INCLUDE):
 - ALWAYS add: "real photograph, NOT 3D rendered, NOT CGI, NOT digital art"
@@ -254,8 +354,12 @@ CONTENT RULES:
 4. Natural lighting: golden hour sun, real fire light, moonlight through windows
 5. Keep under 100 words
 6. Focus on: authentic textures, real weathering, lived-in atmosphere
+7. FORBIDDEN WORDS: "blood", "gore", "corpse", "body", "violence", "torture", "execution"
 
-EXAMPLE:
+EXAMPLES:
+Input: "The Blood Pit - an underground fighting arena where gladiators died"
+Output: "Real photograph of an ancient underground arena with worn stone tiers, dramatic torchlight casting long shadows, sand floor with centuries of history, massive iron gates, atmospheric dust particles in light beams, shot on Arri Alexa, cinematic wide shot, NOT 3D rendered, NOT CGI, like a film location from Gladiator"
+
 Input: "Location Type: Tavern, Name: The Prancing Pony"
 Output: "Real photograph of a rustic medieval tavern interior, actual stone fireplace with crackling fire, heavy oak beams blackened by centuries of smoke, worn wooden tables and benches, pewter tankards and tallow candles, dust motes in shafts of window light, shot on Arri Alexa, cinematic wide shot, NOT 3D rendered, NOT CGI, like a film location from Lord of the Rings"
 
@@ -263,7 +367,18 @@ Output ONLY the optimized prompt.`
   } else if (entityType === 'Faction') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in heraldic symbols, emblems, and faction logos.
 
-YOUR GOAL: Generate prompts that produce iconic faction symbols - crests, emblems, banners, or logos with strong visual identity.
+CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All factions are FICTIONAL FANTASY organizations for entertainment - noble guilds, mysterious orders, legendary groups.
+
+YOUR GOAL: Generate prompts that produce iconic faction symbols - crests, emblems, banners, or logos with strong visual identity. Like museum-quality heraldic art.
+
+CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
+The user's input may contain dramatic faction descriptions. ALWAYS rephrase into NEUTRAL, ARTISTIC terms:
+- "death cult", "murder guild" → "mysterious order", "secret society"
+- "blood clan" → "ancient clan", "noble house"
+- "assassin brotherhood" → "shadow guild", "silent order"
+- "demon worshippers" → "mystical cult", "ancient order"
+- "criminal organization" → "underground guild", "secretive network"
+- Any violent/evil descriptions → focus on SYMBOLISM and HERALDIC DESIGN
 
 CRITICAL RULES:
 1. Describe the symbol/emblem design (central icon, surrounding elements, colors, symbolism)
@@ -272,106 +387,262 @@ CRITICAL RULES:
 4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
 5. Keep under 100 words
 6. Emphasize: clean heraldic design, symbolic representation, faction identity
-7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "label", "game asset", "profile picture"
+7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "label", "game asset", "profile picture", "blood", "death", "skull", "gore"
 8. Think: medieval heraldry, guild emblem, fantasy faction crest
 
-EXAMPLE:
-Bad: "A guild icon with no frame or text"
+EXAMPLES:
+Bad: "A death cult emblem with skulls and blood"
+Good: "Mysterious heraldic emblem featuring a crescent moon over dark waters, deep purple and silver color scheme, ornate gothic border, elegant and enigmatic appearance, fantasy secret society crest, detailed metalwork"
+
 Good: "Heraldic emblem featuring crossed golden swords behind a silver shield, dark blue and gold color scheme, laurel wreath border, majestic and noble appearance, fantasy guild crest, detailed metalwork"
 
 Output ONLY the optimized prompt.`
   } else if (entityType === 'Player') {
-    systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy player character portraits.
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D and Pathfinder PLAYER CHARACTER portraits.
 
-YOUR GOAL: Generate prompts that produce heroic player character portraits - detailed, dynamic poses showing the character's class and abilities.
+YOUR GOAL: Generate prompts that produce HEROIC FANTASY CHARACTER ART - like professional D&D character commissions, Critical Role fan art, or Baldur's Gate 3 character portraits. These are the HEROES of the story!
 
-CRITICAL RULES:
-1. Describe the character based on their race, class, and level - show their experience and power
-2. Art style: ${styleMap[style]}
-3. Include equipment and abilities typical for their class (weapons, armor, magical effects)
-4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
-5. Keep under 100 words
-6. Emphasize: heroic pose, class identity visible, character personality, atmospheric lighting
-7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "profile picture"
-8. Think: D&D player character commission, fantasy hero portrait
+=== D&D/PATHFINDER RACE GUIDE (CRITICAL - USE THIS!) ===
+When you see these races, describe them EXACTLY as specified:
 
-EXAMPLE:
-Bad: "A player character icon with no frame"
-Good: "A confident half-orc barbarian with tribal tattoos and a massive greataxe, muscular build, weathered leather armor, fierce but noble expression, standing in dramatic battle pose, warm campfire lighting, waist-up portrait"
+BIRDFOLK:
+- Owlin: Humanoid with owl features - large round owl eyes, feathered face and body, owl-like beak, wings. NOT just an owl! A humanoid owl-person.
+- Aarakocra: Tall bird-humanoid with eagle/parrot features, large feathered wings, bird head with beak
+- Kenku: Raven-like humanoid, black feathers, crow/raven head with beak, no wings
+
+CATFOLK:
+- Tabaxi: Sleek feline humanoid, cat face with whiskers, fur-covered body, cat ears, tail
+- Leonin: Lion-like humanoid, proud lion face with mane (males), muscular feline body
+
+REPTILIAN:
+- Dragonborn: Tall dragon-humanoid, scaled skin, dragon head with snout, chromatic/metallic colors
+- Kobold: Small reptilian humanoid, scaled skin, dog-like snout, small horns
+- Lizardfolk: Reptilian humanoid with iguana/crocodile features, scaled skin, tail
+
+OTHER EXOTIC:
+- Tiefling: Human with demonic heritage - horns, tail, unusual skin colors (red, purple, blue)
+- Aasimar: Human with angelic heritage - ethereal beauty, possibly glowing eyes, subtle halo
+- Genasi: Elemental heritage - Fire: flame hair; Water: blue skin; Earth: stone-like; Air: wispy
+- Firbolg: Giant-kin, 7-8 feet tall, cow-like nose, gentle giant
+- Goliath: Tall gray-skinned, 7-8 feet, bald, tribal markings
+- Warforged: Living construct, mechanical/wooden body, glowing eyes
+- Harengon: Rabbit-folk humanoid, rabbit head, long ears, fur-covered
+
+CLASSIC:
+- Elf/Drow: Elegant, pointed ears, slender. Drow: dark purple/black skin, white hair
+- Dwarf: Stocky, 4-5 feet, thick beard, broad shoulders
+- Half-Orc: Grayish/greenish skin, prominent lower canines, muscular
+
+=== SAFETY-FILTER RULES ===
+- "assassin", "killer" → "shadowy rogue", "swift scout"
+- "blood mage", "death knight" → "arcane warrior", "dark paladin"
+- "demonic", "evil" → "mysterious", "enigmatic", "dark but noble"
+- Dark backstory → focus on HEROIC PRESENT
+
+=== STYLE RULES ===
+Art style: ${styleMap[style]}
+
+CRITICAL STYLE GUIDANCE:
+- Describe as "heroic fantasy portrait", "D&D player character art", "epic character illustration"
+- Reference: "in the style of official D&D artwork", "like a Baldur's Gate 3 character portrait"
+- These are HEROES - show them looking powerful, confident, ready for adventure
+- Lighting: dramatic, heroic, painterly
+- AVOID: "photograph", "real photo", "cosplay"
+- INCLUDE: "detailed fantasy illustration", "professional character commission", "vibrant colors"
+
+=== CONTENT RULES ===
+1. Race features MUST match the race guide - be SPECIFIC about non-human features
+2. Class-appropriate gear showing their level/experience
+3. HEROIC composition - dynamic pose, confident expression
+4. Keep under 120 words
+5. Show their CLASS ABILITIES: wizard with arcane energy, paladin with divine light, etc.
+
+=== EXAMPLES ===
+Input: "Race: Owlin, Class: Ranger, Level: 12"
+Output: "Heroic fantasy portrait of an Owlin ranger, a humanoid owl-person with large golden owl eyes, brown and white feathered face and body, curved beak, wearing forest-green leather armor with leaf motifs, longbow across back, a hawk companion on shoulder, confident and alert expression, detailed D&D character illustration in the style of official 5e artwork, forest background with dappled sunlight, professional fantasy art"
+
+Input: "Race: Tiefling, Class: Paladin, Level: 8"
+Output: "Epic fantasy portrait of a Tiefling paladin, purple skin, elegant swept-back horns, glowing golden eyes, wearing gleaming silver plate armor with celestial engravings, radiant divine energy emanating from raised holy symbol, righteous and determined expression, detailed character art like Baldur's Gate 3, dramatic divine lighting, heroic pose"
 
 Output ONLY the optimized prompt.`
   } else if (entityType === 'Session') {
-    systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs, NOT 3D renders or CGI.
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D session cover art.
 
-CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game session recap. All content is FICTIONAL FANTASY for entertainment - epic battles, mythical creatures, magic spells are collaborative storytelling like in movies/books. Think Lord of the Rings, Game of Thrones - epic fantasy cinema.
+YOUR GOAL: Generate prompts that produce EPIC FANTASY SCENE ILLUSTRATIONS - like concept art for fantasy films, book covers, or official D&D adventure module art. These are COVER IMAGES for D&D session recaps.
 
-YOUR GOAL: Generate prompts that look like REAL PHOTOGRAPHS from a fantasy film set - movie stills from Lord of the Rings, Game of Thrones, or The Witcher series. These are COVER IMAGES for D&D session recaps.
+=== CREATURE & RACE GUIDE ===
+If the session involves specific D&D creatures or races, describe them correctly:
+- Owlin, Aarakocra, Kenku: Bird-humanoids (humanoid body with bird features, NOT just birds!)
+- Tabaxi, Leonin: Cat-humanoids (humanoid body with feline features)
+- Dragonborn: Dragon-humanoids (NOT dragons! Bipedal humanoids with dragon features)
+- Tiefling: Humanoid with horns, tail, unusual skin colors
+- Mind Flayer/Illithid: Humanoid with octopus-like head, tentacles where mouth would be
+- Beholder: Floating spherical creature with one large central eye and many eye stalks
+- Owlbear: Large beast - bear body with owl head
+- Displacer Beast: Six-legged panther-like creature with tentacles
 
-CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
-The user's input may contain dramatic D&D descriptions. ALWAYS rephrase them into CINEMATIC, ARTISTIC terms that focus on VISUAL SPECTACLE rather than conflict:
+=== SAFETY-FILTER RULES ===
+ALWAYS rephrase dramatic D&D descriptions into ARTISTIC, WONDER-FOCUSED terms:
 - "battle", "war", "fight", "attack" → "epic confrontation", "dramatic standoff", "climactic moment"
 - "giant creature attacking" → "majestic creature towering over heroes", "awe-inspiring beast"
-- "lightning strikes heroes" → "dramatic storm with lightning in sky, heroes silhouetted"
-- "10 meter fox", "giant animal" → "majestic mythical beast", "legendary creature from folklore"
-- "gods at war" → "divine beings in dramatic celestial scene", "mythological tableau"
-- Any violence → focus on DRAMA, TENSION, AWE - like a movie poster, not action scene
+- "death", "killed", "died" → COMPLETELY IGNORE, show the scene without death
+- "demon", "devil", "undead" → "otherworldly being", "spectral figure", "ancient spirit"
+- "blood", "gore" → "dramatic moment", "intense scene"
+- Violence/death → focus on DRAMA, TENSION, AWE - like a movie poster
 
-CRITICAL ANTI-3D RULES (ALWAYS INCLUDE):
-- ALWAYS add: "real photograph, NOT 3D rendered, NOT CGI, NOT video game graphics"
-- ALWAYS add: "shot on Arri Alexa, 35mm anamorphic lens, natural film grain, cinematic color grading"
-- Describe REAL actors in costumes, real locations, practical lighting
+=== STYLE RULES ===
+Art style: ${styleMap[style]}
 
-IMAGE FORMAT: This will be a WIDE 16:9 cover image - compose for horizontal/landscape format with cinematic framing.
+CRITICAL STYLE GUIDANCE:
+- Describe as "epic fantasy illustration", "D&D adventure cover art", "cinematic fantasy scene"
+- Reference: "in the style of official D&D module covers", "like concept art for a fantasy film"
+- Composition: WIDE 16:9 format, cinematic framing, rule of thirds
+- AVOID: "photograph", "real photo", "3D render", "video game screenshot"
+- INCLUDE: "detailed fantasy illustration", "painterly lighting", "rich atmospheric colors"
+- Lighting: dramatic, painterly - golden hour, magical glows, torchlight, moonbeams
 
-CONTENT RULES:
-1. Art style: ${styleMap[style]}
-2. Extract the KEY DRAMATIC MOMENT - transform into CINEMATIC WONDER, not conflict
-3. Show the scene as if photographed on a real movie set with actors and practical effects
-4. Cinematic composition: wide establishing shots, dramatic angles, rule of thirds
-5. Real lighting: golden hour, torchlight, moonlight - all practical and natural
-6. Keep under 100 words
-7. Focus on: atmosphere, wonder, awe, majesty - the EMOTIONAL and VISUAL impact
-8. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "illustration", "painting", "digital art", "attack", "violence", "blood", "gore", "weapon striking"
+=== CONTENT RULES ===
+1. Extract the KEY DRAMATIC MOMENT - transform into visual wonder
+2. Wide establishing shots showing the epic scale
+3. Keep under 120 words
+4. Focus on: atmosphere, wonder, awe, majesty - the EMOTIONAL impact
+5. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "attack", "violence", "blood", "gore", "death", "corpse"
 
-EXAMPLES:
+=== EXAMPLES ===
 Input: "A fox grows to 10 meters in an epic battle at night. Lightning strikes the heroes."
-Output: "Real photograph of a majestic giant fox spirit towering against a stormy night sky, silhouettes of four adventurers standing in awe below, dramatic lightning illuminating storm clouds in the distance, mystical fog swirling, cinematic wide shot, shot on Arri Alexa with anamorphic lens, natural film grain, like a movie still from a fantasy epic, NOT 3D rendered, NOT CGI"
+Output: "Epic fantasy illustration of a colossal spirit fox towering against a stormy night sky, mystical blue fur glowing with ethereal light, four silhouetted adventurers standing in awe on a hilltop below, dramatic lightning illuminating swirling clouds, magical energy crackling in the air, wide cinematic composition, detailed D&D adventure art style like official module covers, painterly atmospheric lighting, rich purples and blues"
 
 Input: "War of the Gods. A massive battle."
-Output: "Real photograph of an epic mythological tableau, divine figures silhouetted against a dramatic sunset sky, heroes witnessing the celestial event from a hilltop, golden light streaming through clouds, awe-inspiring scale, cinematic wide shot, shot on Arri Alexa, natural film grain, like a scene from Lord of the Rings, NOT 3D rendered, NOT CGI"
+Output: "Epic fantasy scene illustration of divine beings clashing in the heavens, colossal mythological figures silhouetted against a dramatic sunset sky, golden light streaming through parting clouds, tiny heroes witnessing the celestial event from a mountain peak, awe-inspiring scale and grandeur, detailed fantasy art in the style of classic D&D covers, painterly lighting, warm and cool color contrast"
 
 Output ONLY the optimized prompt - make it SAFE for DALL-E while preserving the epic fantasy atmosphere.`
   } else if (entityType === 'Item') {
-    systemPrompt = `You are a DALL-E 3 prompt expert specializing in clean, isolated object renders.
+    systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D magical item illustrations.
 
-YOUR GOAL: Generate prompts that produce ONLY the object itself - no frames, no text, no UI elements, no decorations.
+YOUR GOAL: Generate prompts for BEAUTIFUL FANTASY ITEM ARTWORK - like official D&D item illustrations, video game concept art, or tabletop RPG card art. The item should look MAGICAL and UNIQUE.
 
-CRITICAL RULES:
-1. Describe ONLY the physical object in detail (materials, shape, colors, craftsmanship)
-2. Art style: ${styleMap[style]}
-3. ALWAYS specify: "centered on plain neutral background"
-4. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border" (this triggers DALL-E to add them!)
-5. Keep under 80 words
-6. Emphasize: product photography, museum display, or studio render aesthetic
-7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset"
-8. Think: clean catalog photo of a single object
+=== CRITICAL: INTERPRET THE ITEM NAME VISUALLY ===
+The item's NAME often contains visual hints. ALWAYS translate the name into physical features:
+- "Heart" in name → heart-shaped, heart motif, or pulsing/glowing like a heartbeat
+- "Flame/Fire/Burning" → flickering flames, ember glow, warm orange/red colors, heat shimmer
+- "Ice/Frost/Winter" → crystalline ice formations, cold blue glow, frost patterns
+- "Shadow/Dark/Night" → dark wisps, shadowy aura, deep purple/black colors
+- "Storm/Thunder/Lightning" → crackling electricity, storm clouds within, electric blue
+- "Blood/Crimson" → deep red coloring, ruby gems (NOT actual blood!)
+- "Soul/Spirit" → ethereal glow, ghostly wisps, translucent elements
+- "Dragon" → dragon scale patterns, dragon head motifs, dragon eye gems
+- "Star/Celestial" → twinkling lights, cosmic patterns, silver and gold
+- "Ancient/Elder" → weathered look, runic inscriptions, aged patina
+- "Crown/King/Royal" → regal design, gold filigree, gemstone inlays
 
-EXAMPLE:
-Bad: "A sword with no text or frame, game inventory icon style"
-Good: "An ornate longsword with silver crossguard and leather-wrapped grip, centered on neutral grey background, studio lighting, detailed metalwork visible"
+=== D&D ITEM CATEGORIES ===
+WEAPONS: Show magical auras, glowing runes, unique materials (mithril, adamantine, dragon bone)
+ARMOR: Intricate engravings, magical sigils, otherworldly materials
+WANDS/STAVES: Magical cores visible, arcane crystals, swirling energy
+RINGS: Magical gem with inner glow, intricate band design
+AMULETS: Glowing pendant, magical chains, mystical symbols
+POTIONS: Swirling liquids, magical bubbles, ethereal glow inside glass
+CRYSTALS: Inner light, magical inclusions, geometric or organic shapes
+ARTIFACTS: Ancient and powerful appearance, multiple magical elements
+
+=== ANTI-TEXT RULES (CRITICAL!) ===
+DALL-E loves adding text/letters. To prevent this:
+- NEVER mention the item's name in the prompt
+- NEVER use words like "labeled", "inscribed with words", "written", "titled"
+- Instead of "runes with text" say "abstract arcane symbols" or "geometric magical patterns"
+- Focus ONLY on visual elements: shape, color, material, glow, texture
+- End prompt with: "clean artifact illustration, pure visual design"
+
+=== STYLE RULES ===
+Art style: ${styleMap[style]}
+
+CRITICAL STYLE GUIDANCE:
+- Describe as "fantasy item illustration", "D&D artifact art", "magical object concept art"
+- Lighting: dramatic studio lighting, magical glow from within the object
+- Background: simple dark gradient or neutral, all focus on the item
+- AVOID: "photograph", "museum", "catalog" (too mundane for magic items)
+- INCLUDE: "detailed fantasy illustration", "magical aura", "mystical glow"
+
+=== CONTENT RULES ===
+1. FIRST analyze the item name and translate into VISUAL features
+2. Add appropriate magical effects (glow, aura, energy, particles)
+3. Describe materials in fantasy terms (not just "metal" but "enchanted silver", "dragon-forged steel")
+4. Keep under 100 words
+5. End with "clean artifact illustration, pure visual design" to prevent text
+
+=== SAFETY RULES ===
+- "cursed", "evil" → "enchanted", "mysterious", "ancient"
+- "blood" → "crimson", "ruby-colored"
+- Focus on BEAUTY and CRAFTSMANSHIP
+
+=== EXAMPLES ===
+Input: "Das Herz der alten Flamme (Kristall)" / "Heart of the Ancient Flame (Crystal)"
+Output: "Fantasy item illustration of a heart-shaped crystal radiating with inner fire, deep crimson core pulsing with warm orange glow, ancient flame flickering within the translucent gem, delicate gold filigree mounting, ember-like particles floating around it, dramatic magical lighting against dark gradient background, detailed D&D artifact art style, mystical and powerful appearance, clean artifact illustration, pure visual design"
+
+Input: "Frostbane Dagger"
+Output: "Fantasy item illustration of an elegant dagger with blade of eternal ice, crystalline blue steel radiating cold mist, snowflake patterns etched into the frozen metal, hilt wrapped in white leather with silver wolf-head pommel, faint blue magical aura, frost particles in the air around it, dark gradient background, detailed fantasy weapon art, clean artifact illustration, pure visual design"
+
+Input: "Ring of the Storm King"
+Output: "Fantasy item illustration of a royal signet ring with storming thundercloud captured within a large sapphire, tiny lightning bolts crackling inside the gem, band of dark silver with cloud engravings, electric blue glow emanating from within, dramatic lighting against dark background, detailed D&D magical item art style, clean artifact illustration, pure visual design"
 
 Output ONLY the optimized prompt.`
+  } else if (entityType === 'Lore') {
+    systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs or classical artwork, NOT 3D renders or CGI.
+
+CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All lore entries are FICTIONAL FANTASY for entertainment - ancient legends, mythological tales, historical events. Think illustrated manuscripts, museum paintings, ancient tapestries.
+
+YOUR GOAL: Generate prompts that look like REAL PHOTOGRAPHS of historical artwork, museum pieces, or illustrated manuscripts depicting legendary scenes.
+
+CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
+The user's input may contain dramatic D&D lore content. ALWAYS rephrase problematic content into ARTISTIC, HISTORICAL terms:
+- "war", "battle", "conflict" → "epic historical moment", "legendary confrontation", "dramatic standoff"
+- "death", "killed", "slain" → COMPLETELY IGNORE death references, focus on the living legend
+- "destruction", "devastation" → "dramatic transformation", "legendary upheaval"
+- "dark ritual", "sacrifice" → "mysterious ceremony", "ancient tradition", "mystical gathering"
+- "demon", "devil" → "otherworldly being", "mythological entity", "legendary creature"
+- "curse", "cursed" → "enchanted", "bound by ancient magic", "touched by legend"
+- Any violence or death → focus on the LEGEND, the MAJESTY, the HISTORICAL SIGNIFICANCE
+
+CRITICAL ANTI-3D RULES (ALWAYS INCLUDE):
+- ALWAYS add: "classical artwork style, NOT 3D rendered, NOT CGI, NOT digital art"
+- For legends: "like an illuminated manuscript", "like a Renaissance painting", "like a museum oil painting"
+- For historical events: "like a historical tapestry", "like an epic mural", "classical artistic depiction"
+
+CONTENT RULES:
+1. Art style: ${styleMap[style]}
+2. Transform lore into VISUAL SCENES - show the legend being depicted in art
+3. Reference classical art styles: illuminated manuscripts, Renaissance paintings, Pre-Raphaelite art
+4. Focus on WONDER, MAJESTY, HISTORICAL SIGNIFICANCE - not conflict
+5. Keep under 100 words
+6. FORBIDDEN WORDS: "violence", "blood", "gore", "death", "corpse", "attack", "weapon striking", "killing"
+
+EXAMPLES:
+Input: "The Great Dragon War - a devastating conflict that destroyed three kingdoms"
+Output: "Classical oil painting depicting a majestic dragon soaring over medieval kingdoms, tiny figures looking up in awe, dramatic sunset sky, painted in Renaissance style like a museum masterpiece, golden frame-worthy composition, NOT 3D, NOT CGI, like a Pre-Raphaelite fantasy painting"
+
+Input: "The Dark Ritual of the Blood Cult - where they sacrificed innocents"
+Output: "Mysterious illuminated manuscript illustration showing robed figures gathered in candlelit ancient temple, mystical symbols glowing softly, ethereal atmosphere, painted in medieval manuscript style with gold leaf details, NOT 3D, NOT CGI"
+
+Output ONLY the optimized prompt - make it SAFE for DALL-E while preserving the legendary atmosphere.`
   } else {
     // Fallback for any other entity type
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy art.
 
+CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All content is FICTIONAL FANTASY for entertainment.
+
 YOUR GOAL: Generate prompts that produce high-quality fantasy illustrations.
+
+CRITICAL SAFETY-FILTER-FRIENDLY REPHRASING:
+ALWAYS rephrase problematic content into safe, artistic terms:
+- Any violence or death → focus on drama, majesty, legend
+- Dark themes → mysterious, enchanted, legendary
+- Conflict → dramatic moment, standoff, confrontation
 
 CRITICAL RULES:
 1. Art style: ${styleMap[style]}
 2. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border"
 3. Keep under 100 words
-4. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset"
+4. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "violence", "blood", "gore", "death"
 
 Output ONLY the optimized prompt.`
   }

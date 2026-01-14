@@ -4,9 +4,10 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody(event)
 
-  const { entityId, imageUrl } = body as {
+  const { entityId, imageUrl, makePrimary } = body as {
     entityId: number
     imageUrl: string
+    makePrimary?: boolean
   }
 
   if (!entityId || !imageUrl) {
@@ -28,31 +29,26 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Get current max display_order for this entity
-  const maxDisplayOrder = db
+  // Get current count and max display_order in one query
+  const stats = db
     .prepare(
       `
-    SELECT COALESCE(MAX(display_order), -1) as max_order
+    SELECT COUNT(*) as count, COALESCE(MAX(display_order), -1) as max_order
     FROM entity_images
     WHERE entity_id = ?
   `,
     )
-    .get(entityId) as { max_order: number }
+    .get(entityId) as { count: number; max_order: number }
 
-  const displayOrder = maxDisplayOrder.max_order + 1
+  const displayOrder = stats.max_order + 1
 
-  // Check if this is the first image for this entity
-  const imageCount = db
-    .prepare(
-      `
-    SELECT COUNT(*) as count
-    FROM entity_images
-    WHERE entity_id = ?
-  `,
-    )
-    .get(entityId) as { count: number }
+  // Set as primary if: explicitly requested OR first image for this entity
+  const shouldBePrimary = makePrimary === true || stats.count === 0
 
-  const isPrimary = imageCount.count === 0 ? 1 : 0
+  // If making this primary, unset all other primary images first
+  if (shouldBePrimary && stats.count > 0) {
+    db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(entityId)
+  }
 
   // Insert into entity_images table
   const result = db
@@ -62,10 +58,10 @@ export default defineEventHandler(async (event) => {
     VALUES (?, ?, ?, ?, ?)
   `,
     )
-    .run(entityId, imageUrl, isPrimary, displayOrder, new Date().toISOString())
+    .run(entityId, imageUrl, shouldBePrimary ? 1 : 0, displayOrder, new Date().toISOString())
 
-  // If this is the first/primary image, also update entities.image_url
-  if (isPrimary === 1) {
+  // If this is primary, also update entities.image_url
+  if (shouldBePrimary) {
     db.prepare('UPDATE entities SET image_url = ?, updated_at = ? WHERE id = ?').run(
       imageUrl,
       new Date().toISOString(),

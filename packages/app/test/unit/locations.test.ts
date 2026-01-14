@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { getDb } from '../../server/utils/db'
 import type Database from 'better-sqlite3'
+import { LOCATION_TYPES } from '../../types/location'
 
 // Locations API Tests
 // Tests the location-specific functionality including hierarchical structure
@@ -127,7 +128,7 @@ describe('Locations - Metadata (Type, Region, Notes)', () => {
   it('should store notes in metadata', () => {
     const locationId = createLocation('Secret Cave', undefined, {
       type: 'dungeon',
-      notes: 'Contains ancient treasure'
+      notes: 'Contains ancient treasure',
     })
 
     const location = db
@@ -364,7 +365,7 @@ describe('Locations - Location Types', () => {
   const locationTypes = [
     'city', 'town', 'village', 'district', 'building',
     'tavern', 'shop', 'temple', 'dungeon', 'forest',
-    'mountain', 'river', 'sea', 'island', 'cave'
+    'mountain', 'river', 'sea', 'island', 'cave',
   ]
 
   it('should accept all predefined location types', () => {
@@ -427,5 +428,45 @@ describe('Locations - Campaign Isolation', () => {
     // Cleanup
     db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(campaign2Id)
     db.prepare('DELETE FROM campaigns WHERE id = ?').run(campaign2Id)
+  })
+})
+
+describe('Locations - Location Types Constant', () => {
+  it('should include ship as a valid location type', () => {
+    expect(LOCATION_TYPES).toContain('ship')
+  })
+
+  it('should include building as a valid location type', () => {
+    expect(LOCATION_TYPES).toContain('building')
+  })
+
+  it('should include landmark as a valid location type', () => {
+    expect(LOCATION_TYPES).toContain('landmark')
+  })
+
+  it('should be able to create locations with new types', () => {
+    const shipId = createLocation('The Black Pearl', undefined, { type: 'ship' })
+    const buildingId = createLocation('Town Hall', undefined, { type: 'building' })
+    const landmarkId = createLocation('Ancient Obelisk', undefined, { type: 'landmark' })
+
+    const ship = db.prepare('SELECT metadata FROM entities WHERE id = ?').get(shipId) as { metadata: string }
+    const building = db.prepare('SELECT metadata FROM entities WHERE id = ?').get(buildingId) as { metadata: string }
+    const landmark = db.prepare('SELECT metadata FROM entities WHERE id = ?').get(landmarkId) as { metadata: string }
+
+    expect(JSON.parse(ship.metadata).type).toBe('ship')
+    expect(JSON.parse(building.metadata).type).toBe('building')
+    expect(JSON.parse(landmark.metadata).type).toBe('landmark')
+  })
+
+  it('should include all standard D&D location types', () => {
+    const essentialTypes = [
+      'city', 'town', 'village', 'castle', 'dungeon', 'forest', 'mountain',
+      'cave', 'temple', 'ruins', 'tavern', 'shop', 'guild', 'tower',
+      'ship', 'building', 'landmark',
+    ]
+
+    for (const type of essentialTypes) {
+      expect(LOCATION_TYPES).toContain(type)
+    }
   })
 })

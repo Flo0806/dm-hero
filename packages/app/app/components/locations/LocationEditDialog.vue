@@ -129,7 +129,7 @@
                 :entity-description="form.description || undefined"
                 :generate-disabled="hasUnsavedImageChanges"
                 :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
-                @images-updated="loadCounts(location!.id)"
+                @images-updated="onImagesUpdated"
                 @generating="generatingImage = $event"
               />
             </v-tabs-window-item>
@@ -429,7 +429,7 @@ const itemRelationTypeSuggestions = computed(() =>
 const locationTypes = computed(() =>
   LOCATION_TYPES.map((type) => ({
     value: type,
-    title: t(`locations.types.${type}`),
+    title: t(`locations.types.${type}`, type),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
@@ -437,8 +437,8 @@ const locationTypes = computed(() =>
 const originalImageData = ref({
   name: '',
   description: '',
-  type: undefined as string | undefined,
-  region: undefined as string | undefined,
+  type: '',
+  region: '',
 })
 
 // Check if image-critical fields have unsaved changes
@@ -524,12 +524,12 @@ async function loadLocation(locationId: number) {
       },
     }
 
-    // Save snapshot of image-critical fields
+    // Save snapshot of image-critical fields (must match form defaults!)
     originalImageData.value = {
       name: data.name,
       description: data.description || '',
-      type: typeKey || undefined,
-      region: data.metadata?.region || undefined,
+      type: typeKey || '',
+      region: data.metadata?.region || '',
     }
   } catch (e) {
     console.error('[LocationEditDialog] Failed to load location:', e)
@@ -550,6 +550,13 @@ async function loadCounts(locationId: number) {
   } catch (e) {
     console.error('[LocationEditDialog] Failed to load counts:', e)
   }
+}
+
+// Handle images-updated event from EntityImageGallery (e.g., when primary image is changed)
+async function onImagesUpdated() {
+  if (!location.value) return
+  await loadLocation(location.value.id)
+  await loadCounts(location.value.id)
 }
 
 interface ApiRelatedEntity {

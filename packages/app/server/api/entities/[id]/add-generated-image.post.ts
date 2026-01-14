@@ -2,6 +2,7 @@ import { getDb } from '../../../utils/db'
 
 interface AddGeneratedImageRequest {
   imageUrl: string // Just the filename (without /uploads/ prefix)
+  makePrimary?: boolean // If true, always set as primary (regardless of existing images)
 }
 
 export default defineEventHandler(async (event) => {
@@ -23,6 +24,16 @@ export default defineEventHandler(async (event) => {
       .prepare('SELECT COUNT(*) as count FROM entity_images WHERE entity_id = ?')
       .get(Number(entityId)) as { count: number }
 
+    // Set as primary if: explicitly requested OR first image for this entity
+    const shouldBePrimary = body.makePrimary === true || count.count === 0
+
+    // If making this primary, unset all other primary images first
+    if (shouldBePrimary && count.count > 0) {
+      db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(
+        Number(entityId),
+      )
+    }
+
     // Insert the generated image into entity_images
     const result = db
       .prepare(
@@ -31,15 +42,10 @@ export default defineEventHandler(async (event) => {
       VALUES (?, ?, ?, ?)
     `,
       )
-      .run(
-        Number(entityId),
-        body.imageUrl,
-        count.count === 0 ? 1 : 0, // First image is primary
-        count.count,
-      )
+      .run(Number(entityId), body.imageUrl, shouldBePrimary ? 1 : 0, count.count)
 
-    // If this is the first image (primary), update the entity's image_url
-    if (count.count === 0) {
+    // If this is primary, update the entity's image_url
+    if (shouldBePrimary) {
       db.prepare('UPDATE entities SET image_url = ? WHERE id = ?').run(
         body.imageUrl,
         Number(entityId),
@@ -49,7 +55,7 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       imageId: result.lastInsertRowid,
-      isPrimary: count.count === 0,
+      isPrimary: shouldBePrimary,
     }
   } catch (error) {
     console.error('[Add Generated Image] Error:', error)

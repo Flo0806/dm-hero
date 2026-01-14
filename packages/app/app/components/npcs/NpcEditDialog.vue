@@ -1415,7 +1415,12 @@ async function generateImage() {
         method: 'POST',
         body: { imageUrl: result.imageUrl.replace('/uploads/', '') },
       })
+
+      // Notify other components (Gallery) that images changed
+      entitiesStore.incrementImageVersion(npc.value.id)
+
       await refreshNpc()
+      await loadCounts(npc.value.id)
     }
   } catch (error: unknown) {
     console.error('[NPC] Failed to generate image:', error)

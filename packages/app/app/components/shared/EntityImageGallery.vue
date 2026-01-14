@@ -143,6 +143,7 @@
 <script setup lang="ts">
 import { useImageDownload } from '~/composables/useImageDownload'
 import { useErrorHandler } from '../../composables/useErrorHandler.js'
+import { useEntitiesStore } from '~/stores/entities'
 
 interface EntityImage {
   id: number
@@ -180,6 +181,7 @@ const emit = defineEmits<{
 
 const { downloadImage } = useImageDownload()
 const { showError, showUploadError } = useErrorHandler()
+const entitiesStore = useEntitiesStore()
 
 // Image state
 const images = ref<EntityImage[]>([])
@@ -200,6 +202,16 @@ onMounted(async () => {
 
   loadImages()
 })
+
+// Watch for image version changes from other components (e.g., Details tab generating an image)
+// Using flush: 'post' to defer execution until after DOM updates, avoiding render cycle conflicts
+watch(
+  () => entitiesStore.entityImageVersions[props.entityId],
+  () => {
+    loadImages()
+  },
+  { flush: 'post' },
+)
 
 // Load images for this entity
 async function loadImages() {
@@ -249,8 +261,9 @@ async function handleImageUpload(event: Event) {
       throw new Error('Upload failed')
     }
 
-    await loadImages()
-    emit('images-updated') // Notify parent that images changed
+    // Notify components (including self via watcher) that images changed
+    entitiesStore.incrementImageVersion(props.entityId)
+    emit('images-updated')
   } catch (error) {
     console.error('Failed to upload images:', error)
     showUploadError('image')
@@ -297,8 +310,9 @@ async function generateImage() {
         },
       })
 
-      await loadImages()
-      emit('images-updated') // Notify parent that images changed
+      // Notify components (including self via watcher) that images changed
+      entitiesStore.incrementImageVersion(props.entityId)
+      emit('images-updated')
     }
   } catch (error) {
     console.error('Failed to generate image:', error)
@@ -333,10 +347,14 @@ async function setPrimaryImage(imageId: number) {
       method: 'PATCH',
     })
 
+    // Notify other components (Details tab) that primary image changed
+    entitiesStore.incrementImageVersion(props.entityId)
+
     // Update local state
     images.value.forEach((img) => {
       img.is_primary = img.id === imageId ? 1 : 0
     })
+    emit('images-updated') // Notify parent that images changed
   } catch (error) {
     console.error('Failed to set primary image:', error)
   }
@@ -348,6 +366,9 @@ async function deleteImage(imageId: number) {
     await $fetch(`/api/entity-images/${imageId}`, {
       method: 'DELETE',
     })
+
+    // Notify other components that images changed
+    entitiesStore.incrementImageVersion(props.entityId)
 
     images.value = images.value.filter((img) => img.id !== imageId)
     emit('images-updated') // Notify parent that images changed
