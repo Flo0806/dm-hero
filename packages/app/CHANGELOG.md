@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.0.1
+
+### Patch Changes
+
+- 5454732: fix: improve image generation safety filter handling
+
 All notable changes to this project will be documented in this file.
 
 ## 1.0.0
