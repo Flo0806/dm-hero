@@ -161,6 +161,7 @@
       :model-value="viewDialogOpen"
       :item="viewingItem"
       @update:model-value="viewDialogOpen = $event"
+      @edit="openEditDialogFromItem"
     />
 
     <LocationViewDialog
@@ -168,6 +169,7 @@
       :model-value="viewDialogOpen"
       :location="viewingLocation"
       @update:model-value="viewDialogOpen = $event"
+      @edit="openEditDialogFromLocation"
     />
 
     <FactionViewDialog
@@ -195,6 +197,14 @@
       :loading-locations="loadingViewLocations"
       @update:model-value="viewDialogOpen = $event"
       @edit="openEditDialogFromLore"
+    />
+
+    <PlayerViewDialog
+      v-if="viewDialogTypeName === 'Player'"
+      :show="viewDialogOpen"
+      :player="viewingPlayer"
+      @update:show="viewDialogOpen = $event"
+      @edit="openEditDialogFromPlayer"
     />
 
     <!-- Edit Dialogs -->
@@ -266,7 +276,9 @@ import FactionEditDialog from '~/components/factions/FactionEditDialog.vue'
 import LoreViewDialog from '~/components/lore/LoreViewDialog.vue'
 import LoreEditDialog from '~/components/lore/LoreEditDialog.vue'
 import PlayerEditDialog from '~/components/players/PlayerEditDialog.vue'
+import PlayerViewDialog from '~/components/players/PlayerViewDialog.vue'
 import type { NPC } from '~~/types/npc'
+import type { Player } from '~~/types/player'
 import type { Item } from '~~/types/item'
 import type { Location } from '~~/types/location'
 import type { Faction } from '~~/types/faction'
@@ -406,6 +418,7 @@ const viewingItem = ref<Item | null>(null)
 const viewingLocation = ref<Location | null>(null)
 const viewingFaction = ref<Faction | null>(null)
 const viewingLore = ref<Lore | null>(null)
+const viewingPlayer = ref<Player | null>(null)
 
 // Lore view dialog data
 const viewDialogNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
@@ -786,6 +799,8 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     Player: 'players',
   }
 
+  // Player type is now supported with ViewDialog
+
   const apiRoute = typeRoutes[entType.name]
   if (!apiRoute) {
     // Unsupported type - navigate to page instead
@@ -793,13 +808,6 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     return
   }
 
-  // Player has no ViewDialog - open EditDialog directly
-  if (entType.name === 'Player') {
-    editingEntityId.value = ent.id
-    editDialogTypeName.value = 'Player'
-    editDialogOpen.value = true
-    return
-  }
 
   try {
     const data = await $fetch(`/api/${apiRoute}/${ent.id}`)
@@ -810,6 +818,7 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     viewingLocation.value = null
     viewingFaction.value = null
     viewingLore.value = null
+    viewingPlayer.value = null
 
     switch (entType.name) {
       case 'NPC':
@@ -828,6 +837,9 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
         viewingLore.value = data as Lore
         // Load additional data for Lore view dialog
         loadLoreViewData(ent.id)
+        break
+      case 'Player':
+        viewingPlayer.value = data as Player
         break
     }
 
@@ -877,6 +889,32 @@ function openEditDialogFromFaction(faction: Faction) {
 function openEditDialogFromLore(lore: Lore) {
   editingEntityId.value = lore.id
   editDialogTypeName.value = 'Lore'
+  editDialogOpen.value = true
+  viewDialogOpen.value = false
+}
+
+// Helper for ItemViewDialog edit event (receives Item directly, not Connection)
+// Use generic type to match ItemViewDialog's local Item interface
+function openEditDialogFromItem(item: { id: number }) {
+  editingEntityId.value = item.id
+  editDialogTypeName.value = 'Item'
+  editDialogOpen.value = true
+  viewDialogOpen.value = false
+}
+
+// Helper for LocationViewDialog edit event (receives Location directly, not Connection)
+// Use generic type to match LocationViewDialog's local Location interface
+function openEditDialogFromLocation(location: { id: number }) {
+  editingEntityId.value = location.id
+  editDialogTypeName.value = 'Location'
+  editDialogOpen.value = true
+  viewDialogOpen.value = false
+}
+
+// Helper for PlayerViewDialog edit event (receives Player directly, not Connection)
+function openEditDialogFromPlayer(player: { id: number }) {
+  editingEntityId.value = player.id
+  editDialogTypeName.value = 'Player'
   editDialogOpen.value = true
   viewDialogOpen.value = false
 }

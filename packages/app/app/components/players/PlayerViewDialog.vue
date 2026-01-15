@@ -263,6 +263,8 @@ const emit = defineEmits<{
   'view-faction': [factionId: number]
 }>()
 
+const { getCounts, loadPlayerCounts } = usePlayerCounts()
+
 const internalShow = computed({
   get: () => props.show,
   set: (value) => emit('update:show', value),
@@ -271,8 +273,8 @@ const internalShow = computed({
 const activeTab = ref('overview')
 const loading = ref(false)
 
-// Counts from player
-const counts = computed(() => props.player?._counts)
+// Reactive counts - use getCounts() with fallback to _counts
+const counts = computed(() => (props.player ? getCounts(props.player.id) || props.player._counts : undefined))
 
 // Data refs
 const characters = ref<
@@ -337,6 +339,11 @@ watch(
   () => [props.show, props.player] as const,
   async ([isVisible, newPlayer]) => {
     if (!isVisible || !newPlayer) return
+
+    // Load counts if not already cached
+    if (!getCounts(newPlayer.id)) {
+      loadPlayerCounts(newPlayer)
+    }
 
     loading.value = true
     try {
