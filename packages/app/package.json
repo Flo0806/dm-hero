@@ -100,7 +100,11 @@
       "target": [
         "nsis",
         "zip"
-      ]
+      ],
+      "artifactName": "DM-Hero-${version}-win.${ext}"
+    },
+    "nsis": {
+      "artifactName": "DM-Hero-Setup-${version}.${ext}"
     },
     "linux": {
       "target": [
