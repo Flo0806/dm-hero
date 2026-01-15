@@ -1820,6 +1820,11 @@
       "editWeather": "Edit Weather",
       "clearWeather": "Remove Weather",
       "generated": "{count} days of weather generated",
+      "disabledNoCalendar": "Please set up the calendar first",
+      "disabledNoDays": "The current month has no days configured",
+      "overwriteTitle": "Overwrite Weather",
+      "overwriteWarning": "This month already has {count} weather entries. These will be overwritten.",
+      "overwriteConfirm": "Overwrite",
       "types": {
         "sunny": "Sunny",
         "partlyCloudy": "Partly Cloudy",
@@ -1841,6 +1846,21 @@
       "spring": "Spring (mild, rain)",
       "summer": "Summer (warm, sunny)",
       "autumn": "Autumn (cool, foggy)"
+    },
+    "reset": {
+      "button": "Reset Calendar",
+      "title": "Reset Calendar",
+      "warning": "This action will permanently delete all calendar data.",
+      "dataWillBeDeleted": "The following data will be deleted:",
+      "events": "{count} calendar events",
+      "weather": "{count} weather entries",
+      "sessions": "{count} sessions with in-game dates",
+      "seasons": "{count} seasons",
+      "moons": "{count} moons",
+      "confirm": "Are you sure you want to continue?",
+      "confirmButton": "Delete Calendar",
+      "success": "Calendar has been reset",
+      "error": "Failed to reset calendar"
     }
   },
   "pinboard": {

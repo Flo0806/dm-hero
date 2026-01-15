@@ -1806,6 +1806,11 @@
       "editWeather": "Wetter bearbeiten",
       "clearWeather": "Wetter entfernen",
       "generated": "{count} Tage Wetter generiert",
+      "disabledNoCalendar": "Bitte zuerst den Kalender einrichten",
+      "disabledNoDays": "Der aktuelle Monat hat keine Tage konfiguriert",
+      "overwriteTitle": "Wetter überschreiben",
+      "overwriteWarning": "Für diesen Monat existieren bereits {count} Wetter-Einträge. Diese werden überschrieben.",
+      "overwriteConfirm": "Überschreiben",
       "types": {
         "sunny": "Sonnig",
         "partlyCloudy": "Teilweise bewölkt",
@@ -1827,6 +1832,21 @@
       "spring": "Frühling (mild, Regen)",
       "summer": "Sommer (warm, sonnig)",
       "autumn": "Herbst (kühl, nebelig)"
+    },
+    "reset": {
+      "button": "Kalender zurücksetzen",
+      "title": "Kalender zurücksetzen",
+      "warning": "Diese Aktion löscht alle Kalenderdaten unwiderruflich.",
+      "dataWillBeDeleted": "Folgende Daten werden gelöscht:",
+      "events": "{count} Kalender-Ereignisse",
+      "weather": "{count} Wetter-Einträge",
+      "sessions": "{count} Sessions mit In-Game-Datum",
+      "seasons": "{count} Jahreszeiten",
+      "moons": "{count} Monde",
+      "confirm": "Bist du sicher, dass du fortfahren möchtest?",
+      "confirmButton": "Kalender löschen",
+      "success": "Kalender wurde zurückgesetzt",
+      "error": "Fehler beim Zurücksetzen des Kalenders"
     }
   },
   "chaos": {

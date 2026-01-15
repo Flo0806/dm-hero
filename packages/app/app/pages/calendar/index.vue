@@ -16,14 +16,21 @@
             </v-chip>
           </v-btn>
         </v-btn-toggle>
-        <v-btn
-          variant="tonal"
-          prepend-icon="mdi-weather-cloudy"
-          :loading="generatingWeather"
-          @click="generateWeatherForMonth"
-        >
-          {{ $t('calendar.weather.generate') }}
-        </v-btn>
+        <v-tooltip :text="weatherDisabledReason" :disabled="canGenerateWeather" location="bottom">
+          <template #activator="{ props: tooltipProps }">
+            <span v-bind="tooltipProps">
+              <v-btn
+                variant="tonal"
+                prepend-icon="mdi-weather-cloudy"
+                :loading="generatingWeather"
+                :disabled="!canGenerateWeather"
+                @click="generateWeatherForMonth"
+              >
+                {{ $t('calendar.weather.generate') }}
+              </v-btn>
+            </span>
+          </template>
+        </v-tooltip>
         <v-btn variant="tonal" prepend-icon="mdi-cog" @click="openSettingsDialog">
           {{ $t('calendar.settings') }}
         </v-btn>
@@ -445,6 +452,7 @@
       v-model:seasons="editingSeasons"
       :saving="saving"
       @save="saveSettings"
+      @reset="handleCalendarReset"
     />
 
     <!-- Event Dialog -->
@@ -609,6 +617,26 @@
       @saved="onWeatherSaved"
       @cleared="onWeatherCleared"
     />
+
+    <!-- Weather Overwrite Confirmation Dialog -->
+    <v-dialog v-model="showWeatherOverwriteDialog" max-width="450">
+      <v-card>
+        <v-card-title>
+          <v-icon start color="warning">mdi-alert</v-icon>
+          {{ $t('calendar.weather.overwriteTitle') }}
+        </v-card-title>
+        <v-card-text>
+          {{ $t('calendar.weather.overwriteWarning', { count: weather.size }) }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="showWeatherOverwriteDialog = false">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="warning" @click="confirmWeatherOverwrite">
+            {{ $t('calendar.weather.overwriteConfirm') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -732,6 +760,7 @@ interface CalendarWeather {
 }
 const weather = ref<Map<number, CalendarWeather>>(new Map()) // day -> weather
 const generatingWeather = ref(false)
+const showWeatherOverwriteDialog = ref(false)
 const showWeatherDialog = ref(false)
 const weatherDialogDay = ref<number | null>(null)
 const editingSeasons = ref<CalendarSeason[]>([])
@@ -789,7 +818,32 @@ const eventForm = ref({
 const entityOptions = ref<Array<{ id: number; name: string; type: string }>>([])
 
 // Computed
-const isConfigured = computed(() => calendarConfig.value.months.length > 0)
+const isConfigured = computed(() =>
+  calendarConfig.value.months.length > 0 && calendarConfig.value.weekdays.length > 0,
+)
+
+// Check if weather generation is possible
+const canGenerateWeather = computed(() => {
+  if (!isConfigured.value) return false
+  // Use currentMonthDays which correctly calculates days including leap years
+  return currentMonthDays.value > 0
+})
+
+// Reason why weather generation is disabled (for tooltip)
+const weatherDisabledReason = computed(() => {
+  if (!isConfigured.value) {
+    return t('calendar.weather.disabledNoCalendar')
+  }
+  if (currentMonthDays.value <= 0) {
+    return t('calendar.weather.disabledNoDays')
+  }
+  return ''
+})
+
+// Check if current month has any weather data
+const currentMonthHasWeather = computed(() => {
+  return weather.value.size > 0
+})
 
 const currentMonthName = computed(() => {
   const month = calendarConfig.value.months[viewMonth.value - 1]
@@ -833,7 +887,8 @@ const currentMoonPhases = computed(() => {
 
 // Dynamic grid style based on weekdays count
 const calendarGridStyle = computed(() => {
-  const weekdaysCount = calendarConfig.value.weekdays.length || 7
+  // At least 1 weekday is guaranteed by isConfigured check
+  const weekdaysCount = calendarConfig.value.weekdays.length || 1
   return {
     gridTemplateColumns: `repeat(${weekdaysCount}, 1fr)`,
   }
@@ -903,11 +958,13 @@ function getDaysInYear(year: number): number {
 // Get days in a specific month (accounting for leap years)
 function getDaysInMonthWithLeap(year: number, monthIndex: number): number {
   const month = calendarConfig.value.months[monthIndex]
-  if (!month) return 30
-  let days = month.days
+  if (!month) return 0
+  let days = month.days || 0
+  // Safety check: days must be a valid number
+  if (isNaN(days) || days < 0) days = 0
   // Add leap year extra days to the designated month
   if (isLeapYear(year) && calendarConfig.value.config.leap_year_month - 1 === monthIndex) {
-    days += calendarConfig.value.config.leap_year_extra_days
+    days += calendarConfig.value.config.leap_year_extra_days || 0
   }
   return days
 }
@@ -1218,11 +1275,13 @@ function getMoonColor(moonName: string): string {
 // Get days in month (considering leap year)
 function getDaysInMonth(month: number, year: number): number {
   const monthData = calendarConfig.value.months[month - 1]
-  if (!monthData) return 30
-  let days = monthData.days
+  if (!monthData) return 0
+  let days = monthData.days || 0
+  // Safety check: days must be a valid number
+  if (isNaN(days) || days < 0) days = 0
   // Add leap day if this is the leap month and it's a leap year
   if (isLeapYear(year) && month === calendarConfig.value.config.leap_year_month) {
-    days += calendarConfig.value.config.leap_year_extra_days
+    days += calendarConfig.value.config.leap_year_extra_days || 0
   }
   return days
 }
@@ -1583,6 +1642,31 @@ async function confirmDeleteEvent() {
   }
 }
 
+// Handle calendar reset - reload everything
+async function handleCalendarReset() {
+  // Reset to defaults
+  calendarConfig.value = {
+    config: {
+      current_year: 1,
+      current_month: 1,
+      current_day: 1,
+      era_name: '',
+      leap_year_interval: 0,
+      leap_year_month: 1,
+      leap_year_extra_days: 1,
+    },
+    months: [],
+    weekdays: [],
+    moons: [],
+  }
+  viewYear.value = 1
+  viewMonth.value = 1
+  events.value = []
+  sessions.value = []
+  seasons.value = []
+  weather.value.clear()
+}
+
 // Load functions
 async function loadConfig() {
   if (!campaignStore.activeCampaignId) return
@@ -1736,7 +1820,27 @@ function onWeatherCleared() {
 }
 
 // Generate weather for the current month
-async function generateWeatherForMonth() {
+function generateWeatherForMonth() {
+  if (!campaignStore.activeCampaignId) return
+
+  // Check if weather already exists - show confirmation
+  if (currentMonthHasWeather.value) {
+    showWeatherOverwriteDialog.value = true
+    return
+  }
+
+  // No existing weather - generate directly
+  doGenerateWeather(false)
+}
+
+// Confirm overwrite and generate
+function confirmWeatherOverwrite() {
+  showWeatherOverwriteDialog.value = false
+  doGenerateWeather(true)
+}
+
+// Actually generate weather
+async function doGenerateWeather(overwrite: boolean) {
   if (!campaignStore.activeCampaignId) return
 
   generatingWeather.value = true
@@ -1747,7 +1851,7 @@ async function generateWeatherForMonth() {
         campaignId: campaignStore.activeCampaignId,
         year: viewYear.value,
         month: viewMonth.value,
-        overwrite: false, // Don't overwrite existing
+        overwrite,
       },
     })
     // Update weather map

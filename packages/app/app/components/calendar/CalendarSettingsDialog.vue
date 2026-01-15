@@ -41,6 +41,7 @@
                     <v-text-field
                       v-model.number="month.days"
                       type="number"
+                      :min="1"
                       density="compact"
                       hide-details
                       variant="outlined"
@@ -81,7 +82,13 @@
                     />
                   </td>
                   <td>
-                    <v-btn icon="mdi-delete" variant="text" size="small" @click="removeWeekday(index)" />
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      size="small"
+                      :disabled="form.weekdays.length <= 1"
+                      @click="removeWeekday(index)"
+                    />
                   </td>
                 </tr>
               </tbody>
@@ -374,6 +381,9 @@
         </v-window>
       </v-card-text>
       <v-card-actions>
+        <v-btn color="error" variant="text" @click="confirmReset">
+          {{ $t('calendar.reset.button') }}
+        </v-btn>
         <v-spacer />
         <v-btn @click="modelValue = false">{{ $t('common.cancel') }}</v-btn>
         <v-btn color="primary" :loading="saving" @click="emit('save')">
@@ -381,6 +391,49 @@
         </v-btn>
       </v-card-actions>
     </v-card>
+
+    <!-- Reset Confirmation Dialog -->
+    <v-dialog v-model="showResetDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="text-error">
+          <v-icon start color="error">mdi-alert</v-icon>
+          {{ $t('calendar.reset.title') }}
+        </v-card-title>
+        <v-card-text>
+          <p class="mb-4">{{ $t('calendar.reset.warning') }}</p>
+
+          <v-alert v-if="calendarStats?.hasData" type="warning" variant="tonal" class="mb-4">
+            <div class="font-weight-bold mb-2">{{ $t('calendar.reset.dataWillBeDeleted') }}</div>
+            <ul class="pl-4">
+              <li v-if="calendarStats.events > 0">
+                {{ $t('calendar.reset.events', { count: calendarStats.events }) }}
+              </li>
+              <li v-if="calendarStats.weather > 0">
+                {{ $t('calendar.reset.weather', { count: calendarStats.weather }) }}
+              </li>
+              <li v-if="calendarStats.sessionsWithDates > 0">
+                {{ $t('calendar.reset.sessions', { count: calendarStats.sessionsWithDates }) }}
+              </li>
+              <li v-if="calendarStats.seasons > 0">
+                {{ $t('calendar.reset.seasons', { count: calendarStats.seasons }) }}
+              </li>
+              <li v-if="calendarStats.moons > 0">
+                {{ $t('calendar.reset.moons', { count: calendarStats.moons }) }}
+              </li>
+            </ul>
+          </v-alert>
+
+          <p>{{ $t('calendar.reset.confirm') }}</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="showResetDialog = false">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="error" :loading="resetting" @click="executeReset">
+            {{ $t('calendar.reset.confirmButton') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-dialog>
 </template>
 
@@ -428,7 +481,56 @@ defineProps<{
 
 const emit = defineEmits<{
   save: []
+  reset: []
 }>()
+
+const snackbarStore = useSnackbarStore()
+const campaignStore = useCampaignStore()
+
+// Reset calendar state
+const showResetDialog = ref(false)
+const resetting = ref(false)
+const calendarStats = ref<{
+  events: number
+  weather: number
+  sessionsWithDates: number
+  seasons: number
+  moons: number
+  hasData: boolean
+} | null>(null)
+
+async function confirmReset() {
+  if (!campaignStore.activeCampaignId) return
+  // Load stats first
+  try {
+    calendarStats.value = await $fetch('/api/calendar/stats', {
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+  } catch {
+    calendarStats.value = null
+  }
+  showResetDialog.value = true
+}
+
+async function executeReset() {
+  if (!campaignStore.activeCampaignId) return
+  resetting.value = true
+  try {
+    await $fetch('/api/calendar/reset', {
+      method: 'DELETE',
+      query: { campaignId: campaignStore.activeCampaignId },
+    })
+    showResetDialog.value = false
+    modelValue.value = false
+    snackbarStore.success(t('calendar.reset.success'))
+    emit('reset')
+  } catch (error) {
+    console.error('Failed to reset calendar:', error)
+    snackbarStore.error(t('calendar.reset.error'))
+  } finally {
+    resetting.value = false
+  }
+}
 
 // Seasons are managed separately via two-way binding
 const seasons = defineModel<CalendarSeason[]>('seasons', { default: () => [] })

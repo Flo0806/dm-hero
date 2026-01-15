@@ -331,3 +331,393 @@ describe('Calendar Weather - Temperature Ranges', () => {
     expect(weather.temperature).toBeNull()
   })
 })
+
+describe('Calendar Stats API', () => {
+  it('should return zero counts for empty calendar', () => {
+    const eventsCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_events WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    const weatherCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(eventsCount).toBe(0)
+    expect(weatherCount).toBe(0)
+  })
+
+  it('should count weather entries correctly', () => {
+    // Insert some weather
+    for (let day = 1; day <= 5; day++) {
+      db.prepare(`
+        INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(testCampaignId, 1352, 3, day, 'sunny', 20)
+    }
+
+    const weatherCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(weatherCount).toBe(5)
+  })
+
+  it('should count events correctly', () => {
+    // Insert some events
+    db.prepare(`
+      INSERT INTO calendar_events (campaign_id, year, month, day, title, color)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(testCampaignId, 1352, 5, 10, 'Battle', '#ff0000')
+
+    db.prepare(`
+      INSERT INTO calendar_events (campaign_id, year, month, day, title, color)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(testCampaignId, 1352, 5, 15, 'Festival', '#00ff00')
+
+    const eventsCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_events WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(eventsCount).toBe(2)
+
+    // Cleanup
+    db.prepare('DELETE FROM calendar_events WHERE campaign_id = ?').run(testCampaignId)
+  })
+
+  it('should count seasons correctly', () => {
+    // Insert seasons
+    db.prepare(`
+      INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, weather_type)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(testCampaignId, 'Spring', 3, 1, 'spring')
+
+    db.prepare(`
+      INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, weather_type)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(testCampaignId, 'Summer', 6, 1, 'summer')
+
+    const seasonsCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_seasons WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(seasonsCount).toBe(2)
+  })
+
+  it('should count moons correctly', () => {
+    // Insert moons
+    db.prepare(`
+      INSERT INTO calendar_moons (campaign_id, name, cycle_days, full_moon_duration, new_moon_duration, phase_offset)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(testCampaignId, 'Luna', 28, 3, 3, 0)
+
+    const moonsCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_moons WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(moonsCount).toBe(1)
+
+    // Cleanup
+    db.prepare('DELETE FROM calendar_moons WHERE campaign_id = ?').run(testCampaignId)
+  })
+})
+
+describe('Calendar Reset', () => {
+  it('should delete all weather when reset', () => {
+    // Insert weather
+    for (let day = 1; day <= 10; day++) {
+      db.prepare(`
+        INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(testCampaignId, 1352, 1, day, 'sunny', 20)
+    }
+
+    // Verify data exists
+    let count = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+    expect(count).toBe(10)
+
+    // Reset (delete)
+    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ?').run(testCampaignId)
+
+    // Verify deleted
+    count = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+    expect(count).toBe(0)
+  })
+
+  it('should delete all seasons when reset', () => {
+    // Insert seasons
+    db.prepare(`
+      INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, weather_type)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(testCampaignId, 'Winter', 12, 1, 'winter')
+
+    // Reset
+    db.prepare('DELETE FROM calendar_seasons WHERE campaign_id = ?').run(testCampaignId)
+
+    const count = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_seasons WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+    expect(count).toBe(0)
+  })
+
+  it('should delete events and their entity links when reset', () => {
+    // Insert event
+    const eventResult = db
+      .prepare(`
+        INSERT INTO calendar_events (campaign_id, year, month, day, title, color)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+      .run(testCampaignId, 1352, 5, 10, 'Test Event', '#ff0000')
+
+    const eventId = Number(eventResult.lastInsertRowid)
+
+    // Insert event entity link
+    db.prepare(`
+      INSERT INTO calendar_event_entities (event_id, entity_id, entity_type)
+      VALUES (?, ?, ?)
+    `).run(eventId, 1, 'npc')
+
+    // Reset - first delete entity links
+    db.prepare(`
+      DELETE FROM calendar_event_entities
+      WHERE event_id IN (SELECT id FROM calendar_events WHERE campaign_id = ?)
+    `).run(testCampaignId)
+
+    // Then delete events
+    db.prepare('DELETE FROM calendar_events WHERE campaign_id = ?').run(testCampaignId)
+
+    const eventCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_events WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+    expect(eventCount).toBe(0)
+  })
+
+  it('should not affect other campaigns when reset', () => {
+    // Create another campaign
+    const campaign2 = db.prepare('INSERT INTO campaigns (name) VALUES (?)').run('Campaign 2 Reset Test')
+    const campaign2Id = Number(campaign2.lastInsertRowid)
+
+    // Create config for campaign2
+    db.prepare(`
+      INSERT INTO calendar_config (campaign_id, current_year, current_month, current_day)
+      VALUES (?, ?, ?, ?)
+    `).run(campaign2Id, 1, 1, 1)
+
+    // Insert weather for both campaigns
+    db.prepare(`
+      INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(testCampaignId, 1352, 1, 1, 'sunny', 20)
+
+    db.prepare(`
+      INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(campaign2Id, 1, 1, 1, 'rain', 15)
+
+    // Reset only testCampaign
+    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ?').run(testCampaignId)
+
+    // Verify campaign2 weather still exists
+    const campaign2Weather = db
+      .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ?')
+      .get(campaign2Id) as CalendarWeather | undefined
+
+    expect(campaign2Weather).toBeDefined()
+    expect(campaign2Weather?.weather_type).toBe('rain')
+
+    // Cleanup
+    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ?').run(campaign2Id)
+    db.prepare('DELETE FROM calendar_config WHERE campaign_id = ?').run(campaign2Id)
+    db.prepare('DELETE FROM campaigns WHERE id = ?').run(campaign2Id)
+  })
+})
+
+describe('Calendar Weather Overwrite', () => {
+  it('should overwrite existing weather when overwrite=true', () => {
+    // Insert initial weather
+    for (let day = 1; day <= 5; day++) {
+      db.prepare(`
+        INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(testCampaignId, 1352, 8, day, 'sunny', 25)
+    }
+
+    // Overwrite with new weather using UPSERT
+    for (let day = 1; day <= 5; day++) {
+      db.prepare(`
+        INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(campaign_id, year, month, day)
+        DO UPDATE SET
+          weather_type = excluded.weather_type,
+          temperature = excluded.temperature
+      `).run(testCampaignId, 1352, 8, day, 'rain', 18)
+    }
+
+    // Verify all weather is updated
+    const weather = db
+      .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ORDER BY day')
+      .all(testCampaignId, 1352, 8) as CalendarWeather[]
+
+    expect(weather).toHaveLength(5)
+    weather.forEach((w) => {
+      expect(w.weather_type).toBe('rain')
+      expect(w.temperature).toBe(18)
+    })
+  })
+
+  it('should skip existing weather when overwrite=false (insert only new)', () => {
+    // Insert weather for days 1-3
+    for (let day = 1; day <= 3; day++) {
+      db.prepare(`
+        INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(testCampaignId, 1352, 9, day, 'sunny', 25)
+    }
+
+    // Try to insert for days 1-5, but use INSERT OR IGNORE
+    for (let day = 1; day <= 5; day++) {
+      db.prepare(`
+        INSERT OR IGNORE INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(testCampaignId, 1352, 9, day, 'rain', 18)
+    }
+
+    // Days 1-3 should still be sunny (not overwritten)
+    const existingWeather = db
+      .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? AND day <= 3 ORDER BY day')
+      .all(testCampaignId, 1352, 9) as CalendarWeather[]
+
+    existingWeather.forEach((w) => {
+      expect(w.weather_type).toBe('sunny')
+      expect(w.temperature).toBe(25)
+    })
+
+    // Days 4-5 should be rain (newly inserted)
+    const newWeather = db
+      .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? AND day > 3 ORDER BY day')
+      .all(testCampaignId, 1352, 9) as CalendarWeather[]
+
+    expect(newWeather).toHaveLength(2)
+    newWeather.forEach((w) => {
+      expect(w.weather_type).toBe('rain')
+      expect(w.temperature).toBe(18)
+    })
+  })
+
+  it('should detect if month has existing weather', () => {
+    // Empty month
+    let count = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
+        .get(testCampaignId, 1352, 10) as { count: number }
+    )?.count || 0
+    expect(count).toBe(0)
+
+    // Insert weather
+    db.prepare(`
+      INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(testCampaignId, 1352, 10, 1, 'cloudy', 15)
+
+    // Month now has weather
+    count = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
+        .get(testCampaignId, 1352, 10) as { count: number }
+    )?.count || 0
+    expect(count).toBe(1)
+  })
+})
+
+describe('Calendar Configuration Validation', () => {
+  it('should require at least one month for valid calendar', () => {
+    const monthsCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_months WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(monthsCount).toBeGreaterThan(0)
+  })
+
+  it('should track weekdays for calendar', () => {
+    // Insert weekdays
+    db.prepare(`
+      INSERT INTO calendar_weekdays (campaign_id, name, sort_order)
+      VALUES (?, ?, ?)
+    `).run(testCampaignId, 'Montag', 0)
+
+    db.prepare(`
+      INSERT INTO calendar_weekdays (campaign_id, name, sort_order)
+      VALUES (?, ?, ?)
+    `).run(testCampaignId, 'Dienstag', 1)
+
+    const weekdaysCount = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weekdays WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count || 0
+
+    expect(weekdaysCount).toBe(2)
+
+    // isConfigured should be true when both months AND weekdays exist
+    const hasMonths = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_months WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count > 0
+
+    const hasWeekdays = weekdaysCount > 0
+    const isConfigured = hasMonths && hasWeekdays
+
+    expect(isConfigured).toBe(true)
+
+    // Cleanup
+    db.prepare('DELETE FROM calendar_weekdays WHERE campaign_id = ?').run(testCampaignId)
+  })
+
+  it('should not be configured if weekdays are missing', () => {
+    // Ensure no weekdays
+    db.prepare('DELETE FROM calendar_weekdays WHERE campaign_id = ?').run(testCampaignId)
+
+    const hasMonths = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_months WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count > 0
+
+    const hasWeekdays = (
+      db.prepare('SELECT COUNT(*) as count FROM calendar_weekdays WHERE campaign_id = ?').get(testCampaignId) as {
+        count: number
+      }
+    )?.count > 0
+
+    const isConfigured = hasMonths && hasWeekdays
+
+    expect(hasMonths).toBe(true)
+    expect(hasWeekdays).toBe(false)
+    expect(isConfigured).toBe(false)
+  })
+})
