@@ -2235,6 +2235,19 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 40: Group pinning support added')
     },
   },
+  {
+    version: 41,
+    name: 'fix_shadarkai_typo',
+    up: (db) => {
+      // Fix typo: "Shadar-kai" -> "Shadar-Kai" (Issue #204)
+      db.prepare(`
+        UPDATE races SET name_de = 'Shadar-Kai', name_en = 'Shadar-Kai'
+        WHERE name = 'shadarkai'
+      `).run()
+
+      console.log('✅ Migration 41: Fixed Shadar-Kai typo')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
