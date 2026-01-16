@@ -1455,6 +1455,35 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // ==========================================================================
+    // CREATE GROUP FOR IMPORTED ENTITIES (merge mode only)
+    // ==========================================================================
+
+    if (options.mode === 'merge' && options.createGroupOnMerge && idMapping.entities.size > 0) {
+      const groupName = options.groupName || manifest.campaign.name || 'Import'
+
+      // Create the group
+      const groupResult = db.prepare(`
+        INSERT INTO entity_groups (campaign_id, name, icon, created_at, updated_at)
+        VALUES (?, ?, 'mdi-import', datetime('now'), datetime('now'))
+      `).run(campaignId, groupName)
+
+      const groupId = groupResult.lastInsertRowid as number
+
+      // Add all imported entities to the group
+      const insertMember = db.prepare(`
+        INSERT INTO entity_group_members (group_id, entity_id, added_at)
+        VALUES (?, ?, datetime('now'))
+      `)
+
+      for (const [, entityId] of idMapping.entities) {
+        insertMember.run(groupId, entityId)
+      }
+
+      stats.groupCreated = groupName
+      console.log(`[Import] Created group "${groupName}" with ${idMapping.entities.size} members`)
+    }
+
     // Clean up temp directory
     await rm(tempDir, { recursive: true, force: true })
 

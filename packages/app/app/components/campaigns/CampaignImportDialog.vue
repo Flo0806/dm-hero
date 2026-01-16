@@ -174,6 +174,26 @@
               persistent-hint
             />
 
+            <!-- Merge Options -->
+            <div v-if="importMode === 'merge'" class="mb-4">
+              <v-checkbox
+                v-model="createGroupOnMerge"
+                :label="$t('campaigns.import.createGroup')"
+                density="compact"
+                hide-details
+                class="mb-2"
+              />
+              <v-text-field
+                v-if="createGroupOnMerge"
+                v-model="groupName"
+                :label="$t('campaigns.import.groupName')"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="ml-8"
+              />
+            </div>
+
             <!-- Merge Warning -->
             <v-alert
               v-if="importMode === 'merge'"
@@ -445,6 +465,8 @@ const conflictInfo = ref<ImportConflictInfo | null>(null)
 const sourceAdventureSlug = ref<string | null>(null)
 const raceResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
 const classResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
+const createGroupOnMerge = ref(true)
+const groupName = ref('')
 
 // Get current campaign for merge option
 const activeCampaign = computed(() => campaignStore.currentCampaign)
@@ -588,6 +610,7 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
     }
 
     campaignName.value = preview.value.campaignName
+    groupName.value = preview.value.campaignName
 
     // Store sourceAdventureSlug if present (from store downloads)
     sourceAdventureSlug.value = manifest.sourceAdventureSlug || null
@@ -631,6 +654,8 @@ async function doImport(confirmedOverwrite: boolean = false) {
         confirmedOverwrite,
         raceResolutions: Object.keys(raceResolutions.value).length > 0 ? raceResolutions.value : undefined,
         classResolutions: Object.keys(classResolutions.value).length > 0 ? classResolutions.value : undefined,
+        createGroupOnMerge: importMode.value === 'merge' ? createGroupOnMerge.value : undefined,
+        groupName: importMode.value === 'merge' && createGroupOnMerge.value ? (groupName.value || preview.value?.campaignName) : undefined,
       }),
     )
 
@@ -705,5 +730,7 @@ function close() {
   sourceAdventureSlug.value = null
   raceResolutions.value = {}
   classResolutions.value = {}
+  createGroupOnMerge.value = true
+  groupName.value = ''
 }
 </script>

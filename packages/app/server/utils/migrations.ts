@@ -2144,6 +2144,52 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 38: source_entity_id column added to entities')
     },
   },
+  {
+    version: 39,
+    name: 'entity_groups',
+    up: (db) => {
+      console.log('📦 Migration 39: Creating entity groups tables...')
+
+      // Entity groups table - organize entities into named collections
+      db.exec(`
+        CREATE TABLE entity_groups (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          color TEXT,
+          icon TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          deleted_at TEXT,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Junction table for group members (any entity type)
+      db.exec(`
+        CREATE TABLE entity_group_members (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          group_id INTEGER NOT NULL,
+          entity_id INTEGER NOT NULL,
+          added_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (group_id) REFERENCES entity_groups(id) ON DELETE CASCADE,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+          UNIQUE(group_id, entity_id)
+        )
+      `)
+
+      // Indexes for performance
+      db.exec(`
+        CREATE INDEX idx_entity_groups_campaign ON entity_groups(campaign_id);
+        CREATE INDEX idx_entity_groups_deleted ON entity_groups(deleted_at);
+        CREATE INDEX idx_group_members_group ON entity_group_members(group_id);
+        CREATE INDEX idx_group_members_entity ON entity_group_members(entity_id);
+      `)
+
+      console.log('✅ Migration 39: Entity groups tables created')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

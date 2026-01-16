@@ -98,6 +98,12 @@
         to="/maps"
       />
       <v-list-item
+        prepend-icon="mdi-folder-multiple"
+        :title="$t('nav.groups')"
+        value="groups"
+        to="/groups"
+      />
+      <v-list-item
         prepend-icon="mdi-notebook-outline"
         :title="$t('nav.notes')"
         value="notes"

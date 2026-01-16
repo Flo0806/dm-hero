@@ -572,6 +572,10 @@ export interface ImportOptions {
   // 'skip' = skip this race/class (same as keep, but for standard races)
   raceResolutions?: Record<string, 'overwrite' | 'keep' | 'skip'>
   classResolutions?: Record<string, 'overwrite' | 'keep' | 'skip'>
+
+  // For merge mode: auto-create group containing all imported entities
+  createGroupOnMerge?: boolean
+  groupName?: string
 }
 
 // =============================================================================
@@ -593,6 +597,7 @@ export interface ImportResult {
     skipped: number
     warnings: string[]
     entitiesDeleted?: number // How many were soft-deleted before import
+    groupCreated?: string // Name of the group created (if any)
   }
   errors?: string[]
 
