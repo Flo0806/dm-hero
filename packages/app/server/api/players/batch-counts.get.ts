@@ -78,20 +78,35 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 1. Get characters count (NPCs the player plays)
+  // 1. Get characters count (bidirectional - NPCs linked to/from players)
   if (npcTypeId) {
     const charactersCounts = db.prepare(`
-      SELECT er.from_entity_id as player_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities npc ON npc.id = er.to_entity_id
-      INNER JOIN entities player ON player.id = er.from_entity_id
-      WHERE player.campaign_id = ?
-        AND player.type_id = ?
-        AND player.deleted_at IS NULL
-        AND npc.type_id = ?
-        AND npc.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), playerTypeId, npcTypeId) as Array<{ player_id: number; count: number }>
+      SELECT player_id, COUNT(DISTINCT npc_id) as count
+      FROM (
+        SELECT er.from_entity_id as player_id, er.to_entity_id as npc_id
+        FROM entity_relations er
+        INNER JOIN entities npc ON npc.id = er.to_entity_id
+        INNER JOIN entities player ON player.id = er.from_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+
+        UNION
+
+        SELECT er.to_entity_id as player_id, er.from_entity_id as npc_id
+        FROM entity_relations er
+        INNER JOIN entities npc ON npc.id = er.from_entity_id
+        INNER JOIN entities player ON player.id = er.to_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+      )
+      GROUP BY player_id
+    `).all(Number(campaignId), playerTypeId, npcTypeId, Number(campaignId), playerTypeId, npcTypeId) as Array<{ player_id: number; count: number }>
 
     for (const row of charactersCounts) {
       if (result[row.player_id]) {
@@ -100,20 +115,35 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 2. Get items count
+  // 2. Get items count (bidirectional)
   if (itemTypeId) {
     const itemsCounts = db.prepare(`
-      SELECT er.from_entity_id as player_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities item ON item.id = er.to_entity_id
-      INNER JOIN entities player ON player.id = er.from_entity_id
-      WHERE player.campaign_id = ?
-        AND player.type_id = ?
-        AND player.deleted_at IS NULL
-        AND item.type_id = ?
-        AND item.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), playerTypeId, itemTypeId) as Array<{ player_id: number; count: number }>
+      SELECT player_id, COUNT(DISTINCT item_id) as count
+      FROM (
+        SELECT er.from_entity_id as player_id, er.to_entity_id as item_id
+        FROM entity_relations er
+        INNER JOIN entities item ON item.id = er.to_entity_id
+        INNER JOIN entities player ON player.id = er.from_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+
+        UNION
+
+        SELECT er.to_entity_id as player_id, er.from_entity_id as item_id
+        FROM entity_relations er
+        INNER JOIN entities item ON item.id = er.from_entity_id
+        INNER JOIN entities player ON player.id = er.to_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+      )
+      GROUP BY player_id
+    `).all(Number(campaignId), playerTypeId, itemTypeId, Number(campaignId), playerTypeId, itemTypeId) as Array<{ player_id: number; count: number }>
 
     for (const row of itemsCounts) {
       if (result[row.player_id]) {
@@ -122,20 +152,35 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 3. Get locations count
+  // 3. Get locations count (bidirectional)
   if (locationTypeId) {
     const locationsCounts = db.prepare(`
-      SELECT er.from_entity_id as player_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities loc ON loc.id = er.to_entity_id
-      INNER JOIN entities player ON player.id = er.from_entity_id
-      WHERE player.campaign_id = ?
-        AND player.type_id = ?
-        AND player.deleted_at IS NULL
-        AND loc.type_id = ?
-        AND loc.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), playerTypeId, locationTypeId) as Array<{ player_id: number; count: number }>
+      SELECT player_id, COUNT(DISTINCT loc_id) as count
+      FROM (
+        SELECT er.from_entity_id as player_id, er.to_entity_id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities loc ON loc.id = er.to_entity_id
+        INNER JOIN entities player ON player.id = er.from_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND loc.type_id = ?
+          AND loc.deleted_at IS NULL
+
+        UNION
+
+        SELECT er.to_entity_id as player_id, er.from_entity_id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities loc ON loc.id = er.from_entity_id
+        INNER JOIN entities player ON player.id = er.to_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND loc.type_id = ?
+          AND loc.deleted_at IS NULL
+      )
+      GROUP BY player_id
+    `).all(Number(campaignId), playerTypeId, locationTypeId, Number(campaignId), playerTypeId, locationTypeId) as Array<{ player_id: number; count: number }>
 
     for (const row of locationsCounts) {
       if (result[row.player_id]) {
@@ -144,20 +189,35 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 4. Get factions count
+  // 4. Get factions count (bidirectional)
   if (factionTypeId) {
     const factionsCounts = db.prepare(`
-      SELECT er.from_entity_id as player_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities faction ON faction.id = er.to_entity_id
-      INNER JOIN entities player ON player.id = er.from_entity_id
-      WHERE player.campaign_id = ?
-        AND player.type_id = ?
-        AND player.deleted_at IS NULL
-        AND faction.type_id = ?
-        AND faction.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), playerTypeId, factionTypeId) as Array<{ player_id: number; count: number }>
+      SELECT player_id, COUNT(DISTINCT faction_id) as count
+      FROM (
+        SELECT er.from_entity_id as player_id, er.to_entity_id as faction_id
+        FROM entity_relations er
+        INNER JOIN entities faction ON faction.id = er.to_entity_id
+        INNER JOIN entities player ON player.id = er.from_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND faction.type_id = ?
+          AND faction.deleted_at IS NULL
+
+        UNION
+
+        SELECT er.to_entity_id as player_id, er.from_entity_id as faction_id
+        FROM entity_relations er
+        INNER JOIN entities faction ON faction.id = er.from_entity_id
+        INNER JOIN entities player ON player.id = er.to_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND faction.type_id = ?
+          AND faction.deleted_at IS NULL
+      )
+      GROUP BY player_id
+    `).all(Number(campaignId), playerTypeId, factionTypeId, Number(campaignId), playerTypeId, factionTypeId) as Array<{ player_id: number; count: number }>
 
     for (const row of factionsCounts) {
       if (result[row.player_id]) {
@@ -166,20 +226,35 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 5. Get lore count
+  // 5. Get lore count (bidirectional)
   if (loreTypeId) {
     const loreCounts = db.prepare(`
-      SELECT er.from_entity_id as player_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities lore ON lore.id = er.to_entity_id
-      INNER JOIN entities player ON player.id = er.from_entity_id
-      WHERE player.campaign_id = ?
-        AND player.type_id = ?
-        AND player.deleted_at IS NULL
-        AND lore.type_id = ?
-        AND lore.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), playerTypeId, loreTypeId) as Array<{ player_id: number; count: number }>
+      SELECT player_id, COUNT(DISTINCT lore_id) as count
+      FROM (
+        SELECT er.from_entity_id as player_id, er.to_entity_id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities lore ON lore.id = er.to_entity_id
+        INNER JOIN entities player ON player.id = er.from_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND lore.type_id = ?
+          AND lore.deleted_at IS NULL
+
+        UNION
+
+        SELECT er.to_entity_id as player_id, er.from_entity_id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities lore ON lore.id = er.from_entity_id
+        INNER JOIN entities player ON player.id = er.to_entity_id
+        WHERE player.campaign_id = ?
+          AND player.type_id = ?
+          AND player.deleted_at IS NULL
+          AND lore.type_id = ?
+          AND lore.deleted_at IS NULL
+      )
+      GROUP BY player_id
+    `).all(Number(campaignId), playerTypeId, loreTypeId, Number(campaignId), playerTypeId, loreTypeId) as Array<{ player_id: number; count: number }>
 
     for (const row of loreCounts) {
       if (result[row.player_id]) {

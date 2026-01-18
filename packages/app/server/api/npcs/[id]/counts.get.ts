@@ -71,7 +71,7 @@ export default defineEventHandler((event) => {
     )
     .get(Number(npcId)) as { count: number }
 
-  // Get items count (Items owned by this NPC)
+  // Get items count (bidirectional - Items linked to/from this NPC)
   const itemTypeId = db
     .prepare("SELECT id FROM entity_types WHERE name = 'Item'")
     .get() as { id: number } | undefined
@@ -81,19 +81,31 @@ export default defineEventHandler((event) => {
     const itemsResult = db
       .prepare(
         `
-      SELECT COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.to_entity_id
-      WHERE er.from_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
     `,
       )
-      .get(Number(npcId), itemTypeId.id) as { count: number }
+      .get(Number(npcId), itemTypeId.id, Number(npcId), itemTypeId.id) as { count: number }
     itemsCount = itemsResult.count
   }
 
-  // Get locations count
+  // Get locations count (bidirectional - Locations linked to/from this NPC)
   const locationTypeId = db
     .prepare("SELECT id FROM entity_types WHERE name = 'Location'")
     .get() as { id: number } | undefined
@@ -103,59 +115,57 @@ export default defineEventHandler((event) => {
     const locationsResult = db
       .prepare(
         `
-      SELECT COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.to_entity_id
-      WHERE er.from_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
     `,
       )
-      .get(Number(npcId), locationTypeId.id) as { count: number }
+      .get(Number(npcId), locationTypeId.id, Number(npcId), locationTypeId.id) as { count: number }
     locationsCount = locationsResult.count
   }
 
-  // Get factions count (memberships)
+  // Get factions count (memberships) and faction details
   const factionTypeId = db
     .prepare("SELECT id FROM entity_types WHERE name = 'Faction'")
     .get() as { id: number } | undefined
 
   let membershipsCount = 0
-  let factionName: string | null = null
+  let factions: Array<{ id: number; name: string; relationType: string }> = []
   if (factionTypeId) {
-    const membershipsResult = db
+    // Get all faction memberships with relation type
+    factions = db
       .prepare(
         `
-      SELECT COUNT(*) as count
+      SELECT e.id, e.name, er.relation_type as relationType
       FROM entity_relations er
       INNER JOIN entities e ON e.id = er.to_entity_id
       WHERE er.from_entity_id = ?
         AND e.type_id = ?
         AND e.deleted_at IS NULL
+      ORDER BY e.name
     `,
       )
-      .get(Number(npcId), factionTypeId.id) as { count: number }
-    membershipsCount = membershipsResult.count
+      .all(Number(npcId), factionTypeId.id) as Array<{ id: number; name: string; relationType: string }>
 
-    // Get primary faction (first faction membership found)
-    const faction = db
-      .prepare(
-        `
-      SELECT e.name
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.to_entity_id
-      WHERE er.from_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
-      LIMIT 1
-    `,
-      )
-      .get(Number(npcId), factionTypeId.id) as { name: string } | undefined
-
-    factionName = faction?.name || null
+    membershipsCount = factions.length
   }
 
-  // Get lore count
+  // Get lore count (bidirectional - Lore linked to/from this NPC)
   const loreTypeId = db
     .prepare("SELECT id FROM entity_types WHERE name = 'Lore'")
     .get() as { id: number } | undefined
@@ -165,15 +175,27 @@ export default defineEventHandler((event) => {
     const loreResult = db
       .prepare(
         `
-      SELECT COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.to_entity_id
-      WHERE er.from_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
     `,
       )
-      .get(Number(npcId), loreTypeId.id) as { count: number }
+      .get(Number(npcId), loreTypeId.id, Number(npcId), loreTypeId.id) as { count: number }
     loreCount = loreResult.count
   }
 
@@ -247,7 +269,9 @@ export default defineEventHandler((event) => {
     lore: loreCount,
     notes: notesCount.count,
     players: playersCount,
-    factionName,
+    factions,
+    // Backwards compatibility: first faction name
+    factionName: factions.length > 0 ? factions[0].name : null,
     groups,
   }
 })

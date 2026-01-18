@@ -44,6 +44,11 @@
           {{ $t('lore.title') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.lore }}</v-chip>
         </v-tab>
+        <v-tab value="players">
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('players.title') }}
+          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.players }}</v-chip>
+        </v-tab>
         <v-tab value="documents">
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('documents.title') }}
@@ -188,6 +193,18 @@
             />
           </v-window-item>
 
+          <!-- Players Tab -->
+          <v-window-item value="players">
+            <EntityRelationsList
+              :entities="players"
+              :loading="loading"
+              entity-type="player"
+              :empty-message="$t('factions.noPlayers')"
+              :show-relation-type="false"
+              :clickable="false"
+            />
+          </v-window-item>
+
           <!-- Documents Tab -->
           <v-window-item value="documents">
             <EntityDocumentsView
@@ -281,6 +298,9 @@ const locations = ref<
 const loreEntries = ref<
   Array<{ id: number; name: string; description: string | null; image_url: string | null }>
 >([])
+const players = ref<
+  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+>([])
 const documents = ref<Document[]>([])
 const images = ref<Image[]>([])
 
@@ -291,7 +311,7 @@ watch(
     if (isVisible && newFactionId) {
       loading.value = true
       try {
-        const [countsData, membersData, itemsData, locationsData, loreData, documentsData, imagesData] =
+        const [countsData, membersData, itemsData, locationsData, loreData, playersData, documentsData, imagesData] =
           await Promise.all([
             $fetch<FactionCounts>(`/api/factions/${newFactionId}/counts`),
             $fetch<typeof members.value>(`/api/entities/${newFactionId}/related/npcs`).catch(() => []),
@@ -300,6 +320,9 @@ watch(
               () => [],
             ),
             $fetch<typeof loreEntries.value>(`/api/entities/${newFactionId}/related/lore`).catch(
+              () => [],
+            ),
+            $fetch<typeof players.value>(`/api/entities/${newFactionId}/related/players`).catch(
               () => [],
             ),
             $fetch<Document[]>(`/api/entities/${newFactionId}/documents`).catch(() => []),
@@ -312,6 +335,7 @@ watch(
         items.value = itemsData
         locations.value = locationsData
         loreEntries.value = loreData
+        players.value = playersData
         documents.value = documentsData
         images.value = imagesData
       } catch (error) {

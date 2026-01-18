@@ -42,12 +42,14 @@
             :key="entity.id"
             :value="entity.id"
             :active="selectedEntityIds.includes(entity.id)"
-            @click="toggleEntity(entity.id)"
+            :disabled="isAlreadyInGroup(entity.id)"
+            @click="!isAlreadyInGroup(entity.id) && toggleEntity(entity.id)"
           >
             <template #prepend>
               <v-checkbox-btn
                 :model-value="selectedEntityIds.includes(entity.id)"
-                @update:model-value="toggleEntity(entity.id)"
+                :disabled="isAlreadyInGroup(entity.id)"
+                @update:model-value="!isAlreadyInGroup(entity.id) && toggleEntity(entity.id)"
               />
               <v-avatar :color="getAvatarColor(selectedType)" size="40" class="ml-2">
                 <v-img v-if="entity.image_url" :src="`/uploads/${entity.image_url}`" />
@@ -111,10 +113,12 @@ interface Props {
   modelValue: boolean
   groupId: number | null
   existingMembers?: GroupMember[]
+  defaultEntityType?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   existingMembers: () => [],
+  defaultEntityType: 'NPC',
 })
 
 const emit = defineEmits<{
@@ -176,6 +180,7 @@ watch(
   (visible) => {
     if (visible) {
       selectedEntityIds.value = []
+      selectedType.value = props.defaultEntityType
       loadEntities()
     }
   },

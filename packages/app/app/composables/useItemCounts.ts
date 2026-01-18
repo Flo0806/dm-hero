@@ -93,10 +93,31 @@ export function useItemCounts() {
    */
   async function reloadItemCounts(item: Item): Promise<void> {
     // Remove from cache to force reload
-    countsMap[item.id] = undefined  
+    countsMap[item.id] = undefined
     loadingCounts.value.delete(item.id)
     // Now load fresh
     await loadItemCounts(item)
+  }
+
+  /**
+   * Reload counts for specific Item IDs (used by QuickLink after creating relations)
+   */
+  async function reloadCountsFor(itemIds: number[]): Promise<void> {
+    // Invalidate cache for these IDs
+    for (const id of itemIds) {
+      countsMap[id] = undefined
+      loadingCounts.value.delete(id)
+    }
+    // Reload in parallel
+    const promises = itemIds.map(async (id) => {
+      try {
+        const counts = await $fetch<ItemCounts>(`/api/items/${id}/counts`)
+        countsMap[id] = counts
+      } catch (error) {
+        console.error(`Failed to reload counts for Item ${id}:`, error)
+      }
+    })
+    await Promise.all(promises)
   }
 
   /**
@@ -118,6 +139,7 @@ export function useItemCounts() {
     getCounts,
     setCounts,
     reloadItemCounts,
+    reloadCountsFor,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
     batchLoading: computed(() => batchLoading.value),

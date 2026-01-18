@@ -274,7 +274,7 @@
     "addLocationLink": "Ort verknüpfen",
     "editRelation": "Beziehung bearbeiten",
     "editMembership": "Mitgliedschaft bearbeiten",
-    "faction": "Fraktion",
+    "faction": "Fraktion | Fraktionen",
     "relationTypes": {
       "livesIn": "lebt in",
       "worksAt": "arbeitet bei",
@@ -392,15 +392,6 @@
     "membershipTypePlaceholder": "z.B. Mitglied, Anführer",
     "rank": "Rang",
     "rankPlaceholder": "z.B. Hauptmann, Lehrling",
-    "membershipTypes": {
-      "member": "Mitglied",
-      "leader": "Anführer",
-      "founder": "Gründer",
-      "officer": "Offizier",
-      "recruit": "Rekrut",
-      "veteran": "Veteran",
-      "exile": "Verbannter"
-    },
     "npcRelations": "NPC-Beziehungen",
     "selectNpc": "NPC auswählen",
     "addNpcRelation": "NPC-Beziehung hinzufügen",
@@ -552,6 +543,7 @@
     "noMembersText": "Diese Fraktion hat noch keine Mitglieder.",
     "noItems": "Keine Items",
     "noLore": "Kein Wissen",
+    "noPlayers": "Keine Spieler",
     "addMember": "Mitglied hinzufügen",
     "selectNpc": "NPC auswählen",
     "membershipType": "Mitgliedstyp",
@@ -819,6 +811,9 @@
     "selectLocationPlaceholder": "Wähle einen Ort",
     "linkLocation": "Ort verknüpfen",
     "incomingLocationTooltip": "Verknüpfung wurde vom Ort erstellt",
+    "linkedPlayers": "Verknüpfte Spieler",
+    "noLinkedPlayers": "Keine verknüpften Spieler",
+    "noLinkedPlayersText": "Dieses Wissen ist noch mit keinen Spielern verknüpft.",
     "badgeTooltips": {
       "npcs": "Verknüpfte NPCs",
       "items": "Verknüpfte Items",
@@ -858,6 +853,8 @@
     "quantity": "Anzahl",
     "quantityPlaceholder": "z.B. 1, 5, 10",
     "noItems": "Keine Items an diesem Ort",
+    "noConnectedPlayers": "Keine Spieler mit diesem Ort verbunden",
+    "noConnectedFactions": "Keine Fraktionen mit diesem Ort verbunden",
     "itemRelationTypes": {
       "contains": "enthält",
       "hidden": "versteckt",
@@ -1150,6 +1147,22 @@
       "lost": "verloren",
       "guarded": "bewacht"
     },
+    "factionRelationTypes": {
+      "possesses": "besitzt"
+    },
+    "loreRelationTypes": {
+      "references": "referenziert"
+    },
+    "itemRelationTypes": {
+      "part_of": "Teil von",
+      "set_with": "Garnitur mit",
+      "requires": "benötigt",
+      "upgrades_to": "wird aufgewertet zu",
+      "transforms_into": "verwandelt sich in",
+      "complements": "ergänzt",
+      "counters": "kontert",
+      "contains": "enthält"
+    },
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",
     "deleteImage": "Bild löschen",
@@ -1163,6 +1176,7 @@
     "noLocations": "Keine Orte",
     "noFactions": "Keine Fraktionen",
     "noLore": "Kein Wissen",
+    "noPlayers": "Keine Spieler",
     "noLinkedFactions": "Keine verknüpften Fraktionen",
     "noLinkedFactionsText": "Dieses Item ist noch mit keinen Fraktionen verknüpft.",
     "incomingFactionTooltip": "Verknüpfung wurde von der Fraktion erstellt",
@@ -1484,6 +1498,7 @@
     "searchPlaceholder": "Gruppen durchsuchen...",
     "noMembers": "Keine Mitglieder",
     "noMembersText": "Diese Gruppe enthält noch keine Entitäten",
+    "addMember": "Mitglied hinzufügen",
     "memberCount": "{count} Mitglied | {count} Mitglieder",
     "addedAt": "Hinzugefügt am {date}",
     "deleted": "Gruppe gelöscht",
@@ -1491,6 +1506,23 @@
     "created": "Gruppe erstellt",
     "saved": "Gruppe gespeichert",
     "entitiesAdded": "{count} Entität hinzugefügt | {count} Entitäten hinzugefügt"
+  },
+  "quickLink": {
+    "linkNpc": "NPC verknüpfen",
+    "linkLocation": "Ort verknüpfen",
+    "linkItem": "Item verknüpfen",
+    "linkFaction": "Fraktion verknüpfen",
+    "joinFaction": "Fraktion beitreten",
+    "linkLore": "Wissen verknüpfen",
+    "linkPlayer": "Spieler verknüpfen",
+    "addToGroup": "Zu Gruppe hinzufügen",
+    "createGroup": "Neue Gruppe",
+    "selectTitle": "{type} für \"{name}\" auswählen",
+    "relationLabel": "Beziehung: {relation}",
+    "linked": "\"{name}\" verknüpft",
+    "alreadyLinked": "Bereits verknüpft",
+    "searchPlaceholder": "Suchen...",
+    "related": "Verknüpft"
   },
   "settings": {
     "title": "Einstellungen",

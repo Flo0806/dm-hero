@@ -46,6 +46,11 @@
           {{ $t('locations.title') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.locations }}</v-chip>
         </v-tab>
+        <v-tab value="players">
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('players.title') }}
+          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.players }}</v-chip>
+        </v-tab>
         <v-tab value="documents">
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('documents.title') }}
@@ -149,6 +154,18 @@
             />
           </v-window-item>
 
+          <!-- Players Tab -->
+          <v-window-item value="players">
+            <EntityRelationsList
+              :entities="players || []"
+              :loading="loadingPlayers"
+              entity-type="player"
+              :empty-message="$t('lore.noLinkedPlayers')"
+              :show-relation-type="false"
+              :clickable="false"
+            />
+          </v-window-item>
+
           <!-- Documents Tab -->
           <v-window-item value="documents">
             <EntityDocumentsView
@@ -215,6 +232,7 @@ interface LoreCounts {
   items: number
   factions: number
   locations: number
+  players: number
   documents: number
   images: number
 }
@@ -226,6 +244,7 @@ interface Props {
   items?: Entity[]
   factions?: Entity[]
   locations?: Entity[]
+  players?: Entity[]
   documents?: Document[]
   images?: Image[]
   counts?: LoreCounts | null
@@ -234,6 +253,7 @@ interface Props {
   loadingItems?: boolean
   loadingFactions?: boolean
   loadingLocations?: boolean
+  loadingPlayers?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -241,6 +261,7 @@ const props = withDefaults(defineProps<Props>(), {
   items: () => [],
   factions: () => [],
   locations: () => [],
+  players: () => [],
   documents: () => [],
   images: () => [],
   counts: null,
@@ -249,6 +270,7 @@ const props = withDefaults(defineProps<Props>(), {
   loadingItems: false,
   loadingFactions: false,
   loadingLocations: false,
+  loadingPlayers: false,
 })
 
 defineEmits<{

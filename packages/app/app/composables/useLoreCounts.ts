@@ -106,10 +106,31 @@ export function useLoreCounts() {
    */
   async function reloadLoreCounts(lore: Lore): Promise<void> {
     // Remove from cache to force reload
-    countsMap[lore.id] = undefined  
+    countsMap[lore.id] = undefined
     loadingCounts.value.delete(lore.id)
     // Now load fresh
     await loadLoreCounts(lore)
+  }
+
+  /**
+   * Reload counts for specific Lore IDs (used by QuickLink after creating relations)
+   */
+  async function reloadCountsFor(loreIds: number[]): Promise<void> {
+    // Invalidate cache for these IDs
+    for (const id of loreIds) {
+      countsMap[id] = undefined
+      loadingCounts.value.delete(id)
+    }
+    // Reload in parallel
+    const promises = loreIds.map(async (id) => {
+      try {
+        const counts = await $fetch<LoreCounts>(`/api/lore/${id}/counts`)
+        countsMap[id] = counts
+      } catch (error) {
+        console.error(`Failed to reload counts for Lore ${id}:`, error)
+      }
+    })
+    await Promise.all(promises)
   }
 
   /**
@@ -131,6 +152,7 @@ export function useLoreCounts() {
     getCounts,
     setCounts,
     reloadLoreCounts,
+    reloadCountsFor,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
     batchLoading: computed(() => batchLoading.value),

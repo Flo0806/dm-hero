@@ -107,10 +107,31 @@ export function useFactionCounts() {
    */
   async function reloadFactionCounts(faction: Faction): Promise<void> {
     // Remove from cache to force reload
-    countsMap[faction.id] = undefined  
+    countsMap[faction.id] = undefined
     loadingCounts.value.delete(faction.id)
     // Now load fresh
     await loadFactionCounts(faction)
+  }
+
+  /**
+   * Reload counts for specific Faction IDs (used by QuickLink after creating relations)
+   */
+  async function reloadCountsFor(factionIds: number[]): Promise<void> {
+    // Invalidate cache for these IDs
+    for (const id of factionIds) {
+      countsMap[id] = undefined
+      loadingCounts.value.delete(id)
+    }
+    // Reload in parallel
+    const promises = factionIds.map(async (id) => {
+      try {
+        const counts = await $fetch<FactionCounts>(`/api/factions/${id}/counts`)
+        countsMap[id] = counts
+      } catch (error) {
+        console.error(`Failed to reload counts for Faction ${id}:`, error)
+      }
+    })
+    await Promise.all(promises)
   }
 
   /**
@@ -132,6 +153,7 @@ export function useFactionCounts() {
     getCounts,
     setCounts,
     reloadFactionCounts,
+    reloadCountsFor,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
     batchLoading: computed(() => batchLoading.value),

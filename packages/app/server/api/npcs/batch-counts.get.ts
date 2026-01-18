@@ -7,6 +7,12 @@ interface GroupInfo {
   icon: string | null
 }
 
+interface FactionMembership {
+  id: number
+  name: string
+  relationType: string
+}
+
 interface NpcCounts {
   relations: number
   items: number
@@ -17,7 +23,8 @@ interface NpcCounts {
   lore: number
   notes: number
   players: number
-  factionName: string | null
+  factions: FactionMembership[]
+  factionName: string | null // Backwards compatibility
   groups: GroupInfo[]
 }
 
@@ -82,40 +89,146 @@ export default defineEventHandler((event) => {
       lore: 0,
       notes: 0,
       players: 0,
+      factions: [],
       factionName: null,
       groups: [],
     }
   }
 
-  // OPTIMIZED: Combine items, locations, memberships, lore into ONE query
-  // This reduces 4 separate queries into 1
-  const targetTypeIds = [itemTypeId, locationTypeId, factionTypeId, loreTypeId].filter(Boolean)
-  if (targetTypeIds.length > 0) {
-    const relationCounts = db.prepare(`
-      SELECT
-        er.from_entity_id as npc_id,
-        target.type_id as target_type,
-        COUNT(*) as count
+  // Items (bidirectional)
+  if (itemTypeId) {
+    const itemsCounts = db.prepare(`
+      SELECT npc_id, COUNT(DISTINCT item_id) as count FROM (
+        SELECT er.from_entity_id as npc_id, e.id as item_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities npc ON npc.id = er.from_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as npc_id, e.id as item_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities npc ON npc.id = er.to_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY npc_id
+    `).all(
+      Number(campaignId), npcTypeId, itemTypeId,
+      Number(campaignId), npcTypeId, itemTypeId,
+    ) as Array<{ npc_id: number; count: number }>
+
+    for (const row of itemsCounts) {
+      if (result[row.npc_id]) {
+        result[row.npc_id].items = row.count
+      }
+    }
+  }
+
+  // Locations (bidirectional)
+  if (locationTypeId) {
+    const locationsCounts = db.prepare(`
+      SELECT npc_id, COUNT(DISTINCT loc_id) as count FROM (
+        SELECT er.from_entity_id as npc_id, e.id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities npc ON npc.id = er.from_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as npc_id, e.id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities npc ON npc.id = er.to_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY npc_id
+    `).all(
+      Number(campaignId), npcTypeId, locationTypeId,
+      Number(campaignId), npcTypeId, locationTypeId,
+    ) as Array<{ npc_id: number; count: number }>
+
+    for (const row of locationsCounts) {
+      if (result[row.npc_id]) {
+        result[row.npc_id].locations = row.count
+      }
+    }
+  }
+
+  // Memberships/Factions (unidirectional - NPC joins faction)
+  if (factionTypeId) {
+    const membershipsCounts = db.prepare(`
+      SELECT er.from_entity_id as npc_id, COUNT(*) as count
       FROM entity_relations er
-      INNER JOIN entities target ON target.id = er.to_entity_id AND target.deleted_at IS NULL
+      INNER JOIN entities faction ON faction.id = er.to_entity_id
       INNER JOIN entities npc ON npc.id = er.from_entity_id
       WHERE npc.campaign_id = ?
         AND npc.type_id = ?
         AND npc.deleted_at IS NULL
-        AND target.type_id IN (${targetTypeIds.join(',')})
-      GROUP BY er.from_entity_id, target.type_id
-    `).all(Number(campaignId), npcTypeId) as Array<{ npc_id: number; target_type: number; count: number }>
+        AND faction.type_id = ?
+        AND faction.deleted_at IS NULL
+      GROUP BY er.from_entity_id
+    `).all(Number(campaignId), npcTypeId, factionTypeId) as Array<{ npc_id: number; count: number }>
 
-    for (const row of relationCounts) {
-      if (!result[row.npc_id]) continue
-
-      if (row.target_type === itemTypeId) {
-        result[row.npc_id].items = row.count
-      } else if (row.target_type === locationTypeId) {
-        result[row.npc_id].locations = row.count
-      } else if (row.target_type === factionTypeId) {
+    for (const row of membershipsCounts) {
+      if (result[row.npc_id]) {
         result[row.npc_id].memberships = row.count
-      } else if (row.target_type === loreTypeId) {
+      }
+    }
+  }
+
+  // Lore (bidirectional)
+  if (loreTypeId) {
+    const loreCounts = db.prepare(`
+      SELECT npc_id, COUNT(DISTINCT lore_id) as count FROM (
+        SELECT er.from_entity_id as npc_id, e.id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities npc ON npc.id = er.from_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as npc_id, e.id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities npc ON npc.id = er.to_entity_id
+        WHERE npc.campaign_id = ?
+          AND npc.type_id = ?
+          AND npc.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY npc_id
+    `).all(
+      Number(campaignId), npcTypeId, loreTypeId,
+      Number(campaignId), npcTypeId, loreTypeId,
+    ) as Array<{ npc_id: number; count: number }>
+
+    for (const row of loreCounts) {
+      if (result[row.npc_id]) {
         result[row.npc_id].lore = row.count
       }
     }
@@ -197,10 +310,10 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // Faction names - still needed separately
+  // Faction memberships with relation types
   if (factionTypeId) {
-    const factionNames = db.prepare(`
-      SELECT npc.id as npc_id, faction.name as faction_name
+    const factionMemberships = db.prepare(`
+      SELECT npc.id as npc_id, faction.id as faction_id, faction.name as faction_name, er.relation_type
       FROM entities npc
       INNER JOIN entity_relations er ON er.from_entity_id = npc.id
       INNER JOIN entities faction ON faction.id = er.to_entity_id
@@ -209,12 +322,25 @@ export default defineEventHandler((event) => {
         AND npc.deleted_at IS NULL
         AND faction.type_id = ?
         AND faction.deleted_at IS NULL
-      GROUP BY npc.id
-    `).all(Number(campaignId), npcTypeId, factionTypeId) as Array<{ npc_id: number; faction_name: string }>
+      ORDER BY faction.name
+    `).all(Number(campaignId), npcTypeId, factionTypeId) as Array<{
+      npc_id: number
+      faction_id: number
+      faction_name: string
+      relation_type: string
+    }>
 
-    for (const row of factionNames) {
+    for (const row of factionMemberships) {
       if (result[row.npc_id]) {
-        result[row.npc_id].factionName = row.faction_name
+        result[row.npc_id].factions.push({
+          id: row.faction_id,
+          name: row.faction_name,
+          relationType: row.relation_type,
+        })
+        // Backwards compatibility: set first faction name
+        if (!result[row.npc_id].factionName) {
+          result[row.npc_id].factionName = row.faction_name
+        }
       }
     }
   }

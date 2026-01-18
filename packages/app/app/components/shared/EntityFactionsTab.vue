@@ -24,7 +24,7 @@
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip v-if="relation.relation_type" size="small" class="mr-1">
-            {{ $t(`factions.membershipTypes.${relation.relation_type}`, relation.relation_type) }}
+            {{ $t(`${i18nPrefix}.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
           <span v-if="relation.notes" class="text-caption">
             {{ relation.notes }}
@@ -163,9 +163,15 @@ interface FactionRelation {
 
 interface Props {
   entityId: number
+  // Optional: custom relation types and i18n prefix (for Location → Faction, etc.)
+  relationTypes?: readonly string[]
+  i18nPrefix?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  relationTypes: () => FACTION_MEMBERSHIP_TYPES as unknown as string[],
+  i18nPrefix: 'factions.membershipTypes',
+})
 
 const emit = defineEmits<{
   changed: []
@@ -194,9 +200,9 @@ const isDirty = computed(() => !!localFactionId.value || !!localRelationType.val
 watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
 const relationTypeSuggestions = computed(() =>
-  FACTION_MEMBERSHIP_TYPES.map((type) => ({
+  props.relationTypes.map((type) => ({
     value: type,
-    title: t(`factions.membershipTypes.${type}`),
+    title: t(`${props.i18nPrefix}.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 

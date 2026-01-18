@@ -53,6 +53,7 @@
             @view="viewGroup"
             @edit="editGroup"
             @delete="deleteGroup"
+            @add-member="handleContextMenuAddMember"
           />
         </v-col>
       </v-row>
@@ -134,6 +135,7 @@
         v-model="showEntitySelectDialog"
         :group-id="entitySelectGroupId"
         :existing-members="entitySelectExistingMembers"
+        :default-entity-type="defaultEntityType"
         @added="handleEntitiesAdded"
       />
     </ClientOnly>
@@ -268,9 +270,21 @@ function handleViewEdit(group: EntityGroup) {
 const showEntitySelectDialog = ref(false)
 const entitySelectGroupId = ref<number | null>(null)
 const entitySelectExistingMembers = ref<GroupMember[]>([])
+const defaultEntityType = ref('NPC')
 
 async function handleAddEntities(group: EntityGroup) {
   entitySelectGroupId.value = group.id
+  defaultEntityType.value = 'NPC'
+  // Load existing members to show which entities are already in group
+  const members = await $fetch<GroupMember[]>(`/api/groups/${group.id}/members`)
+  entitySelectExistingMembers.value = members
+  showEntitySelectDialog.value = true
+}
+
+// Context menu handler for adding members
+async function handleContextMenuAddMember(group: EntityGroup, entityType: string) {
+  entitySelectGroupId.value = group.id
+  defaultEntityType.value = entityType
   // Load existing members to show which entities are already in group
   const members = await $fetch<GroupMember[]>(`/api/groups/${group.id}/members`)
   entitySelectExistingMembers.value = members

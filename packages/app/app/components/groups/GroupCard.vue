@@ -5,6 +5,7 @@
     :class="['d-flex flex-column group-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', group)"
+    @contextmenu.prevent="openContextMenu"
   >
     <!-- Card Header with Icon & Name -->
     <div class="d-flex align-start pa-4 pb-3">
@@ -75,6 +76,13 @@
       </v-btn>
     </v-card-actions>
   </v-card>
+
+  <!-- Context Menu -->
+  <GroupsGroupAddMemberMenu
+    v-model="showContextMenu"
+    :position="contextMenuPosition"
+    @select="handleAddMemberSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -91,11 +99,25 @@ const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [group: EntityGroup]
   edit: [group: EntityGroup]
   delete: [group: EntityGroup]
+  'add-member': [group: EntityGroup, entityType: string]
 }>()
+
+// Context menu state
+const showContextMenu = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
+
+function openContextMenu(event: MouseEvent) {
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  showContextMenu.value = true
+}
+
+function handleAddMemberSelect(entityType: string) {
+  emit('add-member', props.group, entityType)
+}
 
 // Total members count
 const totalMembers = computed(() => {

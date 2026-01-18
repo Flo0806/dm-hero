@@ -5,6 +5,7 @@
     :class="['d-flex flex-column npc-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', npc)"
+    @contextmenu.prevent="quickLink.openContextMenu"
   >
     <!-- Pin Button (top right) -->
     <SharedPinButton
@@ -82,8 +83,8 @@
 
     <!-- Info Badges (Bottom) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
-      <!-- Row 1: Metadata Badges (Location, Faction) - Fixed Height -->
-      <div class="d-flex flex-wrap mb-2" style="gap: 6px; min-height: 28px">
+      <!-- Row 1: Metadata Badges (Location, Factions) - Fixed Height, No Wrap -->
+      <div class="d-flex mb-2" style="gap: 6px; min-height: 28px; flex-wrap: nowrap; overflow: hidden">
         <!-- Location Badge -->
         <v-chip
           v-if="npc.metadata?.location"
@@ -91,20 +92,45 @@
           size="small"
           variant="outlined"
           color="primary"
+          class="flex-shrink-0"
         >
           {{ npc.metadata.location }}
         </v-chip>
 
-        <!-- Faction Badge (async loaded) -->
-        <v-chip
-          v-if="counts?.factionName"
-          prepend-icon="mdi-shield-account"
-          size="small"
-          variant="outlined"
-          color="secondary"
-        >
-          {{ counts.factionName }}
-        </v-chip>
+        <!-- Faction Badges (show first 2, then +X) -->
+        <template v-if="counts?.factions?.length">
+          <v-tooltip v-for="faction in visibleFactions" :key="faction.id" location="top">
+            <template #activator="{ props: tooltipProps }">
+              <v-chip
+                v-bind="tooltipProps"
+                prepend-icon="mdi-shield-account"
+                size="small"
+                variant="outlined"
+                color="secondary"
+                class="flex-shrink-0"
+              >
+                {{ faction.name }}
+              </v-chip>
+            </template>
+            <span>{{ translateMembershipType(faction.relationType) }}</span>
+          </v-tooltip>
+
+          <!-- +X more indicator -->
+          <v-tooltip v-if="hiddenFactionsCount > 0" location="top">
+            <template #activator="{ props: tooltipProps }">
+              <v-chip
+                v-bind="tooltipProps"
+                size="small"
+                variant="tonal"
+                color="secondary"
+                class="flex-shrink-0"
+              >
+                +{{ hiddenFactionsCount }}
+              </v-chip>
+            </template>
+            <span>{{ hiddenFactionNames }}</span>
+          </v-tooltip>
+        </template>
       </div>
 
       <!-- Row 2: Group Badges -->
@@ -395,11 +421,29 @@
     :chips="previewChips"
     :download-file-name="npc.name"
   />
+
+  <!-- Quick Link Context Menu -->
+  <QuickLinkContextMenu
+    v-model="quickLink.showContextMenu.value"
+    v-bind="quickLink.contextMenuProps.value"
+    @select="quickLink.handleQuickLinkSelect"
+    @add-to-group="quickLink.handleAddToGroup"
+    @create-group="quickLink.handleCreateGroup"
+  />
+
+  <!-- Quick Link Entity Select Dialog -->
+  <QuickLinkEntitySelectDialog
+    v-model="quickLink.showEntitySelectDialog.value"
+    v-bind="quickLink.entitySelectDialogProps.value"
+    @linked="quickLink.handleLinked"
+  />
 </template>
 
 <script setup lang="ts">
 import type { NPC } from '~~/types/npc'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
 
 interface Props {
@@ -415,15 +459,18 @@ const props = withDefaults(defineProps<Props>(), {
   classes: () => [],
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [npc: NPC]
   edit: [npc: NPC]
   download: [npc: NPC]
   delete: [npc: NPC]
   'open-group': [groupId: number]
+  'add-to-group': [payload: { entityId: number; groupId: number }]
+  'create-group': [entityId: number]
+  linked: []
 }>()
 
-const { locale, t } = useI18n()
+const { locale, t, te } = useI18n()
 const { getCounts } = useNpcCounts()
 const router = useRouter()
 
@@ -435,6 +482,28 @@ function openChaosGraph() {
 // Get counts reactively from the composable
 const counts = computed(() => getCounts(props.npc.id) || props.npc._counts)
 
+// Faction display helpers (max 2 visible)
+const MAX_VISIBLE_FACTIONS = 2
+
+const visibleFactions = computed(() => {
+  return (counts.value?.factions || []).slice(0, MAX_VISIBLE_FACTIONS)
+})
+
+const hiddenFactionsCount = computed(() => {
+  const total = counts.value?.factions?.length || 0
+  return Math.max(0, total - MAX_VISIBLE_FACTIONS)
+})
+
+const hiddenFactionNames = computed(() => {
+  const hidden = (counts.value?.factions || []).slice(MAX_VISIBLE_FACTIONS)
+  return hidden.map((f) => `${f.name} (${translateMembershipType(f.relationType)})`).join(', ')
+})
+
+function translateMembershipType(type: string): string {
+  const key = `factions.membershipTypes.${type}`
+  return te(key) ? t(key) : type
+}
+
 // Image Preview State
 const showImagePreview = ref(false)
 
@@ -442,6 +511,17 @@ function openImagePreview() {
   if (!props.npc.image_url) return
   showImagePreview.value = true
 }
+
+// Quick Link - using composable for all state and handlers
+const quickLink = useQuickLink({
+  entityId: props.npc.id,
+  entityName: props.npc.name,
+  sourceType: 'NPC',
+  groups: computed(() => counts.value?.groups),
+  onLinked: () => emit('linked'),
+  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.npc.id, groupId }),
+  onCreateGroup: () => emit('create-group', props.npc.id),
+})
 
 // Build chips for preview dialog
 const previewChips = computed(() => {

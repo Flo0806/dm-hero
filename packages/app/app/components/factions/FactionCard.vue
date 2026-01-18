@@ -5,6 +5,7 @@
     :class="['d-flex flex-column faction-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', faction)"
+    @contextmenu.prevent="quickLink.openContextMenu"
   >
     <!-- Pin Button (top right) -->
     <SharedPinButton
@@ -378,10 +379,28 @@
     :chips="previewChips"
     :download-file-name="faction.name"
   />
+
+  <!-- Quick Link Context Menu -->
+  <QuickLinkContextMenu
+    v-model="quickLink.showContextMenu.value"
+    v-bind="quickLink.contextMenuProps.value"
+    @select="quickLink.handleQuickLinkSelect"
+    @add-to-group="quickLink.handleAddToGroup"
+    @create-group="quickLink.handleCreateGroup"
+  />
+
+  <!-- Quick Link Entity Select Dialog -->
+  <QuickLinkEntitySelectDialog
+    v-model="quickLink.showEntitySelectDialog.value"
+    v-bind="quickLink.entitySelectDialogProps.value"
+    @linked="quickLink.handleLinked"
+  />
 </template>
 
 <script setup lang="ts">
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 
 import type { Faction, FactionCounts } from '../../../types/faction'
 
@@ -394,13 +413,16 @@ const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [faction: Faction]
   edit: [faction: Faction]
   download: [faction: Faction]
   delete: [faction: Faction]
   chaos: [faction: Faction]
   'open-group': [groupId: number]
+  'add-to-group': [payload: { entityId: number; groupId: number }]
+  'create-group': [entityId: number]
+  linked: []
 }>()
 
 const { getCounts } = useFactionCounts()
@@ -408,6 +430,17 @@ const { t } = useI18n()
 
 // Get counts reactively from the composable
 const counts = computed<FactionCounts | undefined>(() => getCounts(props.faction.id) || props.faction._counts)
+
+// Quick Link - using composable for all state and handlers
+const quickLink = useQuickLink({
+  entityId: props.faction.id,
+  entityName: props.faction.name,
+  sourceType: 'Faction',
+  groups: computed(() => counts.value?.groups),
+  onLinked: () => emit('linked'),
+  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.faction.id, groupId }),
+  onCreateGroup: () => emit('create-group', props.faction.id),
+})
 
 // Image Preview State
 const showImagePreview = ref(false)

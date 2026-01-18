@@ -24,7 +24,7 @@
         </v-list-item-title>
         <v-list-item-subtitle>
           <v-chip v-if="relation.relation_type" size="small" class="mr-1">
-            {{ $t(`players.relationTypes.${relation.relation_type}`, relation.relation_type) }}
+            {{ $t(`${i18nPrefix}.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
           <span v-if="relation.notes" class="text-caption">
             {{ relation.notes }}
@@ -163,9 +163,15 @@ interface PlayerRelation {
 
 interface Props {
   entityId: number
+  // Optional: custom relation types and i18n prefix (for Location → Player, Item → Player, etc.)
+  relationTypes?: readonly string[]
+  i18nPrefix?: string
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  relationTypes: () => PLAYER_RELATION_TYPES as unknown as string[],
+  i18nPrefix: 'players.relationTypes',
+})
 
 const emit = defineEmits<{
   changed: []
@@ -190,9 +196,9 @@ const editForm = ref({
 })
 
 const relationTypeSuggestions = computed(() =>
-  PLAYER_RELATION_TYPES.map((type) => ({
+  props.relationTypes.map((type) => ({
     value: type,
-    title: t(`players.relationTypes.${type}`),
+    title: t(`${props.i18nPrefix}.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 

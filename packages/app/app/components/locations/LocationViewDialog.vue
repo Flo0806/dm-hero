@@ -48,6 +48,16 @@
           {{ $t('common.images') }}
           <v-chip size="x-small" class="ml-2">{{ counts?.images || 0 }}</v-chip>
         </v-tab>
+        <v-tab value="players">
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('players.title') }}
+          <v-chip size="x-small" class="ml-2">{{ counts?.players || 0 }}</v-chip>
+        </v-tab>
+        <v-tab value="factions">
+          <v-icon start>mdi-shield-account</v-icon>
+          {{ $t('factions.title') }}
+          <v-chip size="x-small" class="ml-2">{{ counts?.factions || 0 }}</v-chip>
+        </v-tab>
       </v-tabs>
 
       <v-divider />
@@ -167,6 +177,32 @@
               @preview="(image: Image) => $emit('preview-image', image)"
             />
           </v-window-item>
+
+          <!-- Players Tab -->
+          <v-window-item value="players">
+            <EntityRelationsList
+              :entities="players || []"
+              :loading="loadingPlayers"
+              entity-type="player"
+              :empty-message="$t('locations.noConnectedPlayers')"
+              :show-relation-type="true"
+              :clickable="false"
+              relation-type-translation-path="npcs.relationTypes"
+            />
+          </v-window-item>
+
+          <!-- Factions Tab -->
+          <v-window-item value="factions">
+            <EntityRelationsList
+              :entities="factions || []"
+              :loading="loadingFactions"
+              entity-type="faction"
+              :empty-message="$t('locations.noConnectedFactions')"
+              :show-relation-type="true"
+              :clickable="false"
+              relation-type-translation-path="factions.locationTypes"
+            />
+          </v-window-item>
         </v-window>
       </v-card-text>
 
@@ -219,6 +255,8 @@ interface LocationCounts {
   lore: number
   images: number
   documents: number
+  players: number
+  factions: number
 }
 
 interface Document {
@@ -239,6 +277,8 @@ interface Props {
   npcs?: Entity[]
   items?: Entity[]
   lore?: Entity[]
+  players?: Entity[]
+  factions?: Entity[]
   documents?: Document[]
   images?: Image[]
   counts?: LocationCounts | null
@@ -246,12 +286,16 @@ interface Props {
   loadingNpcs?: boolean
   loadingItems?: boolean
   loadingLore?: boolean
+  loadingPlayers?: boolean
+  loadingFactions?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   npcs: () => [],
   items: () => [],
   lore: () => [],
+  players: () => [],
+  factions: () => [],
   documents: () => [],
   images: () => [],
   counts: null,
@@ -259,6 +303,8 @@ const props = withDefaults(defineProps<Props>(), {
   loadingNpcs: false,
   loadingItems: false,
   loadingLore: false,
+  loadingPlayers: false,
+  loadingFactions: false,
 })
 
 defineEmits<{

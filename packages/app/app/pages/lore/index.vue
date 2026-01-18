@@ -93,6 +93,7 @@
       :items="viewDialogItems"
       :factions="viewDialogFactions"
       :locations="viewDialogLocations"
+      :players="viewDialogPlayers"
       :documents="viewDialogDocuments"
       :images="viewDialogImages"
       :counts="viewDialogCounts"
@@ -100,6 +101,7 @@
       :loading-items="loadingViewItems"
       :loading-factions="loadingViewFactions"
       :loading-locations="loadingViewLocations"
+      :loading-players="loadingViewPlayers"
       @edit="editLore"
       @preview-image="handlePreviewImage"
     />
@@ -189,6 +191,9 @@ const viewDialogFactions = ref<
 const viewDialogLocations = ref<
   Array<{ id: number; name: string; description: string | null; image_url: string | null }>
 >([])
+const viewDialogPlayers = ref<
+  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+>([])
 const viewDialogDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
 const viewDialogImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
 const viewDialogCounts = ref<{
@@ -196,6 +201,7 @@ const viewDialogCounts = ref<{
   items: number
   factions: number
   locations: number
+  players: number
   documents: number
   images: number
 } | null>(null)
@@ -203,6 +209,7 @@ const loadingViewNpcs = ref(false)
 const loadingViewItems = ref(false)
 const loadingViewFactions = ref(false)
 const loadingViewLocations = ref(false)
+const loadingViewPlayers = ref(false)
 
 // Image preview
 const showImagePreview = ref(false)
@@ -310,14 +317,16 @@ async function viewLore(loreEntry: Lore) {
   loadingViewItems.value = true
   loadingViewFactions.value = true
   loadingViewLocations.value = true
+  loadingViewPlayers.value = true
 
   // Load all data in parallel
   try {
-    const [npcs, items, factions, locations, documents, images, counts] = await Promise.all([
+    const [npcs, items, factions, locations, players, documents, images, counts] = await Promise.all([
       $fetch<typeof viewDialogNpcs.value>(`/api/entities/${loreEntry.id}/related/npcs`).catch(() => []),
       $fetch<typeof viewDialogItems.value>(`/api/entities/${loreEntry.id}/related/items`).catch(() => []),
       $fetch<typeof viewDialogFactions.value>(`/api/entities/${loreEntry.id}/related/factions`).catch(() => []),
       $fetch<typeof viewDialogLocations.value>(`/api/entities/${loreEntry.id}/related/locations`).catch(() => []),
+      $fetch<typeof viewDialogPlayers.value>(`/api/entities/${loreEntry.id}/related/players`).catch(() => []),
       $fetch<typeof viewDialogDocuments.value>(`/api/entities/${loreEntry.id}/documents`).catch(() => []),
       $fetch<typeof viewDialogImages.value>(`/api/entity-images/${loreEntry.id}`).catch(() => []),
       $fetch<typeof viewDialogCounts.value>(`/api/lore/${loreEntry.id}/counts`).catch(() => null),
@@ -327,6 +336,7 @@ async function viewLore(loreEntry: Lore) {
     viewDialogItems.value = items
     viewDialogFactions.value = factions
     viewDialogLocations.value = locations
+    viewDialogPlayers.value = players
     viewDialogDocuments.value = documents
     viewDialogImages.value = images
     viewDialogCounts.value = counts
@@ -337,6 +347,7 @@ async function viewLore(loreEntry: Lore) {
     loadingViewItems.value = false
     loadingViewFactions.value = false
     loadingViewLocations.value = false
+    loadingViewPlayers.value = false
   }
 }
 

@@ -108,13 +108,26 @@
                     </div>
                   </v-card>
                 </v-col>
-                <v-col v-if="counts?.factionName" cols="12" sm="6">
+                <v-col v-if="counts?.factions?.length" cols="12" sm="6">
                   <v-card variant="outlined" class="pa-3">
-                    <div class="d-flex align-center">
-                      <v-icon class="mr-3" color="secondary">mdi-shield-account</v-icon>
-                      <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('npcs.faction') }}</div>
-                        <div class="font-weight-medium">{{ counts.factionName }}</div>
+                    <div class="d-flex align-start">
+                      <v-icon class="mr-3 mt-1" color="secondary">mdi-shield-account</v-icon>
+                      <div class="flex-grow-1" style="min-width: 0">
+                        <div class="text-caption text-medium-emphasis mb-1">
+                          {{ $t('npcs.faction', counts.factions.length) }}
+                        </div>
+                        <div class="d-flex flex-wrap" style="gap: 6px">
+                          <v-chip
+                            v-for="faction in counts.factions"
+                            :key="faction.id"
+                            size="small"
+                            variant="tonal"
+                            color="secondary"
+                          >
+                            {{ faction.name }}
+                            <span class="text-caption ml-1 opacity-70">({{ translateMembershipType(faction.relationType) }})</span>
+                          </v-chip>
+                        </div>
                       </div>
                     </div>
                   </v-card>
@@ -292,8 +305,14 @@ const emit = defineEmits<{
   'go-back': []
 }>()
 
-const { locale } = useI18n()
+const { locale, t, te } = useI18n()
 const { getCounts } = useNpcCounts()
+
+// Translate membership type
+function translateMembershipType(type: string): string {
+  const key = `factions.membershipTypes.${type}`
+  return te(key) ? t(key) : type
+}
 
 const internalShow = computed({
   get: () => props.show,

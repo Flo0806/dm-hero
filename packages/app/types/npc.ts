@@ -178,6 +178,12 @@ export interface GroupInfo {
   icon: string | null
 }
 
+export interface FactionMembership {
+  id: number
+  name: string
+  relationType: string
+}
+
 export interface NpcCounts {
   relations: number
   items: number
@@ -188,7 +194,8 @@ export interface NpcCounts {
   lore: number
   notes: number
   players: number
-  factionName: string | null
+  factions: FactionMembership[]
+  factionName: string | null // Backwards compatibility
   groups?: GroupInfo[]
 }
 

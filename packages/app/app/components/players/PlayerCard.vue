@@ -5,6 +5,7 @@
     :class="['d-flex flex-column player-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', player)"
+    @contextmenu.prevent="quickLink.openContextMenu"
   >
     <!-- Pin Button (top right) -->
     <SharedPinButton
@@ -330,11 +331,29 @@
     :subtitle="previewSubtitle"
     :download-file-name="player.name"
   />
+
+  <!-- Quick Link Context Menu -->
+  <QuickLinkContextMenu
+    v-model="quickLink.showContextMenu.value"
+    v-bind="quickLink.contextMenuProps.value"
+    @select="quickLink.handleQuickLinkSelect"
+    @add-to-group="quickLink.handleAddToGroup"
+    @create-group="quickLink.handleCreateGroup"
+  />
+
+  <!-- Quick Link Entity Select Dialog -->
+  <QuickLinkEntitySelectDialog
+    v-model="quickLink.showEntitySelectDialog.value"
+    v-bind="quickLink.entitySelectDialogProps.value"
+    @linked="quickLink.handleLinked"
+  />
 </template>
 
 <script setup lang="ts">
 import type { Player } from '~~/types/player'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 
 interface Props {
   player: Player
@@ -345,18 +364,32 @@ const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [player: Player]
   edit: [player: Player]
   download: [player: Player]
   delete: [player: Player]
   chaos: [player: Player]
   'open-group': [groupId: number]
+  'add-to-group': [payload: { entityId: number; groupId: number }]
+  'create-group': [entityId: number]
+  linked: []
 }>()
 
 // Get counts reactively from the composable (shared cache)
 const { getCounts } = usePlayerCounts()
 const counts = computed(() => getCounts(props.player.id) || props.player._counts)
+
+// Quick Link - using composable for all state and handlers
+const quickLink = useQuickLink({
+  entityId: props.player.id,
+  entityName: props.player.name,
+  sourceType: 'Player',
+  groups: computed(() => counts.value?.groups),
+  onLinked: () => emit('linked'),
+  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.player.id, groupId }),
+  onCreateGroup: () => emit('create-group', props.player.id),
+})
 
 // Image Preview State
 const showImagePreview = ref(false)

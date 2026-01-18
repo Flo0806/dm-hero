@@ -143,7 +143,7 @@ const { markDirty } = useTabDirtyState('memberships', t('npcs.memberships'))
 
 // Translate membership type - check if translation exists, otherwise show raw value
 function translateMembershipType(type: string): string {
-  const key = `npcs.membershipTypes.${type}`
+  const key = `factions.membershipTypes.${type}`
   return te(key) ? t(key) : type
 }
 

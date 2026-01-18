@@ -260,7 +260,7 @@
     "race": "Race",
     "class": "Class",
     "location": "Location",
-    "faction": "Faction",
+    "faction": "Faction | Factions",
     "relationship": "Relationship to Party",
     "age": "Age",
     "gender": "Gender",
@@ -393,15 +393,6 @@
     "membershipTypePlaceholder": "e.g. Member, Leader",
     "rank": "Rank",
     "rankPlaceholder": "e.g. Captain, Apprentice",
-    "membershipTypes": {
-      "member": "Member",
-      "leader": "Leader",
-      "founder": "Founder",
-      "officer": "Officer",
-      "recruit": "Recruit",
-      "veteran": "Veteran",
-      "exile": "Exile"
-    },
     "selectNpc": "Select NPC",
     "addNpcRelation": "Add NPC Relation",
     "npcRelationType": "Relation Type",
@@ -551,6 +542,7 @@
     "noMembersText": "This faction has no members yet.",
     "noItems": "No Items",
     "noLore": "No Lore",
+    "noPlayers": "No Players",
     "addMember": "Add Member",
     "selectNpc": "Select NPC",
     "membershipType": "Membership Type",
@@ -824,6 +816,9 @@
     "selectLocationPlaceholder": "Choose a location",
     "linkLocation": "Link Location",
     "incomingLocationTooltip": "Relation created by the location",
+    "linkedPlayers": "Linked Players",
+    "noLinkedPlayers": "No Linked Players",
+    "noLinkedPlayersText": "This lore entry has no linked players yet.",
     "badgeTooltips": {
       "npcs": "Linked NPCs",
       "items": "Linked Items",
@@ -863,6 +858,8 @@
     "quantity": "Quantity",
     "quantityPlaceholder": "e.g. 1, 5, 10",
     "noItems": "No items at this location",
+    "noConnectedPlayers": "No players connected to this location",
+    "noConnectedFactions": "No factions connected to this location",
     "itemRelationTypes": {
       "contains": "contains",
       "hidden": "hidden",
@@ -1155,6 +1152,22 @@
       "lost": "lost",
       "guarded": "guarded"
     },
+    "factionRelationTypes": {
+      "possesses": "possesses"
+    },
+    "loreRelationTypes": {
+      "references": "references"
+    },
+    "itemRelationTypes": {
+      "part_of": "part of",
+      "set_with": "set with",
+      "requires": "requires",
+      "upgrades_to": "upgrades to",
+      "transforms_into": "transforms into",
+      "complements": "complements",
+      "counters": "counters",
+      "contains": "contains"
+    },
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
     "deleteImage": "Delete Image",
@@ -1168,6 +1181,7 @@
     "noLocations": "No Locations",
     "noFactions": "No Factions",
     "noLore": "No Lore",
+    "noPlayers": "No Players",
     "noLinkedFactions": "No Linked Factions",
     "noLinkedFactionsText": "This item has no linked factions yet.",
     "incomingFactionTooltip": "Relation created by the faction",
@@ -1491,6 +1505,7 @@
     "searchPlaceholder": "Search groups...",
     "noMembers": "No Members",
     "noMembersText": "This group contains no entities yet",
+    "addMember": "Add Member",
     "memberCount": "{count} member | {count} members",
     "addedAt": "Added on {date}",
     "deleted": "Group deleted",
@@ -1498,6 +1513,23 @@
     "created": "Group created",
     "saved": "Group saved",
     "entitiesAdded": "{count} entity added | {count} entities added"
+  },
+  "quickLink": {
+    "linkNpc": "Link NPC",
+    "linkLocation": "Link Location",
+    "linkItem": "Link Item",
+    "linkFaction": "Link Faction",
+    "joinFaction": "Join Faction",
+    "linkLore": "Link Lore",
+    "linkPlayer": "Link Player",
+    "addToGroup": "Add to Group",
+    "createGroup": "New Group",
+    "selectTitle": "Select {type} for \"{name}\"",
+    "relationLabel": "Relation: {relation}",
+    "linked": "\"{name}\" linked",
+    "alreadyLinked": "Already linked",
+    "searchPlaceholder": "Search...",
+    "related": "Related"
   },
   "settings": {
     "title": "Settings",

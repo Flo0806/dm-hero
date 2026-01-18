@@ -55,6 +55,11 @@
             {{ $t('players.title') }}
             <v-chip size="x-small" class="ml-2">{{ counts.players }}</v-chip>
           </v-tab>
+          <v-tab value="factions">
+            <v-icon start>mdi-shield-account</v-icon>
+            {{ $t('factions.title') }}
+            <v-chip size="x-small" class="ml-2">{{ counts.factions }}</v-chip>
+          </v-tab>
         </v-tabs>
 
         <v-card-text class="flex-grow-1 overflow-y-auto">
@@ -183,6 +188,19 @@
               <EntityPlayersTab
                 v-if="location"
                 :entity-id="location.id"
+                :relation-types="NPC_LOCATION_RELATION_TYPES"
+                i18n-prefix="npcs.relationTypes"
+                @changed="loadCounts(location!.id)"
+              />
+            </v-tabs-window-item>
+
+            <!-- Factions Tab -->
+            <v-tabs-window-item value="factions">
+              <EntityFactionsTab
+                v-if="location"
+                :entity-id="location.id"
+                :relation-types="FACTION_LOCATION_TYPES"
+                i18n-prefix="factions.locationTypes"
                 @changed="loadCounts(location!.id)"
               />
             </v-tabs-window-item>
@@ -281,7 +299,10 @@ import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 import EntityNpcsTab from '~/components/shared/EntityNpcsTab.vue'
 import EntityItemsTab from '~/components/shared/EntityItemsTab.vue'
 import EntityLoreTab from '~/components/shared/EntityLoreTab.vue'
+import EntityFactionsTab from '~/components/shared/EntityFactionsTab.vue'
 import { LOCATION_TYPES, LOCATION_ITEM_RELATION_TYPES } from '~~/types/location'
+import { NPC_LOCATION_RELATION_TYPES } from '~~/types/npc'
+import { FACTION_LOCATION_TYPES } from '~~/types/faction'
 import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 interface Location {
@@ -376,6 +397,7 @@ const counts = ref({
   items: 0,
   lore: 0,
   players: 0,
+  factions: 0,
 })
 
 // Linked entities
@@ -543,6 +565,7 @@ async function loadCounts(locationId: number) {
       items: number
       lore: number
       players: number
+      factions: number
       documents: number
       images: number
     }>(`/api/locations/${locationId}/counts`)
@@ -632,6 +655,7 @@ function resetForm() {
     items: 0,
     lore: 0,
     players: 0,
+    factions: 0,
   }
 }
 

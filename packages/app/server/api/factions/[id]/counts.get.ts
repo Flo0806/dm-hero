@@ -15,7 +15,7 @@ export default defineEventHandler((event) => {
     })
   }
 
-  // Get NPCs count (members of this faction)
+  // Get NPCs count (bidirectional - members linked to/from this faction)
   const npcTypeId = db.prepare("SELECT id FROM entity_types WHERE name = 'NPC'").get() as
     | { id: number }
     | undefined
@@ -25,19 +25,31 @@ export default defineEventHandler((event) => {
     const membersResult = db
       .prepare(
         `
-      SELECT COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.from_entity_id
-      WHERE er.to_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
     `,
       )
-      .get(Number(factionId), npcTypeId.id) as { count: number }
+      .get(Number(factionId), npcTypeId.id, Number(factionId), npcTypeId.id) as { count: number }
     membersCount = membersResult.count
   }
 
-  // Get lore count (Lore entries related to this faction)
+  // Get lore count (bidirectional - Lore entries linked to/from this faction)
   const loreTypeId = db.prepare("SELECT id FROM entity_types WHERE name = 'Lore'").get() as
     | { id: number }
     | undefined
@@ -47,15 +59,27 @@ export default defineEventHandler((event) => {
     const loreResult = db
       .prepare(
         `
-      SELECT COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities e ON e.id = er.from_entity_id
-      WHERE er.to_entity_id = ?
-        AND e.type_id = ?
-        AND e.deleted_at IS NULL
+      SELECT COUNT(DISTINCT e.id) as count
+      FROM (
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        WHERE er.from_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION
+
+        SELECT e.id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        WHERE er.to_entity_id = ?
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      ) AS e
     `,
       )
-      .get(Number(factionId), loreTypeId.id) as { count: number }
+      .get(Number(factionId), loreTypeId.id, Number(factionId), loreTypeId.id) as { count: number }
     loreCount = loreResult.count
   }
 

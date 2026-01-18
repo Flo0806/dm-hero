@@ -53,6 +53,11 @@
           {{ $t('nav.lore') }}
           <v-chip size="x-small" class="ml-2">{{ counts?.lore || 0 }}</v-chip>
         </v-tab>
+        <v-tab value="players">
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('nav.players') }}
+          <v-chip size="x-small" class="ml-2">{{ counts?.players || 0 }}</v-chip>
+        </v-tab>
         <v-tab value="documents">
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('documents.title') }}
@@ -192,6 +197,19 @@
             />
           </v-window-item>
 
+          <!-- Players Tab -->
+          <v-window-item value="players">
+            <EntityRelationsList
+              :entities="players || []"
+              :loading="loadingPlayers"
+              entity-type="player"
+              :empty-message="$t('items.noPlayers')"
+              :show-relation-type="true"
+              relation-type-translation-path="players.relationTypes"
+              :clickable="false"
+            />
+          </v-window-item>
+
           <!-- Documents Tab -->
           <v-window-item value="documents">
             <EntityDocumentsView
@@ -268,6 +286,7 @@ interface ItemCounts {
   locations: number
   factions: number
   lore: number
+  players: number
   documents: number
   images: number
 }
@@ -291,6 +310,7 @@ interface Props {
   locations?: Entity[]
   factions?: Entity[]
   lore?: Entity[]
+  players?: Entity[]
   documents?: Document[]
   images?: Image[]
   counts?: ItemCounts | null
@@ -299,6 +319,7 @@ interface Props {
   loadingLocations?: boolean
   loadingFactions?: boolean
   loadingLore?: boolean
+  loadingPlayers?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -306,6 +327,7 @@ const props = withDefaults(defineProps<Props>(), {
   locations: () => [],
   factions: () => [],
   lore: () => [],
+  players: () => [],
   documents: () => [],
   images: () => [],
   counts: null,
@@ -314,6 +336,7 @@ const props = withDefaults(defineProps<Props>(), {
   loadingLocations: false,
   loadingFactions: false,
   loadingLore: false,
+  loadingPlayers: false,
 })
 
 defineEmits<{

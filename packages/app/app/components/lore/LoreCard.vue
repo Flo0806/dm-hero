@@ -5,6 +5,7 @@
     :class="['d-flex flex-column lore-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', lore)"
+    @contextmenu.prevent="quickLink.openContextMenu"
   >
     <!-- Pin Button (top right) -->
     <SharedPinButton
@@ -339,11 +340,29 @@
     :chips="previewChips"
     :download-file-name="lore.name"
   />
+
+  <!-- Quick Link Context Menu -->
+  <QuickLinkContextMenu
+    v-model="quickLink.showContextMenu.value"
+    v-bind="quickLink.contextMenuProps.value"
+    @select="quickLink.handleQuickLinkSelect"
+    @add-to-group="quickLink.handleAddToGroup"
+    @create-group="quickLink.handleCreateGroup"
+  />
+
+  <!-- Quick Link Entity Select Dialog -->
+  <QuickLinkEntitySelectDialog
+    v-model="quickLink.showEntitySelectDialog.value"
+    v-bind="quickLink.entitySelectDialogProps.value"
+    @linked="quickLink.handleLinked"
+  />
 </template>
 
 <script setup lang="ts">
 import type { Lore, LoreCounts } from '../../../types/lore'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 
 interface Props {
   lore: Lore
@@ -354,13 +373,16 @@ const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [lore: Lore]
   edit: [lore: Lore]
   download: [lore: Lore]
   delete: [lore: Lore]
   chaos: [lore: Lore]
   'open-group': [groupId: number]
+  'add-to-group': [payload: { entityId: number; groupId: number }]
+  'create-group': [entityId: number]
+  linked: []
 }>()
 
 const { t } = useI18n()
@@ -368,6 +390,17 @@ const { getCounts } = useLoreCounts()
 
 // Get counts reactively from the composable (shared cache)
 const counts = computed<LoreCounts | undefined>(() => getCounts(props.lore.id) || props.lore._counts)
+
+// Quick Link - using composable for all state and handlers
+const quickLink = useQuickLink({
+  entityId: props.lore.id,
+  entityName: props.lore.name,
+  sourceType: 'Lore',
+  groups: computed(() => counts.value?.groups),
+  onLinked: () => emit('linked'),
+  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.lore.id, groupId }),
+  onCreateGroup: () => emit('create-group', props.lore.id),
+})
 
 // Image Preview State
 const showImagePreview = ref(false)

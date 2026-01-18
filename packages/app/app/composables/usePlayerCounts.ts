@@ -100,6 +100,27 @@ export function usePlayerCounts() {
   }
 
   /**
+   * Reload counts for specific Player IDs (used by QuickLink after creating relations)
+   */
+  async function reloadCountsFor(playerIds: number[]): Promise<void> {
+    // Invalidate cache for these IDs
+    for (const id of playerIds) {
+      countsMap[id] = undefined
+      loadingCounts.value.delete(id)
+    }
+    // Reload in parallel
+    const promises = playerIds.map(async (id) => {
+      try {
+        const counts = await $fetch<PlayerCounts>(`/api/players/${id}/counts`)
+        countsMap[id] = counts
+      } catch (error) {
+        console.error(`Failed to reload counts for Player ${id}:`, error)
+      }
+    })
+    await Promise.all(promises)
+  }
+
+  /**
    * Clear all cached counts
    * Use this when reloading all Players from API
    */
@@ -118,6 +139,7 @@ export function usePlayerCounts() {
     getCounts,
     setCounts,
     reloadPlayerCounts,
+    reloadCountsFor,
     clearCountsCache,
     loadingCounts: computed(() => loadingCounts.value),
     batchLoading: computed(() => batchLoading.value),

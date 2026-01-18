@@ -104,6 +104,7 @@
               :class="{
                 'highlight-blink-title': highlightedId === item.raw.id,
               }"
+              @contextmenu.prevent="openQuickLinkMenu($event, item.raw)"
             >
               <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
                 {{ item.title }}
@@ -199,6 +200,8 @@
       :npcs="connectedNpcs"
       :items="locationItems"
       :lore="locationLore"
+      :players="locationPlayers"
+      :factions="locationFactions"
       :documents="locationDocuments"
       :images="locationImages"
       :counts="viewDialogCounts"
@@ -206,6 +209,8 @@
       :loading-npcs="loadingNpcs"
       :loading-items="loadingItems"
       :loading-lore="loadingLore"
+      :loading-players="loadingPlayers"
+      :loading-factions="loadingFactions"
       @edit="editLocationAndCloseView"
       @preview-image="(image: { image_url: string }) => openImagePreview(`/uploads/${image.image_url}`, viewingLocation?.name || '')"
     />
@@ -228,6 +233,25 @@
       :download-file-name="previewImageTitle"
     />
 
+    <!-- Quick Link Context Menu -->
+    <QuickLinkContextMenu
+      v-model="quickLinkState.showContextMenu"
+      :position="quickLinkState.position"
+      :source-entity="quickLinkState.sourceEntity"
+      source-type="Location"
+      @select="handleQuickLinkSelect"
+    />
+
+    <!-- Quick Link Entity Select Dialog -->
+    <QuickLinkEntitySelectDialog
+      v-model="quickLinkState.showEntitySelectDialog"
+      :source-entity="quickLinkState.sourceEntity"
+      source-type="Location"
+      :target-type="quickLinkState.targetType"
+      :relation-type="quickLinkState.relationType"
+      @linked="handleLinked"
+    />
+
     <!-- Floating Action Button -->
     <v-btn
       color="primary"
@@ -243,6 +267,8 @@
 import LocationViewDialog from '~/components/locations/LocationViewDialog.vue'
 import LocationEditDialog from '~/components/locations/LocationEditDialog.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 
 interface Location {
   id: number
@@ -271,6 +297,7 @@ interface LocationCounts {
   items: number
   lore: number
   players: number
+  factions: number
   documents: number
   images: number
 }
@@ -696,6 +723,30 @@ const locationLore = ref<
 >([])
 const loadingLore = ref(false)
 
+// Location Players
+const locationPlayers = ref<
+  Array<{
+    id: number
+    name: string
+    description?: string | null
+    relation_type?: string
+    image_url?: string | null
+  }>
+>([])
+const loadingPlayers = ref(false)
+
+// Location Factions
+const locationFactions = ref<
+  Array<{
+    id: number
+    name: string
+    description?: string | null
+    relation_type?: string
+    image_url?: string | null
+  }>
+>([])
+const loadingFactions = ref(false)
+
 // Location Documents & Images
 const locationDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
 const locationImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
@@ -710,12 +761,16 @@ async function viewLocation(location: Location) {
   loadingNpcs.value = true
   loadingItems.value = true
   loadingLore.value = true
+  loadingPlayers.value = true
+  loadingFactions.value = true
 
   try {
-    const [npcs, items, lore, documents, images, counts] = await Promise.all([
+    const [npcs, items, lore, players, factions, documents, images, counts] = await Promise.all([
       $fetch<ConnectedNPC[]>(`/api/entities/${location.id}/related/npcs`).catch(() => []),
       $fetch<typeof locationItems.value>(`/api/entities/${location.id}/related/items`).catch(() => []),
       $fetch<typeof locationLore.value>(`/api/entities/${location.id}/related/lore`).catch(() => []),
+      $fetch<typeof locationPlayers.value>(`/api/entities/${location.id}/related/players`).catch(() => []),
+      $fetch<typeof locationFactions.value>(`/api/entities/${location.id}/related/factions`).catch(() => []),
       $fetch<typeof locationDocuments.value>(`/api/entities/${location.id}/documents`).catch(() => []),
       $fetch<typeof locationImages.value>(`/api/entity-images/${location.id}`).catch(() => []),
       $fetch<LocationCounts>(`/api/locations/${location.id}/counts`).catch(() => null),
@@ -724,6 +779,8 @@ async function viewLocation(location: Location) {
     connectedNpcs.value = npcs
     locationItems.value = items
     locationLore.value = lore
+    locationPlayers.value = players
+    locationFactions.value = factions
     locationDocuments.value = documents
     locationImages.value = images
     viewDialogCounts.value = counts
@@ -732,6 +789,8 @@ async function viewLocation(location: Location) {
     loadingNpcs.value = false
     loadingItems.value = false
     loadingLore.value = false
+    loadingPlayers.value = false
+    loadingFactions.value = false
   }
 
   // Load items for the form if not already loaded
@@ -841,6 +900,36 @@ async function confirmDelete() {
   } finally {
     deleting.value = false
   }
+}
+
+// ============================================================================
+// Quick Link Context Menu
+// ============================================================================
+const quickLinkState = reactive({
+  showContextMenu: false,
+  showEntitySelectDialog: false,
+  position: { x: 0, y: 0 },
+  sourceEntity: { id: 0, name: '' },
+  targetType: '' as 'NPC' | 'Item' | 'Location' | 'Faction' | 'Lore' | 'Player',
+  relationType: '',
+})
+
+function openQuickLinkMenu(event: MouseEvent, location: Location) {
+  quickLinkState.position = { x: event.clientX, y: event.clientY }
+  quickLinkState.sourceEntity = { id: location.id, name: location.name }
+  quickLinkState.showContextMenu = true
+}
+
+function handleQuickLinkSelect({ targetType, relationType }: { targetType: string; relationType: string }) {
+  quickLinkState.targetType = targetType as typeof quickLinkState.targetType
+  quickLinkState.relationType = relationType
+  quickLinkState.showContextMenu = false
+  quickLinkState.showEntitySelectDialog = true
+}
+
+function handleLinked() {
+  // Optionally reload data or show notification
+  quickLinkState.showEntitySelectDialog = false
 }
 
 </script>

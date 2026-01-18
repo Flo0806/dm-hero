@@ -76,20 +76,37 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 1. Get owners count (NPCs that own items)
+  // 1. Get owners count (NPCs that own items - bidirectional)
   if (npcTypeId) {
     const ownersCounts = db.prepare(`
-      SELECT er.to_entity_id as item_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities npc ON npc.id = er.from_entity_id
-      INNER JOIN entities item ON item.id = er.to_entity_id
-      WHERE item.campaign_id = ?
-        AND item.type_id = ?
-        AND item.deleted_at IS NULL
-        AND npc.type_id = ?
-        AND npc.deleted_at IS NULL
-      GROUP BY er.to_entity_id
-    `).all(Number(campaignId), itemTypeId, npcTypeId) as Array<{ item_id: number; count: number }>
+      SELECT item_id, COUNT(DISTINCT npc_id) as count FROM (
+        SELECT er.from_entity_id as item_id, e.id as npc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities item ON item.id = er.from_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as item_id, e.id as npc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities item ON item.id = er.to_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY item_id
+    `).all(
+      Number(campaignId), itemTypeId, npcTypeId,
+      Number(campaignId), itemTypeId, npcTypeId,
+    ) as Array<{ item_id: number; count: number }>
 
     for (const row of ownersCounts) {
       if (result[row.item_id]) {
@@ -98,20 +115,37 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 2. Get locations count
+  // 2. Get locations count (bidirectional)
   if (locationTypeId) {
     const locationsCounts = db.prepare(`
-      SELECT er.to_entity_id as item_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities loc ON loc.id = er.from_entity_id
-      INNER JOIN entities item ON item.id = er.to_entity_id
-      WHERE item.campaign_id = ?
-        AND item.type_id = ?
-        AND item.deleted_at IS NULL
-        AND loc.type_id = ?
-        AND loc.deleted_at IS NULL
-      GROUP BY er.to_entity_id
-    `).all(Number(campaignId), itemTypeId, locationTypeId) as Array<{ item_id: number; count: number }>
+      SELECT item_id, COUNT(DISTINCT loc_id) as count FROM (
+        SELECT er.from_entity_id as item_id, e.id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities item ON item.id = er.from_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as item_id, e.id as loc_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities item ON item.id = er.to_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY item_id
+    `).all(
+      Number(campaignId), itemTypeId, locationTypeId,
+      Number(campaignId), itemTypeId, locationTypeId,
+    ) as Array<{ item_id: number; count: number }>
 
     for (const row of locationsCounts) {
       if (result[row.item_id]) {
@@ -120,20 +154,37 @@ export default defineEventHandler((event) => {
     }
   }
 
-  // 3. Get lore count
+  // 3. Get lore count (bidirectional)
   if (loreTypeId) {
     const loreCounts = db.prepare(`
-      SELECT er.from_entity_id as item_id, COUNT(*) as count
-      FROM entity_relations er
-      INNER JOIN entities lore ON lore.id = er.to_entity_id
-      INNER JOIN entities item ON item.id = er.from_entity_id
-      WHERE item.campaign_id = ?
-        AND item.type_id = ?
-        AND item.deleted_at IS NULL
-        AND lore.type_id = ?
-        AND lore.deleted_at IS NULL
-      GROUP BY er.from_entity_id
-    `).all(Number(campaignId), itemTypeId, loreTypeId) as Array<{ item_id: number; count: number }>
+      SELECT item_id, COUNT(DISTINCT lore_id) as count FROM (
+        SELECT er.from_entity_id as item_id, e.id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.to_entity_id
+        INNER JOIN entities item ON item.id = er.from_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT er.to_entity_id as item_id, e.id as lore_id
+        FROM entity_relations er
+        INNER JOIN entities e ON e.id = er.from_entity_id
+        INNER JOIN entities item ON item.id = er.to_entity_id
+        WHERE item.campaign_id = ?
+          AND item.type_id = ?
+          AND item.deleted_at IS NULL
+          AND e.type_id = ?
+          AND e.deleted_at IS NULL
+      )
+      GROUP BY item_id
+    `).all(
+      Number(campaignId), itemTypeId, loreTypeId,
+      Number(campaignId), itemTypeId, loreTypeId,
+    ) as Array<{ item_id: number; count: number }>
 
     for (const row of loreCounts) {
       if (result[row.item_id]) {

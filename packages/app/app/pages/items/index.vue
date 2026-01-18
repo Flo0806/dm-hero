@@ -90,6 +90,7 @@
         :locations="itemLocations"
         :factions="itemFactions"
         :lore="itemLore"
+        :players="itemPlayers"
         :documents="itemDocuments"
         :images="itemImages"
         :counts="viewDialogCounts"
@@ -98,6 +99,7 @@
         :loading-locations="loadingLocations"
         :loading-factions="loadingFactions"
         :loading-lore="loadingLore"
+        :loading-players="loadingPlayers"
         @edit="editItemAndCloseView"
         @preview-image="(image: { image_url: string }) => openImagePreview(`/uploads/${image.image_url}`, viewingItem?.name || '')"
       />
@@ -378,12 +380,14 @@ const loadingOwners = ref(false)
 const loadingLocations = ref(false)
 const loadingFactions = ref(false)
 const loadingLore = ref(false)
+const loadingPlayers = ref(false)
 
 const viewDialogCounts = ref<{
   owners: number
   locations: number
   factions: number
   lore: number
+  players: number
   documents: number
   images: number
 } | null>(null)
@@ -394,6 +398,7 @@ const itemOwners = ref<Array<{ id: number; name: string; description?: string | 
 const itemLocations = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
 const itemFactions = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
 const itemLore = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null }>>([])
+const itemPlayers = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
 
 async function viewItem(item: Item) {
   viewingItem.value = item
@@ -404,13 +409,15 @@ async function viewItem(item: Item) {
   loadingLocations.value = true
   loadingFactions.value = true
   loadingLore.value = true
+  loadingPlayers.value = true
 
   try {
-    const [owners, locations, factions, lore, documents, images, counts] = await Promise.all([
+    const [owners, locations, factions, lore, players, documents, images, counts] = await Promise.all([
       $fetch<typeof itemOwners.value>(`/api/entities/${item.id}/related/npcs`).catch(() => []),
       $fetch<typeof itemLocations.value>(`/api/entities/${item.id}/related/locations`).catch(() => []),
       $fetch<typeof itemFactions.value>(`/api/entities/${item.id}/related/factions`).catch(() => []),
       $fetch<typeof itemLore.value>(`/api/entities/${item.id}/related/lore`).catch(() => []),
+      $fetch<typeof itemPlayers.value>(`/api/entities/${item.id}/related/players`).catch(() => []),
       $fetch<typeof itemDocuments.value>(`/api/entities/${item.id}/documents`).catch(() => []),
       $fetch<typeof itemImages.value>(`/api/entity-images/${item.id}`).catch(() => []),
       $fetch<typeof viewDialogCounts.value>(`/api/items/${item.id}/counts`).catch(() => null),
@@ -420,6 +427,7 @@ async function viewItem(item: Item) {
     itemLocations.value = locations
     itemFactions.value = factions
     itemLore.value = lore
+    itemPlayers.value = players
     itemDocuments.value = documents
     itemImages.value = images
     viewDialogCounts.value = counts
@@ -429,6 +437,7 @@ async function viewItem(item: Item) {
     loadingLocations.value = false
     loadingFactions.value = false
     loadingLore.value = false
+    loadingPlayers.value = false
   }
 }
 

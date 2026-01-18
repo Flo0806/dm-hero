@@ -5,6 +5,7 @@
     :class="['d-flex flex-column item-card', { 'highlighted-card': isHighlighted }]"
     style="height: 100%; cursor: pointer"
     @click="$emit('view', item)"
+    @contextmenu.prevent="quickLink.openContextMenu"
   >
     <!-- Pin Button (top right) -->
     <SharedPinButton
@@ -347,11 +348,29 @@
     :chips="previewChips"
     :download-file-name="item.name"
   />
+
+  <!-- Quick Link Context Menu -->
+  <QuickLinkContextMenu
+    v-model="quickLink.showContextMenu.value"
+    v-bind="quickLink.contextMenuProps.value"
+    @select="quickLink.handleQuickLinkSelect"
+    @add-to-group="quickLink.handleAddToGroup"
+    @create-group="quickLink.handleCreateGroup"
+  />
+
+  <!-- Quick Link Entity Select Dialog -->
+  <QuickLinkEntitySelectDialog
+    v-model="quickLink.showEntitySelectDialog.value"
+    v-bind="quickLink.entitySelectDialogProps.value"
+    @linked="quickLink.handleLinked"
+  />
 </template>
 
 <script setup lang="ts">
 import type { Item } from '~~/types/item'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
+import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 
 interface Props {
   item: Item
@@ -362,13 +381,16 @@ const props = withDefaults(defineProps<Props>(), {
   isHighlighted: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   view: [item: Item]
   edit: [item: Item]
   download: [item: Item]
   delete: [item: Item]
   chaos: [item: Item]
   'open-group': [groupId: number]
+  'add-to-group': [payload: { entityId: number; groupId: number }]
+  'create-group': [entityId: number]
+  linked: []
 }>()
 
 const { getCounts } = useItemCounts()
@@ -377,6 +399,17 @@ const { t } = useI18n()
 
 // Get counts reactively from the composable
 const counts = computed(() => getCounts(props.item.id) || props.item._counts)
+
+// Quick Link - using composable for all state and handlers
+const quickLink = useQuickLink({
+  entityId: props.item.id,
+  entityName: props.item.name,
+  sourceType: 'Item',
+  groups: computed(() => counts.value?.groups),
+  onLinked: () => emit('linked'),
+  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.item.id, groupId }),
+  onCreateGroup: () => emit('create-group', props.item.id),
+})
 
 // Image Preview State
 const showImagePreview = ref(false)

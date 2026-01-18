@@ -93,7 +93,7 @@ const { getItemTypeIcon, getLocationTypeIcon } = useEntityIcons()
 interface Props {
   entities: Entity[]
   loading?: boolean
-  entityType: 'item' | 'location' | 'lore' | 'npc' | 'faction'
+  entityType: 'item' | 'location' | 'lore' | 'npc' | 'faction' | 'player'
   emptyMessage: string
   showRelationType?: boolean
   clickable?: boolean
@@ -129,6 +129,7 @@ function getIcon(entity?: Entity): string {
     lore: 'mdi-book-open-variant',
     npc: 'mdi-account',
     faction: 'mdi-shield-account',
+    player: 'mdi-account-star',
   }
   return icons[props.entityType] || 'mdi-help'
 }
@@ -140,6 +141,7 @@ function getAvatarColor(): string {
     lore: 'grey-lighten-2',
     npc: 'primary',
     faction: 'secondary',
+    player: 'amber',
   }
   return colors[props.entityType] || 'grey'
 }
