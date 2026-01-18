@@ -1271,6 +1271,230 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
   })
 })
 
+describe('Groups - Entity Card Chips (batch-counts groups)', () => {
+  // Tests for the groups array returned by batch-counts APIs
+  // Used to display group chips on entity cards
+
+  it('should return groups for an entity in one group', () => {
+    const groupId = createGroup('Dungeon West', { color: '#FF5733', icon: 'mdi-castle' })
+    const npcId = createEntity('Guard NPC', npcTypeId)
+    addMember(groupId, npcId)
+
+    // Query similar to batch-counts.get.ts
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+      ORDER BY g.name
+    `).all(npcId) as Array<{
+      entity_id: number
+      group_id: number
+      group_name: string
+      color: string | null
+      icon: string | null
+    }>
+
+    expect(groupMemberships).toHaveLength(1)
+    expect(groupMemberships[0]?.group_name).toBe('Dungeon West')
+    expect(groupMemberships[0]?.color).toBe('#FF5733')
+    expect(groupMemberships[0]?.icon).toBe('mdi-castle')
+  })
+
+  it('should return multiple groups for an entity in multiple groups', () => {
+    const group1 = createGroup('Adventure A', { color: '#FF0000', icon: 'mdi-sword' })
+    const group2 = createGroup('Important NPCs', { color: '#00FF00', icon: 'mdi-star' })
+    const group3 = createGroup('Zzz Last Group', { color: '#0000FF', icon: 'mdi-sleep' })
+    const npcId = createEntity('Multi-Group NPC', npcTypeId)
+
+    addMember(group1, npcId)
+    addMember(group2, npcId)
+    addMember(group3, npcId)
+
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+      ORDER BY g.name
+    `).all(npcId) as Array<{
+      entity_id: number
+      group_id: number
+      group_name: string
+      color: string | null
+      icon: string | null
+    }>
+
+    expect(groupMemberships).toHaveLength(3)
+    // Should be sorted by name
+    expect(groupMemberships[0]?.group_name).toBe('Adventure A')
+    expect(groupMemberships[1]?.group_name).toBe('Important NPCs')
+    expect(groupMemberships[2]?.group_name).toBe('Zzz Last Group')
+  })
+
+  it('should return empty array for entity not in any group', () => {
+    const npcId = createEntity('Lonely NPC', npcTypeId)
+
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+      ORDER BY g.name
+    `).all(npcId)
+
+    expect(groupMemberships).toHaveLength(0)
+  })
+
+  it('should exclude soft-deleted groups from entity groups', () => {
+    const activeGroup = createGroup('Active Group', { color: '#00FF00' })
+    const deletedGroup = createGroup('Deleted Group', { color: '#FF0000' })
+    const npcId = createEntity('Test NPC', npcTypeId)
+
+    addMember(activeGroup, npcId)
+    addMember(deletedGroup, npcId)
+
+    // Soft-delete one group
+    db.prepare("UPDATE entity_groups SET deleted_at = datetime('now') WHERE id = ?").run(deletedGroup)
+
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+      ORDER BY g.name
+    `).all(npcId) as Array<{ group_name: string }>
+
+    expect(groupMemberships).toHaveLength(1)
+    expect(groupMemberships[0]?.group_name).toBe('Active Group')
+  })
+
+  it('should handle groups with null color and icon', () => {
+    const groupId = createGroup('Plain Group') // No color or icon
+    const npcId = createEntity('Plain NPC', npcTypeId)
+    addMember(groupId, npcId)
+
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+      ORDER BY g.name
+    `).all(npcId) as Array<{
+      group_name: string
+      color: string | null
+      icon: string | null
+    }>
+
+    expect(groupMemberships).toHaveLength(1)
+    expect(groupMemberships[0]?.color).toBeNull()
+    expect(groupMemberships[0]?.icon).toBeNull()
+  })
+
+  it('should aggregate groups for multiple entities (batch query)', () => {
+    // Simulates the batch-counts query pattern
+    const group1 = createGroup('Group Alpha', { color: '#FF0000' })
+    const group2 = createGroup('Group Beta', { color: '#00FF00' })
+
+    const npc1 = createEntity('NPC 1', npcTypeId)
+    const npc2 = createEntity('NPC 2', npcTypeId)
+    const npc3 = createEntity('NPC 3', npcTypeId)
+
+    // NPC 1 is in both groups
+    addMember(group1, npc1)
+    addMember(group2, npc1)
+    // NPC 2 is only in group1
+    addMember(group1, npc2)
+    // NPC 3 is in no groups
+
+    const entityIds = [npc1, npc2, npc3]
+
+    const groupMemberships = db.prepare(`
+      SELECT gm.entity_id, g.id as group_id, g.name as group_name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id IN (${entityIds.join(',')})
+      ORDER BY g.name
+    `).all() as Array<{
+      entity_id: number
+      group_id: number
+      group_name: string
+      color: string | null
+      icon: string | null
+    }>
+
+    // Build groups map like batch-counts does
+    const groupsByEntity = new Map<number, Array<{ id: number; name: string; color: string | null; icon: string | null }>>()
+
+    for (const membership of groupMemberships) {
+      if (!groupsByEntity.has(membership.entity_id)) {
+        groupsByEntity.set(membership.entity_id, [])
+      }
+      groupsByEntity.get(membership.entity_id)!.push({
+        id: membership.group_id,
+        name: membership.group_name,
+        color: membership.color,
+        icon: membership.icon,
+      })
+    }
+
+    // NPC 1 should have 2 groups
+    expect(groupsByEntity.get(npc1)).toHaveLength(2)
+
+    // NPC 2 should have 1 group
+    expect(groupsByEntity.get(npc2)).toHaveLength(1)
+    expect(groupsByEntity.get(npc2)?.[0]?.name).toBe('Group Alpha')
+
+    // NPC 3 should have no entry (or empty array)
+    expect(groupsByEntity.get(npc3)).toBeUndefined()
+  })
+
+  it('should work across different entity types', () => {
+    const groupId = createGroup('Mixed Entity Group', { color: '#9370DB', icon: 'mdi-folder' })
+
+    const npcId = createEntity('Test NPC', npcTypeId)
+    const locationId = createEntity('Test Location', locationTypeId)
+    const itemId = createEntity('Test Item', itemTypeId)
+
+    addMember(groupId, npcId)
+    addMember(groupId, locationId)
+    addMember(groupId, itemId)
+
+    // Query for NPC
+    const npcGroups = db.prepare(`
+      SELECT g.id, g.name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+    `).all(npcId) as Array<{ id: number; name: string }>
+
+    // Query for Location
+    const locationGroups = db.prepare(`
+      SELECT g.id, g.name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+    `).all(locationId) as Array<{ id: number; name: string }>
+
+    // Query for Item
+    const itemGroups = db.prepare(`
+      SELECT g.id, g.name, g.color, g.icon
+      FROM entity_group_members gm
+      INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+      WHERE gm.entity_id = ?
+    `).all(itemId) as Array<{ id: number; name: string }>
+
+    // All should return the same group
+    expect(npcGroups).toHaveLength(1)
+    expect(locationGroups).toHaveLength(1)
+    expect(itemGroups).toHaveLength(1)
+
+    expect(npcGroups[0]?.name).toBe('Mixed Entity Group')
+    expect(locationGroups[0]?.name).toBe('Mixed Entity Group')
+    expect(itemGroups[0]?.name).toBe('Mixed Entity Group')
+  })
+})
+
 describe('Groups - Global Search Integration', () => {
   it('should include groups in combined search results', () => {
     // Create a group with members
