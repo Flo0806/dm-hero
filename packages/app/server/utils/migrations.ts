@@ -1988,7 +1988,7 @@ export const migrations: Migration[] = [
         { key: 'highelf', de: 'Hochelf', en: 'High Elf' },
         { key: 'eladrin', de: 'Eladrin', en: 'Eladrin' },
         { key: 'seaelf', de: 'Seeelf', en: 'Sea Elf' },
-        { key: 'shadarkai', de: 'Shadar-kai', en: 'Shadar-kai' },
+        { key: 'shadarkai', de: 'Shadar-Kai', en: 'Shadar-Kai' },
         // Dwarf subraces
         { key: 'mountaindwarf', de: 'Bergzwerg', en: 'Mountain Dwarf' },
         { key: 'hilldwarf', de: 'Hügelzwerg', en: 'Hill Dwarf' },
