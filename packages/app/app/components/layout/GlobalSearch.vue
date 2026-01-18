@@ -11,7 +11,7 @@
           autofocus
           clearable
           hide-details
-          placeholder="Suche nach NPCs, Orten, Items..."
+          :placeholder="$t('search.placeholder')"
           prepend-inner-icon="mdi-magnify"
           variant="solo"
           flat
@@ -21,7 +21,7 @@
       <v-divider />
       <v-card-text style="max-height: 500px; overflow-y: auto">
         <div v-if="searchQuery" class="text-caption text-disabled mb-2">
-          Suche nach "{{ searchQuery }}"...
+          {{ $t('search.searching', { query: searchQuery }) }}
         </div>
         <v-list v-if="searchResults.length > 0">
           <v-list-item
@@ -34,7 +34,7 @@
             </template>
             <v-list-item-title>{{ result.name }}</v-list-item-title>
             <v-list-item-subtitle class="d-flex align-center flex-wrap ga-1">
-              <span>{{ result.type }}</span>
+              <span>{{ getLocalizedType(result.type) }}</span>
               <template v-if="result.linkedEntities && result.linkedEntities.length > 0">
                 <span class="mx-1">·</span>
                 <v-chip
@@ -51,15 +51,19 @@
           </v-list-item>
         </v-list>
         <div v-else-if="searchQuery" class="text-center text-disabled py-8">
-          Keine Ergebnisse gefunden
+          {{ $t('search.noResults') }}
         </div>
-        <div v-else class="text-center text-disabled py-8">Drücke <kbd>/</kbd> um zu suchen</div>
+        <div v-else class="text-center text-disabled py-8">
+          {{ $t('search.hint') }}
+        </div>
       </v-card-text>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 interface SearchResult {
   id: number
   name: string
@@ -83,6 +87,21 @@ defineEmits<{
   'update:search-query': [query: string]
   'select-result': [result: SearchResult]
 }>()
+
+// Map entity types to localized names
+function getLocalizedType(type: string): string {
+  const typeMap: Record<string, string> = {
+    NPC: t('entityTypes.NPC'),
+    Location: t('entityTypes.Location'),
+    Item: t('entityTypes.Item'),
+    Faction: t('entityTypes.Faction'),
+    Lore: t('entityTypes.Lore'),
+    Session: t('entityTypes.Session'),
+    Player: t('entityTypes.Player'),
+    Group: t('entityTypes.Group'),
+  }
+  return typeMap[type] || type
+}
 </script>
 
 <style scoped>

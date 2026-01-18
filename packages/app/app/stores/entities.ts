@@ -4,6 +4,7 @@ import type { Item } from '../../types/item'
 import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
 import type { Faction } from '../../types/faction'
+import type { EntityGroup } from '../../types/group'
 import { useNpcCounts } from '../composables/useNpcCounts'
 import { useFactionCounts } from '../composables/useFactionCounts'
 import { useItemCounts } from '../composables/useItemCounts'
@@ -57,6 +58,11 @@ export const useEntitiesStore = defineStore('entities', {
     playersLoaded: false,
     playersLoading: false,
 
+    // Groups
+    groups: [] as EntityGroup[],
+    groupsLoaded: false,
+    groupsLoading: false,
+
     // Image versions - incremented when images change for an entity
     // Components can watch this to know when to reload images
     entityImageVersions: {} as Record<number, number>,
@@ -86,6 +92,10 @@ export const useEntitiesStore = defineStore('entities', {
     // Players
     getPlayerById: (state) => (id: number) => state.players.find((p) => p.id === id),
     playersForSelect: (state) => state.players.map((p) => ({ id: p.id, name: p.name })),
+
+    // Groups
+    getGroupById: (state) => (id: number) => state.groups.find((g) => g.id === id),
+    groupsForSelect: (state) => state.groups.map((g) => ({ id: g.id, name: g.name })),
   },
 
   actions: {
@@ -295,6 +305,7 @@ export const useEntitiesStore = defineStore('entities', {
           players: number
           documents: number
           images: number
+          relations: number
         }>(`/api/factions/${id}/counts`)
 
         const faction = this.factions[index]
@@ -754,6 +765,66 @@ export const useEntitiesStore = defineStore('entities', {
       }
     },
 
+    // ==================== Groups ====================
+
+    async fetchGroups(campaignId: string | number, force = false) {
+      if (this.groupsLoaded && !force) return
+
+      this.groupsLoading = true
+      try {
+        const groups = await $fetch<EntityGroup[]>('/api/groups', {
+          query: { campaignId },
+        })
+        this.groups = groups
+        this.groupsLoaded = true
+      } catch (error) {
+        console.error('Failed to fetch groups:', error)
+        this.groups = []
+      } finally {
+        this.groupsLoading = false
+      }
+    },
+
+    async createGroup(campaignId: string | number, data: Partial<EntityGroup>) {
+      const group = await $fetch<EntityGroup>('/api/groups', {
+        method: 'POST',
+        body: {
+          ...data,
+          campaignId,
+        },
+      })
+      this.groups.push(group)
+      return group
+    },
+
+    async updateGroup(id: number, data: Partial<EntityGroup>) {
+      const group = await $fetch<EntityGroup>(`/api/groups/${id}`, {
+        method: 'PATCH',
+        body: data,
+      })
+      const index = this.groups.findIndex((g) => g.id === id)
+      if (index !== -1) {
+        this.groups[index] = { ...this.groups[index], ...group }
+      }
+      return group
+    },
+
+    async deleteGroup(id: number) {
+      await $fetch(`/api/groups/${id}`, {
+        method: 'DELETE',
+      })
+      this.groups = this.groups.filter((g) => g.id !== id)
+    },
+
+    async refreshGroup(id: number) {
+      const group = await $fetch<EntityGroup>(`/api/groups/${id}`)
+      const index = this.groups.findIndex((g) => g.id === id)
+      if (index !== -1) {
+        this.groups[index] = { ...this.groups[index], ...group }
+      }
+      return group
+    },
+
     // ==================== Utility ====================
 
     // Refresh all entities for current campaign
@@ -765,6 +836,7 @@ export const useEntitiesStore = defineStore('entities', {
         this.fetchItems(campaignId, true),
         this.fetchLore(campaignId, true),
         this.fetchPlayers(campaignId, true),
+        this.fetchGroups(campaignId, true),
       ])
     },
 
@@ -794,6 +866,8 @@ export const useEntitiesStore = defineStore('entities', {
       this.loreLoaded = false
       this.players = []
       this.playersLoaded = false
+      this.groups = []
+      this.groupsLoaded = false
       this.entityImageVersions = {}
     },
   },

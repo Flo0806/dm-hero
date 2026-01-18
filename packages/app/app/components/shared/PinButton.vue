@@ -2,7 +2,8 @@
 import type { PinboardItem } from '~~/types/pinboard'
 
 const props = defineProps<{
-  entityId: number
+  entityId?: number
+  groupId?: number
   /** Button variant: 'icon' for icon-only, 'text' for text button, 'chip' for chip style */
   variant?: 'icon' | 'text' | 'chip'
   /** Size for icon variant */
@@ -17,9 +18,29 @@ const campaignId = computed(() => campaignStore.activeCampaignId)
 
 const loading = ref(false)
 
+// Determine if we're pinning an entity or a group
+const isGroup = computed(() => !!props.groupId)
+
 // Use store for pin status
-const isPinned = computed(() => pinboardStore.isPinned(props.entityId))
-const pinId = computed(() => pinboardStore.getPinId(props.entityId))
+const isPinned = computed(() => {
+  if (props.groupId) {
+    return pinboardStore.isGroupPinned(props.groupId)
+  }
+  if (props.entityId) {
+    return pinboardStore.isPinned(props.entityId)
+  }
+  return false
+})
+
+const pinId = computed(() => {
+  if (isGroup.value && props.groupId) {
+    return pinboardStore.getGroupPinId(props.groupId)
+  }
+  if (props.entityId) {
+    return pinboardStore.getPinId(props.entityId)
+  }
+  return null
+})
 
 // Ensure pins are loaded when component mounts
 onMounted(async () => {
@@ -30,7 +51,8 @@ onMounted(async () => {
 
 // Toggle pin state
 async function togglePin() {
-  if (!campaignId.value || !props.entityId) return
+  if (!campaignId.value) return
+  if (!props.entityId && !props.groupId) return
 
   loading.value = true
   try {
@@ -42,9 +64,13 @@ async function togglePin() {
       pinboardStore.removePin(pinId.value)
     } else {
       // Add pin - fetch full pin data to add to store
+      const body = isGroup.value
+        ? { campaignId: campaignId.value, groupId: props.groupId }
+        : { campaignId: campaignId.value, entityId: props.entityId }
+
       const result = await $fetch<{ pinId: number; success: boolean }>('/api/pinboard', {
         method: 'POST',
-        body: { campaignId: campaignId.value, entityId: props.entityId },
+        body,
       })
 
       // Fetch the newly created pin with all its data

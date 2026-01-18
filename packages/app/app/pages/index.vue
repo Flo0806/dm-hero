@@ -231,6 +231,12 @@
       :entity-type="previewEntityType"
     />
 
+    <!-- Group Preview Dialog (handles member previews internally) -->
+    <GroupsGroupPreviewDialog
+      v-model="showGroupPreview"
+      :group-id="previewGroupId"
+    />
+
     <!-- Export Dialog -->
     <CampaignExportDialog
       v-if="activeCampaignId"
@@ -298,6 +304,10 @@ const currentWeather = ref<{ weatherType: string; temperature?: number } | null>
 const showEntityPreview = ref(false)
 const previewEntityId = ref<number | null>(null)
 const previewEntityType = ref<EntityPreviewType>('npc')
+
+// Group preview dialog
+const showGroupPreview = ref(false)
+const previewGroupId = ref<number | null>(null)
 
 // Export/Import/Copy dialogs
 const showExportDialog = ref(false)
@@ -449,6 +459,16 @@ const categories = computed(() => {
       pinnedCount: pinCounts.player || 0,
     },
     {
+      type: 'group',
+      title: t('groups.title'),
+      icon: 'mdi-folder-multiple',
+      color: '#9370DB',
+      to: '/groups',
+      description: t('groups.subtitle'),
+      count: entitiesStore.groups.length,
+      pinnedCount: pinCounts.group || 0,
+    },
+    {
       type: 'session',
       title: t('categories.sessions.title'),
       icon: 'mdi-book-open-page-variant',
@@ -486,6 +506,7 @@ async function fetchDashboardData() {
     entitiesStore.fetchFactions(campaignId),
     entitiesStore.fetchLore(campaignId),
     entitiesStore.fetchPlayers(campaignId),
+    entitiesStore.fetchGroups(campaignId),
 
     // Notes (from store)
     notesStore.fetchNotes(campaignId),
@@ -560,10 +581,20 @@ async function fetchCurrentWeather(config: { current_year: number; current_month
 }
 
 function openEntityPreview(pin: PinboardItem) {
+  // Handle groups separately
+  if (pin.type?.toLowerCase() === 'group') {
+    previewGroupId.value = pin.id
+    showGroupPreview.value = true
+    return
+  }
+
   previewEntityId.value = pin.id
-  previewEntityType.value = pin.type as EntityPreviewType
+  previewEntityType.value = pin.type.toLowerCase() as EntityPreviewType
   showEntityPreview.value = true
 }
+
+// Note: member-click handling is now done internally by GroupPreviewDialog
+// The dialog opens an EntityPreviewDialog on top without closing the group dialog
 
 // Initialize
 onMounted(() => {

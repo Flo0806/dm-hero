@@ -152,6 +152,7 @@ import GroupEntitySelectDialog from '~/components/groups/GroupEntitySelectDialog
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
 
@@ -416,8 +417,29 @@ async function confirmDeleteAll() {
 }
 
 // Initialize
-onMounted(() => {
-  loadGroups()
+onMounted(async () => {
+  await loadGroups()
+
+  // Handle highlight query parameter
+  const highlightParam = route.query.highlight
+  if (highlightParam) {
+    const id = Number(highlightParam)
+    if (!isNaN(id)) {
+      highlightedId.value = id
+      await nextTick()
+      setTimeout(() => {
+        const element = document.getElementById(`group-${id}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+        setTimeout(() => {
+          highlightedId.value = null
+          // Clear the query parameter
+          router.replace({ query: {} })
+        }, 3000)
+      }, 100)
+    }
+  }
 })
 </script>
 

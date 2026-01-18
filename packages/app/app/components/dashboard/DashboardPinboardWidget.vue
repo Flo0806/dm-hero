@@ -18,13 +18,22 @@
             @click="openEntity(pin)"
           >
             <div class="position-relative flex-shrink-0 mr-2">
-              <v-avatar size="36" :color="pin.image_url ? undefined : getTypeColor(pin.type)">
-                <v-img v-if="pin.image_url" :src="`/uploads/${pin.image_url}`" cover />
-                <v-icon v-else :icon="getTypeIcon(pin.type)" size="20" />
-              </v-avatar>
-              <v-avatar v-if="pin.image_url" size="16" :color="getTypeColor(pin.type)" class="type-badge">
-                <v-icon :icon="getTypeIcon(pin.type)" size="10" color="white" />
-              </v-avatar>
+              <!-- Groups use their custom color and icon -->
+              <template v-if="pin.type?.toLowerCase() === 'group'">
+                <v-avatar size="36" :color="pin.color || '#9370DB'">
+                  <v-icon :icon="pin.icon || 'mdi-folder-multiple'" size="20" />
+                </v-avatar>
+              </template>
+              <!-- Regular entities use image or type icon -->
+              <template v-else>
+                <v-avatar size="36" :color="pin.image_url ? undefined : getTypeColor(pin.type)">
+                  <v-img v-if="pin.image_url" :src="`/uploads/${pin.image_url}`" cover />
+                  <v-icon v-else :icon="getTypeIcon(pin.type)" size="20" />
+                </v-avatar>
+                <v-avatar v-if="pin.image_url" size="16" :color="getTypeColor(pin.type)" class="type-badge">
+                  <v-icon :icon="getTypeIcon(pin.type)" size="10" color="white" />
+                </v-avatar>
+              </template>
             </div>
             <div class="flex-grow-1 overflow-hidden">
               <div class="text-body-2 font-weight-medium text-truncate">{{ pin.name }}</div>
@@ -71,6 +80,7 @@ const typeIcons: Record<string, string> = {
   faction: 'mdi-shield',
   lore: 'mdi-book-open-variant',
   player: 'mdi-account-star',
+  group: 'mdi-folder-multiple',
 }
 
 const typeColors: Record<string, string> = {
@@ -80,6 +90,7 @@ const typeColors: Record<string, string> = {
   faction: '#7B92AB',
   lore: '#9B8B7A',
   player: '#A8C686',
+  group: '#9370DB',
 }
 
 function getTypeIcon(type: string): string {
@@ -94,6 +105,10 @@ function getTypeColor(type: string): string {
 
 function getTypeLabel(type: string): string {
   const key = type.toLowerCase()
+  // Groups use their own translation
+  if (key === 'group') {
+    return t('groups.title')
+  }
   // Handle plural form for translation key
   const pluralKey = key === 'lore' ? 'lore' : `${key}s`
   return t(`categories.${pluralKey}.title`)

@@ -531,6 +531,29 @@ export default defineEventHandler(async (event) => {
     allResults = allResults.concat(typeResults)
   }
 
+  // Search Groups separately (they're not in entity_types)
+  const groupResults = db
+    .prepare(
+      `
+    SELECT
+      g.id,
+      g.name,
+      g.description,
+      'Group' as type,
+      COALESCE(g.icon, 'mdi-folder-multiple') as icon,
+      COALESCE(g.color, '#9370DB') as color,
+      GROUP_CONCAT(DISTINCT e.name) as linked_entities
+    FROM entity_groups g
+    LEFT JOIN entity_group_members gm ON gm.group_id = g.id
+    LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
+    WHERE g.campaign_id = ? AND g.deleted_at IS NULL
+    GROUP BY g.id
+  `,
+    )
+    .all(campaignId) as EntityResult[]
+
+  allResults = allResults.concat(groupResults)
+
   // Apply Levenshtein filtering and scoring
   const maxDist = searchTerm.length <= 3 ? 2 : searchTerm.length <= 6 ? 3 : 4
 

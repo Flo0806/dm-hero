@@ -2190,6 +2190,51 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 39: Entity groups tables created')
     },
   },
+  {
+    version: 40,
+    name: 'pinboard_groups_support',
+    up: (db) => {
+      console.log('📦 Migration 40: Adding group pinning support...')
+
+      // SQLite doesn't support ALTER COLUMN, so we recreate the table
+      // to make entity_id nullable and add group_id
+
+      // 1. Create new table with correct schema
+      db.exec(`
+        CREATE TABLE pinboard_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          entity_id INTEGER,
+          group_id INTEGER,
+          display_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE,
+          FOREIGN KEY (group_id) REFERENCES entity_groups(id) ON DELETE CASCADE,
+          UNIQUE(campaign_id, entity_id),
+          UNIQUE(campaign_id, group_id)
+        )
+      `)
+
+      // 2. Copy existing data
+      db.exec(`
+        INSERT INTO pinboard_new (id, campaign_id, entity_id, display_order, created_at)
+        SELECT id, campaign_id, entity_id, display_order, created_at FROM pinboard
+      `)
+
+      // 3. Drop old table
+      db.exec('DROP TABLE pinboard')
+
+      // 4. Rename new table
+      db.exec('ALTER TABLE pinboard_new RENAME TO pinboard')
+
+      // 5. Recreate indexes
+      db.exec('CREATE INDEX IF NOT EXISTS idx_pinboard_campaign_id ON pinboard(campaign_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_pinboard_group_id ON pinboard(group_id)')
+
+      console.log('✅ Migration 40: Group pinning support added')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

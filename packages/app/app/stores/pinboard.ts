@@ -11,12 +11,22 @@ export const usePinboardStore = defineStore('pinboard', {
   getters: {
     // Check if an entity is pinned
     isPinned: (state) => (entityId: number) => {
-      return state.pins.some((p) => p.id === entityId)
+      return state.pins.some((p) => p.id === entityId && p.type?.toLowerCase() !== 'group')
+    },
+
+    // Check if a group is pinned
+    isGroupPinned: (state) => (groupId: number) => {
+      return state.pins.some((p) => p.id === groupId && p.type?.toLowerCase() === 'group')
     },
 
     // Get pin ID for an entity
     getPinId: (state) => (entityId: number) => {
-      return state.pins.find((p) => p.id === entityId)?.pin_id ?? null
+      return state.pins.find((p) => p.id === entityId && p.type?.toLowerCase() !== 'group')?.pin_id ?? null
+    },
+
+    // Get pin ID for a group
+    getGroupPinId: (state) => (groupId: number) => {
+      return state.pins.find((p) => p.id === groupId && p.type?.toLowerCase() === 'group')?.pin_id ?? null
     },
 
     // Get pins grouped by type

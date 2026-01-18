@@ -293,8 +293,6 @@ export async function getRaceKey(
       )
       .get(nameLower, nameLower, nameLower) as { name: string } | undefined
 
-    console.log('[getRaceKey] Custom race lookup for:', nameLower, '→', customRaceExact)
-
     if (customRaceExact) return customRaceExact.name
   } catch (e) {
     console.error('[getRaceKey] DB error:', e)

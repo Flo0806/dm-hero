@@ -185,13 +185,14 @@ const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 // Check if campaign is selected
 onMounted(async () => {
-  // Load entities for this campaign
-  await entitiesStore.fetchNPCs(activeCampaignId.value!)
+  // Load NPCs, races, and classes in PARALLEL for faster page load
+  // These are independent requests that don't depend on each other
+  await Promise.all([
+    entitiesStore.fetchNPCs(activeCampaignId.value!),
+    loadReferenceData(),
+  ])
 
-  // Load races and classes for view dialog
-  await loadReferenceData()
-
-  // Load counts for all NPCs via store (uses batch endpoint - 1 request instead of N)
+  // Load counts AFTER NPCs are loaded (needs NPCs in store to apply counts)
   await entitiesStore.loadAllNpcCounts(activeCampaignId.value!)
 })
 

@@ -152,6 +152,7 @@ function getEntityPath(entityType: string, entityId: number, entityName: string)
     Lore: '/lore',
     Session: '/sessions',
     Player: '/players',
+    Group: '/groups',
   }
   const basePath = typeMap[entityType] || '/npcs'
   const query = new URLSearchParams()

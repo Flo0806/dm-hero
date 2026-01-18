@@ -5,6 +5,10 @@ interface EntityRow {
   id: number
 }
 
+interface GroupRow {
+  id: number
+}
+
 interface MaxOrderRow {
   max_order: number | null
 }
@@ -16,19 +20,36 @@ export default defineEventHandler(async (event): Promise<AddPinResponse> => {
     throw createError({ statusCode: 400, message: 'Campaign ID is required' })
   }
 
-  if (!body.entityId) {
-    throw createError({ statusCode: 400, message: 'Entity ID is required' })
+  if (!body.entityId && !body.groupId) {
+    throw createError({ statusCode: 400, message: 'Entity ID or Group ID is required' })
+  }
+
+  if (body.entityId && body.groupId) {
+    throw createError({ statusCode: 400, message: 'Only one of Entity ID or Group ID can be provided' })
   }
 
   const db = getDb()
 
-  // Check if entity exists
-  const entity = db
-    .prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL')
-    .get(body.entityId) as EntityRow | undefined
+  if (body.entityId) {
+    // Check if entity exists
+    const entity = db
+      .prepare('SELECT id FROM entities WHERE id = ? AND deleted_at IS NULL')
+      .get(body.entityId) as EntityRow | undefined
 
-  if (!entity) {
-    throw createError({ statusCode: 404, message: 'Entity not found' })
+    if (!entity) {
+      throw createError({ statusCode: 404, message: 'Entity not found' })
+    }
+  }
+
+  if (body.groupId) {
+    // Check if group exists
+    const group = db
+      .prepare('SELECT id FROM entity_groups WHERE id = ? AND deleted_at IS NULL')
+      .get(body.groupId) as GroupRow | undefined
+
+    if (!group) {
+      throw createError({ statusCode: 404, message: 'Group not found' })
+    }
   }
 
   // Get the next display order
@@ -39,15 +60,15 @@ export default defineEventHandler(async (event): Promise<AddPinResponse> => {
   const displayOrder = (maxOrder?.max_order ?? -1) + 1
 
   try {
-    // Insert the pin (UNIQUE constraint will prevent duplicates)
+    // Insert the pin
     const result = db
       .prepare(
         `
-        INSERT INTO pinboard (campaign_id, entity_id, display_order)
-        VALUES (?, ?, ?)
+        INSERT INTO pinboard (campaign_id, entity_id, group_id, display_order)
+        VALUES (?, ?, ?, ?)
       `,
       )
-      .run(body.campaignId, body.entityId, displayOrder)
+      .run(body.campaignId, body.entityId || null, body.groupId || null, displayOrder)
 
     return {
       success: true,
@@ -57,7 +78,7 @@ export default defineEventHandler(async (event): Promise<AddPinResponse> => {
   } catch (error: unknown) {
     // Handle duplicate pin attempt
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      throw createError({ statusCode: 409, message: 'Entity is already pinned' })
+      throw createError({ statusCode: 409, message: 'Item is already pinned' })
     }
     throw error
   }

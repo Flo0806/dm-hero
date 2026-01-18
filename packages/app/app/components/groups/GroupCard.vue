@@ -23,6 +23,9 @@
           <span v-else class="text-disabled">{{ $t('groups.noMembers') }}</span>
         </div>
       </div>
+
+      <!-- Pin Button (top right) -->
+      <SharedPinButton :group-id="group.id" size="small" class="ml-2" />
     </div>
 
     <!-- Description (Fixed 3 lines) -->

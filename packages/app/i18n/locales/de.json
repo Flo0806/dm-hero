@@ -12,6 +12,7 @@
     "Quest": "Quest",
     "Lore": "Wissen",
     "Player": "Spieler",
+    "Group": "Gruppe",
     "Unknown": "Unbekannt"
   },
   "nav": {
@@ -35,7 +36,7 @@
     "activeCampaign": "Aktive Kampagne"
   },
   "search": {
-    "placeholder": "Suche nach NPCs, Orten, Items...",
+    "placeholder": "Suche nach NPCs, Orten, Items, Gruppen...",
     "searching": "Suche nach \"{query}\"...",
     "noResults": "Keine Ergebnisse gefunden",
     "hint": "Drücke / um zu suchen"

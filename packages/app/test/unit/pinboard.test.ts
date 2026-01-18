@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { getDb } from '../../server/utils/db'
 import type Database from 'better-sqlite3'
 
@@ -334,6 +334,350 @@ describe('Pinboard - Campaign Isolation', () => {
       db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(secondCampaignId)
       db.prepare('DELETE FROM campaigns WHERE id = ?').run(secondCampaignId)
     }
+  })
+})
+
+describe('Pinboard - Group Pinning', () => {
+  // Helper to create a group
+  function createGroup(name: string, options?: { color?: string; icon?: string }): number {
+    const result = db
+      .prepare(`
+        INSERT INTO entity_groups (campaign_id, name, color, icon, created_at, updated_at)
+        VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+      `)
+      .run(testCampaignId, name, options?.color || null, options?.icon || null)
+    return Number(result.lastInsertRowid)
+  }
+
+  // Helper to create a group pin
+  function createGroupPin(groupId: number, displayOrder: number = 0): number {
+    const result = db
+      .prepare('INSERT INTO pinboard (campaign_id, group_id, display_order) VALUES (?, ?, ?)')
+      .run(testCampaignId, groupId, displayOrder)
+    return Number(result.lastInsertRowid)
+  }
+
+  // Cleanup groups after each test
+  afterEach(() => {
+    db.prepare('DELETE FROM entity_groups WHERE campaign_id = ?').run(testCampaignId)
+  })
+
+  it('should pin a group (entity_id is NULL)', () => {
+    const groupId = createGroup('Test Group')
+    const pinId = createGroupPin(groupId)
+
+    const pin = db.prepare('SELECT * FROM pinboard WHERE id = ?').get(pinId) as {
+      id: number
+      campaign_id: number
+      entity_id: number | null
+      group_id: number | null
+      display_order: number
+    }
+
+    expect(pin).toBeDefined()
+    expect(pin.campaign_id).toBe(testCampaignId)
+    expect(pin.entity_id).toBeNull()
+    expect(pin.group_id).toBe(groupId)
+    expect(pin.display_order).toBe(0)
+  })
+
+  it('should not allow duplicate group pins in same campaign', () => {
+    const groupId = createGroup('Unique Group')
+    createGroupPin(groupId)
+
+    // Try to create duplicate pin
+    expect(() => createGroupPin(groupId)).toThrow()
+  })
+
+  it('should allow pinning same group in different campaigns', () => {
+    // Create another campaign
+    const result = db
+      .prepare('INSERT INTO campaigns (name) VALUES (?)')
+      .run('Second Campaign for Group Pin')
+    const secondCampaignId = Number(result.lastInsertRowid)
+
+    try {
+      const groupId = createGroup('Multi-Campaign Group')
+
+      // Pin in first campaign
+      createGroupPin(groupId)
+
+      // Pin in second campaign (should work)
+      const result2 = db
+        .prepare('INSERT INTO pinboard (campaign_id, group_id, display_order) VALUES (?, ?, ?)')
+        .run(secondCampaignId, groupId, 0)
+
+      expect(result2.lastInsertRowid).toBeGreaterThan(0)
+    } finally {
+      // Clean up
+      db.prepare('DELETE FROM pinboard WHERE campaign_id = ?').run(secondCampaignId)
+      db.prepare('DELETE FROM campaigns WHERE id = ?').run(secondCampaignId)
+    }
+  })
+
+  it('should delete a group pin', () => {
+    const groupId = createGroup('Group to Unpin')
+    const pinId = createGroupPin(groupId)
+
+    // Verify pin exists
+    let pin = db.prepare('SELECT * FROM pinboard WHERE id = ?').get(pinId)
+    expect(pin).toBeDefined()
+
+    // Delete pin
+    db.prepare('DELETE FROM pinboard WHERE id = ?').run(pinId)
+
+    // Verify pin is gone
+    pin = db.prepare('SELECT * FROM pinboard WHERE id = ?').get(pinId)
+    expect(pin).toBeUndefined()
+  })
+
+  it('should return group pins with group details via JOIN', () => {
+    const groupId = createGroup('Detailed Group', { color: '#D4A574', icon: 'mdi-castle' })
+    createGroupPin(groupId)
+
+    const pinWithDetails = db
+      .prepare(`
+        SELECT
+          p.id as pin_id,
+          p.display_order,
+          g.name,
+          g.color,
+          g.icon,
+          'group' as type
+        FROM pinboard p
+        JOIN entity_groups g ON p.group_id = g.id
+        WHERE p.campaign_id = ? AND p.group_id IS NOT NULL
+      `)
+      .get(testCampaignId) as {
+        pin_id: number
+        display_order: number
+        name: string
+        color: string
+        icon: string
+        type: string
+      }
+
+    expect(pinWithDetails).toBeDefined()
+    expect(pinWithDetails.name).toBe('Detailed Group')
+    expect(pinWithDetails.color).toBe('#D4A574')
+    expect(pinWithDetails.icon).toBe('mdi-castle')
+    expect(pinWithDetails.type).toBe('group')
+  })
+
+  it('should not return pins for soft-deleted groups', () => {
+    const groupId = createGroup('Soon Deleted Group')
+    createGroupPin(groupId)
+
+    // Verify pin is returned
+    let pins = db
+      .prepare(`
+        SELECT p.* FROM pinboard p
+        JOIN entity_groups g ON p.group_id = g.id
+        WHERE p.campaign_id = ? AND g.deleted_at IS NULL AND p.group_id IS NOT NULL
+      `)
+      .all(testCampaignId)
+
+    expect(pins).toHaveLength(1)
+
+    // Soft delete the group
+    db.prepare("UPDATE entity_groups SET deleted_at = datetime('now') WHERE id = ?").run(groupId)
+
+    // Verify pin is not returned (group is soft-deleted)
+    pins = db
+      .prepare(`
+        SELECT p.* FROM pinboard p
+        JOIN entity_groups g ON p.group_id = g.id
+        WHERE p.campaign_id = ? AND g.deleted_at IS NULL AND p.group_id IS NOT NULL
+      `)
+      .all(testCampaignId)
+
+    expect(pins).toHaveLength(0)
+  })
+
+  it('should include member_count in group pin query', () => {
+    const groupId = createGroup('Group with Members')
+
+    // Add some entities to the group
+    const npc1 = createEntity('Member NPC 1', npcTypeId)
+    const npc2 = createEntity('Member NPC 2', npcTypeId)
+    const location = createEntity('Member Location', locationTypeId)
+
+    db.prepare('INSERT INTO entity_group_members (group_id, entity_id) VALUES (?, ?)').run(groupId, npc1)
+    db.prepare('INSERT INTO entity_group_members (group_id, entity_id) VALUES (?, ?)').run(groupId, npc2)
+    db.prepare('INSERT INTO entity_group_members (group_id, entity_id) VALUES (?, ?)').run(groupId, location)
+
+    createGroupPin(groupId)
+
+    const pinWithCount = db
+      .prepare(`
+        SELECT
+          p.id as pin_id,
+          g.name,
+          (SELECT COUNT(*) FROM entity_group_members gm
+           JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
+           WHERE gm.group_id = g.id) as member_count
+        FROM pinboard p
+        JOIN entity_groups g ON p.group_id = g.id
+        WHERE p.campaign_id = ? AND p.group_id IS NOT NULL
+      `)
+      .get(testCampaignId) as { pin_id: number; name: string; member_count: number }
+
+    expect(pinWithCount).toBeDefined()
+    expect(pinWithCount.name).toBe('Group with Members')
+    expect(pinWithCount.member_count).toBe(3)
+  })
+})
+
+describe('Pinboard - Mixed Entity and Group Pins', () => {
+  // Helper to create a group
+  function createGroup(name: string): number {
+    const result = db
+      .prepare(`
+        INSERT INTO entity_groups (campaign_id, name, created_at, updated_at)
+        VALUES (?, ?, datetime('now'), datetime('now'))
+      `)
+      .run(testCampaignId, name)
+    return Number(result.lastInsertRowid)
+  }
+
+  // Helper to create a group pin
+  function createGroupPin(groupId: number, displayOrder: number = 0): number {
+    const result = db
+      .prepare('INSERT INTO pinboard (campaign_id, group_id, display_order) VALUES (?, ?, ?)')
+      .run(testCampaignId, groupId, displayOrder)
+    return Number(result.lastInsertRowid)
+  }
+
+  // Cleanup groups after each test
+  afterEach(() => {
+    db.prepare('DELETE FROM entity_groups WHERE campaign_id = ?').run(testCampaignId)
+  })
+
+  it('should mix entity and group pins in the same pinboard', () => {
+    const npcId = createEntity('Pinned NPC', npcTypeId)
+    const groupId = createGroup('Pinned Group')
+    const locationId = createEntity('Pinned Location', locationTypeId)
+
+    createPin(npcId, 0)
+    createGroupPin(groupId, 1)
+    createPin(locationId, 2)
+
+    const allPins = db
+      .prepare('SELECT * FROM pinboard WHERE campaign_id = ? ORDER BY display_order ASC')
+      .all(testCampaignId) as Array<{
+        id: number
+        entity_id: number | null
+        group_id: number | null
+        display_order: number
+      }>
+
+    expect(allPins).toHaveLength(3)
+    expect(allPins[0]?.entity_id).toBe(npcId)
+    expect(allPins[0]?.group_id).toBeNull()
+    expect(allPins[1]?.entity_id).toBeNull()
+    expect(allPins[1]?.group_id).toBe(groupId)
+    expect(allPins[2]?.entity_id).toBe(locationId)
+    expect(allPins[2]?.group_id).toBeNull()
+  })
+
+  it('should reorder mixed pins correctly', () => {
+    const npcId = createEntity('Reorder NPC', npcTypeId)
+    const groupId = createGroup('Reorder Group')
+    const locationId = createEntity('Reorder Location', locationTypeId)
+
+    const pin1 = createPin(npcId, 0)
+    const pin2 = createGroupPin(groupId, 1)
+    const pin3 = createPin(locationId, 2)
+
+    // Reorder: move group to first, location to second, npc to third
+    db.prepare('UPDATE pinboard SET display_order = ? WHERE id = ?').run(0, pin2)
+    db.prepare('UPDATE pinboard SET display_order = ? WHERE id = ?').run(1, pin3)
+    db.prepare('UPDATE pinboard SET display_order = ? WHERE id = ?').run(2, pin1)
+
+    const pins = db
+      .prepare('SELECT * FROM pinboard WHERE campaign_id = ? ORDER BY display_order ASC')
+      .all(testCampaignId) as Array<{
+        entity_id: number | null
+        group_id: number | null
+      }>
+
+    expect(pins[0]?.group_id).toBe(groupId) // Group first
+    expect(pins[1]?.entity_id).toBe(locationId) // Location second
+    expect(pins[2]?.entity_id).toBe(npcId) // NPC third
+  })
+
+  it('should combine entity and group pins in unified query (like API does)', () => {
+    const npcId = createEntity('API Test NPC', npcTypeId)
+    const groupId = createGroup('API Test Group')
+
+    createPin(npcId, 0)
+    createGroupPin(groupId, 1)
+
+    // Simulating the API query that combines both types
+    const entityPins = db
+      .prepare(`
+        SELECT
+          p.id as pin_id,
+          p.display_order,
+          e.id,
+          e.name,
+          et.name as type
+        FROM pinboard p
+        JOIN entities e ON p.entity_id = e.id
+        JOIN entity_types et ON e.type_id = et.id
+        WHERE p.campaign_id = ? AND e.deleted_at IS NULL AND p.entity_id IS NOT NULL
+        ORDER BY p.display_order ASC
+      `)
+      .all(testCampaignId) as Array<{ pin_id: number; display_order: number; name: string; type: string }>
+
+    const groupPins = db
+      .prepare(`
+        SELECT
+          p.id as pin_id,
+          p.display_order,
+          g.id,
+          g.name,
+          'group' as type
+        FROM pinboard p
+        JOIN entity_groups g ON p.group_id = g.id
+        WHERE p.campaign_id = ? AND g.deleted_at IS NULL AND p.group_id IS NOT NULL
+        ORDER BY p.display_order ASC
+      `)
+      .all(testCampaignId) as Array<{ pin_id: number; display_order: number; name: string; type: string }>
+
+    // Combine and sort
+    const allPins = [...entityPins, ...groupPins].sort(
+      (a, b) => a.display_order - b.display_order
+    )
+
+    expect(allPins).toHaveLength(2)
+    expect(allPins[0]?.name).toBe('API Test NPC')
+    expect(allPins[0]?.type).toBe('NPC')
+    expect(allPins[1]?.name).toBe('API Test Group')
+    expect(allPins[1]?.type).toBe('group')
+  })
+
+  it('should allow entity and group with same numeric ID to be pinned separately', () => {
+    // This tests that entity_id and group_id are truly separate columns
+    // An entity with id=5 and a group with id=5 should both be pinnable
+
+    const entityId = createEntity('Entity Same ID', npcTypeId)
+    const groupId = createGroup('Group Same ID')
+
+    // It's unlikely they'll have the same ID, but we can verify the columns work independently
+    createPin(entityId)
+    createGroupPin(groupId)
+
+    const entityPinCount = db
+      .prepare('SELECT COUNT(*) as count FROM pinboard WHERE campaign_id = ? AND entity_id IS NOT NULL')
+      .get(testCampaignId) as { count: number }
+
+    const groupPinCount = db
+      .prepare('SELECT COUNT(*) as count FROM pinboard WHERE campaign_id = ? AND group_id IS NOT NULL')
+      .get(testCampaignId) as { count: number }
+
+    expect(entityPinCount.count).toBe(1)
+    expect(groupPinCount.count).toBe(1)
   })
 })
 

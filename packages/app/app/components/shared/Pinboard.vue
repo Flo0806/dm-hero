@@ -13,6 +13,8 @@ const campaignId = computed(() => campaignStore.activeCampaignId)
 const previewEntityId = ref<number | null>(null)
 const previewType = ref<EntityPreviewType>('npc')
 const showPreview = ref(false)
+const previewGroupId = ref<number | null>(null)
+const showGroupPreview = ref(false)
 const expanded = ref(true)
 const isDragging = ref(false)
 
@@ -73,11 +75,21 @@ async function removePin(pinId: number) {
 }
 
 // Show entity preview
-function showEntityPreview(pin: { id: number; type: EntityPreviewType }) {
+function showEntityPreview(pin: PinboardItem) {
+  // Handle groups separately
+  if (pin.type?.toLowerCase() === 'group') {
+    previewGroupId.value = pin.id
+    showGroupPreview.value = true
+    return
+  }
+
   previewEntityId.value = pin.id
-  previewType.value = pin.type
+  previewType.value = pin.type.toLowerCase() as EntityPreviewType
   showPreview.value = true
 }
+
+// Note: member-click handling is now done internally by GroupPreviewDialog
+// The dialog opens an EntityPreviewDialog on top without closing the group dialog
 
 // Get icon for entity type
 function getTypeIcon(type: string): string {
@@ -88,6 +100,7 @@ function getTypeIcon(type: string): string {
     faction: 'mdi-shield-account',
     lore: 'mdi-book-open-page-variant',
     player: 'mdi-account-star',
+    group: 'mdi-folder-multiple',
   }
   return icons[type.toLowerCase()] || 'mdi-help-circle'
 }
@@ -101,6 +114,7 @@ function getTypeColor(type: string): string {
     faction: 'purple',
     lore: 'deep-orange',
     player: 'teal',
+    group: 'deep-purple',
   }
   return colors[type.toLowerCase()] || 'grey'
 }
@@ -167,7 +181,7 @@ defineExpose({
             <template #item="{ element: pin }">
               <v-chip
                 size="small"
-                :color="getTypeColor(pin.type)"
+                :color="pin.type?.toLowerCase() === 'group' ? (pin.color || 'deep-purple') : getTypeColor(pin.type)"
                 variant="tonal"
                 class="pinboard-chip"
                 :class="{ 'is-dragging': isDragging }"
@@ -187,7 +201,12 @@ defineExpose({
                 <v-avatar v-if="pin.image_url" start size="20" class="ml-n1">
                   <v-img :src="`/uploads/${pin.image_url}`" cover />
                 </v-avatar>
-                <v-icon v-else :icon="getTypeIcon(pin.type)" size="x-small" class="mr-1" />
+                <v-icon
+                  v-else
+                  :icon="pin.type?.toLowerCase() === 'group' ? (pin.icon || 'mdi-folder-multiple') : getTypeIcon(pin.type)"
+                  size="x-small"
+                  class="mr-1"
+                />
                 <span class="chip-text">{{ pin.name }}</span>
               </v-chip>
             </template>
@@ -201,6 +220,12 @@ defineExpose({
       v-model="showPreview"
       :entity-id="previewEntityId"
       :entity-type="previewType"
+    />
+
+    <!-- Group Preview Dialog (handles member previews internally) -->
+    <GroupsGroupPreviewDialog
+      v-model="showGroupPreview"
+      :group-id="previewGroupId"
     />
   </v-card>
 </template>
