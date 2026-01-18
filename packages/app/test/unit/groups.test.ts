@@ -63,7 +63,7 @@ function createGroup(name: string, options?: {
       name,
       options?.description || null,
       options?.color || null,
-      options?.icon || null
+      options?.icon || null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -742,7 +742,7 @@ describe('Groups - Data Integrity', () => {
   it('should update updated_at on modification', () => {
     const groupId = createGroup('Update Test')
 
-    const before = db
+    const _before = db
       .prepare('SELECT updated_at FROM entity_groups WHERE id = ?')
       .get(groupId) as { updated_at: string }
 
@@ -1492,6 +1492,157 @@ describe('Groups - Entity Card Chips (batch-counts groups)', () => {
     expect(npcGroups[0]?.name).toBe('Mixed Entity Group')
     expect(locationGroups[0]?.name).toBe('Mixed Entity Group')
     expect(itemGroups[0]?.name).toBe('Mixed Entity Group')
+  })
+})
+
+// ============================================================================
+// GroupEntitySelectDialog - Already In Group Logic
+// ============================================================================
+
+describe('Groups - isAlreadyInGroup Logic (GroupEntitySelectDialog)', () => {
+  // Tests the logic used in GroupEntitySelectDialog to show entities as disabled
+  // when they are already members of the group
+
+  it('should correctly identify entity as already in group', () => {
+    const groupId = createGroup('Test Group')
+    const npcId = createEntity('Test NPC', npcTypeId)
+    addMember(groupId, npcId)
+
+    // Get existing members (like the dialog does via API)
+    const existingMembers = db.prepare(`
+      SELECT entity_id
+      FROM entity_group_members
+      WHERE group_id = ?
+    `).all(groupId) as Array<{ entity_id: number }>
+
+    // Check if entity is already in group (isAlreadyInGroup logic)
+    const isAlreadyInGroup = (entityId: number) =>
+      existingMembers.some(m => m.entity_id === entityId)
+
+    expect(isAlreadyInGroup(npcId)).toBe(true)
+  })
+
+  it('should correctly identify entity as NOT in group', () => {
+    const groupId = createGroup('Test Group')
+    const memberNpc = createEntity('Member NPC', npcTypeId)
+    const nonMemberNpc = createEntity('Non-Member NPC', npcTypeId)
+    addMember(groupId, memberNpc)
+
+    const existingMembers = db.prepare(`
+      SELECT entity_id
+      FROM entity_group_members
+      WHERE group_id = ?
+    `).all(groupId) as Array<{ entity_id: number }>
+
+    const isAlreadyInGroup = (entityId: number) =>
+      existingMembers.some(m => m.entity_id === entityId)
+
+    expect(isAlreadyInGroup(memberNpc)).toBe(true)
+    expect(isAlreadyInGroup(nonMemberNpc)).toBe(false)
+  })
+
+  it('should handle group with multiple members', () => {
+    const groupId = createGroup('Large Group')
+    const npcs = [
+      createEntity('NPC 1', npcTypeId),
+      createEntity('NPC 2', npcTypeId),
+      createEntity('NPC 3', npcTypeId),
+    ]
+    const outsideNpc = createEntity('Outside NPC', npcTypeId)
+
+    npcs.forEach(npcId => addMember(groupId, npcId))
+
+    const existingMembers = db.prepare(`
+      SELECT entity_id
+      FROM entity_group_members
+      WHERE group_id = ?
+    `).all(groupId) as Array<{ entity_id: number }>
+
+    const isAlreadyInGroup = (entityId: number) =>
+      existingMembers.some(m => m.entity_id === entityId)
+
+    // All NPCs in group should be identified
+    npcs.forEach(npcId => {
+      expect(isAlreadyInGroup(npcId)).toBe(true)
+    })
+
+    // Outside NPC should not be in group
+    expect(isAlreadyInGroup(outsideNpc)).toBe(false)
+  })
+
+  it('should handle empty group', () => {
+    const groupId = createGroup('Empty Group')
+    const npcId = createEntity('Test NPC', npcTypeId)
+
+    const existingMembers = db.prepare(`
+      SELECT entity_id
+      FROM entity_group_members
+      WHERE group_id = ?
+    `).all(groupId) as Array<{ entity_id: number }>
+
+    const isAlreadyInGroup = (entityId: number) =>
+      existingMembers.some(m => m.entity_id === entityId)
+
+    expect(existingMembers).toHaveLength(0)
+    expect(isAlreadyInGroup(npcId)).toBe(false)
+  })
+
+  it('should work with different entity types in same group', () => {
+    const groupId = createGroup('Mixed Group')
+    const npcId = createEntity('Test NPC', npcTypeId)
+    const locationId = createEntity('Test Location', locationTypeId)
+    const itemId = createEntity('Test Item', itemTypeId)
+    const outsideItem = createEntity('Outside Item', itemTypeId)
+
+    addMember(groupId, npcId)
+    addMember(groupId, locationId)
+    addMember(groupId, itemId)
+
+    const existingMembers = db.prepare(`
+      SELECT entity_id
+      FROM entity_group_members
+      WHERE group_id = ?
+    `).all(groupId) as Array<{ entity_id: number }>
+
+    const isAlreadyInGroup = (entityId: number) =>
+      existingMembers.some(m => m.entity_id === entityId)
+
+    expect(isAlreadyInGroup(npcId)).toBe(true)
+    expect(isAlreadyInGroup(locationId)).toBe(true)
+    expect(isAlreadyInGroup(itemId)).toBe(true)
+    expect(isAlreadyInGroup(outsideItem)).toBe(false)
+  })
+
+  it('should return members with entity info for dialog display', () => {
+    const groupId = createGroup('Display Group')
+    const npc1 = createEntity('Alice', npcTypeId)
+    const npc2 = createEntity('Bob', npcTypeId)
+    addMember(groupId, npc1)
+    addMember(groupId, npc2)
+
+    // Query like the API /groups/[id]/members does
+    const members = db.prepare(`
+      SELECT
+        gm.id,
+        gm.entity_id,
+        e.name as entity_name,
+        et.name as entity_type
+      FROM entity_group_members gm
+      INNER JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
+      INNER JOIN entity_types et ON et.id = e.type_id
+      WHERE gm.group_id = ?
+      ORDER BY e.name
+    `).all(groupId) as Array<{
+      id: number
+      entity_id: number
+      entity_name: string
+      entity_type: string
+    }>
+
+    expect(members).toHaveLength(2)
+    expect(members[0]?.entity_name).toBe('Alice')
+    expect(members[1]?.entity_name).toBe('Bob')
+    expect(members[0]?.entity_type).toBe('NPC')
   })
 })
 
