@@ -1,5 +1,12 @@
 import { getDb } from '../../utils/db'
 
+interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 interface NpcCounts {
   relations: number
   items: number
@@ -11,6 +18,7 @@ interface NpcCounts {
   notes: number
   players: number
   factionName: string | null
+  groups: GroupInfo[]
 }
 
 /**
@@ -75,6 +83,7 @@ export default defineEventHandler((event) => {
       notes: 0,
       players: 0,
       factionName: null,
+      groups: [],
     }
   }
 
@@ -258,6 +267,40 @@ export default defineEventHandler((event) => {
       result[row.npc_id].images = row.count
     } else if (row.type === 'notes') {
       result[row.npc_id].notes = row.count
+    }
+  }
+
+  // Groups - fetch all group memberships for NPCs in this campaign
+  const groupMemberships = db.prepare(`
+    SELECT
+      gm.entity_id as npc_id,
+      g.id as group_id,
+      g.name as group_name,
+      g.color,
+      g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    INNER JOIN entities npc ON npc.id = gm.entity_id
+    WHERE npc.campaign_id = ?
+      AND npc.type_id = ?
+      AND npc.deleted_at IS NULL
+    ORDER BY g.name
+  `).all(Number(campaignId), npcTypeId) as Array<{
+    npc_id: number
+    group_id: number
+    group_name: string
+    color: string | null
+    icon: string | null
+  }>
+
+  for (const row of groupMemberships) {
+    if (result[row.npc_id]) {
+      result[row.npc_id].groups.push({
+        id: row.group_id,
+        name: row.group_name,
+        color: row.color,
+        icon: row.icon,
+      })
     }
   }
 

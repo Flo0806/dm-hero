@@ -199,6 +199,7 @@ export const useEntitiesStore = defineStore('entities', {
           notes: number
           players: number
           factionName: string | null
+          groups: Array<{ id: number; name: string; color: string | null; icon: string | null }>
         }>(`/api/npcs/${id}/counts`)
 
         // Update NPC in store with new counts

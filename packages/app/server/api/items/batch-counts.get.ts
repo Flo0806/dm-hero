@@ -1,5 +1,12 @@
 import { getDb } from '../../utils/db'
 
+interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 interface ItemCounts {
   owners: number
   locations: number
@@ -8,6 +15,7 @@ interface ItemCounts {
   players: number
   documents: number
   images: number
+  groups: GroupInfo[]
 }
 
 /**
@@ -64,6 +72,7 @@ export default defineEventHandler((event) => {
       players: 0,
       documents: 0,
       images: 0,
+      groups: [],
     }
   }
 
@@ -242,6 +251,40 @@ export default defineEventHandler((event) => {
   for (const row of imagesCounts) {
     if (result[row.item_id]) {
       result[row.item_id].images = row.count
+    }
+  }
+
+  // 8. Groups - fetch all group memberships for items in this campaign
+  const groupMemberships = db.prepare(`
+    SELECT
+      gm.entity_id as item_id,
+      g.id as group_id,
+      g.name as group_name,
+      g.color,
+      g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    INNER JOIN entities item ON item.id = gm.entity_id
+    WHERE item.campaign_id = ?
+      AND item.type_id = ?
+      AND item.deleted_at IS NULL
+    ORDER BY g.name
+  `).all(Number(campaignId), itemTypeId) as Array<{
+    item_id: number
+    group_id: number
+    group_name: string
+    color: string | null
+    icon: string | null
+  }>
+
+  for (const row of groupMemberships) {
+    if (result[row.item_id]) {
+      result[row.item_id].groups.push({
+        id: row.group_id,
+        name: row.group_name,
+        color: row.color,
+        icon: row.icon,
+      })
     }
   }
 

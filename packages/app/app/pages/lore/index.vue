@@ -54,6 +54,7 @@
             @download="(lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
             @delete="confirmDelete"
             @chaos="openChaos"
+            @open-group="openGroupPreview"
           />
         </v-col>
       </v-row>
@@ -125,6 +126,12 @@
     <!-- Image Preview Dialog -->
     <ImagePreviewDialog v-model="showImagePreview" :image-url="previewImageUrl" :title="previewImageName" />
 
+    <!-- Group Preview Dialog -->
+    <GroupPreviewDialog
+      v-model="showGroupPreview"
+      :group-id="previewGroupId"
+    />
+
     <!-- Floating Action Button -->
     <v-btn
       color="primary"
@@ -142,6 +149,7 @@ import LoreCard from '~/components/lore/LoreCard.vue'
 import LoreViewDialog from '~/components/lore/LoreViewDialog.vue'
 import LoreEditDialog from '~/components/lore/LoreEditDialog.vue'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
+import GroupPreviewDialog from '~/components/groups/GroupPreviewDialog.vue'
 
 // Composables
 const route = useRoute()
@@ -200,6 +208,15 @@ const loadingViewLocations = ref(false)
 const showImagePreview = ref(false)
 const previewImageUrl = ref('')
 const previewImageName = ref('')
+
+// Group preview
+const showGroupPreview = ref(false)
+const previewGroupId = ref<number | null>(null)
+
+function openGroupPreview(groupId: number) {
+  previewGroupId.value = groupId
+  showGroupPreview.value = true
+}
 
 // Check for active campaign and handle highlighting
 onMounted(async () => {

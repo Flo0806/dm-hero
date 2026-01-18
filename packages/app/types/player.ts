@@ -28,6 +28,13 @@ export interface PlayerMetadata {
   [key: string]: unknown
 }
 
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface PlayerCounts {
   characters: number // NPCs controlled by this player
   items: number
@@ -37,6 +44,7 @@ export interface PlayerCounts {
   sessions: number
   documents: number
   images: number
+  groups?: GroupInfo[]
 }
 
 export interface Player {

@@ -39,6 +39,13 @@ export interface LoreMetadata {
   date?: string // Optional date for historical events (YYYY-MM-DD)
 }
 
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface LoreCounts {
   npcs: number
   items: number
@@ -47,6 +54,7 @@ export interface LoreCounts {
   players: number
   documents: number
   images: number
+  groups?: GroupInfo[]
 }
 
 export interface Lore {

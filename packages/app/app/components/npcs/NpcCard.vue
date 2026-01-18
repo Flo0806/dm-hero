@@ -107,6 +107,21 @@
         </v-chip>
       </div>
 
+      <!-- Row 2: Group Badges -->
+      <div v-if="counts?.groups?.length" class="d-flex flex-wrap mb-2" style="gap: 6px">
+        <v-chip
+          v-for="group in counts.groups"
+          :key="group.id"
+          :prepend-icon="group.icon || 'mdi-folder-multiple'"
+          :color="group.color || undefined"
+          size="small"
+          variant="tonal"
+          @click.stop="$emit('open-group', group.id)"
+        >
+          {{ group.name }}
+        </v-chip>
+      </div>
+
       <!-- Row 2: Count Badges (Relations, Items, Documents, Images) -->
       <div class="d-flex flex-wrap" style="gap: 6px">
         <!-- Relations Count Badge -->
@@ -405,6 +420,7 @@ defineEmits<{
   edit: [npc: NPC]
   download: [npc: NPC]
   delete: [npc: NPC]
+  'open-group': [groupId: number]
 }>()
 
 const { locale, t } = useI18n()

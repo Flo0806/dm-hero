@@ -1,5 +1,12 @@
 import { getDb } from '../../utils/db'
 
+interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 interface FactionCounts {
   members: number
   items: number
@@ -9,6 +16,7 @@ interface FactionCounts {
   documents: number
   images: number
   relations: number
+  groups: GroupInfo[]
 }
 
 /**
@@ -66,6 +74,7 @@ export default defineEventHandler((event) => {
       documents: 0,
       images: 0,
       relations: 0,
+      groups: [],
     }
   }
 
@@ -298,6 +307,40 @@ export default defineEventHandler((event) => {
   for (const row of imagesCounts) {
     if (result[row.faction_id]) {
       result[row.faction_id].images = row.count
+    }
+  }
+
+  // 9. Groups - fetch all group memberships for factions in this campaign
+  const groupMemberships = db.prepare(`
+    SELECT
+      gm.entity_id as faction_id,
+      g.id as group_id,
+      g.name as group_name,
+      g.color,
+      g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    INNER JOIN entities faction ON faction.id = gm.entity_id
+    WHERE faction.campaign_id = ?
+      AND faction.type_id = ?
+      AND faction.deleted_at IS NULL
+    ORDER BY g.name
+  `).all(Number(campaignId), factionTypeId) as Array<{
+    faction_id: number
+    group_id: number
+    group_name: string
+    color: string | null
+    icon: string | null
+  }>
+
+  for (const row of groupMemberships) {
+    if (result[row.faction_id]) {
+      result[row.faction_id].groups.push({
+        id: row.group_id,
+        name: row.group_name,
+        color: row.color,
+        icon: row.icon,
+      })
     }
   }
 

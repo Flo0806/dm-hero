@@ -85,6 +85,21 @@
 
     <!-- Info Badges (Bottom) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
+      <!-- Group Badges -->
+      <div v-if="counts?.groups?.length" class="d-flex flex-wrap mb-2" style="gap: 6px">
+        <v-chip
+          v-for="group in counts.groups"
+          :key="group.id"
+          :prepend-icon="group.icon || 'mdi-folder-multiple'"
+          :color="group.color || undefined"
+          size="small"
+          variant="tonal"
+          @click.stop="$emit('open-group', group.id)"
+        >
+          {{ group.name }}
+        </v-chip>
+      </div>
+
       <!-- Count Badges (Members, Lore, Documents, Images) -->
       <div class="d-flex flex-wrap" style="gap: 6px">
         <!-- Members Count Badge -->
@@ -368,32 +383,7 @@
 <script setup lang="ts">
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
-interface Faction {
-  id: number
-  name: string
-  description: string | null
-  image_url?: string | null
-  leader_name?: string | null
-  metadata: {
-    type?: string
-    alignment?: string
-    headquarters?: string
-    goals?: string
-    notes?: string
-  } | null
-  created_at: string
-  updated_at: string
-  _counts?: {
-    members: number
-    lore: number
-    players: number
-    documents: number
-    images: number
-    items: number
-    locations: number
-    relations: number
-  }
-}
+import type { Faction, FactionCounts } from '../../../types/faction'
 
 interface Props {
   faction: Faction
@@ -410,13 +400,14 @@ defineEmits<{
   download: [faction: Faction]
   delete: [faction: Faction]
   chaos: [faction: Faction]
+  'open-group': [groupId: number]
 }>()
 
 const { getCounts } = useFactionCounts()
 const { t } = useI18n()
 
 // Get counts reactively from the composable
-const counts = computed(() => getCounts(props.faction.id) || props.faction._counts)
+const counts = computed<FactionCounts | undefined>(() => getCounts(props.faction.id) || props.faction._counts)
 
 // Image Preview State
 const showImagePreview = ref(false)

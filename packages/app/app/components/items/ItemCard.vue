@@ -81,6 +81,21 @@
 
     <!-- Info Badges (Bottom) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
+      <!-- Group Badges -->
+      <div v-if="counts?.groups?.length" class="d-flex flex-wrap mb-2" style="gap: 6px">
+        <v-chip
+          v-for="group in counts.groups"
+          :key="group.id"
+          :prepend-icon="group.icon || 'mdi-folder-multiple'"
+          :color="group.color || undefined"
+          size="small"
+          variant="tonal"
+          @click.stop="$emit('open-group', group.id)"
+        >
+          {{ group.name }}
+        </v-chip>
+      </div>
+
       <!-- Count Badges (Owners, Locations, Documents, Images, Lore) -->
       <div class="d-flex flex-wrap" style="gap: 6px">
         <!-- Owners Count Badge -->
@@ -353,6 +368,7 @@ defineEmits<{
   download: [item: Item]
   delete: [item: Item]
   chaos: [item: Item]
+  'open-group': [groupId: number]
 }>()
 
 const { getCounts } = useItemCounts()
@@ -433,6 +449,7 @@ function getRarityColor(rarity: string) {
 
 .item-description {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;

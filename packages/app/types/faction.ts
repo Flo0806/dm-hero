@@ -124,6 +124,13 @@ export interface FactionMetadata {
   notes?: string
 }
 
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface FactionCounts {
   members: number
   items: number
@@ -133,6 +140,7 @@ export interface FactionCounts {
   documents: number
   images: number
   relations: number
+  groups?: GroupInfo[]
 }
 
 export interface Faction {

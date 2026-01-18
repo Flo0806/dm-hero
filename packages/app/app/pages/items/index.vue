@@ -55,6 +55,7 @@
             @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
             @delete="deleteItem"
             @chaos="openChaosGraph"
+            @open-group="openGroupPreview"
           />
         </v-col>
       </v-row>
@@ -135,6 +136,14 @@
       />
     </ClientOnly>
 
+    <!-- Group Preview Dialog -->
+    <ClientOnly>
+      <GroupPreviewDialog
+        v-model="showGroupPreview"
+        :group-id="previewGroupId"
+      />
+    </ClientOnly>
+
     <!-- Floating Action Button -->
     <v-btn
       color="primary"
@@ -152,6 +161,7 @@ import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 import ItemCard from '~/components/items/ItemCard.vue'
 import ItemViewDialog from '~/components/items/ItemViewDialog.vue'
 import ItemEditDialog from '~/components/items/ItemEditDialog.vue'
+import GroupPreviewDialog from '~/components/groups/GroupPreviewDialog.vue'
 
 const { locale } = useI18n()
 const router = useRouter()
@@ -461,6 +471,17 @@ function openImagePreview(imageUrl: string, title: string) {
   previewImageUrl.value = imageUrl
   previewImageTitle.value = title
   showImagePreview.value = true
+}
+
+// ============================================================================
+// Group Preview
+// ============================================================================
+const showGroupPreview = ref(false)
+const previewGroupId = ref<number | null>(null)
+
+function openGroupPreview(groupId: number) {
+  previewGroupId.value = groupId
+  showGroupPreview.value = true
 }
 </script>
 

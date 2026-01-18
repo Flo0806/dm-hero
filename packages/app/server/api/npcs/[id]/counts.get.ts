@@ -224,6 +224,19 @@ export default defineEventHandler((event) => {
     playersCount = playersResult.count
   }
 
+  // Get groups this NPC belongs to
+  const groups = db
+    .prepare(
+      `
+    SELECT g.id, g.name, g.color, g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    WHERE gm.entity_id = ?
+    ORDER BY g.name
+  `,
+    )
+    .all(Number(npcId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+
   return {
     relations: relationsCount.count,
     items: itemsCount,
@@ -235,5 +248,6 @@ export default defineEventHandler((event) => {
     notes: notesCount.count,
     players: playersCount,
     factionName,
+    groups,
   }
 })

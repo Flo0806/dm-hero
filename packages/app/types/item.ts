@@ -100,6 +100,13 @@ export interface ItemMetadata {
   [key: string]: unknown
 }
 
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface ItemCounts {
   owners: number
   locations: number
@@ -108,6 +115,7 @@ export interface ItemCounts {
   players: number
   documents: number
   images: number
+  groups?: GroupInfo[]
 }
 
 export interface Item {

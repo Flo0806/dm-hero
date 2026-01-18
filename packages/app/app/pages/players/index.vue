@@ -57,6 +57,7 @@
             @download="handleDownload"
             @delete="confirmDelete"
             @chaos="openChaos"
+            @open-group="openGroupPreview"
           />
         </v-col>
       </v-row>
@@ -106,6 +107,12 @@
       @cancel="showDeleteDialog = false"
     />
 
+    <!-- Group Preview Dialog -->
+    <GroupPreviewDialog
+      v-model="showGroupPreview"
+      :group-id="previewGroupId"
+    />
+
     <!-- Floating Action Button -->
     <v-btn
       color="primary"
@@ -122,6 +129,7 @@ import type { Player } from '../../../types/player'
 import PlayerEditDialog from '~/components/players/PlayerEditDialog.vue'
 import PlayerViewDialog from '~/components/players/PlayerViewDialog.vue'
 import PlayerCard from '~/components/players/PlayerCard.vue'
+import GroupPreviewDialog from '~/components/groups/GroupPreviewDialog.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
 
 const route = useRoute()
@@ -333,6 +341,15 @@ watch(searchQuery, (newVal, oldVal) => {
     highlightedId.value = null
   }
 })
+
+// Group preview
+const showGroupPreview = ref(false)
+const previewGroupId = ref<number | null>(null)
+
+function openGroupPreview(groupId: number) {
+  previewGroupId.value = groupId
+  showGroupPreview.value = true
+}
 </script>
 
 <style scoped>

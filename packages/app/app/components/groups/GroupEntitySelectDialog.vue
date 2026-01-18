@@ -41,12 +41,12 @@
             v-for="entity in filteredEntities"
             :key="entity.id"
             :value="entity.id"
-            :active="selectedEntityIds.includes(entity.id)"
+            :active="currentTypeSelection.includes(entity.id)"
             @click="toggleEntity(entity.id)"
           >
             <template #prepend>
               <v-checkbox-btn
-                :model-value="selectedEntityIds.includes(entity.id)"
+                :model-value="currentTypeSelection.includes(entity.id)"
                 @update:model-value="toggleEntity(entity.id)"
               />
               <v-avatar :color="getAvatarColor(selectedType)" size="40" class="ml-2">
@@ -59,12 +59,6 @@
             <v-list-item-subtitle v-if="entity.description" class="text-truncate">
               {{ entity.description }}
             </v-list-item-subtitle>
-
-            <template #append>
-              <v-chip v-if="isAlreadyInGroup(entity.id)" size="x-small" color="success" variant="tonal">
-                {{ $t('groups.alreadyInGroup') }}
-              </v-chip>
-            </template>
           </v-list-item>
         </v-list>
 
@@ -76,14 +70,14 @@
       <v-divider />
 
       <v-card-actions>
-        <v-chip v-if="selectedEntityIds.length > 0" size="small" color="primary">
-          {{ $t('groups.selectedCount', { count: selectedEntityIds.length }) }}
+        <v-chip v-if="totalSelectedCount > 0" size="small" color="primary">
+          {{ $t('groups.selectedCount', { count: totalSelectedCount }) }}
         </v-chip>
         <v-spacer />
         <v-btn variant="text" @click="close">{{ $t('common.cancel') }}</v-btn>
         <v-btn
           color="primary"
-          :disabled="selectedEntityIds.length === 0"
+          :disabled="totalSelectedCount === 0"
           :loading="adding"
           @click="addSelected"
         >
@@ -143,23 +137,47 @@ const searching = ref(false)
 const loading = ref(false)
 const adding = ref(false)
 const entities = ref<Entity[]>([])
-const selectedEntityIds = ref<number[]>([])
+
+// Store selections per entity type so switching tabs doesn't lose selections
+const selectionsByType = ref<Map<string, number[]>>(new Map())
+
+// Get selected IDs for current entity type
+const currentTypeSelection = computed(() => {
+  return selectionsByType.value.get(selectedType.value) || []
+})
+
+// Total selected across all types
+const totalSelectedCount = computed(() => {
+  let total = 0
+  for (const ids of selectionsByType.value.values()) {
+    total += ids.length
+  }
+  return total
+})
+
+// Collect all selected entity IDs across all types
+const allSelectedEntityIds = computed(() => {
+  const all: number[] = []
+  for (const ids of selectionsByType.value.values()) {
+    all.push(...ids)
+  }
+  return all
+})
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
-// Check if entity is already in group
-function isAlreadyInGroup(entityId: number): boolean {
-  return props.existingMembers.some((m) => m.entity_id === entityId)
-}
-
-// Filter out already selected/in-group entities for search
-const filteredEntities = computed(() => {
-  return entities.value
+// Set of entity IDs already in group (for fast lookup)
+const existingMemberIds = computed(() => {
+  return new Set(props.existingMembers.map((m) => m.entity_id))
 })
 
-// Load entities when type changes
+// Filter out entities already in the group
+const filteredEntities = computed(() => {
+  return entities.value.filter((e) => !existingMemberIds.value.has(e.id))
+})
+
+// Load entities when type changes (don't clear selections - they're per type)
 watch(selectedType, () => {
-  selectedEntityIds.value = []
   loadEntities()
 })
 
@@ -175,7 +193,7 @@ watch(
   () => props.modelValue,
   (visible) => {
     if (visible) {
-      selectedEntityIds.value = []
+      selectionsByType.value = new Map()
       loadEntities()
     }
   },
@@ -211,25 +229,33 @@ function getEndpointForType(type: string): string {
 }
 
 function toggleEntity(entityId: number) {
-  const index = selectedEntityIds.value.indexOf(entityId)
+  const type = selectedType.value
+  const current = selectionsByType.value.get(type) || []
+  const index = current.indexOf(entityId)
+
   if (index === -1) {
-    selectedEntityIds.value.push(entityId)
+    selectionsByType.value.set(type, [...current, entityId])
   } else {
-    selectedEntityIds.value.splice(index, 1)
+    const updated = [...current]
+    updated.splice(index, 1)
+    selectionsByType.value.set(type, updated)
   }
+  // Trigger reactivity
+  selectionsByType.value = new Map(selectionsByType.value)
 }
 
 async function addSelected() {
-  if (!props.groupId || selectedEntityIds.value.length === 0) return
+  const allIds = allSelectedEntityIds.value
+  if (!props.groupId || allIds.length === 0) return
 
   adding.value = true
 
   await $fetch(`/api/groups/${props.groupId}/members`, {
     method: 'POST',
-    body: { entityIds: selectedEntityIds.value },
+    body: { entityIds: allIds },
   })
 
-  emit('added', selectedEntityIds.value.length)
+  emit('added', allIds.length)
   adding.value = false
   close()
 }
@@ -237,7 +263,7 @@ async function addSelected() {
 function close() {
   emit('update:modelValue', false)
   searchQuery.value = ''
-  selectedEntityIds.value = []
+  selectionsByType.value = new Map()
 }
 
 // Entity type icons

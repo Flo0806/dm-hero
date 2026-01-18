@@ -171,6 +171,13 @@ export interface NpcMetadata {
   [key: string]: unknown // Index signature for convertMetadataToKeys compatibility
 }
 
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface NpcCounts {
   relations: number
   items: number
@@ -182,6 +189,7 @@ export interface NpcCounts {
   notes: number
   players: number
   factionName: string | null
+  groups?: GroupInfo[]
 }
 
 export interface NPC {

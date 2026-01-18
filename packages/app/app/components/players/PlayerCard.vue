@@ -66,6 +66,21 @@
 
     <!-- Info Badges (Bottom) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
+      <!-- Group Badges -->
+      <div v-if="counts?.groups?.length" class="d-flex flex-wrap mb-2" style="gap: 6px">
+        <v-chip
+          v-for="group in counts.groups"
+          :key="group.id"
+          :prepend-icon="group.icon || 'mdi-folder-multiple'"
+          :color="group.color || undefined"
+          size="small"
+          variant="tonal"
+          @click.stop="$emit('open-group', group.id)"
+        >
+          {{ group.name }}
+        </v-chip>
+      </div>
+
       <div class="d-flex flex-wrap" style="gap: 6px">
         <!-- Characters Count Badge -->
         <v-tooltip location="top">
@@ -336,6 +351,7 @@ defineEmits<{
   download: [player: Player]
   delete: [player: Player]
   chaos: [player: Player]
+  'open-group': [groupId: number]
 }>()
 
 // Get counts reactively from the composable (shared cache)

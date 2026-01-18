@@ -73,6 +73,21 @@
 
     <!-- Info Badges (Bottom) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0; margin-top: auto">
+      <!-- Group Badges -->
+      <div v-if="counts?.groups?.length" class="d-flex flex-wrap mb-2" style="gap: 6px">
+        <v-chip
+          v-for="group in counts.groups"
+          :key="group.id"
+          :prepend-icon="group.icon || 'mdi-folder-multiple'"
+          :color="group.color || undefined"
+          size="small"
+          variant="tonal"
+          @click.stop="$emit('open-group', group.id)"
+        >
+          {{ group.name }}
+        </v-chip>
+      </div>
+
       <!-- Count Badges (NPCs, Items, Factions, Documents, Images) -->
       <div class="d-flex flex-wrap" style="gap: 6px">
         <!-- NPCs Count Badge -->
@@ -327,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Lore } from '../../../types/lore'
+import type { Lore, LoreCounts } from '../../../types/lore'
 import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 
 interface Props {
@@ -345,13 +360,14 @@ defineEmits<{
   download: [lore: Lore]
   delete: [lore: Lore]
   chaos: [lore: Lore]
+  'open-group': [groupId: number]
 }>()
 
 const { t } = useI18n()
 const { getCounts } = useLoreCounts()
 
 // Get counts reactively from the composable (shared cache)
-const counts = computed(() => getCounts(props.lore.id) || props.lore._counts)
+const counts = computed<LoreCounts | undefined>(() => getCounts(props.lore.id) || props.lore._counts)
 
 // Image Preview State
 const showImagePreview = ref(false)
