@@ -92,7 +92,7 @@
           {{ $t('factions.addFactionRelation') }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
-          <v-select
+          <v-autocomplete
             v-model="localFactionId"
             :items="availableFactions"
             item-title="name"
@@ -101,6 +101,23 @@
             variant="outlined"
             clearable
             class="mb-3"
+          >
+            <template #prepend-item>
+              <v-list-item class="text-primary" @click="showQuickCreate = true">
+                <template #prepend>
+                  <v-icon>mdi-plus</v-icon>
+                </template>
+                <v-list-item-title>{{ $t('quickCreate.newFaction') }}</v-list-item-title>
+              </v-list-item>
+              <v-divider class="my-1" />
+            </template>
+          </v-autocomplete>
+
+          <!-- Quick Create Dialog -->
+          <SharedQuickCreateEntityDialog
+            v-model="showQuickCreate"
+            entity-type="Faction"
+            @created="handleQuickCreated"
           />
 
           <v-combobox
@@ -140,9 +157,14 @@
 
 <script setup lang="ts">
 import { FACTION_RELATION_TYPES } from '~~/types/faction'
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
+import { useEntitiesStore } from '~/stores/entities'
+import { useCampaignStore } from '~/stores/campaign'
+import { useSnackbarStore } from '~/stores/snackbar'
 
 const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Register with parent dialog's dirty state management
 const { markDirty } = useTabDirtyState('factionRelations', t('factions.factionRelations'))
@@ -180,6 +202,9 @@ const emit = defineEmits<Emits>()
 const localFactionId = ref<number | null>(null)
 const localRelationType = ref('')
 const localNotes = ref('')
+
+// Quick Create state
+const showQuickCreate = ref(false)
 
 // Edit dialog state
 const editDialog = ref(false)
@@ -273,5 +298,29 @@ function handleAdd() {
   localFactionId.value = null
   localRelationType.value = ''
   localNotes.value = ''
+}
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchFactions(campaignId, true)
+    // Set default counts for the new faction so it doesn't show loading spinner
+    const { setCounts } = useFactionCounts()
+    setCounts(newEntity.id, {
+      members: 0,
+      items: 0,
+      locations: 0,
+      lore: 0,
+      players: 0,
+      documents: 0,
+      images: 0,
+      relations: 0,
+    })
+  }
+
+  // Pre-select the new faction in the autocomplete
+  localFactionId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 </script>
