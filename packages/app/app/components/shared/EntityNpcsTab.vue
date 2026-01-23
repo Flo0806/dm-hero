@@ -14,7 +14,17 @@
           clearable
           :loading="loading"
           class="mb-2"
-        />
+        >
+          <template #prepend-item>
+            <v-list-item class="text-primary" @click="showQuickCreate = true">
+              <template #prepend>
+                <v-icon>mdi-plus</v-icon>
+              </template>
+              <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-1" />
+          </template>
+        </v-autocomplete>
 
         <v-select
           v-if="showMembershipType && membershipTypeSuggestions.length > 0"
@@ -97,6 +107,13 @@
       :text="$t('common.noLinkedNpcsText')"
     />
 
+    <!-- Quick Create Dialog -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      entity-type="NPC"
+      @created="handleQuickCreated"
+    />
+
     <!-- Edit NPC Link Dialog -->
     <v-dialog v-model="showEditDialog" max-width="500">
       <v-card>
@@ -136,9 +153,10 @@
 </template>
 
 <script setup lang="ts">
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
-
 const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Register with parent dialog's dirty state management
 const { markDirty } = useTabDirtyState('npcs', t('npcs.title'))
@@ -191,6 +209,9 @@ const emit = defineEmits<{
 const localNpcId = ref<number | null>(null)
 const localMembershipType = ref<string>('')
 const localRank = ref<string>('')
+
+// Quick Create state
+const showQuickCreate = ref(false)
 
 // Edit dialog state
 const showEditDialog = ref(false)
@@ -272,5 +293,34 @@ function closeEditDialog() {
   showEditDialog.value = false
   editingNpc.value = null
   editForm.value = { membershipType: '', rank: '' }
+}
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  // Reload NPCs to include the new NPC
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchNPCs(campaignId, true)
+    // Set default counts for the new NPC so it doesn't show loading spinner
+    const { setCounts } = useNpcCounts()
+    setCounts(newEntity.id, {
+      relations: 0,
+      items: 0,
+      locations: 0,
+      documents: 0,
+      images: 0,
+      memberships: 0,
+      lore: 0,
+      notes: 0,
+      players: 0,
+      factions: [],
+      factionName: null,
+      groups: [],
+    })
+  }
+
+  // Pre-select the new NPC in the autocomplete (user still needs to click "Link")
+  localNpcId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 </script>
