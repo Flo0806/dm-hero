@@ -385,14 +385,14 @@ function initializeFromQuery() {
 }
 
 onMounted(async () => {
-  // Load locations from store (cached)
-  await entitiesStore.fetchLocations(activeCampaignId.value!)
-
-  // Load NPCs, Lore, Items and Players for linking
-  await entitiesStore.fetchNPCs(activeCampaignId.value!)
-  await entitiesStore.fetchLore(activeCampaignId.value!)
-  await entitiesStore.fetchItems(activeCampaignId.value!)
-  await entitiesStore.fetchPlayers(activeCampaignId.value!)
+  // Load all data in parallel for better performance
+  await Promise.all([
+    entitiesStore.fetchLocations(activeCampaignId.value!),
+    entitiesStore.fetchNPCs(activeCampaignId.value!),
+    entitiesStore.fetchLore(activeCampaignId.value!),
+    entitiesStore.fetchItems(activeCampaignId.value!),
+    entitiesStore.fetchPlayers(activeCampaignId.value!),
+  ])
 
   // Initialize from query params
   initializeFromQuery()
