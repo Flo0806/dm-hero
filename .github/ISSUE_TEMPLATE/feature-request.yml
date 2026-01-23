@@ -1,0 +1,49 @@
+name: Feature Request
+description: Have an idea to make DM Hero better?
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea! We love hearing how DM Hero can better serve Dungeon Masters.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the feature or improvement you'd like to see
+      placeholder: |
+        I would like to be able to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: How would this help your campaigns?
+      description: Tell us about your use case
+      placeholder: |
+        This would help me because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current workaround
+      description: How are you handling this today? (optional)
+      placeholder: |
+        Right now I'm doing...
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Mockups or examples
+      description: Any sketches, screenshots, or examples that help illustrate your idea? (drag & drop images here)
+
+  - type: checkboxes
+    id: contrib
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to help implement this feature

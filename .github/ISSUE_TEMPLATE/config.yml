@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/Flo0806/dm-hero/discussions
+    about: Questions or general feedback? Start a discussion!
+  - name: DM Hero Website
+    url: https://dm-hero.com
+    about: Visit the official website

@@ -1,0 +1,65 @@
+name: Bug Report
+description: Something not working? Let us know!
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! Your feedback helps make DM Hero better for everyone.
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: How are you running DM Hero?
+      options:
+        - Windows (Desktop App)
+        - Mac (Desktop App)
+        - Linux (Desktop App)
+        - Docker
+        - Browser (self-hosted)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you using? (Found in Settings or About)
+      placeholder: "e.g. 1.0.2"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem. What did you expect to happen?
+      placeholder: |
+        When I tried to... I expected... but instead...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we recreate this issue?
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See the problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem (drag & drop images here)
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else that might help us understand the issue?
