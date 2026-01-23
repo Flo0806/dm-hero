@@ -182,7 +182,17 @@
                 variant="outlined"
                 clearable
                 class="mb-2"
-              />
+              >
+                <template #prepend-item>
+                  <v-list-item class="text-primary" @click="openQuickCreate('NPC')">
+                    <template #prepend>
+                      <v-icon>mdi-plus</v-icon>
+                    </template>
+                    <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
+                  </v-list-item>
+                  <v-divider class="my-1" />
+                </template>
+              </v-autocomplete>
 
               <v-btn color="primary" block :disabled="!selectedNpcId" :loading="loadingNpcs" @click="addNpc">
                 {{ $t('lore.linkNpc') }}
@@ -232,7 +242,17 @@
                 variant="outlined"
                 clearable
                 class="mb-2"
-              />
+              >
+                <template #prepend-item>
+                  <v-list-item class="text-primary" @click="openQuickCreate('Faction')">
+                    <template #prepend>
+                      <v-icon>mdi-plus</v-icon>
+                    </template>
+                    <v-list-item-title>{{ $t('quickCreate.newFaction') }}</v-list-item-title>
+                  </v-list-item>
+                  <v-divider class="my-1" />
+                </template>
+              </v-autocomplete>
 
               <v-btn color="primary" block :disabled="!selectedFactionId" :loading="loadingFactions" @click="addFaction">
                 {{ $t('lore.linkFaction') }}
@@ -248,7 +268,17 @@
                 variant="outlined"
                 clearable
                 class="mb-4"
-              />
+              >
+                <template #prepend-item>
+                  <v-list-item class="text-primary" @click="openQuickCreate('Item')">
+                    <template #prepend>
+                      <v-icon>mdi-plus</v-icon>
+                    </template>
+                    <v-list-item-title>{{ $t('quickCreate.newItem') }}</v-list-item-title>
+                  </v-list-item>
+                  <v-divider class="my-1" />
+                </template>
+              </v-autocomplete>
               <v-btn color="primary" block :disabled="!selectedItemId" :loading="loadingItems" @click="addItem">
                 {{ $t('lore.linkItem') }}
               </v-btn>
@@ -292,7 +322,17 @@
                 variant="outlined"
                 clearable
                 class="mb-4"
-              />
+              >
+                <template #prepend-item>
+                  <v-list-item class="text-primary" @click="openQuickCreate('Location')">
+                    <template #prepend>
+                      <v-icon>mdi-plus</v-icon>
+                    </template>
+                    <v-list-item-title>{{ $t('quickCreate.newLocation') }}</v-list-item-title>
+                  </v-list-item>
+                  <v-divider class="my-1" />
+                </template>
+              </v-autocomplete>
               <v-btn color="primary" block :disabled="!selectedLocationId" :loading="loadingLocations" @click="addLocation">
                 {{ $t('lore.linkLocation') }}
               </v-btn>
@@ -404,6 +444,13 @@
 
   <!-- Image Preview Dialog -->
   <ImagePreviewDialog v-model="showImagePreview" :image-url="previewImageUrl" :title="previewImageTitle" />
+
+  <!-- Quick Create Dialog (single instance, dynamic type) -->
+  <SharedQuickCreateEntityDialog
+    v-model="showQuickCreate"
+    :entity-type="quickCreateType"
+    @created="handleQuickCreated"
+  />
 </template>
 
 <script setup lang="ts">
@@ -417,7 +464,6 @@ import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
-import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 // ============================================================================
 // Props & Emits
@@ -523,6 +569,10 @@ const selectedNpcId = ref<number | null>(null)
 const selectedFactionId = ref<number | null>(null)
 const selectedItemId = ref<number | null>(null)
 const selectedLocationId = ref<number | null>(null)
+
+// Quick Create state (single dialog, dynamic type)
+const showQuickCreate = ref(false)
+const quickCreateType = ref<'NPC' | 'Location' | 'Faction' | 'Item' | 'Lore' | 'Player'>('NPC')
 
 // Track dirty state for inline tabs (form has unsaved selection)
 // Register tabs first, then watch for dirty state changes
@@ -1012,5 +1062,67 @@ function handleImagePreview(url: string, name?: string) {
   previewImageUrl.value = url
   previewImageTitle.value = name || lore.value?.name || ''
   showImagePreview.value = true
+}
+
+// ============================================================================
+// Quick Create
+// ============================================================================
+function openQuickCreate(type: 'NPC' | 'Faction' | 'Item' | 'Location') {
+  quickCreateType.value = type
+  showQuickCreate.value = true
+}
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  const campaignId = campaignStore.activeCampaignId
+  if (!campaignId) return
+
+  switch (quickCreateType.value) {
+    case 'NPC': {
+      await entitiesStore.fetchNPCs(campaignId, true)
+      const { setCounts } = useNpcCounts()
+      setCounts(newEntity.id, {
+        relations: 0,
+        items: 0,
+        locations: 0,
+        documents: 0,
+        images: 0,
+        memberships: 0,
+        lore: 0,
+        notes: 0,
+        players: 0,
+        factions: [],
+        factionName: null,
+        groups: [],
+      })
+      selectedNpcId.value = newEntity.id
+      break
+    }
+    case 'Faction': {
+      await entitiesStore.fetchFactions(campaignId, true)
+      const { setCounts } = useFactionCounts()
+      setCounts(newEntity.id, {
+        members: 0,
+        items: 0,
+        locations: 0,
+        lore: 0,
+        players: 0,
+        documents: 0,
+        images: 0,
+        relations: 0,
+      })
+      selectedFactionId.value = newEntity.id
+      break
+    }
+    case 'Item':
+      await entitiesStore.fetchItems(campaignId, true)
+      selectedItemId.value = newEntity.id
+      break
+    case 'Location':
+      await entitiesStore.fetchLocations(campaignId, true)
+      selectedLocationId.value = newEntity.id
+      break
+  }
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 </script>
