@@ -258,7 +258,17 @@
                     item-title="name"
                     item-value="id"
                     clearable
-                  />
+                  >
+                    <template #prepend-item>
+                      <v-list-item class="text-primary" @click="openQuickCreate('NPC')">
+                        <template #prepend>
+                          <v-icon>mdi-plus</v-icon>
+                        </template>
+                        <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
+                      </v-list-item>
+                      <v-divider class="my-1" />
+                    </template>
+                  </v-autocomplete>
                 </v-col>
                 <v-col cols="12" md="4">
                   <v-select
@@ -350,7 +360,17 @@
                     item-title="name"
                     item-value="id"
                     clearable
-                  />
+                  >
+                    <template #prepend-item>
+                      <v-list-item class="text-primary" @click="openQuickCreate('Location')">
+                        <template #prepend>
+                          <v-icon>mdi-plus</v-icon>
+                        </template>
+                        <v-list-item-title>{{ $t('quickCreate.newLocation') }}</v-list-item-title>
+                      </v-list-item>
+                      <v-divider class="my-1" />
+                    </template>
+                  </v-autocomplete>
                 </v-col>
                 <v-col cols="12" md="4">
                   <v-text-field
@@ -426,7 +446,17 @@
                     item-title="name"
                     item-value="id"
                     clearable
-                  />
+                  >
+                    <template #prepend-item>
+                      <v-list-item class="text-primary" @click="openQuickCreate('Faction')">
+                        <template #prepend>
+                          <v-icon>mdi-plus</v-icon>
+                        </template>
+                        <v-list-item-title>{{ $t('quickCreate.newFaction') }}</v-list-item-title>
+                      </v-list-item>
+                      <v-divider class="my-1" />
+                    </template>
+                  </v-autocomplete>
                 </v-col>
                 <v-col cols="12" md="4">
                   <v-btn
@@ -585,6 +615,13 @@
       :image-url="previewImageUrl"
       :title="previewImageTitle"
       :download-file-name="previewImageTitle"
+    />
+
+    <!-- Quick Create Dialog (single instance, dynamic type) -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      :entity-type="quickCreateType"
+      @created="handleQuickCreated"
     />
   </v-dialog>
 </template>
@@ -821,6 +858,15 @@ const addingOwner = ref(false)
 const addingLocation = ref(false)
 const addingFaction = ref(false)
 const addingLore = ref(false)
+
+// Quick Create state (single dialog, dynamic type)
+const showQuickCreate = ref(false)
+const quickCreateType = ref<'NPC' | 'Location' | 'Faction' | 'Item' | 'Lore' | 'Player'>('NPC')
+
+function openQuickCreate(type: 'NPC' | 'Location' | 'Faction') {
+  quickCreateType.value = type
+  showQuickCreate.value = true
+}
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -1399,6 +1445,50 @@ async function removeLore(relationId: number) {
   } catch (e) {
     console.error('[ItemEditDialog] Failed to remove lore:', e)
   }
+}
+
+// ============================================================================
+// Quick Create Handler (unified for all entity types)
+// ============================================================================
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  const campaignId = campaignStore.activeCampaignId
+  if (!campaignId) return
+
+  switch (quickCreateType.value) {
+    case 'NPC': {
+      await entitiesStore.fetchNPCs(campaignId, true)
+      // Set default counts for the new NPC so it doesn't show loading spinner
+      const { setCounts } = useNpcCounts()
+      setCounts(newEntity.id, {
+        relations: 0,
+        items: 0,
+        locations: 0,
+        documents: 0,
+        images: 0,
+        memberships: 0,
+        lore: 0,
+        notes: 0,
+        players: 0,
+        factions: [],
+        factionName: null,
+        groups: [],
+      })
+      newOwner.value.npcId = newEntity.id
+      break
+    }
+
+    case 'Location':
+      await entitiesStore.fetchLocations(campaignId, true)
+      newLocation.value.locationId = newEntity.id
+      break
+
+    case 'Faction':
+      await entitiesStore.fetchFactions(campaignId, true)
+      newFaction.value.factionId = newEntity.id
+      break
+  }
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 
 // ============================================================================
