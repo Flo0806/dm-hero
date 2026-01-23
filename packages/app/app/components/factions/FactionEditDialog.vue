@@ -821,7 +821,6 @@ async function loadRelations(factionId: number) {
 async function refreshFaction() {
   if (faction.value?.id) {
     await Promise.all([
-      loadFaction(faction.value.id),
       loadRelations(faction.value.id),
       loadCounts(faction.value.id),
     ])

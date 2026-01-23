@@ -29,7 +29,7 @@
         <!-- Color Selection -->
         <div class="mb-4">
           <label class="v-label text-caption mb-2 d-block">{{ $t('groups.color') }}</label>
-          <div class="d-flex flex-wrap gap-2">
+          <div class="d-flex flex-wrap ga-2">
             <v-avatar
               v-for="color in GROUP_COLORS"
               :key="color"

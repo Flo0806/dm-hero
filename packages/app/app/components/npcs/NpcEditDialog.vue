@@ -941,7 +941,6 @@ async function loadRelations(npcId: number) {
 async function refreshNpc() {
   if (npc.value?.id) {
     await Promise.all([
-      loadNpc(npc.value.id),
       loadRelations(npc.value.id),
       loadCounts(npc.value.id),
     ])

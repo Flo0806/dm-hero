@@ -752,7 +752,7 @@ async function loadRelations(loreId: number) {
 
 async function refreshLore() {
   if (lore.value?.id) {
-    await Promise.all([loadLore(lore.value.id), loadRelations(lore.value.id), loadCounts(lore.value.id)])
+    await Promise.all([loadRelations(lore.value.id), loadCounts(lore.value.id)])
   }
 }
 
