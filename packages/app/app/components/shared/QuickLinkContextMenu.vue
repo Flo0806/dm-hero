@@ -6,7 +6,7 @@
     location="bottom start"
     origin="top start"
   >
-    <v-list density="compact" nav>
+    <v-list density="compact" nav elevation="8">
       <!-- Entity Link Options -->
       <template v-for="config in linkConfigs" :key="config.targetType">
         <!-- Single relation type: direct click, no submenu -->
@@ -43,7 +43,7 @@
             :open-delay="100"
             :close-delay="100"
           >
-            <v-list density="compact" nav max-height="400" class="overflow-y-auto">
+            <v-list density="compact" nav max-height="400" class="overflow-y-auto" elevation="8">
               <v-list-item
                 v-for="relationType in sortedRelationTypes(config)"
                 :key="relationType"
@@ -82,7 +82,7 @@
           :open-delay="100"
           :close-delay="100"
         >
-          <v-list density="compact" nav>
+          <v-list density="compact" nav elevation="8">
             <v-list-item
               v-for="group in groups"
               :key="group.id"
