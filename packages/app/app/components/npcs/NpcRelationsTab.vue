@@ -93,7 +93,7 @@
           {{ $t('npcs.addNpcRelation') }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
-          <v-select
+          <v-autocomplete
             v-model="localNpcId"
             :items="availableNpcs || []"
             item-title="name"
@@ -102,7 +102,17 @@
             variant="outlined"
             clearable
             class="mb-3"
-          />
+          >
+            <template #prepend-item>
+              <v-list-item class="text-primary" @click="showQuickCreate = true">
+                <template #prepend>
+                  <v-icon>mdi-plus</v-icon>
+                </template>
+                <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
+              </v-list-item>
+              <v-divider class="my-1" />
+            </template>
+          </v-autocomplete>
 
           <v-combobox
             v-model="localRelationType"
@@ -138,14 +148,23 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
+
+    <!-- Quick Create Dialog -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      entity-type="NPC"
+      @created="handleQuickCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { NPC_RELATION_TYPES } from '~~/types/npc'
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Register with parent dialog's dirty state management
 const { markDirty } = useTabDirtyState('npcRelations', t('npcs.npcRelations'))
@@ -195,6 +214,9 @@ const editRelationId = ref<number | null>(null)
 const editRelationType = ref('')
 const editNotes = ref('')
 const saving = ref(false)
+
+// Quick Create state
+const showQuickCreate = ref(false)
 
 // Track dirty state: form has data or edit dialog is open
 const isDirty = computed(() => {
@@ -286,5 +308,34 @@ function handleAdd() {
   localNpcId.value = null
   localRelationType.value = ''
   localNotes.value = ''
+}
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  // Reload NPCs to include the new NPC
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchNPCs(campaignId, true)
+    // Set default counts for the new NPC so it doesn't show loading spinner
+    const { setCounts } = useNpcCounts()
+    setCounts(newEntity.id, {
+      relations: 0,
+      items: 0,
+      locations: 0,
+      documents: 0,
+      images: 0,
+      memberships: 0,
+      lore: 0,
+      notes: 0,
+      players: 0,
+      factions: [],
+      factionName: null,
+      groups: [],
+    })
+  }
+
+  // Pre-select the new NPC in the autocomplete (user still needs to click "Link")
+  localNpcId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 </script>

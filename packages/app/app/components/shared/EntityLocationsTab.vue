@@ -58,7 +58,7 @@
           {{ $t('npcs.addLocationLink') }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
-          <v-select
+          <v-autocomplete
             v-model="localLocationId"
             :items="availableLocations"
             item-title="name"
@@ -67,7 +67,17 @@
             variant="outlined"
             clearable
             class="mb-3"
-          />
+          >
+            <template #prepend-item>
+              <v-list-item class="text-primary" @click="showQuickCreate = true">
+                <template #prepend>
+                  <v-icon>mdi-plus</v-icon>
+                </template>
+                <v-list-item-title>{{ $t('quickCreate.newLocation') }}</v-list-item-title>
+              </v-list-item>
+              <v-divider class="my-1" />
+            </template>
+          </v-autocomplete>
 
           <v-select
             v-model="localRelationType"
@@ -136,15 +146,23 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Quick Create Dialog -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      entity-type="Location"
+      @created="handleQuickCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { NPC_LOCATION_RELATION_TYPES } from '~~/types/npc'
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
 const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Register with parent dialog's dirty state management
 const { markDirty } = useTabDirtyState('locations', t('npcs.linkedLocations'))
@@ -195,6 +213,9 @@ const editForm = ref({
   notes: '',
 })
 
+// Quick Create state
+const showQuickCreate = ref(false)
+
 const relationTypeSuggestions = computed(() =>
   NPC_LOCATION_RELATION_TYPES.map((type) => ({
     value: type,
@@ -231,6 +252,19 @@ watch(
   },
   { immediate: true },
 )
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  // Reload locations to include the new location
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchLocations(campaignId, true)
+  }
+
+  // Pre-select the new location in the autocomplete (user still needs to click "Link")
+  localLocationId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
+}
 
 async function loadLocations() {
   if (!props.entityId) return

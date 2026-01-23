@@ -1382,6 +1382,8 @@
     "timeExceedsDuration": "Zeit überschreitet Audiodauer"
   },
   "common": {
+    "name": "Name",
+    "description": "Beschreibung",
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "cancel": "Abbrechen",
@@ -1523,6 +1525,17 @@
     "alreadyLinked": "Bereits verknüpft",
     "searchPlaceholder": "Suchen...",
     "related": "Verknüpft"
+  },
+  "quickCreate": {
+    "title": "{type} erstellen",
+    "create": "Erstellen",
+    "created": "\"{name}\" erstellt",
+    "newNpc": "Neuer NPC",
+    "newItem": "Neues Item",
+    "newLocation": "Neuer Ort",
+    "newFaction": "Neue Fraktion",
+    "newLore": "Neues Wissen",
+    "newPlayer": "Neuer Spieler"
   },
   "settings": {
     "title": "Einstellungen",
@@ -1935,6 +1948,14 @@
     "noConnectionsText": "Diese Entität hat noch keine Verknüpfungen"
   },
   "entities": {
+    "types": {
+      "npc": "NPC",
+      "item": "Item",
+      "location": "Ort",
+      "faction": "Fraktion",
+      "lore": "Wissen",
+      "player": "Spieler"
+    },
     "currentLocation": "Aktueller Standort",
     "currentLocationHint": "Der Ort, an dem sich diese Entität gerade befindet",
     "updateOnMaps": "Auf Karten aktualisieren",

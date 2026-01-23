@@ -1389,6 +1389,8 @@
     "timeExceedsDuration": "Time exceeds audio duration"
   },
   "common": {
+    "name": "Name",
+    "description": "Description",
     "edit": "Edit",
     "delete": "Delete",
     "cancel": "Cancel",
@@ -1530,6 +1532,17 @@
     "alreadyLinked": "Already linked",
     "searchPlaceholder": "Search...",
     "related": "Related"
+  },
+  "quickCreate": {
+    "title": "Create {type}",
+    "create": "Create",
+    "created": "\"{name}\" created",
+    "newNpc": "New NPC",
+    "newItem": "New Item",
+    "newLocation": "New Location",
+    "newFaction": "New Faction",
+    "newLore": "New Lore",
+    "newPlayer": "New Player"
   },
   "settings": {
     "title": "Settings",
@@ -1959,6 +1972,14 @@
     "noConnectionsText": "This entity has no links yet"
   },
   "entities": {
+    "types": {
+      "npc": "NPC",
+      "item": "Item",
+      "location": "Location",
+      "faction": "Faction",
+      "lore": "Lore",
+      "player": "Player"
+    },
     "currentLocation": "Current Location",
     "currentLocationHint": "The place where this entity is currently located",
     "updateOnMaps": "Update on Maps",

@@ -14,7 +14,17 @@
           clearable
           :loading="loading"
           class="mb-2"
-        />
+        >
+          <template #prepend-item>
+            <v-list-item class="text-primary" @click="showQuickCreate = true">
+              <template #prepend>
+                <v-icon>mdi-plus</v-icon>
+              </template>
+              <v-list-item-title>{{ $t('quickCreate.newLore') }}</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-1" />
+          </template>
+        </v-autocomplete>
         <v-btn color="primary" block :disabled="!localLoreId" @click="handleAdd">
           <v-icon start>mdi-link-plus</v-icon>
           {{ $t('common.linkLore') }}
@@ -55,13 +65,21 @@
       :title="$t('common.noLinkedLore')"
       :text="$t('common.noLinkedLoreText')"
     />
+
+    <!-- Quick Create Dialog -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      entity-type="Lore"
+      @created="handleQuickCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
-
 const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 // Register with parent dialog's dirty state management
 const { markDirty } = useTabDirtyState('lore', t('lore.title'))
@@ -94,6 +112,9 @@ const emit = defineEmits<{
 
 const localLoreId = ref<number | null>(null)
 
+// Quick Create state
+const showQuickCreate = ref(false)
+
 // Track dirty state
 const isDirty = computed(() => !!localLoreId.value)
 watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
@@ -103,5 +124,18 @@ function handleAdd() {
 
   emit('add', localLoreId.value)
   localLoreId.value = null
+}
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  // Reload lore to include the new entry
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchLore(campaignId, true)
+  }
+
+  // Pre-select the new lore in the autocomplete (user still needs to click "Link")
+  localLoreId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
 }
 </script>

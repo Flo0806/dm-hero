@@ -14,7 +14,17 @@
           clearable
           :loading="loading"
           class="mb-2"
-        />
+        >
+          <template #prepend-item>
+            <v-list-item class="text-primary" @click="showQuickCreate = true">
+              <template #prepend>
+                <v-icon>mdi-plus</v-icon>
+              </template>
+              <v-list-item-title>{{ $t('quickCreate.newItem') }}</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-1" />
+          </template>
+        </v-autocomplete>
 
         <v-select
           v-if="showRelationType && relationTypeSuggestions.length > 0"
@@ -159,12 +169,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Quick Create Dialog -->
+    <SharedQuickCreateEntityDialog
+      v-model="showQuickCreate"
+      entity-type="Item"
+      @created="handleQuickCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useTabDirtyState } from '~/composables/useDialogDirtyState'
-
 const { t } = useI18n()
 
 // Register with parent dialog's dirty state management
@@ -238,6 +253,25 @@ const editForm = ref({
   equipped: false,
 })
 const saving = ref(false)
+
+// Quick Create state
+const showQuickCreate = ref(false)
+const snackbarStore = useSnackbarStore()
+const entitiesStore = useEntitiesStore()
+const campaignStore = useCampaignStore()
+
+async function handleQuickCreated(newEntity: { id: number; name: string }) {
+  // Reload items to include the new item
+  const campaignId = campaignStore.activeCampaignId
+  if (campaignId) {
+    await entitiesStore.fetchItems(campaignId, true)
+  }
+
+  // Pre-select the new item in the autocomplete (user still needs to click "Link")
+  localItemId.value = newEntity.id
+
+  snackbarStore.success(t('quickCreate.created', { name: newEntity.name }))
+}
 
 // Track dirty state: form has data or edit dialog is open
 const isDirty = computed(() => {
