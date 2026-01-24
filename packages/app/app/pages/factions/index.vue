@@ -56,6 +56,7 @@
             @delete="deleteFaction"
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
+            @open-tab="openFactionTab"
           />
         </v-col>
       </v-row>
@@ -96,6 +97,7 @@
       <FactionEditDialog
         :show="showEditDialog"
         :faction-id="editingFactionId"
+        :initial-tab="editDialogInitialTab"
         @update:show="handleDialogClose"
         @saved="handleFactionSaved"
         @created="handleFactionCreated"
@@ -295,14 +297,23 @@ onMounted(async () => {
 // ============================================================================
 const showEditDialog = ref(false)
 const editingFactionId = ref<number | null>(null)
+const editDialogInitialTab = ref<string | undefined>(undefined)
 
 function openCreateDialog() {
   editingFactionId.value = null
+  editDialogInitialTab.value = undefined
   showEditDialog.value = true
 }
 
 function editFaction(faction: Faction) {
   editingFactionId.value = faction.id
+  editDialogInitialTab.value = undefined
+  showEditDialog.value = true
+}
+
+function openFactionTab(faction: Faction, tab: string) {
+  editingFactionId.value = faction.id
+  editDialogInitialTab.value = tab
   showEditDialog.value = true
 }
 
@@ -319,6 +330,7 @@ function handleDialogClose(open: boolean) {
   showEditDialog.value = open
   if (!open) {
     editingFactionId.value = null
+    editDialogInitialTab.value = undefined
   }
 }
 

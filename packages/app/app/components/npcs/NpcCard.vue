@@ -160,6 +160,8 @@
               size="small"
               variant="outlined"
               :color="counts.relations > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'npcRelations')"
             >
               {{ counts.relations }}
             </v-chip>
@@ -187,6 +189,8 @@
               size="small"
               variant="outlined"
               :color="counts.items > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'items')"
             >
               {{ counts.items }}
             </v-chip>
@@ -214,6 +218,8 @@
               size="small"
               variant="outlined"
               :color="(counts.locations || 0) > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'locations')"
             >
               {{ counts.locations || 0 }}
             </v-chip>
@@ -241,6 +247,8 @@
               size="small"
               variant="outlined"
               :color="counts.documents > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'documents')"
             >
               {{ counts.documents }}
             </v-chip>
@@ -268,6 +276,8 @@
               size="small"
               variant="outlined"
               :color="counts.images > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'details')"
             >
               {{ counts.images }}
             </v-chip>
@@ -295,6 +305,8 @@
               size="small"
               variant="outlined"
               :color="(counts.lore || 0) > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'lore')"
             >
               {{ counts.lore || 0 }}
             </v-chip>
@@ -322,6 +334,8 @@
               size="small"
               variant="outlined"
               :color="counts.memberships > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'memberships')"
             >
               {{ counts.memberships }}
             </v-chip>
@@ -349,6 +363,8 @@
               size="small"
               variant="outlined"
               :color="(counts.players || 0) > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', npc, 'players')"
             >
               {{ counts.players || 0 }}
             </v-chip>
@@ -468,6 +484,7 @@ const emit = defineEmits<{
   'add-to-group': [payload: { entityId: number; groupId: number }]
   'create-group': [entityId: number]
   linked: []
+  'open-tab': [npc: NPC, tab: string]
 }>()
 
 const { locale, t, te } = useI18n()
@@ -615,5 +632,15 @@ function getClassDisplayName(className: string): string {
   50% {
     box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0.4);
   }
+}
+
+/* Clickable count badges with hover effect */
+.clickable-chip {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.clickable-chip:hover {
+  transform: scale(1.1);
 }
 </style>

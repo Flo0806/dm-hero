@@ -54,6 +54,7 @@
             @edit="editGroup"
             @delete="deleteGroup"
             @add-member="handleContextMenuAddMember"
+            @open-tab="openGroupTab"
           />
         </v-col>
       </v-row>
@@ -97,6 +98,7 @@
         ref="viewDialogRef"
         v-model="showViewDialog"
         :group="viewingGroup"
+        :initial-tab="viewDialogInitialTab"
         @edit="handleViewEdit"
         @add-entities="handleAddEntities"
         @delete-all="handleDeleteAll"
@@ -255,9 +257,17 @@ function editGroup(group: EntityGroup) {
 const showViewDialog = ref(false)
 const viewingGroup = ref<EntityGroup | null>(null)
 const viewDialogRef = ref<{ refresh: () => Promise<void> } | null>(null)
+const viewDialogInitialTab = ref<string | undefined>(undefined)
 
 function viewGroup(group: EntityGroup) {
   viewingGroup.value = group
+  viewDialogInitialTab.value = undefined
+  showViewDialog.value = true
+}
+
+function openGroupTab(group: EntityGroup, entityType: string) {
+  viewingGroup.value = group
+  viewDialogInitialTab.value = entityType
   showViewDialog.value = true
 }
 

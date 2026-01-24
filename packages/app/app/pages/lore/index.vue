@@ -55,6 +55,7 @@
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
+            @open-tab="openLoreTab"
           />
         </v-col>
       </v-row>
@@ -80,6 +81,7 @@
     <LoreEditDialog
       :show="showEditDialog"
       :lore-id="editingLoreId"
+      :initial-tab="editDialogInitialTab"
       @update:show="handleDialogClose"
       @saved="handleLoreSaved"
       @created="handleLoreCreated"
@@ -177,6 +179,7 @@ const showEditDialog = ref(false)
 const showViewDialog = ref(false)
 const showDeleteDialog = ref(false)
 const editingLoreId = ref<number | null>(null)
+const editDialogInitialTab = ref<string | undefined>(undefined)
 const selectedLore = ref<Lore | null>(null)
 const loreToDelete = ref<Lore | null>(null)
 const deleting = ref(false)
@@ -305,6 +308,7 @@ const filteredLore = computed(() => {
 // Open create dialog
 function openCreateDialog() {
   editingLoreId.value = null
+  editDialogInitialTab.value = undefined
   showEditDialog.value = true
 }
 
@@ -354,7 +358,15 @@ async function viewLore(loreEntry: Lore) {
 // Edit lore entry
 function editLore(loreEntry: Lore) {
   editingLoreId.value = loreEntry.id
+  editDialogInitialTab.value = undefined
   showViewDialog.value = false
+  showEditDialog.value = true
+}
+
+// Open lore edit dialog on specific tab
+function openLoreTab(loreEntry: Lore, tab: string) {
+  editingLoreId.value = loreEntry.id
+  editDialogInitialTab.value = tab
   showEditDialog.value = true
 }
 
@@ -363,6 +375,7 @@ function handleDialogClose(value: boolean) {
   showEditDialog.value = value
   if (!value) {
     editingLoreId.value = null
+    editDialogInitialTab.value = undefined
   }
 }
 

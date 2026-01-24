@@ -524,11 +524,9 @@ import EntityDocuments from '../shared/EntityDocuments.vue'
 import EntityImageUpload from '../shared/EntityImageUpload.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
-import { useImageDownload } from '~/composables/useImageDownload'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
-import { useErrorHandler } from '~/composables/useErrorHandler'
 import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
 
 // ============================================================================
@@ -537,6 +535,7 @@ import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc
 const props = defineProps<{
   show: boolean
   npcId?: number | null // null/undefined = create mode
+  initialTab?: string // Tab to open when dialog opens (default: 'details')
 }>()
 
 const emit = defineEmits<{
@@ -758,7 +757,7 @@ watch(
 // ============================================================================
 async function loadData(npcId: number | null | undefined) {
   loading.value = true
-  activeTab.value = 'details'
+  activeTab.value = props.initialTab || 'details'
 
   try {
     // Load reference data

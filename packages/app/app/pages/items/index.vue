@@ -56,6 +56,7 @@
             @delete="deleteItem"
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
+            @open-tab="openItemTab"
           />
         </v-col>
       </v-row>
@@ -110,6 +111,7 @@
       <ItemEditDialog
         :show="showEditDialog"
         :item-id="editingItemId"
+        :initial-tab="editDialogInitialTab"
         @update:show="handleDialogClose"
         @saved="handleItemSaved"
         @created="handleItemCreated"
@@ -308,14 +310,23 @@ onMounted(async () => {
 // ============================================================================
 const showEditDialog = ref(false)
 const editingItemId = ref<number | null>(null)
+const editDialogInitialTab = ref<string | undefined>(undefined)
 
 function openCreateDialog() {
   editingItemId.value = null
+  editDialogInitialTab.value = undefined
   showEditDialog.value = true
 }
 
 function editItem(item: Item) {
   editingItemId.value = item.id
+  editDialogInitialTab.value = undefined
+  showEditDialog.value = true
+}
+
+function openItemTab(item: Item, tab: string) {
+  editingItemId.value = item.id
+  editDialogInitialTab.value = tab
   showEditDialog.value = true
 }
 
@@ -332,6 +343,7 @@ function handleDialogClose(open: boolean) {
   showEditDialog.value = open
   if (!open) {
     editingItemId.value = null
+    editDialogInitialTab.value = undefined
   }
 }
 

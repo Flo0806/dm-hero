@@ -93,6 +93,8 @@
               size="small"
               variant="outlined"
               :color="counts.characters > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'characters')"
             >
               {{ counts.characters }}
             </v-chip>
@@ -120,6 +122,8 @@
               size="small"
               variant="outlined"
               :color="counts.items > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'items')"
             >
               {{ counts.items }}
             </v-chip>
@@ -147,6 +151,8 @@
               size="small"
               variant="outlined"
               :color="counts.locations > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'locations')"
             >
               {{ counts.locations }}
             </v-chip>
@@ -174,6 +180,8 @@
               size="small"
               variant="outlined"
               :color="counts.factions > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'factions')"
             >
               {{ counts.factions }}
             </v-chip>
@@ -201,6 +209,8 @@
               size="small"
               variant="outlined"
               :color="counts.lore > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'lore')"
             >
               {{ counts.lore }}
             </v-chip>
@@ -228,6 +238,8 @@
               size="small"
               variant="outlined"
               :color="counts.documents > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'documents')"
             >
               {{ counts.documents }}
             </v-chip>
@@ -255,6 +267,8 @@
               size="small"
               variant="outlined"
               :color="counts.images > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', player, 'images')"
             >
               {{ counts.images }}
             </v-chip>
@@ -374,6 +388,7 @@ const emit = defineEmits<{
   'add-to-group': [payload: { entityId: number; groupId: number }]
   'create-group': [entityId: number]
   linked: []
+  'open-tab': [player: Player, tab: string]
 }>()
 
 // Get counts reactively from the composable (shared cache)
@@ -443,5 +458,15 @@ const previewSubtitle = computed(() => {
   50% {
     box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0.4);
   }
+}
+
+/* Clickable count badges with hover effect */
+.clickable-chip {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.clickable-chip:hover {
+  transform: scale(1.1);
 }
 </style>

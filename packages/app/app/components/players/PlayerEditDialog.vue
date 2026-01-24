@@ -421,16 +421,13 @@ import PlayerLoreTab from './PlayerLoreTab.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
 import InGameDatePicker from '../calendar/InGameDatePicker.vue'
-import { useImageDownload } from '~/composables/useImageDownload'
-import { useInGameCalendar } from '~/composables/useInGameCalendar'
-import { useErrorHandler } from '~/composables/useErrorHandler'
-import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 import { useSnackbarStore } from '~/stores/snackbar'
 import { usePlayerStore } from '../../stores/player.js'
 
 const props = defineProps<{
   show: boolean
   playerId?: number | null
+  initialTab?: string // Tab to open when dialog opens (default: 'details')
 }>()
 
 const emit = defineEmits<{
@@ -544,7 +541,7 @@ onMounted(async () => {
 // ============================================================================
 async function loadData(playerId: number | null | undefined) {
   resetForm()
-  activeTab.value = 'details'
+  activeTab.value = props.initialTab || 'details'
 
   // Load calendar for birthday picker
   await loadCalendar()

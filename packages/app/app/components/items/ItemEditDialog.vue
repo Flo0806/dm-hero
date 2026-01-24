@@ -640,7 +640,6 @@ import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
-import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
 
 // ============================================================================
 // Interfaces
@@ -719,6 +718,7 @@ interface ItemForm {
 const props = defineProps<{
   show: boolean
   itemId?: number | null
+  initialTab?: string
 }>()
 
 const emit = defineEmits<{
@@ -916,7 +916,7 @@ watch(
 // ============================================================================
 async function loadData(itemId: number | null | undefined) {
   loading.value = true
-  activeTab.value = 'details'
+  activeTab.value = props.initialTab || 'details'
 
   try {
     await loadStoreData()

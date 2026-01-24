@@ -58,6 +58,7 @@
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
+            @open-tab="openPlayerTab"
           />
         </v-col>
       </v-row>
@@ -92,6 +93,7 @@
     <PlayerEditDialog
       :show="showEditDialog"
       :player-id="editingPlayerId"
+      :initial-tab="editDialogInitialTab"
       @update:show="handleDialogClose"
       @saved="handlePlayerSaved"
       @created="handlePlayerCreated"
@@ -155,6 +157,7 @@ const showDeleteDialog = ref(false)
 const deleting = ref(false)
 const viewingPlayer = ref<Player | null>(null)
 const editingPlayerId = ref<number | null>(null)
+const editDialogInitialTab = ref<string | undefined>(undefined)
 const deletingPlayer = ref<Player | null>(null)
 
 // Computed
@@ -217,6 +220,7 @@ onMounted(async () => {
 // Methods
 function openCreateDialog() {
   editingPlayerId.value = null
+  editDialogInitialTab.value = undefined
   showEditDialog.value = true
 }
 
@@ -227,6 +231,13 @@ function viewPlayer(player: Player) {
 
 function editPlayer(player: Player) {
   editingPlayerId.value = player.id
+  editDialogInitialTab.value = undefined
+  showEditDialog.value = true
+}
+
+function openPlayerTab(player: Player, tab: string) {
+  editingPlayerId.value = player.id
+  editDialogInitialTab.value = tab
   showEditDialog.value = true
 }
 
@@ -248,6 +259,7 @@ function handleDialogClose(value: boolean) {
   showEditDialog.value = value
   if (!value) {
     editingPlayerId.value = null
+    editDialogInitialTab.value = undefined
   }
 }
 

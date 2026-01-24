@@ -422,14 +422,10 @@ import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityImageUpload from '~/components/shared/EntityImageUpload.vue'
-import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
-import { useImageDownload } from '~/composables/useImageDownload'
 import LocationSelectWithMap from '~/components/shared/LocationSelectWithMap.vue'
 import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
-import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
-import { useFactionCounts } from '~/composables/useFactionCounts'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and factionId needed!
@@ -437,6 +433,7 @@ import { useFactionCounts } from '~/composables/useFactionCounts'
 const props = defineProps<{
   show: boolean
   factionId?: number | null // null/undefined = create mode
+  initialTab?: string // Tab to open when dialog opens (default: 'details')
 }>()
 
 const emit = defineEmits<{
@@ -674,7 +671,7 @@ watch(
 // ============================================================================
 async function loadData(factionId: number | null | undefined) {
   loading.value = true
-  activeTab.value = 'details'
+  activeTab.value = props.initialTab || 'details'
 
   try {
     // Load store data and check API key

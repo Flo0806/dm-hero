@@ -101,6 +101,8 @@
               size="small"
               variant="outlined"
               :color="counts.npcs > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'npcs')"
             >
               {{ counts.npcs }}
             </v-chip>
@@ -128,6 +130,8 @@
               size="small"
               variant="outlined"
               :color="counts.items > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'items')"
             >
               {{ counts.items }}
             </v-chip>
@@ -155,6 +159,8 @@
               size="small"
               variant="outlined"
               :color="counts.factions > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'factions')"
             >
               {{ counts.factions }}
             </v-chip>
@@ -182,6 +188,8 @@
               size="small"
               variant="outlined"
               :color="counts.locations > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'locations')"
             >
               {{ counts.locations }}
             </v-chip>
@@ -209,6 +217,8 @@
               size="small"
               variant="outlined"
               :color="counts.players > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'players')"
             >
               {{ counts.players }}
             </v-chip>
@@ -236,6 +246,8 @@
               size="small"
               variant="outlined"
               :color="counts.documents > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'documents')"
             >
               {{ counts.documents }}
             </v-chip>
@@ -263,6 +275,8 @@
               size="small"
               variant="outlined"
               :color="counts.images > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', lore, 'images')"
             >
               {{ counts.images }}
             </v-chip>
@@ -384,6 +398,7 @@ const emit = defineEmits<{
   'add-to-group': [payload: { entityId: number; groupId: number }]
   'create-group': [entityId: number]
   linked: []
+  'open-tab': [lore: Lore, tab: string]
 }>()
 
 const { t } = useI18n()
@@ -490,5 +505,15 @@ function getLoreTypeIcon(type: string): string {
   50% {
     box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0.4);
   }
+}
+
+/* Clickable count badges with hover effect */
+.clickable-chip {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.clickable-chip:hover {
+  transform: scale(1.1);
 }
 </style>

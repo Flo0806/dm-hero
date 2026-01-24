@@ -49,6 +49,8 @@
               size="small"
               variant="outlined"
               :color="count > 0 ? 'primary' : undefined"
+              class="clickable-chip"
+              @click.stop="$emit('open-tab', group, type as string)"
             >
               {{ count }}
             </v-chip>
@@ -104,6 +106,7 @@ const emit = defineEmits<{
   edit: [group: EntityGroup]
   delete: [group: EntityGroup]
   'add-member': [group: EntityGroup, entityType: string]
+  'open-tab': [group: EntityGroup, entityType: string]
 }>()
 
 // Context menu state
@@ -185,5 +188,15 @@ function getEntityTypeIcon(type: string): string {
   50% {
     box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0.4);
   }
+}
+
+/* Clickable count badges with hover effect */
+.clickable-chip {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.clickable-chip:hover {
+  transform: scale(1.1);
 }
 </style>

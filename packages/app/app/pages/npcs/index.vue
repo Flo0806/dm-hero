@@ -67,6 +67,7 @@
             @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
             @delete="deleteNpc"
             @open-group="openGroupPreview"
+            @open-tab="openNpcTab"
           />
         </v-col>
       </v-row>
@@ -119,6 +120,7 @@
       <NpcEditDialog
         :show="showEditDialog"
         :npc-id="editingNpcId"
+        :initial-tab="editDialogInitialTab"
         @update:show="handleEditDialogClose"
         @saved="handleNpcSaved"
         @created="handleNpcCreated"
@@ -428,6 +430,7 @@ const npcViewStack = ref<NPC[]>([]) // Stack for nested NPC views
 
 const showEditDialog = ref(false)
 const editingNpcId = ref<number | null>(null)
+const editDialogInitialTab = ref<string | undefined>(undefined)
 
 const showDeleteDialog = ref(false)
 const deletingNpc = ref<NPC | null>(null)
@@ -436,12 +439,16 @@ const deleting = ref(false)
 // Open create dialog (no npcId)
 function openCreateDialog() {
   editingNpcId.value = null
+  editDialogInitialTab.value = undefined
   showEditDialog.value = true
 }
 
 // Handle edit dialog close
 function handleEditDialogClose(show: boolean) {
   showEditDialog.value = show
+  if (!show) {
+    editDialogInitialTab.value = undefined
+  }
 }
 
 // Handle saved NPC (edit mode)
@@ -481,6 +488,14 @@ async function handleNpcCreated(npc: NPC) {
 // Edit NPC - just open dialog with ID, dialog loads everything itself
 function editNpc(npc: NPC) {
   editingNpcId.value = npc.id
+  editDialogInitialTab.value = undefined
+  showEditDialog.value = true
+}
+
+// Open NPC edit dialog on a specific tab (from count badge click)
+function openNpcTab(npc: NPC, tab: string) {
+  editingNpcId.value = npc.id
+  editDialogInitialTab.value = tab
   showEditDialog.value = true
 }
 

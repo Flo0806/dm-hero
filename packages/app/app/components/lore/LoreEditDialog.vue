@@ -471,6 +471,7 @@ import { useSnackbarStore } from '~/stores/snackbar'
 const props = defineProps<{
   show: boolean
   loreId?: number | null
+  initialTab?: string // Tab to open when dialog opens (default: 'details')
 }>()
 
 const emit = defineEmits<{
@@ -648,7 +649,7 @@ watch(
 // ============================================================================
 async function loadData(loreId: number | null | undefined) {
   loading.value = true
-  activeTab.value = 'details'
+  activeTab.value = props.initialTab || 'details'
 
   try {
     await loadStoreData()

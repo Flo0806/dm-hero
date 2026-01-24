@@ -101,6 +101,7 @@ const { t } = useI18n()
 interface Props {
   modelValue: boolean
   group: EntityGroup | null
+  initialTab?: string // Tab to open when dialog opens (default: 'all')
 }
 
 const props = defineProps<Props>()
@@ -164,7 +165,9 @@ watch(
   () => [props.modelValue, props.group?.id] as const,
   async ([isVisible, groupId]) => {
     if (isVisible && groupId) {
+      // First load members, then set activeTab (tab must exist before we can select it)
       await loadMembers(groupId)
+      activeTab.value = props.initialTab || 'all'
     }
   },
   { immediate: true },

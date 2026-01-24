@@ -1674,7 +1674,7 @@
     "noLocations": "No Locations",
     "noFactions": "No Factions",
     "badgeTooltips": {
-      "characters": "Player Characters",
+      "characters": "Played Characters (NPCs)",
       "items": "Linked Items",
       "locations": "Known Locations",
       "factions": "Faction Memberships",
