@@ -7,6 +7,15 @@
     @click="$emit('view', group)"
     @contextmenu.prevent="openContextMenu"
   >
+    <!-- Pin Button (top right) -->
+    <SharedPinButton
+      :group-id="group.id"
+      variant="icon"
+      size="small"
+      class="pin-button"
+      @click.stop
+    />
+
     <!-- Card Header with Icon & Name -->
     <div class="d-flex align-start pa-4 pb-3">
       <!-- Icon Avatar -->
@@ -164,6 +173,13 @@ function getEntityTypeIcon(type: string): string {
 .group-card {
   transition: all 0.3s ease;
   position: relative;
+}
+
+.pin-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
 }
 
 .group-description {
