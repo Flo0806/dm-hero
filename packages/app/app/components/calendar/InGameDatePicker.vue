@@ -266,6 +266,12 @@ function setToCurrentDate() {
     internalYear.value = currentDate.year
     internalMonth.value = currentDate.month
     internalDay.value = currentDate.day
+    // Also emit so parent gets the value
+    emit('update:modelValue', {
+      year: currentDate.year,
+      month: currentDate.month,
+      day: currentDate.day,
+    })
   }
 }
 
