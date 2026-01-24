@@ -1,3 +1,5 @@
+import type { GroupInfo } from './group'
+
 export const NPC_TYPES = [
   'ally',
   'enemy',
@@ -169,13 +171,6 @@ export interface NpcMetadata {
   age?: number
   gender?: string
   [key: string]: unknown // Index signature for convertMetadataToKeys compatibility
-}
-
-export interface GroupInfo {
-  id: number
-  name: string
-  color: string | null
-  icon: string | null
 }
 
 export interface FactionMembership {

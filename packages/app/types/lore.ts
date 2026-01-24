@@ -1,3 +1,5 @@
+import type { GroupInfo } from './group'
+
 export const LORE_TYPES = [
   'object', // General objects and artifacts
   'plant', // Flora and vegetation
@@ -37,13 +39,6 @@ export type LoreType = (typeof LORE_TYPES)[number]
 export interface LoreMetadata {
   type?: LoreType
   date?: string // Optional date for historical events (YYYY-MM-DD)
-}
-
-export interface GroupInfo {
-  id: number
-  name: string
-  color: string | null
-  icon: string | null
 }
 
 export interface LoreCounts {

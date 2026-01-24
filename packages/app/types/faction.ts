@@ -1,3 +1,5 @@
+import type { GroupInfo } from './group'
+
 export const FACTION_TYPES = [
   'guild',
   'cult',
@@ -122,13 +124,6 @@ export interface FactionMetadata {
   headquarters?: string
   goals?: string
   notes?: string
-}
-
-export interface GroupInfo {
-  id: number
-  name: string
-  color: string | null
-  icon: string | null
 }
 
 export interface FactionCounts {

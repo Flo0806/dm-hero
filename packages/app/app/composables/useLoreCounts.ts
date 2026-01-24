@@ -1,3 +1,5 @@
+import type { GroupInfo } from '../../types/group'
+
 interface Lore {
   id: number
   _counts?: LoreCounts
@@ -11,6 +13,7 @@ interface LoreCounts {
   players: number
   documents: number
   images: number
+  groups?: GroupInfo[]
 }
 
 // SHARED STATE - outside the function so all components share the same cache

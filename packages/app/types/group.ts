@@ -45,6 +45,16 @@ export interface GroupCounts {
   byType: Record<string, number>
 }
 
+/**
+ * Minimal group info for display on entity cards (badge chips)
+ */
+export interface GroupInfo {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+
 export interface EntityGroup {
   id: number
   campaign_id: number

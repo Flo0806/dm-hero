@@ -4,7 +4,7 @@ import type { Item } from '../../types/item'
 import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
 import type { Faction } from '../../types/faction'
-import type { EntityGroup } from '../../types/group'
+import type { EntityGroup, GroupInfo } from '../../types/group'
 import { useNpcCounts } from '../composables/useNpcCounts'
 import { useFactionCounts } from '../composables/useFactionCounts'
 import { useItemCounts } from '../composables/useItemCounts'
@@ -198,8 +198,9 @@ export const useEntitiesStore = defineStore('entities', {
           lore: number
           notes: number
           players: number
+          factions: Array<{ id: number; name: string; relationType: string }>
           factionName: string | null
-          groups: Array<{ id: number; name: string; color: string | null; icon: string | null }>
+          groups: GroupInfo[]
         }>(`/api/npcs/${id}/counts`)
 
         // Update NPC in store with new counts
@@ -277,10 +278,28 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async deleteFaction(id: number) {
-      await $fetch(`/api/factions/${id}`, {
-        method: 'DELETE',
-      })
+      const result = await $fetch<{ success: boolean; affectedFactionIds: number[] }>(
+        `/api/factions/${id}`,
+        {
+          method: 'DELETE',
+        },
+      )
+
+      // Remove the deleted Faction from the list
       this.factions = this.factions.filter((f) => f.id !== id)
+
+      // Decrement relation counts for affected Factions
+      if (result.affectedFactionIds && result.affectedFactionIds.length > 0) {
+        const { setCounts } = useFactionCounts()
+        for (const affectedId of result.affectedFactionIds) {
+          const faction = this.factions.find((f) => f.id === affectedId)
+          if (faction?._counts && faction._counts.relations > 0) {
+            faction._counts.relations--
+            // Also update the composable's countsMap for reactive UI updates
+            setCounts(affectedId, faction._counts)
+          }
+        }
+      }
     },
 
     async refreshFaction(id: number) {
@@ -307,6 +326,7 @@ export const useEntitiesStore = defineStore('entities', {
           documents: number
           images: number
           relations: number
+          groups: GroupInfo[]
         }>(`/api/factions/${id}/counts`)
 
         const faction = this.factions[index]
@@ -461,6 +481,7 @@ export const useEntitiesStore = defineStore('entities', {
           players: number
           documents: number
           images: number
+          groups: GroupInfo[]
         }>(`/api/items/${id}/counts`)
 
         // Update Item in store with new counts
@@ -589,6 +610,7 @@ export const useEntitiesStore = defineStore('entities', {
           players: number
           documents: number
           images: number
+          groups: GroupInfo[]
         }>(`/api/lore/${id}/counts`)
 
         // Update Lore in store with new counts
@@ -734,6 +756,7 @@ export const useEntitiesStore = defineStore('entities', {
           sessions: number
           documents: number
           images: number
+          groups: GroupInfo[]
         }>(`/api/players/${id}/counts`)
 
         const player = this.players[index]

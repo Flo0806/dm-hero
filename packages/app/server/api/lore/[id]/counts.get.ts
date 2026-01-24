@@ -212,6 +212,19 @@ export default defineEventHandler((event) => {
     )
     .get(Number(loreId)) as { count: number }
 
+  // Get groups this lore belongs to
+  const groups = db
+    .prepare(
+      `
+    SELECT g.id, g.name, g.color, g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    WHERE gm.entity_id = ?
+    ORDER BY g.name
+  `,
+    )
+    .all(Number(loreId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+
   return {
     npcs: npcsCount,
     items: itemsCount,
@@ -220,5 +233,6 @@ export default defineEventHandler((event) => {
     players: playersCount,
     documents: documentsCount.count,
     images: imagesCount.count,
+    groups,
   }
 })

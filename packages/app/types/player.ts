@@ -1,3 +1,5 @@
+import type { GroupInfo } from './group'
+
 // Player-to-Entity relation types (what a player knows/has discovered)
 export const PLAYER_RELATION_TYPES = [
   'knows',
@@ -28,13 +30,6 @@ export interface PlayerMetadata {
   birthday?: { year: number; month: number; day: number } | null // Character birthday in game calendar
   showBirthdayInCalendar?: boolean // Whether to show birthday in calendar overview
   [key: string]: unknown
-}
-
-export interface GroupInfo {
-  id: number
-  name: string
-  color: string | null
-  icon: string | null
 }
 
 export interface PlayerCounts {

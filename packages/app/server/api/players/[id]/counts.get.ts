@@ -220,6 +220,19 @@ export default defineEventHandler((event) => {
     )
     .get(Number(playerId)) as { count: number }
 
+  // Get groups this player belongs to
+  const groups = db
+    .prepare(
+      `
+    SELECT g.id, g.name, g.color, g.icon
+    FROM entity_group_members gm
+    INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
+    WHERE gm.entity_id = ?
+    ORDER BY g.name
+  `,
+    )
+    .all(Number(playerId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+
   return {
     characters: npcsCount,
     items: itemsCount,
@@ -229,5 +242,6 @@ export default defineEventHandler((event) => {
     sessions: sessionsCount.count,
     documents: documentsCount.count,
     images: imagesCount.count,
+    groups,
   }
 })

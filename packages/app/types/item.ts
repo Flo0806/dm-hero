@@ -1,3 +1,5 @@
+import type { GroupInfo } from './group'
+
 export const ITEM_TYPES = [
   'weapon',
   'armor',
@@ -98,13 +100,6 @@ export interface ItemMetadata {
   properties?: string
   notes?: string
   [key: string]: unknown
-}
-
-export interface GroupInfo {
-  id: number
-  name: string
-  color: string | null
-  icon: string | null
 }
 
 export interface ItemCounts {

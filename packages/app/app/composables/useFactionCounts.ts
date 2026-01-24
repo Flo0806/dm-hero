@@ -1,3 +1,5 @@
+import type { GroupInfo } from '../../types/group'
+
 interface Faction {
   id: number
   _counts?: FactionCounts
@@ -12,6 +14,7 @@ interface FactionCounts {
   items: number
   locations: number
   relations: number
+  groups?: GroupInfo[]
 }
 
 // SHARED STATE - outside the function so all components share the same cache
