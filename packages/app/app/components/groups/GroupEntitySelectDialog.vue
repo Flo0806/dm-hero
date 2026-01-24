@@ -78,14 +78,14 @@
       <v-divider />
 
       <v-card-actions>
-        <v-chip v-if="selectedEntityIds.length > 0" size="small" color="primary">
-          {{ $t('groups.selectedCount', { count: selectedEntityIds.length }) }}
+        <v-chip v-if="totalSelectedCount > 0" size="small" color="primary">
+          {{ $t('groups.selectedCount', { count: totalSelectedCount }) }}
         </v-chip>
         <v-spacer />
         <v-btn variant="text" @click="close">{{ $t('common.cancel') }}</v-btn>
         <v-btn
           color="primary"
-          :disabled="selectedEntityIds.length === 0"
+          :disabled="totalSelectedCount === 0"
           :loading="adding"
           @click="addSelected"
         >
@@ -147,7 +147,21 @@ const searching = ref(false)
 const loading = ref(false)
 const adding = ref(false)
 const entities = ref<Entity[]>([])
-const selectedEntityIds = ref<number[]>([])
+// Store selected IDs per entity type so they persist across tab switches
+const selectedEntityIdsByType = ref<Record<string, number[]>>({})
+
+// Computed to get/set selected IDs for current type
+const selectedEntityIds = computed({
+  get: () => selectedEntityIdsByType.value[selectedType.value] || [],
+  set: (ids: number[]) => {
+    selectedEntityIdsByType.value[selectedType.value] = ids
+  },
+})
+
+// Total selected across all types
+const totalSelectedCount = computed(() => {
+  return Object.values(selectedEntityIdsByType.value).reduce((sum, ids) => sum + ids.length, 0)
+})
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -161,9 +175,8 @@ const filteredEntities = computed(() => {
   return entities.value
 })
 
-// Load entities when type changes
+// Load entities when type changes (keep selections!)
 watch(selectedType, () => {
-  selectedEntityIds.value = []
   loadEntities()
 })
 
@@ -179,7 +192,7 @@ watch(
   () => props.modelValue,
   (visible) => {
     if (visible) {
-      selectedEntityIds.value = []
+      selectedEntityIdsByType.value = {}
       selectedType.value = props.defaultEntityType
       loadEntities()
     }
@@ -216,25 +229,28 @@ function getEndpointForType(type: string): string {
 }
 
 function toggleEntity(entityId: number) {
-  const index = selectedEntityIds.value.indexOf(entityId)
+  const currentIds = selectedEntityIds.value
+  const index = currentIds.indexOf(entityId)
   if (index === -1) {
-    selectedEntityIds.value.push(entityId)
+    selectedEntityIds.value = [...currentIds, entityId]
   } else {
-    selectedEntityIds.value.splice(index, 1)
+    selectedEntityIds.value = currentIds.filter((id) => id !== entityId)
   }
 }
 
 async function addSelected() {
-  if (!props.groupId || selectedEntityIds.value.length === 0) return
+  // Collect all selected IDs from all types
+  const allSelectedIds = Object.values(selectedEntityIdsByType.value).flat()
+  if (!props.groupId || allSelectedIds.length === 0) return
 
   adding.value = true
 
   await $fetch(`/api/groups/${props.groupId}/members`, {
     method: 'POST',
-    body: { entityIds: selectedEntityIds.value },
+    body: { entityIds: allSelectedIds },
   })
 
-  emit('added', selectedEntityIds.value.length)
+  emit('added', allSelectedIds.length)
   adding.value = false
   close()
 }
@@ -242,7 +258,7 @@ async function addSelected() {
 function close() {
   emit('update:modelValue', false)
   searchQuery.value = ''
-  selectedEntityIds.value = []
+  selectedEntityIdsByType.value = {}
 }
 
 // Entity type icons
