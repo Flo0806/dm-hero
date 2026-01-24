@@ -15,7 +15,7 @@
 
       <!-- Chips for metadata (rarity, type, race+class, etc.) -->
       <v-card-text v-if="chips && chips.length > 0" class="pt-0 pb-2">
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap ga-2">
           <v-chip
             v-for="(chip, index) in chips"
             :key="index"

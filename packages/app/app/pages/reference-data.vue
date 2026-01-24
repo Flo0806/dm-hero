@@ -85,7 +85,7 @@
 
         <v-data-table :headers="raceHeaders" :items="races || []" :loading="racesPending">
           <template #[`item.name`]="{ item }">
-            <div class="d-flex align-center gap-2">
+            <div class="d-flex align-center ga-2">
               <span>{{ item.name }}</span>
               <v-chip
                 v-if="item.is_standard"
@@ -136,7 +136,7 @@
 
         <v-data-table :headers="classHeaders" :items="classes || []" :loading="classesPending">
           <template #[`item.name`]="{ item }">
-            <div class="d-flex align-center gap-2">
+            <div class="d-flex align-center ga-2">
               <span>{{ item.name }}</span>
               <v-chip
                 v-if="item.is_standard"

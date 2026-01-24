@@ -283,7 +283,7 @@
                 </div>
 
                 <!-- Show imported vs existing -->
-                <div v-if="!conflict.isStandard" class="d-flex flex-column flex-sm-row gap-2 mb-2">
+                <div v-if="!conflict.isStandard" class="d-flex flex-column flex-sm-row ga-2 mb-2">
                   <div class="flex-grow-1">
                     <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.imported') }}</div>
                     <div class="text-body-2">

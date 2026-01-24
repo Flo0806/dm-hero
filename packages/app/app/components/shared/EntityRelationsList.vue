@@ -38,7 +38,7 @@
 
         <!-- Subtitle with Metadata Chips -->
         <v-list-item-subtitle>
-          <div class="d-flex align-center gap-2 mt-1">
+          <div class="d-flex align-center ga-2 mt-1">
             <!-- Relation Type Chip -->
             <v-chip v-if="showRelationType && entity.relation_type" size="x-small" color="primary" variant="tonal">
               {{ getRelationTypeLabel(entity.relation_type) }}

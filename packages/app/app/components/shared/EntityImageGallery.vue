@@ -76,7 +76,7 @@
             </div>
           </template>
           <v-list-item-title class="mb-2">
-            <div class="d-flex align-center gap-2">
+            <div class="d-flex align-center ga-2">
               <v-chip v-if="image.is_primary" size="small" color="primary">
                 <v-icon start icon="mdi-star" />
                 {{ $t('common.primary') }}
@@ -101,7 +101,7 @@
             />
           </v-list-item-subtitle>
           <template #append>
-            <div class="d-flex gap-1">
+            <div class="d-flex ga-1">
               <v-btn
                 v-if="!image.is_primary"
                 icon="mdi-star-outline"

@@ -85,7 +85,7 @@
             </div>
 
             <!-- Info Chips -->
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap ga-2">
               <!-- Duration -->
               <v-chip
                 v-if="session.duration_minutes"
@@ -213,11 +213,16 @@
               <!-- In-Game Timeline Section -->
               <v-card variant="outlined" class="mb-4">
                 <v-card-title class="d-flex align-center py-2">
-                  <v-icon start size="small">mdi-sword-cross</v-icon>
-                  {{ $t('sessions.inGameTimeline') }}
+                  <v-checkbox
+                    v-model="useInGameDate"
+                    :label="$t('sessions.useInGameDate')"
+                    density="compact"
+                    hide-details
+                    :disabled="!hasCalendar"
+                  />
                   <v-spacer />
                   <v-btn
-                    v-if="calendarData"
+                    v-if="hasCalendar && useInGameDate"
                     size="small"
                     variant="tonal"
                     color="primary"
@@ -227,13 +232,21 @@
                     {{ $t('sessions.setToToday') }}
                   </v-btn>
                 </v-card-title>
-                <v-card-text class="pt-0">
+                <v-card-text v-if="!hasCalendar" class="text-center py-4">
+                  <v-icon size="48" color="warning" class="mb-2">mdi-calendar-alert</v-icon>
+                  <p class="text-body-2 text-medium-emphasis">
+                    {{ $t('calendar.noCalendarConfigured') }}
+                  </p>
+                </v-card-text>
+                <v-card-text v-else-if="useInGameDate" class="pt-0">
                   <v-row>
                     <v-col cols="12" md="6">
                       <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                       <CalendarInGameDatePicker
                         v-model="inGameDateStart"
                         :calendar-data="calendarData"
+                        :show-clear-button="false"
+                        :show-set-to-current-button="false"
                       />
                     </v-col>
                     <v-col cols="12" md="6">
@@ -241,10 +254,9 @@
                       <CalendarInGameDatePicker
                         v-model="inGameDateEnd"
                         :calendar-data="calendarData"
+                        :show-clear-button="false"
+                        :show-set-to-current-button="false"
                       />
-                      <p class="text-caption text-medium-emphasis mt-1">
-                        {{ $t('sessions.inGameDateEndHint') }}
-                      </p>
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -451,11 +463,16 @@
             <!-- In-Game Timeline Section -->
             <v-card variant="outlined" class="mb-4">
               <v-card-title class="d-flex align-center py-2">
-                <v-icon start size="small">mdi-sword-cross</v-icon>
-                {{ $t('sessions.inGameTimeline') }}
+                <v-checkbox
+                  v-model="useInGameDate"
+                  :label="$t('sessions.useInGameDate')"
+                  density="compact"
+                  hide-details
+                  :disabled="!hasCalendar"
+                />
                 <v-spacer />
                 <v-btn
-                  v-if="calendarData"
+                  v-if="hasCalendar && useInGameDate"
                   size="small"
                   variant="tonal"
                   color="primary"
@@ -465,13 +482,21 @@
                   {{ $t('sessions.setToToday') }}
                 </v-btn>
               </v-card-title>
-              <v-card-text class="pt-0">
+              <v-card-text v-if="!hasCalendar" class="text-center py-4">
+                <v-icon size="48" color="warning" class="mb-2">mdi-calendar-alert</v-icon>
+                <p class="text-body-2 text-medium-emphasis">
+                  {{ $t('calendar.noCalendarConfigured') }}
+                </p>
+              </v-card-text>
+              <v-card-text v-else-if="useInGameDate" class="pt-0">
                 <v-row>
                   <v-col cols="12" md="6">
                     <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                     <CalendarInGameDatePicker
                       v-model="inGameDateStart"
                       :calendar-data="calendarData"
+                      :show-clear-button="false"
+                      :show-set-to-current-button="false"
                     />
                   </v-col>
                   <v-col cols="12" md="6">
@@ -479,10 +504,9 @@
                     <CalendarInGameDatePicker
                       v-model="inGameDateEnd"
                       :calendar-data="calendarData"
+                      :show-clear-button="false"
+                      :show-set-to-current-button="false"
                     />
-                    <p class="text-caption text-medium-emphasis mt-1">
-                      {{ $t('sessions.inGameDateEndHint') }}
-                    </p>
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -902,6 +926,10 @@ const sessionForm = ref({
 const inGameDateStart = ref<InGameDateValue | null>(null)
 const inGameDateEnd = ref<InGameDateValue | null>(null)
 
+// Checkbox to control whether in-game date is used (replaces clear button pattern)
+const useInGameDate = ref(true)
+const hasCalendar = computed(() => calendarData.value && calendarData.value.months.length > 0)
+
 // Helper to convert date object to absolute day for comparison
 function dateToAbsolute(date: InGameDateValue | null): number {
   if (!date || !calendarData.value) return 0
@@ -1221,6 +1249,8 @@ async function editSession(session: Session) {
     session.in_game_year_end && session.in_game_month_end && session.in_game_day_end
       ? { year: session.in_game_year_end, month: session.in_game_month_end, day: session.in_game_day_end }
       : null
+  // Set checkbox based on whether session has in-game dates
+  useInGameDate.value = !!(session.in_game_year_start && session.in_game_month_start && session.in_game_day_start)
   showCreateDialog.value = true
   sessionDialogTab.value = 'details'
 
@@ -1259,14 +1289,15 @@ async function saveSession() {
   saving.value = true
 
   // Build the session data with year/month/day fields
+  // If useInGameDate is false, set all date fields to NULL
   const sessionData = {
     ...sessionForm.value,
-    in_game_year_start: inGameDateStart.value?.year || null,
-    in_game_month_start: inGameDateStart.value?.month || null,
-    in_game_day_start: inGameDateStart.value?.day || null,
-    in_game_year_end: inGameDateEnd.value?.year || null,
-    in_game_month_end: inGameDateEnd.value?.month || null,
-    in_game_day_end: inGameDateEnd.value?.day || null,
+    in_game_year_start: useInGameDate.value ? (inGameDateStart.value?.year || null) : null,
+    in_game_month_start: useInGameDate.value ? (inGameDateStart.value?.month || null) : null,
+    in_game_day_start: useInGameDate.value ? (inGameDateStart.value?.day || null) : null,
+    in_game_year_end: useInGameDate.value ? (inGameDateEnd.value?.year || null) : null,
+    in_game_month_end: useInGameDate.value ? (inGameDateEnd.value?.month || null) : null,
+    in_game_day_end: useInGameDate.value ? (inGameDateEnd.value?.day || null) : null,
   }
 
   try {
@@ -1389,6 +1420,7 @@ function closeDialog() {
   // Reset in-game date refs
   inGameDateStart.value = null
   inGameDateEnd.value = null
+  useInGameDate.value = true // Reset to default (enabled) for new sessions
   sessionAttendance.value = {}
   sessionDialogTab.value = 'details'
 }

@@ -83,8 +83,9 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="d-flex justify-center gap-2 mt-3">
+      <div v-if="showSetToCurrentButton || showClearButton" class="d-flex justify-center ga-2 mt-3">
         <v-btn
+          v-if="showSetToCurrentButton"
           size="small"
           variant="text"
           prepend-icon="mdi-calendar-today"
@@ -92,6 +93,12 @@
         >
           {{ $t('calendar.setToCurrent') }}
         </v-btn>
+        <!--
+          DEPRECATED: Clear button is kept for backwards compatibility but should not be used.
+          Parent components should use a checkbox pattern instead (e.g., "Use in-game date")
+          to control whether the date picker is shown/used.
+          See: PlayerEditDialog.vue (hasBirthday), Sessions page (useInGameDate)
+        -->
         <v-btn
           v-if="modelValue && showClearButton"
           size="small"
@@ -125,13 +132,15 @@ interface Props {
   modelValue: InGameDateValue | null // Year/month/day object
   calendarData?: CalendarData | null // Optional: pass calendar data directly
   autoSetCurrentDate?: boolean // Auto-set to current date if no value (default: true)
-  showClearButton?: boolean // Show the clear button (default: true)
+  showClearButton?: boolean // Show the clear button (default: true) - DEPRECATED, use checkbox pattern instead
+  showSetToCurrentButton?: boolean // Show "Set to Current Date" button (default: true)
 }
 
 const props = withDefaults(defineProps<Props>(), {
   calendarData: null,
   autoSetCurrentDate: true,
   showClearButton: true,
+  showSetToCurrentButton: true,
 })
 
 const emit = defineEmits<{

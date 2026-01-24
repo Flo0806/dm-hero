@@ -185,7 +185,7 @@
                     {{ rel.name }}
                   </v-list-item-title>
                   <v-list-item-subtitle>
-                    <div class="d-flex align-center gap-2 mt-1">
+                    <div class="d-flex align-center ga-2 mt-1">
                       <v-chip size="x-small" color="primary" variant="tonal">
                         {{ $t(`npcs.npcRelationTypes.${rel.relation_type}`, rel.relation_type) }}
                       </v-chip>

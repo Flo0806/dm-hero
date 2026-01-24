@@ -36,7 +36,7 @@
         <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ lore.name }}</h3>
 
         <!-- Type Chip -->
-        <div v-if="lore.metadata?.type" class="d-flex flex-wrap gap-1 mb-2">
+        <div v-if="lore.metadata?.type" class="d-flex flex-wrap ga-1 mb-2">
           <v-chip
             :prepend-icon="getLoreTypeIcon(lore.metadata.type)"
             size="x-small"

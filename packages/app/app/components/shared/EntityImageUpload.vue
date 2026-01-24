@@ -1,7 +1,7 @@
 <template>
   <v-card variant="outlined">
     <v-card-text>
-      <div class="d-flex align-start gap-4">
+      <div class="d-flex align-start ga-4">
         <!-- Image Preview -->
         <div style="position: relative">
           <v-avatar

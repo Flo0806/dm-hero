@@ -44,7 +44,7 @@
         </div>
 
         <!-- Action buttons -->
-        <div class="d-flex gap-2">
+        <div class="d-flex ga-2">
           <!-- State: Update available - show download button (Electron) or external link (Browser) -->
           <template v-if="!isDownloading && !isReadyToInstall">
             <v-btn

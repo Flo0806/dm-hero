@@ -38,7 +38,7 @@
         <!-- Type & Alignment Chips -->
         <div
           v-if="faction.metadata?.type || faction.metadata?.alignment"
-          class="d-flex flex-wrap gap-1 mb-2"
+          class="d-flex flex-wrap ga-1 mb-2"
         >
           <v-chip
             v-if="faction.metadata?.type"

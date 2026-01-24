@@ -36,7 +36,7 @@
         <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ npc.name }}</h3>
 
         <!-- Type & Status Chips -->
-        <div v-if="npc.metadata?.type || npc.metadata?.status" class="d-flex flex-wrap gap-1 mb-2">
+        <div v-if="npc.metadata?.type || npc.metadata?.status" class="d-flex flex-wrap ga-1 mb-2">
           <v-chip
             v-if="npc.metadata?.type"
             :prepend-icon="getNpcTypeIcon(npc.metadata.type)"

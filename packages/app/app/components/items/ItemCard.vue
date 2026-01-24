@@ -36,7 +36,7 @@
         <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ item.name }}</h3>
 
         <!-- Type & Rarity Chips -->
-        <div v-if="item.metadata?.type || item.metadata?.rarity" class="d-flex flex-wrap gap-1 mb-2">
+        <div v-if="item.metadata?.type || item.metadata?.rarity" class="d-flex flex-wrap ga-1 mb-2">
           <v-chip
             v-if="item.metadata?.type"
             :prepend-icon="getItemTypeIcon(item.metadata.type)"

@@ -97,7 +97,7 @@
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
-          <div class="d-flex flex-wrap gap-2 mb-3">
+          <div class="d-flex flex-wrap ga-2 mb-3">
             <v-chip v-if="entity.type" variant="tonal">
               <v-icon start>mdi-tag</v-icon>
               {{ $t(`items.types.${entity.type}`) }}

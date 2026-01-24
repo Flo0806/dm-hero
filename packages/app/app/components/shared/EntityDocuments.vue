@@ -50,7 +50,7 @@
           </v-list-item-subtitle>
 
           <template #append>
-            <div class="d-flex gap-1">
+            <div class="d-flex ga-1">
               <!-- PDF Actions: Preview + Download -->
               <template v-if="doc.file_type === 'pdf'">
                 <v-btn
@@ -174,7 +174,7 @@
         />
       </div>
 
-      <div class="d-flex justify-end gap-2 mt-4">
+      <div class="d-flex justify-end ga-2 mt-4">
         <v-btn variant="text" @click="cancelEditing">
           {{ $t('common.cancel') }}
         </v-btn>

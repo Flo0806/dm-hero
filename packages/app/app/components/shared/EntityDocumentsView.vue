@@ -22,7 +22,7 @@
           <!-- PDF Document -->
           <div v-if="doc.file_type === 'pdf'" class="d-flex flex-column align-center py-4">
             <v-icon size="64" color="error" class="mb-4">mdi-file-pdf-box</v-icon>
-            <div class="d-flex gap-2">
+            <div class="d-flex ga-2">
               <v-btn
                 prepend-icon="mdi-eye"
                 color="primary"

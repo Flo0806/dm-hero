@@ -60,7 +60,7 @@
       </div>
 
       <!-- Controls -->
-      <div class="d-flex align-center gap-1">
+      <div class="d-flex align-center ga-1">
         <!-- Skip back 10s -->
         <v-btn icon size="small" variant="text" @click="skip(-10)">
           <v-icon>mdi-rewind-10</v-icon>
@@ -206,7 +206,7 @@
             variant="outlined"
             class="mb-3"
           />
-          <div class="d-flex align-center gap-3">
+          <div class="d-flex align-center ga-3">
             <v-text-field
               v-model="timestampInput"
               :label="$t('audio.timestamp')"
