@@ -68,6 +68,7 @@
             @delete="deleteNpc"
             @open-group="openGroupPreview"
             @open-tab="openNpcTab"
+            @create-group="groupCreate.open"
           />
         </v-col>
       </v-row>
@@ -157,6 +158,15 @@
       />
     </ClientOnly>
 
+    <!-- Group Create Dialog (from context menu) -->
+    <ClientOnly>
+      <GroupsGroupCreateForEntityDialog
+        v-model="groupCreate.show.value"
+        :entity-id="groupCreate.entityId.value"
+        @done="handleGroupCreated"
+      />
+    </ClientOnly>
+
     <!-- Floating Action Button -->
     <v-btn
       color="primary"
@@ -194,6 +204,16 @@ const previewGroupId = ref<number | null>(null)
 function openGroupPreview(groupId: number) {
   previewGroupId.value = groupId
   showGroupPreview.value = true
+}
+
+// Group Create (from context menu "Neue Gruppe")
+const groupCreate = useGroupCreate()
+
+async function handleGroupCreated() {
+  // Reload NPC counts to show new group badge
+  if (activeCampaignId.value) {
+    await entitiesStore.loadAllNpcCounts(activeCampaignId.value)
+  }
 }
 
 // Auto-imported stores

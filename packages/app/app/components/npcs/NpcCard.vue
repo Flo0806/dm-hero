@@ -443,7 +443,7 @@
     v-model="quickLink.showContextMenu.value"
     v-bind="quickLink.contextMenuProps.value"
     @select="quickLink.handleQuickLinkSelect"
-    @add-to-group="quickLink.handleAddToGroup"
+    @added-to-group="quickLink.handleAddedToGroup"
     @create-group="quickLink.handleCreateGroup"
   />
 
@@ -481,7 +481,6 @@ const emit = defineEmits<{
   download: [npc: NPC]
   delete: [npc: NPC]
   'open-group': [groupId: number]
-  'add-to-group': [payload: { entityId: number; groupId: number }]
   'create-group': [entityId: number]
   linked: []
   'open-tab': [npc: NPC, tab: string]
@@ -536,7 +535,6 @@ const quickLink = useQuickLink({
   sourceType: 'NPC',
   groups: computed(() => counts.value?.groups),
   onLinked: () => emit('linked'),
-  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.npc.id, groupId }),
   onCreateGroup: () => emit('create-group', props.npc.id),
 })
 

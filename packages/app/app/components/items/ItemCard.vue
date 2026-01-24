@@ -368,7 +368,7 @@
     v-model="quickLink.showContextMenu.value"
     v-bind="quickLink.contextMenuProps.value"
     @select="quickLink.handleQuickLinkSelect"
-    @add-to-group="quickLink.handleAddToGroup"
+    @added-to-group="quickLink.handleAddedToGroup"
     @create-group="quickLink.handleCreateGroup"
   />
 
@@ -402,7 +402,6 @@ const emit = defineEmits<{
   delete: [item: Item]
   chaos: [item: Item]
   'open-group': [groupId: number]
-  'add-to-group': [payload: { entityId: number; groupId: number }]
   'create-group': [entityId: number]
   linked: []
   'open-tab': [item: Item, tab: string]
@@ -422,7 +421,6 @@ const quickLink = useQuickLink({
   sourceType: 'Item',
   groups: computed(() => counts.value?.groups),
   onLinked: () => emit('linked'),
-  onAddToGroup: (groupId) => emit('add-to-group', { entityId: props.item.id, groupId }),
   onCreateGroup: () => emit('create-group', props.item.id),
 })
 

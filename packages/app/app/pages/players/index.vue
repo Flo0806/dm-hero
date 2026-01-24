@@ -59,6 +59,7 @@
             @chaos="openChaos"
             @open-group="openGroupPreview"
             @open-tab="openPlayerTab"
+            @create-group="groupCreate.open"
           />
         </v-col>
       </v-row>
@@ -113,6 +114,13 @@
     <GroupPreviewDialog
       v-model="showGroupPreview"
       :group-id="previewGroupId"
+    />
+
+    <!-- Group Create Dialog (from context menu) -->
+    <GroupsGroupCreateForEntityDialog
+      v-model="groupCreate.show.value"
+      :entity-id="groupCreate.entityId.value"
+      @done="handleGroupCreated"
     />
 
     <!-- Floating Action Button -->
@@ -361,6 +369,15 @@ const previewGroupId = ref<number | null>(null)
 function openGroupPreview(groupId: number) {
   previewGroupId.value = groupId
   showGroupPreview.value = true
+}
+
+// Group Create (from context menu "Neue Gruppe")
+const groupCreate = useGroupCreate()
+
+async function handleGroupCreated() {
+  if (activeCampaignId.value) {
+    await loadAllCountsForCampaign(activeCampaignId.value)
+  }
 }
 </script>
 

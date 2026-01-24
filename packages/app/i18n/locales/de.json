@@ -1506,7 +1506,8 @@
     "deletedAll": "Gruppe und alle Entitäten gelöscht",
     "created": "Gruppe erstellt",
     "saved": "Gruppe gespeichert",
-    "entitiesAdded": "{count} Entität hinzugefügt | {count} Entitäten hinzugefügt"
+    "entitiesAdded": "{count} Entität hinzugefügt | {count} Entitäten hinzugefügt",
+    "entityAddedToNewGroup": "Zur neuen Gruppe \"{groupName}\" hinzugefügt"
   },
   "quickLink": {
     "linkNpc": "NPC verknüpfen",

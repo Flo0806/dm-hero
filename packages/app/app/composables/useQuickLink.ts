@@ -1,5 +1,5 @@
 import type { SourceEntityType, QuickLinkSelection } from '~~/types/quick-link'
-import type { GroupInfo } from '~~/types/npc'
+import type { GroupInfo } from '~~/types/group'
 
 interface UseQuickLinkOptions {
   entityId: number
@@ -7,7 +7,6 @@ interface UseQuickLinkOptions {
   sourceType: SourceEntityType
   groups?: Ref<GroupInfo[] | undefined>
   onLinked?: () => void
-  onAddToGroup?: (groupId: number) => void
   onCreateGroup?: () => void
 }
 
@@ -16,10 +15,22 @@ interface UseQuickLinkOptions {
  * Provides all state and handlers needed for right-click linking
  */
 export function useQuickLink(options: UseQuickLinkOptions) {
-  const { entityId, entityName, sourceType, groups, onLinked, onAddToGroup, onCreateGroup } = options
+  const { entityId, entityName, sourceType, groups, onLinked, onCreateGroup } = options
 
-  // Context Menu State
-  const showContextMenu = ref(false)
+  // Use global context menu manager (only one menu open at a time)
+  const contextMenuManager = useContextMenuManager()
+
+  // Context Menu State - computed from global manager
+  const showContextMenu = computed({
+    get: () => contextMenuManager.isActive(entityId),
+    set: (value: boolean) => {
+      if (value) {
+        contextMenuManager.setActive(entityId)
+      } else if (contextMenuManager.isActive(entityId)) {
+        contextMenuManager.setActive(null)
+      }
+    },
+  })
   const contextMenuPosition = ref({ x: 0, y: 0 })
 
   // Entity Select Dialog State
@@ -35,7 +46,8 @@ export function useQuickLink(options: UseQuickLinkOptions) {
    */
   function openContextMenu(event: MouseEvent) {
     contextMenuPosition.value = { x: event.clientX, y: event.clientY }
-    showContextMenu.value = true
+    // This will close any other open context menu and open this one
+    contextMenuManager.setActive(entityId)
   }
 
   /**
@@ -49,10 +61,12 @@ export function useQuickLink(options: UseQuickLinkOptions) {
   }
 
   /**
-   * Handle add to existing group
+   * Handle after entity was added to group (reload counts)
    */
-  function handleAddToGroup(groupId: number) {
-    onAddToGroup?.(groupId)
+  async function handleAddedToGroup() {
+    if (countsReloader) {
+      await countsReloader([entityId])
+    }
   }
 
   /**
@@ -97,7 +111,7 @@ export function useQuickLink(options: UseQuickLinkOptions) {
     // Handlers
     openContextMenu,
     handleQuickLinkSelect,
-    handleAddToGroup,
+    handleAddedToGroup,
     handleCreateGroup,
     handleLinked,
 

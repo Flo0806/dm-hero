@@ -56,6 +56,7 @@
             @chaos="openChaos"
             @open-group="openGroupPreview"
             @open-tab="openLoreTab"
+            @create-group="groupCreate.open"
           />
         </v-col>
       </v-row>
@@ -134,6 +135,13 @@
     <GroupPreviewDialog
       v-model="showGroupPreview"
       :group-id="previewGroupId"
+    />
+
+    <!-- Group Create Dialog (from context menu) -->
+    <GroupsGroupCreateForEntityDialog
+      v-model="groupCreate.show.value"
+      :entity-id="groupCreate.entityId.value"
+      @done="handleGroupCreated"
     />
 
     <!-- Floating Action Button -->
@@ -465,6 +473,15 @@ function handlePreviewImage(imageUrl: string, title: string) {
   previewImageUrl.value = imageUrl
   previewImageName.value = title
   showImagePreview.value = true
+}
+
+// Group Create (from context menu "Neue Gruppe")
+const groupCreate = useGroupCreate()
+
+async function handleGroupCreated() {
+  if (activeCampaignId.value) {
+    await entitiesStore.loadAllLoreCounts(activeCampaignId.value)
+  }
 }
 </script>
 

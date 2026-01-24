@@ -1513,7 +1513,8 @@
     "deletedAll": "Group and all entities deleted",
     "created": "Group created",
     "saved": "Group saved",
-    "entitiesAdded": "{count} entity added | {count} entities added"
+    "entitiesAdded": "{count} entity added | {count} entities added",
+    "entityAddedToNewGroup": "Added to new group \"{groupName}\""
   },
   "quickLink": {
     "linkNpc": "Link NPC",

@@ -60,10 +60,10 @@
       </template>
 
       <!-- Divider -->
-      <v-divider v-if="groups && groups.length > 0" class="my-1" />
+      <v-divider class="my-1" />
 
-      <!-- Add to Group -->
-      <v-list-item v-if="groups && groups.length > 0" class="px-2">
+      <!-- Add to Group - always show, with submenu for all campaign groups -->
+      <v-list-item class="px-2">
         <template #prepend>
           <v-icon icon="mdi-folder-plus" size="small" class="mr-2" />
         </template>
@@ -84,10 +84,11 @@
         >
           <v-list density="compact" nav elevation="8">
             <v-list-item
-              v-for="group in groups"
+              v-for="group in allGroups"
               :key="group.id"
               class="px-3"
-              @click="handleAddToGroup(group.id)"
+              :disabled="isInGroup(group.id)"
+              @click="!isInGroup(group.id) && handleAddToGroup(group.id)"
             >
               <template #prepend>
                 <v-avatar :color="group.color || 'grey'" size="24" class="mr-2">
@@ -97,9 +98,12 @@
               <v-list-item-title class="text-body-2">
                 {{ group.name }}
               </v-list-item-title>
+              <template v-if="isInGroup(group.id)" #append>
+                <v-icon icon="mdi-check" size="small" color="success" />
+              </template>
             </v-list-item>
 
-            <v-divider class="my-1" />
+            <v-divider v-if="allGroups.length > 0" class="my-1" />
 
             <v-list-item class="px-3" @click="handleCreateGroup">
               <template #prepend>
@@ -118,26 +122,50 @@
 
 <script setup lang="ts">
 import { QUICK_LINK_CONFIG, type QuickLinkTargetConfig, type SourceEntityType } from '~~/types/quick-link'
-import type { GroupInfo } from '~~/types/npc'
+import type { GroupInfo } from '~~/types/group'
 
 const { t } = useI18n()
+const campaignStore = useCampaignStore()
+const snackbarStore = useSnackbarStore()
 
 interface Props {
   modelValue: boolean
   position: { x: number; y: number }
   sourceEntity: { id: number; name: string }
   sourceType: SourceEntityType
-  groups?: GroupInfo[]
+  groups?: GroupInfo[] // Groups this entity is already in (for marking)
 }
 
 const props = withDefaults(defineProps<Props>(), {
   groups: () => [],
 })
 
+// Load all campaign groups when menu opens
+const allGroups = ref<GroupInfo[]>([])
+
+watch(() => props.modelValue, async (isOpen) => {
+  if (isOpen && campaignStore.activeCampaignId) {
+    try {
+      const groups = await $fetch<GroupInfo[]>('/api/groups', {
+        query: { campaignId: campaignStore.activeCampaignId },
+      })
+      allGroups.value = groups
+    } catch (e) {
+      console.error('[QuickLinkContextMenu] Failed to load groups:', e)
+      allGroups.value = []
+    }
+  }
+})
+
+// Check if entity is already in a group
+function isInGroup(groupId: number): boolean {
+  return props.groups?.some(g => g.id === groupId) ?? false
+}
+
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   select: [payload: { targetType: string; relationType: string }]
-  'add-to-group': [groupId: number]
+  'added-to-group': [] // Notify parent to refresh counts
   'create-group': []
 }>()
 
@@ -171,8 +199,18 @@ function handleSelect(targetType: string, relationType: string) {
   internalShow.value = false
 }
 
-function handleAddToGroup(groupId: number) {
-  emit('add-to-group', groupId)
+async function handleAddToGroup(groupId: number) {
+  try {
+    await $fetch(`/api/groups/${groupId}/members`, {
+      method: 'POST',
+      body: { entityIds: [props.sourceEntity.id] },
+    })
+    snackbarStore.success(t('groups.entitiesAdded', 1))
+    emit('added-to-group') // Notify parent to refresh counts
+  } catch (e) {
+    console.error('[QuickLinkContextMenu] Failed to add to group:', e)
+    snackbarStore.error(t('common.error'))
+  }
   internalShow.value = false
 }
 

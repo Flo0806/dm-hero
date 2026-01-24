@@ -57,6 +57,7 @@
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
             @open-tab="openItemTab"
+            @create-group="groupCreate.open"
           />
         </v-col>
       </v-row>
@@ -145,6 +146,15 @@
       <GroupPreviewDialog
         v-model="showGroupPreview"
         :group-id="previewGroupId"
+      />
+    </ClientOnly>
+
+    <!-- Group Create Dialog (from context menu) -->
+    <ClientOnly>
+      <GroupsGroupCreateForEntityDialog
+        v-model="groupCreate.show.value"
+        :entity-id="groupCreate.entityId.value"
+        @done="handleGroupCreated"
       />
     </ClientOnly>
 
@@ -503,6 +513,17 @@ const previewGroupId = ref<number | null>(null)
 function openGroupPreview(groupId: number) {
   previewGroupId.value = groupId
   showGroupPreview.value = true
+}
+
+// ============================================================================
+// Group Create (from context menu "Neue Gruppe")
+// ============================================================================
+const groupCreate = useGroupCreate()
+
+async function handleGroupCreated() {
+  if (activeCampaignId.value) {
+    await entitiesStore.loadAllItemCounts(activeCampaignId.value)
+  }
 }
 </script>
 

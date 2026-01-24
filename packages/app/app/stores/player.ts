@@ -78,36 +78,23 @@ export const usePlayerStore = defineStore('player', {
 
     async handleBirthdayEvent(
       playerId: number,
-      playerName: string,
+      _playerName: string,
       birthday: BirthdayDate | null,
       showInCalendar: boolean,
       eventTitle: string,
     ) {
       const campaignStore = useCampaignStore()
       const campaignId = campaignStore.activeCampaignId
-      console.log('[PlayerStore] handleBirthdayEvent called:', {
-        playerId,
-        playerName,
-        birthday,
-        showInCalendar,
-        campaignId,
-        existingEventId: this.existingBirthdayEventId,
-      })
-      if (!campaignId) {
-        console.warn('[PlayerStore] No campaignId - aborting birthday event handling')
-        return
-      }
+      if (!campaignId) return
 
       // Case 1: No birthday or don't show in calendar -> delete existing event
       if (!birthday || !showInCalendar) {
-        console.log('[PlayerStore] Case 1: No birthday or showInCalendar=false')
         if (this.existingBirthdayEventId) {
           try {
             await $fetch(`/api/calendar/events/${this.existingBirthdayEventId}`, {
               method: 'DELETE',
             })
             this.existingBirthdayEventId = null
-            console.log('[PlayerStore] Deleted existing birthday event')
           } catch (e) {
             console.error('[PlayerStore] Failed to delete birthday event:', e)
           }
@@ -116,10 +103,8 @@ export const usePlayerStore = defineStore('player', {
       }
 
       // Case 2: Birthday set and show in calendar
-      console.log('[PlayerStore] Case 2: Birthday set and showInCalendar=true')
       if (this.existingBirthdayEventId) {
         // Update existing event
-        console.log('[PlayerStore] Updating existing event:', this.existingBirthdayEventId)
         try {
           await $fetch(`/api/calendar/events/${this.existingBirthdayEventId}`, {
             method: 'PATCH',
@@ -131,13 +116,11 @@ export const usePlayerStore = defineStore('player', {
               entityIds: [playerId],
             },
           })
-          console.log('[PlayerStore] Event updated successfully')
         } catch (e) {
           console.error('[PlayerStore] Failed to update birthday event:', e)
         }
       } else {
         // Create new event
-        console.log('[PlayerStore] Creating new birthday event')
         try {
           const result = await $fetch<{ id: number }>('/api/calendar/events', {
             method: 'POST',
@@ -152,7 +135,6 @@ export const usePlayerStore = defineStore('player', {
             },
           })
           this.existingBirthdayEventId = result.id
-          console.log('[PlayerStore] Event created with id:', result.id)
         } catch (e) {
           console.error('[PlayerStore] Failed to create birthday event:', e)
         }
