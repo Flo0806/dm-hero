@@ -93,7 +93,7 @@
           {{ $t('calendar.setToCurrent') }}
         </v-btn>
         <v-btn
-          v-if="modelValue"
+          v-if="modelValue && showClearButton"
           size="small"
           variant="text"
           color="error"
@@ -124,9 +124,15 @@ export interface InGameDateValue {
 interface Props {
   modelValue: InGameDateValue | null // Year/month/day object
   calendarData?: CalendarData | null // Optional: pass calendar data directly
+  autoSetCurrentDate?: boolean // Auto-set to current date if no value (default: true)
+  showClearButton?: boolean // Show the clear button (default: true)
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  calendarData: null,
+  autoSetCurrentDate: true,
+  showClearButton: true,
+})
 
 const emit = defineEmits<{
   'update:modelValue': [value: InGameDateValue | null]
@@ -270,8 +276,8 @@ onMounted(async () => {
     internalYear.value = props.modelValue.year
     internalMonth.value = props.modelValue.month
     internalDay.value = props.modelValue.day
-  } else if (calendarData.value) {
-    // Default to current campaign date
+  } else if (calendarData.value && props.autoSetCurrentDate) {
+    // Default to current campaign date (only if autoSetCurrentDate is true)
     setToCurrentDate()
   }
 })
@@ -280,10 +286,6 @@ onMounted(async () => {
 <style scoped>
 .in-game-date-picker {
   min-width: 300px;
-}
-
-.year-input {
-  max-width: 100px;
 }
 
 .year-input :deep(input) {

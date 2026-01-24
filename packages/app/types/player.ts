@@ -25,6 +25,8 @@ export interface PlayerMetadata {
   phone?: string | null
   discord?: string | null
   notes?: string | null
+  birthday?: { year: number; month: number; day: number } | null // Character birthday in game calendar
+  showBirthdayInCalendar?: boolean // Whether to show birthday in calendar overview
   [key: string]: unknown
 }
 

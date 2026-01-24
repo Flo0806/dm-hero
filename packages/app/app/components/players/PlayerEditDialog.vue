@@ -103,6 +103,47 @@
               class="mb-3"
             />
 
+            <!-- Character Birthday -->
+            <v-card variant="outlined" class="mb-3 pa-3">
+              <div class="d-flex align-center mb-2">
+                <v-icon class="mr-2" color="primary">mdi-cake-variant</v-icon>
+                <span class="text-subtitle-2">{{ $t('players.characterBirthday') }}</span>
+                <v-tooltip v-if="!hasCalendar" location="top">
+                  <template #activator="{ props: tooltipProps }">
+                    <v-icon v-bind="tooltipProps" class="ml-2" size="small" color="warning">
+                      mdi-alert-circle
+                    </v-icon>
+                  </template>
+                  {{ $t('players.noCalendarForBirthday') }}
+                </v-tooltip>
+              </div>
+              <div v-if="hasCalendar">
+                <v-checkbox
+                  v-model="hasBirthday"
+                  :label="$t('players.hasBirthday')"
+                  density="compact"
+                  hide-details
+                />
+                <div v-if="hasBirthday" class="mt-3">
+                  <InGameDatePicker
+                    v-model="form.birthday"
+                    :calendar-data="calendarData"
+                    :show-clear-button="false"
+                  />
+                  <v-checkbox
+                    v-model="form.showBirthdayInCalendar"
+                    :label="$t('players.showBirthdayInCalendar')"
+                    density="compact"
+                    hide-details
+                    class="mt-2"
+                  />
+                </div>
+              </div>
+              <div v-else class="text-medium-emphasis text-body-2">
+                {{ $t('players.noCalendarForBirthday') }}
+              </div>
+            </v-card>
+
             <v-textarea
               v-model="form.description"
               :label="$t('players.description')"
@@ -200,7 +241,7 @@
             <EntityDocuments
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
 
@@ -209,7 +250,7 @@
             <PlayerCharactersTab
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
 
@@ -218,7 +259,7 @@
             <PlayerItemsTab
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
 
@@ -227,7 +268,7 @@
             <EntityLocationsTab
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
 
@@ -236,7 +277,7 @@
             <EntityFactionsTab
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
 
@@ -245,7 +286,7 @@
             <PlayerLoreTab
               v-if="player"
               :entity-id="player.id"
-              @changed="loadCounts(player!.id)"
+              @changed="playerStore.loadCounts(player!.id)"
             />
           </v-tabs-window-item>
         </v-tabs-window>
@@ -368,7 +409,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Player, PlayerCounts } from '~~/types/player'
+import type { Player } from '~~/types/player'
 import EntityImageUpload from '../shared/EntityImageUpload.vue'
 import EntityImageGallery from '../shared/EntityImageGallery.vue'
 import EntityDocuments from '../shared/EntityDocuments.vue'
@@ -379,10 +420,13 @@ import PlayerItemsTab from './PlayerItemsTab.vue'
 import PlayerLoreTab from './PlayerLoreTab.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
+import InGameDatePicker from '../calendar/InGameDatePicker.vue'
 import { useImageDownload } from '~/composables/useImageDownload'
-import { useSnackbarStore } from '~/stores/snackbar'
+import { useInGameCalendar } from '~/composables/useInGameCalendar'
 import { useErrorHandler } from '~/composables/useErrorHandler'
 import { useDialogDirtyStateProvider } from '~/composables/useDialogDirtyState'
+import { useSnackbarStore } from '~/stores/snackbar'
+import { usePlayerStore } from '../../stores/player.js'
 
 const props = defineProps<{
   show: boolean
@@ -399,11 +443,16 @@ const { t } = useI18n()
 const { downloadImage: downloadImageFile } = useImageDownload()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
+const playerStore = usePlayerStore()
 const snackbarStore = useSnackbarStore()
 const { showError, showUploadError, showImageError } = useErrorHandler()
 
 // Dirty state management for tabs
 const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
+
+// Calendar for birthday
+const { calendarData, loadCalendar } = useInGameCalendar()
+const hasCalendar = computed(() => calendarData.value && calendarData.value.months.length > 0)
 
 // ============================================================================
 // State
@@ -427,21 +476,18 @@ const form = ref({
   phone: '',
   notes: '',
   location_id: null as number | null,
+  birthday: null as { year: number; month: number; day: number } | null,
+  showBirthdayInCalendar: true,
 })
 
 // Map sync data (from LocationSelectWithMap)
 const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
 
-const counts = ref<PlayerCounts>({
-  characters: 0,
-  items: 0,
-  locations: 0,
-  factions: 0,
-  lore: 0,
-  sessions: 0,
-  documents: 0,
-  images: 0,
-})
+// Birthday toggle (controls visibility, actual null is set on save)
+const hasBirthday = ref(false)
+
+// Counts from store (reactive)
+const counts = computed(() => playerStore.counts)
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -500,48 +546,50 @@ async function loadData(playerId: number | null | undefined) {
   resetForm()
   activeTab.value = 'details'
 
+  // Load calendar for birthday picker
+  await loadCalendar()
+
   if (playerId) {
     await loadPlayer(playerId)
   }
 }
 
 async function loadPlayer(playerId: number) {
-  try {
-    const data = await $fetch<Player>(`/api/players/${playerId}`)
-    player.value = data
+  // Use store to load player, counts, and birthday event
+  await playerStore.loadPlayer(playerId)
 
-    form.value = {
-      name: data.name,
-      description: data.description || '',
-      player_name: data.metadata?.player_name || '',
-      inspiration: data.metadata?.inspiration || 0,
-      email: data.metadata?.email || '',
-      discord: data.metadata?.discord || '',
-      phone: data.metadata?.phone || '',
-      notes: data.metadata?.notes || '',
-      location_id: data.location_id || null,
-    }
+  const data = playerStore.player
+  if (!data) return
 
-    // Save snapshot of image-critical fields
-    originalImageData.value = {
-      name: data.name,
-      description: data.description || '',
-    }
+  player.value = data
 
-    await loadCounts(playerId)
-  } catch (e) {
-    console.error('[PlayerEditDialog] Failed to load player:', e)
+  // Determine showBirthdayInCalendar: sync with actual event existence
+  // If metadata says true but event was deleted in calendar, set to false
+  const metadataShowInCalendar = data.metadata?.showBirthdayInCalendar !== false
+  const eventActuallyExists = playerStore.existingBirthdayEventId !== null
+  const showBirthdayInCalendar = metadataShowInCalendar && eventActuallyExists
+
+  form.value = {
+    name: data.name,
+    description: data.description || '',
+    player_name: data.metadata?.player_name || '',
+    inspiration: data.metadata?.inspiration || 0,
+    email: data.metadata?.email || '',
+    discord: data.metadata?.discord || '',
+    phone: data.metadata?.phone || '',
+    notes: data.metadata?.notes || '',
+    location_id: data.location_id || null,
+    birthday: data.metadata?.birthday || null,
+    showBirthdayInCalendar,
   }
-}
 
-async function loadCounts(playerId: number) {
-  try {
-    const data = await $fetch<PlayerCounts>(`/api/players/${playerId}/counts`)
-    counts.value = data
-    // Also update the store's player counts for card badge updates (no extra fetch)
-    entitiesStore.setPlayerCounts(playerId, data)
-  } catch (e) {
-    console.error('[PlayerEditDialog] Failed to load counts:', e)
+  // Set birthday toggle based on existing data
+  hasBirthday.value = !!data.metadata?.birthday
+
+  // Save snapshot of image-critical fields
+  originalImageData.value = {
+    name: data.name,
+    description: data.description || '',
   }
 }
 
@@ -557,18 +605,12 @@ function resetForm() {
     phone: '',
     notes: '',
     location_id: null,
+    birthday: null,
+    showBirthdayInCalendar: true,
   }
   mapSyncData.value = null
-  counts.value = {
-    characters: 0,
-    items: 0,
-    locations: 0,
-    factions: 0,
-    lore: 0,
-    sessions: 0,
-    documents: 0,
-    images: 0,
-  }
+  hasBirthday.value = false
+  playerStore.reset()
 }
 
 // ============================================================================
@@ -583,6 +625,9 @@ async function save() {
     const campaignId = campaignStore.activeCampaignId
     if (!campaignId) throw new Error('No active campaign')
 
+    // If hasBirthday is false, clear the birthday (even if form still has a value)
+    const birthdayToSave = hasBirthday.value ? form.value.birthday : null
+
     const metadata = {
       player_name: form.value.player_name || null,
       inspiration: form.value.inspiration || 0,
@@ -590,7 +635,11 @@ async function save() {
       discord: form.value.discord || null,
       phone: form.value.phone || null,
       notes: form.value.notes || null,
+      birthday: birthdayToSave,
+      showBirthdayInCalendar: hasBirthday.value ? form.value.showBirthdayInCalendar : false,
     }
+
+    let savedPlayerId: number
 
     if (player.value) {
       // Update existing player via store (no skeleton loader)
@@ -600,6 +649,7 @@ async function save() {
         location_id: form.value.location_id,
         metadata,
       })
+      savedPlayerId = updated.id
 
       // Handle map sync if enabled
       if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
@@ -615,6 +665,7 @@ async function save() {
         location_id: form.value.location_id,
         metadata,
       })
+      savedPlayerId = created.id
 
       // Handle map sync if enabled
       if (mapSyncData.value && mapSyncData.value.locationId && mapSyncData.value.mapIds.length > 0) {
@@ -623,6 +674,16 @@ async function save() {
 
       emit('created', created)
     }
+
+    // Handle birthday calendar event via store
+    const eventTitle = t('calendar.birthdayOf', { name: form.value.name })
+    await playerStore.handleBirthdayEvent(
+      savedPlayerId,
+      form.value.name,
+      birthdayToSave,
+      hasBirthday.value && form.value.showBirthdayInCalendar,
+      eventTitle,
+    )
 
     close()
   } catch (e) {
@@ -751,7 +812,7 @@ async function handleImageUpload(event: Event) {
     await loadPlayer(player.value.id)
     await entitiesStore.refreshPlayer(player.value.id)
     await imageGalleryRef.value?.refresh()
-    await loadCounts(player.value.id)
+    await playerStore.loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to upload image:', error)
     showUploadError('image')
@@ -802,7 +863,7 @@ async function generateImage() {
 
         await loadPlayer(player.value.id)
         await entitiesStore.refreshPlayer(player.value.id)
-        await loadCounts(player.value.id)
+        await playerStore.loadCounts(player.value.id)
       }
     }
   } catch (error: unknown) {
@@ -826,7 +887,7 @@ async function deleteImage() {
     await loadPlayer(player.value.id)
     await entitiesStore.refreshPlayer(player.value.id)
     await imageGalleryRef.value?.refresh()
-    await loadCounts(player.value.id)
+    await playerStore.loadCounts(player.value.id)
   } catch (error) {
     console.error('Failed to delete image:', error)
     showImageError('delete')
@@ -840,7 +901,7 @@ async function handleGalleryUpdated() {
   if (!player.value) return
   await loadPlayer(player.value.id)
   await entitiesStore.refreshPlayer(player.value.id)
-  await loadCounts(player.value.id)
+  await playerStore.loadCounts(player.value.id)
 }
 
 function downloadImage() {
