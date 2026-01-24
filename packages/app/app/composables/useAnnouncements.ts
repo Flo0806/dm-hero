@@ -11,6 +11,7 @@ export interface Announcement {
   titleKey: string // i18n key for title
   contentKey: string // i18n key for content
   showInstallerPath?: boolean // Show OS-specific installer path
+  html?: boolean // Render content as HTML (for formatted announcements)
 }
 
 // Hardcoded announcements - add new ones here with incrementing IDs
@@ -21,6 +22,12 @@ const ANNOUNCEMENTS: Announcement[] = [
     contentKey: 'announcements.installer.content',
     showInstallerPath: true,
   },
+  {
+    id: 2,
+    titleKey: 'announcements.v110.title',
+    contentKey: 'announcements.v110.content',
+    html: true,
+  },
 ]
 
 const STORAGE_KEY = 'dm-hero-last-seen-announcement'
@@ -30,7 +37,7 @@ const STORAGE_KEY = 'dm-hero-last-seen-announcement'
  */
 function getCurrentAnnouncement(): Announcement | null {
   if (ANNOUNCEMENTS.length === 0) return null
-  return ANNOUNCEMENTS[ANNOUNCEMENTS.length - 1]
+  return ANNOUNCEMENTS[ANNOUNCEMENTS.length - 1] || null
 }
 
 /**

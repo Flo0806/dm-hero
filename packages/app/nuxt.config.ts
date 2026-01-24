@@ -42,6 +42,9 @@ export default defineNuxtConfig({
     defaultLocale: 'de',
     langDir: 'locales',
     strategy: 'no_prefix',
+    compilation: {
+      strictMessage: false, // Allow HTML in i18n messages (for announcements)
+    },
   },
 
   build: {

@@ -25,6 +25,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "nuxt": "^4.3.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

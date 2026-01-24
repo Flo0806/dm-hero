@@ -76,13 +76,29 @@ export default defineEventHandler(async (event) => {
 
   // Check if marker already exists for this entity on this map
   const existingMarker = db
-    .prepare<[string, number], { id: number }>(
-      'SELECT id FROM map_markers WHERE map_id = ? AND entity_id = ?',
+    .prepare<[string, number], { id: number; x: number; y: number }>(
+      'SELECT id, x, y FROM map_markers WHERE map_id = ? AND entity_id = ?',
     )
     .get(mapId, entity_id)
 
   if (existingMarker) {
-    // Update existing marker position
+    // Check if existing marker is already inside the area
+    const dx = existingMarker.x - area.center_x
+    const dy = existingMarker.y - area.center_y
+    const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
+    const isInsideArea = distanceFromCenter <= area.radius
+
+    if (isInsideArea) {
+      // Marker is already in the area - don't move it
+      return {
+        id: existingMarker.id,
+        x: existingMarker.x,
+        y: existingMarker.y,
+        action: 'unchanged',
+      }
+    }
+
+    // Marker is outside the area - move it to a free spot inside
     db.prepare(
       'UPDATE map_markers SET x = ?, y = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     ).run(position.x, position.y, existingMarker.id)

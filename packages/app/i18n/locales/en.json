@@ -2119,6 +2119,10 @@
       "title": "New: Automatic Updates!",
       "content": "DM Hero is now available as an installer. If you install the app using the installer, you'll automatically receive all future updates - no action required!"
     },
+    "v110": {
+      "title": "Version 1.1 is here!",
+      "content": "<p><strong>New in this version:</strong></p><ul><li>Right-click on cards opens context menu for quick linking</li><li>Quick-Create in dialogs lets you create new entities while linking</li><li>Clickable badges on cards jump directly to the right tab</li><li>Player birthdays with calendar integration</li><li>Improved session date picker</li><li>Nuxt 4.3 upgrade</li></ul>"
+    },
     "installerPath": "Installation path ({os}):",
     "autoUpdateHint": "After installation via the installer, the app will automatically update whenever a new version is available.",
     "dontShowAgain": "Don't show again",

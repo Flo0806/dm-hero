@@ -6,8 +6,17 @@
         {{ $t(currentAnnouncement?.titleKey || '') }}
       </v-card-title>
 
+      <!-- eslint-disable vue/no-v-html -->
       <v-card-text>
-        <p class="text-body-1 mb-4">
+        <!-- HTML content (formatted announcements) -->
+        <div
+          v-if="currentAnnouncement?.html"
+          class="text-body-1 mb-4"
+          v-html="$t(currentAnnouncement?.contentKey || '')"
+        />
+        <!-- eslint-enable vue/no-v-html -->
+        <!-- Plain text content (legacy) -->
+        <p v-else class="text-body-1 mb-4">
           {{ $t(currentAnnouncement?.contentKey || '') }}
         </p>
 
