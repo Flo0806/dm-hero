@@ -1,8 +1,23 @@
-import { readFile } from 'fs/promises'
-import { join } from 'path'
-import JSZip from 'jszip'
+import { createWriteStream, mkdirSync, existsSync } from 'fs'
+import { readFile, rm } from 'fs/promises'
+import { join, dirname } from 'path'
+import { tmpdir } from 'os'
+import { randomUUID } from 'crypto'
+import { pipeline } from 'stream/promises'
+import { PassThrough } from 'stream'
+import archiver from 'archiver'
 import { query, queryOne } from '../../../../utils/db'
 import { getAuthUser } from '../../../../utils/requireAuth'
+
+// Dynamic import for unzipper (ESM)
+let unzipper: typeof import('unzipper')
+
+async function getUnzipper() {
+  if (!unzipper) {
+    unzipper = await import('unzipper')
+  }
+  return unzipper
+}
 
 interface AdventureRow {
   id: number
@@ -94,43 +109,81 @@ export default defineEventHandler(async (event) => {
   const relativePath = file.file_path.replace('/api/uploads/', '')
   const absolutePath = join(uploadsDir, relativePath)
 
+  // Create temp directory for extraction
+  const tempDir = join(tmpdir(), `dmhero-download-${randomUUID()}`)
+  mkdirSync(tempDir, { recursive: true })
+
   try {
-    const fileBuffer = await readFile(absolutePath)
+    // Extract ZIP using unzipper (same as dm-hero app import)
+    const uz = await getUnzipper()
+    const directory = await uz.Open.file(absolutePath)
 
-    // Parse the ZIP and modify manifest
-    const zip = await JSZip.loadAsync(fileBuffer)
-    const manifestFile = zip.file('manifest.json')
-
-    if (!manifestFile) {
-      throw createError({ statusCode: 500, message: 'Invalid .dmhero file: no manifest' })
+    // Extract all files to temp dir
+    for (const zipFile of directory.files) {
+      if (zipFile.type === 'File') {
+        const targetPath = join(tempDir, zipFile.path)
+        mkdirSync(dirname(targetPath), { recursive: true })
+        const writeStream = createWriteStream(targetPath)
+        await pipeline(zipFile.stream(), writeStream)
+      }
     }
 
     // Read and modify manifest
-    const manifestContent = await manifestFile.async('string')
+    const manifestPath = join(tempDir, 'manifest.json')
+    if (!existsSync(manifestPath)) {
+      throw createError({ statusCode: 500, message: 'Invalid .dmhero file: no manifest' })
+    }
+
+    const manifestContent = await readFile(manifestPath, 'utf-8')
     const manifest = JSON.parse(manifestContent)
 
     // Inject sourceAdventureSlug and version info
     manifest.sourceAdventureSlug = adventure.slug
     manifest.sourceVersion = version.version_number
 
-    // Update manifest in ZIP
-    zip.file('manifest.json', JSON.stringify(manifest, null, 2))
+    // Create new ZIP with archiver (same as dm-hero app export)
+    const archive = archiver('zip', { zlib: { level: 9 } })
+    const passthrough = new PassThrough()
+    archive.pipe(passthrough)
 
-    // Generate modified ZIP
-    const modifiedBuffer = await zip.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-      compressionOptions: { level: 6 },
-    })
+    // Add modified manifest
+    archive.append(JSON.stringify(manifest, null, 2), { name: 'manifest.json' })
+
+    // Add all other files from extracted temp dir
+    for (const zipFile of directory.files) {
+      if (zipFile.type === 'File' && zipFile.path !== 'manifest.json') {
+        const filePath = join(tempDir, zipFile.path)
+        if (existsSync(filePath)) {
+          archive.file(filePath, { name: zipFile.path })
+        }
+      }
+    }
+
+    // Finalize archive
+    archive.finalize()
 
     // Set response headers for file download
-    setHeader(event, 'Content-Type', 'application/octet-stream')
+    setHeader(event, 'Content-Type', 'application/zip')
     setHeader(event, 'Content-Disposition', `attachment; filename="${adventure.slug}-v${version.version_number}.dmhero"`)
-    setHeader(event, 'Content-Length', modifiedBuffer.length)
 
-    // Return the modified file
-    return modifiedBuffer
+    // Clean up temp dir after stream completes
+    passthrough.on('end', async () => {
+      try {
+        await rm(tempDir, { recursive: true, force: true })
+      } catch {
+        // Ignore cleanup errors
+      }
+    })
+
+    return passthrough
   } catch (err) {
+    // Clean up on error
+    try {
+      await rm(tempDir, { recursive: true, force: true })
+    } catch {
+      // Ignore cleanup errors
+    }
+
     console.error('[Download] Error processing file:', err)
     throw createError({
       statusCode: 500,

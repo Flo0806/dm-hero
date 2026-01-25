@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Invalid adventure ID' })
   }
 
-  // Check adventure exists and is published
+  // Check adventure exists and is published (published_version_id is set)
   const adventure = await queryOne<{ id: number }>(
-    'SELECT id FROM adventures WHERE id = ? AND status = ?',
-    [adventureId, 'published'],
+    'SELECT id FROM adventures WHERE id = ? AND published_version_id IS NOT NULL',
+    [adventureId],
   )
 
   if (!adventure) {

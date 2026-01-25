@@ -360,10 +360,16 @@ const migrations: Migration[] = [
       `ALTER TABLE adventure_files
         MODIFY COLUMN version_id INT NOT NULL`,
 
-      // Step 9: Add foreign keys
+      // Step 9: Add foreign keys (drop first if exists for idempotency)
+      `ALTER TABLE adventure_versions
+        DROP FOREIGN KEY IF EXISTS fk_version_adventure`,
+
       `ALTER TABLE adventure_versions
         ADD CONSTRAINT fk_version_adventure
         FOREIGN KEY (adventure_id) REFERENCES adventures(id) ON DELETE CASCADE`,
+
+      `ALTER TABLE adventure_files
+        DROP FOREIGN KEY IF EXISTS fk_file_version`,
 
       `ALTER TABLE adventure_files
         ADD CONSTRAINT fk_file_version
