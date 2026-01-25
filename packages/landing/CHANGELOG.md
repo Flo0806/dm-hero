@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.6
+
+### Patch Changes
+
+- 0805637: fix: uploads API route missing from git + consistent cover filename
+
 ## 1.1.5
 
 ### Patch Changes
