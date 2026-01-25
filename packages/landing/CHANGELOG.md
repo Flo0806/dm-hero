@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.1.7
+
+### Patch Changes
+
+- 2d60b3b: fix: uploads API route + favorites endpoint + migration idempotency + download ZIP corruption
+
 ## 1.1.6
 
 ### Patch Changes
