@@ -99,6 +99,7 @@ export const NPC_RELATION_TYPES = [
   'nemesis',
   'contact',
   'informant',
+  'knows',
   'debtor',
   'creditor',
   'believesIn',
