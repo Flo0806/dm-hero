@@ -1,5 +1,13 @@
 # @dm-hero/app
 
+## 1.1.2
+
+### Patch Changes
+
+- 75c6090: fix: add missing 'knows' relation type to NPC_RELATION_TYPES
+  fix: add missing 'letter' lore type
+  fix: campaign import - calendar conflict detection, group deletion cascade
+
 ## 1.1.1
 
 ### Patch Changes
