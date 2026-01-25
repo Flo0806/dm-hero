@@ -32,6 +32,7 @@ export const LORE_TYPES = [
   'song', // Songs and ballads
   'poem', // Poems and verses
   'riddle', // Riddles and puzzles
+  'letter', // Letters and correspondence
 ] as const
 
 export type LoreType = (typeof LORE_TYPES)[number]

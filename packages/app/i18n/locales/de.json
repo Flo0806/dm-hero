@@ -777,7 +777,8 @@
       "calendar": "Kalender",
       "song": "Lied",
       "poem": "Gedicht",
-      "riddle": "Rätsel"
+      "riddle": "Rätsel",
+      "letter": "Brief"
     },
     "uploadImage": "Bild hochladen",
     "changeImage": "Bild ändern",

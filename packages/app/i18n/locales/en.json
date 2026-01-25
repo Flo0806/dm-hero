@@ -782,7 +782,8 @@
       "calendar": "Calendar",
       "song": "Song",
       "poem": "Poem",
-      "riddle": "Riddle"
+      "riddle": "Riddle",
+      "letter": "Letter"
     },
     "uploadImage": "Upload Image",
     "changeImage": "Change Image",
