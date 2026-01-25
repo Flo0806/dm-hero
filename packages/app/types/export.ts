@@ -544,6 +544,10 @@ export interface ImportConflictInfo {
 
   // Race/Class conflicts (global data - requires user decision)
   raceClassConflicts?: RaceClassConflict[]
+
+  // Calendar conflict: import contains calendar AND campaign already has one
+  hasCalendarConflict?: boolean
+  existingCalendarMonths?: number // Number of months in existing calendar
 }
 
 // =============================================================================
@@ -576,6 +580,9 @@ export interface ImportOptions {
   // For merge mode: auto-create group containing all imported entities
   createGroupOnMerge?: boolean
   groupName?: string
+
+  // Calendar conflict resolution: 'overwrite' = replace, 'keep' = skip import
+  calendarResolution?: 'overwrite' | 'keep'
 }
 
 // =============================================================================

@@ -158,6 +158,7 @@ const { t } = useI18n()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const snackbarStore = useSnackbarStore()
+const entitiesStore = useEntitiesStore()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -432,6 +433,11 @@ async function confirmDeleteAll() {
   // Remove from local list
   groups.value = groups.value.filter((g) => g.id !== deleteAllGroup.value!.id)
   snackbarStore.success(t('groups.deletedAll'))
+
+  // Refresh all entity stores to reflect deleted entities
+  if (activeCampaignId.value) {
+    await entitiesStore.refreshAll(activeCampaignId.value)
+  }
 
   showDeleteAllDialog.value = false
   showViewDialog.value = false

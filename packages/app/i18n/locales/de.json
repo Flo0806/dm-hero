@@ -241,7 +241,13 @@
       "keepExisting": "Behalten (meine Version behalten)",
       "overwriteExisting": "Überschreiben (mit importierter Version)",
       "createGroup": "Importierte Entitäten in Gruppe sammeln",
-      "groupName": "Gruppenname"
+      "groupName": "Gruppenname",
+      "calendarConflictWarning": "Die Kampagne hat bereits einen Kalender mit {months} Monaten. Der Import enthält ebenfalls einen Kalender.",
+      "calendarConflictDetails": "Wie soll mit dem bestehenden Kalender verfahren werden?",
+      "keepExistingCalendar": "Bestehenden Kalender behalten",
+      "keepExistingCalendarHint": "Der Kalender aus dem Import wird ignoriert. Deine Monate, Jahreszeiten und Events bleiben erhalten.",
+      "overwriteCalendar": "Kalender überschreiben",
+      "overwriteCalendarHint": "Dein bestehender Kalender wird gelöscht und durch den importierten ersetzt. Alle bestehenden Events gehen verloren!"
     }
   },
   "npcs": {

@@ -76,7 +76,7 @@ async function streamBodyToFile(event: Parameters<typeof defineEventHandler>[0] 
 // Parse multipart boundary from content-type header
 function getMultipartBoundary(contentType: string): string | null {
   const match = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/)
-  return match ? (match[1] || match[2]) : null
+  return match ? (match[1] ?? match[2] ?? null) : null
 }
 
 // Extract file data from raw multipart body using streaming to handle large files
@@ -110,6 +110,7 @@ async function extractFileFromMultipart(rawFilePath: string, boundary: string, t
 
   for (let i = 1; i < parts.length; i++) {
     const part = parts[i]
+    if (!part) continue
     if (part.startsWith('--')) continue // End marker
 
     const headerEndIdx = part.indexOf('\r\n\r\n')
@@ -385,31 +386,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // ==========================================================================
-    // CREATE OR MERGE CAMPAIGN
+    // RACE/CLASS CONFLICT DETECTION (global, always checked)
+    // MUST be checked BEFORE creating campaign to avoid duplicates!
     // ==========================================================================
 
-    if (options.mode === 'new') {
-      // Create new campaign
-      const campaignName = options.campaignName || manifest.campaign.name
-      const result = db
-        .prepare('INSERT INTO campaigns (name, description, created_at, updated_at) VALUES (?, ?, datetime(), datetime())')
-        .run(campaignName, manifest.campaign.description || null)
-      campaignId = result.lastInsertRowid as number
-    } else if (options.mode === 'merge' && options.targetCampaignId) {
-      // Verify target campaign exists
-      const existing = db.prepare('SELECT id FROM campaigns WHERE id = ? AND deleted_at IS NULL').get(options.targetCampaignId)
-      if (!existing) {
-        throw createError({ statusCode: 404, message: 'Target campaign not found' })
-      }
-      campaignId = options.targetCampaignId
-    } else {
-      throw createError({ statusCode: 400, message: 'Invalid import options' })
-    }
-
-    // ==========================================================================
-    // CONFLICT DETECTION (for merge mode only)
-    // ==========================================================================
-
+    // Initialize conflict tracking (before campaign creation)
     const conflictInfo: ImportConflictInfo = {
       isStoreUpdate: false,
       existingCount: 0,
@@ -418,60 +399,6 @@ export default defineEventHandler(async (event) => {
 
     // Get sourceAdventureSlug from manifest or options
     const sourceAdventureSlug = options.sourceAdventureSlug || manifest.sourceAdventureSlug
-
-    if (options.mode === 'merge' && manifest.entities && manifest.entities.length > 0) {
-      // Check 1: Store-Update scenario (same adventure slug)
-      if (sourceAdventureSlug) {
-        const existingFromSameAdventure = db
-          .prepare(
-            `
-          SELECT id, name FROM entities
-          WHERE campaign_id = ?
-          AND deleted_at IS NULL
-          AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
-        `,
-          )
-          .all(campaignId, sourceAdventureSlug) as Array<{ id: number; name: string }>
-
-        if (existingFromSameAdventure.length > 0) {
-          conflictInfo.isStoreUpdate = true
-          conflictInfo.sourceAdventureSlug = sourceAdventureSlug
-          conflictInfo.existingCount = existingFromSameAdventure.length
-        }
-      }
-
-      // Check 2: Name+Type duplicates (only if not a store update)
-      if (!conflictInfo.isStoreUpdate) {
-        for (const entity of manifest.entities) {
-          const localTypeId = resolveTypeId(entity)
-          const typeName = entity.type_name || fallbackTypeIdToName[entity.type_id] || 'Unknown'
-
-          const existing = db
-            .prepare(
-              `
-            SELECT id, name FROM entities
-            WHERE campaign_id = ?
-            AND type_id = ?
-            AND LOWER(name) = LOWER(?)
-            AND deleted_at IS NULL
-          `,
-            )
-            .get(campaignId, localTypeId, entity.name) as { id: number; name: string } | undefined
-
-          if (existing) {
-            conflictInfo.duplicates.push({
-              name: entity.name,
-              typeName,
-              existingId: existing.id,
-            })
-          }
-        }
-      }
-    }
-
-    // ==========================================================================
-    // RACE/CLASS CONFLICT DETECTION (global, always checked)
-    // ==========================================================================
 
     const raceClassConflicts: RaceClassConflict[] = []
 
@@ -549,21 +476,122 @@ export default defineEventHandler(async (event) => {
         return !resolutions || !(c.key in resolutions)
       })
 
-    // Race/class conflicts apply to ALL modes (they are global, not campaign-scoped)
-    if (hasUnresolvedRaceClassConflicts) {
+    // ==========================================================================
+    // CALENDAR CONFLICT DETECTION (merge mode only, can check before campaign creation)
+    // ==========================================================================
+
+    if (options.mode === 'merge' && options.targetCampaignId) {
+      // Check for calendar conflict using targetCampaignId
+      if (manifest.calendar && manifest.calendar.months && manifest.calendar.months.length > 0) {
+        const existingMonths = db
+          .prepare('SELECT COUNT(*) as count FROM calendar_months WHERE campaign_id = ?')
+          .get(options.targetCampaignId) as { count: number }
+
+        if (existingMonths.count > 0 && !options.calendarResolution) {
+          conflictInfo.hasCalendarConflict = true
+          conflictInfo.existingCalendarMonths = existingMonths.count
+        }
+      }
+    }
+
+    // Check if calendar conflict is resolved
+    const hasUnresolvedCalendarConflict = conflictInfo.hasCalendarConflict && !options.calendarResolution
+
+    // ==========================================================================
+    // RETURN ALL CONFLICTS AT ONCE (before creating campaign)
+    // ==========================================================================
+
+    const hasAnyUnresolvedConflicts = hasUnresolvedRaceClassConflicts || hasUnresolvedCalendarConflict
+
+    if (hasAnyUnresolvedConflicts) {
       // Clean up temp directory
       await rm(tempDir, { recursive: true, force: true })
 
       return {
         success: false,
-        campaignId,
+        campaignId: 0, // No campaign created yet
         stats,
         conflictInfo,
         requiresConfirmation: true,
       } as ImportResult
     }
 
+    // ==========================================================================
+    // CREATE OR MERGE CAMPAIGN
+    // Only create after all pre-checks pass to avoid duplicates!
+    // ==========================================================================
+
+    if (options.mode === 'new') {
+      // Create new campaign
+      const campaignName = options.campaignName || manifest.campaign.name
+      const result = db
+        .prepare('INSERT INTO campaigns (name, description, created_at, updated_at) VALUES (?, ?, datetime(), datetime())')
+        .run(campaignName, manifest.campaign.description || null)
+      campaignId = result.lastInsertRowid as number
+    } else if (options.mode === 'merge' && options.targetCampaignId) {
+      // Verify target campaign exists
+      const existing = db.prepare('SELECT id FROM campaigns WHERE id = ? AND deleted_at IS NULL').get(options.targetCampaignId)
+      if (!existing) {
+        throw createError({ statusCode: 404, message: 'Target campaign not found' })
+      }
+      campaignId = options.targetCampaignId
+    } else {
+      throw createError({ statusCode: 400, message: 'Invalid import options' })
+    }
+
+    // ==========================================================================
+    // ENTITY CONFLICT DETECTION (merge mode only, needs campaignId)
+    // ==========================================================================
+
     if (options.mode === 'merge' && manifest.entities && manifest.entities.length > 0) {
+      // Check 1: Store-Update scenario (same adventure slug)
+      if (sourceAdventureSlug) {
+        const existingFromSameAdventure = db
+          .prepare(
+            `
+          SELECT id, name FROM entities
+          WHERE campaign_id = ?
+          AND deleted_at IS NULL
+          AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
+        `,
+          )
+          .all(campaignId, sourceAdventureSlug) as Array<{ id: number; name: string }>
+
+        if (existingFromSameAdventure.length > 0) {
+          conflictInfo.isStoreUpdate = true
+          conflictInfo.sourceAdventureSlug = sourceAdventureSlug
+          conflictInfo.existingCount = existingFromSameAdventure.length
+        }
+      }
+
+      // Check 2: Name+Type duplicates (only if not a store update)
+      if (!conflictInfo.isStoreUpdate) {
+        for (const entity of manifest.entities) {
+          const localTypeId = resolveTypeId(entity)
+          const typeName = entity.type_name || fallbackTypeIdToName[entity.type_id] || 'Unknown'
+
+          const existing = db
+            .prepare(
+              `
+            SELECT id, name FROM entities
+            WHERE campaign_id = ?
+            AND type_id = ?
+            AND LOWER(name) = LOWER(?)
+            AND deleted_at IS NULL
+          `,
+            )
+            .get(campaignId, localTypeId, entity.name) as { id: number; name: string } | undefined
+
+          if (existing) {
+            conflictInfo.duplicates.push({
+              name: entity.name,
+              typeName,
+              existingId: existing.id,
+            })
+          }
+        }
+      }
+
       // If entity conflicts detected and user hasn't confirmed, return early
       const hasEntityConflicts = conflictInfo.isStoreUpdate || conflictInfo.duplicates.length > 0
       if (hasEntityConflicts && !options.confirmedOverwrite) {
@@ -998,13 +1026,26 @@ export default defineEventHandler(async (event) => {
     // IMPORT CALENDAR
     // ==========================================================================
 
-    if (manifest.calendar) {
-      const cal = manifest.calendar
+    // Skip calendar import if user chose to keep existing
+    const shouldImportCalendar = manifest.calendar && options.calendarResolution !== 'keep'
+
+    if (shouldImportCalendar) {
+      const cal = manifest.calendar!
+
+      // Delete existing calendar data for this campaign first (prevents duplicates on merge)
+      db.prepare('DELETE FROM calendar_event_entities WHERE event_id IN (SELECT id FROM calendar_events WHERE campaign_id = ?)').run(campaignId)
+      db.prepare('DELETE FROM calendar_events WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_seasons WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_moons WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_weekdays WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_months WHERE campaign_id = ?').run(campaignId)
+      db.prepare('DELETE FROM calendar_config WHERE campaign_id = ?').run(campaignId)
 
       // Calendar Config
       if (cal.config) {
         db.prepare(`
-          INSERT OR REPLACE INTO calendar_config (campaign_id, current_year, current_month, current_day,
+          INSERT INTO calendar_config (campaign_id, current_year, current_month, current_day,
             year_zero_name, era_name, leap_year_interval, leap_year_month, leap_year_extra_days)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
@@ -1151,6 +1192,7 @@ export default defineEventHandler(async (event) => {
     // ==========================================================================
 
     if (manifest.maps && manifest.maps.length > 0) {
+      // Maps are additive - no deletion, just add new maps
       const insertMap = db.prepare(`
         INSERT INTO campaign_maps (campaign_id, name, description, image_url, parent_map_id, version_name,
           default_zoom, min_zoom, max_zoom, scale_value, scale_unit, created_at, updated_at)

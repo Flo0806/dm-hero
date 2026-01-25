@@ -330,6 +330,45 @@
             </v-card>
           </div>
 
+          <!-- Calendar Conflict -->
+          <div v-if="conflictInfo?.hasCalendarConflict" class="mb-4">
+            <v-alert type="warning" variant="tonal" class="mb-3">
+              <v-icon start>mdi-calendar-alert</v-icon>
+              {{ $t('campaigns.import.calendarConflictWarning', { months: conflictInfo.existingCalendarMonths }) }}
+            </v-alert>
+
+            <v-card variant="outlined">
+              <v-card-text class="pa-3">
+                <div class="text-body-2 mb-3">
+                  {{ $t('campaigns.import.calendarConflictDetails') }}
+                </div>
+
+                <v-radio-group
+                  v-model="calendarResolution"
+                  density="compact"
+                  hide-details
+                >
+                  <v-radio value="keep">
+                    <template #label>
+                      <div>
+                        <span class="text-body-2 font-weight-medium">{{ $t('campaigns.import.keepExistingCalendar') }}</span>
+                        <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.keepExistingCalendarHint') }}</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="overwrite">
+                    <template #label>
+                      <div>
+                        <span class="text-body-2 font-weight-medium">{{ $t('campaigns.import.overwriteCalendar') }}</span>
+                        <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.overwriteCalendarHint') }}</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
+              </v-card-text>
+            </v-card>
+          </div>
+
           <v-alert type="info" variant="tonal" density="compact">
             {{ $t('campaigns.import.confirmHint') }}
           </v-alert>
@@ -393,7 +432,7 @@
           <v-btn
             color="warning"
             variant="flat"
-            :disabled="!allRaceClassResolved"
+            :disabled="!allConflictsResolved"
             @click="doImport(true)"
           >
             <v-icon start>mdi-alert</v-icon>
@@ -465,6 +504,7 @@ const conflictInfo = ref<ImportConflictInfo | null>(null)
 const sourceAdventureSlug = ref<string | null>(null)
 const raceResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
 const classResolutions = ref<Record<string, 'overwrite' | 'keep' | 'skip'>>({})
+const calendarResolution = ref<'overwrite' | 'keep' | null>(null)
 const createGroupOnMerge = ref(true)
 const groupName = ref('')
 
@@ -478,6 +518,17 @@ const allRaceClassResolved = computed(() => {
     const res = c.type === 'race' ? raceResolutions.value[c.key] : classResolutions.value[c.key]
     return !!res
   })
+})
+
+// Check if calendar conflict is resolved
+const calendarConflictResolved = computed(() => {
+  if (!conflictInfo.value?.hasCalendarConflict) return true
+  return calendarResolution.value !== null
+})
+
+// All conflicts resolved
+const allConflictsResolved = computed(() => {
+  return allRaceClassResolved.value && calendarConflictResolved.value
 })
 
 // Helper to get resolution for a conflict
@@ -500,14 +551,21 @@ function setResolution(conflict: RaceClassConflict, value: string | null) {
 
 // Initialize resolutions when conflicts are detected
 function initializeResolutions() {
-  if (!conflictInfo.value?.raceClassConflicts) return
-  for (const conflict of conflictInfo.value.raceClassConflicts) {
-    if (conflict.type === 'race' && !raceResolutions.value[conflict.key]) {
-      // Default: keep existing for custom, skip for standard
-      raceResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
-    } else if (conflict.type === 'class' && !classResolutions.value[conflict.key]) {
-      classResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
+  // Race/Class defaults
+  if (conflictInfo.value?.raceClassConflicts) {
+    for (const conflict of conflictInfo.value.raceClassConflicts) {
+      if (conflict.type === 'race' && !raceResolutions.value[conflict.key]) {
+        // Default: keep existing for custom, skip for standard
+        raceResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
+      } else if (conflict.type === 'class' && !classResolutions.value[conflict.key]) {
+        classResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
+      }
     }
+  }
+
+  // Calendar default: keep existing
+  if (conflictInfo.value?.hasCalendarConflict && !calendarResolution.value) {
+    calendarResolution.value = 'keep'
   }
 }
 
@@ -654,6 +712,7 @@ async function doImport(confirmedOverwrite: boolean = false) {
         confirmedOverwrite,
         raceResolutions: Object.keys(raceResolutions.value).length > 0 ? raceResolutions.value : undefined,
         classResolutions: Object.keys(classResolutions.value).length > 0 ? classResolutions.value : undefined,
+        calendarResolution: calendarResolution.value || undefined,
         createGroupOnMerge: importMode.value === 'merge' ? createGroupOnMerge.value : undefined,
         groupName: importMode.value === 'merge' && createGroupOnMerge.value ? (groupName.value || preview.value?.campaignName) : undefined,
       }),
@@ -730,6 +789,7 @@ function close() {
   sourceAdventureSlug.value = null
   raceResolutions.value = {}
   classResolutions.value = {}
+  calendarResolution.value = null
   createGroupOnMerge.value = true
   groupName.value = ''
 }
