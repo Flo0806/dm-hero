@@ -73,11 +73,11 @@ export default defineEventHandler(async (event) => {
   await mkdir(coversDir, { recursive: true })
   await mkdir(filesDir, { recursive: true })
 
-  // Save cover image
+  // Save cover image (with version suffix for consistency with updates)
   let coverImageUrl: string | null = null
   if (coverImageFile) {
     const ext = coverImageFile.filename.split('.').pop() || 'jpg'
-    const coverFilename = `${slug}.${ext}`
+    const coverFilename = `${slug}-v1.${ext}`
     const coverPath = join(coversDir, coverFilename)
     await writeFile(coverPath, coverImageFile.data)
     coverImageUrl = `/api/uploads/covers/${coverFilename}`

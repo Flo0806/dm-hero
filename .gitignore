@@ -31,10 +31,11 @@ packages/*/data/
 *.db-shm
 *.db-wal
 
-# Uploads
+# Uploads (data folders, not API routes)
 uploads/
 /uploads/
 packages/*/uploads/
+!packages/*/server/api/uploads/
 
 # Electron build outputs
 dist-electron/
