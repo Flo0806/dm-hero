@@ -1,5 +1,15 @@
 # @dm-hero/landing
 
+## 1.2.0
+
+### Minor Changes
+
+- 0b23c46: Add Discord banner and footer link for community engagement
+
+### Patch Changes
+
+- 0b23c46: fix: uploads API route + favorites endpoint + migration idempotency + download ZIP corruption
+
 ## 1.1.7
 
 ### Patch Changes
