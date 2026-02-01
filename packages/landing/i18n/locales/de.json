@@ -138,6 +138,7 @@
     "madeWith": "Made with",
     "loveBy": "by",
     "links": {
+      "discord": "Discord",
       "github": "GitHub",
       "issues": "Probleme melden",
       "releases": "Releases",
@@ -154,6 +155,10 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "close": "Schließen"
+  },
+  "discordBanner": {
+    "message": "Offizieller Discord für DM Hero - Fragen, Support, Feature-Anfragen oder Vorstellung eigener OneShots!",
+    "join": "Beitreten"
   },
   "privacyBanner": {
     "title": "Deine Daten gehören dir.",
