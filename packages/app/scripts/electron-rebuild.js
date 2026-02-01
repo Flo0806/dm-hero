@@ -58,9 +58,14 @@ console.log('   Path:', betterSqlitePath)
 // Electron version must match package.json
 const electronVersion = '39.2.3'
 
+// Support cross-compilation for different architectures (x64, arm64)
+// Set via: npm_config_arch=arm64 node scripts/electron-rebuild.js
+const arch = process.env.npm_config_arch || process.arch
+console.log('   Architecture:', arch)
+
 try {
   execSync(
-    `npx node-gyp rebuild --target=${electronVersion} --arch=x64 --dist-url=https://electronjs.org/headers`,
+    `npx node-gyp rebuild --target=${electronVersion} --arch=${arch} --dist-url=https://electronjs.org/headers`,
     {
       cwd: betterSqlitePath,
       stdio: 'inherit',

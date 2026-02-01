@@ -49,3 +49,7 @@ packages/*/coverage/
 # Private project documentation (keep local only)
 CLAUDE.md
 /scripts/
+
+# Temporary macOS icon creation tools
+packages/app/scripts/create-mac-icon.js
+packages/app/public/images/dm-hero-logo-transparent.png

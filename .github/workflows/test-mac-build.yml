@@ -1,0 +1,120 @@
+name: Test macOS Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Architecture'
+        required: true
+        default: 'x64'
+        type: choice
+        options:
+          - x64
+          - arm64
+          - both
+      sign:
+        description: 'Code Signing (requires secrets)'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ inputs.arch == 'both' && fromJSON('["x64", "arm64"]') || fromJSON(format('["{0}"]', inputs.arch)) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Nuxt
+        run: pnpm build
+        working-directory: packages/app
+
+      # Code Signing (only when enabled AND secrets are available)
+      - name: Import Code Signing Certificate
+        if: inputs.sign
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::APPLE_CERTIFICATE secret not set, skipping signing"
+            exit 0
+          fi
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          echo "SIGNING_ENABLED=true" >> $GITHUB_ENV
+
+      - name: Rebuild native modules for Electron (${{ matrix.arch }})
+        run: |
+          cd packages/app
+          npm_config_arch=${{ matrix.arch }} node scripts/electron-rebuild.js
+        env:
+          npm_config_arch: ${{ matrix.arch }}
+
+      - name: Build Electron (${{ matrix.arch }}) - Unsigned
+        if: ${{ !inputs.sign || env.SIGNING_ENABLED != 'true' }}
+        run: |
+          cd packages/app
+          pnpm electron-builder --mac --${{ matrix.arch }} --publish never --config.mac.identity=null
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Build Electron (${{ matrix.arch }}) - Signed
+        if: inputs.sign && env.SIGNING_ENABLED == 'true'
+        run: |
+          cd packages/app
+          pnpm electron-builder --mac --${{ matrix.arch }} --publish never
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: List build output
+        run: |
+          echo "=== Build Output ==="
+          ls -la packages/app/dist-electron/ || echo "No dist-electron folder found"
+          echo ""
+          echo "=== DMG Files ==="
+          find packages/app/dist-electron -name "*.dmg" 2>/dev/null || echo "No DMG files found"
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dm-hero-mac-${{ matrix.arch }}-test
+          path: packages/app/dist-electron/*.dmg
+          retention-days: 7
+          if-no-files-found: error
