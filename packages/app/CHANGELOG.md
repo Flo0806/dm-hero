@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.1.3
+
+### Patch Changes
+
+- 0beeba9: Add macOS builds to release workflow (arm64 + x64, signed and notarized)
+
 ## 1.1.2
 
 ### Patch Changes
