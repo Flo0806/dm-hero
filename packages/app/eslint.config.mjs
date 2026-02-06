@@ -35,11 +35,9 @@ export default withNuxt({
       },
     ],
 
-    // Formatting rules (basic ESLint)
-    'quotes': ['error', 'single', { avoidEscape: true }],
-    'semi': ['error', 'never'],
-    'comma-dangle': ['error', 'always-multiline'],
-    'indent': ['error', 2, { SwitchCase: 1 }],
+    // Stylistic overrides (rest handled by @nuxt/eslint stylistic)
+    '@stylistic/comma-dangle': ['error', 'always-multiline'],
+    '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
 
     // General rules
     'no-console': 'off',

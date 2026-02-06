@@ -96,7 +96,7 @@ const localeCookie = useCookie<'en' | 'de'>('locale', {
   maxAge: 60 * 60 * 24 * 365, // 1 year
 })
 
-// Sync Vuetify locale with i18n locale
+// Sync Vuetify locale with i18n locale fox
 watch(
   locale,
   (newLocale) => {
@@ -123,7 +123,8 @@ if (import.meta.client) {
     (newId) => {
       if (newId) {
         notesStore.fetchNotes(Number(newId))
-      } else {
+      }
+      else {
         notesStore.clearNotes()
       }
     },
@@ -174,8 +175,8 @@ onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {
     // Check if user is typing in an input field
     const target = e.target as HTMLElement
-    const isTyping =
-      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+    const isTyping
+      = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
 
     // "/" öffnet Suche (nur wenn NICHT in Eingabefeld)
     if (e.key === '/' && !showSearch.value && !isTyping) {
@@ -223,12 +224,13 @@ watch(searchQuery, async (query) => {
       },
     })
 
-    searchResults.value = results.map((r) => ({
+    searchResults.value = results.map(r => ({
       ...r,
       path: getEntityPath(r.type, r.id, r.name),
       linkedEntities: r.linkedEntities || [],
     }))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Search failed:', error)
     searchResults.value = []
   }

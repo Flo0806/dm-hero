@@ -2,23 +2,8 @@ import pkg from './package.json'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
   modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt'],
-
-  eslint: {
-    config: {
-      // Disable stylistic - too strict for existing codebase
-      // We use basic ESLint rules instead
-      stylistic: false,
-    },
-  },
-
-  runtimeConfig: {
-    public: {
-      appVersion: pkg.version,
-    },
-  },
+  devtools: { enabled: true },
 
   app: {
     head: {
@@ -34,28 +19,16 @@ export default defineNuxtConfig({
     '@/assets/css/dashboard.css',
   ],
 
-  i18n: {
-    locales: [
-      { code: 'en', name: 'English', file: 'en.json' },
-      { code: 'de', name: 'Deutsch', file: 'de.json' },
-    ],
-    defaultLocale: 'de',
-    langDir: 'locales',
-    strategy: 'no_prefix',
-    compilation: {
-      strictMessage: false, // Allow HTML in i18n messages (for announcements)
+  runtimeConfig: {
+    public: {
+      appVersion: pkg.version,
     },
   },
 
   build: {
     transpile: ['vuetify'],
   },
-
-  vite: {
-    ssr: {
-      noExternal: ['vuetify'],
-    },
-  },
+  compatibilityDate: '2025-07-15',
 
   nitro: {
     storage: {
@@ -69,8 +42,37 @@ export default defineNuxtConfig({
       external: ['better-sqlite3'],
     },
   },
+
+  vite: {
+    ssr: {
+      noExternal: ['vuetify'],
+    },
+  },
   hooks: {
     'vite:extendConfig': extendViteConfig,
+  },
+
+  eslint: {
+    config: {
+      stylistic: {
+        indent: 2,
+        quotes: 'single',
+        semi: false,
+      },
+    },
+  },
+
+  i18n: {
+    locales: [
+      { code: 'en', name: 'English', file: 'en.json' },
+      { code: 'de', name: 'Deutsch', file: 'de.json' },
+    ],
+    defaultLocale: 'de',
+    langDir: 'locales',
+    strategy: 'no_prefix',
+    compilation: {
+      strictMessage: false, // Allow HTML in i18n messages (for announcements)
+    },
   },
 })
 
@@ -80,6 +82,6 @@ function extendViteConfig(config: any) {
   if (plugin) plugin.enforce = 'pre'
 }
 
-function isPlugin(plugin: unknown, name: string): plugin is { name: string; enforce?: string } {
+function isPlugin(plugin: unknown, name: string): plugin is { name: string, enforce?: string } {
   return !!(plugin && typeof plugin === 'object' && 'name' in plugin && plugin.name === name)
 }

@@ -1,49 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
-
-  future: {
-    compatibilityVersion: 4,
-  },
 
   modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content', '@pinia/nuxt'],
-
-  eslint: {
-    config: {
-      stylistic: false,
-    },
-  },
-
-  css: [
-    '@/assets/css/main.css',
-    '@/assets/css/animations.css',
-  ],
-
-  i18n: {
-    locales: [
-      { code: 'en', name: 'English', file: 'en.json' },
-      { code: 'de', name: 'Deutsch', file: 'de.json' },
-    ],
-    defaultLocale: 'en',
-    langDir: '../i18n/locales',
-    strategy: 'no_prefix',
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: 'dm_hero_lang',
-      fallbackLocale: 'en',
-    },
-  },
-
-  build: {
-    transpile: ['vuetify'],
-  },
-
-  vite: {
-    ssr: {
-      noExternal: ['vuetify'],
-    },
-  },
+  devtools: { enabled: true },
 
   app: {
     head: {
@@ -69,23 +28,10 @@ export default defineNuxtConfig({
     },
   },
 
-  nitro: {
-    // No preset = node-server for API routes
-    storage: {
-      uploads: {
-        driver: 'fs',
-        base: './uploads',
-      },
-    },
-    // Serve uploads directory
-    publicAssets: [
-      {
-        dir: 'uploads',
-        baseURL: '/uploads',
-        maxAge: 60 * 60 * 24 * 7, // 1 week cache
-      },
-    ],
-  },
+  css: [
+    '@/assets/css/main.css',
+    '@/assets/css/animations.css',
+  ],
 
   runtimeConfig: {
     // Server-only env vars
@@ -109,6 +55,64 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3001',
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3001',
+    },
+  },
+
+  build: {
+    transpile: ['vuetify'],
+  },
+
+  future: {
+    compatibilityVersion: 4,
+  },
+  compatibilityDate: '2025-07-15',
+
+  nitro: {
+    // No preset = node-server for API routes
+    storage: {
+      uploads: {
+        driver: 'fs',
+        base: './uploads',
+      },
+    },
+    // Serve uploads directory
+    publicAssets: [
+      {
+        dir: 'uploads',
+        baseURL: '/uploads',
+        maxAge: 60 * 60 * 24 * 7, // 1 week cache
+      },
+    ],
+  },
+
+  vite: {
+    ssr: {
+      noExternal: ['vuetify'],
+    },
+  },
+
+  eslint: {
+    config: {
+      stylistic: {
+        indent: 2,
+        quotes: 'single',
+        semi: false,
+      },
+    },
+  },
+
+  i18n: {
+    locales: [
+      { code: 'en', name: 'English', file: 'en.json' },
+      { code: 'de', name: 'Deutsch', file: 'de.json' },
+    ],
+    defaultLocale: 'en',
+    langDir: '../i18n/locales',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'dm_hero_lang',
+      fallbackLocale: 'en',
     },
   },
 })
