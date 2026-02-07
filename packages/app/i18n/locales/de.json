@@ -2197,6 +2197,10 @@
       "title": "Version 1.1 ist da!",
       "content": "<p><strong>Neu in dieser Version:</strong></p><ul><li>Rechtsklick auf Karten öffnet Kontextmenü zum schnellen Verknüpfen</li><li>Quick-Create in Dialogen erstellt neue Entities direkt beim Verlinken</li><li>Klickbare Badges auf Karten springen direkt zum richtigen Tab</li><li>Spieler-Geburtstage mit Kalender-Integration</li><li>Verbesserter Session-Datumswähler</li><li>Nuxt 4.3 Upgrade</li></ul>"
     },
+    "v120": {
+      "title": "Version 1.2 ist da!",
+      "content": "<p><strong>Neu in dieser Version:</strong></p><ul><li><strong>Encounter Tracker</strong> — Kampfmanagement mit Initiative, Rundentracking, HP-Verwaltung, Effektsystem und Würfelroller</li><li><strong>Multi-Provider KI</strong> — Wahl zwischen OpenAI und Google Gemini, Modellauswahl pro Anbieter (z.B. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat-Block-Vorlagen</strong> — Vorlagensystem für Monster- und NPC-Statblöcke</li><li><strong>macOS-Support</strong> — Native macOS-Builds mit Auto-Updates</li></ul><p><strong>Verbesserungen & Fixes:</strong></p><ul><li>Textformatierung in Ansichtsdialogen bleibt erhalten</li><li>NPC-Spieler-Beziehungen inkl. Kontextmenü verbessert</li><li>Linux-Menüleiste minimiert wie macOS</li><li>Pflichtfelder bei Jahreszeiten korrekt angezeigt</li><li>KI-generierte Bilder enthalten keinen Text mehr</li></ul>"
+    },
     "installerPath": "Installationspfad ({os}):",
     "autoUpdateHint": "Nach der Installation über den Installer wird die App automatisch aktualisiert, sobald eine neue Version verfügbar ist.",
     "dontShowAgain": "Nicht mehr anzeigen",

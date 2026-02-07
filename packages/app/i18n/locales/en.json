@@ -2221,6 +2221,10 @@
       "title": "Version 1.1 is here!",
       "content": "<p><strong>New in this version:</strong></p><ul><li>Right-click on cards opens context menu for quick linking</li><li>Quick-Create in dialogs lets you create new entities while linking</li><li>Clickable badges on cards jump directly to the right tab</li><li>Player birthdays with calendar integration</li><li>Improved session date picker</li><li>Nuxt 4.3 upgrade</li></ul>"
     },
+    "v120": {
+      "title": "Version 1.2 is here!",
+      "content": "<p><strong>New in this version:</strong></p><ul><li><strong>Encounter Tracker</strong> — Combat management with initiative, turn tracking, HP management, effects system and dice roller</li><li><strong>Multi-Provider AI</strong> — Choose between OpenAI and Google Gemini, model selection per provider (e.g. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat Block Templates</strong> — Template system for monster and NPC stat blocks</li><li><strong>macOS Support</strong> — Native macOS builds with auto-updates</li></ul><p><strong>Improvements & Fixes:</strong></p><ul><li>Text formatting preserved in view dialogs</li><li>NPC-player relations including context menu improved</li><li>Linux menu bar minimized like macOS</li><li>Required season fields shown correctly</li><li>AI-generated images no longer contain text</li></ul>"
+    },
     "installerPath": "Installation path ({os}):",
     "autoUpdateHint": "After installation via the installer, the app will automatically update whenever a new version is available.",
     "dontShowAgain": "Don't show again",
