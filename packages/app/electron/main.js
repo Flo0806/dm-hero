@@ -225,21 +225,26 @@ function createWindow() {
     },
   }
 
-  // Set up macOS menu (minimal: App, Edit, Help)
-  if (process.platform === 'darwin') {
+  // Set up minimal menu (macOS + Linux)
+  // Windows uses custom titlebar, so no menu needed
+  if (!isWindows) {
     const template = [
-      {
-        label: 'DM Hero',
-        submenu: [
-          { role: 'about' },
-          { type: 'separator' },
-          { role: 'hide' },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit' },
-        ],
-      },
+      ...(process.platform === 'darwin'
+        ? [
+            {
+              label: 'DM Hero',
+              submenu: [
+                { role: 'about' },
+                { type: 'separator' },
+                { role: 'hide' },
+                { role: 'hideOthers' },
+                { role: 'unhide' },
+                { type: 'separator' },
+                { role: 'quit' },
+              ],
+            },
+          ]
+        : []),
       {
         label: 'Edit',
         submenu: [
