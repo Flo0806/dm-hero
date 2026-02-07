@@ -41,6 +41,13 @@
             {{ $t('npcs.items') }}
             <v-chip size="x-small" class="ml-2">{{ counts.items }}</v-chip>
           </v-tab>
+          <v-tab value="stats">
+            <v-icon start>mdi-clipboard-list-outline</v-icon>
+            {{ $t('entityStats.title') }}
+            <v-chip v-if="counts.hasStats" size="x-small" class="ml-2" color="primary">
+              <v-icon size="x-small">mdi-check</v-icon>
+            </v-chip>
+          </v-tab>
           <v-tab value="notes">
             <v-icon start> mdi-note-text </v-icon>
             {{ $t('npcs.notes') }}
@@ -294,6 +301,16 @@
               />
             </v-tabs-window-item>
 
+            <!-- Stats Tab -->
+            <v-tabs-window-item value="stats">
+              <SharedEntityStatsTab
+                v-if="npc"
+                ref="statsTabRef"
+                :entity-id="npc.id"
+                @changed="loadCounts(npc!.id)"
+              />
+            </v-tabs-window-item>
+
             <!-- Notes Tab -->
             <v-tabs-window-item value="notes">
               <NpcNotesTab v-if="npc" :npc-id="npc.id" />
@@ -521,6 +538,7 @@ import EntityLoreTab from '../shared/EntityLoreTab.vue'
 import EntityPlayersTab from '../shared/EntityPlayersTab.vue'
 import NpcNotesTab from './NpcNotesTab.vue'
 import EntityDocuments from '../shared/EntityDocuments.vue'
+import SharedEntityStatsTab from '../shared/EntityStatsTab.vue'
 import EntityImageUpload from '../shared/EntityImageUpload.vue'
 import ImagePreviewDialog from '../shared/ImagePreviewDialog.vue'
 import LocationSelectWithMap from '../shared/LocationSelectWithMap.vue'
@@ -540,8 +558,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [npc: NPC]
-  created: [npc: NPC]
+  'saved': [npc: NPC]
+  'created': [npc: NPC]
 }>()
 
 // ============================================================================
@@ -562,7 +580,7 @@ const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 // ============================================================================
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const loading = ref(false)
@@ -598,17 +616,17 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   return (
-    form.value.name !== originalImageData.value.name ||
-    form.value.description !== originalImageData.value.description ||
-    form.value.metadata.race !== originalImageData.value.race ||
-    form.value.metadata.class !== originalImageData.value.class ||
-    form.value.metadata.age !== originalImageData.value.age ||
-    form.value.metadata.gender !== originalImageData.value.gender
+    form.value.name !== originalImageData.value.name
+    || form.value.description !== originalImageData.value.description
+    || form.value.metadata.race !== originalImageData.value.race
+    || form.value.metadata.class !== originalImageData.value.class
+    || form.value.metadata.age !== originalImageData.value.age
+    || form.value.metadata.gender !== originalImageData.value.gender
   )
 })
 
 // Map sync data (from LocationSelectWithMap)
-const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
+const mapSyncData = ref<{ locationId: number | null, mapIds: number[] } | null>(null)
 
 // Relations data - loaded internally
 interface NpcRelation {
@@ -627,6 +645,9 @@ const factionMemberships = ref<NpcMembership[]>([])
 const npcItems = ref<NpcItem[]>([])
 const linkedLore = ref<Array<Pick<Lore, 'id' | 'name' | 'description' | 'image_url'>>>([])
 
+// Stats tab ref (for saving stats on dialog save)
+const statsTabRef = ref<{ saveStats: () => Promise<void> } | null>(null)
+
 // Counts for tab badges
 const counts = ref({
   relations: 0,
@@ -637,6 +658,7 @@ const counts = ref({
   documents: 0,
   lore: 0,
   players: 0,
+  hasStats: false,
 })
 
 // Loading states for relation operations
@@ -646,8 +668,8 @@ const addingItem = ref(false)
 const loadingLore = ref(false)
 
 // Reference data - loaded from API/store
-const races = ref<Array<{ name: string; name_de?: string | null; name_en?: string | null }>>([])
-const classes = ref<Array<{ name: string; name_de?: string | null; name_en?: string | null }>>([])
+const races = ref<Array<{ name: string, name_de?: string | null, name_en?: string | null }>>([])
+const classes = ref<Array<{ name: string, name_de?: string | null, name_en?: string | null }>>([])
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -667,7 +689,7 @@ const previewImageTitle = ref('')
 // ============================================================================
 const raceItems = computed(() =>
   races.value
-    .map((race) => ({
+    .map(race => ({
       title: locale.value === 'de' ? (race.name_de || race.name) : (race.name_en || race.name),
       value: race.name,
     }))
@@ -676,7 +698,7 @@ const raceItems = computed(() =>
 
 const classItems = computed(() =>
   classes.value
-    .map((cls) => ({
+    .map(cls => ({
       title: locale.value === 'de' ? (cls.name_de || cls.name) : (cls.name_en || cls.name),
       value: cls.name,
     }))
@@ -692,14 +714,14 @@ const genderItems = computed(() => [
 ])
 
 const npcTypes = computed(() =>
-  NPC_TYPES.map((type) => ({
+  NPC_TYPES.map(type => ({
     value: type,
     title: t(`npcs.types.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const npcStatuses = computed(() =>
-  NPC_STATUSES.map((status) => ({
+  NPC_STATUSES.map(status => ({
     value: status,
     title: t(`npcs.statuses.${status}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -708,32 +730,32 @@ const npcStatuses = computed(() =>
 // Available entities from store (sorted alphabetically)
 const availableNpcs = computed(() =>
   entitiesStore.npcs
-    .filter((n) => n.id !== npc.value?.id)
-    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .filter(n => n.id !== npc.value?.id)
+    .map(n => ({ id: n.id, name: n.name, image_url: n.image_url }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableFactions = computed(() =>
   entitiesStore.factions
-    .map((f) => ({ id: f.id, name: f.name }))
+    .map(f => ({ id: f.id, name: f.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableItems = computed(() =>
   entitiesStore.items
-    .map((i) => ({ id: i.id, name: i.name }))
+    .map(i => ({ id: i.id, name: i.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLore = computed(() =>
   entitiesStore.lore
-    .map((l) => ({ id: l.id, name: l.name }))
+    .map(l => ({ id: l.id, name: l.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 // Item relation type suggestions from TypeScript types
 const npcItemRelationTypeSuggestions = computed(() =>
-  NPC_ITEM_RELATION_TYPES.map((type) => ({
+  NPC_ITEM_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`npcs.itemRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -771,11 +793,13 @@ async function loadData(npcId: number | null | undefined) {
       // Edit mode: load NPC and relations
       await loadNpc(npcId)
       await loadRelations(npcId)
-    } else {
+    }
+    else {
       // Create mode: reset form
       resetForm()
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -783,12 +807,13 @@ async function loadData(npcId: number | null | undefined) {
 async function loadReferenceData() {
   try {
     const [racesData, classesData] = await Promise.all([
-      $fetch<Array<{ name: string; name_de?: string | null; name_en?: string | null }>>('/api/races'),
-      $fetch<Array<{ name: string; name_de?: string | null; name_en?: string | null }>>('/api/classes'),
+      $fetch<Array<{ name: string, name_de?: string | null, name_en?: string | null }>>('/api/races'),
+      $fetch<Array<{ name: string, name_de?: string | null, name_en?: string | null }>>('/api/classes'),
     ])
     races.value = racesData
     classes.value = classesData
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to load reference data:', e)
   }
 }
@@ -812,7 +837,8 @@ async function checkApiKey() {
   try {
     const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 }
@@ -849,7 +875,8 @@ async function loadNpc(npcId: number) {
 
     // Load counts for tab badges
     await loadCounts(npcId)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to load NPC:', e)
   }
 }
@@ -865,9 +892,11 @@ async function loadCounts(npcId: number) {
       documents: number
       lore: number
       players: number
+      hasStats: boolean
     }>(`/api/npcs/${npcId}/counts`)
     counts.value = data
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to load counts:', e)
   }
 }
@@ -895,8 +924,8 @@ async function loadRelations(npcId: number) {
     const allRelations = await $fetch<AllRelation[]>(`/api/npcs/${npcId}/all-relations`)
     // Filter faction memberships and map to NpcMembership format
     factionMemberships.value = allRelations
-      .filter((rel) => rel.to_entity_type === 'Faction')
-      .map((rel) => ({
+      .filter(rel => rel.to_entity_type === 'Faction')
+      .map(rel => ({
         id: rel.id,
         from_entity_id: rel.from_entity_id,
         to_entity_id: rel.to_entity_id,
@@ -911,13 +940,13 @@ async function loadRelations(npcId: number) {
     const itemsData = await $fetch<Array<{
       id: number
       relation_type: string
-      notes: { quantity?: number; equipped?: boolean } | null
+      notes: { quantity?: number, equipped?: boolean } | null
       name: string
       description: string | null
-      metadata: { rarity?: string; type?: string } | null
+      metadata: { rarity?: string, type?: string } | null
       image_url: string | null
     }>>(`/api/entities/${npcId}/related/items`)
-    npcItems.value = itemsData.map((item) => ({
+    npcItems.value = itemsData.map(item => ({
       id: item.id,
       relation_id: item.id,
       name: item.name,
@@ -930,9 +959,10 @@ async function loadRelations(npcId: number) {
     }))
 
     // Load lore
-    const loreData = await $fetch<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>(`/api/entities/${npcId}/related/lore`)
+    const loreData = await $fetch<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>(`/api/entities/${npcId}/related/lore`)
     linkedLore.value = loreData
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to load relations:', e)
   }
 }
@@ -975,6 +1005,7 @@ function resetForm() {
     documents: 0,
     lore: 0,
     players: 0,
+    hasStats: false,
   }
 }
 
@@ -1005,7 +1036,8 @@ async function save() {
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new NPC
       const created = await entitiesStore.createNPC(campaignId, {
         name: form.value.name,
@@ -1022,10 +1054,15 @@ async function save() {
       emit('created', created)
     }
 
+    // Save stats if dirty
+    await statsTabRef.value?.saveStats()
+
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -1038,18 +1075,19 @@ function close() {
 async function syncToMaps(entityId: number, mapIds: number[]) {
   // Get maps that have an area (circle) for the selected location
   const locationId = form.value.location_id
-  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let mapsWithArea: Array<{ map_id: number, map_name: string, area_id: number }> = []
   let locationName = ''
 
   if (locationId) {
     try {
-      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+      mapsWithArea = await $fetch<Array<{ map_id: number, map_name: string, area_id: number }>>(
         `/api/locations/${locationId}/maps-with-area`,
       )
       // Get location name from API
       const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
       locationName = location.name
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[NpcEditDialog] Failed to get maps with area:', e)
     }
   }
@@ -1058,19 +1096,20 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
   const mapsWithoutLocation: string[] = []
 
   // Get all maps to know their names for warning message
-  let allMaps: Array<{ id: number; name: string }> = []
+  let allMaps: Array<{ id: number, name: string }> = []
   try {
-    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+    allMaps = await $fetch<Array<{ id: number, name: string }>>('/api/maps', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to get maps:', e)
   }
 
   for (const mapId of mapIds) {
     try {
       // Check if this map has an area for the location
-      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+      const areaInfo = mapsWithArea.find(m => m.map_id === mapId)
 
       if (areaInfo) {
         // Place marker inside the location circle (finds free spot automatically)
@@ -1082,7 +1121,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
             area_id: areaInfo.area_id,
           },
         })
-      } else {
+      }
+      else {
         // No area for this location on this map
         // Check if marker already exists
         const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
@@ -1104,13 +1144,14 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
         // Track this map for warning (location is not on this map)
         // Show warning for both new and existing markers
         if (locationId) {
-          const mapInfo = allMaps.find((m) => m.id === mapId)
+          const mapInfo = allMaps.find(m => m.id === mapId)
           if (mapInfo) {
             mapsWithoutLocation.push(mapInfo.name)
           }
         }
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error(`[NpcEditDialog] Failed to sync to map ${mapId}:`, e)
     }
   }
@@ -1121,7 +1162,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
       snackbarStore.warning(
         t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
       )
-    } else {
+    }
+    else {
       snackbarStore.warning(
         t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
       )
@@ -1132,7 +1174,7 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
 // ============================================================================
 // Relation Management
 // ============================================================================
-async function addNpcRelation(payload: { npcId: number; relationType: string; notes?: string }) {
+async function addNpcRelation(payload: { npcId: number, relationType: string, notes?: string }) {
   if (!npc.value) return
 
   addingRelation.value = true
@@ -1149,14 +1191,16 @@ async function addNpcRelation(payload: { npcId: number; relationType: string; no
     await loadCounts(npc.value.id)
     // Also update the other NPC's counts in the store (for card badges)
     entitiesStore.loadNpcCounts(payload.npcId)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to add relation:', e)
-  } finally {
+  }
+  finally {
     addingRelation.value = false
   }
 }
 
-async function addMembership(payload: { factionId: number; relationType: string; rank?: string }) {
+async function addMembership(payload: { factionId: number, relationType: string, rank?: string }) {
   if (!npc.value) return
 
   addingMembership.value = true
@@ -1172,14 +1216,16 @@ async function addMembership(payload: { factionId: number; relationType: string;
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to add membership:', e)
-  } finally {
+  }
+  finally {
     addingMembership.value = false
   }
 }
 
-async function updateMembership(payload: { membershipId: number; relationType: string; rank?: string }) {
+async function updateMembership(payload: { membershipId: number, relationType: string, rank?: string }) {
   if (!npc.value) return
 
   try {
@@ -1191,7 +1237,8 @@ async function updateMembership(payload: { membershipId: number; relationType: s
       },
     })
     await loadRelations(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to update membership:', e)
   }
 }
@@ -1205,7 +1252,8 @@ async function removeMembership(id: number) {
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to remove membership:', e)
   }
 }
@@ -1214,7 +1262,7 @@ async function removeNpcRelation(id: number) {
   if (!npc.value) return
 
   // Find the other NPC's ID before deleting
-  const relation = npcRelations.value.find((r) => r.id === id)
+  const relation = npcRelations.value.find(r => r.id === id)
   const otherNpcId = relation?.related_npc_id
 
   try {
@@ -1227,12 +1275,13 @@ async function removeNpcRelation(id: number) {
     if (otherNpcId) {
       entitiesStore.loadNpcCounts(otherNpcId)
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to remove NPC relation:', e)
   }
 }
 
-async function updateNpcRelation(payload: { relationId: number; relationType: string; notes?: string }) {
+async function updateNpcRelation(payload: { relationId: number, relationType: string, notes?: string }) {
   if (!npc.value) return
 
   try {
@@ -1244,12 +1293,13 @@ async function updateNpcRelation(payload: { relationId: number; relationType: st
       },
     })
     await loadRelations(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to update NPC relation:', e)
   }
 }
 
-async function addItem(payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+async function addItem(payload: { itemId: number, relationType?: string, quantity?: number, equipped?: boolean }) {
   if (!npc.value) return
 
   addingItem.value = true
@@ -1265,14 +1315,16 @@ async function addItem(payload: { itemId: number; relationType?: string; quantit
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to add item:', e)
-  } finally {
+  }
+  finally {
     addingItem.value = false
   }
 }
 
-async function updateItem(payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+async function updateItem(payload: { relationId: number, relationType?: string, quantity?: number, equipped?: boolean }) {
   if (!npc.value) return
 
   try {
@@ -1288,7 +1340,8 @@ async function updateItem(payload: { relationId: number; relationType?: string; 
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to update item:', e)
   }
 }
@@ -1302,7 +1355,8 @@ async function removeItem(id: number) {
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to remove item:', e)
   }
 }
@@ -1322,9 +1376,11 @@ async function addLore(loreId: number) {
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to add lore:', e)
-  } finally {
+  }
+  finally {
     loadingLore.value = false
   }
 }
@@ -1338,7 +1394,8 @@ async function removeLore(relationId: number) {
     })
     await loadRelations(npc.value.id)
     await loadCounts(npc.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[NpcEditDialog] Failed to remove lore:', e)
   }
 }
@@ -1373,10 +1430,12 @@ async function handleImageUpload(event: Event) {
     }
 
     await refreshNpc()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload image:', error)
     showUploadError('image')
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -1420,11 +1479,12 @@ async function generateImage() {
       await refreshNpc()
       await loadCounts(npc.value.id)
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('[NPC] Failed to generate image:', error)
     // Extract error message from Nuxt FetchError for logging
     if (error && typeof error === 'object') {
-      const fetchError = error as { data?: { message?: string }; message?: string; statusCode?: number }
+      const fetchError = error as { data?: { message?: string }, message?: string, statusCode?: number }
       console.error('[NPC] Error details:', {
         statusCode: fetchError.statusCode,
         message: fetchError.message,
@@ -1432,10 +1492,12 @@ async function generateImage() {
       })
       // Show translated error via error handler
       showError(fetchError.data?.message || fetchError.message, 'errors.image.generateFailed')
-    } else {
+    }
+    else {
       showImageError('generate')
     }
-  } finally {
+  }
+  finally {
     generatingImage.value = false
   }
 }
@@ -1447,10 +1509,12 @@ async function deleteImage() {
   try {
     await $fetch(`/api/entities/${npc.value.id}/delete-image`, { method: 'DELETE' })
     await refreshNpc()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete image:', error)
     showImageError('delete')
-  } finally {
+  }
+  finally {
     deletingImage.value = false
   }
 }
@@ -1489,10 +1553,12 @@ async function generateName() {
     if (result.name) {
       form.value.name = result.name
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[NPC] Failed to generate name:', error)
     showError(error)
-  } finally {
+  }
+  finally {
     generatingName.value = false
   }
 }

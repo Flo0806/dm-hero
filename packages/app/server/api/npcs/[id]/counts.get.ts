@@ -145,7 +145,7 @@ export default defineEventHandler((event) => {
     .get() as { id: number } | undefined
 
   let membershipsCount = 0
-  let factions: Array<{ id: number; name: string; relationType: string }> = []
+  let factions: Array<{ id: number, name: string, relationType: string }> = []
   if (factionTypeId) {
     // Get all faction memberships with relation type
     factions = db
@@ -160,7 +160,7 @@ export default defineEventHandler((event) => {
       ORDER BY e.name
     `,
       )
-      .all(Number(npcId), factionTypeId.id) as Array<{ id: number; name: string; relationType: string }>
+      .all(Number(npcId), factionTypeId.id) as Array<{ id: number, name: string, relationType: string }>
 
     membershipsCount = factions.length
   }
@@ -246,6 +246,11 @@ export default defineEventHandler((event) => {
     playersCount = playersResult.count
   }
 
+  // Check if entity has stats assigned
+  const hasStats = !!db
+    .prepare('SELECT 1 FROM entity_stats WHERE entity_id = ?')
+    .get(Number(npcId))
+
   // Get groups this NPC belongs to
   const groups = db
     .prepare(
@@ -257,7 +262,7 @@ export default defineEventHandler((event) => {
     ORDER BY g.name
   `,
     )
-    .all(Number(npcId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+    .all(Number(npcId)) as Array<{ id: number, name: string, color: string | null, icon: string | null }>
 
   return {
     relations: relationsCount.count,
@@ -270,8 +275,9 @@ export default defineEventHandler((event) => {
     notes: notesCount.count,
     players: playersCount,
     factions,
+    hasStats,
     // Backwards compatibility: first faction name
-    factionName: factions.length > 0 ? factions[0].name : null,
+    factionName: factions[0]?.name ?? null,
     groups,
   }
 })

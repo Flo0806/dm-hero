@@ -24,6 +24,7 @@ interface NpcCounts {
   notes: number
   players: number
   factions: FactionMembership[]
+  hasStats: boolean
   factionName: string | null // Backwards compatibility
   groups: GroupInfo[]
 }
@@ -50,9 +51,9 @@ export default defineEventHandler((event) => {
   // Get all entity type IDs once
   const entityTypes = db
     .prepare('SELECT id, name FROM entity_types WHERE name IN (\'NPC\', \'Item\', \'Location\', \'Faction\', \'Lore\', \'Player\')')
-    .all() as Array<{ id: number; name: string }>
+    .all() as Array<{ id: number, name: string }>
 
-  const typeMap = Object.fromEntries(entityTypes.map((t) => [t.name, t.id]))
+  const typeMap = Object.fromEntries(entityTypes.map(t => [t.name, t.id]))
   const npcTypeId = typeMap['NPC']
   const itemTypeId = typeMap['Item']
   const locationTypeId = typeMap['Location']
@@ -90,6 +91,7 @@ export default defineEventHandler((event) => {
       notes: 0,
       players: 0,
       factions: [],
+      hasStats: false,
       factionName: null,
       groups: [],
     }
@@ -125,11 +127,12 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), npcTypeId, itemTypeId,
       Number(campaignId), npcTypeId, itemTypeId,
-    ) as Array<{ npc_id: number; count: number }>
+    ) as Array<{ npc_id: number, count: number }>
 
     for (const row of itemsCounts) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].items = row.count
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.items = row.count
       }
     }
   }
@@ -164,11 +167,12 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), npcTypeId, locationTypeId,
       Number(campaignId), npcTypeId, locationTypeId,
-    ) as Array<{ npc_id: number; count: number }>
+    ) as Array<{ npc_id: number, count: number }>
 
     for (const row of locationsCounts) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].locations = row.count
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.locations = row.count
       }
     }
   }
@@ -186,11 +190,12 @@ export default defineEventHandler((event) => {
         AND faction.type_id = ?
         AND faction.deleted_at IS NULL
       GROUP BY er.from_entity_id
-    `).all(Number(campaignId), npcTypeId, factionTypeId) as Array<{ npc_id: number; count: number }>
+    `).all(Number(campaignId), npcTypeId, factionTypeId) as Array<{ npc_id: number, count: number }>
 
     for (const row of membershipsCounts) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].memberships = row.count
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.memberships = row.count
       }
     }
   }
@@ -225,11 +230,12 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), npcTypeId, loreTypeId,
       Number(campaignId), npcTypeId, loreTypeId,
-    ) as Array<{ npc_id: number; count: number }>
+    ) as Array<{ npc_id: number, count: number }>
 
     for (const row of loreCounts) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].lore = row.count
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.lore = row.count
       }
     }
   }
@@ -263,11 +269,12 @@ export default defineEventHandler((event) => {
   `).all(
     Number(campaignId), npcTypeId, npcTypeId,
     Number(campaignId), npcTypeId, npcTypeId,
-  ) as Array<{ npc_id: number; count: number }>
+  ) as Array<{ npc_id: number, count: number }>
 
   for (const row of relationsCounts) {
-    if (result[row.npc_id]) {
-      result[row.npc_id].relations = row.count
+    const entry = result[row.npc_id]
+    if (entry) {
+      entry.relations = row.count
     }
   }
 
@@ -301,11 +308,12 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), npcTypeId, playerTypeId,
       Number(campaignId), npcTypeId, playerTypeId,
-    ) as Array<{ npc_id: number; count: number }>
+    ) as Array<{ npc_id: number, count: number }>
 
     for (const row of playersCounts) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].players = row.count
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.players = row.count
       }
     }
   }
@@ -331,15 +339,16 @@ export default defineEventHandler((event) => {
     }>
 
     for (const row of factionMemberships) {
-      if (result[row.npc_id]) {
-        result[row.npc_id].factions.push({
+      const entry = result[row.npc_id]
+      if (entry) {
+        entry.factions.push({
           id: row.faction_id,
           name: row.faction_name,
           relationType: row.relation_type,
         })
         // Backwards compatibility: set first faction name
-        if (!result[row.npc_id].factionName) {
-          result[row.npc_id].factionName = row.faction_name
+        if (!entry.factionName) {
+          entry.factionName = row.faction_name
         }
       }
     }
@@ -382,17 +391,20 @@ export default defineEventHandler((event) => {
     Number(campaignId), npcTypeId,
     Number(campaignId), npcTypeId,
     Number(campaignId), npcTypeId,
-  ) as Array<{ npc_id: number; type: string; count: number }>
+  ) as Array<{ npc_id: number, type: string, count: number }>
 
   for (const row of attachmentCounts) {
-    if (!result[row.npc_id]) continue
+    const entry = result[row.npc_id]
+    if (!entry) continue
 
     if (row.type === 'documents') {
-      result[row.npc_id].documents = row.count
-    } else if (row.type === 'images') {
-      result[row.npc_id].images = row.count
-    } else if (row.type === 'notes') {
-      result[row.npc_id].notes = row.count
+      entry.documents = row.count
+    }
+    else if (row.type === 'images') {
+      entry.images = row.count
+    }
+    else if (row.type === 'notes') {
+      entry.notes = row.count
     }
   }
 
@@ -420,13 +432,30 @@ export default defineEventHandler((event) => {
   }>
 
   for (const row of groupMemberships) {
-    if (result[row.npc_id]) {
-      result[row.npc_id].groups.push({
+    const entry = result[row.npc_id]
+    if (entry) {
+      entry.groups.push({
         id: row.group_id,
         name: row.group_name,
         color: row.color,
         icon: row.icon,
       })
+    }
+  }
+
+  // Entity stats - check which NPCs have stats assigned
+  const npcIdList = npcIds.map(n => n.id)
+  if (npcIdList.length > 0) {
+    const placeholders = npcIdList.map(() => '?').join(',')
+    const statsRows = db
+      .prepare(`SELECT entity_id FROM entity_stats WHERE entity_id IN (${placeholders})`)
+      .all(...npcIdList) as Array<{ entity_id: number }>
+
+    for (const row of statsRows) {
+      const entry = result[row.entity_id]
+      if (entry) {
+        entry.hasStats = true
+      }
     }
   }
 

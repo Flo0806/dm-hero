@@ -31,6 +31,13 @@
           {{ $t('npcs.npcRelations') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.relations }}</v-chip>
         </v-tab>
+        <v-tab value="stats">
+          <v-icon start>mdi-clipboard-list-outline</v-icon>
+          {{ $t('entityStats.title') }}
+          <v-chip v-if="counts?.hasStats" size="x-small" class="ml-2" color="primary">
+            <v-icon size="x-small">mdi-check</v-icon>
+          </v-chip>
+        </v-tab>
         <v-tab value="items">
           <v-icon start>mdi-bag-personal</v-icon>
           {{ $t('npcs.items') }}
@@ -197,6 +204,15 @@
             </div>
           </v-window-item>
 
+          <!-- Stats Tab -->
+          <v-window-item value="stats">
+            <SharedEntityStatsTab
+              v-if="npc"
+              :entity-id="npc.id"
+              readonly
+            />
+          </v-window-item>
+
           <!-- Items Tab -->
           <v-window-item value="items">
             <EntityRelationsList
@@ -281,12 +297,13 @@ import type { NPC } from '~~/types/npc'
 import EntityRelationsList from '~/components/shared/EntityRelationsList.vue'
 import EntityDocumentsView from '~/components/shared/EntityDocumentsView.vue'
 import EntityImageGalleryView from '~/components/shared/EntityImageGalleryView.vue'
+import SharedEntityStatsTab from '~/components/shared/EntityStatsTab.vue'
 
 interface Props {
   show: boolean
   npc: NPC | null
-  races?: Array<{ name: string; name_de?: string | null; name_en?: string | null }>
-  classes?: Array<{ name: string; name_de?: string | null; name_en?: string | null }>
+  races?: Array<{ name: string, name_de?: string | null, name_en?: string | null }>
+  classes?: Array<{ name: string, name_de?: string | null, name_en?: string | null }>
   canGoBack?: boolean
 }
 
@@ -298,7 +315,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  edit: [npc: NPC]
+  'edit': [npc: NPC]
   'view-npc': [npcId: number]
   'view-item': [itemId: number]
   'view-location': [locationId: number]
@@ -316,7 +333,7 @@ function translateMembershipType(type: string): string {
 
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const activeTab = ref('overview')
@@ -361,17 +378,17 @@ const locations = ref<
     region?: string
   }>
 >([])
-const documents = ref<Array<{ id: number; title: string; content: string }>>([])
-const images = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const documents = ref<Array<{ id: number, title: string, content: string }>>([])
+const images = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const loreEntries = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 
 // Image preview
 const showImagePreview = ref(false)
-const previewImage = ref<{ id: number; image_url: string; is_primary: boolean } | null>(null)
+const previewImage = ref<{ id: number, image_url: string, is_primary: boolean } | null>(null)
 
-function openImagePreview(image: { id: number; image_url: string; is_primary: boolean }) {
+function openImagePreview(image: { id: number, image_url: string, is_primary: boolean }) {
   previewImage.value = image
   showImagePreview.value = true
 }
@@ -388,7 +405,8 @@ function getNotesText(notes: string | Record<string, unknown> | null | undefined
         if (parsed && typeof parsed === 'object' && 'text' in parsed) {
           return String(parsed.text)
         }
-      } catch {
+      }
+      catch {
         // Not valid JSON, return as-is
       }
     }
@@ -443,11 +461,11 @@ watch(
             description?: string
             relation_type?: string
             image_url?: string
-            metadata?: { type?: string; region?: string } | null
+            metadata?: { type?: string, region?: string } | null
           }>
         >(`/api/entities/${newNpc.id}/related/locations`)
-          .then((data) =>
-            data.map((loc) => ({
+          .then(data =>
+            data.map(loc => ({
               id: loc.id,
               relation_id: loc.id, // Map id to relation_id for consistency
               name: loc.name,
@@ -462,20 +480,20 @@ watch(
             console.error('Failed to load locations:', error)
             return []
           }),
-        $fetch<Array<{ id: number; title: string; content: string }>>(`/api/entities/${newNpc.id}/documents`).catch(
+        $fetch<Array<{ id: number, title: string, content: string }>>(`/api/entities/${newNpc.id}/documents`).catch(
           (error) => {
             console.error('Failed to load documents:', error)
             return []
           },
         ),
-        $fetch<Array<{ id: number; image_url: string; is_primary: boolean }>>(
+        $fetch<Array<{ id: number, image_url: string, is_primary: boolean }>>(
           `/api/entity-images/${newNpc.id}`,
         ).catch((error) => {
           console.error('Failed to load images:', error)
           return []
         }),
         $fetch<
-          Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+          Array<{ id: number, name: string, description: string | null, image_url: string | null }>
         >(`/api/entities/${newNpc.id}/related/lore`).catch((error) => {
           console.error('Failed to load lore:', error)
           return []
@@ -488,7 +506,8 @@ watch(
       documents.value = documentsData
       images.value = imagesData
       loreEntries.value = loreData
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   },
@@ -501,7 +520,7 @@ function close() {
 
 // Helper functions
 function getRaceDisplayName(raceName: string): string {
-  const race = props.races.find((r) => r.name === raceName)
+  const race = props.races.find(r => r.name === raceName)
   if (!race) return raceName
   if (race.name_de && race.name_en) {
     return locale.value === 'de' ? race.name_de : race.name_en
@@ -510,7 +529,7 @@ function getRaceDisplayName(raceName: string): string {
 }
 
 function getClassDisplayName(className: string): string {
-  const classData = props.classes.find((c) => c.name === className)
+  const classData = props.classes.find(c => c.name === className)
   if (!classData) return className
   if (classData.name_de && classData.name_en) {
     return locale.value === 'de' ? classData.name_de : classData.name_en

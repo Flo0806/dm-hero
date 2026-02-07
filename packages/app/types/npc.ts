@@ -191,6 +191,7 @@ export interface NpcCounts {
   notes: number
   players: number
   factions: FactionMembership[]
+  hasStats: boolean
   factionName: string | null // Backwards compatibility
   groups?: GroupInfo[]
 }
