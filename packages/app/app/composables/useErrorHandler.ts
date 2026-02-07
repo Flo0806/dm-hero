@@ -6,73 +6,53 @@
  */
 
 /**
- * Parse AI error message and return the appropriate i18n key
+ * Parse OpenAI error message and return the appropriate i18n key
  */
-export function getAiErrorKey(error: string): string {
+export function getOpenAIErrorKey(error: string): string {
   const errorLower = error.toLowerCase()
 
-  // Quota / billing
-  if (errorLower.includes('quota') || errorLower.includes('exceeded your current quota') || errorLower.includes('resource_exhausted')) {
-    return 'errors.ai.insufficientQuota'
+  // Check for specific error patterns
+  if (errorLower.includes('quota') || errorLower.includes('exceeded your current quota')) {
+    return 'errors.openai.insufficientQuota'
   }
-  // Invalid API key
-  if (errorLower.includes('invalid_api_key') || errorLower.includes('incorrect api key') || errorLower.includes('permission_denied') || errorLower.includes('api key not valid')) {
-    return 'errors.ai.invalidApiKey'
+  if (errorLower.includes('invalid_api_key') || errorLower.includes('incorrect api key')) {
+    return 'errors.openai.invalidApiKey'
   }
-  // Rate limit
-  if (errorLower.includes('rate_limit') || errorLower.includes('rate limit') || errorLower.includes('too many requests')) {
-    return 'errors.ai.rateLimitExceeded'
+  if (errorLower.includes('rate_limit') || errorLower.includes('rate limit')) {
+    return 'errors.openai.rateLimitExceeded'
   }
-  // Content policy / safety
-  if (errorLower.includes('content_policy') || errorLower.includes('safety system') || errorLower.includes('safety') || errorLower.includes('blocked')) {
-    return 'errors.ai.contentPolicyViolation'
+  if (errorLower.includes('content_policy') || errorLower.includes('safety system')) {
+    return 'errors.openai.contentPolicyViolation'
   }
-  // Billing limit
   if (errorLower.includes('billing_hard_limit') || errorLower.includes('billing hard limit')) {
-    return 'errors.ai.billingHardLimitReached'
+    return 'errors.openai.billingHardLimitReached'
   }
-  // Server error
   if (errorLower.includes('server_error') || errorLower.includes('internal server error')) {
-    return 'errors.ai.serverError'
+    return 'errors.openai.serverError'
   }
-  // Model not found
   if (errorLower.includes('model_not_found') || errorLower.includes('does not exist')) {
-    return 'errors.ai.modelNotFound'
-  }
-  // No API key configured
-  if (errorLower.includes('api key not configured')) {
-    return 'errors.ai.noApiKey'
+    return 'errors.openai.modelNotFound'
   }
 
-  return 'errors.ai.unknown'
+  // Default fallback
+  return 'errors.openai.unknown'
 }
-
-// Backward compat alias
-export const getOpenAIErrorKey = getAiErrorKey
 
 /**
- * Check if an error is an AI-related error
+ * Check if an error is an OpenAI-related error
  */
-export function isAiError(error: string): boolean {
+export function isOpenAIError(error: string): boolean {
   const errorLower = error.toLowerCase()
   return (
-    errorLower.includes('openai')
-    || errorLower.includes('gemini')
-    || errorLower.includes('imagen')
-    || errorLower.includes('quota')
-    || errorLower.includes('api key')
-    || errorLower.includes('api_key')
-    || errorLower.includes('rate limit')
-    || errorLower.includes('dall-e')
-    || errorLower.includes('gpt')
-    || errorLower.includes('permission_denied')
-    || errorLower.includes('resource_exhausted')
-    || errorLower.includes('api key not configured')
+    errorLower.includes('openai') ||
+    errorLower.includes('quota') ||
+    errorLower.includes('api key') ||
+    errorLower.includes('api_key') ||
+    errorLower.includes('rate limit') ||
+    errorLower.includes('dall-e') ||
+    errorLower.includes('gpt')
   )
 }
-
-// Backward compat alias
-export const isOpenAIError = isAiError
 
 /**
  * Extract the actual error message from various error formats
@@ -81,7 +61,7 @@ function extractErrorMessage(error: unknown): string {
   // Handle $fetch errors which have nested data
   if (error && typeof error === 'object') {
     const fetchError = error as {
-      data?: { message?: string, statusMessage?: string }
+      data?: { message?: string; statusMessage?: string }
       statusMessage?: string
       message?: string
       statusCode?: number
@@ -141,19 +121,17 @@ export function useErrorHandler() {
     const message = extractErrorMessage(error)
 
     if (!message) {
-      snackbarStore.error(t(fallbackKey || 'errors.ai.unknown'), { persistent: true })
+      snackbarStore.error(t(fallbackKey || 'errors.openai.unknown'), { persistent: true })
       return
     }
 
-    // Check if it's an AI error and translate it
-    if (isAiError(message)) {
-      const errorKey = getAiErrorKey(message)
+    // Check if it's an OpenAI error and translate it
+    if (isOpenAIError(message)) {
+      const errorKey = getOpenAIErrorKey(message)
       snackbarStore.error(t(errorKey), { persistent: true })
-    }
-    else if (fallbackKey) {
+    } else if (fallbackKey) {
       snackbarStore.error(t(fallbackKey), { persistent: true })
-    }
-    else {
+    } else {
       // Show original message if no translation available
       snackbarStore.error(message, { persistent: true })
     }
@@ -194,8 +172,6 @@ export function useErrorHandler() {
     showUploadError,
     showDownloadError,
     showImageError,
-    getAiErrorKey,
-    isAiError,
     getOpenAIErrorKey,
     isOpenAIError,
   }
