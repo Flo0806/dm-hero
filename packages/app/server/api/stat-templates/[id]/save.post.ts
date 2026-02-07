@@ -1,6 +1,6 @@
 import type { SaveStatTemplatePayload } from '~~/types/stat-template'
 
-// Bulk-save entire template structure (groups + fields).
+// Save entire template: name, description, and groups+fields in one call.
 // Replaces all existing groups/fields in one transaction.
 // Also cleans up orphaned keys in linked entity_stats.values_json.
 export default defineEventHandler(async (event) => {
@@ -29,6 +29,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const transaction = db.transaction(() => {
+    // Update name/description
+    db.prepare(
+      'UPDATE stat_templates SET name = ?, description = ?, updated_at = datetime(\'now\') WHERE id = ?',
+    ).run(body.name || '', body.description || null, id)
+
     // Delete all existing groups (CASCADE deletes fields)
     db.prepare('DELETE FROM stat_template_groups WHERE template_id = ?').run(id)
 
@@ -58,9 +63,6 @@ export default defineEventHandler(async (event) => {
         )
       }
     }
-
-    // Update template timestamp
-    db.prepare("UPDATE stat_templates SET updated_at = datetime('now') WHERE id = ?").run(id)
 
     // Clean up orphaned keys in entity_stats for entities using this template
     const linkedStats = db

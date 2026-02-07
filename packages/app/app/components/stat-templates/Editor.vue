@@ -1,0 +1,405 @@
+<template>
+  <div>
+    <!-- Top bar: Template select + New button + Save/Delete -->
+    <div class="d-flex align-center ga-3 mb-6">
+      <v-select
+        v-model="selectedTemplateId"
+        :items="templateSelectItems"
+        :label="$t('statTemplates.title')"
+        variant="outlined"
+        density="compact"
+        hide-details
+        class="flex-grow-1"
+        style="max-width: 350px;"
+        :disabled="isDirty"
+      >
+        <template #item="{ item, props: itemProps }">
+          <v-list-item v-bind="itemProps">
+            <template v-if="item.raw.systemKey" #append>
+              <v-chip size="x-small" variant="tonal" color="primary">
+                {{ $t(`statPresets.${item.raw.systemKey}.name`, item.raw.systemKey) }}
+              </v-chip>
+            </template>
+          </v-list-item>
+        </template>
+      </v-select>
+
+      <!-- New template menu -->
+      <v-menu>
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            color="primary"
+            prepend-icon="mdi-plus"
+            :disabled="isDirty"
+          >
+            {{ $t('statTemplates.create') }}
+          </v-btn>
+        </template>
+        <v-list density="compact">
+          <v-list-item
+            v-for="preset in presets"
+            :key="preset.system_key"
+            :prepend-icon="presetIcon(preset.system_key)"
+            @click="createFromPreset(preset.system_key)"
+          >
+            <v-list-item-title>{{ $t(preset.name) }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <v-spacer />
+
+      <!-- Save + Delete -->
+      <v-btn
+        v-if="currentTemplate"
+        color="primary"
+        :loading="saving"
+        :disabled="!isDirty"
+        prepend-icon="mdi-content-save"
+        @click="save"
+      >
+        {{ $t('common.save') }}
+      </v-btn>
+      <v-btn
+        v-if="currentTemplate"
+        icon="mdi-delete"
+        variant="text"
+        color="error"
+        :disabled="isDirty"
+        @click="$emit('requestDelete', currentTemplate)"
+      />
+    </div>
+
+    <!-- Dirty state warning -->
+    <v-alert
+      v-if="isDirty"
+      type="warning"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+    >
+      {{ $t('statTemplates.unsavedChanges') }}
+    </v-alert>
+
+    <!-- No template selected -->
+    <div v-if="!currentTemplate" class="text-center py-8">
+      <v-icon icon="mdi-clipboard-list-outline" size="48" color="grey" class="mb-4" />
+      <p class="text-body-1 text-medium-emphasis">{{ $t('statTemplates.noTemplates') }}</p>
+      <p class="text-body-2 text-medium-emphasis">{{ $t('statTemplates.noTemplatesHint') }}</p>
+    </div>
+
+    <!-- Template editor: name + description + groups -->
+    <template v-else>
+      <v-row dense class="mb-4">
+        <v-col cols="12" sm="6">
+          <v-text-field
+            v-model="localName"
+            :label="$t('statTemplates.templateName')"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="markDirty"
+          />
+        </v-col>
+        <v-col cols="12" sm="6">
+          <v-text-field
+            v-model="localDescription"
+            :label="$t('statTemplates.templateDescription')"
+            variant="outlined"
+            density="compact"
+            hide-details
+            @update:model-value="markDirty"
+          />
+        </v-col>
+      </v-row>
+
+      <!-- Groups with drag & drop -->
+      <draggable
+        v-model="localGroups"
+        item-key="_key"
+        handle=".group-drag-handle"
+        :animation="200"
+        ghost-class="group-ghost"
+        @end="onGroupsReorder"
+      >
+        <template #item="{ element, index }">
+          <StatTemplatesGroupEditor
+            :group="element"
+            @update="(updated: Omit<GroupData, '_key'>) => updateGroup(index, updated)"
+            @delete="deleteGroup(index)"
+          />
+        </template>
+      </draggable>
+
+      <!-- Add group button -->
+      <v-btn
+        variant="outlined"
+        prepend-icon="mdi-plus"
+        class="mt-2"
+        @click="addGroup"
+      >
+        {{ $t('statTemplates.groups.add') }}
+      </v-btn>
+    </template>
+
+    <!-- Discard confirmation dialog -->
+    <v-dialog v-model="showDiscardDialog" max-width="400">
+      <v-card>
+        <v-card-title>{{ $t('statTemplates.discardChanges') }}</v-card-title>
+        <v-card-text>{{ $t('statTemplates.discardConfirm') }}</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showDiscardDialog = false">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="error" @click="confirmDiscard">
+            {{ $t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import draggable from 'vuedraggable'
+import type { StatTemplate, SaveStatTemplatePayload } from '~~/types/stat-template'
+
+interface PresetField {
+  name: string
+  label: string
+  field_type: 'string' | 'number' | 'resource' | 'boolean'
+  has_modifier: boolean
+}
+
+interface PresetGroup {
+  name: string
+  group_type: string
+  fields: PresetField[]
+}
+
+interface PresetInfo {
+  system_key: string
+  name: string
+  description: string
+  groups: PresetGroup[]
+}
+
+interface FieldData {
+  name: string
+  label: string
+  field_type: 'string' | 'number' | 'resource' | 'boolean'
+  has_modifier: boolean
+}
+
+interface GroupData {
+  _key: string
+  name: string
+  group_type: string
+  fields: FieldData[]
+}
+
+const props = defineProps<{
+  templates: StatTemplate[]
+  loading: boolean
+}>()
+
+const emit = defineEmits<{
+  saved: [template: StatTemplate]
+  created: [template: StatTemplate]
+  requestDelete: [template: StatTemplate]
+}>()
+
+const { t } = useI18n()
+
+const presets = ref<PresetInfo[]>([])
+const selectedTemplateId = ref<number | null>(null)
+const saving = ref(false)
+const isDirty = ref(false)
+const showDiscardDialog = ref(false)
+const pendingTemplateId = ref<number | null>(null)
+
+const localName = ref('')
+const localDescription = ref('')
+const localGroups = ref<GroupData[]>([])
+
+let keyCounter = 0
+function makeKey() {
+  return `group_${++keyCounter}`
+}
+
+function presetIcon(key: string): string {
+  const icons: Record<string, string> = {
+    dnd5e: 'mdi-dice-d20',
+    pathfinder2e: 'mdi-shield-sword',
+    dsa5: 'mdi-star-four-points',
+    splittermond: 'mdi-moon-waning-crescent',
+    blank: 'mdi-file-outline',
+  }
+  return icons[key] || 'mdi-file-outline'
+}
+
+// Current template from props based on selection
+const currentTemplate = computed(() => {
+  if (!selectedTemplateId.value) return null
+  return props.templates.find(t => t.id === selectedTemplateId.value) || null
+})
+
+// Items for the select dropdown
+const templateSelectItems = computed(() =>
+  props.templates.map(t => ({
+    value: t.id,
+    title: t.name,
+    systemKey: t.system_key,
+  })),
+)
+
+// Load template data into local state
+function loadTemplateIntoEditor(template: StatTemplate) {
+  localName.value = template.name
+  localDescription.value = template.description || ''
+  localGroups.value = template.groups.map(g => ({
+    _key: makeKey(),
+    name: g.name,
+    group_type: g.group_type,
+    fields: g.fields.map(f => ({
+      name: f.name,
+      label: f.label,
+      field_type: f.field_type,
+      has_modifier: f.has_modifier,
+    })),
+  }))
+  isDirty.value = false
+}
+
+// Watch select changes
+watch(selectedTemplateId, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    const template = props.templates.find(t => t.id === newId)
+    if (template) loadTemplateIntoEditor(template)
+  }
+})
+
+// Auto-select first template, or reset if selected was deleted
+watch(() => props.templates, (templates) => {
+  const stillExists = templates.some(t => t.id === selectedTemplateId.value)
+  if (!stillExists) {
+    selectedTemplateId.value = templates.length > 0 ? templates[0]!.id : null
+  }
+}, { immediate: true })
+
+// Load presets on mount
+onMounted(async () => {
+  try {
+    presets.value = await $fetch<PresetInfo[]>('/api/stat-templates/presets')
+  }
+  catch (error) {
+    console.error('Failed to load presets:', error)
+  }
+})
+
+async function createFromPreset(systemKey: string) {
+  const preset = presets.value.find(p => p.system_key === systemKey)
+  if (!preset) return
+
+  try {
+    const template = await $fetch<StatTemplate>('/api/stat-templates', {
+      method: 'POST',
+      body: { name: t(preset.name), fromPreset: systemKey },
+    })
+    emit('created', template)
+    nextTick(() => {
+      selectedTemplateId.value = template.id
+    })
+  }
+  catch (error) {
+    console.error('Failed to create template:', error)
+  }
+}
+
+function markDirty() {
+  isDirty.value = true
+}
+
+function onGroupsReorder() {
+  markDirty()
+}
+
+function updateGroup(index: number, updated: Omit<GroupData, '_key'>) {
+  const existing = localGroups.value[index]
+  if (existing) {
+    localGroups.value[index] = { ...updated, _key: existing._key }
+    markDirty()
+  }
+}
+
+function deleteGroup(index: number) {
+  localGroups.value.splice(index, 1)
+  markDirty()
+}
+
+function addGroup() {
+  localGroups.value.push({
+    _key: makeKey(),
+    name: `${t('statTemplates.groups.title')} ${localGroups.value.length + 1}`,
+    group_type: 'custom',
+    fields: [],
+  })
+  markDirty()
+}
+
+async function save() {
+  if (!selectedTemplateId.value) return
+
+  saving.value = true
+  try {
+    // Update name/description
+    await $fetch(`/api/stat-templates/${selectedTemplateId.value}`, {
+      method: 'PATCH',
+      body: { name: localName.value, description: localDescription.value || null },
+    })
+
+    // Bulk-save groups+fields
+    const groups: SaveStatTemplatePayload['groups'] = localGroups.value.map(g => ({
+      name: g.name,
+      group_type: g.group_type,
+      fields: g.fields.map(f => ({
+        name: f.name,
+        label: f.label,
+        field_type: f.field_type,
+        has_modifier: f.has_modifier,
+      })),
+    }))
+
+    const updated = await $fetch<StatTemplate>(`/api/stat-templates/${selectedTemplateId.value}/save`, {
+      method: 'POST',
+      body: { groups },
+    })
+
+    isDirty.value = false
+    emit('saved', updated)
+  }
+  catch (error) {
+    console.error('Failed to save template:', error)
+  }
+  finally {
+    saving.value = false
+  }
+}
+
+function confirmDiscard() {
+  showDiscardDialog.value = false
+  isDirty.value = false
+  if (pendingTemplateId.value != null) {
+    selectedTemplateId.value = pendingTemplateId.value
+    pendingTemplateId.value = null
+  }
+}
+</script>
+
+<style scoped>
+.group-ghost {
+  opacity: 0.4;
+}
+</style>

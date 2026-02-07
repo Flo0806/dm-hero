@@ -15,6 +15,10 @@
         <v-icon start> mdi-sword-cross </v-icon>
         {{ $t('referenceData.classes') }}
       </v-tab>
+      <v-tab value="stat-templates">
+        <v-icon start> mdi-clipboard-list-outline </v-icon>
+        {{ $t('statTemplates.title') }}
+      </v-tab>
     </v-tabs>
 
     <v-tabs-window v-model="tab">
@@ -176,7 +180,47 @@
           </template>
         </v-data-table>
       </v-tabs-window-item>
+
+      <!-- Stat Templates Tab -->
+      <v-tabs-window-item value="stat-templates">
+        <StatTemplatesEditor
+          class="mt-2"
+          :templates="statTemplates"
+          :loading="statTemplatesLoading"
+          @saved="onTemplateSaved"
+          @created="onTemplateCreated"
+          @request-delete="confirmDeleteTemplate"
+        />
+      </v-tabs-window-item>
     </v-tabs-window>
+
+    <!-- Stat Template Delete Dialog -->
+    <v-dialog v-model="showTemplateDeleteDialog" max-width="450">
+      <v-card>
+        <v-card-title>{{ $t('statTemplates.delete') }}</v-card-title>
+        <v-card-text>
+          <p>{{ $t('statTemplates.deleteConfirm', { name: deletingTemplate?.name }) }}</p>
+          <v-alert
+            v-if="deletingTemplateLinkedCount > 0"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mt-4"
+          >
+            {{ $t('statTemplates.deleteConfirmLinked', { count: deletingTemplateLinkedCount }) }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showTemplateDeleteDialog = false">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="error" :loading="deletingTemplateLoading" @click="deleteTemplate">
+            {{ $t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Race Dialog -->
     <v-dialog v-model="showRaceDialog" max-width="600">
@@ -421,6 +465,7 @@
 
 <script setup lang="ts">
 import { useCampaignStore } from '~/stores/campaign'
+import type { StatTemplate } from '~~/types/stat-template'
 
 interface ReferenceData {
   id: number
@@ -472,7 +517,7 @@ const {
   refresh: refreshRaces,
 } = await useFetch<ReferenceData[]>('/api/races', {
   key: 'races',
-  getCachedData: (key) => useNuxtApp().static.data[key],
+  getCachedData: key => useNuxtApp().static.data[key],
 })
 const {
   data: classes,
@@ -480,7 +525,7 @@ const {
   refresh: refreshClasses,
 } = await useFetch<ReferenceData[]>('/api/classes', {
   key: 'classes',
-  getCachedData: (key) => useNuxtApp().static.data[key],
+  getCachedData: key => useNuxtApp().static.data[key],
 })
 
 // Table headers
@@ -534,7 +579,8 @@ watch(
   async (newId) => {
     if (newId) {
       await loadCurrencies()
-    } else {
+    }
+    else {
       currencies.value = []
     }
   },
@@ -549,10 +595,12 @@ async function loadCurrencies() {
     currencies.value = await $fetch<Currency[]>('/api/currencies', {
       query: { campaignId: activeCampaignId.value },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load currencies:', error)
     currencies.value = []
-  } finally {
+  }
+  finally {
     currenciesLoading.value = false
   }
 }
@@ -586,7 +634,8 @@ async function confirmDeleteCurrency(currency: Currency) {
   try {
     const usage = await $fetch<{ itemCount: number }>(`/api/currencies/${currency.id}/usage`)
     deletingCurrencyItemCount.value = usage.itemCount
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to check currency usage:', error)
   }
 
@@ -618,7 +667,8 @@ async function saveCurrency() {
           is_default: currencyForm.value.is_default ? 1 : 0,
         },
       })
-    } else {
+    }
+    else {
       await $fetch('/api/currencies', {
         method: 'POST',
         body: {
@@ -633,11 +683,13 @@ async function saveCurrency() {
     closeCurrencyDialog()
     successMessage.value = t('common.saved')
     showSuccess.value = true
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
-  } finally {
+  }
+  finally {
     savingCurrency.value = false
   }
 }
@@ -653,18 +705,20 @@ async function deleteCurrency() {
     await loadCurrencies()
     showCurrencyDeleteDialog.value = false
     deletingCurrency.value = null
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.deleteError')
     showError.value = true
-  } finally {
+  }
+  finally {
     deletingCurrencyLoading.value = false
   }
 }
 
 async function moveCurrency(currency: Currency, direction: 'up' | 'down') {
   const sorted = sortedCurrencies.value
-  const currentIndex = sorted.findIndex((c) => c.id === currency.id)
+  const currentIndex = sorted.findIndex(c => c.id === currency.id)
   if (currentIndex === -1) return
 
   const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
@@ -686,7 +740,8 @@ async function moveCurrency(currency: Currency, direction: 'up' | 'down') {
       }),
     ])
     await loadCurrencies()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to reorder currencies:', error)
     errorMessage.value = t('referenceData.saveError')
     showError.value = true
@@ -739,7 +794,8 @@ function openRaceDialog(race?: ReferenceData) {
       name_en: race.name_en || '',
       description: race.description || '',
     }
-  } else {
+  }
+  else {
     editingRace.value = null
     raceForm.value = {
       name: '',
@@ -771,7 +827,8 @@ function openClassDialog(classData?: ReferenceData) {
       name_en: classData.name_en || '',
       description: classData.description || '',
     }
-  } else {
+  }
+  else {
     editingClass.value = null
     classForm.value = {
       name: '',
@@ -804,7 +861,8 @@ async function saveRace() {
         body: raceForm.value,
       })
       successMessage.value = t('referenceData.races') + ' ' + t('common.save').toLowerCase()
-    } else {
+    }
+    else {
       await $fetch('/api/races', {
         method: 'POST',
         body: raceForm.value,
@@ -815,11 +873,13 @@ async function saveRace() {
     await refreshRaces()
     closeRaceDialog()
     showSuccess.value = true
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -834,7 +894,8 @@ async function saveClass() {
         body: classForm.value,
       })
       successMessage.value = t('referenceData.classes') + ' ' + t('common.save').toLowerCase()
-    } else {
+    }
+    else {
       await $fetch('/api/classes', {
         method: 'POST',
         body: classForm.value,
@@ -845,11 +906,13 @@ async function saveClass() {
     await refreshClasses()
     closeClassDialog()
     showSuccess.value = true
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     errorMessage.value = err.data?.message || t('referenceData.saveError')
     showError.value = true
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -881,7 +944,8 @@ async function confirmDelete() {
         method: 'DELETE',
       })
       await refreshRaces()
-    } else {
+    }
+    else {
       await $fetch(`/api/classes/${deletingId.value}`, {
         method: 'DELETE',
       })
@@ -890,21 +954,111 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingId.value = null
-  } catch (error) {
-    const err = error as { data?: { message?: string; data?: { code?: string; count?: number } } }
+  }
+  catch (error) {
+    const err = error as { data?: { message?: string, data?: { code?: string, count?: number } } }
     const errData = err.data?.data
 
     // Translate specific error codes
     if (errData?.code === 'RACE_IN_USE') {
       errorMessage.value = t('referenceData.raceInUse', { count: errData.count })
-    } else if (errData?.code === 'CLASS_IN_USE') {
+    }
+    else if (errData?.code === 'CLASS_IN_USE') {
       errorMessage.value = t('referenceData.classInUse', { count: errData.count })
-    } else {
+    }
+    else {
       errorMessage.value = t('referenceData.deleteError')
     }
     showError.value = true
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
+
+// ===== Stat Templates =====
+const statTemplates = ref<StatTemplate[]>([])
+const statTemplatesLoading = ref(false)
+const showTemplateDeleteDialog = ref(false)
+const deletingTemplate = ref<StatTemplate | null>(null)
+const deletingTemplateLinkedCount = ref(0)
+const deletingTemplateLoading = ref(false)
+
+async function loadStatTemplates() {
+  statTemplatesLoading.value = true
+  try {
+    statTemplates.value = await $fetch<StatTemplate[]>('/api/stat-templates')
+  }
+  catch (error) {
+    console.error('Failed to load stat templates:', error)
+    statTemplates.value = []
+  }
+  finally {
+    statTemplatesLoading.value = false
+  }
+}
+
+function onTemplateCreated(template: StatTemplate) {
+  statTemplates.value.push(template)
+}
+
+function onTemplateSaved(template: StatTemplate) {
+  const idx = statTemplates.value.findIndex(t => t.id === template.id)
+  if (idx !== -1) statTemplates.value[idx] = template
+
+  successMessage.value = t('statTemplates.saved')
+  showSuccess.value = true
+}
+
+async function confirmDeleteTemplate(template: StatTemplate) {
+  deletingTemplate.value = template
+  deletingTemplateLinkedCount.value = 0
+
+  // Check linked entities
+  try {
+    const result = await $fetch<{ success: boolean, requiresConfirmation?: boolean, linkedEntityCount?: number }>(
+      `/api/stat-templates/${template.id}`,
+      { method: 'DELETE' },
+    )
+    if (result.requiresConfirmation) {
+      deletingTemplateLinkedCount.value = result.linkedEntityCount || 0
+    }
+  }
+  catch {
+    // Ignore - will show dialog without count
+  }
+
+  showTemplateDeleteDialog.value = true
+}
+
+async function deleteTemplate() {
+  if (!deletingTemplate.value) return
+
+  deletingTemplateLoading.value = true
+  try {
+    await $fetch(`/api/stat-templates/${deletingTemplate.value.id}?confirm=true`, {
+      method: 'DELETE',
+    })
+    statTemplates.value = statTemplates.value.filter(t => t.id !== deletingTemplate.value!.id)
+    showTemplateDeleteDialog.value = false
+    deletingTemplate.value = null
+    successMessage.value = t('statTemplates.deleted')
+    showSuccess.value = true
+  }
+  catch (error) {
+    const err = error as { data?: { message?: string } }
+    errorMessage.value = err.data?.message || t('referenceData.deleteError')
+    showError.value = true
+  }
+  finally {
+    deletingTemplateLoading.value = false
+  }
+}
+
+// Load stat templates when tab is selected
+watch(tab, (newTab) => {
+  if (newTab === 'stat-templates' && statTemplates.value.length === 0) {
+    loadStatTemplates()
+  }
+})
 </script>
