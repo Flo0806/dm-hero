@@ -3,6 +3,7 @@ import pkg from 'electron-updater'
 import path from 'path'
 import { existsSync, mkdirSync, copyFileSync, writeFileSync, appendFileSync } from 'fs'
 import { fileURLToPath } from 'url'
+
 const { autoUpdater } = pkg
 
 const __filename = fileURLToPath(import.meta.url)
@@ -179,10 +180,11 @@ async function waitForServer(url, timeout = 30000) {
       if (response.ok || response.status === 404) {
         return true
       }
-    } catch {
+    }
+    catch {
       // Server not ready yet
     }
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 500))
   }
 
   throw new Error(`Server did not start within ${timeout}ms`)
@@ -277,7 +279,8 @@ function createWindow() {
   if (isWindows) {
     windowOptions.titleBarStyle = 'hidden'
     windowOptions.titleBarOverlay = currentTheme.titleBarOverlay
-  } else {
+  }
+  else {
     // Linux/macOS: Hide menu bar for cleaner look
     windowOptions.autoHideMenuBar = true
     // Set window icon (Linux needs this explicitly, Windows/macOS use app bundle icon)
@@ -344,7 +347,8 @@ ipcMain.handle('export-database', async () => {
   try {
     copyFileSync(paths.databasePath, result.filePath)
     return { success: true, filePath: result.filePath }
-  } catch (error) {
+  }
+  catch (error) {
     return { success: false, error: error.message }
   }
 })
@@ -361,7 +365,8 @@ ipcMain.handle('open-uploads-folder', async () => {
   try {
     await shell.openPath(paths.uploadPath)
     return { success: true }
-  } catch (error) {
+  }
+  catch (error) {
     return { success: false, error: error.message }
   }
 })
@@ -378,7 +383,8 @@ ipcMain.handle('open-logs-folder', async () => {
   try {
     await shell.openPath(paths.logsPath)
     return { success: true }
-  } catch (error) {
+  }
+  catch (error) {
     return { success: false, error: error.message }
   }
 })
@@ -388,7 +394,8 @@ ipcMain.handle('open-external-url', async (event, url) => {
   try {
     await shell.openExternal(url)
     return { success: true }
-  } catch (error) {
+  }
+  catch (error) {
     return { success: false, error: error.message }
   }
 })
@@ -426,7 +433,8 @@ ipcMain.handle('check-for-updates', async () => {
       }
     }
     return { updateAvailable: false }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[AutoUpdater] Check failed:', error.message)
     return { updateAvailable: false, error: error.message }
   }
@@ -441,7 +449,7 @@ ipcMain.handle('download-update', async () => {
     // Simulate progress events
     const simulateProgress = async () => {
       for (let percent = 0; percent <= 100; percent += 10) {
-        await new Promise((resolve) => setTimeout(resolve, 300))
+        await new Promise(resolve => setTimeout(resolve, 300))
         if (mainWindow) {
           mainWindow.webContents.send('update-download-progress', {
             percent,
@@ -464,7 +472,8 @@ ipcMain.handle('download-update', async () => {
   try {
     await autoUpdater.downloadUpdate()
     return { started: true }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[AutoUpdater] Download failed:', error.message)
     return { started: false, error: error.message }
   }
@@ -558,7 +567,8 @@ ipcMain.handle('save-file-dialog', async (event, options) => {
     const buffer = Buffer.from(fileData)
     writeFileSync(result.filePath, buffer)
     return { success: true, filePath: result.filePath }
-  } catch (error) {
+  }
+  catch (error) {
     return { success: false, error: error.message }
   }
 })
@@ -582,7 +592,8 @@ function logToFile(message) {
     const logLine = `[${timestamp}] [FATAL] [Electron Main] ${message}\n`
 
     appendFileSync(logFile, logLine, 'utf-8')
-  } catch (err) {
+  }
+  catch (err) {
     console.error('[Electron] Failed to write to log file:', err)
   }
 }
@@ -604,7 +615,8 @@ app.whenReady().then(async () => {
   try {
     await startServer()
     createWindow()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Electron] Failed to start:', error)
     app.quit()
   }
