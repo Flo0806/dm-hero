@@ -312,6 +312,7 @@ async function handleQuickCreated(newEntity: { id: number; name: string }) {
       lore: 0,
       notes: 0,
       players: 0,
+      hasStats: false,
       factions: [],
       factionName: null,
       groups: [],
