@@ -90,6 +90,7 @@
         :title="$t('nav.encounters')"
         value="encounters"
         to="/encounters"
+        :class="{ 'encounter-active': hasCombatActive }"
       />
       <v-list-item
         prepend-icon="mdi-calendar"
@@ -154,6 +155,11 @@
 <script setup lang="ts">
 const router = useRouter()
 const notesStore = useNotesStore()
+const encounterStore = useEncounterStore()
+
+const hasCombatActive = computed(() =>
+  encounterStore.encounters.some(e => e.status === 'active'),
+)
 
 interface Props {
   modelValue: boolean
@@ -173,3 +179,12 @@ defineEmits<{
   'toggle-theme': []
 }>()
 </script>
+
+<style scoped>
+.encounter-active {
+  color: rgb(var(--v-theme-error)) !important;
+}
+.encounter-active :deep(.v-icon) {
+  color: rgb(var(--v-theme-error)) !important;
+}
+</style>

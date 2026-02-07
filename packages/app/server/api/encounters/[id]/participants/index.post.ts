@@ -7,13 +7,10 @@ interface EntityRow {
   image_url: string | null
 }
 
-interface StatRow {
-  values_json: string
-}
-
-interface FieldRow {
-  name: string
-  field_type: string
+interface ParticipantInput {
+  entityId: number
+  currentHp?: number
+  maxHp?: number
 }
 
 export default defineEventHandler(async (event) => {
@@ -25,9 +22,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Encounter ID is required' })
   }
 
-  const { entityIds } = body as { entityIds: number[] }
-  if (!entityIds || !Array.isArray(entityIds) || entityIds.length === 0) {
-    throw createError({ statusCode: 400, message: 'entityIds array is required' })
+  // Support both formats: { entityIds: number[] } or { participants: ParticipantInput[] }
+  let inputs: ParticipantInput[]
+
+  if (body.participants && Array.isArray(body.participants)) {
+    inputs = body.participants
+  }
+  else if (body.entityIds && Array.isArray(body.entityIds)) {
+    inputs = body.entityIds.map((id: number) => ({ entityId: id }))
+  }
+  else {
+    throw createError({ statusCode: 400, message: 'participants or entityIds array is required' })
   }
 
   // Verify encounter exists
@@ -51,65 +56,27 @@ export default defineEventHandler(async (event) => {
   `)
 
   const insertMany = db.transaction(() => {
-    for (const entityId of entityIds) {
-      // Look up entity
+    for (const input of inputs) {
       const entity = db.prepare(`
         SELECT e.id, e.name, et.name as type_name, e.image_url
         FROM entities e
         JOIN entity_types et ON et.id = e.type_id
         WHERE e.id = ? AND e.deleted_at IS NULL
-      `).get(entityId) as EntityRow | undefined
+      `).get(input.entityId) as EntityRow | undefined
 
       if (!entity) continue
 
-      // Count existing participants with same entity_id for duplicate_index
       const dupCount = db.prepare(
         'SELECT COUNT(*) as cnt FROM encounter_participants WHERE encounter_id = ? AND entity_id = ?',
-      ).get(encounterId, entityId) as { cnt: number }
-
-      // Try to extract HP from entity_stats resource field named "hp"
-      let currentHp = 0
-      let maxHp = 0
-
-      const stats = db.prepare(
-        'SELECT es.values_json FROM entity_stats es WHERE es.entity_id = ?',
-      ).get(entityId) as StatRow | undefined
-
-      if (stats) {
-        try {
-          const values = JSON.parse(stats.values_json || '{}')
-          // Look for a resource field named "hp" in the template
-          const statLink = db.prepare(
-            'SELECT template_id FROM entity_stats WHERE entity_id = ?',
-          ).get(entityId) as { template_id: number } | undefined
-
-          if (statLink) {
-            const hpField = db.prepare(`
-              SELECT name, field_type FROM stat_template_fields
-              WHERE template_id = ? AND field_type = 'resource' AND LOWER(name) = 'hp'
-            `).get(statLink.template_id) as FieldRow | undefined
-
-            if (hpField && values[hpField.name]) {
-              const res = values[hpField.name]
-              if (typeof res === 'object' && 'current' in res && 'max' in res) {
-                currentHp = Number(res.current) || 0
-                maxHp = Number(res.max) || 0
-              }
-            }
-          }
-        }
-        catch {
-          // Ignore JSON parse errors
-        }
-      }
+      ).get(encounterId, input.entityId) as { cnt: number }
 
       insertStmt.run(
         encounterId,
-        entityId,
+        input.entityId,
         entity.name,
         dupCount.cnt,
-        currentHp,
-        maxHp,
+        input.currentHp ?? 0,
+        input.maxHp ?? 0,
         sortOrder++,
       )
     }
@@ -117,7 +84,7 @@ export default defineEventHandler(async (event) => {
 
   insertMany()
 
-  // Return updated encounter with participants (reuse GET pattern)
+  // Return updated encounter with participants
   const updatedEncounter = db.prepare(`
     SELECT id, campaign_id, session_id, name, status, round, current_turn_index,
       created_at, updated_at, finished_at
@@ -136,7 +103,12 @@ export default defineEventHandler(async (event) => {
     LEFT JOIN entity_types et ON et.id = e.type_id
     WHERE ep.encounter_id = ?
     ORDER BY ep.sort_order ASC
-  `).all(encounterId)
+  `).all(encounterId) as Record<string, unknown>[]
+
+  const effectsStmt = db.prepare('SELECT * FROM encounter_effects WHERE participant_id = ?')
+  for (const p of participants) {
+    p.effects = effectsStmt.all(p.id)
+  }
 
   return { ...updatedEncounter, participants }
 })

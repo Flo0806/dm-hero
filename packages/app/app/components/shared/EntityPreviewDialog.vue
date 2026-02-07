@@ -43,6 +43,8 @@
             <strong>{{ $t('common.notes') }}:</strong>
             <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
+          <!-- Stats -->
+          <SharedEntityPreviewStats v-if="entityId" :entity-id="entityId" />
         </template>
 
         <!-- Location Details -->
@@ -203,6 +205,8 @@
             <strong>{{ $t('common.notes') }}:</strong>
             <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
+          <!-- Stats -->
+          <SharedEntityPreviewStats v-if="entityId" :entity-id="entityId" />
         </template>
       </v-card-text>
 
@@ -232,7 +236,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  navigate: [type: EntityPreviewType, id: number, name: string]
+  'navigate': [type: EntityPreviewType, id: number, name: string]
 }>()
 
 const router = useRouter()
@@ -241,7 +245,7 @@ const { getItemTypeIcon, getLocationTypeIcon } = useEntityIcons()
 // Dialog state
 const dialogOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 // Entity data - using generic interface for all entity types
@@ -259,7 +263,7 @@ const loading = ref(false)
 // Entity type config
 const entityConfig: Record<
   EntityPreviewType,
-  { icon: string; color: string; endpoint: string; route: string }
+  { icon: string, color: string, endpoint: string, route: string }
 > = {
   npc: { icon: 'mdi-account', color: 'blue', endpoint: '/api/npcs', route: '/npcs' },
   location: { icon: 'mdi-map-marker', color: 'green', endpoint: '/api/locations', route: '/locations' },
@@ -310,10 +314,12 @@ async function loadEntity(id: number) {
       return
     }
     entity.value = await $fetch<GenericEntity>(`${config.endpoint}/${id}`)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load entity:', error)
     entity.value = null
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

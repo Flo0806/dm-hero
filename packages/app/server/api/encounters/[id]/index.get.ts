@@ -55,7 +55,13 @@ export default defineEventHandler((event) => {
     ORDER BY ep.sort_order ASC
   `,
     )
-    .all(id)
+    .all(id) as Record<string, unknown>[]
+
+  // Load effects per participant
+  const effectsStmt = db.prepare('SELECT * FROM encounter_effects WHERE participant_id = ?')
+  for (const p of participants) {
+    p.effects = effectsStmt.all(p.id)
+  }
 
   return { ...encounter, participants }
 })

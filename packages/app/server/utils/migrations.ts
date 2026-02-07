@@ -2402,6 +2402,30 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 45: Created encounters and encounter_participants tables')
     },
   },
+  {
+    version: 46,
+    name: 'Create encounter_effects table',
+    up: (db: Database.Database) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS encounter_effects (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          participant_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          icon TEXT,
+          duration_type TEXT NOT NULL DEFAULT 'infinite',
+          duration_rounds INTEGER,
+          remaining_rounds INTEGER,
+          FOREIGN KEY (participant_id) REFERENCES encounter_participants(id) ON DELETE CASCADE
+        )
+      `)
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_encounter_effects_participant_id ON encounter_effects(participant_id)
+      `)
+
+      console.log('✅ Migration 46: Created encounter_effects table')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

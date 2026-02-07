@@ -778,9 +778,14 @@ async function deleteSheet(doc: DocumentInfo) {
 // ============================================================================
 // Lifecycle
 // ============================================================================
+// Always reload when mounted (template may have changed externally)
+onMounted(() => {
+  store.load(props.entityId)
+})
+
 watch(() => props.entityId, (id) => {
   store.load(id)
-}, { immediate: true })
+})
 </script>
 
 <style scoped>

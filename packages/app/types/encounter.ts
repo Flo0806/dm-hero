@@ -1,4 +1,4 @@
-export const ENCOUNTER_STATUSES = ['setup', 'initiative', 'active', 'paused', 'finished'] as const
+export const ENCOUNTER_STATUSES = ['setup', 'initiative', 'active', 'finished'] as const
 export type EncounterStatus = (typeof ENCOUNTER_STATUSES)[number]
 
 export interface Encounter {
@@ -16,6 +16,18 @@ export interface Encounter {
   _participantCount?: number
 }
 
+export type EffectDurationType = 'infinite' | 'rounds' | 'concentration'
+
+export interface EncounterEffect {
+  id: number
+  participant_id: number
+  name: string
+  icon: string | null
+  duration_type: EffectDurationType
+  duration_rounds: number | null
+  remaining_rounds: number | null
+}
+
 export interface EncounterParticipant {
   id: number
   encounter_id: number
@@ -31,6 +43,7 @@ export interface EncounterParticipant {
   notes: string | null
   entity_type?: string
   entity_image?: string | null
+  effects?: EncounterEffect[]
 }
 
 export interface EncounterWithParticipants extends Encounter {

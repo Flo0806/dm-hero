@@ -23,14 +23,14 @@
     <EncountersEncounterDetail v-if="encounterStore.isEncounterOpen" class="mb-4" />
 
     <!-- Loading State -->
-    <v-row v-show="!encounterStore.isEncounterOpen && encounterStore.loading">
+    <v-row v-if="!encounterStore.isEncounterOpen && encounterStore.loading">
       <v-col v-for="i in 3" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <!-- Encounter Cards -->
-    <v-row v-show="!encounterStore.isEncounterOpen && !encounterStore.loading && encounterStore.encounters.length > 0">
+    <v-row v-if="!encounterStore.isEncounterOpen && !encounterStore.loading && encounterStore.encounters.length > 0">
       <v-col v-for="encounter in encounterStore.encounters" :key="encounter.id" cols="12" md="6" lg="4">
         <v-card hover @click="encounterStore.openEncounter(encounter.id)">
           <v-card-title class="d-flex align-center pb-1">
@@ -58,7 +58,7 @@
               </v-chip>
 
               <v-chip
-                v-if="encounter.status === 'active' || encounter.status === 'paused'"
+                v-if="encounter.status === 'active'"
                 size="small"
                 variant="tonal"
                 prepend-icon="mdi-refresh"
@@ -229,7 +229,6 @@ function statusColor(status: string) {
     case 'setup': return 'grey'
     case 'initiative': return 'info'
     case 'active': return 'success'
-    case 'paused': return 'warning'
     case 'finished': return 'default'
     default: return 'grey'
   }
