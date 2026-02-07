@@ -325,7 +325,7 @@ watch(
             $fetch<typeof players.value>(`/api/entities/${newFactionId}/related/players`).catch(
               () => [],
             ),
-            $fetch<Document[]>(`/api/entities/${newFactionId}/documents`).catch(() => []),
+            $fetch<Document[]>(`/api/entities/${newFactionId}/documents`, { query: { exclude_type: 'character_sheet' } }).catch(() => []),
             $fetch<Image[]>(`/api/entity-images/${newFactionId}`).catch(() => []),
           ])
 

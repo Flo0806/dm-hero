@@ -458,6 +458,7 @@ watch(
           // Documents
           $fetch<Array<{ id: number, title: string, content: string }>>(
             `/api/entities/${newPlayer.id}/documents`,
+            { query: { exclude_type: 'character_sheet' } },
           ).catch((error) => {
             console.error('Failed to load documents:', error)
             return []

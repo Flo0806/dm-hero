@@ -197,6 +197,7 @@ export default defineEventHandler((event) => {
     SELECT COUNT(*) as count
     FROM entity_documents
     WHERE entity_id = ?
+      AND (document_type IS NULL OR document_type != 'character_sheet')
   `,
     )
     .get(Number(loreId)) as { count: number }

@@ -279,6 +279,7 @@ export default defineEventHandler((event) => {
     WHERE item.campaign_id = ?
       AND item.type_id = ?
       AND item.deleted_at IS NULL
+      AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
   `).all(Number(campaignId), itemTypeId) as Array<{ item_id: number; count: number }>
 

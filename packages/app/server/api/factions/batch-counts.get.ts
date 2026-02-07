@@ -318,6 +318,7 @@ export default defineEventHandler((event) => {
     WHERE faction.campaign_id = ?
       AND faction.type_id = ?
       AND faction.deleted_at IS NULL
+      AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
   `).all(Number(campaignId), factionTypeId) as Array<{ faction_id: number; count: number }>
 

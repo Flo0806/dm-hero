@@ -480,7 +480,7 @@ watch(
             console.error('Failed to load locations:', error)
             return []
           }),
-        $fetch<Array<{ id: number, title: string, content: string }>>(`/api/entities/${newNpc.id}/documents`).catch(
+        $fetch<Array<{ id: number, title: string, content: string }>>(`/api/entities/${newNpc.id}/documents`, { query: { exclude_type: 'character_sheet' } }).catch(
           (error) => {
             console.error('Failed to load documents:', error)
             return []

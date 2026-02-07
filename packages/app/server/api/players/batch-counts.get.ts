@@ -290,6 +290,7 @@ export default defineEventHandler((event) => {
     WHERE player.campaign_id = ?
       AND player.type_id = ?
       AND player.deleted_at IS NULL
+      AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
   `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number; count: number }>
 

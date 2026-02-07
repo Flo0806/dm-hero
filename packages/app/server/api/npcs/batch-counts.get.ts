@@ -357,13 +357,14 @@ export default defineEventHandler((event) => {
   // OPTIMIZED: Combine documents, images, notes into ONE query using UNION ALL
   const attachmentCounts = db.prepare(`
     SELECT npc_id, type, COUNT(*) as count FROM (
-      -- Documents
+      -- Documents (exclude character sheets)
       SELECT ed.entity_id as npc_id, 'documents' as type
       FROM entity_documents ed
       INNER JOIN entities npc ON npc.id = ed.entity_id
       WHERE npc.campaign_id = ?
         AND npc.type_id = ?
         AND npc.deleted_at IS NULL
+        AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
 
       UNION ALL
 
