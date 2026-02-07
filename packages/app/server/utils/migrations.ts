@@ -344,12 +344,13 @@ export const migrations: Migration[] = [
       const tableInfo = db.prepare('PRAGMA table_info(entity_images)').all() as Array<{
         name: string
       }>
-      const hasCaptionColumn = tableInfo.some((col) => col.name === 'caption')
+      const hasCaptionColumn = tableInfo.some(col => col.name === 'caption')
 
       if (!hasCaptionColumn) {
         db.exec('ALTER TABLE entity_images ADD COLUMN caption TEXT')
         console.log('✅ Migration 6: Caption column added to entity_images')
-      } else {
+      }
+      else {
         console.log('✅ Migration 6: Caption column already exists, skipping')
       }
     },
@@ -689,20 +690,20 @@ export const migrations: Migration[] = [
 
       // Map German names to English i18n keys
       const raceKeyMapping: Record<string, string> = {
-        Mensch: 'human',
-        Elf: 'elf',
-        Zwerg: 'dwarf',
-        Halbling: 'halfling',
-        Gnom: 'gnome',
-        Halbelf: 'halfelf',
-        Halbork: 'halforc',
-        Tiefling: 'tiefling',
-        Drachenblütiger: 'dragonborn',
-        Drow: 'drow',
-        Waldelf: 'woodelf',
-        Hochelf: 'highelf',
-        Bergzwerg: 'mountaindwarf',
-        Hügelzwerg: 'hilldwarf',
+        'Mensch': 'human',
+        'Elf': 'elf',
+        'Zwerg': 'dwarf',
+        'Halbling': 'halfling',
+        'Gnom': 'gnome',
+        'Halbelf': 'halfelf',
+        'Halbork': 'halforc',
+        'Tiefling': 'tiefling',
+        'Drachenblütiger': 'dragonborn',
+        'Drow': 'drow',
+        'Waldelf': 'woodelf',
+        'Hochelf': 'highelf',
+        'Bergzwerg': 'mountaindwarf',
+        'Hügelzwerg': 'hilldwarf',
         'Leichtfuß-Halbling': 'lightfoothalfling',
         'Robuster Halbling': 'stouthalfling',
       }
@@ -796,21 +797,21 @@ export const migrations: Migration[] = [
 
       // For standard races: name should be the KEY (english lowercase), not the German display name
       // name_de and name_en should contain the localized display names
-      const raceMapping: Record<string, { key: string; name_de: string; name_en: string }> = {
-        Mensch: { key: 'human', name_de: 'Mensch', name_en: 'Human' },
-        Elf: { key: 'elf', name_de: 'Elf', name_en: 'Elf' },
-        Zwerg: { key: 'dwarf', name_de: 'Zwerg', name_en: 'Dwarf' },
-        Halbling: { key: 'halfling', name_de: 'Halbling', name_en: 'Halfling' },
-        Gnom: { key: 'gnome', name_de: 'Gnom', name_en: 'Gnome' },
-        Halbelf: { key: 'halfelf', name_de: 'Halbelf', name_en: 'Half-Elf' },
-        Halbork: { key: 'halforc', name_de: 'Halbork', name_en: 'Half-Orc' },
-        Tiefling: { key: 'tiefling', name_de: 'Tiefling', name_en: 'Tiefling' },
-        Drachenblütiger: { key: 'dragonborn', name_de: 'Drachenblütiger', name_en: 'Dragonborn' },
+      const raceMapping: Record<string, { key: string, name_de: string, name_en: string }> = {
+        'Mensch': { key: 'human', name_de: 'Mensch', name_en: 'Human' },
+        'Elf': { key: 'elf', name_de: 'Elf', name_en: 'Elf' },
+        'Zwerg': { key: 'dwarf', name_de: 'Zwerg', name_en: 'Dwarf' },
+        'Halbling': { key: 'halfling', name_de: 'Halbling', name_en: 'Halfling' },
+        'Gnom': { key: 'gnome', name_de: 'Gnom', name_en: 'Gnome' },
+        'Halbelf': { key: 'halfelf', name_de: 'Halbelf', name_en: 'Half-Elf' },
+        'Halbork': { key: 'halforc', name_de: 'Halbork', name_en: 'Half-Orc' },
+        'Tiefling': { key: 'tiefling', name_de: 'Tiefling', name_en: 'Tiefling' },
+        'Drachenblütiger': { key: 'dragonborn', name_de: 'Drachenblütiger', name_en: 'Dragonborn' },
         'Zwergelf (Drow)': { key: 'drow', name_de: 'Dunkelelf', name_en: 'Drow' },
-        Waldelf: { key: 'woodelf', name_de: 'Waldelf', name_en: 'Wood Elf' },
-        Hochelf: { key: 'highelf', name_de: 'Hochelf', name_en: 'High Elf' },
-        Bergzwerg: { key: 'mountaindwarf', name_de: 'Bergzwerg', name_en: 'Mountain Dwarf' },
-        Hügelzwerg: { key: 'hilldwarf', name_de: 'Hügelzwerg', name_en: 'Hill Dwarf' },
+        'Waldelf': { key: 'woodelf', name_de: 'Waldelf', name_en: 'Wood Elf' },
+        'Hochelf': { key: 'highelf', name_de: 'Hochelf', name_en: 'High Elf' },
+        'Bergzwerg': { key: 'mountaindwarf', name_de: 'Bergzwerg', name_en: 'Mountain Dwarf' },
+        'Hügelzwerg': { key: 'hilldwarf', name_de: 'Hügelzwerg', name_en: 'Hill Dwarf' },
         'Leichtfuß-Halbling': {
           key: 'lightfoothalfling',
           name_de: 'Leichtfuß-Halbling',
@@ -823,7 +824,7 @@ export const migrations: Migration[] = [
         },
       }
 
-      const classMapping: Record<string, { key: string; name_de: string; name_en: string }> = {
+      const classMapping: Record<string, { key: string, name_de: string, name_en: string }> = {
         Barbar: { key: 'barbarian', name_de: 'Barbar', name_en: 'Barbarian' },
         Barde: { key: 'bard', name_de: 'Barde', name_en: 'Bard' },
         Druide: { key: 'druid', name_de: 'Druide', name_en: 'Druid' },
@@ -862,7 +863,7 @@ export const migrations: Migration[] = [
         .prepare(
           "SELECT id, metadata FROM entities WHERE type_id = (SELECT id FROM entity_types WHERE name = 'NPC') AND metadata IS NOT NULL",
         )
-        .all() as Array<{ id: number; metadata: string }>
+        .all() as Array<{ id: number, metadata: string }>
 
       const updateNpcMetadata = db.prepare('UPDATE entities SET metadata = ? WHERE id = ?')
 
@@ -1355,7 +1356,7 @@ export const migrations: Migration[] = [
         SELECT e.id, e.metadata FROM entities e
         JOIN entity_types et ON e.type_id = et.id
         WHERE et.name = 'Faction' AND e.metadata IS NOT NULL AND e.deleted_at IS NULL
-      `).all() as Array<{ id: number; metadata: string }>
+      `).all() as Array<{ id: number, metadata: string }>
 
       const updateMetadataStmt = db.prepare('UPDATE entities SET metadata = ? WHERE id = ?')
 
@@ -1369,7 +1370,8 @@ export const migrations: Migration[] = [
             console.log(`  Updated faction ${faction.id} alignment: "${oldAlignment}" → "${metadata.alignment}"`)
             updatedCount++
           }
-        } catch {
+        }
+        catch {
           // Skip invalid JSON
         }
       }
@@ -1702,11 +1704,14 @@ export const migrations: Migration[] = [
 
         if (name.includes('winter') || name.includes('kalt')) {
           weatherType = 'winter'
-        } else if (name.includes('spring') || name.includes('früh') || name.includes('lenz')) {
+        }
+        else if (name.includes('spring') || name.includes('früh') || name.includes('lenz')) {
           weatherType = 'spring'
-        } else if (name.includes('summer') || name.includes('sommer')) {
+        }
+        else if (name.includes('summer') || name.includes('sommer')) {
           weatherType = 'summer'
-        } else if (name.includes('autumn') || name.includes('herbst') || name.includes('fall')) {
+        }
+        else if (name.includes('autumn') || name.includes('herbst') || name.includes('fall')) {
           weatherType = 'autumn'
         }
 
@@ -1864,7 +1869,7 @@ export const migrations: Migration[] = [
         absoluteDay: number,
         months: CalendarMonth[],
         config: CalendarConfig,
-      ): { year: number; month: number; day: number } | null {
+      ): { year: number, month: number, day: number } | null {
         if (absoluteDay <= 0 || months.length === 0) return null
 
         const getDaysInYear = (year: number): number => {
@@ -1880,10 +1885,10 @@ export const migrations: Migration[] = [
           if (!month) return 30
           let days = month.days
           if (
-            config.leap_year_interval > 0 &&
-            year % config.leap_year_interval === 0 &&
-            config.leap_year_month > 0 &&
-            monthIndex === config.leap_year_month - 1
+            config.leap_year_interval > 0
+            && year % config.leap_year_interval === 0
+            && config.leap_year_month > 0
+            && monthIndex === config.leap_year_month - 1
           ) {
             days += config.leap_year_extra_days
           }
@@ -2248,11 +2253,100 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 41: Fixed Shadar-Kai typo')
     },
   },
+  {
+    version: 42,
+    name: 'create_stat_templates',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS stat_templates (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          system_key TEXT,
+          description TEXT,
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now')),
+          deleted_at TEXT
+        )
+      `)
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS stat_template_groups (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          template_id INTEGER NOT NULL REFERENCES stat_templates(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          group_type TEXT DEFAULT 'custom',
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT (datetime('now'))
+        )
+      `)
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_stat_template_groups_template_id
+        ON stat_template_groups(template_id)
+      `)
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS stat_template_fields (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          group_id INTEGER NOT NULL REFERENCES stat_template_groups(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          label TEXT NOT NULL,
+          field_type TEXT NOT NULL DEFAULT 'number',
+          default_value TEXT,
+          config TEXT,
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT (datetime('now'))
+        )
+      `)
+
+      db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_stat_template_fields_group_id
+        ON stat_template_fields(group_id)
+      `)
+
+      // Entity-to-template link with JSON values (one template per entity)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS entity_stats (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_id INTEGER NOT NULL UNIQUE REFERENCES entities(id) ON DELETE CASCADE,
+          template_id INTEGER NOT NULL REFERENCES stat_templates(id),
+          values_json TEXT DEFAULT '{}',
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )
+      `)
+
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_entity_stats_entity_id
+        ON entity_stats(entity_id)
+      `)
+
+      // Optional document type column (e.g., 'character_sheet')
+      db.exec(`
+        ALTER TABLE entity_documents ADD COLUMN document_type TEXT DEFAULT NULL
+      `)
+
+      console.log('✅ Migration 42: Created stat template tables + entity_stats + document_type')
+    },
+  },
+  {
+    version: 43,
+    name: 'simplify_stat_template_fields',
+    up: (db) => {
+      // Remove default_value and config columns, add has_modifier
+      db.exec('ALTER TABLE stat_template_fields DROP COLUMN default_value')
+      db.exec('ALTER TABLE stat_template_fields DROP COLUMN config')
+      db.exec('ALTER TABLE stat_template_fields ADD COLUMN has_modifier INTEGER DEFAULT 0')
+
+      console.log('✅ Migration 43: Simplified stat_template_fields (removed default_value/config, added has_modifier)')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
   const currentVersion = getCurrentVersion(db)
-  const pendingMigrations = migrations.filter((m) => m.version > currentVersion)
+  const pendingMigrations = migrations.filter(m => m.version > currentVersion)
 
   if (pendingMigrations.length === 0) {
     console.log(`✅ Database is up to date (version: ${currentVersion})`)
@@ -2273,7 +2367,8 @@ export async function runMigrations(db: Database.Database) {
       setVersion(db, migration.version)
       db.exec('COMMIT')
       console.log(`  ✅ Migration ${migration.version} applied successfully`)
-    } catch (error) {
+    }
+    catch (error) {
       db.exec('ROLLBACK')
       console.error(`  ❌ Migration ${migration.version} failed:`, error)
       throw error
