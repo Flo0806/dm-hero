@@ -390,7 +390,7 @@ describe('Encounters - Participants', () => {
       LEFT JOIN entity_types et ON et.id = e.type_id
       WHERE ep.encounter_id = ?
       ORDER BY ep.sort_order ASC
-    `).all(encId) as Array<{ display_name: string; entity_type: string }>
+    `).all(encId) as Array<{ display_name: string, entity_type: string }>
 
     expect(participants).toHaveLength(2)
     expect(participants[0].entity_type).toBe('NPC')
@@ -412,7 +412,7 @@ describe('Encounters - Initiative Sorting', () => {
     // Sort by initiative descending → update sort_order
     const participants = db.prepare(
       'SELECT id, initiative FROM encounter_participants WHERE encounter_id = ? ORDER BY initiative DESC',
-    ).all(encId) as Array<{ id: number; initiative: number }>
+    ).all(encId) as Array<{ id: number, initiative: number }>
 
     participants.forEach((p, i) => {
       db.prepare('UPDATE encounter_participants SET sort_order = ? WHERE id = ?').run(i, p.id)
@@ -420,7 +420,7 @@ describe('Encounters - Initiative Sorting', () => {
 
     const sorted = db.prepare(
       'SELECT display_name, initiative FROM encounter_participants WHERE encounter_id = ? ORDER BY sort_order ASC',
-    ).all(encId) as Array<{ display_name: string; initiative: number }>
+    ).all(encId) as Array<{ display_name: string, initiative: number }>
 
     expect(sorted[0].display_name).toBe('Fast')
     expect(sorted[0].initiative).toBe(20)
@@ -775,9 +775,9 @@ describe('Encounters - COALESCE Update Pattern', () => {
     `).run(null, 25, null, null, null, null, null, partId)
 
     const part = getParticipant(partId)
-    expect(part!.initiative).toBe(15)    // Unchanged
-    expect(part!.current_hp).toBe(25)    // Updated
-    expect(part!.max_hp).toBe(40)        // Unchanged
+    expect(part!.initiative).toBe(15) // Unchanged
+    expect(part!.current_hp).toBe(25) // Updated
+    expect(part!.max_hp).toBe(40) // Unchanged
   })
 
   it('should only update provided fields on encounter PATCH', () => {
@@ -795,9 +795,9 @@ describe('Encounters - COALESCE Update Pattern', () => {
     `).run(null, null, 4, null, encId)
 
     const enc = getEncounter(encId)
-    expect(enc!.name).toBe('Enc COALESCE')  // Unchanged
-    expect(enc!.status).toBe('active')       // Unchanged
-    expect(enc!.round).toBe(4)               // Updated
+    expect(enc!.name).toBe('Enc COALESCE') // Unchanged
+    expect(enc!.status).toBe('active') // Unchanged
+    expect(enc!.round).toBe(4) // Updated
   })
 })
 
@@ -876,7 +876,7 @@ describe('Encounters - Full Combat Flow', () => {
     // Verify sort order: Knight (18) > Wizard (12) > Dragon (5)
     const combatOrder = db.prepare(
       'SELECT display_name, initiative FROM encounter_participants WHERE encounter_id = ? ORDER BY sort_order ASC',
-    ).all(encId) as Array<{ display_name: string; initiative: number }>
+    ).all(encId) as Array<{ display_name: string, initiative: number }>
     expect(combatOrder[0].display_name).toBe('Knight')
     expect(combatOrder[1].display_name).toBe('Wizard')
     expect(combatOrder[2].display_name).toBe('Dragon')
@@ -973,7 +973,7 @@ describe('Encounters - Temp HP Damage Absorption', () => {
       .run(currentHp, tempHp, partId)
 
     const updated = getParticipant(partId)
-    expect(updated!.temp_hp).toBe(0)   // 10 - 10 = 0
+    expect(updated!.temp_hp).toBe(0) // 10 - 10 = 0
     expect(updated!.current_hp).toBe(25) // 30 - 5 = 25
   })
 
@@ -1040,7 +1040,7 @@ describe('Encounters - Sort Order Persistence', () => {
 
     const final = db.prepare(
       'SELECT display_name, initiative FROM encounter_participants WHERE encounter_id = ? ORDER BY sort_order ASC',
-    ).all(encId) as Array<{ display_name: string; initiative: number }>
+    ).all(encId) as Array<{ display_name: string, initiative: number }>
 
     expect(final[0].display_name).toBe('High Ini')
     expect(final[0].initiative).toBe(20)
