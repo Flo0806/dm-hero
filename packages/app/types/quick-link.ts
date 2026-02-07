@@ -22,7 +22,7 @@ export const SIMPLE_RELATION_TYPE = ['related'] as const
 
 // Quick link configuration per source entity type
 export const QUICK_LINK_CONFIG: Record<string, QuickLinkTargetConfig[]> = {
-  // NPC can link to: NPC, Location, Item, Faction
+  // NPC can link to: NPC, Location, Item, Faction, Player
   NPC: [
     {
       targetType: 'NPC',
@@ -51,6 +51,13 @@ export const QUICK_LINK_CONFIG: Record<string, QuickLinkTargetConfig[]> = {
       icon: 'mdi-shield-account',
       relationTypes: FACTION_MEMBERSHIP_TYPES,
       i18nPrefix: 'factions.membershipTypes',
+    },
+    {
+      targetType: 'Player',
+      labelKey: 'quickLink.linkPlayer',
+      icon: 'mdi-account-star',
+      relationTypes: PLAYER_RELATION_TYPES,
+      i18nPrefix: 'players.relationTypes',
     },
   ],
 

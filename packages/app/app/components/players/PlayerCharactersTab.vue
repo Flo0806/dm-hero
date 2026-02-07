@@ -16,7 +16,7 @@
         <v-list-item-title>{{ npc.name }}</v-list-item-title>
         <v-list-item-subtitle>
           <v-chip size="small" class="mr-1" color="primary" variant="tonal">
-            {{ $t(`npcs.npcRelationTypes.${npc.relation_type}`, npc.relation_type) }}
+            {{ $t(`players.relationTypes.${npc.relation_type}`, npc.relation_type) }}
           </v-chip>
           <span v-if="npc.notes" class="text-caption">
             {{ npc.notes.substring(0, 80) }}{{ npc.notes.length > 80 ? '...' : '' }}
@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { NPC_RELATION_TYPES } from '~~/types/npc'
+import { PLAYER_RELATION_TYPES } from '~~/types/player'
 import { useTabDirtyState } from '~/composables/useDialogDirtyState'
 
 const { t } = useI18n()
@@ -189,11 +189,11 @@ const editNotes = ref('')
 const isDirty = computed(() => !!selectedNpcId.value || !!selectedRelationType.value || !!selectedNotes.value || editDialog.value)
 watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
 
-// Relation type suggestions using NPC_RELATION_TYPES
+// Relation type suggestions using PLAYER_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>
-  NPC_RELATION_TYPES.map((type) => ({
+  PLAYER_RELATION_TYPES.map((type) => ({
     value: type,
-    title: t(`npcs.npcRelationTypes.${type}`),
+    title: t(`players.relationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
