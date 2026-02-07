@@ -439,8 +439,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [faction: Faction]
-  created: [faction: Faction]
+  'saved': [faction: Faction]
+  'created': [faction: Faction]
 }>()
 
 // ============================================================================
@@ -460,7 +460,7 @@ const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 // ============================================================================
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const loading = ref(false)
@@ -476,7 +476,7 @@ const form = ref({
   leaderId: null as number | null,
   location_id: null as number | null,
   metadata: {
-    type: undefined as string | { value: string; title: string } | undefined,
+    type: undefined as string | { value: string, title: string } | undefined,
     alignment: undefined as string | undefined,
     headquarters: undefined as string | undefined,
     goals: undefined as string | undefined,
@@ -485,7 +485,7 @@ const form = ref({
 })
 
 // Map sync data (from LocationSelectWithMap)
-const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
+const mapSyncData = ref<{ locationId: number | null, mapIds: number[] } | null>(null)
 
 // Relations data - loaded internally
 interface FactionMember {
@@ -579,12 +579,12 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   const currentType = getComboboxValue(
-    form.value.metadata.type as string | { value: string; title: string } | undefined,
+    form.value.metadata.type as string | { value: string, title: string } | undefined,
   )
   return (
-    form.value.name !== originalImageData.value.name ||
-    form.value.description !== originalImageData.value.description ||
-    currentType !== originalImageData.value.type
+    form.value.name !== originalImageData.value.name
+    || form.value.description !== originalImageData.value.description
+    || currentType !== originalImageData.value.type
   )
 })
 
@@ -595,7 +595,7 @@ const previewImageTitle = ref('')
 
 // Membership type suggestions from TypeScript types
 const membershipTypeSuggestions = computed(() =>
-  FACTION_MEMBERSHIP_TYPES.map((type) => ({
+  FACTION_MEMBERSHIP_TYPES.map(type => ({
     value: type,
     title: t(`factions.membershipTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -603,8 +603,8 @@ const membershipTypeSuggestions = computed(() =>
 
 // Faction type options from TypeScript types
 // Explicitly typed to allow custom string values in v-combobox
-const factionTypes = computed((): Array<{ value: string; title: string }> =>
-  FACTION_TYPES.map((type) => ({
+const factionTypes = computed((): Array<{ value: string, title: string }> =>
+  FACTION_TYPES.map(type => ({
     value: type,
     title: t(`factions.types.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -612,7 +612,7 @@ const factionTypes = computed((): Array<{ value: string; title: string }> =>
 
 // Faction alignment options from TypeScript types
 const factionAlignments = computed(() =>
-  FACTION_ALIGNMENTS.map((alignment) => ({
+  FACTION_ALIGNMENTS.map(alignment => ({
     value: alignment,
     title: t(`factions.alignments.${alignment}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -623,33 +623,33 @@ const factionAlignments = computed(() =>
 // ============================================================================
 const availableNpcs = computed(() =>
   entitiesStore.npcs
-    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .map(n => ({ id: n.id, name: n.name, image_url: n.image_url }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLocations = computed(() =>
   entitiesStore.locations
-    .map((l) => ({ id: l.id, name: l.name, image_url: l.image_url }))
+    .map(l => ({ id: l.id, name: l.name, image_url: l.image_url }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableItems = computed(() =>
   entitiesStore.items
-    .map((i) => ({ id: i.id, name: i.name }))
+    .map(i => ({ id: i.id, name: i.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableLore = computed(() =>
   entitiesStore.lore
-    .map((l) => ({ id: l.id, name: l.name }))
+    .map(l => ({ id: l.id, name: l.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 // Available factions for relations (exclude current faction)
 const availableFactions = computed(() =>
   entitiesStore.factions
-    .filter((f) => f.id !== faction.value?.id)
-    .map((f) => ({ id: f.id, name: f.name }))
+    .filter(f => f.id !== faction.value?.id)
+    .map(f => ({ id: f.id, name: f.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
@@ -684,11 +684,13 @@ async function loadData(factionId: number | null | undefined) {
       // Edit mode: load faction and relations
       await loadFaction(factionId)
       await loadRelations(factionId)
-    } else {
+    }
+    else {
       // Create mode: reset form
       resetForm()
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -710,9 +712,10 @@ async function loadStoreData() {
 
 async function checkApiKey() {
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 }
@@ -725,7 +728,7 @@ async function loadFaction(factionId: number) {
     // Populate form from faction
     // For v-combobox: convert KEY to {value, title} object so it displays the title correctly
     const typeKey = data.metadata?.type as string | undefined
-    const typeItem = typeKey ? factionTypes.value.find((t) => t.value === typeKey) : undefined
+    const typeItem = typeKey ? factionTypes.value.find(t => t.value === typeKey) : undefined
 
     form.value = {
       name: data.name,
@@ -752,7 +755,8 @@ async function loadFaction(factionId: number) {
 
     // Load counts for tab badges
     await loadCounts(factionId)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to load faction:', e)
   }
 }
@@ -766,7 +770,8 @@ async function loadCounts(factionId: number) {
     if (faction?._counts) {
       counts.value = faction._counts
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to load counts:', e)
   }
 }
@@ -781,14 +786,14 @@ async function loadRelations(factionId: number) {
       $fetch<FactionMember[]>(`/api/entities/${factionId}/related/npcs`).catch(() => []),
       $fetch<FactionLocation[]>(`/api/entities/${factionId}/related/locations`).catch(() => []),
       $fetch<FactionItem[]>(`/api/entities/${factionId}/related/items`).catch(() => []),
-      $fetch<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>(`/api/entities/${factionId}/related/lore`).catch(() => []),
+      $fetch<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>(`/api/entities/${factionId}/related/lore`).catch(() => []),
       $fetch<FactionRelation[]>(`/api/factions/${factionId}/relations`).catch(() => []),
     ])
 
     factionMembers.value = members
     factionLocations.value = locations
     // Map items with relation_id and quantity from notes
-    factionItems.value = items.map((item: { id: number; name: string; description: string | null; image_url: string | null; relation_type?: string | null; notes?: { quantity?: number } | null; direction?: 'outgoing' | 'incoming' }) => ({
+    factionItems.value = items.map((item: { id: number, name: string, description: string | null, image_url: string | null, relation_type?: string | null, notes?: { quantity?: number } | null, direction?: 'outgoing' | 'incoming' }) => ({
       id: item.id, // This is actually relation_id from the API
       relation_id: item.id,
       name: item.name,
@@ -800,9 +805,11 @@ async function loadRelations(factionId: number) {
     }))
     linkedLore.value = lore
     factionRelations.value = relations
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to load relations:', e)
-  } finally {
+  }
+  finally {
     loadingMembers.value = false
     loadingLocations.value = false
     loadingLore.value = false
@@ -854,7 +861,7 @@ function resetForm() {
 // ============================================================================
 // Helper: Extract value from combobox selection (can be string or {value, title} object)
 // ============================================================================
-function getComboboxValue(val: string | { value: string; title: string } | undefined): string | undefined {
+function getComboboxValue(val: string | { value: string, title: string } | undefined): string | undefined {
   if (!val) return undefined
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -876,7 +883,7 @@ async function save() {
     // Extract actual values from combobox selections
     const metadata = {
       ...form.value.metadata,
-      type: getComboboxValue(form.value.metadata.type as string | { value: string; title: string } | undefined),
+      type: getComboboxValue(form.value.metadata.type as string | { value: string, title: string } | undefined),
     }
 
     if (faction.value) {
@@ -895,7 +902,8 @@ async function save() {
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new faction
       const created = await entitiesStore.createFaction(campaignId, {
         name: form.value.name,
@@ -914,9 +922,11 @@ async function save() {
     }
 
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -928,35 +938,37 @@ function close() {
 // Sync Faction marker to selected maps - place inside location circle if available
 async function syncToMaps(entityId: number, mapIds: number[]) {
   const locationId = form.value.location_id
-  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let mapsWithArea: Array<{ map_id: number, map_name: string, area_id: number }> = []
   let locationName = ''
 
   if (locationId) {
     try {
-      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+      mapsWithArea = await $fetch<Array<{ map_id: number, map_name: string, area_id: number }>>(
         `/api/locations/${locationId}/maps-with-area`,
       )
       const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
       locationName = location.name
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[FactionEditDialog] Failed to get maps with area:', e)
     }
   }
 
   const mapsWithoutLocation: string[] = []
 
-  let allMaps: Array<{ id: number; name: string }> = []
+  let allMaps: Array<{ id: number, name: string }> = []
   try {
-    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+    allMaps = await $fetch<Array<{ id: number, name: string }>>('/api/maps', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to get maps:', e)
   }
 
   for (const mapId of mapIds) {
     try {
-      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+      const areaInfo = mapsWithArea.find(m => m.map_id === mapId)
 
       if (areaInfo) {
         await $fetch(`/api/maps/${mapId}/place-in-area`, {
@@ -966,7 +978,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
             area_id: areaInfo.area_id,
           },
         })
-      } else {
+      }
+      else {
         const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
           query: { entityId },
         })
@@ -983,13 +996,14 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
         }
 
         if (locationId) {
-          const mapInfo = allMaps.find((m) => m.id === mapId)
+          const mapInfo = allMaps.find(m => m.id === mapId)
           if (mapInfo) {
             mapsWithoutLocation.push(mapInfo.name)
           }
         }
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error(`[FactionEditDialog] Failed to sync to map ${mapId}:`, e)
     }
   }
@@ -999,7 +1013,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
       snackbarStore.warning(
         t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
       )
-    } else {
+    }
+    else {
       snackbarStore.warning(
         t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
       )
@@ -1010,7 +1025,7 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
 // ============================================================================
 // Member Management
 // ============================================================================
-async function addMember(payload: { npcId: number; membershipType?: string; rank?: string }) {
+async function addMember(payload: { npcId: number, membershipType?: string, rank?: string }) {
   if (!faction.value) return
 
   addingMember.value = true
@@ -1025,14 +1040,16 @@ async function addMember(payload: { npcId: number; membershipType?: string; rank
     })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to add member:', e)
-  } finally {
+  }
+  finally {
     addingMember.value = false
   }
 }
 
-async function updateMember(payload: { relationId: number; membershipType?: string; rank?: string }) {
+async function updateMember(payload: { relationId: number, membershipType?: string, rank?: string }) {
   if (!faction.value) return
 
   try {
@@ -1044,7 +1061,8 @@ async function updateMember(payload: { relationId: number; membershipType?: stri
       },
     })
     await loadRelations(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to update member:', e)
   }
 }
@@ -1056,7 +1074,8 @@ async function removeMember(relationId: number) {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to remove member:', e)
   }
 }
@@ -1064,7 +1083,7 @@ async function removeMember(relationId: number) {
 // ============================================================================
 // Location Management
 // ============================================================================
-async function addLocation(payload: { locationId: number; relationType: string }) {
+async function addLocation(payload: { locationId: number, relationType: string }) {
   if (!faction.value) return
 
   addingLocation.value = true
@@ -1078,14 +1097,16 @@ async function addLocation(payload: { locationId: number; relationType: string }
     })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to add location:', e)
-  } finally {
+  }
+  finally {
     addingLocation.value = false
   }
 }
 
-async function updateLocation(payload: { relationId: number; relationType: string }) {
+async function updateLocation(payload: { relationId: number, relationType: string }) {
   if (!faction.value) return
 
   try {
@@ -1096,7 +1117,8 @@ async function updateLocation(payload: { relationId: number; relationType: strin
       },
     })
     await loadRelations(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to update location:', e)
   }
 }
@@ -1108,7 +1130,8 @@ async function removeLocation(relationId: number) {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to remove location:', e)
   }
 }
@@ -1116,7 +1139,7 @@ async function removeLocation(relationId: number) {
 // ============================================================================
 // Item Management
 // ============================================================================
-async function addItem(payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+async function addItem(payload: { itemId: number, relationType?: string, quantity?: number, equipped?: boolean }) {
   if (!faction.value) return
 
   addingItem.value = true
@@ -1132,14 +1155,16 @@ async function addItem(payload: { itemId: number; relationType?: string; quantit
     })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to add item:', e)
-  } finally {
+  }
+  finally {
     addingItem.value = false
   }
 }
 
-async function updateItem(payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }) {
+async function updateItem(payload: { relationId: number, relationType?: string, quantity?: number, equipped?: boolean }) {
   if (!faction.value) return
 
   try {
@@ -1151,7 +1176,8 @@ async function updateItem(payload: { relationId: number; relationType?: string; 
       },
     })
     await loadRelations(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to update item:', e)
   }
 }
@@ -1163,7 +1189,8 @@ async function removeItem(relationId: number) {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to remove item:', e)
   }
 }
@@ -1186,9 +1213,11 @@ async function addLore(loreId: number) {
     })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to add lore:', e)
-  } finally {
+  }
+  finally {
     loadingLore.value = false
   }
 }
@@ -1200,7 +1229,8 @@ async function removeLore(relationId: number) {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     await loadRelations(faction.value.id)
     await loadCounts(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to remove lore:', e)
   }
 }
@@ -1208,7 +1238,7 @@ async function removeLore(relationId: number) {
 // ============================================================================
 // Faction-to-Faction Relation Management
 // ============================================================================
-async function addFactionRelation(payload: { factionId: number; relationType: string; notes?: string }) {
+async function addFactionRelation(payload: { factionId: number, relationType: string, notes?: string }) {
   if (!faction.value) return
 
   addingRelation.value = true
@@ -1226,14 +1256,16 @@ async function addFactionRelation(payload: { factionId: number; relationType: st
     await loadCounts(faction.value.id)
     // Also update the OTHER faction's counts (bidirectional relation)
     entitiesStore.loadFactionCounts(payload.factionId)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to add faction relation:', e)
-  } finally {
+  }
+  finally {
     addingRelation.value = false
   }
 }
 
-async function updateFactionRelation(payload: { relationId: number; relationType: string; notes?: string }) {
+async function updateFactionRelation(payload: { relationId: number, relationType: string, notes?: string }) {
   if (!faction.value) return
 
   try {
@@ -1245,7 +1277,8 @@ async function updateFactionRelation(payload: { relationId: number; relationType
       },
     })
     await loadRelations(faction.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to update faction relation:', e)
   }
 }
@@ -1254,7 +1287,7 @@ async function removeFactionRelation(relationId: number) {
   if (!faction.value) return
 
   // Find the other faction's ID BEFORE deleting
-  const relation = factionRelations.value.find((r) => r.id === relationId)
+  const relation = factionRelations.value.find(r => r.id === relationId)
   const otherFactionId = relation?.related_faction_id
 
   try {
@@ -1265,7 +1298,8 @@ async function removeFactionRelation(relationId: number) {
     if (otherFactionId) {
       entitiesStore.loadFactionCounts(otherFactionId)
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[FactionEditDialog] Failed to remove faction relation:', e)
   }
 }
@@ -1300,9 +1334,11 @@ async function handleImageUpload(event: Event) {
     }
 
     await refreshFaction()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload image:', error)
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -1339,12 +1375,14 @@ async function generateImage() {
       // Notify other components (Gallery) that images changed
       entitiesStore.incrementImageVersion(faction.value.id)
 
-      await refreshFaction()
-      await loadCounts(faction.value.id)
+      // Reload faction to get updated image_url
+      await loadFaction(faction.value.id)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[FactionEditDialog] Failed to generate image:', error)
-  } finally {
+  }
+  finally {
     generatingImage.value = false
   }
 }
@@ -1356,9 +1394,11 @@ async function deleteImage() {
   try {
     await $fetch(`/api/entities/${faction.value.id}/delete-image`, { method: 'DELETE' })
     await refreshFaction()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete image:', error)
-  } finally {
+  }
+  finally {
     deletingImage.value = false
   }
 }

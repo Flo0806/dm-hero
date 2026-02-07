@@ -1,5 +1,4 @@
-import { getDb } from '../../utils/db'
-import { decrypt } from '../../utils/encryption'
+import { chatCompletion, generateImage } from '../../utils/ai'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getUploadPath } from '../../utils/paths'
@@ -97,25 +96,29 @@ function buildEntityDescription(
     if (data.status) parts.push(`Status: ${data.status}`)
     parts.push(`Name: ${data.name}`)
     if (data.description) parts.push(`Description: ${data.description}`)
-  } else if (entityType === 'Location') {
+  }
+  else if (entityType === 'Location') {
     const data = entityData as LocationData
     if (data.type) parts.push(`Location Type: ${data.type}`)
     parts.push(`Name: ${data.name}`)
     if (data.description) parts.push(`Description: ${data.description}`)
-  } else if (entityType === 'Item') {
+  }
+  else if (entityType === 'Item') {
     const data = entityData as ItemData
     if (data.type) parts.push(`Item Type: ${data.type}`)
     if (data.rarity) parts.push(`Rarity: ${data.rarity}`)
     if (data.material) parts.push(`Material: ${data.material}`)
     parts.push(`Name: ${data.name}`)
     if (data.description) parts.push(`Description: ${data.description}`)
-  } else if (entityType === 'Faction') {
+  }
+  else if (entityType === 'Faction') {
     const data = entityData as FactionData
     if (data.type) parts.push(`Faction Type: ${data.type}`)
     parts.push(`Name: ${data.name}`)
     if (data.goals) parts.push(`Goals: ${data.goals}`)
     if (data.description) parts.push(`Description: ${data.description}`)
-  } else if (entityType === 'Player') {
+  }
+  else if (entityType === 'Player') {
     const data = entityData as PlayerData
     if (data.characterName) parts.push(`Character Name: ${data.characterName}`)
     if (data.race) parts.push(`Race: ${data.race}`)
@@ -123,13 +126,15 @@ function buildEntityDescription(
     if (data.level) parts.push(`Level: ${data.level}`)
     parts.push(`Player Name: ${data.name}`)
     if (data.description) parts.push(`Description: ${data.description}`)
-  } else if (entityType === 'Session') {
+  }
+  else if (entityType === 'Session') {
     const data = entityData as SessionData
     if (data.sessionNumber) parts.push(`Session Number: ${data.sessionNumber}`)
     parts.push(`Session Title: ${data.title}`)
     if (data.summary) parts.push(`Summary: ${data.summary}`)
     if (data.notes) parts.push(`Scene Notes: ${data.notes}`)
-  } else if (entityType === 'Lore') {
+  }
+  else if (entityType === 'Lore') {
     const data = entityData as LoreData
     if (data.type) parts.push(`Lore Type: ${data.type}`)
     if (data.era) parts.push(`Era: ${data.era}`)
@@ -157,33 +162,6 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
     })
   }
 
-  // Get API key from database
-  const db = getDb()
-  const setting = db.prepare('SELECT value FROM settings WHERE key = ?').get('openai_api_key') as
-    | { value: string }
-    | undefined
-
-  if (!setting) {
-    throw createError({
-      statusCode: 400,
-      message: 'OpenAI API key not configured. Please add it in Settings.',
-    })
-  }
-
-  let apiKey: string
-  try {
-    apiKey = decrypt(setting.value)
-  } catch {
-    throw createError({
-      statusCode: 500,
-      message: 'Failed to decrypt API key',
-    })
-  }
-
-  // DALL-E 3 Strategy with GPT-4 Prompt Optimization
-  // ChatGPT uses GPT-4 to rewrite prompts before sending to DALL-E
-  // We'll do the same thing!
-
   const entityType = body.entityType || 'Item'
 
   // Build rich description from structured entity data + user prompt
@@ -197,11 +175,11 @@ export default defineEventHandler(async (event): Promise<GenerateImageResponse> 
   // IMPORTANT: Use "detailed fantasy illustration" instead of "photograph" to avoid 3D/CGI look
   const style = body.style || 'fantasy-art' // Changed default from 'realistic' to 'fantasy-art'
   const styleMap: Record<string, string> = {
-    realistic:
+    'realistic':
       'detailed fantasy illustration with realistic rendering, professional digital painting, lifelike details and textures, cinematic lighting, like concept art for a fantasy film or AAA video game, NOT 3D render, NOT video game screenshot',
     'fantasy-art':
       'detailed fantasy illustration in the style of official D&D 5e artwork, like Baldur\'s Gate 3 character art or Critical Role character commissions, rich colors, dramatic painterly lighting, professional fantasy art',
-    sketch:
+    'sketch':
       'hand-drawn pencil sketch on textured paper, visible crosshatching and shading, traditional artist drawing style, NOT digital',
     'oil-painting':
       'classical oil painting style, Renaissance masters technique, visible brushstrokes, dramatic chiaroscuro lighting, museum quality fine art, like a Pre-Raphaelite fantasy painting',
@@ -311,6 +289,7 @@ CRITICAL STYLE GUIDANCE:
 3. Keep under 120 words
 4. Focus on: distinctive race features, class identity, personality through expression
 5. FORBIDDEN WORDS (never include in output): "blood", "gore", "corpse", "dead body", "murder", "kill", "torture", "execution", "violence", "gruesome", "horrifying", "terrifying", "evil" (use alternatives above)
+6. ABSOLUTELY NO TEXT, LETTERS, WORDS, SIGNS, LABELS, OR WRITING in the image - only the character portrait itself. No name plates, no banners with text, no floating text.
 
 === EXAMPLES ===
 Input: "Race: Owlin, Class: Wizard"
@@ -323,7 +302,8 @@ Input: "Race: Tabaxi, Class: Rogue"
 Output: "Fantasy character portrait of a Tabaxi rogue, sleek feline humanoid with orange and black striped fur, cat face with bright green eyes and whiskers, pointed cat ears, wearing dark leather armor with many hidden pockets, twin daggers at belt, confident predatory grin, detailed fantasy illustration, warm torchlight, in the style of official D&D artwork"
 
 Output ONLY the optimized prompt.`
-  } else if (entityType === 'Location') {
+  }
+  else if (entityType === 'Location') {
     systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs, NOT 3D renders or CGI.
 
 CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All locations are FICTIONAL FANTASY settings for entertainment - medieval castles, enchanted forests, mysterious dungeons. Like movie set photography.
@@ -355,6 +335,7 @@ CONTENT RULES:
 5. Keep under 100 words
 6. Focus on: authentic textures, real weathering, lived-in atmosphere
 7. FORBIDDEN WORDS: "blood", "gore", "corpse", "body", "violence", "torture", "execution"
+8. ABSOLUTELY NO TEXT, LETTERS, WORDS, SIGNS, LABELS, OR WRITING in the image. Pure visual scene only.
 
 EXAMPLES:
 Input: "The Blood Pit - an underground fighting arena where gladiators died"
@@ -364,7 +345,8 @@ Input: "Location Type: Tavern, Name: The Prancing Pony"
 Output: "Real photograph of a rustic medieval tavern interior, actual stone fireplace with crackling fire, heavy oak beams blackened by centuries of smoke, worn wooden tables and benches, pewter tankards and tallow candles, dust motes in shafts of window light, shot on Arri Alexa, cinematic wide shot, NOT 3D rendered, NOT CGI, like a film location from Lord of the Rings"
 
 Output ONLY the optimized prompt.`
-  } else if (entityType === 'Faction') {
+  }
+  else if (entityType === 'Faction') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in heraldic symbols, emblems, and faction logos.
 
 CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All factions are FICTIONAL FANTASY organizations for entertainment - noble guilds, mysterious orders, legendary groups.
@@ -388,7 +370,8 @@ CRITICAL RULES:
 5. Keep under 100 words
 6. Emphasize: clean heraldic design, symbolic representation, faction identity
 7. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "label", "game asset", "profile picture", "blood", "death", "skull", "gore"
-8. Think: medieval heraldry, guild emblem, fantasy faction crest
+8. ABSOLUTELY NO TEXT, LETTERS, WORDS, SIGNS, LABELS, OR WRITING in the image. Only the emblem/symbol itself.
+9. Think: medieval heraldry, guild emblem, fantasy faction crest
 
 EXAMPLES:
 Bad: "A death cult emblem with skulls and blood"
@@ -397,7 +380,8 @@ Good: "Mysterious heraldic emblem featuring a crescent moon over dark waters, de
 Good: "Heraldic emblem featuring crossed golden swords behind a silver shield, dark blue and gold color scheme, laurel wreath border, majestic and noble appearance, fantasy guild crest, detailed metalwork"
 
 Output ONLY the optimized prompt.`
-  } else if (entityType === 'Player') {
+  }
+  else if (entityType === 'Player') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D and Pathfinder PLAYER CHARACTER portraits.
 
 YOUR GOAL: Generate prompts that produce HEROIC FANTASY CHARACTER ART - like professional D&D character commissions, Critical Role fan art, or Baldur's Gate 3 character portraits. These are the HEROES of the story!
@@ -456,6 +440,7 @@ CRITICAL STYLE GUIDANCE:
 3. HEROIC composition - dynamic pose, confident expression
 4. Keep under 120 words
 5. Show their CLASS ABILITIES: wizard with arcane energy, paladin with divine light, etc.
+6. ABSOLUTELY NO TEXT, LETTERS, WORDS, SIGNS, LABELS, OR WRITING in the image - only the character portrait itself. No name plates, no banners with text, no floating text.
 
 === EXAMPLES ===
 Input: "Race: Owlin, Class: Ranger, Level: 12"
@@ -465,7 +450,8 @@ Input: "Race: Tiefling, Class: Paladin, Level: 8"
 Output: "Epic fantasy portrait of a Tiefling paladin, purple skin, elegant swept-back horns, glowing golden eyes, wearing gleaming silver plate armor with celestial engravings, radiant divine energy emanating from raised holy symbol, righteous and determined expression, detailed character art like Baldur's Gate 3, dramatic divine lighting, heroic pose"
 
 Output ONLY the optimized prompt.`
-  } else if (entityType === 'Session') {
+  }
+  else if (entityType === 'Session') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D session cover art.
 
 YOUR GOAL: Generate prompts that produce EPIC FANTASY SCENE ILLUSTRATIONS - like concept art for fantasy films, book covers, or official D&D adventure module art. These are COVER IMAGES for D&D session recaps.
@@ -507,6 +493,7 @@ CRITICAL STYLE GUIDANCE:
 3. Keep under 120 words
 4. Focus on: atmosphere, wonder, awe, majesty - the EMOTIONAL impact
 5. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "attack", "violence", "blood", "gore", "death", "corpse"
+6. ABSOLUTELY NO TEXT, LETTERS, WORDS, TITLES, LABELS, OR WRITING in the image. Pure visual scene only.
 
 === EXAMPLES ===
 Input: "A fox grows to 10 meters in an epic battle at night. Lightning strikes the heroes."
@@ -516,7 +503,8 @@ Input: "War of the Gods. A massive battle."
 Output: "Epic fantasy scene illustration of divine beings clashing in the heavens, colossal mythological figures silhouetted against a dramatic sunset sky, golden light streaming through parting clouds, tiny heroes witnessing the celestial event from a mountain peak, awe-inspiring scale and grandeur, detailed fantasy art in the style of classic D&D covers, painterly lighting, warm and cool color contrast"
 
 Output ONLY the optimized prompt - make it SAFE for DALL-E while preserving the epic fantasy atmosphere.`
-  } else if (entityType === 'Item') {
+  }
+  else if (entityType === 'Item') {
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in D&D magical item illustrations.
 
 YOUR GOAL: Generate prompts for BEAUTIFUL FANTASY ITEM ARTWORK - like official D&D item illustrations, video game concept art, or tabletop RPG card art. The item should look MAGICAL and UNIQUE.
@@ -586,7 +574,8 @@ Input: "Ring of the Storm King"
 Output: "Fantasy item illustration of a royal signet ring with storming thundercloud captured within a large sapphire, tiny lightning bolts crackling inside the gem, band of dark silver with cloud engravings, electric blue glow emanating from within, dramatic lighting against dark background, detailed D&D magical item art style, clean artifact illustration, pure visual design"
 
 Output ONLY the optimized prompt.`
-  } else if (entityType === 'Lore') {
+  }
+  else if (entityType === 'Lore') {
     systemPrompt = `You are a DALL-E 3 prompt expert. Your prompts must produce REALISTIC photographs or classical artwork, NOT 3D renders or CGI.
 
 CONTEXT: This is for a Dungeons & Dragons tabletop roleplaying game. All lore entries are FICTIONAL FANTASY for entertainment - ancient legends, mythological tales, historical events. Think illustrated manuscripts, museum paintings, ancient tapestries.
@@ -615,6 +604,7 @@ CONTENT RULES:
 4. Focus on WONDER, MAJESTY, HISTORICAL SIGNIFICANCE - not conflict
 5. Keep under 100 words
 6. FORBIDDEN WORDS: "violence", "blood", "gore", "death", "corpse", "attack", "weapon striking", "killing"
+7. ABSOLUTELY NO TEXT, LETTERS, WORDS, TITLES, LABELS, OR WRITING in the image. Pure visual scene only.
 
 EXAMPLES:
 Input: "The Great Dragon War - a devastating conflict that destroyed three kingdoms"
@@ -624,7 +614,8 @@ Input: "The Dark Ritual of the Blood Cult - where they sacrificed innocents"
 Output: "Mysterious illuminated manuscript illustration showing robed figures gathered in candlelit ancient temple, mystical symbols glowing softly, ethereal atmosphere, painted in medieval manuscript style with gold leaf details, NOT 3D, NOT CGI"
 
 Output ONLY the optimized prompt - make it SAFE for DALL-E while preserving the legendary atmosphere.`
-  } else {
+  }
+  else {
     // Fallback for any other entity type
     systemPrompt = `You are a DALL-E 3 prompt expert specializing in fantasy art.
 
@@ -643,119 +634,49 @@ CRITICAL RULES:
 2. Use ONLY positive descriptions - NEVER say "no text", "no frame", "no border"
 3. Keep under 100 words
 4. FORBIDDEN WORDS: "inventory", "icon", "UI", "card", "interface", "banner", "label", "frame", "border", "game asset", "violence", "blood", "gore", "death"
+5. ABSOLUTELY NO TEXT, LETTERS, WORDS, SIGNS, LABELS, OR WRITING in the image. Pure visual illustration only.
 
 Output ONLY the optimized prompt.`
   }
 
-  const gptResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini', // Cheaper and faster than gpt-4
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: objectDescription,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 150,
-    }),
-  })
-
+  // Step 1: Optimize prompt using AI chat completion
   let enhancedPrompt: string
-  if (!gptResponse.ok) {
-    console.error('[AI] GPT-4 optimization failed, using fallback prompt')
-    // Fallback to simple prompt if GPT-4 fails
+  try {
+    enhancedPrompt = await chatCompletion(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: objectDescription },
+      ],
+      { temperature: 0.7, max_tokens: 150 },
+    )
+  }
+  catch {
+    console.error('[AI] Prompt optimization failed, using fallback')
     enhancedPrompt = `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
-  } else {
-    const gptData = await gptResponse.json()
-    enhancedPrompt =
-      gptData.choices?.[0]?.message?.content?.trim() ||
-      `${objectDescription}, ${styleMap[style]}, centered composition, simple background`
   }
 
-  // Call OpenAI DALL-E 3 API
-  // Use 16:9 format (1792x1024) for Session cover images, square for everything else
-  const imageSize = entityType === 'Session' ? '1792x1024' : '1024x1024'
+  // Step 2: Generate image
+  const aspectRatio = entityType === 'Session' ? '16:9' as const : '1:1' as const
 
   try {
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: enhancedPrompt,
-        n: 1,
-        size: imageSize,
-        quality: 'standard',
-        style: 'natural', // Use 'natural' to minimize creative rewriting
-        response_format: 'url',
-      }),
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw createError({
-        statusCode: response.status,
-        message: error.error?.message || 'OpenAI DALL-E API request failed',
-      })
-    }
-
-    const data = await response.json()
-    const imageUrl = data.data?.[0]?.url
-    const revisedPrompt = data.data?.[0]?.revised_prompt
-
-    // Log what DALL-E actually generated vs what we asked for
-    if (!imageUrl) {
-      throw createError({
-        statusCode: 500,
-        message: 'No image generated',
-      })
-    }
-
-    // Download the image from OpenAI and save locally
-    const imageResponse = await fetch(imageUrl)
-    if (!imageResponse.ok) {
-      throw createError({
-        statusCode: 500,
-        message: 'Failed to download generated image',
-      })
-    }
-
-    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
+    const imageBuffer = await generateImage(enhancedPrompt, { aspectRatio })
 
     // Save to uploads directory with UUID filename
     const filename = `${randomUUID()}.png`
     const uploadsDir = getUploadPath()
     const filePath = join(uploadsDir, filename)
 
-    // Ensure uploads directory exists
     await mkdir(uploadsDir, { recursive: true })
-
     await writeFile(filePath, imageBuffer)
 
-    // Return local URL
     return {
       imageUrl: `/uploads/${filename}`,
-      revisedPrompt,
+      revisedPrompt: enhancedPrompt,
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('[AI Generate Image] Error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
-    throw createError({
-      statusCode: 500,
-      message: errorMessage,
-    })
+    throw createError({ statusCode: 500, message: errorMessage })
   }
 })

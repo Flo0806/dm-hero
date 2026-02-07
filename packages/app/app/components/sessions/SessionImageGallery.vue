@@ -187,7 +187,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'preview-image': [url: string, name: string]
   'images-updated': []
-  generating: [isGenerating: boolean]
+  'generating': [isGenerating: boolean]
 }>()
 
 const { t } = useI18n()
@@ -209,9 +209,10 @@ const generationError = ref('')
 const hasApiKey = ref(false)
 onMounted(async () => {
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 
@@ -236,9 +237,11 @@ async function loadImages() {
   try {
     const result = await $fetch<SessionImage[]>(`/api/session-images/${props.sessionId}`)
     images.value = result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load session images:', error)
-  } finally {
+  }
+  finally {
     loadingImages.value = false
   }
 }
@@ -277,10 +280,12 @@ async function handleImageUpload(event: Event) {
 
     await loadImages()
     emit('images-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload session images:', error)
     showUploadError('image')
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -323,15 +328,17 @@ async function generateImage() {
       // Clear prompt on success
       imagePrompt.value = ''
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('Failed to generate session image:', error)
     // Extract error message from different error formats
     let errorMessage = ''
     if (error && typeof error === 'object') {
       // Check for $fetch error format (has data.message or statusMessage)
-      const fetchError = error as { data?: { message?: string }; statusMessage?: string; message?: string }
+      const fetchError = error as { data?: { message?: string }, statusMessage?: string, message?: string }
       errorMessage = fetchError.data?.message || fetchError.statusMessage || fetchError.message || String(error)
-    } else {
+    }
+    else {
       errorMessage = String(error)
     }
 
@@ -340,11 +347,13 @@ async function generateImage() {
     // Check for safety filter error
     if (errorMessage.includes('safety system') || errorMessage.includes('rejected')) {
       generationError.value = t('sessions.coverImageSafetyError')
-    } else {
+    }
+    else {
       // Show actual error message for debugging
       generationError.value = `${t('common.generateImageError')}: ${errorMessage}`
     }
-  } finally {
+  }
+  finally {
     generatingImage.value = false
     emit('generating', false)
   }
@@ -358,11 +367,12 @@ async function updateImageCaption(imageId: number, caption: string) {
       body: { caption },
     })
 
-    const image = images.value.find((img) => img.id === imageId)
+    const image = images.value.find(img => img.id === imageId)
     if (image) {
       image.caption = caption
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update caption:', error)
   }
 }
@@ -379,7 +389,8 @@ async function setPrimaryImage(imageId: number) {
       img.isPrimary = img.id === imageId
     })
     emit('images-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to set primary image:', error)
   }
 }
@@ -391,9 +402,10 @@ async function deleteImage(imageId: number) {
       method: 'DELETE',
     })
 
-    images.value = images.value.filter((img) => img.id !== imageId)
+    images.value = images.value.filter(img => img.id !== imageId)
     emit('images-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete session image:', error)
   }
 }

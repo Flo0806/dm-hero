@@ -176,7 +176,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'preview-image': [url: string, name: string]
   'images-updated': []
-  generating: [isGenerating: boolean]
+  'generating': [isGenerating: boolean]
 }>()
 
 const { downloadImage } = useImageDownload()
@@ -194,9 +194,10 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const hasApiKey = ref(false)
 onMounted(async () => {
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 
@@ -221,9 +222,11 @@ async function loadImages() {
   try {
     const result = await $fetch<EntityImage[]>(`/api/entity-images/${props.entityId}`)
     images.value = result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load images:', error)
-  } finally {
+  }
+  finally {
     loadingImages.value = false
   }
 }
@@ -264,10 +267,12 @@ async function handleImageUpload(event: Event) {
     // Notify components (including self via watcher) that images changed
     entitiesStore.incrementImageVersion(props.entityId)
     emit('images-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload images:', error)
     showUploadError('image')
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -314,10 +319,12 @@ async function generateImage() {
       entitiesStore.incrementImageVersion(props.entityId)
       emit('images-updated')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to generate image:', error)
     showError(error, 'errors.image.generateFailed')
-  } finally {
+  }
+  finally {
     generatingImage.value = false
     emit('generating', false)
   }
@@ -331,11 +338,12 @@ async function updateImageCaption(imageId: number, caption: string) {
       body: { caption },
     })
 
-    const image = images.value.find((img) => img.id === imageId)
+    const image = images.value.find(img => img.id === imageId)
     if (image) {
       image.caption = caption
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update caption:', error)
   }
 }
@@ -355,7 +363,8 @@ async function setPrimaryImage(imageId: number) {
       img.is_primary = img.id === imageId ? 1 : 0
     })
     emit('images-updated') // Notify parent that images changed
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to set primary image:', error)
   }
 }
@@ -370,9 +379,10 @@ async function deleteImage(imageId: number) {
     // Notify other components that images changed
     entitiesStore.incrementImageVersion(props.entityId)
 
-    images.value = images.value.filter((img) => img.id !== imageId)
+    images.value = images.value.filter(img => img.id !== imageId)
     emit('images-updated') // Notify parent that images changed
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete image:', error)
   }
 }

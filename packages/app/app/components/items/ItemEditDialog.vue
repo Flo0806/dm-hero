@@ -23,80 +23,516 @@
         </v-card-title>
 
         <v-tabs v-if="item" v-model="activeTab" class="px-4" show-arrows>
-        <v-tab value="details">
-          <v-icon start>mdi-information</v-icon>
-          {{ $t('items.details') }}
-        </v-tab>
-        <v-tab value="images">
-          <v-icon start>mdi-image-multiple</v-icon>
-          {{ $t('common.images') }}
-          <v-badge v-if="counts.images > 0" :content="counts.images" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="documents">
-          <v-icon start>mdi-file-document</v-icon>
-          {{ $t('documents.title') }}
-          <v-badge v-if="counts.documents > 0" :content="counts.documents" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="npcs">
-          <v-icon start>mdi-account</v-icon>
-          {{ $t('npcs.title') }}
-          <v-badge v-if="linkedOwners.length > 0" :content="linkedOwners.length" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="locations">
-          <v-icon start>mdi-map-marker</v-icon>
-          {{ $t('items.locations') }}
-          <v-badge v-if="linkedLocations.length > 0" :content="linkedLocations.length" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="factions">
-          <v-icon start>mdi-shield-account</v-icon>
-          {{ $t('factions.title') }}
-          <v-badge v-if="linkedFactions.length > 0" :content="linkedFactions.length" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="lore">
-          <v-icon start>mdi-book-open-variant</v-icon>
-          {{ $t('lore.title') }}
-          <v-badge v-if="linkedLore.length > 0" :content="linkedLore.length" color="primary" inline class="ml-1" />
-        </v-tab>
-        <v-tab value="players">
-          <v-icon start>mdi-account-star</v-icon>
-          {{ $t('players.title') }}
-          <v-badge v-if="counts.players > 0" :content="counts.players" color="primary" inline class="ml-1" />
-        </v-tab>
+          <v-tab value="details">
+            <v-icon start>mdi-information</v-icon>
+            {{ $t('items.details') }}
+          </v-tab>
+          <v-tab value="images">
+            <v-icon start>mdi-image-multiple</v-icon>
+            {{ $t('common.images') }}
+            <v-badge v-if="counts.images > 0" :content="counts.images" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="documents">
+            <v-icon start>mdi-file-document</v-icon>
+            {{ $t('documents.title') }}
+            <v-badge v-if="counts.documents > 0" :content="counts.documents" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="npcs">
+            <v-icon start>mdi-account</v-icon>
+            {{ $t('npcs.title') }}
+            <v-badge v-if="linkedOwners.length > 0" :content="linkedOwners.length" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="locations">
+            <v-icon start>mdi-map-marker</v-icon>
+            {{ $t('items.locations') }}
+            <v-badge v-if="linkedLocations.length > 0" :content="linkedLocations.length" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="factions">
+            <v-icon start>mdi-shield-account</v-icon>
+            {{ $t('factions.title') }}
+            <v-badge v-if="linkedFactions.length > 0" :content="linkedFactions.length" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="lore">
+            <v-icon start>mdi-book-open-variant</v-icon>
+            {{ $t('lore.title') }}
+            <v-badge v-if="linkedLore.length > 0" :content="linkedLore.length" color="primary" inline class="ml-1" />
+          </v-tab>
+          <v-tab value="players">
+            <v-icon start>mdi-account-star</v-icon>
+            {{ $t('players.title') }}
+            <v-badge v-if="counts.players > 0" :content="counts.players" color="primary" inline class="ml-1" />
+          </v-tab>
         </v-tabs>
 
         <v-card-text class="flex-grow-1 overflow-y-auto">
-        <!-- Edit Mode with Tabs -->
-        <v-tabs-window v-if="item" v-model="activeTab">
-          <!-- Details Tab -->
-          <v-tabs-window-item value="details">
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="image/*"
-              style="display: none"
-              @change="handleImageUpload"
-            />
+          <!-- Edit Mode with Tabs -->
+          <v-tabs-window v-if="item" v-model="activeTab">
+            <!-- Details Tab -->
+            <v-tabs-window-item value="details">
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleImageUpload"
+              />
 
-            <EntityImageUpload
-              class="mb-4"
-              :image-url="item?.image_url"
-              :entity-name="form.name"
-              entity-type="Item"
-              :uploading="uploadingImage"
-              :generating="generatingImage"
-              :deleting="deletingImage"
-              :has-api-key="hasApiKey"
-              :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
-              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
-              :avatar-size="160"
-              default-icon="mdi-sword"
-              @preview-image="openImagePreview"
-              @upload="triggerImageUpload"
-              @generate="generateImage"
-              @download="downloadImage"
-              @delete="deleteImage"
-            />
+              <EntityImageUpload
+                class="mb-4"
+                :image-url="item?.image_url"
+                :entity-name="form.name"
+                entity-type="Item"
+                :uploading="uploadingImage"
+                :generating="generatingImage"
+                :deleting="deletingImage"
+                :has-api-key="hasApiKey"
+                :generate-disabled="!form.name || uploadingImage || deletingImage || generatingImage || !hasApiKey || hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
+                :avatar-size="160"
+                default-icon="mdi-sword"
+                @preview-image="openImagePreview"
+                @upload="triggerImageUpload"
+                @generate="generateImage"
+                @download="downloadImage"
+                @delete="deleteImage"
+              />
 
+              <v-text-field
+                v-model="form.name"
+                :label="$t('items.name')"
+                :rules="[(v: string) => !!v || $t('items.nameRequired')]"
+                variant="outlined"
+                class="mb-4"
+              />
+
+              <v-textarea
+                v-model="form.description"
+                :label="$t('items.description')"
+                variant="outlined"
+                rows="3"
+                class="mb-4"
+              />
+
+              <v-divider class="my-4" />
+
+              <div class="text-h6 mb-4">{{ $t('items.metadata') }}</div>
+
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="form.metadata.type"
+                    :items="sortedItemTypes"
+                    :label="$t('items.type')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props: itemProps, item: selectItem }">
+                      <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
+                    </template>
+                    <template #selection="{ item: selectItem }">
+                      {{ $t(`items.types.${selectItem.value}`) }}
+                    </template>
+                  </v-select>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="form.metadata.rarity"
+                    :items="sortedItemRarities"
+                    :label="$t('items.rarity')"
+                    variant="outlined"
+                    clearable
+                  >
+                    <template #item="{ props: itemProps, item: selectItem }">
+                      <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
+                    </template>
+                    <template #selection="{ item: selectItem }">
+                      {{ $t(`items.rarities.${selectItem.value}`) }}
+                    </template>
+                  </v-select>
+                </v-col>
+              </v-row>
+
+              <v-row>
+                <v-col cols="12" md="5">
+                  <v-text-field
+                    v-model.number="form.metadata.weight"
+                    :label="$t('items.weight')"
+                    :suffix="$t('items.weightUnit')"
+                    variant="outlined"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                  />
+                </v-col>
+                <v-col cols="12" md="5">
+                  <v-tooltip :text="$t('items.valueHint')" location="top">
+                    <template #activator="{ props: tooltipProps }">
+                      <v-text-field
+                        v-bind="tooltipProps"
+                        v-model.number="form.metadata.value"
+                        :label="$t('items.value')"
+                        variant="outlined"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                      />
+                    </template>
+                  </v-tooltip>
+                </v-col>
+                <v-col cols="12" md="2">
+                  <v-select
+                    v-model="form.metadata.currency_id"
+                    :items="translatedCurrencies"
+                    :label="$t('items.currency')"
+                    variant="outlined"
+                    item-title="displayName"
+                    item-value="id"
+                    density="default"
+                  >
+                    <template #item="{ props: itemProps, item: selectItem }">
+                      <v-list-item v-bind="itemProps">
+                        <template #prepend>
+                          <span class="font-weight-bold mr-2">{{ selectItem.raw.symbol }}</span>
+                        </template>
+                      </v-list-item>
+                    </template>
+                    <template #selection="{ item: selectItem }">
+                      {{ selectItem.raw.symbol }}
+                    </template>
+                  </v-select>
+                </v-col>
+              </v-row>
+
+              <v-textarea
+                v-model="form.metadata.notes"
+                :label="$t('items.notes')"
+                variant="outlined"
+                rows="3"
+              />
+
+              <v-divider class="my-4" />
+
+              <!-- Current Location with Map Sync -->
+              <LocationSelectWithMap
+                v-model="form.location_id"
+                :label="$t('items.currentLocation')"
+                @update:map-sync="mapSyncData = $event"
+              />
+            </v-tabs-window-item>
+
+            <!-- Images Tab -->
+            <v-tabs-window-item value="images">
+              <EntityImageGallery
+                v-if="item"
+                :entity-id="item.id"
+                :entity-name="form.name"
+                entity-type="Item"
+                :generate-disabled="hasUnsavedImageChanges"
+                :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
+                @images-updated="onImagesUpdated"
+                @preview-image="openImagePreview"
+                @generating="generatingImage = $event"
+              />
+            </v-tabs-window-item>
+
+            <!-- Documents Tab -->
+            <v-tabs-window-item value="documents">
+              <EntityDocuments
+                v-if="item"
+                :entity-id="item.id"
+                entity-type="Item"
+                @changed="loadCounts(item!.id)"
+              />
+            </v-tabs-window-item>
+
+            <!-- NPCs Tab -->
+            <v-tabs-window-item value="npcs">
+              <div class="mb-4 mt-4">
+                <v-row align="center">
+                  <v-col cols="12" md="4">
+                    <v-autocomplete
+                      v-model="newOwner.npcId"
+                      :items="availableOwners"
+                      :label="$t('items.selectNpc')"
+                      variant="outlined"
+                      item-title="name"
+                      item-value="id"
+                      clearable
+                    >
+                      <template #prepend-item>
+                        <v-list-item class="text-primary" @click="openQuickCreate('NPC')">
+                          <template #prepend>
+                            <v-icon>mdi-plus</v-icon>
+                          </template>
+                          <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
+                        </v-list-item>
+                        <v-divider class="my-1" />
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="newOwner.relationType"
+                      :items="npcRelationTypeOptions"
+                      :label="$t('items.ownerRelationType')"
+                      variant="outlined"
+                      item-title="title"
+                      item-value="value"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="2">
+                    <v-text-field
+                      v-model.number="newOwner.quantity"
+                      :label="$t('items.quantity')"
+                      variant="outlined"
+                      type="number"
+                      min="1"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="2">
+                    <v-btn
+                      color="primary"
+                      block
+                      :disabled="!newOwner.npcId || !newOwner.relationType"
+                      :loading="addingOwner"
+                      @click="addOwner"
+                    >
+                      {{ $t('common.add') }}
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="my-4" />
+
+              <v-empty-state
+                v-if="linkedOwners.length === 0"
+                icon="mdi-account-off"
+                :title="$t('items.noOwners')"
+              />
+
+              <v-list v-else>
+                <v-list-item
+                  v-for="owner in linkedOwners"
+                  :key="owner.id"
+                  :prepend-avatar="owner.image_url ? `/uploads/${owner.image_url}` : undefined"
+                >
+                  <template v-if="!owner.image_url" #prepend>
+                    <v-avatar color="grey-lighten-2">
+                      <v-icon>mdi-account</v-icon>
+                    </v-avatar>
+                  </template>
+
+                  <v-list-item-title>{{ owner.name }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip size="small" color="primary" variant="outlined" class="mr-2">
+                      {{ $t(`items.ownerRelationTypes.${owner.relation_type}`, owner.relation_type) }}
+                    </v-chip>
+                    <span v-if="owner.quantity && owner.quantity > 1">
+                      {{ $t('items.quantity') }}: {{ owner.quantity }}
+                    </span>
+                    <span v-if="owner.equipped" class="ml-2">| {{ $t('items.equipped') }}</span>
+                  </v-list-item-subtitle>
+
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="removeOwner(owner.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-tabs-window-item>
+
+            <!-- Locations Tab -->
+            <v-tabs-window-item value="locations">
+              <div class="mb-4">
+                <v-row align="center">
+                  <v-col cols="12" md="6">
+                    <v-autocomplete
+                      v-model="newLocation.locationId"
+                      :items="availableLocations"
+                      :label="$t('items.selectLocation')"
+                      variant="outlined"
+                      item-title="name"
+                      item-value="id"
+                      clearable
+                    >
+                      <template #prepend-item>
+                        <v-list-item class="text-primary" @click="openQuickCreate('Location')">
+                          <template #prepend>
+                            <v-icon>mdi-plus</v-icon>
+                          </template>
+                          <v-list-item-title>{{ $t('quickCreate.newLocation') }}</v-list-item-title>
+                        </v-list-item>
+                        <v-divider class="my-1" />
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model.number="newLocation.quantity"
+                      :label="$t('items.quantity')"
+                      variant="outlined"
+                      type="number"
+                      min="1"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="2">
+                    <v-btn
+                      color="primary"
+                      block
+                      :disabled="!newLocation.locationId || !newLocation.quantity"
+                      :loading="addingLocation"
+                      @click="addLocation"
+                    >
+                      {{ $t('common.add') }}
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="my-4" />
+
+              <v-empty-state
+                v-if="linkedLocations.length === 0"
+                icon="mdi-map-marker-off"
+                :title="$t('items.noLocations')"
+              />
+
+              <v-list v-else>
+                <v-list-item
+                  v-for="loc in linkedLocations"
+                  :key="loc.id"
+                  :prepend-avatar="loc.image_url ? `/uploads/${loc.image_url}` : undefined"
+                >
+                  <template v-if="!loc.image_url" #prepend>
+                    <v-avatar color="grey-lighten-2">
+                      <v-icon>mdi-map-marker</v-icon>
+                    </v-avatar>
+                  </template>
+
+                  <v-list-item-title>{{ loc.name }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ $t('items.quantity') }}: {{ loc.quantity ?? 1 }}
+                  </v-list-item-subtitle>
+
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="removeLocation(loc.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-tabs-window-item>
+
+            <!-- Factions Tab -->
+            <v-tabs-window-item value="factions">
+              <div class="mb-4">
+                <v-row align="center">
+                  <v-col cols="12" md="8">
+                    <v-autocomplete
+                      v-model="newFaction.factionId"
+                      :items="availableFactions"
+                      :label="$t('items.selectFaction')"
+                      variant="outlined"
+                      item-title="name"
+                      item-value="id"
+                      clearable
+                    >
+                      <template #prepend-item>
+                        <v-list-item class="text-primary" @click="openQuickCreate('Faction')">
+                          <template #prepend>
+                            <v-icon>mdi-plus</v-icon>
+                          </template>
+                          <v-list-item-title>{{ $t('quickCreate.newFaction') }}</v-list-item-title>
+                        </v-list-item>
+                        <v-divider class="my-1" />
+                      </template>
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-btn
+                      color="primary"
+                      block
+                      :disabled="!newFaction.factionId"
+                      :loading="addingFaction"
+                      @click="addFaction"
+                    >
+                      {{ $t('common.add') }}
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="my-4" />
+
+              <v-empty-state
+                v-if="linkedFactions.length === 0"
+                icon="mdi-shield-account-outline"
+                :title="$t('items.noFactions')"
+              />
+
+              <v-list v-else>
+                <v-list-item
+                  v-for="faction in linkedFactions"
+                  :key="faction.id"
+                  :prepend-avatar="faction.image_url ? `/uploads/${faction.image_url}` : undefined"
+                >
+                  <template v-if="!faction.image_url" #prepend>
+                    <v-avatar color="grey-lighten-2">
+                      <v-icon>mdi-shield-account</v-icon>
+                    </v-avatar>
+                  </template>
+
+                  <v-list-item-title>{{ faction.name }}</v-list-item-title>
+                  <v-list-item-subtitle v-if="faction.description">
+                    {{ faction.description }}
+                  </v-list-item-subtitle>
+
+                  <template #append>
+                    <v-btn
+                      icon="mdi-delete"
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="removeFaction(faction.id)"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-tabs-window-item>
+
+            <!-- Lore Tab -->
+            <v-tabs-window-item value="lore">
+              <EntityLoreTab
+                :linked-lore="linkedLore"
+                :available-lore="availableLore"
+                :loading="addingLore"
+                @add="addLore"
+                @remove="removeLore"
+              />
+            </v-tabs-window-item>
+
+            <!-- Players Tab -->
+            <v-tabs-window-item value="players">
+              <EntityPlayersTab
+                v-if="item"
+                :entity-id="item.id"
+                @changed="loadCounts(item!.id)"
+              />
+            </v-tabs-window-item>
+          </v-tabs-window>
+
+          <!-- Create Mode (no tabs) -->
+          <div v-else>
             <v-text-field
               v-model="form.name"
               :label="$t('items.name')"
@@ -112,10 +548,6 @@
               rows="3"
               class="mb-4"
             />
-
-            <v-divider class="my-4" />
-
-            <div class="text-h6 mb-4">{{ $t('items.metadata') }}</div>
 
             <v-row>
               <v-col cols="12" md="6">
@@ -151,438 +583,6 @@
                 </v-select>
               </v-col>
             </v-row>
-
-            <v-row>
-              <v-col cols="12" md="5">
-                <v-text-field
-                  v-model.number="form.metadata.weight"
-                  :label="$t('items.weight')"
-                  :suffix="$t('items.weightUnit')"
-                  variant="outlined"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                />
-              </v-col>
-              <v-col cols="12" md="5">
-                <v-tooltip :text="$t('items.valueHint')" location="top">
-                  <template #activator="{ props: tooltipProps }">
-                    <v-text-field
-                      v-bind="tooltipProps"
-                      v-model.number="form.metadata.value"
-                      :label="$t('items.value')"
-                      variant="outlined"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                    />
-                  </template>
-                </v-tooltip>
-              </v-col>
-              <v-col cols="12" md="2">
-                <v-select
-                  v-model="form.metadata.currency_id"
-                  :items="translatedCurrencies"
-                  :label="$t('items.currency')"
-                  variant="outlined"
-                  item-title="displayName"
-                  item-value="id"
-                  density="default"
-                >
-                  <template #item="{ props: itemProps, item: selectItem }">
-                    <v-list-item v-bind="itemProps">
-                      <template #prepend>
-                        <span class="font-weight-bold mr-2">{{ selectItem.raw.symbol }}</span>
-                      </template>
-                    </v-list-item>
-                  </template>
-                  <template #selection="{ item: selectItem }">
-                    {{ selectItem.raw.symbol }}
-                  </template>
-                </v-select>
-              </v-col>
-            </v-row>
-
-            <v-textarea
-              v-model="form.metadata.notes"
-              :label="$t('items.notes')"
-              variant="outlined"
-              rows="3"
-            />
-
-            <v-divider class="my-4" />
-
-            <!-- Current Location with Map Sync -->
-            <LocationSelectWithMap
-              v-model="form.location_id"
-              :label="$t('items.currentLocation')"
-              @update:map-sync="mapSyncData = $event"
-            />
-          </v-tabs-window-item>
-
-          <!-- Images Tab -->
-          <v-tabs-window-item value="images">
-            <EntityImageGallery
-              v-if="item"
-              :entity-id="item.id"
-              :entity-name="form.name"
-              entity-type="Item"
-              :generate-disabled="hasUnsavedImageChanges"
-              :generate-disabled-reason="hasUnsavedImageChanges ? $t('common.saveChangesFirst') : ''"
-              @images-updated="onImagesUpdated"
-              @preview-image="openImagePreview"
-              @generating="generatingImage = $event"
-            />
-          </v-tabs-window-item>
-
-          <!-- Documents Tab -->
-          <v-tabs-window-item value="documents">
-            <EntityDocuments
-              v-if="item"
-              :entity-id="item.id"
-              entity-type="Item"
-              @changed="loadCounts(item!.id)"
-            />
-          </v-tabs-window-item>
-
-          <!-- NPCs Tab -->
-          <v-tabs-window-item value="npcs">
-            <div class="mb-4 mt-4">
-              <v-row align="center">
-                <v-col cols="12" md="4">
-                  <v-autocomplete
-                    v-model="newOwner.npcId"
-                    :items="availableOwners"
-                    :label="$t('items.selectNpc')"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    clearable
-                  >
-                    <template #prepend-item>
-                      <v-list-item class="text-primary" @click="openQuickCreate('NPC')">
-                        <template #prepend>
-                          <v-icon>mdi-plus</v-icon>
-                        </template>
-                        <v-list-item-title>{{ $t('quickCreate.newNpc') }}</v-list-item-title>
-                      </v-list-item>
-                      <v-divider class="my-1" />
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-select
-                    v-model="newOwner.relationType"
-                    :items="npcRelationTypeOptions"
-                    :label="$t('items.ownerRelationType')"
-                    variant="outlined"
-                    item-title="title"
-                    item-value="value"
-                  />
-                </v-col>
-                <v-col cols="12" md="2">
-                  <v-text-field
-                    v-model.number="newOwner.quantity"
-                    :label="$t('items.quantity')"
-                    variant="outlined"
-                    type="number"
-                    min="1"
-                  />
-                </v-col>
-                <v-col cols="12" md="2">
-                  <v-btn
-                    color="primary"
-                    block
-                    :disabled="!newOwner.npcId || !newOwner.relationType"
-                    :loading="addingOwner"
-                    @click="addOwner"
-                  >
-                    {{ $t('common.add') }}
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </div>
-
-            <v-divider class="my-4" />
-
-            <v-empty-state
-              v-if="linkedOwners.length === 0"
-              icon="mdi-account-off"
-              :title="$t('items.noOwners')"
-            />
-
-            <v-list v-else>
-              <v-list-item
-                v-for="owner in linkedOwners"
-                :key="owner.id"
-                :prepend-avatar="owner.image_url ? `/uploads/${owner.image_url}` : undefined"
-              >
-                <template v-if="!owner.image_url" #prepend>
-                  <v-avatar color="grey-lighten-2">
-                    <v-icon>mdi-account</v-icon>
-                  </v-avatar>
-                </template>
-
-                <v-list-item-title>{{ owner.name }}</v-list-item-title>
-                <v-list-item-subtitle>
-                  <v-chip size="small" color="primary" variant="outlined" class="mr-2">
-                    {{ $t(`items.ownerRelationTypes.${owner.relation_type}`, owner.relation_type) }}
-                  </v-chip>
-                  <span v-if="owner.quantity && owner.quantity > 1">
-                    {{ $t('items.quantity') }}: {{ owner.quantity }}
-                  </span>
-                  <span v-if="owner.equipped" class="ml-2">| {{ $t('items.equipped') }}</span>
-                </v-list-item-subtitle>
-
-                <template #append>
-                  <v-btn
-                    icon="mdi-delete"
-                    variant="text"
-                    color="error"
-                    size="small"
-                    @click="removeOwner(owner.id)"
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-tabs-window-item>
-
-          <!-- Locations Tab -->
-          <v-tabs-window-item value="locations">
-            <div class="mb-4">
-              <v-row align="center">
-                <v-col cols="12" md="6">
-                  <v-autocomplete
-                    v-model="newLocation.locationId"
-                    :items="availableLocations"
-                    :label="$t('items.selectLocation')"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    clearable
-                  >
-                    <template #prepend-item>
-                      <v-list-item class="text-primary" @click="openQuickCreate('Location')">
-                        <template #prepend>
-                          <v-icon>mdi-plus</v-icon>
-                        </template>
-                        <v-list-item-title>{{ $t('quickCreate.newLocation') }}</v-list-item-title>
-                      </v-list-item>
-                      <v-divider class="my-1" />
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model.number="newLocation.quantity"
-                    :label="$t('items.quantity')"
-                    variant="outlined"
-                    type="number"
-                    min="1"
-                  />
-                </v-col>
-                <v-col cols="12" md="2">
-                  <v-btn
-                    color="primary"
-                    block
-                    :disabled="!newLocation.locationId || !newLocation.quantity"
-                    :loading="addingLocation"
-                    @click="addLocation"
-                  >
-                    {{ $t('common.add') }}
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </div>
-
-            <v-divider class="my-4" />
-
-            <v-empty-state
-              v-if="linkedLocations.length === 0"
-              icon="mdi-map-marker-off"
-              :title="$t('items.noLocations')"
-            />
-
-            <v-list v-else>
-              <v-list-item
-                v-for="loc in linkedLocations"
-                :key="loc.id"
-                :prepend-avatar="loc.image_url ? `/uploads/${loc.image_url}` : undefined"
-              >
-                <template v-if="!loc.image_url" #prepend>
-                  <v-avatar color="grey-lighten-2">
-                    <v-icon>mdi-map-marker</v-icon>
-                  </v-avatar>
-                </template>
-
-                <v-list-item-title>{{ loc.name }}</v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ $t('items.quantity') }}: {{ loc.quantity ?? 1 }}
-                </v-list-item-subtitle>
-
-                <template #append>
-                  <v-btn
-                    icon="mdi-delete"
-                    variant="text"
-                    color="error"
-                    size="small"
-                    @click="removeLocation(loc.id)"
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-tabs-window-item>
-
-          <!-- Factions Tab -->
-          <v-tabs-window-item value="factions">
-            <div class="mb-4">
-              <v-row align="center">
-                <v-col cols="12" md="8">
-                  <v-autocomplete
-                    v-model="newFaction.factionId"
-                    :items="availableFactions"
-                    :label="$t('items.selectFaction')"
-                    variant="outlined"
-                    item-title="name"
-                    item-value="id"
-                    clearable
-                  >
-                    <template #prepend-item>
-                      <v-list-item class="text-primary" @click="openQuickCreate('Faction')">
-                        <template #prepend>
-                          <v-icon>mdi-plus</v-icon>
-                        </template>
-                        <v-list-item-title>{{ $t('quickCreate.newFaction') }}</v-list-item-title>
-                      </v-list-item>
-                      <v-divider class="my-1" />
-                    </template>
-                  </v-autocomplete>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-btn
-                    color="primary"
-                    block
-                    :disabled="!newFaction.factionId"
-                    :loading="addingFaction"
-                    @click="addFaction"
-                  >
-                    {{ $t('common.add') }}
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </div>
-
-            <v-divider class="my-4" />
-
-            <v-empty-state
-              v-if="linkedFactions.length === 0"
-              icon="mdi-shield-account-outline"
-              :title="$t('items.noFactions')"
-            />
-
-            <v-list v-else>
-              <v-list-item
-                v-for="faction in linkedFactions"
-                :key="faction.id"
-                :prepend-avatar="faction.image_url ? `/uploads/${faction.image_url}` : undefined"
-              >
-                <template v-if="!faction.image_url" #prepend>
-                  <v-avatar color="grey-lighten-2">
-                    <v-icon>mdi-shield-account</v-icon>
-                  </v-avatar>
-                </template>
-
-                <v-list-item-title>{{ faction.name }}</v-list-item-title>
-                <v-list-item-subtitle v-if="faction.description">
-                  {{ faction.description }}
-                </v-list-item-subtitle>
-
-                <template #append>
-                  <v-btn
-                    icon="mdi-delete"
-                    variant="text"
-                    color="error"
-                    size="small"
-                    @click="removeFaction(faction.id)"
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-tabs-window-item>
-
-          <!-- Lore Tab -->
-          <v-tabs-window-item value="lore">
-            <EntityLoreTab
-              :linked-lore="linkedLore"
-              :available-lore="availableLore"
-              :loading="addingLore"
-              @add="addLore"
-              @remove="removeLore"
-            />
-          </v-tabs-window-item>
-
-          <!-- Players Tab -->
-          <v-tabs-window-item value="players">
-            <EntityPlayersTab
-              v-if="item"
-              :entity-id="item.id"
-              @changed="loadCounts(item!.id)"
-            />
-          </v-tabs-window-item>
-        </v-tabs-window>
-
-          <!-- Create Mode (no tabs) -->
-          <div v-else>
-          <v-text-field
-            v-model="form.name"
-            :label="$t('items.name')"
-            :rules="[(v: string) => !!v || $t('items.nameRequired')]"
-            variant="outlined"
-            class="mb-4"
-          />
-
-          <v-textarea
-            v-model="form.description"
-            :label="$t('items.description')"
-            variant="outlined"
-            rows="3"
-            class="mb-4"
-          />
-
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.metadata.type"
-                :items="sortedItemTypes"
-                :label="$t('items.type')"
-                variant="outlined"
-                clearable
-              >
-                <template #item="{ props: itemProps, item: selectItem }">
-                  <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
-                </template>
-                <template #selection="{ item: selectItem }">
-                  {{ $t(`items.types.${selectItem.value}`) }}
-                </template>
-              </v-select>
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.metadata.rarity"
-                :items="sortedItemRarities"
-                :label="$t('items.rarity')"
-                variant="outlined"
-                clearable
-              >
-                <template #item="{ props: itemProps, item: selectItem }">
-                  <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
-                </template>
-                <template #selection="{ item: selectItem }">
-                  {{ $t(`items.rarities.${selectItem.value}`) }}
-                </template>
-              </v-select>
-            </v-col>
-          </v-row>
           </div>
         </v-card-text>
 
@@ -701,7 +701,7 @@ interface ApiRelatedEntity {
   description: string | null
   image_url: string | null
   relation_type: string
-  notes: { quantity?: number; equipped?: boolean } | null
+  notes: { quantity?: number, equipped?: boolean } | null
   direction: 'outgoing' | 'incoming'
 }
 
@@ -723,8 +723,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [item: Item]
-  created: [item: Item]
+  'saved': [item: Item]
+  'created': [item: Item]
 }>()
 
 // ============================================================================
@@ -761,7 +761,7 @@ const form = ref<ItemForm>({
 })
 
 // Map sync data (from LocationSelectWithMap)
-const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
+const mapSyncData = ref<{ locationId: number | null, mapIds: number[] } | null>(null)
 
 const counts = ref({
   images: 0,
@@ -774,7 +774,7 @@ const currencies = ref<Currency[]>([])
 
 // Translated currencies for display
 const translatedCurrencies = computed(() => {
-  return currencies.value.map((c) => ({
+  return currencies.value.map(c => ({
     ...c,
     displayName: DEFAULT_CURRENCY_KEYS.includes(c.name)
       ? t(`campaigns.currencies.defaults.${c.name}`)
@@ -790,34 +790,34 @@ const linkedLore = ref<LinkedLoreItem[]>([])
 
 // Available entities for dropdowns (sorted alphabetically)
 const availableOwners = computed(() => {
-  const linkedIds = new Set(linkedOwners.value.map((o) => o.entity_id))
+  const linkedIds = new Set(linkedOwners.value.map(o => o.entity_id))
   return (entitiesStore.npcs || [])
-    .filter((npc) => !linkedIds.has(npc.id))
-    .map((npc) => ({ id: npc.id, name: npc.name }))
+    .filter(npc => !linkedIds.has(npc.id))
+    .map(npc => ({ id: npc.id, name: npc.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLocations = computed(() => {
-  const linkedIds = new Set(linkedLocations.value.map((l) => l.entity_id))
+  const linkedIds = new Set(linkedLocations.value.map(l => l.entity_id))
   return (entitiesStore.locations || [])
-    .filter((loc) => !linkedIds.has(loc.id))
-    .map((loc) => ({ id: loc.id, name: loc.name }))
+    .filter(loc => !linkedIds.has(loc.id))
+    .map(loc => ({ id: loc.id, name: loc.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableFactions = computed(() => {
-  const linkedIds = new Set(linkedFactions.value.map((f) => f.entity_id))
+  const linkedIds = new Set(linkedFactions.value.map(f => f.entity_id))
   return (entitiesStore.factions || [])
-    .filter((f) => !linkedIds.has(f.id))
-    .map((f) => ({ id: f.id, name: f.name }))
+    .filter(f => !linkedIds.has(f.id))
+    .map(f => ({ id: f.id, name: f.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLore = computed(() => {
-  const linkedIds = new Set(linkedLore.value.map((l) => l.entity_id))
+  const linkedIds = new Set(linkedLore.value.map(l => l.entity_id))
   return (entitiesStore.lore || [])
-    .filter((l) => !linkedIds.has(l.id))
-    .map((l) => ({ id: l.id, name: l.name }))
+    .filter(l => !linkedIds.has(l.id))
+    .map(l => ({ id: l.id, name: l.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
@@ -826,7 +826,7 @@ const newOwner = ref({ npcId: null as number | null, relationType: 'owns' as str
 
 // Computed: NPC relation type options for dropdown
 const npcRelationTypeOptions = computed(() =>
-  NPC_ITEM_RELATION_TYPES.map((type) => ({
+  NPC_ITEM_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`items.ownerRelationTypes.${type}`, type),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -849,9 +849,9 @@ const locationsTabDirty = computed(() => !!newLocation.value.locationId)
 const factionsTabDirty = computed(() => !!newFaction.value.factionId)
 
 // Register and update dirty state for inline tabs
-watch(npcsTabDirty, (dirty) => setDirty('npcsTab', dirty), { immediate: true })
-watch(locationsTabDirty, (dirty) => setDirty('locationsTab', dirty), { immediate: true })
-watch(factionsTabDirty, (dirty) => setDirty('factionsTab', dirty), { immediate: true })
+watch(npcsTabDirty, dirty => setDirty('npcsTab', dirty), { immediate: true })
+watch(locationsTabDirty, dirty => setDirty('locationsTab', dirty), { immediate: true })
+watch(factionsTabDirty, dirty => setDirty('factionsTab', dirty), { immediate: true })
 
 // Loading states for relation operations
 const addingOwner = ref(false)
@@ -886,10 +886,10 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   return (
-    form.value.name !== originalImageData.value.name ||
-    (form.value.description || '') !== originalImageData.value.description ||
-    (form.value.metadata.type || undefined) !== originalImageData.value.type ||
-    (form.value.metadata.rarity || undefined) !== originalImageData.value.rarity
+    form.value.name !== originalImageData.value.name
+    || (form.value.description || '') !== originalImageData.value.description
+    || (form.value.metadata.type || undefined) !== originalImageData.value.type
+    || (form.value.metadata.rarity || undefined) !== originalImageData.value.rarity
   )
 })
 
@@ -925,10 +925,12 @@ async function loadData(itemId: number | null | undefined) {
       await loadItem(itemId)
       await loadRelations(itemId)
       await loadCounts(itemId)
-    } else {
+    }
+    else {
       resetForm()
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -951,15 +953,17 @@ async function loadStoreData() {
     currencies.value = await $fetch<Currency[]>('/api/currencies', {
       query: { campaignId },
     })
-  } catch {
+  }
+  catch {
     currencies.value = []
   }
 
   // Check API key
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 }
@@ -972,7 +976,7 @@ async function loadItem(itemId: number) {
     // If no currency_id set, use the default currency for this campaign
     let currencyId = data.metadata?.currency_id || null
     if (!currencyId) {
-      const defaultCurrency = currencies.value.find((c) => c.is_default === 1)
+      const defaultCurrency = currencies.value.find(c => c.is_default === 1)
       currencyId = defaultCurrency?.id || null
     }
 
@@ -997,7 +1001,8 @@ async function loadItem(itemId: number) {
       type: data.metadata?.type || undefined,
       rarity: data.metadata?.rarity || undefined,
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to load item:', e)
   }
 }
@@ -1011,7 +1016,7 @@ async function loadRelations(itemId: number) {
       $fetch<ApiRelatedEntity[]>(`/api/entities/${itemId}/related/lore`),
     ])
 
-    linkedOwners.value = ownersRaw.map((o) => ({
+    linkedOwners.value = ownersRaw.map(o => ({
       id: o.id,
       entity_id: o.direction === 'outgoing' ? o.to_entity_id : o.from_entity_id,
       name: o.name,
@@ -1022,7 +1027,7 @@ async function loadRelations(itemId: number) {
       equipped: o.notes?.equipped,
     }))
 
-    linkedLocations.value = locationsRaw.map((l) => ({
+    linkedLocations.value = locationsRaw.map(l => ({
       id: l.id,
       entity_id: l.direction === 'outgoing' ? l.to_entity_id : l.from_entity_id,
       name: l.name,
@@ -1031,7 +1036,7 @@ async function loadRelations(itemId: number) {
       quantity: l.notes?.quantity,
     }))
 
-    linkedFactions.value = factionsRaw.map((f) => ({
+    linkedFactions.value = factionsRaw.map(f => ({
       id: f.id,
       entity_id: f.direction === 'outgoing' ? f.to_entity_id : f.from_entity_id,
       name: f.name,
@@ -1039,23 +1044,25 @@ async function loadRelations(itemId: number) {
       image_url: f.image_url,
     }))
 
-    linkedLore.value = loreRaw.map((l) => ({
+    linkedLore.value = loreRaw.map(l => ({
       id: l.id,
       entity_id: l.direction === 'outgoing' ? l.to_entity_id : l.from_entity_id,
       name: l.name,
       description: l.description,
       image_url: l.image_url,
     }))
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to load relations:', e)
   }
 }
 
 async function loadCounts(itemId: number) {
   try {
-    const data = await $fetch<{ images: number; documents: number; players: number }>(`/api/items/${itemId}/counts`)
+    const data = await $fetch<{ images: number, documents: number, players: number }>(`/api/items/${itemId}/counts`)
     counts.value = data
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to load counts:', e)
   }
 }
@@ -1071,7 +1078,7 @@ function resetForm() {
   item.value = null
 
   // Set default currency
-  const defaultCurrency = currencies.value.find((c) => c.is_default === 1)
+  const defaultCurrency = currencies.value.find(c => c.is_default === 1)
 
   form.value = {
     name: '',
@@ -1138,13 +1145,14 @@ async function save() {
       }
 
       // Update store
-      const index = entitiesStore.items?.findIndex((i) => i.id === item.value!.id)
+      const index = entitiesStore.items?.findIndex(i => i.id === item.value!.id)
       if (index !== undefined && index !== -1 && entitiesStore.items) {
         entitiesStore.items[index] = { ...entitiesStore.items[index], ...updated }
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new
       const created = await $fetch<Item>('/api/items', {
         method: 'POST',
@@ -1167,9 +1175,11 @@ async function save() {
     }
 
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -1177,35 +1187,37 @@ async function save() {
 // Sync Item marker to selected maps - place inside location circle if available
 async function syncToMaps(entityId: number, mapIds: number[]) {
   const locationId = form.value.location_id
-  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let mapsWithArea: Array<{ map_id: number, map_name: string, area_id: number }> = []
   let locationName = ''
 
   if (locationId) {
     try {
-      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+      mapsWithArea = await $fetch<Array<{ map_id: number, map_name: string, area_id: number }>>(
         `/api/locations/${locationId}/maps-with-area`,
       )
       const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
       locationName = location.name
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[ItemEditDialog] Failed to get maps with area:', e)
     }
   }
 
   const mapsWithoutLocation: string[] = []
 
-  let allMaps: Array<{ id: number; name: string }> = []
+  let allMaps: Array<{ id: number, name: string }> = []
   try {
-    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+    allMaps = await $fetch<Array<{ id: number, name: string }>>('/api/maps', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to get maps:', e)
   }
 
   for (const mapId of mapIds) {
     try {
-      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+      const areaInfo = mapsWithArea.find(m => m.map_id === mapId)
 
       if (areaInfo) {
         await $fetch(`/api/maps/${mapId}/place-in-area`, {
@@ -1215,7 +1227,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
             area_id: areaInfo.area_id,
           },
         })
-      } else {
+      }
+      else {
         const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
           query: { entityId },
         })
@@ -1232,13 +1245,14 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
         }
 
         if (locationId) {
-          const mapInfo = allMaps.find((m) => m.id === mapId)
+          const mapInfo = allMaps.find(m => m.id === mapId)
           if (mapInfo) {
             mapsWithoutLocation.push(mapInfo.name)
           }
         }
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error(`[ItemEditDialog] Failed to sync to map ${mapId}:`, e)
     }
   }
@@ -1248,7 +1262,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
       snackbarStore.warning(
         t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
       )
-    } else {
+    }
+    else {
       snackbarStore.warning(
         t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
       )
@@ -1274,7 +1289,7 @@ async function addOwner() {
       },
     })
 
-    const npc = entitiesStore.npcs?.find((n) => n.id === newOwner.value.npcId)
+    const npc = entitiesStore.npcs?.find(n => n.id === newOwner.value.npcId)
     if (npc) {
       linkedOwners.value.push({
         id: createdRelation.id,
@@ -1288,9 +1303,11 @@ async function addOwner() {
     }
 
     newOwner.value = { npcId: null, relationType: 'owns', quantity: 1 }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to add owner:', e)
-  } finally {
+  }
+  finally {
     addingOwner.value = false
   }
 }
@@ -1300,8 +1317,9 @@ async function removeOwner(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedOwners.value = linkedOwners.value.filter((o) => o.id !== relationId)
-  } catch (e) {
+    linkedOwners.value = linkedOwners.value.filter(o => o.id !== relationId)
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to remove owner:', e)
   }
 }
@@ -1324,7 +1342,7 @@ async function addLocation() {
       },
     })
 
-    const loc = entitiesStore.locations?.find((l) => l.id === newLocation.value.locationId)
+    const loc = entitiesStore.locations?.find(l => l.id === newLocation.value.locationId)
     if (loc) {
       linkedLocations.value.push({
         id: createdRelation.id,
@@ -1337,9 +1355,11 @@ async function addLocation() {
     }
 
     newLocation.value = { locationId: null, quantity: 1 }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to add location:', e)
-  } finally {
+  }
+  finally {
     addingLocation.value = false
   }
 }
@@ -1349,8 +1369,9 @@ async function removeLocation(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedLocations.value = linkedLocations.value.filter((l) => l.id !== relationId)
-  } catch (e) {
+    linkedLocations.value = linkedLocations.value.filter(l => l.id !== relationId)
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to remove location:', e)
   }
 }
@@ -1372,7 +1393,7 @@ async function addFaction() {
       },
     })
 
-    const faction = entitiesStore.factions?.find((f) => f.id === newFaction.value.factionId)
+    const faction = entitiesStore.factions?.find(f => f.id === newFaction.value.factionId)
     if (faction) {
       linkedFactions.value.push({
         id: createdRelation.id,
@@ -1384,9 +1405,11 @@ async function addFaction() {
     }
 
     newFaction.value = { factionId: null }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to add faction:', e)
-  } finally {
+  }
+  finally {
     addingFaction.value = false
   }
 }
@@ -1396,8 +1419,9 @@ async function removeFaction(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedFactions.value = linkedFactions.value.filter((f) => f.id !== relationId)
-  } catch (e) {
+    linkedFactions.value = linkedFactions.value.filter(f => f.id !== relationId)
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to remove faction:', e)
   }
 }
@@ -1419,7 +1443,7 @@ async function addLore(loreId: number) {
       },
     })
 
-    const lore = entitiesStore.lore?.find((l) => l.id === loreId)
+    const lore = entitiesStore.lore?.find(l => l.id === loreId)
     if (lore) {
       linkedLore.value.push({
         id: createdRelation.id,
@@ -1429,9 +1453,11 @@ async function addLore(loreId: number) {
         image_url: lore.image_url || null,
       })
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to add lore:', e)
-  } finally {
+  }
+  finally {
     addingLore.value = false
   }
 }
@@ -1441,8 +1467,9 @@ async function removeLore(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedLore.value = linkedLore.value.filter((l) => l.id !== relationId)
-  } catch (e) {
+    linkedLore.value = linkedLore.value.filter(l => l.id !== relationId)
+  }
+  catch (e) {
     console.error('[ItemEditDialog] Failed to remove lore:', e)
   }
 }
@@ -1450,7 +1477,7 @@ async function removeLore(relationId: number) {
 // ============================================================================
 // Quick Create Handler (unified for all entity types)
 // ============================================================================
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   const campaignId = campaignStore.activeCampaignId
   if (!campaignId) return
 
@@ -1524,9 +1551,11 @@ async function handleImageUpload(event: Event) {
 
     await entitiesStore.refreshItem(item.value.id)
     await loadItem(item.value.id)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ItemEditDialog] Failed to upload image:', error)
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -1567,9 +1596,11 @@ async function generateImage() {
       await loadItem(item.value.id)
       await loadCounts(item.value.id)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ItemEditDialog] Failed to generate image:', error)
-  } finally {
+  }
+  finally {
     generatingImage.value = false
   }
 }
@@ -1583,9 +1614,11 @@ async function deleteImage() {
     await $fetch(`/api/entities/${item.value.id}/delete-image`, { method: 'DELETE' })
     await entitiesStore.refreshItem(item.value.id)
     await loadItem(item.value.id)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ItemEditDialog] Failed to delete image:', error)
-  } finally {
+  }
+  finally {
     deletingImage.value = false
   }
 }
@@ -1602,7 +1635,8 @@ async function downloadImage() {
     link.download = `${form.value.name}.${item.value.image_url.split('.').pop()}`
     link.click()
     window.URL.revokeObjectURL(url)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ItemEditDialog] Failed to download image:', error)
   }
 }

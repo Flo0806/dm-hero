@@ -835,7 +835,7 @@ async function loadStoreData() {
 
 async function checkApiKey() {
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
   }
   catch {
@@ -1476,8 +1476,8 @@ async function generateImage() {
       // Notify other components (Gallery) that images changed
       entitiesStore.incrementImageVersion(npc.value.id)
 
-      await refreshNpc()
-      await loadCounts(npc.value.id)
+      // Reload NPC to get updated image_url
+      await loadNpc(npc.value.id)
     }
   }
   catch (error: unknown) {

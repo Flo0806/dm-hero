@@ -43,7 +43,7 @@
               <v-icon size="x-small" class="mr-1">mdi-sword-cross</v-icon>
               {{ formatSessionDate(session) }}
               <span v-if="session.in_game_year_end && hasDateRange(session)">
-                <br/>→ {{ formatSessionEndDate(session) }}
+                <br />→ {{ formatSessionEndDate(session) }}
               </span>
             </div>
           </div>
@@ -790,9 +790,9 @@ function formatSessionEndDate(session: Session): string {
 // Check if session has a different end date than start
 function hasDateRange(session: Session): boolean {
   return (
-    session.in_game_year_start !== session.in_game_year_end ||
-    session.in_game_month_start !== session.in_game_month_end ||
-    session.in_game_day_start !== session.in_game_day_end
+    session.in_game_year_start !== session.in_game_year_end
+    || session.in_game_month_start !== session.in_game_month_end
+    || session.in_game_day_start !== session.in_game_day_end
   )
 }
 
@@ -814,9 +814,10 @@ const editorTheme = computed<'light' | 'dark'>(() =>
 onMounted(async () => {
   // Check API key availability for AI features
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 
@@ -836,7 +837,7 @@ const sessions = ref<Session[]>([])
 const pending = ref(false)
 
 // Pinboard ref (exposed methods: refresh, addPin)
-const pinboardRef = ref<{ refresh: () => void; addPin: (entityId: number) => Promise<boolean | undefined> } | null>(null)
+const pinboardRef = ref<{ refresh: () => void, addPin: (entityId: number) => Promise<boolean | undefined> } | null>(null)
 
 // Form state
 const showCreateDialog = ref(false)
@@ -892,9 +893,11 @@ async function smoothNotesText() {
     if (result.text) {
       sessionForm.value.notes = result.text
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to smooth text:', error)
-  } finally {
+  }
+  finally {
     smoothingText.value = false
   }
 }
@@ -959,7 +962,8 @@ watch(
       if (!inGameDateStart.value) {
         // End is set but start is not - set start to same as end
         inGameDateStart.value = { ...newEnd }
-      } else {
+      }
+      else {
         const startAbs = dateToAbsolute(inGameDateStart.value)
         const endAbs = dateToAbsolute(newEnd)
         if (endAbs < startAbs) {
@@ -982,17 +986,17 @@ const editorRef = ref<EditorExpose | null>(null)
 function resolveEntityName(type: string, id: number): string {
   switch (type) {
     case 'npc':
-      return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
+      return entitiesStore.npcs?.find(e => e.id === id)?.name || `NPC #${id}`
     case 'location':
-      return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
+      return entitiesStore.locations?.find(e => e.id === id)?.name || `Location #${id}`
     case 'item':
-      return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
+      return entitiesStore.items?.find(e => e.id === id)?.name || `Item #${id}`
     case 'faction':
-      return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
+      return entitiesStore.factions?.find(e => e.id === id)?.name || `Faction #${id}`
     case 'lore':
-      return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
+      return entitiesStore.lore?.find(e => e.id === id)?.name || `Lore #${id}`
     case 'player': {
-      const player = entitiesStore.players?.find((e) => e.id === id)
+      const player = entitiesStore.players?.find(e => e.id === id)
       // Return character name (name field), human name is shown separately
       return player?.name || `Player #${id}`
     }
@@ -1003,7 +1007,7 @@ function resolveEntityName(type: string, id: number): string {
 
 // Helper to get player's human name (for display alongside character name)
 function resolvePlayerHumanName(id: number): string | null {
-  const player = entitiesStore.players?.find((e) => e.id === id)
+  const player = entitiesStore.players?.find(e => e.id === id)
   return player?.metadata?.player_name || null
 }
 
@@ -1066,10 +1070,12 @@ async function loadSessions() {
 
       return 0
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load sessions:', error)
     sessions.value = []
-  } finally {
+  }
+  finally {
     pending.value = false
   }
 }
@@ -1115,7 +1121,8 @@ function sanitizeHtml(html: string): string {
       if (humanName) {
         // Spielername groß, Character-Name klein in Klammern
         displayHtml = `${humanName} <span style="font-size: 0.75rem; opacity: 0.8;">(${name})</span>`
-      } else {
+      }
+      else {
         // Kein Spielername - Character name kursiv
         displayHtml = `<em>${name}</em>`
       }
@@ -1241,12 +1248,12 @@ async function editSession(session: Session) {
     duration_minutes: session.duration_minutes,
   }
   // Set in-game date refs
-  inGameDateStart.value =
-    session.in_game_year_start && session.in_game_month_start && session.in_game_day_start
+  inGameDateStart.value
+    = session.in_game_year_start && session.in_game_month_start && session.in_game_day_start
       ? { year: session.in_game_year_start, month: session.in_game_month_start, day: session.in_game_day_start }
       : null
-  inGameDateEnd.value =
-    session.in_game_year_end && session.in_game_month_end && session.in_game_day_end
+  inGameDateEnd.value
+    = session.in_game_year_end && session.in_game_month_end && session.in_game_day_end
       ? { year: session.in_game_year_end, month: session.in_game_month_end, day: session.in_game_day_end }
       : null
   // Set checkbox based on whether session has in-game dates
@@ -1266,9 +1273,11 @@ async function editSession(session: Session) {
     for (const record of attendance) {
       sessionAttendance.value[record.player_id] = record.attended === 1
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load attendance:', error)
-  } finally {
+  }
+  finally {
     loadingAttendance.value = false
   }
 }
@@ -1316,7 +1325,8 @@ async function saveSession() {
         method: 'POST',
         body: { attendance: attendanceData },
       })
-    } else {
+    }
+    else {
       await $fetch('/api/sessions', {
         method: 'POST',
         body: {
@@ -1328,9 +1338,11 @@ async function saveSession() {
 
     await loadSessions()
     closeDialog()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save session:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -1347,9 +1359,11 @@ async function confirmDelete() {
     await loadSessions()
     showDeleteDialog.value = false
     deletingSession.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete session:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
@@ -1367,13 +1381,15 @@ async function handleImageUpload(files: File[], callback: (urls: string[]) => vo
           body: formData,
         })
         uploaded.push(res.image_url)
-      } catch (e) {
+      }
+      catch (e) {
         console.error('Failed to upload image:', e)
       }
     }
     // md-editor expects final URLs
-    callback(uploaded.map((u) => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
-  } finally {
+    callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
+  }
+  finally {
     uploadingImage.value = false
   }
 }
@@ -1383,7 +1399,8 @@ async function openImageGallery() {
   try {
     const images = await $fetch<string[]>('/api/documents/images')
     galleryImages.value = images ?? []
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load images:', e)
     galleryImages.value = []
   }
@@ -1396,7 +1413,8 @@ function insertImageFromGallery(image: string) {
   // Use the EntityMarkdownEditor's insert API
   if (editorRef.value) {
     editorRef.value.insert(markdown)
-  } else {
+  }
+  else {
     // Fallback: append at end
     sessionForm.value.notes += `\n${markdown}\n`
   }

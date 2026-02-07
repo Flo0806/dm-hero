@@ -550,7 +550,7 @@ watch(
 // Check API key on mount
 onMounted(async () => {
   try {
-    const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
+    const result = await $fetch<{ hasKey: boolean }>('/api/settings/ai-key/check')
     hasApiKey.value = result.hasKey
   }
   catch {

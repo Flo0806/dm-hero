@@ -1618,7 +1618,7 @@
     "title": "Settings",
     "subtitle": "Configure API keys and preferences",
     "sections": {
-      "openai": "OpenAI Integration",
+      "ai": "AI Integration",
       "preferences": "Preferences",
       "campaign": "Campaign",
       "announcements": "Announcements",
@@ -1632,20 +1632,25 @@
       "title": "Campaign Settings",
       "subtitle": "Settings for the active campaign"
     },
-    "openai": {
-      "apiKey": "OpenAI API Key",
-      "apiKeyPlaceholder": "sk-proj-...",
-      "apiKeyHint": "Your OpenAI API key will be stored encrypted",
-      "model": "Model",
-      "modelHint": "Default: gpt-4o-mini",
+    "ai": {
+      "provider": "AI Provider",
+      "providerHint": "Choose your AI provider for text and image generation",
+      "openaiApiKey": "OpenAI API Key",
+      "openaiApiKeyPlaceholder": "sk-proj-...",
+      "geminiApiKey": "Google Gemini API Key",
+      "geminiApiKeyPlaceholder": "AIza...",
+      "apiKeyHint": "Your API key will be stored encrypted",
+      "activeProvider": "Active provider",
+      "openaiModel": "OpenAI Model",
+      "geminiModel": "Gemini Model",
+      "modelHint": "Choose from the list or enter a custom model name",
+      "modelsAvailable": "models available",
       "testConnection": "Test Connection",
-      "testing": "Testing connection...",
       "testSuccess": "Connection successful!",
       "testFailed": "Connection failed",
-      "showKey": "Show",
-      "hideKey": "Hide",
       "getApiKey": "Get API Key",
-      "howToGetKey": "Go to platform.openai.com, create an account and generate an API key"
+      "openaiHowToGetKey": "Create an account at platform.openai.com and generate an API key",
+      "geminiHowToGetKey": "Create an API key at aistudio.google.com"
     },
     "saved": "Settings saved",
     "saveFailed": "Failed to save settings",
@@ -2232,14 +2237,15 @@
     "GROUP_NAME_EMPTY": "Group name cannot be empty",
     "GROUP_ENTITY_IDS_REQUIRED": "At least one entity is required",
     "GROUP_ENTITY_ID_REQUIRED": "Entity ID is required",
-    "openai": {
-      "insufficientQuota": "OpenAI credits exhausted. Please check your billing at platform.openai.com.",
+    "ai": {
+      "insufficientQuota": "AI credits exhausted. Please check your billing with the provider.",
       "invalidApiKey": "Invalid API key. Please check your settings.",
       "rateLimitExceeded": "Too many requests. Please wait a moment and try again.",
-      "contentPolicyViolation": "Content violates OpenAI policies. Please adjust the description.",
-      "billingHardLimitReached": "OpenAI billing limit reached. Please check your limits at platform.openai.com.",
-      "serverError": "OpenAI server unavailable. Please try again later.",
+      "contentPolicyViolation": "Content violates the AI provider's policies. Please adjust the description.",
+      "billingHardLimitReached": "AI provider billing limit reached. Please check your limits.",
+      "serverError": "AI server unavailable. Please try again later.",
       "modelNotFound": "The selected AI model is not available.",
+      "noApiKey": "No API key configured. Please add one in Settings.",
       "unknown": "An error occurred during the AI request."
     },
     "upload": {

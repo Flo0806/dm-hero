@@ -13,62 +13,128 @@
     <!-- Settings Form -->
     <v-card>
       <v-card-text>
-        <!-- OpenAI Integration Section -->
+        <!-- AI Integration Section -->
         <div class="mb-6">
           <h2 class="text-h6 mb-4">
-            {{ $t('settings.sections.openai') }}
+            {{ $t('settings.sections.ai') }}
           </h2>
 
-          <!-- API Key Field -->
-          <v-text-field
-            v-model="apiKey"
-            :label="$t('settings.openai.apiKey')"
-            :placeholder="$t('settings.openai.apiKeyPlaceholder')"
-            :hint="$t('settings.openai.apiKeyHint')"
-            :type="showApiKey ? 'text' : 'password'"
+          <!-- Provider Selection -->
+          <v-select
+            v-model="aiProvider"
+            :items="providerOptions"
+            item-title="title"
+            item-value="value"
+            :label="$t('settings.ai.provider')"
+            :hint="$t('settings.ai.providerHint')"
             variant="outlined"
             density="comfortable"
             class="mb-4"
             persistent-hint
+            autocomplete="off"
+          />
+
+          <!-- OpenAI API Key -->
+          <v-text-field
+            v-model="openaiApiKey"
+            :label="$t('settings.ai.openaiApiKey')"
+            :placeholder="$t('settings.ai.openaiApiKeyPlaceholder')"
+            :hint="aiProvider === 'openai' ? $t('settings.ai.activeProvider') : ''"
+            :type="showOpenaiKey ? 'text' : 'password'"
+            variant="outlined"
+            density="comfortable"
+            class="mb-4"
+            persistent-hint
+            :color="aiProvider === 'openai' ? 'primary' : undefined"
           >
+            <template #prepend-inner>
+              <v-icon v-if="aiProvider === 'openai'" color="primary" size="small">mdi-check-circle</v-icon>
+            </template>
             <template #append-inner>
               <v-btn
-                :icon="showApiKey ? 'mdi-eye-off' : 'mdi-eye'"
+                :icon="showOpenaiKey ? 'mdi-eye-off' : 'mdi-eye'"
                 variant="text"
                 size="small"
-                @click="showApiKey = !showApiKey"
+                @click="showOpenaiKey = !showOpenaiKey"
               />
+            </template>
+            <template #details>
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="text-caption text-primary">
+                {{ $t('settings.ai.openaiHowToGetKey') }}
+                <v-icon size="x-small">mdi-open-in-new</v-icon>
+              </a>
             </template>
           </v-text-field>
 
-          <!-- Get API Key Help -->
-          <v-alert type="info" variant="tonal" density="compact" class="mb-4">
-            <div class="d-flex align-center">
-              <span class="flex-grow-1">{{ $t('settings.openai.howToGetKey') }}</span>
+          <!-- Gemini API Key -->
+          <v-text-field
+            v-model="geminiApiKey"
+            :label="$t('settings.ai.geminiApiKey')"
+            :placeholder="$t('settings.ai.geminiApiKeyPlaceholder')"
+            :hint="aiProvider === 'gemini' ? $t('settings.ai.activeProvider') : ''"
+            :type="showGeminiKey ? 'text' : 'password'"
+            variant="outlined"
+            density="comfortable"
+            class="mb-4"
+            persistent-hint
+            :color="aiProvider === 'gemini' ? 'primary' : undefined"
+          >
+            <template #prepend-inner>
+              <v-icon v-if="aiProvider === 'gemini'" color="primary" size="small">mdi-check-circle</v-icon>
+            </template>
+            <template #append-inner>
               <v-btn
-                href="https://platform.openai.com/api-keys"
-                target="_blank"
+                :icon="showGeminiKey ? 'mdi-eye-off' : 'mdi-eye'"
                 variant="text"
                 size="small"
-                color="primary"
-              >
-                {{ $t('settings.openai.getApiKey') }}
-                <v-icon end> mdi-open-in-new </v-icon>
-              </v-btn>
-            </div>
-          </v-alert>
+                @click="showGeminiKey = !showGeminiKey"
+              />
+            </template>
+            <template #details>
+              <a href="https://aistudio.google.com/apikey" target="_blank" class="text-caption text-primary">
+                {{ $t('settings.ai.geminiHowToGetKey') }}
+                <v-icon size="x-small">mdi-open-in-new</v-icon>
+              </a>
+            </template>
+          </v-text-field>
+
+          <!-- OpenAI Model -->
+          <v-combobox
+            v-if="aiProvider === 'openai'"
+            v-model="openaiModel"
+            :items="openaiModels"
+            :label="$t('settings.ai.openaiModel')"
+            :hint="$t('settings.ai.modelHint')"
+            variant="outlined"
+            density="comfortable"
+            persistent-hint
+            class="mb-4"
+          />
+
+          <!-- Gemini Model -->
+          <v-combobox
+            v-if="aiProvider === 'gemini'"
+            v-model="geminiModel"
+            :items="geminiModels"
+            :label="$t('settings.ai.geminiModel')"
+            :hint="$t('settings.ai.modelHint')"
+            variant="outlined"
+            density="comfortable"
+            persistent-hint
+            class="mb-4"
+          />
 
           <!-- Test Connection Button -->
           <v-btn
             :loading="testing"
-            :disabled="!apiKey || apiKey.trim().length === 0"
+            :disabled="!activeApiKey || activeApiKey.trim().length === 0"
             color="secondary"
             variant="outlined"
             class="mb-4"
             @click="testConnection"
           >
-            <v-icon start> mdi-connection </v-icon>
-            {{ $t('settings.openai.testConnection') }}
+            <v-icon start>mdi-connection</v-icon>
+            {{ $t('settings.ai.testConnection') }}
           </v-btn>
 
           <!-- Test Result Alert -->
@@ -83,22 +149,9 @@
           >
             {{ testResult.message }}
             <div v-if="testResult.success && testResult.modelsAvailable" class="text-caption mt-1">
-              {{ testResult.modelsAvailable }} models available
-              <span v-if="testResult.hasGpt4oMini">(including gpt-4o-mini ✓)</span>
+              {{ testResult.modelsAvailable }} {{ $t('settings.ai.modelsAvailable') }}
             </div>
           </v-alert>
-
-          <!-- Model Selection (for future use) -->
-          <v-text-field
-            v-model="model"
-            :label="$t('settings.openai.model')"
-            :hint="$t('settings.openai.modelHint')"
-            variant="outlined"
-            density="comfortable"
-            persistent-hint
-            readonly
-            disabled
-          />
         </div>
       </v-card-text>
 
@@ -262,15 +315,31 @@ function checkAnnouncementState() {
 
 // Electron API detection
 const electron = useElectron()
-const dataPaths = ref<{ databasePath: string; uploadPath: string; logsPath: string } | null>(null)
+const dataPaths = ref<{ databasePath: string, uploadPath: string, logsPath: string } | null>(null)
 const exporting = ref(false)
 const logPath = ref<string | null>(null)
 const isElectron = computed(() => electron.isElectron)
 
 // Settings state
-const apiKey = ref('')
-const model = ref('gpt-4o-mini')
-const showApiKey = ref(false)
+const aiProvider = ref<'openai' | 'gemini'>('openai')
+const openaiApiKey = ref('')
+const geminiApiKey = ref('')
+const openaiModel = ref('gpt-4o-mini')
+const geminiModel = ref('gemini-2.5-flash')
+const showOpenaiKey = ref(false)
+const showGeminiKey = ref(false)
+
+const providerOptions = [
+  { value: 'openai', title: 'OpenAI (GPT, DALL-E)' },
+  { value: 'gemini', title: 'Google Gemini (Gemini, Imagen)' },
+]
+
+const openaiModels = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4.5-preview']
+const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro']
+
+const activeApiKey = computed(() =>
+  aiProvider.value === 'openai' ? openaiApiKey.value : geminiApiKey.value,
+)
 
 // UI state
 const saving = ref(false)
@@ -279,7 +348,6 @@ const testResult = ref<{
   success: boolean
   message: string
   modelsAvailable?: number
-  hasGpt4oMini?: boolean
 } | null>(null)
 
 const snackbar = ref({
@@ -301,7 +369,8 @@ async function checkElectron() {
   if (electron.isElectron) {
     try {
       dataPaths.value = await electron.getDataPaths()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('[Settings] Failed to get data paths:', error)
     }
   }
@@ -321,27 +390,31 @@ async function exportDatabase() {
         message: t('settings.dataManagement.exportSuccess'),
         color: 'success',
       }
-    } else if (result.canceled) {
+    }
+    else if (result.canceled) {
       snackbar.value = {
         show: true,
         message: t('settings.dataManagement.exportCanceled'),
         color: 'info',
       }
-    } else {
+    }
+    else {
       snackbar.value = {
         show: true,
         message: `${t('settings.dataManagement.exportFailed')}: ${result.error}`,
         color: 'error',
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Settings] Export failed:', error)
     snackbar.value = {
       show: true,
       message: t('settings.dataManagement.exportFailed'),
       color: 'error',
     }
-  } finally {
+  }
+  finally {
     exporting.value = false
   }
 }
@@ -360,7 +433,8 @@ async function openUploadsFolder() {
         color: 'error',
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Settings] Open folder failed:', error)
     snackbar.value = {
       show: true,
@@ -373,9 +447,10 @@ async function openUploadsFolder() {
 // Load log path from backend
 async function loadLogPath() {
   try {
-    const result = await $fetch<{ logPath: string; logDir: string }>('/api/log-info/path')
+    const result = await $fetch<{ logPath: string, logDir: string }>('/api/log-info/path')
     logPath.value = result.logPath
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Settings] Failed to load log path:', error)
   }
 }
@@ -394,7 +469,8 @@ async function openLogsFolder() {
         color: 'error',
       }
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Settings] Open logs folder failed:', error)
     snackbar.value = {
       show: true,
@@ -409,10 +485,13 @@ async function loadSettings() {
   try {
     const settings = await $fetch<Record<string, string>>('/api/settings')
 
-    // Use the full API key (not masked) for editing
-    apiKey.value = settings.openai_api_key_full || ''
-    model.value = settings.openai_model || 'gpt-4o-mini'
-  } catch (error) {
+    aiProvider.value = (settings.ai_provider as 'openai' | 'gemini') || 'openai'
+    openaiApiKey.value = settings.openai_api_key_full || ''
+    geminiApiKey.value = settings.gemini_api_key_full || ''
+    openaiModel.value = settings.openai_model || 'gpt-4o-mini'
+    geminiModel.value = settings.gemini_model || 'gemini-2.5-flash'
+  }
+  catch (error) {
     console.error('[Settings] Failed to load settings:', error)
   }
 }
@@ -426,8 +505,11 @@ async function saveSettings() {
     await $fetch('/api/settings', {
       method: 'POST',
       body: {
-        openai_api_key: apiKey.value,
-        openai_model: model.value,
+        ai_provider: aiProvider.value,
+        openai_api_key: openaiApiKey.value,
+        openai_model: openaiModel.value,
+        gemini_api_key: geminiApiKey.value,
+        gemini_model: geminiModel.value,
       },
     })
 
@@ -436,7 +518,8 @@ async function saveSettings() {
       message: t('settings.saved'),
       color: 'success',
     }
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     console.error('[Settings] Failed to save settings:', error)
     snackbar.value = {
@@ -444,12 +527,13 @@ async function saveSettings() {
       message: err.data?.message || t('settings.saveFailed'),
       color: 'error',
     }
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
 
-// Test OpenAI connection
+// Test AI connection
 async function testConnection() {
   testing.value = true
   testResult.value = null
@@ -459,28 +543,29 @@ async function testConnection() {
       success: boolean
       message: string
       modelsAvailable?: number
-      hasGpt4oMini?: boolean
-    }>('/api/settings/test-openai', {
+    }>('/api/settings/test-ai', {
       method: 'POST',
       body: {
-        apiKey: apiKey.value,
+        provider: aiProvider.value,
+        apiKey: activeApiKey.value,
       },
     })
 
     testResult.value = {
       success: true,
-      message: t('settings.openai.testSuccess'),
+      message: t('settings.ai.testSuccess'),
       modelsAvailable: result.modelsAvailable,
-      hasGpt4oMini: result.hasGpt4oMini,
     }
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { data?: { message?: string } }
     console.error('[Settings] Test connection failed:', error)
     testResult.value = {
       success: false,
-      message: err.data?.message || t('settings.openai.testFailed'),
+      message: err.data?.message || t('settings.ai.testFailed'),
     }
-  } finally {
+  }
+  finally {
     testing.value = false
   }
 }

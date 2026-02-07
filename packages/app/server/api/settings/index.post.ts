@@ -2,15 +2,17 @@ import { getDb } from '../../utils/db'
 import { encrypt } from '../../utils/encryption'
 
 interface SettingsUpdateRequest {
+  ai_provider?: string
   openai_api_key?: string
   openai_model?: string
+  gemini_api_key?: string
+  gemini_model?: string
 }
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const body = await readBody<SettingsUpdateRequest>(event)
 
-  // Validate input
   if (!body || typeof body !== 'object') {
     throw createError({
       statusCode: 400,
@@ -18,7 +20,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Prepare upsert statement
   const upsertStmt = db.prepare(`
     INSERT INTO settings (key, value, updated_at)
     VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -27,30 +28,31 @@ export default defineEventHandler(async (event) => {
       updated_at = CURRENT_TIMESTAMP
   `)
 
-  // Update each setting (encrypt sensitive data)
-  const updates: Array<{ key: string; value: string }> = []
+  const updates: Array<{ key: string, value: string }> = []
 
-  if (body.openai_api_key !== undefined) {
-    // Only update if not empty (allow deletion by setting to empty string)
-    if (body.openai_api_key.trim().length > 0) {
-      updates.push({
-        key: 'openai_api_key',
-        value: encrypt(body.openai_api_key.trim()),
-      })
-    } else {
-      // Delete the key if empty
-      db.prepare('DELETE FROM settings WHERE key = ?').run('openai_api_key')
-    }
-  }
-
-  if (body.openai_model !== undefined) {
+  // AI provider selection
+  if (body.ai_provider !== undefined) {
+    const validProviders = ['openai', 'gemini']
+    const provider = validProviders.includes(body.ai_provider) ? body.ai_provider : 'openai'
     updates.push({
-      key: 'openai_model',
-      value: encrypt(body.openai_model.trim() || 'gpt-4o-mini'),
+      key: 'ai_provider',
+      value: encrypt(provider),
     })
   }
 
-  // Execute updates
+  // API keys + models — encrypt if non-empty, delete if empty
+  for (const keyName of ['openai_api_key', 'openai_model', 'gemini_api_key', 'gemini_model'] as const) {
+    const val = body[keyName]
+    if (val !== undefined) {
+      if (val.trim().length > 0) {
+        updates.push({ key: keyName, value: encrypt(val.trim()) })
+      }
+      else {
+        db.prepare('DELETE FROM settings WHERE key = ?').run(keyName)
+      }
+    }
+  }
+
   for (const update of updates) {
     upsertStmt.run(update.key, update.value)
   }

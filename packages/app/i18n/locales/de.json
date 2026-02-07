@@ -1611,7 +1611,7 @@
     "title": "Einstellungen",
     "subtitle": "Konfiguriere API-Keys und Präferenzen",
     "sections": {
-      "openai": "OpenAI Integration",
+      "ai": "KI-Integration",
       "preferences": "Präferenzen",
       "campaign": "Kampagne",
       "announcements": "Neuigkeiten",
@@ -1625,20 +1625,25 @@
       "title": "Kampagnen-Einstellungen",
       "subtitle": "Einstellungen für die aktive Kampagne"
     },
-    "openai": {
-      "apiKey": "OpenAI API-Key",
-      "apiKeyPlaceholder": "sk-proj-...",
-      "apiKeyHint": "Dein OpenAI API-Key wird verschlüsselt gespeichert",
-      "model": "Modell",
-      "modelHint": "Standard: gpt-4o-mini",
+    "ai": {
+      "provider": "KI-Anbieter",
+      "providerHint": "Wähle deinen KI-Anbieter für Text- und Bildgenerierung",
+      "openaiApiKey": "OpenAI API-Key",
+      "openaiApiKeyPlaceholder": "sk-proj-...",
+      "geminiApiKey": "Google Gemini API-Key",
+      "geminiApiKeyPlaceholder": "AIza...",
+      "apiKeyHint": "Dein API-Key wird verschlüsselt gespeichert",
+      "activeProvider": "Aktiver Anbieter",
+      "openaiModel": "OpenAI Modell",
+      "geminiModel": "Gemini Modell",
+      "modelHint": "Aus der Liste wählen oder eigenen Modellnamen eingeben",
+      "modelsAvailable": "Modelle verfügbar",
       "testConnection": "Verbindung testen",
-      "testing": "Teste Verbindung...",
       "testSuccess": "Verbindung erfolgreich!",
       "testFailed": "Verbindung fehlgeschlagen",
-      "showKey": "Zeigen",
-      "hideKey": "Verbergen",
       "getApiKey": "API-Key erhalten",
-      "howToGetKey": "Gehe zu platform.openai.com, erstelle einen Account und generiere einen API-Key"
+      "openaiHowToGetKey": "Erstelle einen Account auf platform.openai.com und generiere einen API-Key",
+      "geminiHowToGetKey": "Erstelle einen API-Key auf aistudio.google.com"
     },
     "saved": "Einstellungen gespeichert",
     "saveFailed": "Fehler beim Speichern",
@@ -2208,14 +2213,15 @@
     "GROUP_NAME_EMPTY": "Gruppenname darf nicht leer sein",
     "GROUP_ENTITY_IDS_REQUIRED": "Mindestens eine Entität ist erforderlich",
     "GROUP_ENTITY_ID_REQUIRED": "Entitäts-ID ist erforderlich",
-    "openai": {
-      "insufficientQuota": "OpenAI-Guthaben aufgebraucht. Bitte Zahlungsmethode unter platform.openai.com prüfen.",
+    "ai": {
+      "insufficientQuota": "KI-Guthaben aufgebraucht. Bitte Zahlungsmethode beim Anbieter prüfen.",
       "invalidApiKey": "Ungültiger API-Schlüssel. Bitte in den Einstellungen prüfen.",
       "rateLimitExceeded": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen.",
-      "contentPolicyViolation": "Der Inhalt verstößt gegen die OpenAI-Richtlinien. Bitte Beschreibung anpassen.",
-      "billingHardLimitReached": "OpenAI-Kostenlimit erreicht. Bitte Limits unter platform.openai.com prüfen.",
-      "serverError": "OpenAI-Server nicht erreichbar. Bitte später erneut versuchen.",
+      "contentPolicyViolation": "Der Inhalt verstößt gegen die Richtlinien des KI-Anbieters. Bitte Beschreibung anpassen.",
+      "billingHardLimitReached": "Kostenlimit beim KI-Anbieter erreicht. Bitte Limits prüfen.",
+      "serverError": "KI-Server nicht erreichbar. Bitte später erneut versuchen.",
       "modelNotFound": "Das ausgewählte KI-Modell ist nicht verfügbar.",
+      "noApiKey": "Kein API-Key konfiguriert. Bitte in den Einstellungen hinterlegen.",
       "unknown": "Ein Fehler bei der KI-Anfrage ist aufgetreten."
     },
     "upload": {
