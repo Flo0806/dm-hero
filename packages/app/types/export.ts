@@ -160,6 +160,10 @@ export interface CampaignExportManifest {
   // These are GLOBAL (not campaign-scoped), so import may cause conflicts
   races?: ExportRace[]
   classes?: ExportClass[]
+
+  // Stat templates & entity stats
+  statTemplates?: ExportStatTemplate[]
+  entityStats?: ExportEntityStats[]
 }
 
 // =============================================================================
@@ -228,6 +232,7 @@ export interface ExportEntityDocument {
   file_type: 'markdown' | 'pdf'
   date?: string
   sort_order: number
+  document_type?: string | null // 'character_sheet' or null
 }
 
 // =============================================================================
@@ -491,6 +496,35 @@ export interface RaceClassConflict {
 }
 
 // =============================================================================
+// STAT TEMPLATES & ENTITY STATS
+// =============================================================================
+
+export interface ExportStatTemplate {
+  _exportId: string // "stat-template:1"
+  name: string
+  system_key?: string | null
+  description?: string | null
+  groups: Array<{
+    name: string
+    group_type: string
+    sort_order: number
+    fields: Array<{
+      name: string
+      label: string
+      field_type: string // 'string' | 'number' | 'resource' | 'boolean'
+      has_modifier: boolean
+      sort_order: number
+    }>
+  }>
+}
+
+export interface ExportEntityStats {
+  entity: string // "entity:1"
+  template: string // "stat-template:1"
+  values: Record<string, unknown> // values_json parsed
+}
+
+// =============================================================================
 // EXPORT OPTIONS (for API)
 // =============================================================================
 
@@ -601,6 +635,8 @@ export interface ImportResult {
     documentsImported: number
     racesImported: number
     classesImported: number
+    statTemplatesImported: number
+    statsImported: number
     skipped: number
     warnings: string[]
     entitiesDeleted?: number // How many were soft-deleted before import
@@ -624,4 +660,5 @@ export interface IdMapping {
   events: Map<string, number> // "event:1" -> 3
   maps: Map<string, number> // "map:1" -> 2
   audio: Map<string, number> // "audio:1" -> 1
+  statTemplates: Map<string, number> // "stat-template:1" -> 42
 }

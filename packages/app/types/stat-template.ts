@@ -18,6 +18,7 @@ export interface StatTemplateDbRow {
   system_key: string | null
   description: string | null
   sort_order: number
+  is_imported: number
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -70,6 +71,7 @@ export interface StatTemplate {
   system_key: StatSystemKey | null
   description: string | null
   sort_order: number
+  is_imported: boolean
   created_at: string
   updated_at: string
   groups: StatTemplateGroup[]

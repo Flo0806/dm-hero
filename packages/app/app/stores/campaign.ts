@@ -41,6 +41,15 @@ export const useCampaignStore = defineStore('campaign', {
       entitiesStore.clearAll()
       const notesStore = useNotesStore()
       notesStore.clearNotes()
+      // Clear count caches (important after import/merge)
+      useNpcCounts().clearCountsCache()
+      usePlayerCounts().clearCountsCache()
+      useItemCounts().clearCountsCache()
+      useLoreCounts().clearCountsCache()
+      useFactionCounts().clearCountsCache()
+      // Clear stat templates cache (new templates may have been imported)
+      const statTemplatesStore = useStatTemplatesStore()
+      statTemplatesStore.templates = []
 
       this.activeCampaignId = String(campaignId)
       const activeCampaignId = useCookie('activeCampaignId', {

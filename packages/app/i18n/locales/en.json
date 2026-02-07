@@ -2213,6 +2213,7 @@
     "selectPreset": "Select Preset",
     "presetBadge": "Preset",
     "customBadge": "Custom",
+    "importedBadge": "Imported",
     "unsavedChanges": "Unsaved changes. Please save or discard first.",
     "discardChanges": "Discard changes?",
     "discardConfirm": "You have unsaved changes. Really discard?",

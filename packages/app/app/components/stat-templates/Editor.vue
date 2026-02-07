@@ -10,13 +10,16 @@
         density="compact"
         hide-details
         class="flex-grow-1"
-        style="max-width: 350px;"
+        style="max-width: 500px;"
         :disabled="isDirty"
       >
         <template #item="{ item, props: itemProps }">
           <v-list-item v-bind="itemProps">
-            <template v-if="item.raw.systemKey" #append>
-              <v-chip size="x-small" variant="tonal" color="primary">
+            <template v-if="item.raw.systemKey || item.raw.isImported" #append>
+              <v-chip v-if="item.raw.isImported" size="x-small" variant="tonal" color="info" class="mr-1">
+                {{ $t('statTemplates.importedBadge') }}
+              </v-chip>
+              <v-chip v-if="item.raw.systemKey" size="x-small" variant="tonal" color="primary">
                 {{ $t(`statPresets.${item.raw.systemKey}.name`, item.raw.systemKey) }}
               </v-chip>
             </template>
@@ -97,6 +100,17 @@
 
     <!-- Template editor: name + description + groups -->
     <template v-else>
+      <v-chip
+        v-if="currentTemplate?.is_imported"
+        size="small"
+        variant="tonal"
+        color="info"
+        prepend-icon="mdi-import"
+        class="mb-3"
+      >
+        {{ $t('statTemplates.importedBadge') }}
+      </v-chip>
+
       <v-row dense class="mb-4">
         <v-col cols="12" sm="6">
           <v-text-field
@@ -214,6 +228,7 @@ const templateSelectItems = computed(() =>
     value: t.id,
     title: t.name,
     systemKey: t.system_key,
+    isImported: t.is_imported,
   })),
 )
 

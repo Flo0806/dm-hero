@@ -29,6 +29,8 @@ import type {
   ExportEntityType,
   ExportRace,
   ExportClass,
+  ExportStatTemplate,
+  ExportEntityStats,
 } from '~~/types/export'
 import { EXPORT_FORMAT_VERSION } from '~~/types/export'
 
@@ -264,7 +266,7 @@ export default defineEventHandler(async (event) => {
   const entityDocs = db
     .prepare(
       `
-    SELECT ed.id, ed.entity_id, ed.title, ed.content, ed.file_path, ed.file_type, ed.date, ed.sort_order
+    SELECT ed.id, ed.entity_id, ed.title, ed.content, ed.file_path, ed.file_type, ed.date, ed.sort_order, ed.document_type
     FROM entity_documents ed
     JOIN entities e ON ed.entity_id = e.id
     WHERE e.campaign_id = ? AND e.deleted_at IS NULL
@@ -279,6 +281,7 @@ export default defineEventHandler(async (event) => {
     file_type: string
     date: string | null
     sort_order: number
+    document_type: string | null
   }>
 
   const documentExportIdMap = new Map<number, string>()
@@ -300,6 +303,7 @@ export default defineEventHandler(async (event) => {
         file_type: doc.file_type as 'markdown' | 'pdf',
         date: doc.date || undefined,
         sort_order: doc.sort_order,
+        document_type: doc.document_type || undefined,
       }
     })
 
@@ -901,6 +905,66 @@ export default defineEventHandler(async (event) => {
   }
 
   // ==========================================================================
+  // STAT TEMPLATES & ENTITY STATS
+  // ==========================================================================
+
+  let exportStatTemplates: ExportStatTemplate[] = []
+  let exportEntityStats: ExportEntityStats[] = []
+
+  // Get entity stats for exported entities
+  const entityIdList = entities.map(e => e.id)
+  if (entityIdList.length > 0) {
+    const placeholders = entityIdList.map(() => '?').join(',')
+    const entityStatsRows = db
+      .prepare(`SELECT entity_id, template_id, values_json FROM entity_stats WHERE entity_id IN (${placeholders})`)
+      .all(...entityIdList) as Array<{ entity_id: number, template_id: number, values_json: string }>
+
+    if (entityStatsRows.length > 0) {
+      // Collect unique template IDs
+      const usedTemplateIds = [...new Set(entityStatsRows.map(r => r.template_id))]
+      const templateExportIdMap = new Map<number, string>()
+
+      // Load and export each template with its full structure
+      let templateIndex = 1
+      for (const templateId of usedTemplateIds) {
+        const template = getStatTemplateById(templateId)
+        if (!template) continue
+
+        const exportId = `stat-template:${templateIndex++}`
+        templateExportIdMap.set(templateId, exportId)
+
+        exportStatTemplates.push({
+          _exportId: exportId,
+          name: template.name,
+          system_key: template.system_key || undefined,
+          description: template.description || undefined,
+          groups: template.groups.map(g => ({
+            name: g.name,
+            group_type: g.group_type,
+            sort_order: g.sort_order,
+            fields: g.fields.map(f => ({
+              name: f.name,
+              label: f.label,
+              field_type: f.field_type,
+              has_modifier: f.has_modifier,
+              sort_order: f.sort_order,
+            })),
+          })),
+        })
+      }
+
+      // Export entity stats with template references
+      exportEntityStats = entityStatsRows
+        .filter(r => entityExportIdMap.has(r.entity_id) && templateExportIdMap.has(r.template_id))
+        .map(r => ({
+          entity: entityExportIdMap.get(r.entity_id)!,
+          template: templateExportIdMap.get(r.template_id)!,
+          values: JSON.parse(r.values_json || '{}'),
+        }))
+    }
+  }
+
+  // ==========================================================================
   // BUILD MANIFEST
   // ==========================================================================
 
@@ -935,6 +999,8 @@ export default defineEventHandler(async (event) => {
     pinboard: exportPinboard.length > 0 ? exportPinboard : undefined,
     races: exportRaces.length > 0 ? exportRaces : undefined,
     classes: exportClasses.length > 0 ? exportClasses : undefined,
+    statTemplates: exportStatTemplates.length > 0 ? exportStatTemplates : undefined,
+    entityStats: exportEntityStats.length > 0 ? exportEntityStats : undefined,
   }
 
   // ==========================================================================

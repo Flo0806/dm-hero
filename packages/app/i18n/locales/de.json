@@ -2189,6 +2189,7 @@
     "selectPreset": "Preset auswählen",
     "presetBadge": "Preset",
     "customBadge": "Eigene",
+    "importedBadge": "Importiert",
     "unsavedChanges": "Ungespeicherte Änderungen. Bitte speichere oder verwerfe zuerst.",
     "discardChanges": "Änderungen verwerfen?",
     "discardConfirm": "Du hast ungespeicherte Änderungen. Wirklich verwerfen?",

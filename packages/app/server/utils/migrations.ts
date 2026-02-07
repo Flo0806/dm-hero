@@ -2342,6 +2342,14 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 43: Simplified stat_template_fields (removed default_value/config, added has_modifier)')
     },
   },
+  {
+    version: 44,
+    name: 'add_stat_template_imported_flag',
+    up: (db) => {
+      db.exec('ALTER TABLE stat_templates ADD COLUMN is_imported INTEGER DEFAULT 0')
+      console.log('✅ Migration 44: Added is_imported flag to stat_templates')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

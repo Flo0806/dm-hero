@@ -283,6 +283,8 @@ export default defineEventHandler(async (event) => {
     documentsImported: 0,
     racesImported: 0,
     classesImported: 0,
+    statTemplatesImported: 0,
+    statsImported: 0,
     skipped: 0,
     warnings: [],
     entitiesDeleted: 0,
@@ -295,6 +297,7 @@ export default defineEventHandler(async (event) => {
     events: new Map(),
     maps: new Map(),
     audio: new Map(),
+    statTemplates: new Map(),
   }
 
   let campaignId: number = 0
@@ -833,8 +836,8 @@ export default defineEventHandler(async (event) => {
 
     if (manifest.entityDocuments && manifest.entityDocuments.length > 0) {
       const insertDoc = db.prepare(`
-        INSERT INTO entity_documents (entity_id, title, content, file_path, file_type, date, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO entity_documents (entity_id, title, content, file_path, file_type, date, sort_order, document_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       for (const doc of manifest.entityDocuments) {
@@ -856,6 +859,7 @@ export default defineEventHandler(async (event) => {
           doc.file_type,
           doc.date || new Date().toISOString().split('T')[0],  // NOT NULL - use today as default
           doc.sort_order,
+          doc.document_type || null,
         )
 
         idMapping.documents.set(doc._exportId, result.lastInsertRowid as number)
@@ -1433,6 +1437,61 @@ export default defineEventHandler(async (event) => {
             .run(key, cls.name_de || null, cls.name_en || null, cls.description || null)
           stats.classesImported++
         }
+      }
+    }
+
+    // ==========================================================================
+    // IMPORT STAT TEMPLATES & ENTITY STATS
+    // ==========================================================================
+
+    if (manifest.statTemplates && manifest.statTemplates.length > 0) {
+      for (const tmpl of manifest.statTemplates) {
+        // Always create new template (marked as imported)
+        const result = db.prepare(
+          'INSERT INTO stat_templates (name, system_key, description, is_imported) VALUES (?, ?, ?, 1)',
+        ).run(tmpl.name, tmpl.system_key || null, tmpl.description || null)
+        const templateId = result.lastInsertRowid as number
+        idMapping.statTemplates.set(tmpl._exportId, templateId)
+
+        // Create groups and fields
+        for (const group of tmpl.groups) {
+          const groupResult = db.prepare(
+            'INSERT INTO stat_template_groups (template_id, name, group_type, sort_order) VALUES (?, ?, ?, ?)',
+          ).run(templateId, group.name, group.group_type, group.sort_order)
+          const groupId = groupResult.lastInsertRowid as number
+
+          for (const field of group.fields) {
+            db.prepare(
+              'INSERT INTO stat_template_fields (group_id, name, label, field_type, has_modifier, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
+            ).run(groupId, field.name, field.label, field.field_type, field.has_modifier ? 1 : 0, field.sort_order)
+          }
+        }
+
+        stats.statTemplatesImported++
+      }
+    }
+
+    if (manifest.entityStats && manifest.entityStats.length > 0) {
+      const upsertStats = db.prepare(`
+        INSERT INTO entity_stats (entity_id, template_id, values_json)
+        VALUES (?, ?, ?)
+        ON CONFLICT(entity_id) DO UPDATE SET
+          template_id = excluded.template_id,
+          values_json = excluded.values_json,
+          updated_at = datetime('now')
+      `)
+
+      for (const stat of manifest.entityStats) {
+        const entityId = idMapping.entities.get(stat.entity)
+        const templateId = idMapping.statTemplates.get(stat.template)
+
+        if (!entityId || !templateId) {
+          stats.skipped++
+          continue
+        }
+
+        upsertStats.run(entityId, templateId, JSON.stringify(stat.values))
+        stats.statsImported++
       }
     }
 

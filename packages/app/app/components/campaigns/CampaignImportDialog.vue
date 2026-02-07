@@ -663,7 +663,7 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
       entityCounts,
       sessionCount: manifest.sessions?.length || 0,
       mapCount: manifest.maps?.length || 0,
-      hasCalendar: !!manifest.calendar,
+      hasCalendar: !!(manifest.calendar && manifest.calendar.months && manifest.calendar.months.length > 0),
       warnings: warnings.length > 0 ? warnings : undefined,
     }
 

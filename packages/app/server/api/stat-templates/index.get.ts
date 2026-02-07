@@ -6,7 +6,7 @@ export default defineEventHandler(() => {
 
   const templates = db
     .prepare<unknown[], StatTemplateDbRow>(
-      `SELECT id, name, system_key, description, sort_order, created_at, updated_at
+      `SELECT id, name, system_key, description, sort_order, is_imported, created_at, updated_at
        FROM stat_templates WHERE deleted_at IS NULL ORDER BY sort_order ASC, name ASC`,
     )
     .all()
@@ -55,6 +55,7 @@ export default defineEventHandler(() => {
   return templates.map<StatTemplate>(t => ({
     ...t,
     system_key: t.system_key as StatTemplate['system_key'],
+    is_imported: Boolean(t.is_imported),
     groups: (groupsByTemplate.get(t.id) || []).map(g => ({
       ...g,
       group_type: g.group_type as StatTemplate['groups'][number]['group_type'],

@@ -7,7 +7,7 @@ export function getStatTemplateById(id: number): StatTemplate | null {
 
   const template = db
     .prepare<unknown[], StatTemplateDbRow>(
-      `SELECT id, name, system_key, description, sort_order, created_at, updated_at
+      `SELECT id, name, system_key, description, sort_order, is_imported, created_at, updated_at
        FROM stat_templates WHERE id = ? AND deleted_at IS NULL`,
     )
     .get(id)
@@ -44,6 +44,7 @@ export function getStatTemplateById(id: number): StatTemplate | null {
   return {
     ...template,
     system_key: template.system_key as StatTemplate['system_key'],
+    is_imported: Boolean(template.is_imported),
     groups: groups.map(g => ({
       ...g,
       group_type: g.group_type as StatTemplate['groups'][number]['group_type'],
