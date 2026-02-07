@@ -125,7 +125,6 @@
               :color="usageEntities.length > 0 ? 'success' : undefined"
               :prepend-icon="usageEntities.length > 0 ? 'mdi-account-check' : 'mdi-account-off'"
               style="cursor: pointer"
-              @click="loadUsage"
             >
               {{ $t('statTemplates.usageCount', { count: usageEntities.length }) }}
             </v-chip>
@@ -214,7 +213,6 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import type { StatTemplate, SaveStatTemplatePayload } from '~~/types/stat-template'
-import { useStatTemplatesStore } from '~/stores/statTemplates'
 
 interface FieldData {
   name: string
@@ -255,7 +253,6 @@ const localGroups = ref<GroupData[]>([])
 const usageMenuOpen = ref(false)
 const usageLoading = ref(false)
 const usageEntities = ref<UsageEntity[]>([])
-const usageLoadedForId = ref<number | null>(null)
 
 const usageGrouped = computed(() => {
   const groups: Record<string, UsageEntity[]> = {}
@@ -268,12 +265,9 @@ const usageGrouped = computed(() => {
 
 async function loadUsage() {
   if (!selectedTemplateId.value) return
-  // Only reload if template changed
-  if (usageLoadedForId.value === selectedTemplateId.value) return
   usageLoading.value = true
   try {
     usageEntities.value = await $fetch<UsageEntity[]>(`/api/stat-templates/${selectedTemplateId.value}/usage`)
-    usageLoadedForId.value = selectedTemplateId.value
   }
   catch (e) {
     console.error('Failed to load template usage:', e)
@@ -339,8 +333,9 @@ watch(selectedTemplateId, (newId, oldId) => {
   if (newId && newId !== oldId) {
     const template = store.templates.find(t => t.id === newId)
     if (template) loadTemplateIntoEditor(template)
-    // Reset usage cache for new template
-    usageLoadedForId.value = null
+    loadUsage()
+  }
+  else if (!newId) {
     usageEntities.value = []
   }
 })
