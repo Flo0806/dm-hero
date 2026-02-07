@@ -79,7 +79,7 @@
                 <h3 class="text-h6 mb-2">
                   {{ $t('locations.description') }}
                 </h3>
-                <p class="text-body-1">
+                <p class="text-body-1" style="white-space: pre-wrap">
                   {{ location.description }}
                 </p>
               </div>
@@ -114,7 +114,7 @@
                       <v-icon class="mr-3 mt-1">mdi-note-text</v-icon>
                       <div>
                         <div class="text-caption text-medium-emphasis">{{ $t('locations.notes') }}</div>
-                        <div class="font-weight-medium">{{ location.metadata.notes }}</div>
+                        <div class="font-weight-medium" style="white-space: pre-wrap">{{ location.metadata.notes }}</div>
                       </div>
                     </div>
                   </v-card>

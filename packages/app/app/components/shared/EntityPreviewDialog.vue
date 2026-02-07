@@ -24,7 +24,7 @@
             class="mb-4 rounded"
             cover
           />
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -41,7 +41,7 @@
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
 
@@ -55,7 +55,7 @@
             class="mb-4 rounded"
             cover
           />
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -69,7 +69,7 @@
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
 
@@ -93,7 +93,7 @@
               {{ $t(`items.rarities.${entity.rarity}`) }}
             </v-chip>
           </div>
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -109,7 +109,7 @@
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
 
@@ -123,7 +123,7 @@
             class="mb-4 rounded"
             cover
           />
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -137,11 +137,11 @@
           </div>
           <div v-if="entity.goals" class="mt-4">
             <strong>{{ $t('factions.goals') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.goals }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.goals }}</div>
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
 
@@ -155,7 +155,7 @@
             class="mb-4 rounded"
             cover
           />
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -170,7 +170,7 @@
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
 
@@ -184,7 +184,7 @@
             class="mb-4 rounded"
             cover
           />
-          <div v-if="entity.description" class="text-body-1 mb-4">
+          <div v-if="entity.description" class="text-body-1 mb-4" style="white-space: pre-wrap">
             {{ entity.description }}
           </div>
           <v-divider class="my-4" />
@@ -201,7 +201,7 @@
           </div>
           <div v-if="entity.notes" class="mt-4">
             <strong>{{ $t('common.notes') }}:</strong>
-            <div class="text-body-2 mt-2">{{ entity.notes }}</div>
+            <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
         </template>
       </v-card-text>

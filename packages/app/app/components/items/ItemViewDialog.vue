@@ -93,7 +93,7 @@
                 <h3 class="text-h6 mb-2">
                   {{ $t('items.description') }}
                 </h3>
-                <p class="text-body-1">
+                <p class="text-body-1" style="white-space: pre-wrap">
                   {{ item.description }}
                 </p>
               </div>

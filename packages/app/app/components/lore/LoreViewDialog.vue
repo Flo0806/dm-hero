@@ -90,7 +90,7 @@
                   <div class="text-caption text-medium-emphasis mb-2">
                     {{ $t('lore.description') }}
                   </div>
-                  <div class="text-body-1">
+                  <div class="text-body-1" style="white-space: pre-wrap">
                     {{ lore.description }}
                   </div>
                 </v-card-text>

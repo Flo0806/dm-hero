@@ -97,7 +97,7 @@
                 <h3 class="text-subtitle-1 font-weight-bold mb-2">
                   {{ $t('factions.description') }}
                 </h3>
-                <p class="text-body-2">{{ faction.description }}</p>
+                <p class="text-body-2" style="white-space: pre-wrap">{{ faction.description }}</p>
               </div>
 
               <!-- Metadata Grid -->
@@ -123,7 +123,7 @@
                         <div class="text-caption text-medium-emphasis">
                           {{ $t('factions.goals') }}
                         </div>
-                        <div class="font-weight-medium">{{ faction.metadata.goals }}</div>
+                        <div class="font-weight-medium" style="white-space: pre-wrap">{{ faction.metadata.goals }}</div>
                       </div>
                     </div>
                   </v-card>
@@ -136,7 +136,7 @@
                         <div class="text-caption text-medium-emphasis">
                           {{ $t('factions.notes') }}
                         </div>
-                        <div class="font-weight-medium">{{ faction.metadata.notes }}</div>
+                        <div class="font-weight-medium" style="white-space: pre-wrap">{{ faction.metadata.notes }}</div>
                       </div>
                     </div>
                   </v-card>

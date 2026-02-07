@@ -99,7 +99,7 @@
               <!-- Description -->
               <div v-if="npc.description" class="mb-6">
                 <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('npcs.description') }}</h3>
-                <p class="text-body-2">{{ npc.description }}</p>
+                <p class="text-body-2" style="white-space: pre-wrap">{{ npc.description }}</p>
               </div>
 
               <!-- Metadata Grid -->
