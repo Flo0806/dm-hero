@@ -1883,6 +1883,8 @@
     "deleteSeason": "Jahreszeit löschen",
     "deleteSeasonConfirm": "Möchtest du diese Jahreszeit wirklich löschen?",
     "seasonName": "Name",
+    "seasonNameRequired": "Name ist erforderlich",
+    "seasonBackgroundRequired": "Hintergrundbild ist erforderlich",
     "seasonStartDate": "Beginn",
     "seasonStartMonth": "Startmonat",
     "seasonStartDay": "Starttag",

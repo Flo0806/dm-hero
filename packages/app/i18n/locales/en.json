@@ -1897,6 +1897,8 @@
     "deleteSeason": "Delete Season",
     "deleteSeasonConfirm": "Are you sure you want to delete this season?",
     "seasonName": "Name",
+    "seasonNameRequired": "Name is required",
+    "seasonBackgroundRequired": "Background image is required",
     "seasonStartDate": "Start",
     "seasonStartMonth": "Start Month",
     "seasonStartDay": "Start Day",

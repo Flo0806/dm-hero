@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="modelValue" max-width="1100" scrollable>
+  <v-dialog v-model="modelValue" max-width="1100" scrollable persistent>
     <v-card>
       <v-card-title>{{ $t('calendar.settings') }}</v-card-title>
       <v-card-text style="max-height: 70vh">
@@ -193,11 +193,12 @@
                   <!-- Season Name -->
                   <v-text-field
                     v-model="season.name"
-                    :label="$t('calendar.seasonName')"
+                    :label="$t('calendar.seasonName') + ' *'"
                     density="compact"
-                    hide-details
+                    hide-details="auto"
                     variant="outlined"
                     style="flex: 1; min-width: 150px"
+                    :rules="[v => !!v?.trim() || $t('calendar.seasonNameRequired')]"
                   />
 
                   <!-- Start Date -->
@@ -256,13 +257,13 @@
                   <!-- Background Image -->
                   <v-select
                     v-model="season.background_image"
-                    :label="$t('calendar.seasonBackground')"
+                    :label="$t('calendar.seasonBackground') + ' *'"
                     :items="backgroundOptions"
                     density="compact"
-                    hide-details
+                    hide-details="auto"
                     variant="outlined"
                     style="width: 180px"
-                    clearable
+                    :rules="[v => !!v || $t('calendar.seasonBackgroundRequired')]"
                   >
                     <template #selection="{ item }">
                       <div class="d-flex align-center ga-2">
@@ -386,7 +387,7 @@
         </v-btn>
         <v-spacer />
         <v-btn @click="modelValue = false">{{ $t('common.cancel') }}</v-btn>
-        <v-btn color="primary" :loading="saving" @click="emit('save')">
+        <v-btn color="primary" :loading="saving" :disabled="!seasonsValid" @click="emit('save')">
           {{ $t('common.save') }}
         </v-btn>
       </v-card-actions>
@@ -506,7 +507,8 @@ async function confirmReset() {
     calendarStats.value = await $fetch('/api/calendar/stats', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch {
+  }
+  catch {
     calendarStats.value = null
   }
   showResetDialog.value = true
@@ -524,10 +526,12 @@ async function executeReset() {
     modelValue.value = false
     snackbarStore.success(t('calendar.reset.success'))
     emit('reset')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to reset calendar:', error)
     snackbarStore.error(t('calendar.reset.error'))
-  } finally {
+  }
+  finally {
     resetting.value = false
   }
 }
@@ -565,7 +569,7 @@ watch(
 
 // Also watch for month days changes (user editing month config)
 watch(
-  () => form.value.months.map((m) => m.days),
+  () => form.value.months.map(m => m.days),
   () => {
     if (form.value.currentDay > maxDaysInCurrentMonth.value) {
       form.value.currentDay = maxDaysInCurrentMonth.value
@@ -637,6 +641,11 @@ function addMoon() {
 function removeMoon(index: number) {
   form.value.moons.splice(index, 1)
 }
+
+// Season validation
+const seasonsValid = computed(() =>
+  seasons.value.length === 0 || seasons.value.every(s => !!s.name?.trim() && !!s.background_image),
+)
 
 // Season functions
 const monthOptions = computed(() => {
