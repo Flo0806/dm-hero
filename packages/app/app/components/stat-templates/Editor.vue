@@ -100,16 +100,61 @@
 
     <!-- Template editor: name + description + groups -->
     <template v-else>
-      <v-chip
-        v-if="currentTemplate?.is_imported"
-        size="small"
-        variant="tonal"
-        color="info"
-        prepend-icon="mdi-import"
-        class="mb-3"
-      >
-        {{ $t('statTemplates.importedBadge') }}
-      </v-chip>
+      <div class="d-flex align-center ga-2 mb-3">
+        <v-chip
+          v-if="currentTemplate?.is_imported"
+          size="small"
+          variant="tonal"
+          color="info"
+          prepend-icon="mdi-import"
+        >
+          {{ $t('statTemplates.importedBadge') }}
+        </v-chip>
+
+        <!-- Usage badge -->
+        <v-menu
+          v-model="usageMenuOpen"
+          :close-on-content-click="false"
+          location="bottom start"
+        >
+          <template #activator="{ props: menuProps }">
+            <v-chip
+              v-bind="menuProps"
+              size="small"
+              variant="tonal"
+              :color="usageEntities.length > 0 ? 'success' : undefined"
+              :prepend-icon="usageEntities.length > 0 ? 'mdi-account-check' : 'mdi-account-off'"
+              style="cursor: pointer"
+              @click="loadUsage"
+            >
+              {{ $t('statTemplates.usageCount', { count: usageEntities.length }) }}
+            </v-chip>
+          </template>
+          <v-card min-width="280" max-width="400">
+            <v-card-title class="text-subtitle-2 py-2">
+              {{ $t('statTemplates.usedBy') }}
+            </v-card-title>
+            <v-divider />
+            <v-card-text v-if="usageLoading" class="text-center py-4">
+              <v-progress-circular indeterminate size="24" />
+            </v-card-text>
+            <v-card-text v-else-if="usageEntities.length === 0" class="text-center text-medium-emphasis py-4">
+              {{ $t('statTemplates.notUsed') }}
+            </v-card-text>
+            <v-list v-else density="compact" class="py-0">
+              <template v-for="(group, typeName) in usageGrouped" :key="typeName">
+                <v-list-subheader>{{ $t(`entityTypes.${typeName}`, String(typeName)) }}</v-list-subheader>
+                <v-list-item
+                  v-for="entity in group"
+                  :key="entity.entity_id"
+                  :title="entity.entity_name"
+                  density="compact"
+                />
+              </template>
+            </v-list>
+          </v-card>
+        </v-menu>
+      </div>
 
       <v-row dense class="mb-4">
         <v-col cols="12" sm="6">
@@ -192,6 +237,12 @@ defineEmits<{
 const { t } = useI18n()
 const store = useStatTemplatesStore()
 
+interface UsageEntity {
+  entity_id: number
+  entity_name: string
+  type_name: string
+}
+
 const selectedTemplateId = ref<number | null>(null)
 const saving = ref(false)
 const isDirty = ref(false)
@@ -199,6 +250,39 @@ const isDirty = ref(false)
 const localName = ref('')
 const localDescription = ref('')
 const localGroups = ref<GroupData[]>([])
+
+// Usage tracking
+const usageMenuOpen = ref(false)
+const usageLoading = ref(false)
+const usageEntities = ref<UsageEntity[]>([])
+const usageLoadedForId = ref<number | null>(null)
+
+const usageGrouped = computed(() => {
+  const groups: Record<string, UsageEntity[]> = {}
+  for (const entity of usageEntities.value) {
+    if (!groups[entity.type_name]) groups[entity.type_name] = []
+    groups[entity.type_name]!.push(entity)
+  }
+  return groups
+})
+
+async function loadUsage() {
+  if (!selectedTemplateId.value) return
+  // Only reload if template changed
+  if (usageLoadedForId.value === selectedTemplateId.value) return
+  usageLoading.value = true
+  try {
+    usageEntities.value = await $fetch<UsageEntity[]>(`/api/stat-templates/${selectedTemplateId.value}/usage`)
+    usageLoadedForId.value = selectedTemplateId.value
+  }
+  catch (e) {
+    console.error('Failed to load template usage:', e)
+    usageEntities.value = []
+  }
+  finally {
+    usageLoading.value = false
+  }
+}
 
 let keyCounter = 0
 function makeKey() {
@@ -255,6 +339,9 @@ watch(selectedTemplateId, (newId, oldId) => {
   if (newId && newId !== oldId) {
     const template = store.templates.find(t => t.id === newId)
     if (template) loadTemplateIntoEditor(template)
+    // Reset usage cache for new template
+    usageLoadedForId.value = null
+    usageEntities.value = []
   }
 })
 
