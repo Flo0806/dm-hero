@@ -41,6 +41,7 @@ export interface PlayerCounts {
   sessions: number
   documents: number
   images: number
+  hasStats?: boolean
   groups?: GroupInfo[]
 }
 

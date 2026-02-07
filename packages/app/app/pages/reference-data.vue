@@ -185,10 +185,6 @@
       <v-tabs-window-item value="stat-templates">
         <StatTemplatesEditor
           class="mt-2"
-          :templates="statTemplates"
-          :loading="statTemplatesLoading"
-          @saved="onTemplateSaved"
-          @created="onTemplateCreated"
           @request-delete="confirmDeleteTemplate"
         />
       </v-tabs-window-item>
@@ -466,6 +462,7 @@
 <script setup lang="ts">
 import { useCampaignStore } from '~/stores/campaign'
 import type { StatTemplate } from '~~/types/stat-template'
+import { useStatTemplatesStore } from '~/stores/statTemplates'
 
 interface ReferenceData {
   id: number
@@ -491,6 +488,7 @@ interface Currency {
 
 const { t } = useI18n()
 const campaignStore = useCampaignStore()
+const statTemplatesStore = useStatTemplatesStore()
 const tab = ref('currencies')
 
 // Key validation: lowercase letters and underscores only, max 20 chars
@@ -977,49 +975,17 @@ async function confirmDelete() {
 }
 
 // ===== Stat Templates =====
-const statTemplates = ref<StatTemplate[]>([])
-const statTemplatesLoading = ref(false)
 const showTemplateDeleteDialog = ref(false)
 const deletingTemplate = ref<StatTemplate | null>(null)
 const deletingTemplateLinkedCount = ref(0)
 const deletingTemplateLoading = ref(false)
 
-async function loadStatTemplates() {
-  statTemplatesLoading.value = true
-  try {
-    statTemplates.value = await $fetch<StatTemplate[]>('/api/stat-templates')
-  }
-  catch (error) {
-    console.error('Failed to load stat templates:', error)
-    statTemplates.value = []
-  }
-  finally {
-    statTemplatesLoading.value = false
-  }
-}
-
-function onTemplateCreated(template: StatTemplate) {
-  statTemplates.value.push(template)
-}
-
-function onTemplateSaved(template: StatTemplate) {
-  const idx = statTemplates.value.findIndex(t => t.id === template.id)
-  if (idx !== -1) statTemplates.value[idx] = template
-
-  successMessage.value = t('statTemplates.saved')
-  showSuccess.value = true
-}
-
 async function confirmDeleteTemplate(template: StatTemplate) {
   deletingTemplate.value = template
   deletingTemplateLinkedCount.value = 0
 
-  // Check linked entities
   try {
-    const result = await $fetch<{ success: boolean, requiresConfirmation?: boolean, linkedEntityCount?: number }>(
-      `/api/stat-templates/${template.id}`,
-      { method: 'DELETE' },
-    )
+    const result = await statTemplatesStore.checkDelete(template.id)
     if (result.requiresConfirmation) {
       deletingTemplateLinkedCount.value = result.linkedEntityCount || 0
     }
@@ -1036,10 +1002,7 @@ async function deleteTemplate() {
 
   deletingTemplateLoading.value = true
   try {
-    await $fetch(`/api/stat-templates/${deletingTemplate.value.id}?confirm=true`, {
-      method: 'DELETE',
-    })
-    statTemplates.value = statTemplates.value.filter(t => t.id !== deletingTemplate.value!.id)
+    await statTemplatesStore.deleteTemplate(deletingTemplate.value.id)
     showTemplateDeleteDialog.value = false
     deletingTemplate.value = null
     successMessage.value = t('statTemplates.deleted')
@@ -1057,8 +1020,8 @@ async function deleteTemplate() {
 
 // Load stat templates when tab is selected
 watch(tab, (newTab) => {
-  if (newTab === 'stat-templates' && statTemplates.value.length === 0) {
-    loadStatTemplates()
+  if (newTab === 'stat-templates') {
+    statTemplatesStore.ensureLoaded()
   }
 })
 </script>

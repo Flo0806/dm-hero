@@ -2168,6 +2168,29 @@
       "deleteFailed": "Could not delete image."
     }
   },
+  "entityStats": {
+    "title": "Stat Block",
+    "selectTemplate": "Select stat template",
+    "noTemplate": "No stat template assigned",
+    "noTemplateHint": "Choose a template to start tracking stats",
+    "createTemplateLink": "Create templates in Reference Data",
+    "assignTemplate": "Assign Template",
+    "changeTemplate": "Change Template",
+    "changeTemplateConfirm": "Changing the template will reset all values. Continue?",
+    "removeTemplate": "Remove Template",
+    "removeTemplateConfirm": "This will delete all stat values for this entity. Continue?",
+    "saved": "Stats saved",
+    "removed": "Stats removed",
+    "editMode": "Edit values",
+    "viewMode": "View values",
+    "current": "Current",
+    "max": "Max",
+    "characterSheet": "Character Sheet",
+    "uploadCharacterSheet": "Upload Character Sheet",
+    "replaceCharacterSheet": "Replace",
+    "noCharacterSheet": "No character sheet uploaded",
+    "modifier": "Mod"
+  },
   "statTemplates": {
     "title": "Stat Blocks",
     "subtitle": "Stat block templates for different RPG systems",

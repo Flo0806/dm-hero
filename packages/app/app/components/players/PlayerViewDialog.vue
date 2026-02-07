@@ -38,6 +38,18 @@
           <v-icon start>mdi-information</v-icon>
           {{ $t('common.details') }}
         </v-tab>
+        <v-tab value="gallery">
+          <v-icon start>mdi-image</v-icon>
+          {{ $t('common.images') }}
+          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.images }}</v-chip>
+        </v-tab>
+        <v-tab value="stats">
+          <v-icon start>mdi-clipboard-list-outline</v-icon>
+          {{ $t('entityStats.title') }}
+          <v-chip v-if="counts?.hasStats" size="x-small" class="ml-2" color="primary">
+            <v-icon size="x-small">mdi-check</v-icon>
+          </v-chip>
+        </v-tab>
         <v-tab value="characters">
           <v-icon start>mdi-account-group</v-icon>
           {{ $t('players.characters') }}
@@ -67,11 +79,6 @@
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('common.notes') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.documents }}</v-chip>
-        </v-tab>
-        <v-tab value="gallery">
-          <v-icon start>mdi-image</v-icon>
-          {{ $t('common.images') }}
-          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.images }}</v-chip>
         </v-tab>
       </v-tabs>
 
@@ -140,6 +147,25 @@
             </div>
           </v-window-item>
 
+          <!-- Gallery Tab -->
+          <v-window-item value="gallery">
+            <EntityImageGalleryView
+              :images="images"
+              :loading="loading"
+              :empty-message="$t('common.noImages')"
+              @preview="openImagePreview"
+            />
+          </v-window-item>
+
+          <!-- Stats Tab -->
+          <v-window-item value="stats">
+            <SharedEntityStatsTab
+              v-if="player"
+              :entity-id="player.id"
+              readonly
+            />
+          </v-window-item>
+
           <!-- Characters (NPCs) Tab -->
           <v-window-item value="characters">
             <EntityRelationsList
@@ -204,16 +230,6 @@
               :empty-message="$t('documents.empty')"
             />
           </v-window-item>
-
-          <!-- Gallery Tab -->
-          <v-window-item value="gallery">
-            <EntityImageGalleryView
-              :images="images"
-              :loading="loading"
-              :empty-message="$t('common.noImages')"
-              @preview="openImagePreview"
-            />
-          </v-window-item>
         </v-window>
       </v-card-text>
 
@@ -256,7 +272,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  edit: [player: Player]
+  'edit': [player: Player]
   'view-npc': [npcId: number]
   'view-item': [itemId: number]
   'view-location': [locationId: number]
@@ -267,7 +283,7 @@ const { getCounts, loadPlayerCounts } = usePlayerCounts()
 
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const activeTab = ref('overview')
@@ -322,14 +338,14 @@ const loreEntries = ref<
     image_url?: string | null
   }>
 >([])
-const documents = ref<Array<{ id: number; title: string; content: string }>>([])
-const images = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const documents = ref<Array<{ id: number, title: string, content: string }>>([])
+const images = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 
 // Image preview
 const showImagePreview = ref(false)
-const previewImage = ref<{ id: number; image_url: string; is_primary: boolean } | null>(null)
+const previewImage = ref<{ id: number, image_url: string, is_primary: boolean } | null>(null)
 
-function openImagePreview(image: { id: number; image_url: string; is_primary: boolean }) {
+function openImagePreview(image: { id: number, image_url: string, is_primary: boolean }) {
   previewImage.value = image
   showImagePreview.value = true
 }
@@ -348,8 +364,8 @@ watch(
     loading.value = true
     try {
       // Load all data in parallel
-      const [charactersData, itemsData, locationsData, factionsData, loreData, documentsData, imagesData] =
-        await Promise.all([
+      const [charactersData, itemsData, locationsData, factionsData, loreData, documentsData, imagesData]
+        = await Promise.all([
           // Characters (NPCs linked to this player)
           $fetch<
             Array<{
@@ -359,8 +375,8 @@ watch(
               image_url?: string
             }>
           >(`/api/entities/${newPlayer.id}/related/npcs`)
-            .then((data) =>
-              data.map((npc) => ({
+            .then(data =>
+              data.map(npc => ({
                 ...npc,
                 relation_id: npc.id,
               })),
@@ -379,8 +395,8 @@ watch(
               rarity?: string
             }>
           >(`/api/entities/${newPlayer.id}/related/items`)
-            .then((data) =>
-              data.map((item) => ({
+            .then(data =>
+              data.map(item => ({
                 ...item,
                 relation_id: item.id,
               })),
@@ -398,8 +414,8 @@ watch(
               image_url?: string
             }>
           >(`/api/entities/${newPlayer.id}/related/locations`)
-            .then((data) =>
-              data.map((loc) => ({
+            .then(data =>
+              data.map(loc => ({
                 ...loc,
                 relation_id: loc.id,
               })),
@@ -417,8 +433,8 @@ watch(
               image_url?: string
             }>
           >(`/api/entities/${newPlayer.id}/related/factions`)
-            .then((data) =>
-              data.map((fac) => ({
+            .then(data =>
+              data.map(fac => ({
                 ...fac,
                 relation_id: fac.id,
               })),
@@ -440,14 +456,14 @@ watch(
             return []
           }),
           // Documents
-          $fetch<Array<{ id: number; title: string; content: string }>>(
+          $fetch<Array<{ id: number, title: string, content: string }>>(
             `/api/entities/${newPlayer.id}/documents`,
           ).catch((error) => {
             console.error('Failed to load documents:', error)
             return []
           }),
           // Images
-          $fetch<Array<{ id: number; image_url: string; is_primary: boolean }>>(
+          $fetch<Array<{ id: number, image_url: string, is_primary: boolean }>>(
             `/api/entity-images/${newPlayer.id}`,
           ).catch((error) => {
             console.error('Failed to load images:', error)
@@ -462,7 +478,8 @@ watch(
       loreEntries.value = loreData
       documents.value = documentsData
       images.value = imagesData
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   },

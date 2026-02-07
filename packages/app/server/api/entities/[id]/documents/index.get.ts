@@ -11,26 +11,29 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const documents = db
-    .prepare(
-      `
-    SELECT
-      id,
-      entity_id,
-      title,
-      content,
-      date,
-      sort_order,
-      file_path,
-      file_type,
-      created_at,
-      updated_at
+  const query = getQuery(event)
+  const documentType = query.document_type as string | undefined
+  const excludeType = query.exclude_type as string | undefined
+
+  let sql = `
+    SELECT id, entity_id, title, content, date, sort_order,
+           file_path, file_type, document_type, created_at, updated_at
     FROM entity_documents
-    WHERE entity_id = ?
-    ORDER BY sort_order ASC, created_at DESC
-  `,
-    )
-    .all(entityId)
+    WHERE entity_id = ?`
+  const params: unknown[] = [entityId]
+
+  if (documentType) {
+    sql += ' AND document_type = ?'
+    params.push(documentType)
+  }
+  else if (excludeType) {
+    sql += ' AND (document_type IS NULL OR document_type != ?)'
+    params.push(excludeType)
+  }
+
+  sql += ' ORDER BY sort_order ASC, created_at DESC'
+
+  const documents = db.prepare(sql).all(...params)
 
   return documents
 })

@@ -260,7 +260,7 @@
       @cancel="showDeleteDialog = false"
     />
 
-    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -335,13 +335,13 @@ const documentForm = ref({
 const isEditing = computed(() => !!editingDocument.value || creatingDocument.value)
 
 // Notify parent dialog about dirty state
-watch(isEditing, (dirty) => markDirty(dirty), { immediate: true })
+watch(isEditing, dirty => markDirty(dirty), { immediate: true })
 
 const filteredDocuments = computed(() => {
   if (!searchQuery.value) return documents.value
   const q = searchQuery.value.toLowerCase()
   return documents.value.filter(
-    (doc) => doc.title.toLowerCase().includes(q) || doc.content.toLowerCase().includes(q),
+    doc => doc.title.toLowerCase().includes(q) || doc.content.toLowerCase().includes(q),
   )
 })
 
@@ -350,9 +350,13 @@ const canSave = computed(() => !!documentForm.value.title && !!documentForm.valu
 /* ---------- Methods ---------- */
 async function loadDocuments() {
   try {
-    const data = await $fetch<Document[]>(`/api/entities/${props.entityId}/documents`)
+    const data = await $fetch<Document[]>(
+      `/api/entities/${props.entityId}/documents`,
+      { query: { exclude_type: 'character_sheet' } },
+    )
     documents.value = data
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load documents:', e)
     documents.value = []
   }
@@ -389,7 +393,8 @@ async function saveDocument() {
         method: 'PATCH',
         body: documentForm.value,
       })
-    } else {
+    }
+    else {
       await $fetch(`/api/entities/${props.entityId}/documents`, {
         method: 'POST',
         body: documentForm.value,
@@ -398,9 +403,11 @@ async function saveDocument() {
     await loadDocuments()
     cancelEditing()
     emit('changed') // Notify parent that document count changed
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to save document:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -421,9 +428,11 @@ async function deleteDocument() {
     showDeleteDialog.value = false
     deletingDocument.value = null
     emit('changed') // Notify parent that document count changed
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to delete document:', e)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
@@ -450,13 +459,15 @@ async function handleImageUpload(files: File[], callback: (urls: string[]) => vo
           body: formData,
         })
         uploaded.push(res.image_url)
-      } catch (e) {
+      }
+      catch (e) {
         console.error('Failed to upload image:', e)
       }
     }
     // md-editor erwartet endgültige URLs
-    callback(uploaded.map((u) => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
-  } finally {
+    callback(uploaded.map(u => (u.startsWith('/pictures/') ? u : `/pictures/${u}`)))
+  }
+  finally {
     uploadingImage.value = false
   }
 }
@@ -466,7 +477,8 @@ async function openImageGallery() {
   try {
     const images = await $fetch<string[]>('/api/documents/images')
     galleryImages.value = images ?? []
-  } catch (e) {
+  }
+  catch (e) {
     console.error('Failed to load images:', e)
     galleryImages.value = []
   }
@@ -479,7 +491,8 @@ function insertImageFromGallery(image: string) {
   // Use EntityMarkdownEditor's insert API
   if (editorRef.value) {
     editorRef.value.insert(markdown)
-  } else {
+  }
+  else {
     // Fallback: append at end
     documentForm.value.content += `\n${markdown}\n`
   }
@@ -522,10 +535,12 @@ async function handlePdfUpload(event: Event) {
     }
 
     emit('changed') // Notify parent that document count changed
-  } catch (error) {
+  }
+  catch (error) {
     console.error('PDF upload failed:', error)
     showUploadError('pdf')
-  } finally {
+  }
+  finally {
     uploadingPdf.value = false
   }
 }
@@ -534,7 +549,8 @@ function openDocument(doc: Document) {
   if (doc.file_type === 'pdf') {
     // Open PDF preview dialog
     previewPdf(doc)
-  } else {
+  }
+  else {
     // Edit markdown document
     editDocument(doc)
   }
@@ -558,7 +574,8 @@ function downloadPdf(doc: Document) {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to download PDF:', error)
     showDownloadError()
   }

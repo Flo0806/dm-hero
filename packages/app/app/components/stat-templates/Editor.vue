@@ -38,7 +38,7 @@
         </template>
         <v-list density="compact">
           <v-list-item
-            v-for="preset in presets"
+            v-for="preset in store.presets"
             :key="preset.system_key"
             :prepend-icon="presetIcon(preset.system_key)"
             @click="createFromPreset(preset.system_key)"
@@ -79,7 +79,13 @@
       density="compact"
       class="mb-4"
     >
-      {{ $t('statTemplates.unsavedChanges') }}
+      <div class="d-flex align-center">
+        <span>{{ $t('statTemplates.unsavedChanges') }}</span>
+        <v-spacer />
+        <v-btn size="small" variant="text" @click="discardChanges">
+          {{ $t('statTemplates.discardChanges') }}
+        </v-btn>
+      </div>
     </v-alert>
 
     <!-- No template selected -->
@@ -143,48 +149,13 @@
       </v-btn>
     </template>
 
-    <!-- Discard confirmation dialog -->
-    <v-dialog v-model="showDiscardDialog" max-width="400">
-      <v-card>
-        <v-card-title>{{ $t('statTemplates.discardChanges') }}</v-card-title>
-        <v-card-text>{{ $t('statTemplates.discardConfirm') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="showDiscardDialog = false">
-            {{ $t('common.cancel') }}
-          </v-btn>
-          <v-btn color="error" @click="confirmDiscard">
-            {{ $t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import draggable from 'vuedraggable'
 import type { StatTemplate, SaveStatTemplatePayload } from '~~/types/stat-template'
-
-interface PresetField {
-  name: string
-  label: string
-  field_type: 'string' | 'number' | 'resource' | 'boolean'
-  has_modifier: boolean
-}
-
-interface PresetGroup {
-  name: string
-  group_type: string
-  fields: PresetField[]
-}
-
-interface PresetInfo {
-  system_key: string
-  name: string
-  description: string
-  groups: PresetGroup[]
-}
+import { useStatTemplatesStore } from '~/stores/statTemplates'
 
 interface FieldData {
   name: string
@@ -200,25 +171,16 @@ interface GroupData {
   fields: FieldData[]
 }
 
-const props = defineProps<{
-  templates: StatTemplate[]
-  loading: boolean
-}>()
-
-const emit = defineEmits<{
-  saved: [template: StatTemplate]
-  created: [template: StatTemplate]
+defineEmits<{
   requestDelete: [template: StatTemplate]
 }>()
 
 const { t } = useI18n()
+const store = useStatTemplatesStore()
 
-const presets = ref<PresetInfo[]>([])
 const selectedTemplateId = ref<number | null>(null)
 const saving = ref(false)
 const isDirty = ref(false)
-const showDiscardDialog = ref(false)
-const pendingTemplateId = ref<number | null>(null)
 
 const localName = ref('')
 const localDescription = ref('')
@@ -240,15 +202,15 @@ function presetIcon(key: string): string {
   return icons[key] || 'mdi-file-outline'
 }
 
-// Current template from props based on selection
+// Current template from store based on selection
 const currentTemplate = computed(() => {
   if (!selectedTemplateId.value) return null
-  return props.templates.find(t => t.id === selectedTemplateId.value) || null
+  return store.templates.find(t => t.id === selectedTemplateId.value) || null
 })
 
 // Items for the select dropdown
 const templateSelectItems = computed(() =>
-  props.templates.map(t => ({
+  store.templates.map(t => ({
     value: t.id,
     title: t.name,
     systemKey: t.system_key,
@@ -276,13 +238,13 @@ function loadTemplateIntoEditor(template: StatTemplate) {
 // Watch select changes
 watch(selectedTemplateId, (newId, oldId) => {
   if (newId && newId !== oldId) {
-    const template = props.templates.find(t => t.id === newId)
+    const template = store.templates.find(t => t.id === newId)
     if (template) loadTemplateIntoEditor(template)
   }
 })
 
 // Auto-select first template, or reset if selected was deleted
-watch(() => props.templates, (templates) => {
+watch(() => store.templates, (templates) => {
   const stillExists = templates.some(t => t.id === selectedTemplateId.value)
   if (!stillExists) {
     selectedTemplateId.value = templates.length > 0 ? templates[0]!.id : null
@@ -290,25 +252,16 @@ watch(() => props.templates, (templates) => {
 }, { immediate: true })
 
 // Load presets on mount
-onMounted(async () => {
-  try {
-    presets.value = await $fetch<PresetInfo[]>('/api/stat-templates/presets')
-  }
-  catch (error) {
-    console.error('Failed to load presets:', error)
-  }
+onMounted(() => {
+  store.loadPresets()
 })
 
 async function createFromPreset(systemKey: string) {
-  const preset = presets.value.find(p => p.system_key === systemKey)
+  const preset = store.presets.find(p => p.system_key === systemKey)
   if (!preset) return
 
   try {
-    const template = await $fetch<StatTemplate>('/api/stat-templates', {
-      method: 'POST',
-      body: { name: t(preset.name), fromPreset: systemKey },
-    })
-    emit('created', template)
+    const template = await store.createFromPreset(systemKey, t(preset.name))
     nextTick(() => {
       selectedTemplateId.value = template.id
     })
@@ -354,13 +307,6 @@ async function save() {
 
   saving.value = true
   try {
-    // Update name/description
-    await $fetch(`/api/stat-templates/${selectedTemplateId.value}`, {
-      method: 'PATCH',
-      body: { name: localName.value, description: localDescription.value || null },
-    })
-
-    // Bulk-save groups+fields
     const groups: SaveStatTemplatePayload['groups'] = localGroups.value.map(g => ({
       name: g.name,
       group_type: g.group_type,
@@ -372,13 +318,13 @@ async function save() {
       })),
     }))
 
-    const updated = await $fetch<StatTemplate>(`/api/stat-templates/${selectedTemplateId.value}/save`, {
-      method: 'POST',
-      body: { groups },
+    await store.saveTemplate(selectedTemplateId.value, {
+      name: localName.value,
+      description: localDescription.value || null,
+      groups,
     })
 
     isDirty.value = false
-    emit('saved', updated)
   }
   catch (error) {
     console.error('Failed to save template:', error)
@@ -388,12 +334,9 @@ async function save() {
   }
 }
 
-function confirmDiscard() {
-  showDiscardDialog.value = false
-  isDirty.value = false
-  if (pendingTemplateId.value != null) {
-    selectedTemplateId.value = pendingTemplateId.value
-    pendingTemplateId.value = null
+function discardChanges() {
+  if (currentTemplate.value) {
+    loadTemplateIntoEditor(currentTemplate.value)
   }
 }
 </script>

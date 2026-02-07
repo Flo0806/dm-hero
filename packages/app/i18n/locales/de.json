@@ -2144,6 +2144,29 @@
       "deleteFailed": "Bild konnte nicht gelöscht werden."
     }
   },
+  "entityStats": {
+    "title": "Werteblock",
+    "selectTemplate": "Werteblock-Vorlage auswählen",
+    "noTemplate": "Keine Werteblock-Vorlage zugewiesen",
+    "noTemplateHint": "Wähle eine Vorlage um Werte zu erfassen",
+    "createTemplateLink": "Vorlagen in den Stammdaten erstellen",
+    "assignTemplate": "Vorlage zuweisen",
+    "changeTemplate": "Vorlage wechseln",
+    "changeTemplateConfirm": "Beim Wechseln der Vorlage werden alle Werte zurückgesetzt. Fortfahren?",
+    "removeTemplate": "Vorlage entfernen",
+    "removeTemplateConfirm": "Alle Werte für diese Entität werden gelöscht. Fortfahren?",
+    "saved": "Werte gespeichert",
+    "removed": "Werte entfernt",
+    "editMode": "Werte bearbeiten",
+    "viewMode": "Werte anzeigen",
+    "current": "Aktuell",
+    "max": "Max",
+    "characterSheet": "Charakterbogen",
+    "uploadCharacterSheet": "Charakterbogen hochladen",
+    "replaceCharacterSheet": "Ersetzen",
+    "noCharacterSheet": "Kein Charakterbogen hochgeladen",
+    "modifier": "Mod"
+  },
   "statTemplates": {
     "title": "Werteblöcke",
     "subtitle": "Stat-Block-Vorlagen für verschiedene Rollenspielsysteme",

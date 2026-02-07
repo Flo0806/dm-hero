@@ -24,14 +24,20 @@ export default defineEventHandler(async (event) => {
     // Extract fields
     let entityId: number | null = null
     let title = ''
-    let file: { filename: string; data: Buffer } | null = null
+    let documentType: string | null = null
+    let file: { filename: string, data: Buffer } | null = null
 
     for (const part of form) {
       if (part.name === 'entityId') {
         entityId = Number.parseInt(part.data.toString(), 10)
-      } else if (part.name === 'title') {
+      }
+      else if (part.name === 'title') {
         title = part.data.toString()
-      } else if (part.name === 'file' && part.filename) {
+      }
+      else if (part.name === 'document_type') {
+        documentType = part.data.toString() || null
+      }
+      else if (part.name === 'file' && part.filename) {
         file = {
           filename: part.filename,
           data: part.data,
@@ -96,11 +102,11 @@ export default defineEventHandler(async (event) => {
     const result = db
       .prepare(
         `
-      INSERT INTO entity_documents (entity_id, title, file_path, file_type, content, date, sort_order)
-      VALUES (?, ?, ?, ?, ?, datetime('now'), ?)
+      INSERT INTO entity_documents (entity_id, title, file_path, file_type, content, date, sort_order, document_type)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?)
     `,
       )
-      .run(entityId, title, uniqueFilename, 'pdf', '', sortOrder)
+      .run(entityId, title, uniqueFilename, 'pdf', '', sortOrder, documentType)
 
     // Return created document
     return {
@@ -109,9 +115,11 @@ export default defineEventHandler(async (event) => {
       title,
       file_path: uniqueFilename,
       file_type: 'pdf',
+      document_type: documentType,
       sort_order: sortOrder,
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('PDF upload error:', error)
     throw createError({
       statusCode: 500,

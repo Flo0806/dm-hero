@@ -91,6 +91,8 @@ export interface UpdateStatTemplatePayload {
 }
 
 export interface SaveStatTemplatePayload {
+  name?: string
+  description?: string | null
   groups: Array<{
     name: string
     group_type: string
@@ -114,8 +116,13 @@ export interface StatResourceValue {
   max: number
 }
 
+export interface StatNumberWithModifier {
+  value: number
+  modifier: number
+}
+
 // Keys are field names, values depend on field_type
-export type StatValues = Record<string, string | number | boolean | StatResourceValue | null>
+export type StatValues = Record<string, string | number | boolean | StatResourceValue | StatNumberWithModifier | null>
 
 export interface EntityStatsDbRow {
   id: number

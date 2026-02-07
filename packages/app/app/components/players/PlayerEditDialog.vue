@@ -19,6 +19,13 @@
           {{ $t('common.images') }}
           <v-chip size="x-small" class="ml-2">{{ counts.images }}</v-chip>
         </v-tab>
+        <v-tab value="stats">
+          <v-icon start>mdi-clipboard-list-outline</v-icon>
+          {{ $t('entityStats.title') }}
+          <v-chip v-if="counts.hasStats" size="x-small" class="ml-2" color="primary">
+            <v-icon size="x-small">mdi-check</v-icon>
+          </v-chip>
+        </v-tab>
         <v-tab value="documents">
           <v-icon start>mdi-file-document</v-icon>
           {{ $t('common.notes') }}
@@ -236,6 +243,16 @@
             />
           </v-tabs-window-item>
 
+          <!-- Stats Tab -->
+          <v-tabs-window-item value="stats">
+            <SharedEntityStatsTab
+              v-if="player"
+              ref="statsTabRef"
+              :entity-id="player.id"
+              @changed="playerStore.loadCounts(player!.id)"
+            />
+          </v-tabs-window-item>
+
           <!-- Documents Tab -->
           <v-tabs-window-item value="documents">
             <EntityDocuments
@@ -413,6 +430,7 @@ import type { Player } from '~~/types/player'
 import EntityImageUpload from '../shared/EntityImageUpload.vue'
 import EntityImageGallery from '../shared/EntityImageGallery.vue'
 import EntityDocuments from '../shared/EntityDocuments.vue'
+import SharedEntityStatsTab from '../shared/EntityStatsTab.vue'
 import EntityLocationsTab from '../shared/EntityLocationsTab.vue'
 import EntityFactionsTab from '../shared/EntityFactionsTab.vue'
 import PlayerCharactersTab from './PlayerCharactersTab.vue'
@@ -432,8 +450,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [player: Player]
-  created: [player: Player]
+  'saved': [player: Player]
+  'created': [player: Player]
 }>()
 
 const { t } = useI18n()
@@ -456,7 +474,7 @@ const hasCalendar = computed(() => calendarData.value && calendarData.value.mont
 // ============================================================================
 const internalShow = computed({
   get: () => props.show,
-  set: (v) => emit('update:show', v),
+  set: v => emit('update:show', v),
 })
 
 const player = ref<Player | null>(null)
@@ -473,18 +491,21 @@ const form = ref({
   phone: '',
   notes: '',
   location_id: null as number | null,
-  birthday: null as { year: number; month: number; day: number } | null,
+  birthday: null as { year: number, month: number, day: number } | null,
   showBirthdayInCalendar: true,
 })
 
 // Map sync data (from LocationSelectWithMap)
-const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
+const mapSyncData = ref<{ locationId: number | null, mapIds: number[] } | null>(null)
 
 // Birthday toggle (controls visibility, actual null is set on save)
 const hasBirthday = ref(false)
 
 // Counts from store (reactive)
 const counts = computed(() => playerStore.counts)
+
+// Stats tab ref (for saving stats on dialog save)
+const statsTabRef = ref<{ saveStats: () => Promise<void> } | null>(null)
 
 // Image management
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -503,8 +524,8 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   return (
-    form.value.name !== originalImageData.value.name ||
-    (form.value.description || '') !== originalImageData.value.description
+    form.value.name !== originalImageData.value.name
+    || (form.value.description || '') !== originalImageData.value.description
   )
 })
 
@@ -531,7 +552,8 @@ onMounted(async () => {
   try {
     const result = await $fetch<{ hasKey: boolean }>('/api/settings/openai-key/check')
     hasApiKey.value = result.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 })
@@ -654,7 +676,8 @@ async function save() {
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new player via store
       const created = await entitiesStore.createPlayer(campaignId, {
         name: form.value.name,
@@ -682,10 +705,15 @@ async function save() {
       eventTitle,
     )
 
+    // Save stats if dirty
+    await statsTabRef.value?.saveStats()
+
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[PlayerEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -697,35 +725,37 @@ function close() {
 // Sync Player marker to selected maps - place inside location circle if available
 async function syncToMaps(entityId: number, mapIds: number[]) {
   const locationId = form.value.location_id
-  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let mapsWithArea: Array<{ map_id: number, map_name: string, area_id: number }> = []
   let locationName = ''
 
   if (locationId) {
     try {
-      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+      mapsWithArea = await $fetch<Array<{ map_id: number, map_name: string, area_id: number }>>(
         `/api/locations/${locationId}/maps-with-area`,
       )
       const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
       locationName = location.name
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[PlayerEditDialog] Failed to get maps with area:', e)
     }
   }
 
   const mapsWithoutLocation: string[] = []
 
-  let allMaps: Array<{ id: number; name: string }> = []
+  let allMaps: Array<{ id: number, name: string }> = []
   try {
-    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+    allMaps = await $fetch<Array<{ id: number, name: string }>>('/api/maps', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[PlayerEditDialog] Failed to get maps:', e)
   }
 
   for (const mapId of mapIds) {
     try {
-      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+      const areaInfo = mapsWithArea.find(m => m.map_id === mapId)
 
       if (areaInfo) {
         await $fetch(`/api/maps/${mapId}/place-in-area`, {
@@ -735,7 +765,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
             area_id: areaInfo.area_id,
           },
         })
-      } else {
+      }
+      else {
         const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
           query: { entityId },
         })
@@ -752,13 +783,14 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
         }
 
         if (locationId) {
-          const mapInfo = allMaps.find((m) => m.id === mapId)
+          const mapInfo = allMaps.find(m => m.id === mapId)
           if (mapInfo) {
             mapsWithoutLocation.push(mapInfo.name)
           }
         }
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error(`[PlayerEditDialog] Failed to sync to map ${mapId}:`, e)
     }
   }
@@ -768,7 +800,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
       snackbarStore.warning(
         t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
       )
-    } else {
+    }
+    else {
       snackbarStore.warning(
         t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
       )
@@ -810,10 +843,12 @@ async function handleImageUpload(event: Event) {
     await entitiesStore.refreshPlayer(player.value.id)
     await imageGalleryRef.value?.refresh()
     await playerStore.loadCounts(player.value.id)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload image:', error)
     showUploadError('image')
-  } finally {
+  }
+  finally {
     uploadingImage.value = false
     if (target) target.value = ''
   }
@@ -825,7 +860,7 @@ async function generateImage() {
   generatingImage.value = true
 
   try {
-    const result = await $fetch<{ imageUrl: string; revisedPrompt?: string }>(
+    const result = await $fetch<{ imageUrl: string, revisedPrompt?: string }>(
       '/api/ai/generate-image',
       {
         method: 'POST',
@@ -863,10 +898,12 @@ async function generateImage() {
         await playerStore.loadCounts(player.value.id)
       }
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('[PlayerEditDialog] Failed to generate image:', error)
     showError(error, 'errors.image.generateFailed')
-  } finally {
+  }
+  finally {
     generatingImage.value = false
   }
 }
@@ -885,10 +922,12 @@ async function deleteImage() {
     await entitiesStore.refreshPlayer(player.value.id)
     await imageGalleryRef.value?.refresh()
     await playerStore.loadCounts(player.value.id)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete image:', error)
     showImageError('delete')
-  } finally {
+  }
+  finally {
     deletingImage.value = false
   }
 }
