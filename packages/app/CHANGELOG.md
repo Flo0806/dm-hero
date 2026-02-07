@@ -1,5 +1,27 @@
 # @dm-hero/app
 
+## 1.2.0
+
+### Minor Changes
+
+- af11147: Add encounter tracker with full combat flow: initiative, turn tracking, HP management, effects system, dice roller, and 49 unit tests (#247)
+- 09293e9: Add multi-provider AI support: OpenAI + Google Gemini with model selection, shared abstraction, and no-text image rules (#249)
+- a9668e7: Add stat block template system for NPCs and Players
+
+  - Stat template CRUD with presets (D&D 5e, Pathfinder 2e, DSA 5, Splittermond)
+  - Entity stats (assign, edit, change, remove) with all field types
+  - Character sheet PDF upload/view/download
+  - Export/Import support for stat templates and entity stats
+  - Reference data editor with usage tracking and imported badge
+  - Character sheets excluded from document counts
+
+### Patch Changes
+
+- cf641cb: Season name and background image are now required fields in calendar settings with validation
+- 01d3ed4: Fix text formatting (newlines) being lost in view/preview dialogs
+- 56e66ba: Minimize Linux Electron menu bar to match macOS (Edit + Help only)
+- 32e9d4f: Add v1.2 welcome dialog announcement and fix missing hasStats in NpcCounts
+
 ## 1.1.3
 
 ### Patch Changes
@@ -31,12 +53,14 @@
 ### Minor Changes
 
 - 2d78fdd: ### Features
+
   - Clickable count badges on entity cards - click to jump directly to the related tab (#214)
   - Character birthday with in-game calendar integration (#213)
   - Quick linking and quick create in dialogs (#208)
   - Item grouping for better organization (#205)
 
   ### Fixes
+
   - Fixed map marker placement - markers already inside location area are no longer moved
   - Improved session in-game date picker UX with checkbox pattern (#215)
   - Fixed state loss in entity details when adding relations (#212)
@@ -47,6 +71,7 @@
   - Fixed chaos graph view/edit buttons (#198)
 
   ### Dependencies
+
   - Upgraded Nuxt to 4.3.0
 
 ## 1.0.2
