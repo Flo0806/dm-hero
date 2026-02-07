@@ -86,6 +86,12 @@
         to="/sessions"
       />
       <v-list-item
+        prepend-icon="mdi-sword-cross"
+        :title="$t('nav.encounters')"
+        value="encounters"
+        to="/encounters"
+      />
+      <v-list-item
         prepend-icon="mdi-calendar"
         :title="$t('calendar.title')"
         value="calendar"

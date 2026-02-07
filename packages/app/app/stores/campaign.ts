@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useEntitiesStore } from './entities'
+import { useEncounterStore } from './encounter'
 import { useNotesStore } from './notes'
 
 interface Campaign {
@@ -41,6 +42,8 @@ export const useCampaignStore = defineStore('campaign', {
       entitiesStore.clearAll()
       const notesStore = useNotesStore()
       notesStore.clearNotes()
+      const encounterStore = useEncounterStore()
+      encounterStore.clearAll()
       // Clear count caches (important after import/merge)
       useNpcCounts().clearCountsCache()
       usePlayerCounts().clearCountsCache()

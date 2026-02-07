@@ -26,6 +26,7 @@
     "players": "Players",
     "quests": "Quests",
     "sessions": "Sessions",
+    "encounters": "Encounters",
     "maps": "Maps",
     "groups": "Groups",
     "calendar": "Calendar",
@@ -1336,6 +1337,36 @@
       "unpinnedSuccess": "Pin removed"
     }
   },
+  "encounters": {
+    "title": "Encounters",
+    "subtitle": "Track combat encounters and initiative order",
+    "create": "New Encounter",
+    "name": "Name",
+    "status": "Status",
+    "statuses": {
+      "setup": "Setup",
+      "initiative": "Initiative",
+      "active": "Active",
+      "paused": "Paused",
+      "finished": "Finished"
+    },
+    "participants": "Participants",
+    "round": "Round",
+    "empty": "No encounters available",
+    "emptyText": "Create your first encounter to get started",
+    "deleteTitle": "Delete Encounter",
+    "deleteConfirm": "Do you really want to delete '{name}'? The encounter will be archived and can be restored.",
+    "back": "Back to list",
+    "addParticipants": "Add Participants",
+    "removeParticipant": "Remove",
+    "noParticipants": "No participants yet",
+    "noParticipantsHint": "Add NPCs and Players to this encounter",
+    "participantAdded": "Participants added",
+    "participantRemoved": "Participant removed",
+    "selectType": "Entity Type",
+    "alreadyInEncounter": "Already in encounter",
+    "hp": "HP"
+  },
   "documents": {
     "title": "Documents",
     "subtitle": "Markdown documents and notes",
@@ -1424,6 +1455,7 @@
     "confirm": "Confirm",
     "uploading": "Uploading...",
     "loading": "Loading...",
+    "error": "An error occurred",
     "comingSoon": "Coming soon",
     "images": "Images",
     "uploadImage": "Upload Image",
