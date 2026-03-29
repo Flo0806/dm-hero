@@ -1550,8 +1550,11 @@ async function handleImageUpload(event: Event) {
 
     if (!response.ok) throw new Error('Upload failed')
 
-    await entitiesStore.refreshItem(item.value.id)
-    await loadItem(item.value.id)
+    const result = await response.json()
+    if (result.imageUrl && item.value) {
+      item.value = { ...item.value, image_url: result.imageUrl }
+    }
+    await entitiesStore.refreshItem(item.value!.id)
   }
   catch (error) {
     console.error('[ItemEditDialog] Failed to upload image:', error)

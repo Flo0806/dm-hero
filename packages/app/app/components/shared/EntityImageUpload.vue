@@ -13,6 +13,7 @@
           >
             <v-img
               v-if="imageUrl"
+              :key="imageUrl"
               :src="`/uploads/${imageUrl}`"
               cover
               :class="{ 'blur-image': uploading || generating }"

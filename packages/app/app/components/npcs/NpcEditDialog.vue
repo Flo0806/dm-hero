@@ -1429,6 +1429,13 @@ async function handleImageUpload(event: Event) {
       throw new Error('Upload failed')
     }
 
+    // Update image_url from upload response
+    const result = await response.json()
+    if (result.imageUrl && npc.value) {
+      npc.value = { ...npc.value, image_url: result.imageUrl }
+    }
+    // Refresh list/card view so image shows even without save
+    await entitiesStore.refreshNPC(npc.value!.id)
     await refreshNpc()
   }
   catch (error) {

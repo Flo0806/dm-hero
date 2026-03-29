@@ -201,8 +201,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  add: [payload: { npcId: number; membershipType?: string; rank?: string }]
-  update: [payload: { relationId: number; membershipType?: string; rank?: string }]
+  add: [payload: { npcId: number, membershipType?: string, rank?: string }]
+  update: [payload: { relationId: number, membershipType?: string, rank?: string }]
   remove: [npcId: number]
 }>()
 
@@ -227,7 +227,7 @@ const isDirty = computed(() => {
   const hasFormData = !!localNpcId.value || !!localMembershipType.value || !!localRank.value
   return hasFormData || showEditDialog.value
 })
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const canAdd = computed(() => {
   if (!localNpcId.value) return false
@@ -237,7 +237,7 @@ const canAdd = computed(() => {
 
 function getMembershipTypeLabel(membershipType: string): string {
   // Try to find in suggestions first
-  const suggestion = props.membershipTypeSuggestions.find((s) => s.value === membershipType)
+  const suggestion = props.membershipTypeSuggestions.find(s => s.value === membershipType)
   if (suggestion) return suggestion.title
   return membershipType
 }
@@ -245,7 +245,7 @@ function getMembershipTypeLabel(membershipType: string): string {
 function handleAdd() {
   if (!localNpcId.value) return
 
-  const payload: { npcId: number; membershipType?: string; rank?: string } = {
+  const payload: { npcId: number, membershipType?: string, rank?: string } = {
     npcId: localNpcId.value,
   }
 
@@ -295,7 +295,7 @@ function closeEditDialog() {
   editForm.value = { membershipType: '', rank: '' }
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload NPCs to include the new NPC
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
