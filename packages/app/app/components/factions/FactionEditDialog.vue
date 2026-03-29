@@ -1333,6 +1333,11 @@ async function handleImageUpload(event: Event) {
       throw new Error('Upload failed')
     }
 
+    const result = await response.json()
+    if (result.imageUrl && faction.value) {
+      faction.value = { ...faction.value, image_url: result.imageUrl }
+    }
+    await entitiesStore.refreshFaction(faction.value!.id)
     await refreshFaction()
   }
   catch (error) {

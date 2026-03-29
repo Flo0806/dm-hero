@@ -838,8 +838,10 @@ async function handleImageUpload(event: Event) {
       throw new Error('Upload failed')
     }
 
-    // Refresh player data and gallery
-    await loadPlayer(player.value.id)
+    const result = await response.json()
+    if (result.imageUrl && player.value) {
+      player.value = { ...player.value, image_url: result.imageUrl }
+    }
     await entitiesStore.refreshPlayer(player.value.id)
     await imageGalleryRef.value?.refresh()
     await playerStore.loadCounts(player.value.id)
