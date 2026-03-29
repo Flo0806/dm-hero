@@ -87,7 +87,7 @@ describe('Location Linking - NPCs', () => {
     // Link NPC to Location (NPC → Location)
     db.prepare(
       'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
-    ).run(npcId, locationId, 'befindet sich in')
+    ).run(npcId, locationId, 'currentlyAt')
 
     // Query linked NPCs (like /api/locations/[id]/npcs.get.ts)
     const linkedNpcs = db
@@ -140,7 +140,7 @@ describe('Location Linking - NPCs', () => {
     ).run(npc1.lastInsertRowid, locationId, 'arbeitet bei')
     db.prepare(
       'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
-    ).run(npc2.lastInsertRowid, locationId, 'befindet sich in')
+    ).run(npc2.lastInsertRowid, locationId, 'currentlyAt')
     db.prepare(
       'INSERT INTO entity_relations (from_entity_id, to_entity_id, relation_type) VALUES (?, ?, ?)',
     ).run(npc3.lastInsertRowid, locationId, 'bewacht')

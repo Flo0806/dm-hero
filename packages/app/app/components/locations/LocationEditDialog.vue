@@ -749,7 +749,7 @@ async function addNpcRelation(payload: { npcId: number }) {
       body: {
         fromEntityId: payload.npcId,
         toEntityId: location.value.id,
-        relationType: 'befindet sich in',
+        relationType: 'currentlyAt',
       },
     })
 
