@@ -43,6 +43,46 @@
             <strong>{{ $t('common.notes') }}:</strong>
             <div class="text-body-2 mt-2" style="white-space: pre-wrap">{{ entity.notes }}</div>
           </div>
+
+          <!-- Linked NPCs -->
+          <template v-if="linkedNpcs.length > 0">
+            <v-divider class="my-4" />
+            <strong>{{ $t('npcs.relations') }}</strong>
+            <v-list density="compact" class="mt-2">
+              <v-list-item v-for="rel in linkedNpcs" :key="rel.id">
+                <template #prepend>
+                  <v-avatar v-if="rel.image_url" size="32" class="mr-2">
+                    <v-img :src="`/uploads/${rel.image_url}`" />
+                  </v-avatar>
+                  <v-icon v-else size="small" class="mr-2">mdi-account</v-icon>
+                </template>
+                <v-list-item-title>{{ rel.related_npc_name }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  <v-chip size="x-small" variant="tonal" color="primary">
+                    {{ $t(`npcs.npcRelationTypes.${rel.relation_type}`, rel.relation_type) }}
+                  </v-chip>
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+          </template>
+
+          <!-- Linked Players -->
+          <template v-if="linkedPlayers.length > 0">
+            <v-divider class="my-4" />
+            <strong>{{ $t('nav.players') }}</strong>
+            <v-list density="compact" class="mt-2">
+              <v-list-item v-for="p in linkedPlayers" :key="p.id">
+                <template #prepend>
+                  <v-avatar v-if="p.image_url" size="32" class="mr-2">
+                    <v-img :src="`/uploads/${p.image_url}`" />
+                  </v-avatar>
+                  <v-icon v-else size="small" class="mr-2">mdi-account-star</v-icon>
+                </template>
+                <v-list-item-title>{{ p.name }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </template>
+
           <!-- Stats -->
           <SharedEntityPreviewStats v-if="entityId" :entity-id="entityId" />
         </template>
@@ -260,6 +300,22 @@ interface GenericEntity {
 const entity = ref<GenericEntity | null>(null)
 const loading = ref(false)
 
+// NPC relations data
+interface LinkedNpc {
+  id: number
+  related_npc_name: string
+  relation_type: string
+  image_url: string | null
+}
+interface LinkedPlayer {
+  id: number
+  name: string
+  image_url: string | null
+}
+const linkedNpcs = ref<LinkedNpc[]>([])
+const linkedPlayers = ref<LinkedPlayer[]>([])
+
+
 // Entity type config
 const entityConfig: Record<
   EntityPreviewType,
@@ -314,6 +370,25 @@ async function loadEntity(id: number) {
       return
     }
     entity.value = await $fetch<GenericEntity>(`${config.endpoint}/${id}`)
+
+    // Load NPC relations and players
+    linkedNpcs.value = []
+    linkedPlayers.value = []
+    if (normalizedEntityType.value === 'npc') {
+      try {
+        const [npcRels, allRels] = await Promise.all([
+          $fetch<LinkedNpc[]>(`/api/npcs/${id}/relations`),
+          $fetch<Array<{ id: number, to_entity_name: string, to_entity_type: string, to_entity_image_url: string | null }>>(`/api/npcs/${id}/all-relations`),
+        ])
+        linkedNpcs.value = npcRels
+        linkedPlayers.value = allRels
+          .filter(r => r.to_entity_type === 'Player')
+          .map(r => ({ id: r.id, name: r.to_entity_name, image_url: r.to_entity_image_url }))
+      }
+      catch (e) {
+        console.error('[Preview] Failed to load relations:', e)
+      }
+    }
   }
   catch (error) {
     console.error('Failed to load entity:', error)
