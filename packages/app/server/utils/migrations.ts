@@ -2426,6 +2426,17 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 46: Created encounter_effects table')
     },
   },
+  {
+    version: 47,
+    name: 'normalize_befindet_sich_in',
+    up: (db) => {
+      const result = db.prepare(`
+        UPDATE entity_relations SET relation_type = 'currentlyAt' WHERE relation_type = 'befindet sich in'
+      `).run()
+
+      console.log(`✅ Migration 47: Normalized 'befindet sich in' → 'currentlyAt' (${result.changes} rows)`)
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
