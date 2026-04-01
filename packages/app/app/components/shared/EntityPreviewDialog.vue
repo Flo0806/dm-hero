@@ -315,7 +315,6 @@ interface LinkedPlayer {
 const linkedNpcs = ref<LinkedNpc[]>([])
 const linkedPlayers = ref<LinkedPlayer[]>([])
 
-
 // Entity type config
 const entityConfig: Record<
   EntityPreviewType,
@@ -376,14 +375,12 @@ async function loadEntity(id: number) {
     linkedPlayers.value = []
     if (normalizedEntityType.value === 'npc') {
       try {
-        const [npcRels, allRels] = await Promise.all([
+        const [npcRels, players] = await Promise.all([
           $fetch<LinkedNpc[]>(`/api/npcs/${id}/relations`),
-          $fetch<Array<{ id: number, to_entity_name: string, to_entity_type: string, to_entity_image_url: string | null }>>(`/api/npcs/${id}/all-relations`),
+          $fetch<LinkedPlayer[]>(`/api/npcs/${id}/linked-players`),
         ])
         linkedNpcs.value = npcRels
-        linkedPlayers.value = allRels
-          .filter(r => r.to_entity_type === 'Player')
-          .map(r => ({ id: r.id, name: r.to_entity_name, image_url: r.to_entity_image_url }))
+        linkedPlayers.value = players
       }
       catch (e) {
         console.error('[Preview] Failed to load relations:', e)

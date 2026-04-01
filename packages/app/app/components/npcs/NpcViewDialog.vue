@@ -53,6 +53,11 @@
           {{ $t('documents.title') }}
           <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.documents }}</v-chip>
         </v-tab>
+        <v-tab value="players">
+          <v-icon start>mdi-account-star</v-icon>
+          {{ $t('nav.players') }}
+          <v-chip v-if="counts" size="x-small" class="ml-2">{{ counts.players || 0 }}</v-chip>
+        </v-tab>
         <v-tab value="lore">
           <v-icon start>mdi-book-open-variant</v-icon>
           {{ $t('npcs.badgeTooltips.lore') }}
@@ -244,6 +249,18 @@
             />
           </v-window-item>
 
+          <!-- Players Tab -->
+          <v-window-item value="players">
+            <EntityRelationsList
+              :entities="players"
+              :loading="loading"
+              entity-type="player"
+              :empty-message="$t('nav.players') + ' - Keine Daten'"
+              :show-relation-type="false"
+              :clickable="false"
+            />
+          </v-window-item>
+
           <!-- Lore Tab -->
           <v-window-item value="lore">
             <EntityRelationsList
@@ -383,6 +400,9 @@ const images = ref<Array<{ id: number, image_url: string, is_primary: boolean }>
 const loreEntries = ref<
   Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
+const players = ref<
+  Array<{ id: number, name: string, image_url: string | null }>
+>([])
 
 // Image preview
 const showImagePreview = ref(false)
@@ -424,7 +444,7 @@ watch(
     loading.value = true
     try {
       // Load all data in parallel
-      const [relationsData, itemsData, locationsData, documentsData, imagesData, loreData] = await Promise.all([
+      const [relationsData, itemsData, locationsData, documentsData, imagesData, loreData, playersData] = await Promise.all([
         $fetch<
           Array<{
             id: number
@@ -498,6 +518,12 @@ watch(
           console.error('Failed to load lore:', error)
           return []
         }),
+        $fetch<
+          Array<{ id: number, name: string, image_url: string | null }>
+        >(`/api/npcs/${newNpc.id}/linked-players`).catch((error) => {
+          console.error('Failed to load players:', error)
+          return []
+        }),
       ])
 
       relations.value = relationsData
@@ -506,6 +532,7 @@ watch(
       documents.value = documentsData
       images.value = imagesData
       loreEntries.value = loreData
+      players.value = playersData
     }
     finally {
       loading.value = false

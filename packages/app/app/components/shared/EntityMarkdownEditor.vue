@@ -115,7 +115,7 @@
         </template>
       </MdEditor>
       <div class="editor-hint text-caption text-medium-emphasis mt-1 d-flex align-center">
-        <v-hotkey keys="ctrl+space" :platform="platform" class="mr-2" />
+        <v-hotkey keys="ctrl+shift+space" :platform="platform" class="mr-2" />
         <span>{{ $t('editor.quickSearchHintText') }}</span>
       </div>
     </ClientOnly>
@@ -617,8 +617,8 @@ function openImageGallery() {
 const editorWrapperRef = ref<HTMLElement | null>(null)
 
 function handleKeydown(event: KeyboardEvent) {
-  // Trigger quick search with Ctrl+Space (or Cmd+Space on Mac)
-  if (event.key === ' ' && (event.ctrlKey || event.metaKey) && !showQuickSearch.value) {
+  // Trigger quick search with Ctrl+Shift+Space (or Cmd+Shift+Space on Mac)
+  if (event.key === ' ' && (event.ctrlKey || event.metaKey) && event.shiftKey && !showQuickSearch.value) {
     event.preventDefault()
     event.stopPropagation()
     // Save the current active element (textarea) to restore focus later
