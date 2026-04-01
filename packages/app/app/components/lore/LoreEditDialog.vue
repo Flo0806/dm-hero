@@ -375,7 +375,13 @@
 
             <!-- Players Tab -->
             <v-tabs-window-item value="players">
-              <EntityPlayersTab v-if="lore" :entity-id="lore.id" @changed="refreshLore" />
+              <EntityPlayersTab
+                v-if="lore"
+                :entity-id="lore.id"
+                :relation-types="LORE_PLAYER_RELATION_TYPES"
+                i18n-prefix="players.loreRelationTypes"
+                @changed="refreshLore"
+              />
             </v-tabs-window-item>
           </v-tabs-window>
 
@@ -455,7 +461,7 @@
 
 <script setup lang="ts">
 import type { Lore } from '~~/types/lore'
-import { LORE_TYPES } from '~~/types/lore'
+import { LORE_TYPES, LORE_PLAYER_RELATION_TYPES } from '~~/types/lore'
 import EntityDocuments from '~/components/shared/EntityDocuments.vue'
 import EntityImageGallery from '~/components/shared/EntityImageGallery.vue'
 import EntityPlayersTab from '~/components/shared/EntityPlayersTab.vue'
@@ -476,8 +482,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [lore: Lore]
-  created: [lore: Lore]
+  'saved': [lore: Lore]
+  'created': [lore: Lore]
 }>()
 
 // ============================================================================
@@ -496,7 +502,7 @@ const { hasDirtyTabs, dirtyTabLabels, setDirty, registerTab } = useDialogDirtySt
 // ============================================================================
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const loading = ref(false)
@@ -524,14 +530,14 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   return (
-    form.value.name !== originalImageData.value.name ||
-    form.value.description !== originalImageData.value.description ||
-    (form.value.type || undefined) !== originalImageData.value.type
+    form.value.name !== originalImageData.value.name
+    || form.value.description !== originalImageData.value.description
+    || (form.value.type || undefined) !== originalImageData.value.type
   )
 })
 
 // Map sync data (from LocationSelectWithMap)
-const mapSyncData = ref<{ locationId: number | null; mapIds: number[] } | null>(null)
+const mapSyncData = ref<{ locationId: number | null, mapIds: number[] } | null>(null)
 
 // Counts for tab badges
 const counts = ref({
@@ -587,10 +593,10 @@ const factionsTabDirty = computed(() => !!selectedFactionId.value)
 const itemsTabDirty = computed(() => !!selectedItemId.value)
 const locationsTabDirty = computed(() => !!selectedLocationId.value)
 
-watch(npcsTabDirty, (dirty) => setDirty('npcs', dirty), { immediate: true })
-watch(factionsTabDirty, (dirty) => setDirty('factions', dirty), { immediate: true })
-watch(itemsTabDirty, (dirty) => setDirty('items', dirty), { immediate: true })
-watch(locationsTabDirty, (dirty) => setDirty('locations', dirty), { immediate: true })
+watch(npcsTabDirty, dirty => setDirty('npcs', dirty), { immediate: true })
+watch(factionsTabDirty, dirty => setDirty('factions', dirty), { immediate: true })
+watch(itemsTabDirty, dirty => setDirty('items', dirty), { immediate: true })
+watch(locationsTabDirty, dirty => setDirty('locations', dirty), { immediate: true })
 
 // Image preview
 const showImagePreview = ref(false)
@@ -602,30 +608,30 @@ const previewImageTitle = ref('')
 // ============================================================================
 const availableNpcs = computed(() =>
   entitiesStore.npcs
-    .map((n) => ({ id: n.id, name: n.name, image_url: n.image_url }))
+    .map(n => ({ id: n.id, name: n.name, image_url: n.image_url }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const availableFactions = computed(() =>
   entitiesStore.factions
-    .map((f) => ({ id: f.id, name: f.name, image_url: f.image_url }))
+    .map(f => ({ id: f.id, name: f.name, image_url: f.image_url }))
     .sort((a, b) => a.name.localeCompare(b.name)),
 )
 
 const itemsForSelect = computed(() =>
   entitiesStore.items
-    .map((i) => ({ title: i.name, value: i.id }))
+    .map(i => ({ title: i.name, value: i.id }))
     .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const locationsForSelect = computed(() =>
   entitiesStore.locations
-    .map((l) => ({ title: l.name, value: l.id }))
+    .map(l => ({ title: l.name, value: l.id }))
     .sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const loreTypeItems = computed(() =>
-  LORE_TYPES.map((type) => ({
+  LORE_TYPES.map(type => ({
     title: t(`lore.types.${type}`),
     value: type,
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -657,10 +663,12 @@ async function loadData(loreId: number | null | undefined) {
     if (loreId) {
       await loadLore(loreId)
       await loadRelations(loreId)
-    } else {
+    }
+    else {
       resetForm()
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -699,7 +707,8 @@ async function loadLore(loreId: number) {
     }
 
     await loadCounts(loreId)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to load lore:', e)
   }
 }
@@ -718,7 +727,8 @@ async function loadCounts(loreId: number) {
     counts.value = data
     // Also update the store's lore counts for card badge updates (no extra fetch)
     entitiesStore.setLoreCounts(loreId, data)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to load counts:', e)
   }
 }
@@ -741,9 +751,11 @@ async function loadRelations(loreId: number) {
     linkedFactions.value = factions
     linkedItems.value = items
     linkedLocations.value = locations
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to load relations:', e)
-  } finally {
+  }
+  finally {
     loadingNpcs.value = false
     loadingFactions.value = false
     loadingItems.value = false
@@ -803,7 +815,8 @@ async function save() {
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new lore via store
       const created = await entitiesStore.createLore(campaignId, {
         name: form.value.name,
@@ -823,9 +836,11 @@ async function save() {
     }
 
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -837,35 +852,37 @@ function close() {
 // Sync Lore marker to selected maps - place inside location circle if available
 async function syncToMaps(entityId: number, mapIds: number[]) {
   const locationId = form.value.location_id
-  let mapsWithArea: Array<{ map_id: number; map_name: string; area_id: number }> = []
+  let mapsWithArea: Array<{ map_id: number, map_name: string, area_id: number }> = []
   let locationName = ''
 
   if (locationId) {
     try {
-      mapsWithArea = await $fetch<Array<{ map_id: number; map_name: string; area_id: number }>>(
+      mapsWithArea = await $fetch<Array<{ map_id: number, map_name: string, area_id: number }>>(
         `/api/locations/${locationId}/maps-with-area`,
       )
       const location = await $fetch<{ name: string }>(`/api/locations/${locationId}`)
       locationName = location.name
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[LoreEditDialog] Failed to get maps with area:', e)
     }
   }
 
   const mapsWithoutLocation: string[] = []
 
-  let allMaps: Array<{ id: number; name: string }> = []
+  let allMaps: Array<{ id: number, name: string }> = []
   try {
-    allMaps = await $fetch<Array<{ id: number; name: string }>>('/api/maps', {
+    allMaps = await $fetch<Array<{ id: number, name: string }>>('/api/maps', {
       query: { campaignId: campaignStore.activeCampaignId },
     })
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to get maps:', e)
   }
 
   for (const mapId of mapIds) {
     try {
-      const areaInfo = mapsWithArea.find((m) => m.map_id === mapId)
+      const areaInfo = mapsWithArea.find(m => m.map_id === mapId)
 
       if (areaInfo) {
         await $fetch(`/api/maps/${mapId}/place-in-area`, {
@@ -875,7 +892,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
             area_id: areaInfo.area_id,
           },
         })
-      } else {
+      }
+      else {
         const existingMarkers = await $fetch<Array<{ id: number }>>(`/api/maps/${mapId}/markers`, {
           query: { entityId },
         })
@@ -892,13 +910,14 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
         }
 
         if (locationId) {
-          const mapInfo = allMaps.find((m) => m.id === mapId)
+          const mapInfo = allMaps.find(m => m.id === mapId)
           if (mapInfo) {
             mapsWithoutLocation.push(mapInfo.name)
           }
         }
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error(`[LoreEditDialog] Failed to sync to map ${mapId}:`, e)
     }
   }
@@ -908,7 +927,8 @@ async function syncToMaps(entityId: number, mapIds: number[]) {
       snackbarStore.warning(
         t('maps.locationNotOnMap', { location: locationName, map: mapsWithoutLocation[0] }),
       )
-    } else {
+    }
+    else {
       snackbarStore.warning(
         t('maps.locationNotOnMaps', { location: locationName, count: mapsWithoutLocation.length }),
       )
@@ -931,9 +951,11 @@ async function addNpc() {
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
     selectedNpcId.value = null
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to add NPC:', e)
-  } finally {
+  }
+  finally {
     loadingNpcs.value = false
   }
 }
@@ -946,7 +968,8 @@ async function removeNpc(npc: LinkedEntity) {
     await $fetch(`/api/entity-relations/${npc.id}`, { method: 'DELETE' })
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to remove NPC:', e)
   }
 }
@@ -966,9 +989,11 @@ async function addFaction() {
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
     selectedFactionId.value = null
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to add faction:', e)
-  } finally {
+  }
+  finally {
     loadingFactions.value = false
   }
 }
@@ -981,7 +1006,8 @@ async function removeFaction(faction: LinkedEntity) {
     await $fetch(`/api/entity-relations/${faction.id}`, { method: 'DELETE' })
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to remove faction:', e)
   }
 }
@@ -1001,9 +1027,11 @@ async function addItem() {
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
     selectedItemId.value = null
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to add item:', e)
-  } finally {
+  }
+  finally {
     loadingItems.value = false
   }
 }
@@ -1016,7 +1044,8 @@ async function removeItem(item: LinkedEntity) {
     await $fetch(`/api/entity-relations/${item.id}`, { method: 'DELETE' })
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to remove item:', e)
   }
 }
@@ -1036,9 +1065,11 @@ async function addLocation() {
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
     selectedLocationId.value = null
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to add location:', e)
-  } finally {
+  }
+  finally {
     loadingLocations.value = false
   }
 }
@@ -1051,7 +1082,8 @@ async function removeLocation(location: LinkedEntity) {
     await $fetch(`/api/entity-relations/${location.id}`, { method: 'DELETE' })
     await loadRelations(lore.value.id)
     await loadCounts(lore.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LoreEditDialog] Failed to remove location:', e)
   }
 }
@@ -1073,7 +1105,7 @@ function openQuickCreate(type: 'NPC' | 'Faction' | 'Item' | 'Location') {
   showQuickCreate.value = true
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   const campaignId = campaignStore.activeCampaignId
   if (!campaignId) return
 

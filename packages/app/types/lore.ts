@@ -37,6 +37,24 @@ export const LORE_TYPES = [
 
 export type LoreType = (typeof LORE_TYPES)[number]
 
+// Relation types for Lore ↔ Player (knowledge-based, used in both directions)
+export const LORE_PLAYER_RELATION_TYPES = [
+  'knows',
+  'discovered',
+  'created',
+  'owns',
+  'visited',
+  'interested',
+  'allied',
+  'hostile',
+  'met',
+  'heard_of',
+  'researched',
+  'forgotten',
+  'believesIn',
+  'worships',
+] as const
+
 export interface LoreMetadata {
   type?: LoreType
   date?: string // Optional date for historical events (YYYY-MM-DD)
