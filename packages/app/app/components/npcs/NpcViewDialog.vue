@@ -11,8 +11,8 @@
           <h2 class="text-h5">{{ npc.name }}</h2>
           <div class="text-body-2 text-medium-emphasis">
             <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
-            <span v-if="npc.metadata?.race && npc.metadata?.class"> • </span>
-            <span v-if="npc.metadata?.class">{{ getClassesDisplay(npc.metadata.class) }}</span>
+            <span v-if="npc.metadata?.race && toArray(npc.metadata?.class).length"> • </span>
+            <span v-if="toArray(npc.metadata?.class).length">{{ getClassesDisplay(npc.metadata?.class) }}</span>
           </div>
         </div>
         <SharedPinButton v-if="npc?.id" :entity-id="npc.id" variant="icon" size="small" />

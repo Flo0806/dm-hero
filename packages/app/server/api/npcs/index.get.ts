@@ -611,7 +611,7 @@ export default defineEventHandler(async (event) => {
           const linkedNpcNamesNormalized = normalizeText(npc.linked_npc_names || '')
 
           // Parse metadata to check race/class with localized names
-          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class' | 'type'> | null = null
           try {
             metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
           }
@@ -806,7 +806,7 @@ export default defineEventHandler(async (event) => {
           const linkedNpcNamesNormalized = normalizeText(npc.linked_npc_names || '')
 
           // Parse metadata to check race/class with localized names
-          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class' | 'type'> | null = null
           try {
             metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
           }
@@ -963,7 +963,7 @@ export default defineEventHandler(async (event) => {
           const linkedNpcNamesNormalized = normalizeText(npc.linked_npc_names || '')
 
           // Parse metadata to check race/class with localized names
-          let metadataObj: Pick<NpcMetadata, 'race' | 'class'> | null = null
+          let metadataObj: Pick<NpcMetadata, 'race' | 'class' | 'type'> | null = null
           try {
             metadataObj = npc.metadata ? JSON.parse(npc.metadata) : null
           }

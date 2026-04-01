@@ -64,8 +64,8 @@
           :style="{ minHeight: toArray(npc.metadata?.type).length || npc.metadata?.status ? '20px' : '44px' }"
         >
           <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
-          <span v-if="npc.metadata?.race && npc.metadata?.class"> • </span>
-          <span v-if="npc.metadata?.class">{{ getClassesDisplay(npc.metadata.class) }}</span>
+          <span v-if="npc.metadata?.race && toArray(npc.metadata?.class).length"> • </span>
+          <span v-if="toArray(npc.metadata?.class).length">{{ getClassesDisplay(npc.metadata?.class) }}</span>
         </div>
       </div>
     </div>
@@ -569,7 +569,7 @@ const previewChips = computed(() => {
 const previewSubtitle = computed(() => {
   const parts = []
   if (props.npc.metadata?.race) parts.push(getRaceDisplayName(props.npc.metadata.race))
-  if (props.npc.metadata?.class) parts.push(getClassesDisplay(props.npc.metadata.class))
+  if (toArray(props.npc.metadata?.class).length) parts.push(getClassesDisplay(props.npc.metadata?.class))
   return parts.join(' • ')
 })
 
