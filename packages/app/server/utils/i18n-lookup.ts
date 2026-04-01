@@ -154,22 +154,59 @@ const STANDARD_CLASSES_DEFINITION: StandardClass[] = [
   { key: 'beastmaster', de: 'Tiermeister', en: 'Beastmaster' },
 ]
 
+// NPC Types (same structure as races/classes)
+const STANDARD_NPC_TYPES_DEFINITION: Array<{ key: string, de: string, en: string }> = [
+  { key: 'ally', de: 'Verbündeter', en: 'Ally' },
+  { key: 'enemy', de: 'Feind', en: 'Enemy' },
+  { key: 'neutral', de: 'Neutral', en: 'Neutral' },
+  { key: 'questgiver', de: 'Questgeber', en: 'Quest Giver' },
+  { key: 'merchant', de: 'Händler', en: 'Merchant' },
+  { key: 'guard', de: 'Wache', en: 'Guard' },
+  { key: 'noble', de: 'Adeliger', en: 'Noble' },
+  { key: 'commoner', de: 'Bürger', en: 'Commoner' },
+  { key: 'villain', de: 'Schurke', en: 'Villain' },
+  { key: 'mentor', de: 'Mentor', en: 'Mentor' },
+  { key: 'companion', de: 'Gefährte', en: 'Companion' },
+  { key: 'informant', de: 'Informant', en: 'Informant' },
+  { key: 'innkeeper', de: 'Wirt', en: 'Innkeeper' },
+  { key: 'rival', de: 'Rivale', en: 'Rival' },
+  { key: 'servant', de: 'Diener', en: 'Servant' },
+  { key: 'slave', de: 'Sklave', en: 'Slave' },
+  { key: 'ruler', de: 'Herrscher', en: 'Ruler' },
+  { key: 'steward', de: 'Verwalter', en: 'Steward' },
+  { key: 'spy', de: 'Spion', en: 'Spy' },
+  { key: 'healer', de: 'Heiler', en: 'Healer' },
+  { key: 'scholar', de: 'Gelehrter', en: 'Scholar' },
+  { key: 'craftsman', de: 'Handwerker', en: 'Craftsman' },
+  { key: 'priest', de: 'Priester', en: 'Priest' },
+  { key: 'soldier', de: 'Soldat', en: 'Soldier' },
+  { key: 'thief', de: 'Dieb', en: 'Thief' },
+  { key: 'bard', de: 'Barde', en: 'Bard' },
+  { key: 'farmer', de: 'Bauer', en: 'Farmer' },
+  { key: 'hunter', de: 'Jäger', en: 'Hunter' },
+  { key: 'mage', de: 'Magier', en: 'Mage' },
+  { key: 'knight', de: 'Ritter', en: 'Knight' },
+  { key: 'assassin', de: 'Assassine', en: 'Assassin' },
+  { key: 'smuggler', de: 'Schmuggler', en: 'Smuggler' },
+  { key: 'deity', de: 'Gottheit', en: 'Deity' },
+]
+
 // =============================================================================
 // DERIVED: Sets of standard keys (for checking if a key is custom)
 // =============================================================================
 
 /** Set of all standard race keys - any key NOT in this set is a custom race */
-export const STANDARD_RACE_KEYS = new Set(STANDARD_RACES_DEFINITION.map((r) => r.key))
+export const STANDARD_RACE_KEYS = new Set(STANDARD_RACES_DEFINITION.map(r => r.key))
 
 /** Set of all standard class keys - any key NOT in this set is a custom class */
-export const STANDARD_CLASS_KEYS = new Set(STANDARD_CLASSES_DEFINITION.map((c) => c.key))
+export const STANDARD_CLASS_KEYS = new Set(STANDARD_CLASSES_DEFINITION.map(c => c.key))
 
 // =============================================================================
 // DERIVED: Lookup tables (name → key, built once at module load)
 // =============================================================================
 
 function buildLookup(
-  definitions: Array<{ key: string; de: string | string[]; en: string | string[] }>,
+  definitions: Array<{ key: string, de: string | string[], en: string | string[] }>,
   locale: 'de' | 'en',
 ): Record<string, string> {
   const lookup: Record<string, string> = {}
@@ -187,6 +224,8 @@ const RACES_DE = buildLookup(STANDARD_RACES_DEFINITION, 'de')
 const RACES_EN = buildLookup(STANDARD_RACES_DEFINITION, 'en')
 const CLASSES_DE = buildLookup(STANDARD_CLASSES_DEFINITION, 'de')
 const CLASSES_EN = buildLookup(STANDARD_CLASSES_DEFINITION, 'en')
+const NPC_TYPES_DE = buildLookup(STANDARD_NPC_TYPES_DEFINITION, 'de')
+const NPC_TYPES_EN = buildLookup(STANDARD_NPC_TYPES_DEFINITION, 'en')
 
 // =============================================================================
 // TYPES
@@ -207,7 +246,7 @@ export interface ItemLookup {
  * Defaults to 'de'.
  */
 export function getLocaleFromEvent(event: {
-  node: { req: { headers: { 'accept-language'?: string; cookie?: string } } }
+  node: { req: { headers: { 'accept-language'?: string, 'cookie'?: string } } }
 }): 'de' | 'en' {
   // Priority 1: Accept-Language header (set by frontend with current locale)
   const acceptLanguage = event.node.req.headers['accept-language']
@@ -294,7 +333,8 @@ export async function getRaceKey(
       .get(nameLower, nameLower, nameLower) as { name: string } | undefined
 
     if (customRaceExact) return customRaceExact.name
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[getRaceKey] DB error:', e)
     // DB not available or error - continue with i18n only
   }
@@ -321,7 +361,7 @@ export async function getRaceKey(
           AND deleted_at IS NULL
       `,
         )
-        .all() as Array<{ name: string; name_de: string; name_en: string }>
+        .all() as Array<{ name: string, name_de: string, name_en: string }>
 
       for (const race of allCustomRaces) {
         const compareValue = locale === 'de' ? race.name_de : race.name_en
@@ -329,7 +369,8 @@ export async function getRaceKey(
           return race.name
         }
       }
-    } catch {
+    }
+    catch {
       // DB not available or error - continue
     }
   }
@@ -372,13 +413,16 @@ export async function getRaceSearchVariants(
 
       if (raceByKey) {
         actualKey = raceByKey.name
-      } else {
+      }
+      else {
         return [name.toLowerCase()]
       }
-    } catch {
+    }
+    catch {
       return [name.toLowerCase()]
     }
-  } else {
+  }
+  else {
     actualKey = key
   }
 
@@ -398,13 +442,14 @@ export async function getRaceSearchVariants(
       LIMIT 1
     `,
       )
-      .get(actualKey) as { name_de: string; name_en: string } | undefined
+      .get(actualKey) as { name_de: string, name_en: string } | undefined
 
     if (customRace) {
       if (customRace.name_de) variants.push(customRace.name_de.toLowerCase())
       if (customRace.name_en) variants.push(customRace.name_en.toLowerCase())
     }
-  } catch {
+  }
+  catch {
     // DB not available
   }
 
@@ -442,7 +487,8 @@ export async function getClassKey(
       .get(nameLower, nameLower, nameLower) as { name: string } | undefined
 
     if (customClassExact) return customClassExact.name
-  } catch {
+  }
+  catch {
     // DB not available or error - continue with i18n only
   }
 
@@ -468,7 +514,7 @@ export async function getClassKey(
           AND deleted_at IS NULL
       `,
         )
-        .all() as Array<{ name: string; name_de: string; name_en: string }>
+        .all() as Array<{ name: string, name_de: string, name_en: string }>
 
       for (const classData of allCustomClasses) {
         const compareValue = locale === 'de' ? classData.name_de : classData.name_en
@@ -476,7 +522,8 @@ export async function getClassKey(
           return classData.name
         }
       }
-    } catch {
+    }
+    catch {
       // DB not available or error - continue
     }
   }
@@ -516,13 +563,16 @@ export async function getClassSearchVariants(
 
       if (classByKey) {
         actualKey = classByKey.name
-      } else {
+      }
+      else {
         return [name.toLowerCase()]
       }
-    } catch {
+    }
+    catch {
       return [name.toLowerCase()]
     }
-  } else {
+  }
+  else {
     actualKey = key
   }
 
@@ -542,13 +592,14 @@ export async function getClassSearchVariants(
       LIMIT 1
     `,
       )
-      .get(actualKey) as { name_de: string; name_en: string } | undefined
+      .get(actualKey) as { name_de: string, name_en: string } | undefined
 
     if (customClass) {
       if (customClass.name_de) variants.push(customClass.name_de.toLowerCase())
       if (customClass.name_en) variants.push(customClass.name_en.toLowerCase())
     }
-  } catch {
+  }
+  catch {
     // DB not available
   }
 
@@ -579,7 +630,8 @@ function simpleLevenshtein(a: string, b: string): number {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
         matrix[i]![j] = matrix[i - 1]![j - 1]!
-      } else {
+      }
+      else {
         matrix[i]![j] = Math.min(
           matrix[i - 1]![j - 1]! + 1,
           matrix[i]![j - 1]! + 1,
@@ -598,52 +650,52 @@ function simpleLevenshtein(a: string, b: string): number {
  */
 export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
   const typesDE: Record<string, string> = {
-    waffe: 'weapon',
-    rüstung: 'armor',
-    trank: 'potion',
-    schriftrolle: 'scroll',
-    ring: 'ring',
-    amulett: 'amulet',
-    stab: 'staff',
-    zauberstab: 'wand',
+    'waffe': 'weapon',
+    'rüstung': 'armor',
+    'trank': 'potion',
+    'schriftrolle': 'scroll',
+    'ring': 'ring',
+    'amulett': 'amulet',
+    'stab': 'staff',
+    'zauberstab': 'wand',
     'wundersamer gegenstand': 'wondrous_item',
-    werkzeug: 'tool',
-    ausrüstung: 'equipment',
+    'werkzeug': 'tool',
+    'ausrüstung': 'equipment',
   }
 
   const typesEN: Record<string, string> = {
-    weapon: 'weapon',
-    armor: 'armor',
-    potion: 'potion',
-    scroll: 'scroll',
-    ring: 'ring',
-    amulet: 'amulet',
-    staff: 'staff',
-    wand: 'wand',
+    'weapon': 'weapon',
+    'armor': 'armor',
+    'potion': 'potion',
+    'scroll': 'scroll',
+    'ring': 'ring',
+    'amulet': 'amulet',
+    'staff': 'staff',
+    'wand': 'wand',
     'wondrous item': 'wondrous_item',
-    wondrous_item: 'wondrous_item',
-    tool: 'tool',
-    equipment: 'equipment',
+    'wondrous_item': 'wondrous_item',
+    'tool': 'tool',
+    'equipment': 'equipment',
   }
 
   const raritiesDE: Record<string, string> = {
-    gewöhnlich: 'common',
-    ungewöhnlich: 'uncommon',
-    selten: 'rare',
+    'gewöhnlich': 'common',
+    'ungewöhnlich': 'uncommon',
+    'selten': 'rare',
     'sehr selten': 'very_rare',
-    sehr_selten: 'very_rare',
-    legendär: 'legendary',
-    artefakt: 'artifact',
+    'sehr_selten': 'very_rare',
+    'legendär': 'legendary',
+    'artefakt': 'artifact',
   }
 
   const raritiesEN: Record<string, string> = {
-    common: 'common',
-    uncommon: 'uncommon',
-    rare: 'rare',
+    'common': 'common',
+    'uncommon': 'uncommon',
+    'rare': 'rare',
     'very rare': 'very_rare',
-    very_rare: 'very_rare',
-    legendary: 'legendary',
-    artifact: 'artifact',
+    'very_rare': 'very_rare',
+    'legendary': 'legendary',
+    'artifact': 'artifact',
   }
 
   return {
@@ -726,95 +778,112 @@ export async function convertMetadataToKeys(
   if (entityType === 'npc') {
     // Handle race - could be string or {title, value} object from v-combobox
     if (converted.race) {
-      const raceValue =
-        typeof converted.race === 'object' && converted.race !== null && 'value' in converted.race
+      const raceValue
+        = typeof converted.race === 'object' && converted.race !== null && 'value' in converted.race
           ? converted.race.value
           : converted.race
 
       // If it's already a key (lowercase, no spaces), keep it
       // This prevents double-conversion: "halfelf" should stay "halfelf", not be converted again
       if (
-        typeof raceValue === 'string' &&
-        raceValue === raceValue.toLowerCase() &&
-        !raceValue.includes(' ')
+        typeof raceValue === 'string'
+        && raceValue === raceValue.toLowerCase()
+        && !raceValue.includes(' ')
       ) {
         converted.race = raceValue
-      } else if (typeof raceValue === 'string') {
+      }
+      else if (typeof raceValue === 'string') {
         // It's a display name (e.g., "Halbelf") - convert to key
         const raceKey = await getRaceKey(raceValue)
         if (raceKey) converted.race = raceKey
       }
     }
 
-    // Handle class - could be string or {title, value} object from v-combobox
+    // Handle class - could be string, string[], or {title, value} object
     if (converted.class) {
-      const classValue =
-        typeof converted.class === 'object' &&
-        converted.class !== null &&
-        'value' in converted.class
-          ? converted.class.value
-          : converted.class
+      const rawClass = converted.class
+      const classArr = Array.isArray(rawClass) ? rawClass : [rawClass]
+      const convertedClasses: string[] = []
 
-      // If it's already a key (lowercase, no spaces), keep it
-      if (
-        typeof classValue === 'string' &&
-        classValue === classValue.toLowerCase() &&
-        !classValue.includes(' ')
-      ) {
-        converted.class = classValue
-      } else if (typeof classValue === 'string') {
-        // It's a display name (e.g., "Magier") - convert to key
-        const classKey = await getClassKey(classValue)
-        if (classKey) converted.class = classKey
+      for (const cls of classArr) {
+        const classValue = typeof cls === 'object' && cls !== null && 'value' in cls ? cls.value : cls
+        if (typeof classValue === 'string') {
+          const classKey = await getClassKey(classValue)
+          convertedClasses.push(classKey || classValue)
+        }
       }
+
+      converted.class = convertedClasses.length === 1 ? convertedClasses[0] : convertedClasses
     }
-  } else if (entityType === 'item') {
+  }
+  else if (entityType === 'item') {
     // Handle type - use fuzzy matching for typos when saving
     if (converted.type) {
-      const typeValue =
-        typeof converted.type === 'object' && converted.type !== null && 'value' in converted.type
+      const typeValue
+        = typeof converted.type === 'object' && converted.type !== null && 'value' in converted.type
           ? converted.type.value
           : converted.type
 
       if (
-        typeof typeValue === 'string' &&
-        typeValue === typeValue.toLowerCase() &&
-        !typeValue.includes(' ')
+        typeof typeValue === 'string'
+        && typeValue === typeValue.toLowerCase()
+        && !typeValue.includes(' ')
       ) {
         converted.type = typeValue
-      } else if (typeof typeValue === 'string') {
+      }
+      else if (typeof typeValue === 'string') {
         // Try exact match first, then fuzzy
-        const typeKey =
-          (await getItemTypeKey(typeValue, false, locale)) ||
-          (await getItemTypeKey(typeValue, true, locale))
+        const typeKey
+          = (await getItemTypeKey(typeValue, false, locale))
+            || (await getItemTypeKey(typeValue, true, locale))
         if (typeKey) converted.type = typeKey
       }
     }
 
     // Handle rarity - use fuzzy matching for typos when saving
     if (converted.rarity) {
-      const rarityValue =
-        typeof converted.rarity === 'object' &&
-        converted.rarity !== null &&
-        'value' in converted.rarity
+      const rarityValue
+        = typeof converted.rarity === 'object'
+          && converted.rarity !== null
+          && 'value' in converted.rarity
           ? converted.rarity.value
           : converted.rarity
 
       if (
-        typeof rarityValue === 'string' &&
-        rarityValue === rarityValue.toLowerCase() &&
-        !rarityValue.includes(' ')
+        typeof rarityValue === 'string'
+        && rarityValue === rarityValue.toLowerCase()
+        && !rarityValue.includes(' ')
       ) {
         converted.rarity = rarityValue
-      } else if (typeof rarityValue === 'string') {
+      }
+      else if (typeof rarityValue === 'string') {
         // Try exact match first, then fuzzy
-        const rarityKey =
-          (await getItemRarityKey(rarityValue, false, locale)) ||
-          (await getItemRarityKey(rarityValue, true, locale))
+        const rarityKey
+          = (await getItemRarityKey(rarityValue, false, locale))
+            || (await getItemRarityKey(rarityValue, true, locale))
         if (rarityKey) converted.rarity = rarityKey
       }
     }
   }
 
   return converted
+}
+
+// =============================================================================
+// NPC Type lookup (same pattern as race/class)
+// =============================================================================
+
+export function getNpcTypeKey(name: string, locale: 'de' | 'en' = 'de'): string | null {
+  if (!name) return null
+  const nameLower = name.toLowerCase()
+  // Check preferred locale first, then fallback to other
+  const primary = locale === 'en' ? NPC_TYPES_EN : NPC_TYPES_DE
+  const secondary = locale === 'en' ? NPC_TYPES_DE : NPC_TYPES_EN
+  return primary[nameLower] || secondary[nameLower] || null
+}
+
+export function getNpcTypeSearchVariants(typeKey: string): string[] {
+  const def = STANDARD_NPC_TYPES_DEFINITION.find(d => d.key === typeKey)
+  if (!def) return [typeKey]
+  return [typeKey, def.de.toLowerCase(), def.en.toLowerCase()]
 }

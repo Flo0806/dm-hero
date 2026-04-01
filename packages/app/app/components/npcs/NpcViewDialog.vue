@@ -12,7 +12,7 @@
           <div class="text-body-2 text-medium-emphasis">
             <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
             <span v-if="npc.metadata?.race && npc.metadata?.class"> • </span>
-            <span v-if="npc.metadata?.class">{{ getClassDisplayName(npc.metadata.class) }}</span>
+            <span v-if="npc.metadata?.class">{{ getClassesDisplay(npc.metadata.class) }}</span>
           </div>
         </div>
         <SharedPinButton v-if="npc?.id" :entity-id="npc.id" variant="icon" size="small" />
@@ -79,21 +79,22 @@
           <v-window-item value="overview">
             <div class="pa-4">
               <!-- Type & Status -->
-              <div v-if="npc.metadata?.type || npc.metadata?.status" class="mb-4">
+              <div v-if="toArray(npc.metadata?.type).length || npc.metadata?.status" class="mb-4">
                 <v-chip
-                  v-if="npc.metadata?.type"
-                  :prepend-icon="getTypeIcon(npc.metadata.type)"
+                  v-for="tp in toArray(npc.metadata?.type)"
+                  :key="tp"
+                  :prepend-icon="getNpcTypeIcon(tp)"
                   size="small"
                   color="primary"
                   variant="tonal"
                   class="mr-2"
                 >
-                  {{ $t(`npcs.types.${npc.metadata.type}`) }}
+                  {{ $t(`npcs.types.${tp}`) }}
                 </v-chip>
                 <v-chip
                   v-if="npc.metadata?.status"
-                  :prepend-icon="getStatusIcon(npc.metadata.status)"
-                  :color="getStatusColor(npc.metadata.status)"
+                  :prepend-icon="getNpcStatusIcon(npc.metadata.status)"
+                  :color="getNpcStatusColor(npc.metadata.status)"
                   size="small"
                   variant="flat"
                 >
@@ -315,6 +316,8 @@ import EntityRelationsList from '~/components/shared/EntityRelationsList.vue'
 import EntityDocumentsView from '~/components/shared/EntityDocumentsView.vue'
 import EntityImageGalleryView from '~/components/shared/EntityImageGalleryView.vue'
 import SharedEntityStatsTab from '~/components/shared/EntityStatsTab.vue'
+import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
+import { toArray } from '~/utils/array'
 
 interface Props {
   show: boolean
@@ -555,6 +558,10 @@ function getRaceDisplayName(raceName: string): string {
   return race.name
 }
 
+function getClassesDisplay(val: string | string[] | undefined): string {
+  return toArray(val).map(c => getClassDisplayName(c)).join(', ')
+}
+
 function getClassDisplayName(className: string): string {
   const classData = props.classes.find(c => c.name === className)
   if (!classData) return className
@@ -564,45 +571,5 @@ function getClassDisplayName(className: string): string {
   return classData.name
 }
 
-function getTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    ally: 'mdi-handshake',
-    enemy: 'mdi-sword-cross',
-    neutral: 'mdi-minus-circle',
-    questgiver: 'mdi-exclamation',
-    merchant: 'mdi-cart',
-    guard: 'mdi-shield',
-    noble: 'mdi-crown',
-    commoner: 'mdi-account',
-    villain: 'mdi-skull',
-    mentor: 'mdi-school',
-    companion: 'mdi-account-multiple',
-    informant: 'mdi-eye',
-  }
-  return icons[type] || 'mdi-account'
-}
-
-function getStatusIcon(status: string): string {
-  const icons: Record<string, string> = {
-    alive: 'mdi-heart-pulse',
-    dead: 'mdi-skull',
-    missing: 'mdi-help-circle',
-    imprisoned: 'mdi-lock',
-    unknown: 'mdi-help',
-    undead: 'mdi-zombie',
-  }
-  return icons[status] || 'mdi-help'
-}
-
-function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    alive: 'success',
-    dead: 'error',
-    missing: 'warning',
-    imprisoned: 'grey-darken-2',
-    unknown: 'grey',
-    undead: 'purple',
-  }
-  return colors[status] || 'grey'
-}
+// getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor imported from ~/utils/npc-icons
 </script>

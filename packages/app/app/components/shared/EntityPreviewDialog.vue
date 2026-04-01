@@ -33,7 +33,7 @@
               <strong>{{ $t('npcs.race') }}:</strong> {{ entity.race }}
             </div>
             <div v-if="entity.class" class="mb-2">
-              <strong>{{ $t('npcs.class') }}:</strong> {{ entity.class }}
+              <strong>{{ $t('npcs.class') }}:</strong> {{ Array.isArray(entity.class) ? entity.class.join(', ') : entity.class }}
             </div>
             <div v-if="entity.faction" class="mb-2">
               <strong>{{ $t('npcs.faction') }}:</strong> {{ entity.faction }}
