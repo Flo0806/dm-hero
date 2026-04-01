@@ -163,11 +163,11 @@ export type NpcItemRelationType = (typeof NPC_ITEM_RELATION_TYPES)[number]
 
 export interface NpcMetadata {
   race?: string
-  class?: string
+  class?: string | string[]
   location?: string
   faction?: string
   relationship?: string
-  type?: NpcType
+  type?: NpcType | NpcType[]
   status?: NpcStatus
   age?: number
   gender?: string
@@ -202,17 +202,7 @@ export interface NPC {
   description: string | null
   image_url?: string | null
   location_id?: number | null
-  metadata: {
-    race?: string
-    class?: string
-    location?: string
-    faction?: string
-    relationship?: string
-    type?: NpcType
-    status?: NpcStatus
-    age?: number
-    gender?: string
-  } | null
+  metadata: NpcMetadata | null
   created_at: string
   updated_at: string
   // Async loaded counts (optional, loaded on demand)

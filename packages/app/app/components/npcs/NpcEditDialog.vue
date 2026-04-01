@@ -153,6 +153,8 @@
                     :label="$t('npcs.class')"
                     variant="outlined"
                     clearable
+                    multiple
+                    chips
                     item-title="title"
                     item-value="value"
                   />
@@ -191,6 +193,8 @@
                     :label="$t('npcs.type')"
                     variant="outlined"
                     clearable
+                    multiple
+                    chips
                   >
                     <template #item="{ props: itemProps, item }">
                       <v-list-item v-bind="itemProps">
@@ -394,6 +398,8 @@
                   :label="$t('npcs.class')"
                   variant="outlined"
                   clearable
+                  multiple
+                  chips
                   item-title="title"
                   item-value="value"
                 />
@@ -432,6 +438,8 @@
                   :label="$t('npcs.type')"
                   variant="outlined"
                   clearable
+                  multiple
+                  chips
                 >
                   <template #item="{ props: itemProps, item }">
                     <v-list-item v-bind="itemProps">
@@ -546,6 +554,7 @@ import { useEntitiesStore } from '~/stores/entities'
 import { useCampaignStore } from '~/stores/campaign'
 import { useSnackbarStore } from '~/stores/snackbar'
 import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
+import { toArray } from '~/utils/array'
 
 // ============================================================================
 // Props & Emits - SIMPLIFIED: only show and npcId needed!
@@ -595,10 +604,10 @@ const form = ref({
   location_id: null as number | null,
   metadata: {
     race: undefined as string | undefined,
-    class: undefined as string | undefined,
+    class: [] as string[],
     age: undefined as number | undefined,
     gender: undefined as string | undefined,
-    type: undefined as NpcType | undefined,
+    type: [] as NpcType[],
     status: undefined as NpcStatus | undefined,
   },
 })
@@ -608,7 +617,7 @@ const originalImageData = ref({
   name: '',
   description: '',
   race: undefined as string | undefined,
-  class: undefined as string | undefined,
+  class: [] as string[],
   age: undefined as number | undefined,
   gender: undefined as string | undefined,
 })
@@ -619,7 +628,7 @@ const hasUnsavedImageChanges = computed(() => {
     form.value.name !== originalImageData.value.name
     || form.value.description !== originalImageData.value.description
     || form.value.metadata.race !== originalImageData.value.race
-    || form.value.metadata.class !== originalImageData.value.class
+    || JSON.stringify(form.value.metadata.class) !== JSON.stringify(originalImageData.value.class)
     || form.value.metadata.age !== originalImageData.value.age
     || form.value.metadata.gender !== originalImageData.value.gender
   )
@@ -855,10 +864,10 @@ async function loadNpc(npcId: number) {
       location_id: data.location_id || null,
       metadata: {
         race: data.metadata?.race as string | undefined,
-        class: data.metadata?.class as string | undefined,
+        class: toArray(data.metadata?.class),
         age: data.metadata?.age as number | undefined,
         gender: data.metadata?.gender as string | undefined,
-        type: data.metadata?.type as NpcType | undefined,
+        type: toArray(data.metadata?.type) as NpcType[],
         status: data.metadata?.status as NpcStatus | undefined,
       },
     }
@@ -868,7 +877,7 @@ async function loadNpc(npcId: number) {
       name: data.name,
       description: data.description || '',
       race: data.metadata?.race as string | undefined,
-      class: data.metadata?.class as string | undefined,
+      class: toArray(data.metadata?.class),
       age: data.metadata?.age as number | undefined,
       gender: data.metadata?.gender as string | undefined,
     }
@@ -984,10 +993,10 @@ function resetForm() {
     location_id: null,
     metadata: {
       race: undefined,
-      class: undefined,
+      class: [] as string[],
       age: undefined,
       gender: undefined,
-      type: undefined as NpcType | undefined,
+      type: [] as NpcType[],
       status: undefined as NpcStatus | undefined,
     },
   }
@@ -1546,7 +1555,7 @@ async function generateName() {
   try {
     const context = []
     if (form.value.metadata.race) context.push(form.value.metadata.race)
-    if (form.value.metadata.class) context.push(form.value.metadata.class)
+    if (form.value.metadata.class?.length) context.push(form.value.metadata.class.join(', '))
 
     const result = await $fetch<{ name: string }>('/api/ai/generate-name', {
       method: 'POST',

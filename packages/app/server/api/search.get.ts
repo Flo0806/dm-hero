@@ -1,7 +1,7 @@
 import { getDb } from '../utils/db'
 import { createLevenshtein } from '../utils/levenshtein'
 import { normalizeText } from '../utils/normalize'
-import { getRaceKey, getClassKey, getLocaleFromEvent } from '../utils/i18n-lookup'
+import { getRaceKey, getClassKey, getNpcTypeKey, getLocaleFromEvent } from '../utils/i18n-lookup'
 import { getItemTypeIcon, getLocationTypeIcon } from '../utils/entity-icons'
 
 const levenshtein = createLevenshtein()
@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
   const locale = getLocaleFromEvent(event)
   const raceKey = await getRaceKey(searchQuery.trim(), true, locale)
   const classKey = await getClassKey(searchQuery.trim(), true, locale)
+  const typeKey = getNpcTypeKey(searchQuery.trim(), locale)
 
   // Get all entity types
   const entityTypes = db
@@ -43,7 +44,7 @@ export default defineEventHandler(async (event) => {
     SELECT id, name, icon, color FROM entity_types
   `,
     )
-    .all() as Array<{ id: number; name: string; icon: string; color: string }>
+    .all() as Array<{ id: number, name: string, icon: string, color: string }>
 
   let allResults: EntityResult[] = []
 
@@ -128,7 +129,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else if (type.name === 'NPC') {
+    }
+    else if (type.name === 'NPC') {
       // NPCs: Include linked Locations, Items, Lore, Factions, Players (bidirectional) + metadata for race/class search
       typeResults = db
         .prepare(
@@ -202,7 +204,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else if (type.name === 'Item') {
+    }
+    else if (type.name === 'Item') {
       // Items: Include linked NPCs, Locations, Lore, Factions, Players (bidirectional)
       typeResults = db
         .prepare(
@@ -276,7 +279,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else if (type.name === 'Faction') {
+    }
+    else if (type.name === 'Faction') {
       // Factions: Include linked NPCs, Items, Locations, Lore, Players, AND other Factions (bidirectional)
       typeResults = db
         .prepare(
@@ -359,7 +363,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else if (type.name === 'Player') {
+    }
+    else if (type.name === 'Player') {
       // Players: Include linked NPCs, Items, Locations, Factions, Lore (bidirectional) + metadata for race/class search
       typeResults = db
         .prepare(
@@ -433,7 +438,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else if (type.name === 'Lore') {
+    }
+    else if (type.name === 'Lore') {
       // Lore: Include linked NPCs, Items, Locations, Factions, Players (bidirectional)
       typeResults = db
         .prepare(
@@ -506,7 +512,8 @@ export default defineEventHandler(async (event) => {
       `,
         )
         .all(type.name, type.icon, type.color, type.id, campaignId) as EntityResult[]
-    } else {
+    }
+    else {
       // Other unknown types: Simple query without relations
       typeResults = db
         .prepare(
@@ -585,9 +592,10 @@ export default defineEventHandler(async (event) => {
             score -= 300 // Metadata race match: very good
             return { ...result, _score: score }
           }
-          // Check if class KEY matches
-          if (classKey && metadata.class === classKey) {
-            score -= 300 // Metadata class match: very good
+          // Check if class KEY matches (supports string or string[])
+          const classVals = Array.isArray(metadata.class) ? metadata.class : metadata.class ? [metadata.class] : []
+          if (classKey && classVals.includes(classKey)) {
+            score -= 300
             return { ...result, _score: score }
           }
           // Also check if searchTerm directly matches the KEY in metadata
@@ -595,11 +603,22 @@ export default defineEventHandler(async (event) => {
             score -= 250
             return { ...result, _score: score }
           }
-          if (metadata.class && normalizeText(metadata.class) === searchTerm) {
+          if (classVals.some((c: string) => normalizeText(c) === searchTerm)) {
             score -= 250
             return { ...result, _score: score }
           }
-        } catch {
+          // Check type KEY matches (supports string or string[])
+          const typeVals = Array.isArray(metadata.type) ? metadata.type : metadata.type ? [metadata.type] : []
+          if (typeKey && typeVals.includes(typeKey)) {
+            score -= 300
+            return { ...result, _score: score }
+          }
+          if (typeVals.some((t: string) => normalizeText(t) === searchTerm)) {
+            score -= 250
+            return { ...result, _score: score }
+          }
+        }
+        catch {
           // Invalid JSON metadata, skip
         }
       }
@@ -647,7 +666,7 @@ export default defineEventHandler(async (event) => {
 
       // Levenshtein on linked entity names
       if (linkedEntitiesNormalized.length > 0) {
-        const linkedNames = linkedEntitiesNormalized.split(/[|,]/).map((n) => n.trim())
+        const linkedNames = linkedEntitiesNormalized.split(/[|,]/).map(n => n.trim())
         for (const linkedName of linkedNames) {
           const linkedWords = linkedName.split(/\s+/)
           for (const word of linkedWords) {
@@ -673,7 +692,7 @@ export default defineEventHandler(async (event) => {
     // Parse linked_entities string into unique, non-empty names
     const linkedNames: string[] = []
     if (linked_entities) {
-      const names = linked_entities.split(/[|,]/).map((n) => n.trim())
+      const names = linked_entities.split(/[|,]/).map(n => n.trim())
       for (const name of names) {
         if (name && name.length > 0 && !linkedNames.includes(name)) {
           linkedNames.push(name)
@@ -688,10 +707,12 @@ export default defineEventHandler(async (event) => {
         const meta = JSON.parse(metadata)
         if (result.type === 'Item' && meta.type) {
           icon = getItemTypeIcon(meta.type)
-        } else if (result.type === 'Location' && meta.type) {
+        }
+        else if (result.type === 'Location' && meta.type) {
           icon = getLocationTypeIcon(meta.type)
         }
-      } catch {
+      }
+      catch {
         // Invalid JSON, keep default icon
       }
     }

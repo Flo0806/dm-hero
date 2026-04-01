@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { getDb } from '../../server/utils/db'
 import { normalizeText } from '../../server/utils/normalize'
-import { getRaceKey, getClassKey } from '../../server/utils/i18n-lookup'
+import { getRaceKey, getClassKey, getNpcTypeKey } from '../../server/utils/i18n-lookup'
 import { parseSearchQuery } from '../../server/utils/search-query-parser'
 import { distance } from 'fastest-levenshtein'
 import type Database from 'better-sqlite3'
@@ -365,9 +365,9 @@ describe('NPC Search - Race/Class i18n Lookup', () => {
         const variantNormalized = normalizeText(variant)
         const raceKeyNormalized = normalizeText(raceKey)
         return (
-          raceKeyNormalized === variantNormalized ||
-          raceKeyNormalized.includes(variantNormalized) ||
-          variantNormalized.includes(raceKeyNormalized)
+          raceKeyNormalized === variantNormalized
+          || raceKeyNormalized.includes(variantNormalized)
+          || variantNormalized.includes(raceKeyNormalized)
         )
       })
     })
@@ -409,9 +409,9 @@ describe('NPC Search - Race/Class i18n Lookup', () => {
         const variantNormalized = normalizeText(variant)
         const classKeyNormalized = normalizeText(classKey)
         return (
-          classKeyNormalized === variantNormalized ||
-          classKeyNormalized.includes(variantNormalized) ||
-          variantNormalized.includes(classKeyNormalized)
+          classKeyNormalized === variantNormalized
+          || classKeyNormalized.includes(variantNormalized)
+          || variantNormalized.includes(classKeyNormalized)
         )
       })
     })
@@ -453,9 +453,9 @@ describe('NPC Search - Race/Class i18n Lookup', () => {
         const variantNormalized = normalizeText(variant)
         const raceKeyNormalized = normalizeText(raceKey)
         return (
-          raceKeyNormalized === variantNormalized ||
-          raceKeyNormalized.includes(variantNormalized) ||
-          variantNormalized.includes(raceKeyNormalized)
+          raceKeyNormalized === variantNormalized
+          || raceKeyNormalized.includes(variantNormalized)
+          || variantNormalized.includes(raceKeyNormalized)
         )
       })
     })
@@ -725,7 +725,7 @@ describe('NPC Search - Linked Entities (Factions, Locations & Lore)', () => {
 
     // Check multi-word matching logic
     const linkedLoreMatches = npcsWithLore.filter(
-      (npc: { name: string; linked_lore_names: string | null }) => {
+      (npc: { name: string, linked_lore_names: string | null }) => {
         if (!npc.linked_lore_names) return false
         const linkedLoreNormalized = normalizeText(npc.linked_lore_names)
 
@@ -808,7 +808,7 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"hans-peter"*', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"hans-peter"*', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('Hans-Peter')
@@ -869,7 +869,7 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('gandalf*', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('gandalf*', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     expect(npcs).toHaveLength(1)
     expect(npcs[0].name).toBe('GANDALF')
@@ -895,5 +895,142 @@ describe('NPC Search - Edge Cases & Regression Prevention', () => {
       .all(npcTypeId, testCampaignId)
 
     expect(npcs).toHaveLength(300)
+  })
+})
+
+describe('NPC Search - Multi-Class/Type Support', () => {
+  it('should store and retrieve multi-class as array', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Multiclass NPC', JSON.stringify({ race: 'human', class: ['wizard', 'fighter'] }))
+
+    const npc = db
+      .prepare('SELECT metadata FROM entities WHERE name = ? AND campaign_id = ?')
+      .get('Multiclass NPC', testCampaignId) as { metadata: string }
+
+    const metadata = JSON.parse(npc.metadata)
+    expect(metadata.class).toEqual(['wizard', 'fighter'])
+  })
+
+  it('should find NPC by any class in multi-class array', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Elara', JSON.stringify({ race: 'elf', class: ['wizard', 'fighter'] }))
+
+    const npcs = db
+      .prepare('SELECT name, metadata FROM entities WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL')
+      .all(npcTypeId, testCampaignId) as Array<{ name: string, metadata: string | null }>
+
+    // Search for "fighter" should match
+    const searchKey = 'fighter'
+    const matches = npcs.filter((npc) => {
+      if (!npc.metadata) return false
+      const meta = JSON.parse(npc.metadata)
+      const classVals = Array.isArray(meta.class) ? meta.class : meta.class ? [meta.class] : []
+      return classVals.includes(searchKey)
+    })
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.name).toBe('Elara')
+  })
+
+  it('should find NPC by any class in multi-class array using i18n lookup', async () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Thorin', JSON.stringify({ race: 'human', class: ['wizard', 'fighter'] }))
+
+    // "Kämpfer" (German) should resolve to "fighter" key
+    const classKey = await getClassKey('Kämpfer', false, 'de')
+    expect(classKey).toBe('fighter')
+
+    const npcs = db
+      .prepare('SELECT name, metadata FROM entities WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL')
+      .all(npcTypeId, testCampaignId) as Array<{ name: string, metadata: string | null }>
+
+    const matches = npcs.filter((npc) => {
+      if (!npc.metadata) return false
+      const meta = JSON.parse(npc.metadata)
+      const classVals = Array.isArray(meta.class) ? meta.class : meta.class ? [meta.class] : []
+      return classVals.includes(classKey!)
+    })
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.name).toBe('Thorin')
+  })
+
+  it('should be backwards compatible with single-class string', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'OldNPC', JSON.stringify({ race: 'human', class: 'wizard' }))
+
+    const npc = db
+      .prepare('SELECT metadata FROM entities WHERE name = ? AND campaign_id = ?')
+      .get('OldNPC', testCampaignId) as { metadata: string }
+
+    const meta = JSON.parse(npc.metadata)
+    const classVals = Array.isArray(meta.class) ? meta.class : meta.class ? [meta.class] : []
+    expect(classVals).toEqual(['wizard'])
+    expect(classVals.includes('wizard')).toBe(true)
+  })
+
+  it('should store and retrieve multi-type as array', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'MultiType NPC', JSON.stringify({ type: ['merchant', 'spy'] }))
+
+    const npc = db
+      .prepare('SELECT metadata FROM entities WHERE name = ? AND campaign_id = ?')
+      .get('MultiType NPC', testCampaignId) as { metadata: string }
+
+    const metadata = JSON.parse(npc.metadata)
+    expect(metadata.type).toEqual(['merchant', 'spy'])
+  })
+
+  it('should find NPC type key from German name', () => {
+    expect(getNpcTypeKey('Diener', 'de')).toBe('servant')
+    expect(getNpcTypeKey('Händler', 'de')).toBe('merchant')
+    expect(getNpcTypeKey('Bauer', 'de')).toBe('farmer')
+    expect(getNpcTypeKey('Merchant', 'en')).toBe('merchant')
+    // Should also find across locales
+    expect(getNpcTypeKey('Bauer', 'en')).toBe('farmer')
+    expect(getNpcTypeKey('Farmer', 'de')).toBe('farmer')
+  })
+
+  it('should find NPC by type using i18n lookup', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'Hans', JSON.stringify({ type: ['farmer', 'merchant'] }))
+
+    const typeKey = getNpcTypeKey('Bauer', 'de')
+    expect(typeKey).toBe('farmer')
+
+    const npcs = db
+      .prepare('SELECT name, metadata FROM entities WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL')
+      .all(npcTypeId, testCampaignId) as Array<{ name: string, metadata: string | null }>
+
+    const matches = npcs.filter((npc) => {
+      if (!npc.metadata) return false
+      const meta = JSON.parse(npc.metadata)
+      const typeVals = Array.isArray(meta.type) ? meta.type : meta.type ? [meta.type] : []
+      return typeVals.includes(typeKey!)
+    })
+
+    expect(matches).toHaveLength(1)
+    expect(matches[0]?.name).toBe('Hans')
+  })
+
+  it('should be backwards compatible with single-type string', () => {
+    db.prepare(
+      'INSERT INTO entities (type_id, campaign_id, name, metadata) VALUES (?, ?, ?, ?)',
+    ).run(npcTypeId, testCampaignId, 'OldTypeNPC', JSON.stringify({ type: 'merchant' }))
+
+    const npc = db
+      .prepare('SELECT metadata FROM entities WHERE name = ? AND campaign_id = ?')
+      .get('OldTypeNPC', testCampaignId) as { metadata: string }
+
+    const meta = JSON.parse(npc.metadata)
+    const typeVals = Array.isArray(meta.type) ? meta.type : meta.type ? [meta.type] : []
+    expect(typeVals).toEqual(['merchant'])
+    expect(typeVals.includes('merchant')).toBe(true)
   })
 })

@@ -36,15 +36,16 @@
         <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ npc.name }}</h3>
 
         <!-- Type & Status Chips -->
-        <div v-if="npc.metadata?.type || npc.metadata?.status" class="d-flex flex-wrap ga-1 mb-2">
+        <div v-if="toArray(npc.metadata?.type).length || npc.metadata?.status" class="d-flex flex-wrap ga-1 mb-2">
           <v-chip
-            v-if="npc.metadata?.type"
-            :prepend-icon="getNpcTypeIcon(npc.metadata.type)"
+            v-for="tp in toArray(npc.metadata?.type)"
+            :key="tp"
+            :prepend-icon="getNpcTypeIcon(tp)"
             size="x-small"
             color="primary"
             variant="tonal"
           >
-            {{ $t(`npcs.types.${npc.metadata.type}`) }}
+            {{ $t(`npcs.types.${tp}`) }}
           </v-chip>
           <v-chip
             v-if="npc.metadata?.status"
@@ -60,11 +61,11 @@
         <!-- Race & Class (always shown, takes same vertical space) -->
         <div
           class="text-caption text-medium-emphasis"
-          :style="{ minHeight: npc.metadata?.type || npc.metadata?.status ? '20px' : '44px' }"
+          :style="{ minHeight: toArray(npc.metadata?.type).length || npc.metadata?.status ? '20px' : '44px' }"
         >
           <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
-          <span v-if="npc.metadata?.race && npc.metadata?.class"> • </span>
-          <span v-if="npc.metadata?.class">{{ getClassDisplayName(npc.metadata.class) }}</span>
+          <span v-if="npc.metadata?.race && toArray(npc.metadata?.class).length"> • </span>
+          <span v-if="toArray(npc.metadata?.class).length">{{ getClassesDisplay(npc.metadata?.class) }}</span>
         </div>
       </div>
     </div>
@@ -461,12 +462,13 @@ import ImagePreviewDialog from '~/components/shared/ImagePreviewDialog.vue'
 import QuickLinkContextMenu from '~/components/shared/QuickLinkContextMenu.vue'
 import QuickLinkEntitySelectDialog from '~/components/shared/QuickLinkEntitySelectDialog.vue'
 import { getNpcTypeIcon, getNpcStatusIcon, getNpcStatusColor } from '~/utils/npc-icons'
+import { toArray } from '~/utils/array'
 
 interface Props {
   npc: NPC
   isHighlighted?: boolean
-  races?: Array<{ name: string; name_de?: string | null; name_en?: string | null }>
-  classes?: Array<{ name: string; name_de?: string | null; name_en?: string | null }>
+  races?: Array<{ name: string, name_de?: string | null, name_en?: string | null }>
+  classes?: Array<{ name: string, name_de?: string | null, name_en?: string | null }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -476,13 +478,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [npc: NPC]
-  edit: [npc: NPC]
-  download: [npc: NPC]
-  delete: [npc: NPC]
+  'view': [npc: NPC]
+  'edit': [npc: NPC]
+  'download': [npc: NPC]
+  'delete': [npc: NPC]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [npc: NPC, tab: string]
 }>()
 
@@ -512,7 +514,7 @@ const hiddenFactionsCount = computed(() => {
 
 const hiddenFactionNames = computed(() => {
   const hidden = (counts.value?.factions || []).slice(MAX_VISIBLE_FACTIONS)
-  return hidden.map((f) => `${f.name} (${translateMembershipType(f.relationType)})`).join(', ')
+  return hidden.map(f => `${f.name} (${translateMembershipType(f.relationType)})`).join(', ')
 })
 
 function translateMembershipType(type: string): string {
@@ -542,10 +544,10 @@ const quickLink = useQuickLink({
 const previewChips = computed(() => {
   const chips = []
 
-  if (props.npc.metadata?.type) {
+  for (const tp of toArray(props.npc.metadata?.type)) {
     chips.push({
-      text: t(`npcs.types.${props.npc.metadata.type}`),
-      icon: getNpcTypeIcon(props.npc.metadata.type),
+      text: t(`npcs.types.${tp}`),
+      icon: getNpcTypeIcon(tp),
       color: 'primary',
       variant: 'tonal' as const,
     })
@@ -567,13 +569,13 @@ const previewChips = computed(() => {
 const previewSubtitle = computed(() => {
   const parts = []
   if (props.npc.metadata?.race) parts.push(getRaceDisplayName(props.npc.metadata.race))
-  if (props.npc.metadata?.class) parts.push(getClassDisplayName(props.npc.metadata.class))
+  if (toArray(props.npc.metadata?.class).length) parts.push(getClassesDisplay(props.npc.metadata?.class))
   return parts.join(' • ')
 })
 
 // Helper functions for display names
 function getRaceDisplayName(raceName: string): string {
-  const race = props.races.find((r) => r.name === raceName)
+  const race = props.races.find(r => r.name === raceName)
   if (!race) return raceName
 
   if (race.name_de && race.name_en) {
@@ -583,13 +585,19 @@ function getRaceDisplayName(raceName: string): string {
 }
 
 function getClassDisplayName(className: string): string {
-  const classData = props.classes.find((c) => c.name === className)
+  const classData = props.classes.find(c => c.name === className)
   if (!classData) return className
 
   if (classData.name_de && classData.name_en) {
     return locale.value === 'de' ? classData.name_de : classData.name_en
   }
   return classData.name
+}
+
+function getClassesDisplay(val: string | string[] | undefined): string {
+  if (!val) return ''
+  const arr = Array.isArray(val) ? val : [val]
+  return arr.map(c => getClassDisplayName(c)).join(', ')
 }
 
 // Icon helpers imported from ~/utils/npc-icons
