@@ -168,7 +168,10 @@ const {
   downloadUpdate,
   installUpdate,
   dismissUpdate,
+  backupCreated,
 } = useUpdateChecker()
+
+const snackbarStore = useSnackbarStore()
 
 const { openExternalUrl } = useElectron()
 
@@ -210,6 +213,9 @@ function openDownloadPage() {
 
 async function startDownload() {
   await downloadUpdate()
+  if (backupCreated.value) {
+    snackbarStore.success($t('update.backupCreated'))
+  }
 }
 
 async function restartAndInstall() {

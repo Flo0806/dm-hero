@@ -2178,7 +2178,8 @@
     "readyToInstall": "Update bereit",
     "restartNow": "Jetzt neu starten",
     "clickToRestart": "Klicken zum Neustarten",
-    "dismiss": "Später"
+    "dismiss": "Später",
+    "backupCreated": "Datenbank-Backup erstellt"
   },
   "notes": {
     "title": "Notizen",
