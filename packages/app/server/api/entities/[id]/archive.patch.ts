@@ -16,12 +16,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Entity not found' })
   }
 
+  // Find all descendants recursively (children, grandchildren, etc.)
+  const descendants = db.prepare(`
+    WITH RECURSIVE children AS (
+      SELECT id FROM entities WHERE parent_entity_id = ? AND deleted_at IS NULL
+      UNION ALL
+      SELECT e.id FROM entities e INNER JOIN children c ON e.parent_entity_id = c.id WHERE e.deleted_at IS NULL
+    )
+    SELECT id FROM children
+  `).all(id) as Array<{ id: number }>
+
+  const allIds = [id, ...descendants.map(d => d.id)]
+
   if (archive) {
-    db.prepare('UPDATE entities SET archived_at = datetime(\'now\') WHERE id = ?').run(id)
+    const placeholders = allIds.map(() => '?').join(',')
+    db.prepare(`UPDATE entities SET archived_at = datetime('now') WHERE id IN (${placeholders}) AND deleted_at IS NULL`).run(...allIds)
   }
   else {
-    db.prepare('UPDATE entities SET archived_at = NULL WHERE id = ?').run(id)
+    const placeholders = allIds.map(() => '?').join(',')
+    db.prepare(`UPDATE entities SET archived_at = NULL WHERE id IN (${placeholders}) AND deleted_at IS NULL`).run(...allIds)
   }
 
-  return { success: true, archived: archive }
+  return { success: true, archived: archive, affectedIds: allIds }
 })

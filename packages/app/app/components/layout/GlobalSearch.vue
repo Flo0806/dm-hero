@@ -5,7 +5,7 @@
     @update:model-value="$emit('update:model-value', $event)"
   >
     <v-card>
-      <v-card-title>
+      <v-card-title class="d-flex align-center ga-2">
         <v-text-field
           :model-value="searchQuery"
           autofocus
@@ -17,6 +17,17 @@
           flat
           @update:model-value="$emit('update:search-query', $event)"
         />
+        <v-btn
+          :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+          :color="entitiesStore.showArchived ? 'warning' : undefined"
+          variant="text"
+          @click="entitiesStore.toggleShowArchived()"
+        >
+          <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+          <v-tooltip activator="parent" location="bottom">
+            {{ $t('common.showArchived') }}
+          </v-tooltip>
+        </v-btn>
       </v-card-title>
       <v-divider />
       <v-card-text style="max-height: 500px; overflow-y: auto">
@@ -63,6 +74,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const entitiesStore = useEntitiesStore()
 
 interface SearchResult {
   id: number

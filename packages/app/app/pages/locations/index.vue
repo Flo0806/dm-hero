@@ -14,18 +14,29 @@
     </UiPageHeader>
 
     <!-- Search Bar - Non-reactive for smooth typing -->
-    <v-text-field
-      :model-value="inputValue"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('locations.searchHint') : ''"
-      persistent-hint
-      @update:model-value="handleSearchInput"
-      @click:clear="handleSearchClear"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        :model-value="inputValue"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+        @update:model-value="handleSearchInput"
+        @click:clear="handleSearchClear"
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -145,6 +156,18 @@
                 color="primary"
                 @click.stop="openChaosGraph(item.raw)"
               />
+              <v-btn
+                :icon="item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+                size="x-small"
+                variant="text"
+                :color="item.raw.archived_at ? 'success' : 'warning'"
+                @click.stop="archiveLocation(item.raw)"
+              >
+                <v-icon>{{ item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ item.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+                </v-tooltip>
+              </v-btn>
               <v-btn
                 icon="mdi-delete"
                 size="x-small"
@@ -283,6 +306,7 @@ interface Location {
   } | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
 }
 
 interface ConnectedNPC {
@@ -818,6 +842,10 @@ function editLocation(location: Location) {
 function editLocationAndCloseView(location: Location) {
   editLocation(location)
   showViewDialog.value = false
+}
+
+async function archiveLocation(location: Location) {
+  await entitiesStore.archiveEntity(location.id, !location.archived_at)
 }
 
 function deleteLocation(location: Location) {

@@ -894,25 +894,29 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Archive/unarchive an entity
     async archiveEntity(id: number, archive: boolean) {
-      await $fetch(`/api/entities/${id}/archive`, {
+      const result = await $fetch<{ affectedIds: number[] }>(`/api/entities/${id}/archive`, {
         method: 'PATCH',
         body: { archive },
       })
 
-      // Update local state
-      const updateArchived = (list: Array<{ id: number, archived_at?: string | null }>) => {
-        const entity = list.find(e => e.id === id)
-        if (entity) {
-          entity.archived_at = archive ? new Date().toISOString() : null
+      // Update local state for all affected entities (including children)
+      const affectedIds = new Set(result.affectedIds)
+      const timestamp = archive ? new Date().toISOString() : null
+
+      const updateList = (list: Array<{ id: number, archived_at?: string | null }>) => {
+        for (const entity of list) {
+          if (affectedIds.has(entity.id)) {
+            entity.archived_at = timestamp
+          }
         }
       }
 
-      updateArchived(this.npcs)
-      updateArchived(this.factions)
-      updateArchived(this.locations)
-      updateArchived(this.items)
-      updateArchived(this.lore)
-      updateArchived(this.players)
+      updateList(this.npcs)
+      updateList(this.factions)
+      updateList(this.locations)
+      updateList(this.items)
+      updateList(this.lore)
+      updateList(this.players)
     },
 
     toggleShowArchived() {

@@ -15,6 +15,7 @@ interface EntityResult {
   color: string
   linked_entities?: string | null
   metadata?: string | null
+  archived_at?: string | null
   _score?: number
 }
 
@@ -65,6 +66,7 @@ export default defineEventHandler(async (event) => {
           e.name,
           e.description,
           e.metadata,
+          e.archived_at,
           ? as type,
           ? as icon,
           ? as color,
@@ -140,6 +142,7 @@ export default defineEventHandler(async (event) => {
           e.name,
           e.description,
           e.metadata,
+          e.archived_at,
           ? as type,
           ? as icon,
           ? as color,
@@ -215,6 +218,7 @@ export default defineEventHandler(async (event) => {
           e.name,
           e.description,
           e.metadata,
+          e.archived_at,
           ? as type,
           ? as icon,
           ? as color,
@@ -374,6 +378,7 @@ export default defineEventHandler(async (event) => {
           e.name,
           e.description,
           e.metadata,
+          e.archived_at,
           ? as type,
           ? as icon,
           ? as color,
