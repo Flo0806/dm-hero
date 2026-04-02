@@ -125,7 +125,7 @@ export default defineEventHandler(async (event) => {
 
   // Entities
   let entitiesQuery = `
-    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, created_at, updated_at
+    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, created_at, updated_at, archived_at
     FROM entities
     WHERE campaign_id = ? AND deleted_at IS NULL
   `
@@ -148,6 +148,7 @@ export default defineEventHandler(async (event) => {
     parent_entity_id: number | null
     created_at: string
     updated_at: string
+    archived_at: string | null
   }>
 
   const entityIdSet = new Set(entities.map((e) => e.id))
@@ -202,6 +203,7 @@ export default defineEventHandler(async (event) => {
           : undefined,
       created_at: e.created_at,
       updated_at: e.updated_at,
+      archived_at: e.archived_at || null,
     }
   })
 

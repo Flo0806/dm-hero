@@ -17,7 +17,7 @@ import type {
   ImportConflictInfo,
   ImportTracking,
 } from '~~/types/export'
-import { isExportCompatible } from '~~/types/export'
+import { isExportCompatible, isExportFromNewerVersion } from '~~/types/export'
 
 // Get app version from package.json
 import pkg from '~~/package.json'
@@ -346,6 +346,14 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         message: `Export format v${manifest.version} requires app version ${manifest.generatorVersion} or later. Please update DM Hero.`,
+      })
+    }
+
+    // Check if export is from a newer app version (may lose data)
+    if (isExportFromNewerVersion(manifest.generatorVersion, pkg.version)) {
+      throw createError({
+        statusCode: 400,
+        message: `This export was created with DM Hero v${manifest.generatorVersion}. Your version is v${pkg.version}. Please update to avoid data loss.`,
       })
     }
 
@@ -728,8 +736,8 @@ export default defineEventHandler(async (event) => {
 
     if (manifest.entities && manifest.entities.length > 0) {
       const insertEntity = db.prepare(`
-        INSERT INTO entities (campaign_id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO entities (campaign_id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, created_at, updated_at, archived_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       // First pass: insert all entities without references (location_id, parent_entity_id)
@@ -757,6 +765,7 @@ export default defineEventHandler(async (event) => {
           null, // parent_entity_id - set in second pass
           entity.created_at || new Date().toISOString(),
           entity.updated_at || new Date().toISOString(),
+          entity.archived_at || null,
         )
 
         idMapping.entities.set(entity._exportId, result.lastInsertRowid as number)

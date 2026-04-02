@@ -52,6 +52,18 @@ export function isExportCompatible(exportVersion: string, appVersion: string): b
 }
 
 /**
+ * Check if export was created by a newer app version than the current one.
+ * Importing from a newer version may lose data (e.g. new fields not supported).
+ * @param exportGeneratorVersion The app version that created the export
+ * @param currentAppVersion The current app version
+ * @returns true if export is from a newer version
+ */
+export function isExportFromNewerVersion(exportGeneratorVersion: string | undefined, currentAppVersion: string): boolean {
+  if (!exportGeneratorVersion) return false
+  return compareVersions(exportGeneratorVersion, currentAppVersion) > 0
+}
+
+/**
  * Compare two semver versions
  * @returns -1 if a < b, 0 if equal, 1 if a > b
  */
@@ -206,6 +218,7 @@ export interface ExportEntity {
   parent_entity_id?: string // Reference: "entity:3" (for hierarchical locations)
   created_at?: string
   updated_at?: string
+  archived_at?: string | null
 }
 
 export interface ExportRelation {
