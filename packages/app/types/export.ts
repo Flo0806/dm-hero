@@ -64,33 +64,49 @@ export function isExportFromNewerVersion(exportGeneratorVersion: string | undefi
 }
 
 /**
- * Compare two semver versions
+ * Compare two semver versions (SemVer 2.0.0 compliant).
+ * - Compare major.minor.patch numerically
+ * - Stable (no prerelease) > prerelease: 1.2.0 > 1.2.0-beta.1
+ * - Prerelease comparison: alpha < beta < rc, then numeric suffix
  * @returns -1 if a < b, 0 if equal, 1 if a > b
  */
 function compareVersions(a: string, b: string): number {
-  // Strip pre-release suffix for comparison (1.0.0-beta.1 -> 1.0.0.1)
-  const normalize = (v: string) => {
-    const splitParts = v.split('-')
-    const base = splitParts[0] || v
-    const pre = splitParts[1]
-    const parts = base.split('.').map(Number)
-    if (pre) {
-      // Extract number from pre-release (beta.1 -> 1)
-      const preNum = parseInt(pre.replace(/\D/g, '')) || 0
-      parts.push(preNum)
-    }
-    return parts
+  const parse = (v: string) => {
+    const clean = v.replace(/^v/, '')
+    const [main, pre] = clean.split('-')
+    const [major = 0, minor = 0, patch = 0] = (main || '').split('.').map(Number)
+    return { major, minor, patch, pre: pre || '' }
   }
 
-  const aParts = normalize(a)
-  const bParts = normalize(b)
+  const vA = parse(a)
+  const vB = parse(b)
 
-  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-    const aVal = aParts[i] || 0
-    const bVal = bParts[i] || 0
-    if (aVal < bVal) return -1
-    if (aVal > bVal) return 1
+  // Compare major.minor.patch
+  if (vA.major !== vB.major) return vA.major > vB.major ? 1 : -1
+  if (vA.minor !== vB.minor) return vA.minor > vB.minor ? 1 : -1
+  if (vA.patch !== vB.patch) return vA.patch > vB.patch ? 1 : -1
+
+  // Same major.minor.patch - compare prerelease
+  // No prerelease = stable = greater than any prerelease
+  if (!vA.pre && !vB.pre) return 0
+  if (!vA.pre && vB.pre) return 1 // 1.2.0 > 1.2.0-beta.1
+  if (vA.pre && !vB.pre) return -1 // 1.2.0-beta.1 < 1.2.0
+
+  // Both have prerelease - compare identifiers
+  const preOrder: Record<string, number> = { alpha: 1, beta: 2, rc: 3 }
+  const parsePrerelease = (pre: string) => {
+    const parts = pre.split('.')
+    const label = parts[0] || ''
+    const num = parseInt(parts[1] || '0', 10)
+    return { order: preOrder[label] || 0, label, num }
   }
+
+  const preA = parsePrerelease(vA.pre)
+  const preB = parsePrerelease(vB.pre)
+
+  if (preA.order !== preB.order) return preA.order > preB.order ? 1 : -1
+  if (preA.num !== preB.num) return preA.num > preB.num ? 1 : -1
+
   return 0
 }
 

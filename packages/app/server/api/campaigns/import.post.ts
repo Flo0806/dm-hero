@@ -1624,10 +1624,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Preserve original statusCode (e.g. 400 from version check)
+    const statusCode = (error as { statusCode?: number }).statusCode || 500
     if (error instanceof Error) {
       throw createError({
-        statusCode: 500,
-        message: `Import failed: ${error.message}`,
+        statusCode,
+        message: statusCode === 500 ? `Import failed: ${error.message}` : error.message,
       })
     }
     throw error
