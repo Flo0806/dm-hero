@@ -2,8 +2,9 @@
   <v-card
     :id="`player-${player.id}`"
     hover
+    :variant="player.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column player-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: player.archived_at ? 0.6 : 1 }"
     @click="$emit('view', player)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Contact Info -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ player.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ player.name }}
+          <v-chip v-if="player.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Contact Info -->
         <div class="d-flex flex-column" style="gap: 4px">

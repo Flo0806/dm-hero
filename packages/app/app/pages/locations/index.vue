@@ -117,8 +117,11 @@
               }"
               @contextmenu.prevent="openQuickLinkMenu($event, item.raw)"
             >
-              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
+              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }" :style="{ opacity: item.raw.archived_at ? 0.5 : 1 }">
                 {{ item.title }}
+                <v-chip v-if="item.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+                  {{ $t('common.archived') }}
+                </v-chip>
               </span>
             </div>
           </template>

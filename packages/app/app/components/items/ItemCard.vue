@@ -2,8 +2,9 @@
   <v-card
     :id="`item-${item.id}`"
     hover
+    :variant="item.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column item-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: item.archived_at ? 0.6 : 1 }"
     @click="$emit('view', item)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ item.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ item.name }}
+          <v-chip v-if="item.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Type & Rarity Chips -->
         <div v-if="item.metadata?.type || item.metadata?.rarity" class="d-flex flex-wrap ga-1 mb-2">
