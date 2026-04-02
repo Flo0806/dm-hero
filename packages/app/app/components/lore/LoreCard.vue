@@ -2,8 +2,9 @@
   <v-card
     :id="`lore-${lore.id}`"
     hover
+    :variant="lore.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column lore-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: lore.archived_at ? 0.6 : 1 }"
     @click="$emit('view', lore)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ lore.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ lore.name }}
+          <v-chip v-if="lore.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Type Chip -->
         <div v-if="lore.metadata?.type" class="d-flex flex-wrap ga-1 mb-2">
@@ -332,6 +338,18 @@
         </v-tooltip>
       </v-btn>
       <v-btn
+        :icon="lore.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="lore.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', lore)"
+      >
+        <v-icon>{{ lore.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ lore.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
         icon="mdi-delete"
         size="small"
         variant="text"
@@ -389,14 +407,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [lore: Lore]
-  edit: [lore: Lore]
-  download: [lore: Lore]
-  delete: [lore: Lore]
-  chaos: [lore: Lore]
+  'view': [lore: Lore]
+  'edit': [lore: Lore]
+  'download': [lore: Lore]
+  'archive': [lore: Lore]
+  'delete': [lore: Lore]
+  'chaos': [lore: Lore]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [lore: Lore, tab: string]
 }>()
 

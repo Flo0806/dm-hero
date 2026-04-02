@@ -3,7 +3,8 @@
     :id="`npc-${npc.id}`"
     hover
     :class="['d-flex flex-column npc-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :variant="npc.archived_at ? 'outlined' : undefined"
+    :style="{ height: '100%', cursor: 'pointer', opacity: npc.archived_at ? 0.6 : 1 }"
     @click="$emit('view', npc)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ npc.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ npc.name }}
+          <v-chip v-if="npc.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Type & Status Chips -->
         <div v-if="toArray(npc.metadata?.type).length || npc.metadata?.status" class="d-flex flex-wrap ga-1 mb-2">
@@ -420,6 +426,18 @@
           {{ $t('common.edit') }}
         </v-tooltip>
       </v-btn>
+      <v-btn
+        :icon="npc.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="npc.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', npc)"
+      >
+        <v-icon>{{ npc.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ npc.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click.stop="$emit('delete', npc)">
         <v-icon>mdi-delete</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -481,6 +499,7 @@ const emit = defineEmits<{
   'view': [npc: NPC]
   'edit': [npc: NPC]
   'download': [npc: NPC]
+  'archive': [npc: NPC]
   'delete': [npc: NPC]
   'open-group': [groupId: number]
   'create-group': [entityId: number]

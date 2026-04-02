@@ -9,17 +9,28 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      :loading="searching"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('items.searchHint') : ''"
-      persistent-hint
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        :loading="searching"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -53,6 +64,7 @@
             @view="viewItem"
             @edit="editItem"
             @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
+            @archive="archiveEntity"
             @delete="deleteItem"
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
@@ -182,6 +194,7 @@ const router = useRouter()
 const route = useRoute()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const { loadItemCountsBatch } = useItemCounts()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
@@ -214,11 +227,13 @@ async function executeSearch(query: string) {
     // Load counts for search results using the shared composable
     // This ensures ItemCard gets the counts via getCounts()
     loadItemCountsBatch(results)
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') return
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -289,7 +304,8 @@ watch(
 watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     highlightedId.value = null
     if (route.query.highlight || route.query.search) {
       router.replace({ query: {} })
@@ -302,7 +318,7 @@ watch(searchQuery, () => {
 // ============================================================================
 const { downloadImage } = useImageDownload()
 
-const items = computed(() => entitiesStore.items)
+const items = computed(() => entitiesStore.activeItems)
 const pending = computed(() => entitiesStore.itemsLoading)
 
 onMounted(async () => {
@@ -414,13 +430,13 @@ const viewDialogCounts = ref<{
   images: number
 } | null>(null)
 
-const itemDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const itemImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
-const itemOwners = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemLocations = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemFactions = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemLore = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null }>>([])
-const itemPlayers = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
+const itemDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const itemImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
+const itemOwners = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemLocations = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemFactions = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemLore = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null }>>([])
+const itemPlayers = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
 
 async function viewItem(item: Item) {
   viewingItem.value = item
@@ -453,7 +469,8 @@ async function viewItem(item: Item) {
     itemDocuments.value = documents
     itemImages.value = images
     viewDialogCounts.value = counts
-  } finally {
+  }
+  finally {
     loadingViewData.value = false
     loadingOwners.value = false
     loadingLocations.value = false
@@ -470,6 +487,18 @@ const showDeleteDialog = ref(false)
 const deletingItem = ref<Item | null>(null)
 const deleting = ref(false)
 
+async function archiveEntity(entity: Item) {
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
+}
+
 function deleteItem(item: Item) {
   deletingItem.value = item
   showDeleteDialog.value = true
@@ -484,9 +513,11 @@ async function confirmDelete() {
     await entitiesStore.deleteItem(deletingItem.value.id)
     showDeleteDialog.value = false
     deletingItem.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete item:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

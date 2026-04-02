@@ -30,7 +30,7 @@
     <GlobalSearch
       v-model="showSearch"
       v-model:search-query="searchQuery"
-      :search-results="searchResults"
+      :search-results="filteredSearchResults"
       @select-result="navigateToResult"
     />
 
@@ -78,8 +78,17 @@ const searchResults = ref<
     color: string
     path: string
     linkedEntities: string[]
+    archived_at?: string | null
   }>
 >([])
+
+// Filter archived from global search unless showArchived is enabled
+const entitiesStore = useEntitiesStore()
+const filteredSearchResults = computed(() =>
+  entitiesStore.showArchived
+    ? searchResults.value
+    : searchResults.value.filter(r => !r.archived_at),
+)
 
 // Stores
 const campaignStore = useCampaignStore()

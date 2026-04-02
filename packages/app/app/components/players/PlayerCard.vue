@@ -2,8 +2,9 @@
   <v-card
     :id="`player-${player.id}`"
     hover
+    :variant="player.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column player-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: player.archived_at ? 0.6 : 1 }"
     @click="$emit('view', player)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Contact Info -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ player.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ player.name }}
+          <v-chip v-if="player.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Contact Info -->
         <div class="d-flex flex-column" style="gap: 4px">
@@ -323,6 +329,18 @@
         </v-tooltip>
       </v-btn>
       <v-btn
+        :icon="player.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="player.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', player)"
+      >
+        <v-icon>{{ player.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ player.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
         icon="mdi-delete"
         size="small"
         variant="text"
@@ -379,14 +397,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [player: Player]
-  edit: [player: Player]
-  download: [player: Player]
-  delete: [player: Player]
-  chaos: [player: Player]
+  'view': [player: Player]
+  'edit': [player: Player]
+  'download': [player: Player]
+  'archive': [player: Player]
+  'delete': [player: Player]
+  'chaos': [player: Player]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [player: Player, tab: string]
 }>()
 

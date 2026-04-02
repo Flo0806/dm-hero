@@ -12,12 +12,12 @@ function quoteFts5Term(term: string): string {
 
   // FTS5 special chars that need quoting: - . () [] {}
   if (
-    term.includes('-') ||
-    term.includes('.') ||
-    term.includes('(') ||
-    term.includes(')') ||
-    term.includes('[') ||
-    term.includes(']')
+    term.includes('-')
+    || term.includes('.')
+    || term.includes('(')
+    || term.includes(')')
+    || term.includes('[')
+    || term.includes(']')
   ) {
     const escaped = term.replace(/"/g, '""')
     return `"${escaped}"`
@@ -70,6 +70,7 @@ export default defineEventHandler((event) => {
     metadata: string | null
     created_at: string
     updated_at: string
+    archived_at: string | null
     fts_score?: number
     leader_id?: number | null
     leader_name?: string | null
@@ -96,7 +97,8 @@ export default defineEventHandler((event) => {
     if (isQuotedPhrase) {
       const withoutQuotes = trimmedQuery.slice(1, -1) // Remove surrounding quotes
       searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
-    } else {
+    }
+    else {
       searchTerm = normalizeText(trimmedQuery)
     }
 
@@ -107,19 +109,22 @@ export default defineEventHandler((event) => {
     let ftsQuery: string
     if (parsedQuery.hasOperators) {
       // Reconstruct query with original operators
-      const expandedTerms = parsedQuery.terms.map((term) => `${quoteFts5Term(term)}*`)
+      const expandedTerms = parsedQuery.terms.map(term => `${quoteFts5Term(term)}*`)
       const fts5QueryUpper = parsedQuery.fts5Query.toUpperCase()
 
       if (fts5QueryUpper.includes(' AND ')) {
         ftsQuery = expandedTerms.join(' AND ')
-      } else if (fts5QueryUpper.includes(' OR ')) {
+      }
+      else if (fts5QueryUpper.includes(' OR ')) {
         ftsQuery = expandedTerms.join(' OR ')
-      } else {
+      }
+      else {
         ftsQuery = expandedTerms.join(' ')
       }
-    } else {
+    }
+    else {
       // Simple query: add all terms as OR (quote special chars)
-      ftsQuery = parsedQuery.terms.map((t) => `${quoteFts5Term(t)}*`).join(' OR ')
+      ftsQuery = parsedQuery.terms.map(t => `${quoteFts5Term(t)}*`).join(' OR ')
     }
 
     let useExactMatch = parsedQuery.useExactFirst
@@ -138,6 +143,7 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
+          e.archived_at,
           leader_rel.from_entity_id as leader_id,
           leader_npc.name as leader_name,
           GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -177,6 +183,7 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
+            e.archived_at,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
             GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -217,6 +224,7 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
+            e.archived_at,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
             GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -250,7 +258,7 @@ export default defineEventHandler((event) => {
             WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL
           `,
           )
-          .all(playerTypeId, campaignId) as Array<{ id: number; name: string }>
+          .all(playerTypeId, campaignId) as Array<{ id: number, name: string }>
 
         // Filter Players with substring match OR Levenshtein distance
         const maxDist = searchTerm.length <= 3 ? 1 : searchTerm.length <= 6 ? 2 : 3
@@ -275,7 +283,7 @@ export default defineEventHandler((event) => {
 
         // Find Factions linked to matching Players (bidirectional relations)
         if (matchingPlayers.length > 0) {
-          const playerIds = matchingPlayers.map((p) => p.id)
+          const playerIds = matchingPlayers.map(p => p.id)
           const linkedFactions = db
             .prepare(
               `
@@ -315,19 +323,21 @@ export default defineEventHandler((event) => {
         const isNpcMatch = linkedNpcNamesLower.includes(searchTerm)
         const isLoreMatch = linkedLoreNamesLower.includes(searchTerm)
         const isPlayerMatch = factionIdsLinkedToMatchingPlayers.has(faction.id)
-        const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isLeaderMatch || isNpcMatch || isLoreMatch || isPlayerMatch) &&
-          !containsQuery
+        const isNonNameMatch
+          = (isMetadataMatch || isDescriptionMatch || isLeaderMatch || isNpcMatch || isLoreMatch || isPlayerMatch)
+            && !containsQuery
 
         let levDistance: number
 
         if (isNonNameMatch) {
           // Metadata/Description match: Set distance to 0 (perfect match conceptually)
           levDistance = 0
-        } else if (startsWithQuery) {
+        }
+        else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
           levDistance = nameLower.length - searchTerm.length
-        } else {
+        }
+        else {
           // Full Levenshtein distance for non-prefix matches
           levDistance = levenshtein(searchTerm, nameLower)
         }
@@ -355,8 +365,8 @@ export default defineEventHandler((event) => {
       })
 
       // Step 3: Filter by Levenshtein distance
-      const isQuotedPhraseSearch =
-        parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
+      const isQuotedPhraseSearch
+        = parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
 
       if (isQuotedPhraseSearch) {
         // Quoted phrase: EXACT substring match (no Levenshtein), but check all fields including cross-entity
@@ -377,15 +387,16 @@ export default defineEventHandler((event) => {
 
           // Check if EXACT phrase appears in ANY field
           return (
-            nameLower.includes(exactPhrase) ||
-            descriptionLower.includes(exactPhrase) ||
-            metadataLower.includes(exactPhrase) ||
-            leaderNameLower.includes(exactPhrase) ||
-            linkedNpcNamesLower.includes(exactPhrase) ||
-            linkedLoreNamesLower.includes(exactPhrase)
+            nameLower.includes(exactPhrase)
+            || descriptionLower.includes(exactPhrase)
+            || metadataLower.includes(exactPhrase)
+            || leaderNameLower.includes(exactPhrase)
+            || linkedNpcNamesLower.includes(exactPhrase)
+            || linkedLoreNamesLower.includes(exactPhrase)
           )
         })
-      } else if (!parsedQuery.hasOperators) {
+      }
+      else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches
         scoredFactions = scoredFactions.filter((faction) => {
           // Check if linked to a matching Player (fast check first)
@@ -404,12 +415,12 @@ export default defineEventHandler((event) => {
           for (const term of parsedQuery.terms) {
             // Exact/substring match in any field
             if (
-              nameLower.includes(term) ||
-              descriptionLower.includes(term) ||
-              metadataLower.includes(term) ||
-              leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term) ||
-              linkedLoreNamesLower.includes(term)
+              nameLower.includes(term)
+              || descriptionLower.includes(term)
+              || metadataLower.includes(term)
+              || leaderNameLower.includes(term)
+              || linkedNpcNamesLower.includes(term)
+              || linkedLoreNamesLower.includes(term)
             ) {
               return true
             }
@@ -438,7 +449,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked NPC names (split by comma, then by words)
             if (linkedNpcNamesLower.length > 0) {
-              const npcNames = linkedNpcNamesLower.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words (e.g., "andré müller" → ["andré", "müller"])
@@ -455,7 +466,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked Lore names (split by comma, then by words)
             if (linkedLoreNamesLower.length > 0) {
-              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesLower.split(',').map(n => n.trim())
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
                 // Split each Lore name into words (e.g., "böser frosch" → ["böser", "frosch"])
@@ -473,7 +484,8 @@ export default defineEventHandler((event) => {
 
           return false // No term matched
         })
-      } else if (hasOrOperator && !hasAndOperator) {
+      }
+      else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredFactions = scoredFactions.filter((faction) => {
           // Check if linked to a matching Player (fast check first)
@@ -492,12 +504,12 @@ export default defineEventHandler((event) => {
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
             if (
-              nameLower.includes(term) ||
-              descriptionLower.includes(term) ||
-              metadataLower.includes(term) ||
-              leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term) ||
-              linkedLoreNamesLower.includes(term)
+              nameLower.includes(term)
+              || descriptionLower.includes(term)
+              || metadataLower.includes(term)
+              || leaderNameLower.includes(term)
+              || linkedNpcNamesLower.includes(term)
+              || linkedLoreNamesLower.includes(term)
             ) {
               return true
             }
@@ -526,7 +538,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked NPC names (split by comma, then by words)
             if (linkedNpcNamesLower.length > 0) {
-              const npcNames = linkedNpcNamesLower.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 const npcWords = npcName.split(/\s+/)
@@ -542,7 +554,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked Lore names (split by comma, then by words)
             if (linkedLoreNamesLower.length > 0) {
-              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesLower.split(',').map(n => n.trim())
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
                 const loreWords = loreName.split(/\s+/)
@@ -558,7 +570,8 @@ export default defineEventHandler((event) => {
           }
           return false // No term matched
         })
-      } else if (hasAndOperator) {
+      }
+      else if (hasAndOperator) {
         // AND query: ALL terms must match
         scoredFactions = scoredFactions.filter((faction) => {
           const nameLower = normalizeText(faction.name)
@@ -577,12 +590,12 @@ export default defineEventHandler((event) => {
 
             // Check if term appears in any field
             if (
-              nameLower.includes(term) ||
-              descriptionLower.includes(term) ||
-              metadataLower.includes(term) ||
-              leaderNameLower.includes(term) ||
-              linkedNpcNamesLower.includes(term) ||
-              linkedLoreNamesLower.includes(term)
+              nameLower.includes(term)
+              || descriptionLower.includes(term)
+              || metadataLower.includes(term)
+              || leaderNameLower.includes(term)
+              || linkedNpcNamesLower.includes(term)
+              || linkedLoreNamesLower.includes(term)
             ) {
               termMatches = true
             }
@@ -616,7 +629,7 @@ export default defineEventHandler((event) => {
 
             // Check Levenshtein for linked NPC names (split by comma, then by words)
             if (!termMatches && linkedNpcNamesLower.length > 0) {
-              const npcNames = linkedNpcNamesLower.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesLower.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words (e.g., "andré müller" → ["andré", "müller"])
@@ -637,7 +650,7 @@ export default defineEventHandler((event) => {
 
             // Check Levenshtein for linked Lore names (split by comma, then by words)
             if (!termMatches && linkedLoreNamesLower.length > 0) {
-              const loreNames = linkedLoreNamesLower.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesLower.split(',').map(n => n.trim())
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
                 // Split each Lore name into words (e.g., "böser frosch" → ["böser", "frosch"])
@@ -675,12 +688,14 @@ export default defineEventHandler((event) => {
       factions = scoredFactions.map(
         ({ fts_score: _fts_score, _lev_distance, _final_score, ...faction }) => faction,
       )
-    } catch (error) {
+    }
+    catch (error) {
       // Fallback: If FTS5 fails, return empty (better than crashing)
       console.error('[Faction Search] FTS5 search failed:', error)
       factions = []
     }
-  } else {
+  }
+  else {
     // No search query - return all factions for this campaign
     factions = db
       .prepare(
@@ -693,6 +708,7 @@ export default defineEventHandler((event) => {
         e.metadata,
         e.created_at,
         e.updated_at,
+        e.archived_at,
         leader_rel.from_entity_id as leader_id,
         leader_npc.name as leader_name,
         GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -715,7 +731,7 @@ export default defineEventHandler((event) => {
   }
 
   // Parse metadata JSON
-  return factions.map((faction) => ({
+  return factions.map(faction => ({
     ...faction,
     metadata: faction.metadata ? JSON.parse(faction.metadata as string) : null,
   }))

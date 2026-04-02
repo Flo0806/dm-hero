@@ -9,14 +9,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -52,6 +65,7 @@
             @view="viewLore"
             @edit="editLore"
             @download="(lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
+            @archive="archiveEntity"
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
@@ -168,6 +182,7 @@ const route = useRoute()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage } = useImageDownload()
 const { loadLoreCountsBatch } = useLoreCounts()
 
@@ -180,7 +195,7 @@ const searching = ref(false)
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 // Get lore from store
-const lore = computed(() => entitiesStore.lore)
+const lore = computed(() => entitiesStore.activeLore)
 
 // Refs for dialogs
 const showEditDialog = ref(false)
@@ -194,19 +209,19 @@ const deleting = ref(false)
 const highlightedId = ref<number | null>(null)
 
 // View Dialog data
-const viewDialogNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
-const viewDialogItems = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const viewDialogNpcs = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
+const viewDialogItems = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
 const viewDialogFactions = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const viewDialogLocations = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const viewDialogPlayers = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
-const viewDialogDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const viewDialogImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const viewDialogDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const viewDialogImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const viewDialogCounts = ref<{
   npcs: number
   items: number
@@ -297,7 +312,8 @@ watch(searchQuery, async (query) => {
       // Load counts for search results using the shared composable
       // This ensures LoreCard gets the counts via getCounts()
       loadLoreCountsBatch(results)
-    } finally {
+    }
+    finally {
       searching.value = false
     }
   }, 300)
@@ -352,9 +368,11 @@ async function viewLore(loreEntry: Lore) {
     viewDialogDocuments.value = documents
     viewDialogImages.value = images
     viewDialogCounts.value = counts
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load lore data:', error)
-  } finally {
+  }
+  finally {
     loadingViewNpcs.value = false
     loadingViewItems.value = false
     loadingViewFactions.value = false
@@ -435,6 +453,18 @@ async function handleLoreCreated(createdLore: Lore) {
   }, 100)
 }
 
+async function archiveEntity(entity: Lore) {
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
+}
+
 // Confirm delete
 function confirmDelete(loreEntry: Lore) {
   loreToDelete.value = loreEntry
@@ -456,9 +486,11 @@ async function deleteLore() {
     }
     showDeleteDialog.value = false
     loreToDelete.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete lore:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

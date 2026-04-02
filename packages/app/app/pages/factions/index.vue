@@ -9,17 +9,28 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      :loading="searching"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('factions.searchHint') : ''"
-      persistent-hint
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        :loading="searching"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -53,6 +64,7 @@
             @view="viewFaction"
             @edit="editFaction"
             @download="(f) => downloadImage(`/uploads/${f.image_url}`, f.name)"
+            @archive="archiveEntity"
             @delete="deleteFaction"
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
@@ -168,6 +180,7 @@ const router = useRouter()
 const route = useRoute()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -199,11 +212,13 @@ async function executeSearch(query: string) {
     if (results.length > 0) {
       loadFactionCountsBatch(results)
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') return
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -274,7 +289,8 @@ watch(
 watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     highlightedId.value = null
     if (route.query.highlight || route.query.search) {
       router.replace({ query: {} })
@@ -288,7 +304,7 @@ watch(searchQuery, () => {
 const { loadAllCountsForCampaign, loadFactionCountsBatch } = useFactionCounts()
 const { downloadImage } = useImageDownload()
 
-const factions = computed(() => entitiesStore.factions)
+const factions = computed(() => entitiesStore.activeFactions)
 const pending = computed(() => entitiesStore.factionsLoading)
 
 onMounted(async () => {
@@ -397,6 +413,18 @@ const showDeleteDialog = ref(false)
 const deletingFaction = ref<Faction | null>(null)
 const deleting = ref(false)
 
+async function archiveEntity(entity: Faction) {
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
+}
+
 function deleteFaction(faction: Faction) {
   deletingFaction.value = faction
   showDeleteDialog.value = true
@@ -411,9 +439,11 @@ async function confirmDelete() {
     await entitiesStore.deleteFaction(deletingFaction.value.id)
     showDeleteDialog.value = false
     deletingFaction.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete faction:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

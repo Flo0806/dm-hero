@@ -9,16 +9,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('players.searchHint') : ''"
-      persistent-hint
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <!-- Loading Skeleton -->
     <v-row v-if="loading">
@@ -55,6 +66,7 @@
             @view="viewPlayer"
             @edit="editPlayer"
             @download="handleDownload"
+            @archive="archiveEntity"
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
@@ -146,6 +158,7 @@ const route = useRoute()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage } = useImageDownload()
 const { loadAllCountsForCampaign, loadPlayerCountsBatch, reloadPlayerCounts } = usePlayerCounts()
 
@@ -170,7 +183,7 @@ const deletingPlayer = ref<Player | null>(null)
 
 // Computed
 const loading = computed(() => entitiesStore.playersLoading)
-const players = computed(() => entitiesStore.players)
+const players = computed(() => entitiesStore.activePlayers)
 
 const filteredPlayers = computed(() => {
   // If searching, use search results from API (keep relevance order from FTS5)
@@ -205,10 +218,12 @@ watch(searchQuery, async (query) => {
 
       // Load counts for search results using the shared composable
       loadPlayerCountsBatch(results)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Player search failed:', error)
       searchResults.value = []
-    } finally {
+    }
+    finally {
       searching.value = false
     }
   }, 300)
@@ -295,6 +310,18 @@ async function handlePlayerCreated(player: Player) {
   }, 100)
 }
 
+async function archiveEntity(entity: Player) {
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
+}
+
 function confirmDelete(player: Player) {
   deletingPlayer.value = player
   showDeleteDialog.value = true
@@ -308,9 +335,11 @@ async function deletePlayer() {
     await entitiesStore.deletePlayer(deletingPlayer.value.id)
     showDeleteDialog.value = false
     deletingPlayer.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete player:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

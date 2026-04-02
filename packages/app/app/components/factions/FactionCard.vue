@@ -2,8 +2,9 @@
   <v-card
     :id="`faction-${faction.id}`"
     hover
+    :variant="faction.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column faction-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: faction.archived_at ? 0.6 : 1 }"
     @click="$emit('view', faction)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ faction.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ faction.name }}
+          <v-chip v-if="faction.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Type & Alignment Chips -->
         <div
@@ -372,6 +378,18 @@
         </v-tooltip>
       </v-btn>
       <v-btn
+        :icon="faction.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="faction.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', faction)"
+      >
+        <v-icon>{{ faction.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ faction.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
         icon="mdi-delete"
         size="small"
         variant="text"
@@ -430,14 +448,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [faction: Faction]
-  edit: [faction: Faction]
-  download: [faction: Faction]
-  delete: [faction: Faction]
-  chaos: [faction: Faction]
+  'view': [faction: Faction]
+  'edit': [faction: Faction]
+  'download': [faction: Faction]
+  'archive': [faction: Faction]
+  'delete': [faction: Faction]
+  'chaos': [faction: Faction]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [faction: Faction, tab: string]
 }>()
 

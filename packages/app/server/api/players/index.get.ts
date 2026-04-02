@@ -46,6 +46,7 @@ export default defineEventHandler((event) => {
     metadata: string | null
     created_at: string
     updated_at: string
+    archived_at: string | null
   }
 
   let players: PlayerRow[]
@@ -58,7 +59,7 @@ export default defineEventHandler((event) => {
     const allPlayers = db
       .prepare<unknown[], PlayerRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
              ei.image_url
       FROM entities e
       LEFT JOIN (
@@ -119,7 +120,7 @@ export default defineEventHandler((event) => {
             AND deleted_at IS NULL
         `,
         )
-        .all(campaignId) as Array<{ id: number; name: string; type_id: number }>
+        .all(campaignId) as Array<{ id: number, name: string, type_id: number }>
 
       console.log('[Player Search] allEntities count:', allEntities.length)
 
@@ -144,11 +145,11 @@ export default defineEventHandler((event) => {
         return false
       })
 
-      console.log('[Player Search] searchTerm:', searchTerm, 'matchingEntities:', matchingEntities.map((e) => ({ id: e.id, name: e.name })))
+      console.log('[Player Search] searchTerm:', searchTerm, 'matchingEntities:', matchingEntities.map(e => ({ id: e.id, name: e.name })))
 
       // Find Players linked to matching entities (bidirectional relations)
       if (matchingEntities.length > 0) {
-        const entityIds = matchingEntities.map((e) => e.id)
+        const entityIds = matchingEntities.map(e => e.id)
         const linkedPlayers = db
           .prepare(
             `
@@ -171,16 +172,16 @@ export default defineEventHandler((event) => {
 
     // Step 3: If we found Players via entity links, add them to results
     if (playerIdsLinkedToMatchingEntities.size > 0) {
-      const existingIds = new Set(players.map((p) => p.id))
+      const existingIds = new Set(players.map(p => p.id))
 
       // Get Players linked to entities that aren't already in results
-      const additionalPlayerIds = [...playerIdsLinkedToMatchingEntities].filter((id) => !existingIds.has(id))
+      const additionalPlayerIds = [...playerIdsLinkedToMatchingEntities].filter(id => !existingIds.has(id))
 
       if (additionalPlayerIds.length > 0) {
         const additionalPlayers = db
           .prepare<unknown[], PlayerRow>(
             `
-          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
                  ei.image_url
           FROM entities e
           LEFT JOIN (
@@ -200,11 +201,12 @@ export default defineEventHandler((event) => {
         players = [...players, ...additionalPlayers]
       }
     }
-  } else {
+  }
+  else {
     players = db
       .prepare<unknown[], PlayerRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
              ei.image_url
       FROM entities e
       LEFT JOIN (
@@ -221,7 +223,7 @@ export default defineEventHandler((event) => {
       .all(entityType.id, campaignId)
   }
 
-  return players.map((player) => ({
+  return players.map(player => ({
     ...player,
     metadata: player.metadata ? JSON.parse(player.metadata) : null,
   }))

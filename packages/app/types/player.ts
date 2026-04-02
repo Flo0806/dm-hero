@@ -47,7 +47,7 @@ export interface PlayerMetadata {
   phone?: string | null
   discord?: string | null
   notes?: string | null
-  birthday?: { year: number; month: number; day: number } | null // Character birthday in game calendar
+  birthday?: { year: number, month: number, day: number } | null // Character birthday in game calendar
   showBirthdayInCalendar?: boolean // Whether to show birthday in calendar overview
   [key: string]: unknown
 }
@@ -74,5 +74,6 @@ export interface Player {
   metadata: PlayerMetadata | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
   _counts?: PlayerCounts
 }

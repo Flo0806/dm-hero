@@ -2,8 +2,9 @@
   <v-card
     :id="`item-${item.id}`"
     hover
+    :variant="item.archived_at ? 'outlined' : undefined"
     :class="['d-flex flex-column item-card', { 'highlighted-card': isHighlighted }]"
-    style="height: 100%; cursor: pointer"
+    :style="{ height: '100%', cursor: 'pointer', opacity: item.archived_at ? 0.6 : 1 }"
     @click="$emit('view', item)"
     @contextmenu.prevent="quickLink.openContextMenu"
   >
@@ -33,7 +34,12 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ item.name }}</h3>
+        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+          {{ item.name }}
+          <v-chip v-if="item.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+            {{ $t('common.archived') }}
+          </v-chip>
+        </h3>
 
         <!-- Type & Rarity Chips -->
         <div v-if="item.metadata?.type || item.metadata?.rarity" class="d-flex flex-wrap ga-1 mb-2">
@@ -339,6 +345,18 @@
         </v-tooltip>
       </v-btn>
       <v-btn
+        :icon="item.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="item.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', item)"
+      >
+        <v-icon>{{ item.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ item.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
         icon="mdi-delete"
         size="small"
         variant="text"
@@ -396,14 +414,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [item: Item]
-  edit: [item: Item]
-  download: [item: Item]
-  delete: [item: Item]
-  chaos: [item: Item]
+  'view': [item: Item]
+  'edit': [item: Item]
+  'download': [item: Item]
+  'archive': [item: Item]
+  'delete': [item: Item]
+  'chaos': [item: Item]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [item: Item, tab: string]
 }>()
 

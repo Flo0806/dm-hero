@@ -14,18 +14,29 @@
     </UiPageHeader>
 
     <!-- Search Bar - Non-reactive for smooth typing -->
-    <v-text-field
-      :model-value="inputValue"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('locations.searchHint') : ''"
-      persistent-hint
-      @update:model-value="handleSearchInput"
-      @click:clear="handleSearchClear"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        :model-value="inputValue"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+        @update:model-value="handleSearchInput"
+        @click:clear="handleSearchClear"
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -106,8 +117,11 @@
               }"
               @contextmenu.prevent="openQuickLinkMenu($event, item.raw)"
             >
-              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }">
+              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }" :style="{ opacity: item.raw.archived_at ? 0.5 : 1 }">
                 {{ item.title }}
+                <v-chip v-if="item.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+                  {{ $t('common.archived') }}
+                </v-chip>
               </span>
             </div>
           </template>
@@ -145,6 +159,18 @@
                 color="primary"
                 @click.stop="openChaosGraph(item.raw)"
               />
+              <v-btn
+                :icon="item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+                size="x-small"
+                variant="text"
+                :color="item.raw.archived_at ? 'success' : 'warning'"
+                @click.stop="archiveLocation(item.raw)"
+              >
+                <v-icon>{{ item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ item.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+                </v-tooltip>
+              </v-btn>
               <v-btn
                 icon="mdi-delete"
                 size="x-small"
@@ -283,6 +309,7 @@ interface Location {
   } | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
 }
 
 interface ConnectedNPC {
@@ -320,7 +347,8 @@ function handleSearchInput(value: string) {
   if (value && value.trim().length > 0) {
     searching.value = true
     isInSearchMode.value = true
-  } else {
+  }
+  else {
     searching.value = false
     isInSearchMode.value = false
   }
@@ -342,6 +370,7 @@ const { locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const campaignStore = useCampaignStore()
 const { getLocationTypeIcon, getLocationTypeColor } = useEntityIcons()
 
@@ -401,7 +430,8 @@ onMounted(async () => {
   try {
     const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
     hasApiKey.value = response.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 })
@@ -432,7 +462,7 @@ watch(searchQuery, () => {
 })
 
 // Use store data
-const locations = computed(() => entitiesStore.locations)
+const locations = computed(() => entitiesStore.activeLocations)
 const pending = computed(() => entitiesStore.locationsLoading)
 
 // Debounce search with abort controller
@@ -464,14 +494,16 @@ async function executeSearch(query: string) {
       signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -528,7 +560,7 @@ interface TreeNode {
 
 // Helper: Get all parent IDs for a location
 function getParentIds(locationId: number, allLocations: Location[]): number[] {
-  const location = allLocations.find((l) => l.id === locationId)
+  const location = allLocations.find(l => l.id === locationId)
   if (!location || !location.parent_entity_id) return []
 
   return [location.parent_entity_id, ...getParentIds(location.parent_entity_id, allLocations)]
@@ -560,7 +592,7 @@ const treeItems = computed(() => {
       const parentIds = getParentIds(result.id, allLocations)
       parentIds.forEach((parentId) => {
         if (!addedLocationIds.has(parentId)) {
-          const parent = allLocations.find((l) => l.id === parentId)
+          const parent = allLocations.find(l => l.id === parentId)
           if (parent) {
             locationsToShow.push(parent)
             addedLocationIds.add(parentId)
@@ -568,7 +600,8 @@ const treeItems = computed(() => {
         }
       })
     })
-  } else {
+  }
+  else {
     // Not searching: Show all locations
     locationsToShow = searchResults
   }
@@ -597,11 +630,13 @@ const treeItems = computed(() => {
       const parent = locationMap.get(location.parent_entity_id)
       if (parent) {
         parent.children!.push(node)
-      } else {
+      }
+      else {
         // Parent not found (not in locationsToShow) - treat as root
         rootNodes.push(node)
       }
-    } else {
+    }
+    else {
       // No parent - is a root node
       rootNodes.push(node)
     }
@@ -643,7 +678,7 @@ watch(
 
         // Add all parent IDs to ensure the result is visible
         const parentIds = getParentIds(result.id, allLocations)
-        parentIds.forEach((id) => nodesToOpen.add(id))
+        parentIds.forEach(id => nodesToOpen.add(id))
       })
 
       openedNodes.value = Array.from(nodesToOpen)
@@ -653,7 +688,8 @@ watch(
         animationKey.value++
         isFromGlobalSearch.value = false // Reset flag
       }
-    } else if (!searching) {
+    }
+    else if (!searching) {
       // When not searching, collapse all
       openedNodes.value = []
     }
@@ -719,7 +755,7 @@ const loadingItems = ref(false)
 
 // Location Lore
 const locationLore = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const loadingLore = ref(false)
 
@@ -748,8 +784,8 @@ const locationFactions = ref<
 const loadingFactions = ref(false)
 
 // Location Documents & Images
-const locationDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const locationImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const locationDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const locationImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const loadingViewData = ref(false)
 
 async function viewLocation(location: Location) {
@@ -784,7 +820,8 @@ async function viewLocation(location: Location) {
     locationDocuments.value = documents
     locationImages.value = images
     viewDialogCounts.value = counts
-  } finally {
+  }
+  finally {
     loadingViewData.value = false
     loadingNpcs.value = false
     loadingItems.value = false
@@ -809,6 +846,18 @@ function editLocation(location: Location) {
 function editLocationAndCloseView(location: Location) {
   editLocation(location)
   showViewDialog.value = false
+}
+
+async function archiveLocation(location: Location) {
+  try {
+    const archive = !location.archived_at
+    await entitiesStore.archiveEntity(location.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 function deleteLocation(location: Location) {
@@ -856,7 +905,8 @@ async function highlightAfterSave(locationId: number) {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       clearInterval(scrollInterval)
-    } else if (attempts >= maxAttempts) {
+    }
+    else if (attempts >= maxAttempts) {
       clearInterval(scrollInterval)
     }
   }, 200)
@@ -879,7 +929,7 @@ async function confirmDelete() {
 
   try {
     // Delete location (cascade deletes children)
-    const result = await $fetch<{ success: boolean; deletedCount: number; message: string }>(
+    const result = await $fetch<{ success: boolean, deletedCount: number, message: string }>(
       `/api/locations/${deletingLocation.value.id}`,
       { method: 'DELETE' },
     )
@@ -895,9 +945,11 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingLocation.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete location:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
@@ -920,7 +972,7 @@ function openQuickLinkMenu(event: MouseEvent, location: Location) {
   quickLinkState.showContextMenu = true
 }
 
-function handleQuickLinkSelect({ targetType, relationType }: { targetType: string; relationType: string }) {
+function handleQuickLinkSelect({ targetType, relationType }: { targetType: string, relationType: string }) {
   quickLinkState.targetType = targetType as typeof quickLinkState.targetType
   quickLinkState.relationType = relationType
   quickLinkState.showContextMenu = false
@@ -931,7 +983,6 @@ function handleLinked() {
   // Optionally reload data or show notification
   quickLinkState.showEntitySelectDialog = false
 }
-
 </script>
 
 <style scoped>

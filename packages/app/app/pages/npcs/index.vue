@@ -14,14 +14,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="entitiesStore.npcsLoading">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -65,6 +78,7 @@
             @view="viewNpc"
             @edit="editNpc"
             @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
+            @archive="archiveNpc"
             @delete="deleteNpc"
             @open-group="openGroupPreview"
             @open-tab="openNpcTab"
@@ -218,6 +232,7 @@ async function handleGroupCreated() {
 
 // Auto-imported stores
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const campaignStore = useCampaignStore()
 const { loadNpcCountsBatch } = useNpcCounts()
 
@@ -287,7 +302,8 @@ watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     // First change after global search, keep highlight
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     // Manual search by user, clear highlight
     highlightedId.value = null
     // Remove query params from URL
@@ -298,7 +314,7 @@ watch(searchQuery, () => {
 })
 
 // Get data from stores
-const npcs = computed(() => entitiesStore.npcs)
+const npcs = computed(() => entitiesStore.activeNpcs)
 
 // Reference data for view dialog
 const races = ref<
@@ -383,14 +399,16 @@ async function executeSearch(query: string) {
     // Load counts for search results using the shared composable
     // This ensures NpcCard gets the counts via getCounts()
     loadNpcCountsBatch(results)
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -541,10 +559,11 @@ function handleEditFromView(npc: NPC) {
 
 // View NPC by ID (from relations in view dialog)
 async function viewNpcById(npcId: number) {
-  const npc = entitiesStore.npcs?.find((n) => n.id === npcId)
+  const npc = entitiesStore.npcs?.find(n => n.id === npcId)
   if (npc) {
     viewNpc(npc)
-  } else {
+  }
+  else {
     console.error('NPC not found in store:', npcId)
   }
 }
@@ -578,6 +597,18 @@ watch(showViewDialog, (isOpen) => {
   }
 })
 
+async function archiveNpc(npc: NPC) {
+  try {
+    const archive = !npc.archived_at
+    await entitiesStore.archiveEntity(npc.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
+}
+
 function deleteNpc(npc: NPC) {
   deletingNpc.value = npc
   showDeleteDialog.value = true
@@ -594,7 +625,7 @@ async function confirmDelete() {
 
     // If user is searching, remove from search results
     if (searchQuery.value && searchQuery.value.trim().length > 0) {
-      const deleteIndex = searchResults.value.findIndex((n) => n.id === deletingNpc.value?.id)
+      const deleteIndex = searchResults.value.findIndex(n => n.id === deletingNpc.value?.id)
       if (deleteIndex !== -1) {
         searchResults.value.splice(deleteIndex, 1)
       }
@@ -602,9 +633,11 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingNpc.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete NPC:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

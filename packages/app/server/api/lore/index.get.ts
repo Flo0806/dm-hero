@@ -42,6 +42,7 @@ export default defineEventHandler((event) => {
     metadata: string | null
     created_at: string
     updated_at: string
+    archived_at: string | null
   }
 
   let loreEntries: LoreRow[]
@@ -55,7 +56,7 @@ export default defineEventHandler((event) => {
     const allLoreEntries = db
       .prepare<unknown[], LoreRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
              ei.image_url
       FROM entities e
       LEFT JOIN (
@@ -105,7 +106,7 @@ export default defineEventHandler((event) => {
           WHERE type_id = ? AND campaign_id = ? AND deleted_at IS NULL
         `,
         )
-        .all(playerTypeId, campaignId) as Array<{ id: number; name: string }>
+        .all(playerTypeId, campaignId) as Array<{ id: number, name: string }>
 
       // Filter Players with substring match OR Levenshtein distance
       const maxDist = searchTerm.length <= 3 ? 1 : searchTerm.length <= 6 ? 2 : 3
@@ -130,7 +131,7 @@ export default defineEventHandler((event) => {
 
       // Find Lore entries linked to matching Players (bidirectional relations)
       if (matchingPlayers.length > 0) {
-        const playerIds = matchingPlayers.map((p) => p.id)
+        const playerIds = matchingPlayers.map(p => p.id)
         const linkedLore = db
           .prepare(
             `
@@ -151,16 +152,16 @@ export default defineEventHandler((event) => {
 
     // Step 3: If we found Lore via Player links, add them to results
     if (loreIdsLinkedToMatchingPlayers.size > 0) {
-      const existingIds = new Set(loreEntries.map((l) => l.id))
+      const existingIds = new Set(loreEntries.map(l => l.id))
 
       // Get Lore entries linked to Players that aren't already in results
-      const additionalLoreIds = [...loreIdsLinkedToMatchingPlayers].filter((id) => !existingIds.has(id))
+      const additionalLoreIds = [...loreIdsLinkedToMatchingPlayers].filter(id => !existingIds.has(id))
 
       if (additionalLoreIds.length > 0) {
         const additionalLore = db
           .prepare<unknown[], LoreRow>(
             `
-          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
                  ei.image_url
           FROM entities e
           LEFT JOIN (
@@ -180,12 +181,13 @@ export default defineEventHandler((event) => {
         loreEntries = [...loreEntries, ...additionalLore]
       }
     }
-  } else {
+  }
+  else {
     // No search - return all lore entries
     loreEntries = db
       .prepare<unknown[], LoreRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
              ei.image_url
       FROM entities e
       LEFT JOIN (
@@ -203,7 +205,7 @@ export default defineEventHandler((event) => {
   }
 
   // Parse metadata JSON
-  return loreEntries.map((lore) => ({
+  return loreEntries.map(lore => ({
     ...lore,
     metadata: lore.metadata ? JSON.parse(lore.metadata) : null,
   }))
