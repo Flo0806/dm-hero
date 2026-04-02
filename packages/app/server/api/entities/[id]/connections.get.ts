@@ -82,7 +82,7 @@ export default defineEventHandler((event) => {
     .prepare<unknown[], DbConnection>(
       `
       SELECT
-        0 as relation_id,
+        -(e.id * 10) as relation_id,
         e.id as entity_id,
         e.name as entity_name,
         et.name as entity_type,
@@ -107,7 +107,7 @@ export default defineEventHandler((event) => {
     .prepare<unknown[], DbConnection>(
       `
       SELECT
-        0 as relation_id,
+        -(e.id * 10 + 1) as relation_id,
         e.id as entity_id,
         e.name as entity_name,
         et.name as entity_type,
