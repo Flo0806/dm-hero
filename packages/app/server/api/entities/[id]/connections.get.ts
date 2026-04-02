@@ -77,11 +77,60 @@ export default defineEventHandler((event) => {
     )
     .all(id)
 
+  // Get child entities (entities where parent_entity_id = this entity)
+  const children = db
+    .prepare<unknown[], DbConnection>(
+      `
+      SELECT
+        -(e.id * 10) as relation_id,
+        e.id as entity_id,
+        e.name as entity_name,
+        et.name as entity_type,
+        et.id as entity_type_id,
+        et.icon as entity_icon,
+        et.color as entity_color,
+        e.image_url as entity_image_url,
+        'contains' as relation_type,
+        NULL as relation_notes,
+        'outgoing' as direction
+      FROM entities e
+      INNER JOIN entity_types et ON e.type_id = et.id
+      WHERE e.parent_entity_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY et.name, e.name
+    `,
+    )
+    .all(id)
+
+  // Get parent entity (if this entity has a parent_entity_id)
+  const parent = db
+    .prepare<unknown[], DbConnection>(
+      `
+      SELECT
+        -(e.id * 10 + 1) as relation_id,
+        e.id as entity_id,
+        e.name as entity_name,
+        et.name as entity_type,
+        et.id as entity_type_id,
+        et.icon as entity_icon,
+        et.color as entity_color,
+        e.image_url as entity_image_url,
+        'part_of' as relation_type,
+        NULL as relation_notes,
+        'outgoing' as direction
+      FROM entities e
+      INNER JOIN entity_types et ON e.type_id = et.id
+      WHERE e.id = (SELECT parent_entity_id FROM entities WHERE id = ? AND deleted_at IS NULL)
+        AND e.deleted_at IS NULL
+    `,
+    )
+    .all(id)
+
   // Combine and deduplicate (same entity might have multiple relation types)
-  const allConnections = [...outgoing, ...incoming]
+  const allConnections = [...outgoing, ...incoming, ...children, ...parent]
 
   // Get unique entity IDs from connections
-  const connectedEntityIds = [...new Set(allConnections.map((c) => c.entity_id))]
+  const connectedEntityIds = [...new Set(allConnections.map(c => c.entity_id))]
 
   // Get inter-connections (relations between the connected entities)
   interface DbInterConnection {
@@ -116,7 +165,8 @@ export default defineEventHandler((event) => {
     if (conn.relation_notes) {
       try {
         parsedNotes = JSON.parse(conn.relation_notes)
-      } catch {
+      }
+      catch {
         parsedNotes = conn.relation_notes
       }
     }
@@ -138,7 +188,7 @@ export default defineEventHandler((event) => {
 
   return {
     connections,
-    interConnections: interConnections.map((ic) => ({
+    interConnections: interConnections.map(ic => ({
       relationId: ic.relation_id,
       fromEntityId: ic.from_entity_id,
       toEntityId: ic.to_entity_id,
