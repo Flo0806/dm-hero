@@ -59,9 +59,14 @@
     </div>
 
     <!-- Relation Label (for connected entities) -->
-    <div v-if="relationLabel" class="chaos-entity-card__relation">
+    <v-tooltip v-if="relationLabel" location="bottom">
+      <template #activator="{ props: tooltipProps }">
+        <div v-bind="tooltipProps" class="chaos-entity-card__relation">
+          {{ relationLabel }}
+        </div>
+      </template>
       {{ relationLabel }}
-    </div>
+    </v-tooltip>
   </div>
 </template>
 
@@ -181,10 +186,15 @@ const cardStyle = computed(() => {
 
 .chaos-entity-card__relation {
   margin-top: 8px;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: rgb(var(--v-theme-primary));
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  cursor: default;
 }
 </style>
