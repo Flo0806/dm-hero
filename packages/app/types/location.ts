@@ -130,5 +130,6 @@ export interface Location {
   metadata: LocationMetadata | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
   _counts?: LocationCounts
 }

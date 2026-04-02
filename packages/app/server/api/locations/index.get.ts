@@ -53,6 +53,7 @@ export default defineEventHandler((event) => {
     metadata: string | null
     created_at: string
     updated_at: string
+    archived_at: string | null
     fts_score?: number
     linked_npc_names?: string | null
     linked_item_names?: string | null
@@ -73,13 +74,13 @@ export default defineEventHandler((event) => {
     // Check if this is a quoted phrase BEFORE normalization
     const isQuotedPhrase = trimmedQuery.startsWith('"') && trimmedQuery.endsWith('"')
 
-
     // If quoted, remove quotes, normalize, then re-add quotes
     let searchTerm: string
     if (isQuotedPhrase) {
       const withoutQuotes = trimmedQuery.slice(1, -1) // Remove surrounding quotes
       searchTerm = `"${normalizeText(withoutQuotes)}"` // Normalize and re-add quotes
-    } else {
+    }
+    else {
       searchTerm = normalizeText(trimmedQuery)
     }
 
@@ -93,24 +94,27 @@ export default defineEventHandler((event) => {
       if (parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')) {
         // Use the exact quoted phrase for FTS5
         ftsQuery = parsedQuery.fts5Query
-      } else {
+      }
+      else {
         // Reconstruct query with original operators
-        const expandedTerms = parsedQuery.terms.map((term) => `${term}*`)
+        const expandedTerms = parsedQuery.terms.map(term => `${term}*`)
         const fts5QueryUpper = parsedQuery.fts5Query.toUpperCase()
 
         if (fts5QueryUpper.includes(' AND ')) {
           ftsQuery = expandedTerms.join(' AND ')
-        } else if (fts5QueryUpper.includes(' OR ')) {
+        }
+        else if (fts5QueryUpper.includes(' OR ')) {
           ftsQuery = expandedTerms.join(' OR ')
-        } else {
+        }
+        else {
           ftsQuery = expandedTerms.join(' ')
         }
       }
-    } else {
-      // Simple query: add all terms as OR
-      ftsQuery = parsedQuery.terms.map((t) => `${t}*`).join(' OR ')
     }
-
+    else {
+      // Simple query: add all terms as OR
+      ftsQuery = parsedQuery.terms.map(t => `${t}*`).join(' OR ')
+    }
 
     let useExactMatch = parsedQuery.useExactFirst
 
@@ -129,6 +133,7 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
+          e.archived_at,
           ei.image_url as primary_image_url,
           GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
           GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
@@ -170,6 +175,7 @@ export default defineEventHandler((event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
+            e.archived_at,
             ei.image_url as primary_image_url,
             GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
             GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
@@ -199,8 +205,8 @@ export default defineEventHandler((event) => {
       // Even for quoted phrases, we want to search in linked NPCs/Items/Lore
       const hasOrOperator = parsedQuery.fts5Query.toUpperCase().includes(' OR ')
       const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
-      const isQuotedPhraseSearch =
-        parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
+      const isQuotedPhraseSearch
+        = parsedQuery.fts5Query.startsWith('"') && parsedQuery.fts5Query.endsWith('"')
 
       // Load all locations with linked entities
       locations = db
@@ -215,6 +221,7 @@ export default defineEventHandler((event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
+          e.archived_at,
           ei.image_url as primary_image_url,
           GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
           GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
@@ -256,19 +263,21 @@ export default defineEventHandler((event) => {
         const isNpcMatch = linkedNpcNamesNormalized.includes(searchTerm)
         const isItemMatch = linkedItemNamesNormalized.includes(searchTerm)
         const isLoreMatch = linkedLoreNamesNormalized.includes(searchTerm)
-        const isNonNameMatch =
-          (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch || isLoreMatch) &&
-          !containsQuery
+        const isNonNameMatch
+          = (isMetadataMatch || isDescriptionMatch || isNpcMatch || isItemMatch || isLoreMatch)
+            && !containsQuery
 
         let levDistance: number
 
         if (isNonNameMatch) {
           // Metadata/Description match: Set distance to 0 (perfect match conceptually)
           levDistance = 0
-        } else if (startsWithQuery) {
+        }
+        else if (startsWithQuery) {
           // If name starts with query, distance is just the remaining chars
           levDistance = nameNormalized.length - searchTerm.length
-        } else {
+        }
+        else {
           // Full Levenshtein distance for non-prefix matches
           levDistance = levenshtein(searchTerm, nameNormalized)
         }
@@ -290,7 +299,7 @@ export default defineEventHandler((event) => {
         // SPECIAL: Multi-word lore match bonus (e.g., "böser frosch")
         // Check if ALL terms from parsedQuery appear in this Location's lore names
         if (parsedQuery.terms.length > 1 && linkedLoreNamesNormalized.length > 0) {
-          const allTermsInThisLore = parsedQuery.terms.every((term) =>
+          const allTermsInThisLore = parsedQuery.terms.every(term =>
             linkedLoreNamesNormalized.includes(normalizeText(term)),
           )
           if (allTermsInThisLore) {
@@ -320,16 +329,16 @@ export default defineEventHandler((event) => {
 
           // Check if EXACT phrase appears in ANY field
           return (
-            nameNormalized.includes(exactPhrase) ||
-            descriptionNormalized.includes(exactPhrase) ||
-            metadataNormalized.includes(exactPhrase) ||
-            linkedNpcNamesNormalized.includes(exactPhrase) ||
-            linkedItemNamesNormalized.includes(exactPhrase) ||
-            linkedLoreNamesNormalized.includes(exactPhrase)
+            nameNormalized.includes(exactPhrase)
+            || descriptionNormalized.includes(exactPhrase)
+            || metadataNormalized.includes(exactPhrase)
+            || linkedNpcNamesNormalized.includes(exactPhrase)
+            || linkedItemNamesNormalized.includes(exactPhrase)
+            || linkedLoreNamesNormalized.includes(exactPhrase)
           )
         })
-
-      } else if (!parsedQuery.hasOperators) {
+      }
+      else if (!parsedQuery.hasOperators) {
         // Simple query: check if ANY term matches (with Levenshtein)
         scoredLocations = scoredLocations.filter((location) => {
           const nameNormalized = normalizeText(location.name)
@@ -341,7 +350,7 @@ export default defineEventHandler((event) => {
 
           // Special case: Multi-word search - check if ALL terms appear in Lore names
           if (parsedQuery.terms.length > 1 && linkedLoreNamesNormalized.length > 0) {
-            const allTermsInLore = parsedQuery.terms.every((term) =>
+            const allTermsInLore = parsedQuery.terms.every(term =>
               linkedLoreNamesNormalized.includes(term),
             )
             if (allTermsInLore) {
@@ -353,12 +362,12 @@ export default defineEventHandler((event) => {
           for (const term of parsedQuery.terms) {
             // Exact/substring match in any field
             if (
-              nameNormalized.includes(term) ||
-              descriptionNormalized.includes(term) ||
-              metadataNormalized.includes(term) ||
-              linkedNpcNamesNormalized.includes(term) ||
-              linkedItemNamesNormalized.includes(term) ||
-              linkedLoreNamesNormalized.includes(term)
+              nameNormalized.includes(term)
+              || descriptionNormalized.includes(term)
+              || metadataNormalized.includes(term)
+              || linkedNpcNamesNormalized.includes(term)
+              || linkedItemNamesNormalized.includes(term)
+              || linkedLoreNamesNormalized.includes(term)
             ) {
               return true
             }
@@ -396,7 +405,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked NPC names (split by comma, then by words)
             if (linkedNpcNamesNormalized.length > 0) {
-              const npcNames = linkedNpcNamesNormalized.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words (e.g., "Günther Müller" → ["günther", "müller"])
@@ -413,7 +422,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked Item names (split by comma, then by words)
             if (linkedItemNamesNormalized.length > 0) {
-              const itemNames = linkedItemNamesNormalized.split(',').map((n) => n.trim())
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue
                 // Split each item name into words
@@ -430,7 +439,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked Lore names (split by comma, then by words)
             if (linkedLoreNamesNormalized.length > 0) {
-              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesNormalized.split(',').map(n => n.trim())
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
                 // Split each lore name into words (e.g., "Böser Frosch" → ["böser", "frosch"])
@@ -448,7 +457,8 @@ export default defineEventHandler((event) => {
 
           return false // No term matched
         })
-      } else if (hasOrOperator && !hasAndOperator) {
+      }
+      else if (hasOrOperator && !hasAndOperator) {
         // OR query: at least ONE term must match
         scoredLocations = scoredLocations.filter((location) => {
           const nameNormalized = normalizeText(location.name)
@@ -462,12 +472,12 @@ export default defineEventHandler((event) => {
           for (const term of parsedQuery.terms) {
             // Check if term appears in any field
             if (
-              nameNormalized.includes(term) ||
-              descriptionNormalized.includes(term) ||
-              metadataNormalized.includes(term) ||
-              linkedNpcNamesNormalized.includes(term) ||
-              linkedItemNamesNormalized.includes(term) ||
-              linkedLoreNamesNormalized.includes(term)
+              nameNormalized.includes(term)
+              || descriptionNormalized.includes(term)
+              || metadataNormalized.includes(term)
+              || linkedNpcNamesNormalized.includes(term)
+              || linkedItemNamesNormalized.includes(term)
+              || linkedLoreNamesNormalized.includes(term)
             ) {
               return true
             }
@@ -505,7 +515,7 @@ export default defineEventHandler((event) => {
 
             // Check Levenshtein for linked NPC names (split by comma, then by words)
             if (linkedNpcNamesNormalized.length > 0) {
-              const npcNames = linkedNpcNamesNormalized.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
                 // Split each NPC name into words
@@ -522,7 +532,7 @@ export default defineEventHandler((event) => {
 
             // Check Levenshtein for linked Item names (split by comma, then by words)
             if (linkedItemNamesNormalized.length > 0) {
-              const itemNames = linkedItemNamesNormalized.split(',').map((n) => n.trim())
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue
                 // Split each item name into words
@@ -539,7 +549,7 @@ export default defineEventHandler((event) => {
 
             // Levenshtein match for linked Lore names
             if (linkedLoreNamesNormalized.length > 0) {
-              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesNormalized.split(',').map(n => n.trim())
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
                 const loreWords = loreName.split(/\s+/)
@@ -555,7 +565,8 @@ export default defineEventHandler((event) => {
           }
           return false // No term matched
         })
-      } else if (hasAndOperator) {
+      }
+      else if (hasAndOperator) {
         // AND query: ALL terms must match
 
         scoredLocations = scoredLocations.filter((location) => {
@@ -576,24 +587,25 @@ export default defineEventHandler((event) => {
             if (isPhraseTerm) {
               // Exact phrase match - no Levenshtein
               if (
-                nameNormalized.includes(term) ||
-                descriptionNormalized.includes(term) ||
-                metadataNormalized.includes(term) ||
-                linkedNpcNamesNormalized.includes(term) ||
-                linkedItemNamesNormalized.includes(term) ||
-                linkedLoreNamesNormalized.includes(term)
+                nameNormalized.includes(term)
+                || descriptionNormalized.includes(term)
+                || metadataNormalized.includes(term)
+                || linkedNpcNamesNormalized.includes(term)
+                || linkedItemNamesNormalized.includes(term)
+                || linkedLoreNamesNormalized.includes(term)
               ) {
                 termMatches = true
-              } 
-            } else {
+              }
+            }
+            else {
               // Single word term - check with substring match first
               if (
-                nameNormalized.includes(term) ||
-                descriptionNormalized.includes(term) ||
-                metadataNormalized.includes(term) ||
-                linkedNpcNamesNormalized.includes(term) ||
-                linkedItemNamesNormalized.includes(term) ||
-                linkedLoreNamesNormalized.includes(term)
+                nameNormalized.includes(term)
+                || descriptionNormalized.includes(term)
+                || metadataNormalized.includes(term)
+                || linkedNpcNamesNormalized.includes(term)
+                || linkedItemNamesNormalized.includes(term)
+                || linkedLoreNamesNormalized.includes(term)
               ) {
                 termMatches = true
               }
@@ -647,7 +659,7 @@ export default defineEventHandler((event) => {
             if (!termMatches && linkedNpcNamesNormalized.length > 0) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const npcNames = linkedNpcNamesNormalized.split(',').map((n) => n.trim())
+              const npcNames = linkedNpcNamesNormalized.split(',').map(n => n.trim())
 
               for (const npcName of npcNames) {
                 if (npcName.length === 0) continue
@@ -669,7 +681,7 @@ export default defineEventHandler((event) => {
             if (!termMatches && linkedItemNamesNormalized.length > 0) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const itemNames = linkedItemNamesNormalized.split(',').map((n) => n.trim())
+              const itemNames = linkedItemNamesNormalized.split(',').map(n => n.trim())
 
               for (const itemName of itemNames) {
                 if (itemName.length === 0) continue
@@ -691,7 +703,7 @@ export default defineEventHandler((event) => {
             if (!termMatches && linkedLoreNamesNormalized.length > 0) {
               const termLength = term.length
               const maxDist = termLength <= 3 ? 2 : termLength <= 6 ? 3 : 4
-              const loreNames = linkedLoreNamesNormalized.split(',').map((n) => n.trim())
+              const loreNames = linkedLoreNamesNormalized.split(',').map(n => n.trim())
 
               for (const loreName of loreNames) {
                 if (loreName.length === 0) continue
@@ -711,13 +723,12 @@ export default defineEventHandler((event) => {
             // If this term doesn't match, reject the location
             if (!termMatches) {
               return false
-            } 
+            }
           }
 
           // All terms matched!
           return true
         })
-
       }
 
       // Step 4: Sort by combined score and take top 50
@@ -728,12 +739,14 @@ export default defineEventHandler((event) => {
       locations = scoredLocations.map(
         ({ fts_score: _fts_score, _lev_distance, _final_score, ...location }) => location,
       )
-    } catch (error) {
+    }
+    catch (error) {
       // Fallback: If FTS5 fails, return empty (better than crashing)
       console.error('[Location Search] FTS5 search failed:', error)
       locations = []
     }
-  } else {
+  }
+  else {
     // No search query - return all locations for this campaign
     locations = db
       .prepare(
@@ -747,6 +760,7 @@ export default defineEventHandler((event) => {
         e.metadata,
         e.created_at,
         e.updated_at,
+        e.archived_at,
         ei.image_url as primary_image_url,
         GROUP_CONCAT(DISTINCT npc.name) as linked_npc_names,
         GROUP_CONCAT(DISTINCT item.name) as linked_item_names,
@@ -770,7 +784,7 @@ export default defineEventHandler((event) => {
   }
 
   // Parse metadata JSON
-  return locations.map((location) => ({
+  return locations.map(location => ({
     ...location,
     image_url: location.primary_image_url || location.image_url, // Fallback to old image_url
     metadata: location.metadata ? JSON.parse(location.metadata as string) : null,

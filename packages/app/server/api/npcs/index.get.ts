@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
     metadata: string | null
     created_at: string
     updated_at: string
+    archived_at: string | null
     fts_score?: number
     linked_faction_names?: string | null
     linked_location_names?: string | null
@@ -208,6 +209,7 @@ export default defineEventHandler(async (event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
+          e.archived_at,
           GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
           GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
           GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
@@ -251,6 +253,7 @@ export default defineEventHandler(async (event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
+            e.archived_at,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
             GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
@@ -298,6 +301,7 @@ export default defineEventHandler(async (event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
+            e.archived_at,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
             GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
@@ -1184,7 +1188,8 @@ export default defineEventHandler(async (event) => {
         e.image_url,
         e.metadata,
         e.created_at,
-        e.updated_at
+        e.updated_at,
+        e.archived_at
       FROM entities e
       WHERE e.type_id = ?
         AND e.campaign_id = ?

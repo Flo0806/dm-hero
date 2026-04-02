@@ -2437,6 +2437,16 @@ export const migrations: Migration[] = [
       console.log(`✅ Migration 47: Normalized 'befindet sich in' → 'currentlyAt' (${result.changes} rows)`)
     },
   },
+  {
+    version: 48,
+    name: 'add_archived_at',
+    up: (db) => {
+      db.exec('ALTER TABLE entities ADD COLUMN archived_at TEXT')
+      db.exec('CREATE INDEX idx_entities_archived_at ON entities(archived_at)')
+
+      console.log('✅ Migration 48: Added archived_at column to entities')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

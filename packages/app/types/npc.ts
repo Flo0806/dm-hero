@@ -205,6 +205,7 @@ export interface NPC {
   metadata: NpcMetadata | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
   // Async loaded counts (optional, loaded on demand)
   _counts?: NpcCounts
 }
