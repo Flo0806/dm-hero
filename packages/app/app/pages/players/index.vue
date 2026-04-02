@@ -158,6 +158,7 @@ const route = useRoute()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage } = useImageDownload()
 const { loadAllCountsForCampaign, loadPlayerCountsBatch, reloadPlayerCounts } = usePlayerCounts()
 
@@ -310,7 +311,15 @@ async function handlePlayerCreated(player: Player) {
 }
 
 async function archiveEntity(entity: Player) {
-  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 function confirmDelete(player: Player) {

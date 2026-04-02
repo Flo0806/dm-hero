@@ -232,6 +232,7 @@ async function handleGroupCreated() {
 
 // Auto-imported stores
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const campaignStore = useCampaignStore()
 const { loadNpcCountsBatch } = useNpcCounts()
 
@@ -597,7 +598,15 @@ watch(showViewDialog, (isOpen) => {
 })
 
 async function archiveNpc(npc: NPC) {
-  await entitiesStore.archiveEntity(npc.id, !npc.archived_at)
+  try {
+    const archive = !npc.archived_at
+    await entitiesStore.archiveEntity(npc.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 function deleteNpc(npc: NPC) {

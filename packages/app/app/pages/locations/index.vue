@@ -370,6 +370,7 @@ const { locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const campaignStore = useCampaignStore()
 const { getLocationTypeIcon, getLocationTypeColor } = useEntityIcons()
 
@@ -848,7 +849,15 @@ function editLocationAndCloseView(location: Location) {
 }
 
 async function archiveLocation(location: Location) {
-  await entitiesStore.archiveEntity(location.id, !location.archived_at)
+  try {
+    const archive = !location.archived_at
+    await entitiesStore.archiveEntity(location.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 function deleteLocation(location: Location) {

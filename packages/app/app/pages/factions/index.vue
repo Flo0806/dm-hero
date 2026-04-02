@@ -180,6 +180,7 @@ const router = useRouter()
 const route = useRoute()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
@@ -413,7 +414,15 @@ const deletingFaction = ref<Faction | null>(null)
 const deleting = ref(false)
 
 async function archiveEntity(entity: Faction) {
-  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 function deleteFaction(faction: Faction) {

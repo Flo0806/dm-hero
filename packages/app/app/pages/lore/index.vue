@@ -182,6 +182,7 @@ const route = useRoute()
 const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
+const snackbarStore = useSnackbarStore()
 const { downloadImage } = useImageDownload()
 const { loadLoreCountsBatch } = useLoreCounts()
 
@@ -453,7 +454,15 @@ async function handleLoreCreated(createdLore: Lore) {
 }
 
 async function archiveEntity(entity: Lore) {
-  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
+  try {
+    const archive = !entity.archived_at
+    await entitiesStore.archiveEntity(entity.id, archive)
+    snackbarStore.success($t(archive ? 'common.archiveSuccess' : 'common.unarchiveSuccess'))
+  }
+  catch (error) {
+    console.error('Failed to archive entity:', error)
+    snackbarStore.error($t('common.archiveError'))
+  }
 }
 
 // Confirm delete
