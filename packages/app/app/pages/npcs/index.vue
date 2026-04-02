@@ -14,14 +14,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="entitiesStore.npcsLoading">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -65,6 +78,7 @@
             @view="viewNpc"
             @edit="editNpc"
             @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
+            @archive="archiveNpc"
             @delete="deleteNpc"
             @open-group="openGroupPreview"
             @open-tab="openNpcTab"
@@ -581,6 +595,10 @@ watch(showViewDialog, (isOpen) => {
     viewingNpc.value = null
   }
 })
+
+async function archiveNpc(npc: NPC) {
+  await entitiesStore.archiveEntity(npc.id, !npc.archived_at)
+}
 
 function deleteNpc(npc: NPC) {
   deletingNpc.value = npc

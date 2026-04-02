@@ -323,6 +323,18 @@
         </v-tooltip>
       </v-btn>
       <v-btn
+        :icon="player.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="player.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', player)"
+      >
+        <v-icon>{{ player.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ player.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
         icon="mdi-delete"
         size="small"
         variant="text"
@@ -379,14 +391,15 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [player: Player]
-  edit: [player: Player]
-  download: [player: Player]
-  delete: [player: Player]
-  chaos: [player: Player]
+  'view': [player: Player]
+  'edit': [player: Player]
+  'download': [player: Player]
+  'archive': [player: Player]
+  'delete': [player: Player]
+  'chaos': [player: Player]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
-  linked: []
+  'linked': []
   'open-tab': [player: Player, tab: string]
 }>()
 

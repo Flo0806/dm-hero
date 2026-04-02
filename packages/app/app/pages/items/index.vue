@@ -9,17 +9,28 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      :loading="searching"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('items.searchHint') : ''"
-      persistent-hint
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        :loading="searching"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -53,6 +64,7 @@
             @view="viewItem"
             @edit="editItem"
             @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
+            @archive="archiveEntity"
             @delete="deleteItem"
             @chaos="openChaosGraph"
             @open-group="openGroupPreview"
@@ -473,6 +485,10 @@ async function viewItem(item: Item) {
 const showDeleteDialog = ref(false)
 const deletingItem = ref<Item | null>(null)
 const deleting = ref(false)
+
+async function archiveEntity(entity: Item) {
+  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
+}
 
 function deleteItem(item: Item) {
   deletingItem.value = item

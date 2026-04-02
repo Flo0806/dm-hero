@@ -9,16 +9,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-      :hint="searchQuery && searchQuery.trim().length > 0 ? $t('players.searchHint') : ''"
-      persistent-hint
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <!-- Loading Skeleton -->
     <v-row v-if="loading">
@@ -55,6 +66,7 @@
             @view="viewPlayer"
             @edit="editPlayer"
             @download="handleDownload"
+            @archive="archiveEntity"
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
@@ -295,6 +307,10 @@ async function handlePlayerCreated(player: Player) {
       highlightedId.value = null
     }, 3000)
   }, 100)
+}
+
+async function archiveEntity(entity: Player) {
+  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
 }
 
 function confirmDelete(player: Player) {

@@ -9,14 +9,27 @@
     </UiPageHeader>
 
     <!-- Search Bar -->
-    <v-text-field
-      v-model="searchQuery"
-      :placeholder="$t('common.search')"
-      prepend-inner-icon="mdi-magnify"
-      variant="outlined"
-      clearable
-      class="mb-4"
-    />
+    <div class="d-flex align-center ga-3 mb-4">
+      <v-text-field
+        v-model="searchQuery"
+        :placeholder="$t('common.search')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        clearable
+        hide-details
+      />
+      <v-btn
+        :icon="entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off'"
+        :color="entitiesStore.showArchived ? 'warning' : undefined"
+        variant="text"
+        @click="entitiesStore.toggleShowArchived()"
+      >
+        <v-icon>{{ entitiesStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-off' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ $t('common.showArchived') }}
+        </v-tooltip>
+      </v-btn>
+    </div>
 
     <v-row v-if="pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
@@ -52,6 +65,7 @@
             @view="viewLore"
             @edit="editLore"
             @download="(lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
+            @archive="archiveEntity"
             @delete="confirmDelete"
             @chaos="openChaos"
             @open-group="openGroupPreview"
@@ -436,6 +450,10 @@ async function handleLoreCreated(createdLore: Lore) {
       highlightedId.value = null
     }, 3000)
   }, 100)
+}
+
+async function archiveEntity(entity: Lore) {
+  await entitiesStore.archiveEntity(entity.id, !entity.archived_at)
 }
 
 // Confirm delete

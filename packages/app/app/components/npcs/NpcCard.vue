@@ -420,6 +420,18 @@
           {{ $t('common.edit') }}
         </v-tooltip>
       </v-btn>
+      <v-btn
+        :icon="npc.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+        size="small"
+        variant="text"
+        :color="npc.archived_at ? 'success' : 'warning'"
+        @click.stop="$emit('archive', npc)"
+      >
+        <v-icon>{{ npc.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ npc.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+        </v-tooltip>
+      </v-btn>
       <v-btn icon="mdi-delete" size="small" variant="text" color="error" @click.stop="$emit('delete', npc)">
         <v-icon>mdi-delete</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -481,6 +493,7 @@ const emit = defineEmits<{
   'view': [npc: NPC]
   'edit': [npc: NPC]
   'download': [npc: NPC]
+  'archive': [npc: NPC]
   'delete': [npc: NPC]
   'open-group': [groupId: number]
   'create-group': [entityId: number]
