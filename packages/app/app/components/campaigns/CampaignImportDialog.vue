@@ -745,8 +745,9 @@ async function doImport(confirmedOverwrite: boolean = false) {
     } else {
       throw new Error(result.errors?.join(', ') || 'Import failed')
     }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Import failed'
+  } catch (err: unknown) {
+    const fetchErr = err as { data?: { message?: string }, message?: string }
+    error.value = fetchErr.data?.message || fetchErr.message || 'Import failed'
     step.value = 'preview'
   }
 }

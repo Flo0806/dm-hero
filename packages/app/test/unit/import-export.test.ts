@@ -51,12 +51,10 @@ describe('Version Compatibility - isExportCompatible', () => {
     expect(isExportCompatible('1.1', '1.0.0-beta.1')).toBe(false)
   })
 
-  it('should handle edge case: final version vs beta (current behavior)', () => {
-    // Current implementation: 1.0.0 [1,0,0] is LESS than 1.0.0-beta.1 [1,0,0,1]
-    // This is a known quirk - in semver, final SHOULD be greater
-    // But we test current behavior to catch unexpected changes
-    expect(isExportCompatible('1.0', '1.0.0')).toBe(false) // min is 1.0.0-beta.1
-    expect(isExportCompatible('1.1', '1.0.0')).toBe(false) // min is 1.0.0-beta.2
+  it('should handle final version vs beta (SemVer: stable > prerelease)', () => {
+    // SemVer 2.0.0: 1.0.0 > 1.0.0-beta.1 (stable is greater than prerelease)
+    expect(isExportCompatible('1.0', '1.0.0')).toBe(true) // 1.0.0 > min 1.0.0-beta.1
+    expect(isExportCompatible('1.1', '1.0.0')).toBe(true) // 1.0.0 > min 1.0.0-beta.2
   })
 
   it('should return true for unknown format versions (try anyway)', () => {
