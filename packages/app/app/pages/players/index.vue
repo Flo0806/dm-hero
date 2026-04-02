@@ -170,7 +170,7 @@ const deletingPlayer = ref<Player | null>(null)
 
 // Computed
 const loading = computed(() => entitiesStore.playersLoading)
-const players = computed(() => entitiesStore.players)
+const players = computed(() => entitiesStore.activePlayers)
 
 const filteredPlayers = computed(() => {
   // If searching, use search results from API (keep relevance order from FTS5)
@@ -205,10 +205,12 @@ watch(searchQuery, async (query) => {
 
       // Load counts for search results using the shared composable
       loadPlayerCountsBatch(results)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Player search failed:', error)
       searchResults.value = []
-    } finally {
+    }
+    finally {
       searching.value = false
     }
   }, 300)
@@ -308,9 +310,11 @@ async function deletePlayer() {
     await entitiesStore.deletePlayer(deletingPlayer.value.id)
     showDeleteDialog.value = false
     deletingPlayer.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete player:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

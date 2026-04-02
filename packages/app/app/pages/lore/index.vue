@@ -180,7 +180,7 @@ const searching = ref(false)
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
 
 // Get lore from store
-const lore = computed(() => entitiesStore.lore)
+const lore = computed(() => entitiesStore.activeLore)
 
 // Refs for dialogs
 const showEditDialog = ref(false)
@@ -194,19 +194,19 @@ const deleting = ref(false)
 const highlightedId = ref<number | null>(null)
 
 // View Dialog data
-const viewDialogNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
-const viewDialogItems = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const viewDialogNpcs = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
+const viewDialogItems = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
 const viewDialogFactions = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const viewDialogLocations = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const viewDialogPlayers = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
-const viewDialogDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const viewDialogImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const viewDialogDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const viewDialogImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const viewDialogCounts = ref<{
   npcs: number
   items: number
@@ -297,7 +297,8 @@ watch(searchQuery, async (query) => {
       // Load counts for search results using the shared composable
       // This ensures LoreCard gets the counts via getCounts()
       loadLoreCountsBatch(results)
-    } finally {
+    }
+    finally {
       searching.value = false
     }
   }, 300)
@@ -352,9 +353,11 @@ async function viewLore(loreEntry: Lore) {
     viewDialogDocuments.value = documents
     viewDialogImages.value = images
     viewDialogCounts.value = counts
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load lore data:', error)
-  } finally {
+  }
+  finally {
     loadingViewNpcs.value = false
     loadingViewItems.value = false
     loadingViewFactions.value = false
@@ -456,9 +459,11 @@ async function deleteLore() {
     }
     showDeleteDialog.value = false
     loreToDelete.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete lore:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

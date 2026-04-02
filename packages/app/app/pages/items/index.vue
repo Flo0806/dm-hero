@@ -214,11 +214,13 @@ async function executeSearch(query: string) {
     // Load counts for search results using the shared composable
     // This ensures ItemCard gets the counts via getCounts()
     loadItemCountsBatch(results)
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') return
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -289,7 +291,8 @@ watch(
 watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     highlightedId.value = null
     if (route.query.highlight || route.query.search) {
       router.replace({ query: {} })
@@ -302,7 +305,7 @@ watch(searchQuery, () => {
 // ============================================================================
 const { downloadImage } = useImageDownload()
 
-const items = computed(() => entitiesStore.items)
+const items = computed(() => entitiesStore.activeItems)
 const pending = computed(() => entitiesStore.itemsLoading)
 
 onMounted(async () => {
@@ -414,13 +417,13 @@ const viewDialogCounts = ref<{
   images: number
 } | null>(null)
 
-const itemDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const itemImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
-const itemOwners = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemLocations = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemFactions = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
-const itemLore = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null }>>([])
-const itemPlayers = ref<Array<{ id: number; name: string; description?: string | null; image_url?: string | null; relation_type?: string }>>([])
+const itemDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const itemImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
+const itemOwners = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemLocations = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemFactions = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
+const itemLore = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null }>>([])
+const itemPlayers = ref<Array<{ id: number, name: string, description?: string | null, image_url?: string | null, relation_type?: string }>>([])
 
 async function viewItem(item: Item) {
   viewingItem.value = item
@@ -453,7 +456,8 @@ async function viewItem(item: Item) {
     itemDocuments.value = documents
     itemImages.value = images
     viewDialogCounts.value = counts
-  } finally {
+  }
+  finally {
     loadingViewData.value = false
     loadingOwners.value = false
     loadingLocations.value = false
@@ -484,9 +488,11 @@ async function confirmDelete() {
     await entitiesStore.deleteItem(deletingItem.value.id)
     showDeleteDialog.value = false
     deletingItem.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete item:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

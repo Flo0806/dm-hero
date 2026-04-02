@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { NPC } from '../../types/npc'
+import type { NPC, NpcCounts } from '../../types/npc'
 import type { Item } from '../../types/item'
 import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
@@ -24,6 +24,7 @@ interface Location {
   } | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
 }
 
 export const useEntitiesStore = defineStore('entities', {
@@ -66,36 +67,55 @@ export const useEntitiesStore = defineStore('entities', {
     // Image versions - incremented when images change for an entity
     // Components can watch this to know when to reload images
     entityImageVersions: {} as Record<number, number>,
+
+    // Archive toggle - when true, archived entities are included in lists
+    showArchived: false,
   }),
 
   getters: {
+    // Filtered lists (respecting archive toggle)
+    activeNpcs: state => state.showArchived ? state.npcs : state.npcs.filter(n => !n.archived_at),
+    activeFactions: state => state.showArchived ? state.factions : state.factions.filter(f => !f.archived_at),
+    activeLocations: state => state.showArchived ? state.locations : state.locations.filter(l => !l.archived_at),
+    activeItems: state => state.showArchived ? state.items : state.items.filter(i => !i.archived_at),
+    activeLore: state => state.showArchived ? state.lore : state.lore.filter(l => !l.archived_at),
+    activePlayers: state => state.showArchived ? state.players : state.players.filter(p => !p.archived_at),
+
+    // Archived only lists (for archive page)
+    archivedNpcs: state => state.npcs.filter(n => n.archived_at),
+    archivedFactions: state => state.factions.filter(f => f.archived_at),
+    archivedLocations: state => state.locations.filter(l => l.archived_at),
+    archivedItems: state => state.items.filter(i => i.archived_at),
+    archivedLore: state => state.lore.filter(l => l.archived_at),
+    archivedPlayers: state => state.players.filter(p => p.archived_at),
+
     // NPCs
-    getNpcById: (state) => (id: number) => state.npcs.find((npc) => npc.id === id),
-    npcsForSelect: (state) => state.npcs.map((npc) => ({ id: npc.id, name: npc.name })),
+    getNpcById: state => (id: number) => state.npcs.find(npc => npc.id === id),
+    npcsForSelect: state => state.npcs.map(npc => ({ id: npc.id, name: npc.name })),
 
     // Factions
-    getFactionById: (state) => (id: number) => state.factions.find((f) => f.id === id),
-    factionsForSelect: (state) => state.factions.map((f) => ({ id: f.id, name: f.name })),
+    getFactionById: state => (id: number) => state.factions.find(f => f.id === id),
+    factionsForSelect: state => state.factions.map(f => ({ id: f.id, name: f.name })),
 
     // Locations
-    getLocationById: (state) => (id: number) => state.locations.find((l) => l.id === id),
-    locationsForSelect: (state) => state.locations.map((l) => ({ id: l.id, name: l.name })),
+    getLocationById: state => (id: number) => state.locations.find(l => l.id === id),
+    locationsForSelect: state => state.locations.map(l => ({ id: l.id, name: l.name })),
 
     // Items
-    getItemById: (state) => (id: number) => state.items.find((i) => i.id === id),
-    itemsForSelect: (state) => state.items.map((i) => ({ id: i.id, name: i.name })),
+    getItemById: state => (id: number) => state.items.find(i => i.id === id),
+    itemsForSelect: state => state.items.map(i => ({ id: i.id, name: i.name })),
 
     // Lore
-    getLoreById: (state) => (id: number) => state.lore.find((l) => l.id === id),
-    loreForSelect: (state) => state.lore.map((l) => ({ id: l.id, name: l.name })),
+    getLoreById: state => (id: number) => state.lore.find(l => l.id === id),
+    loreForSelect: state => state.lore.map(l => ({ id: l.id, name: l.name })),
 
     // Players
-    getPlayerById: (state) => (id: number) => state.players.find((p) => p.id === id),
-    playersForSelect: (state) => state.players.map((p) => ({ id: p.id, name: p.name })),
+    getPlayerById: state => (id: number) => state.players.find(p => p.id === id),
+    playersForSelect: state => state.players.map(p => ({ id: p.id, name: p.name })),
 
     // Groups
-    getGroupById: (state) => (id: number) => state.groups.find((g) => g.id === id),
-    groupsForSelect: (state) => state.groups.map((g) => ({ id: g.id, name: g.name })),
+    getGroupById: state => (id: number) => state.groups.find(g => g.id === id),
+    groupsForSelect: state => state.groups.map(g => ({ id: g.id, name: g.name })),
   },
 
   actions: {
@@ -112,10 +132,12 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.npcs = npcs
         this.npcsLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch NPCs:', error)
         this.npcs = []
-      } finally {
+      }
+      finally {
         this.npcsLoading = false
       }
     },
@@ -131,7 +153,7 @@ export const useEntitiesStore = defineStore('entities', {
       this.npcs.push(npc)
       // Load counts for new NPC
       await this.loadNpcCounts(npc.id)
-      return this.npcs.find((n) => n.id === npc.id) || npc
+      return this.npcs.find(n => n.id === npc.id) || npc
     },
 
     async updateNPC(id: number, data: Partial<NPC>) {
@@ -139,7 +161,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.npcs.findIndex((n) => n.id === id)
+      const index = this.npcs.findIndex(n => n.id === id)
       if (index !== -1) {
         // Preserve _counts from old NPC and merge with new data
         const oldNpc = this.npcs[index]
@@ -151,7 +173,7 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async deleteNPC(id: number) {
-      const result = await $fetch<{ success: boolean; affectedNpcIds: number[] }>(
+      const result = await $fetch<{ success: boolean, affectedNpcIds: number[] }>(
         `/api/npcs/${id}`,
         {
           method: 'DELETE',
@@ -159,12 +181,12 @@ export const useEntitiesStore = defineStore('entities', {
       )
 
       // Remove the deleted NPC from the list
-      this.npcs = this.npcs.filter((n) => n.id !== id)
+      this.npcs = this.npcs.filter(n => n.id !== id)
 
       // Decrement relation counts for affected NPCs
       if (result.affectedNpcIds && result.affectedNpcIds.length > 0) {
         for (const affectedId of result.affectedNpcIds) {
-          const npc = this.npcs.find((n) => n.id === affectedId)
+          const npc = this.npcs.find(n => n.id === affectedId)
           if (npc?._counts && npc._counts.relations > 0) {
             npc._counts.relations--
           }
@@ -174,7 +196,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     async refreshNPC(id: number) {
       const npc = await $fetch<NPC>(`/api/npcs/${id}`)
-      const index = this.npcs.findIndex((n) => n.id === id)
+      const index = this.npcs.findIndex(n => n.id === id)
       if (index !== -1) {
         // Preserve _counts from the old NPC (not returned by API)
         this.npcs[index] = { ...this.npcs[index], ...npc }
@@ -184,24 +206,11 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Load counts for a single NPC and update it in the store
     async loadNpcCounts(id: number) {
-      const index = this.npcs.findIndex((n) => n.id === id)
+      const index = this.npcs.findIndex(n => n.id === id)
       if (index === -1) return
 
       try {
-        const counts = await $fetch<{
-          relations: number
-          items: number
-          locations: number
-          documents: number
-          images: number
-          memberships: number
-          lore: number
-          notes: number
-          players: number
-          factions: Array<{ id: number; name: string; relationType: string }>
-          factionName: string | null
-          groups: GroupInfo[]
-        }>(`/api/npcs/${id}/counts`)
+        const counts = await $fetch<NpcCounts>(`/api/npcs/${id}/counts`)
 
         // Update NPC in store with new counts
         if (this.npcs[index]) {
@@ -214,7 +223,8 @@ export const useEntitiesStore = defineStore('entities', {
         // Also update the composable's countsMap for reactive UI updates
         const { setCounts } = useNpcCounts()
         setCounts(id, counts)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to load counts for NPC ${id}:`, error)
       }
     },
@@ -245,10 +255,12 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.factions = factions
         this.factionsLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch factions:', error)
         this.factions = []
-      } finally {
+      }
+      finally {
         this.factionsLoading = false
       }
     },
@@ -270,7 +282,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.factions.findIndex((f) => f.id === id)
+      const index = this.factions.findIndex(f => f.id === id)
       if (index !== -1) {
         this.factions[index] = faction
       }
@@ -278,7 +290,7 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async deleteFaction(id: number) {
-      const result = await $fetch<{ success: boolean; affectedFactionIds: number[] }>(
+      const result = await $fetch<{ success: boolean, affectedFactionIds: number[] }>(
         `/api/factions/${id}`,
         {
           method: 'DELETE',
@@ -286,13 +298,13 @@ export const useEntitiesStore = defineStore('entities', {
       )
 
       // Remove the deleted Faction from the list
-      this.factions = this.factions.filter((f) => f.id !== id)
+      this.factions = this.factions.filter(f => f.id !== id)
 
       // Decrement relation counts for affected Factions
       if (result.affectedFactionIds && result.affectedFactionIds.length > 0) {
         const { setCounts } = useFactionCounts()
         for (const affectedId of result.affectedFactionIds) {
-          const faction = this.factions.find((f) => f.id === affectedId)
+          const faction = this.factions.find(f => f.id === affectedId)
           if (faction?._counts && faction._counts.relations > 0) {
             faction._counts.relations--
             // Also update the composable's countsMap for reactive UI updates
@@ -304,7 +316,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     async refreshFaction(id: number) {
       const faction = await $fetch<Faction>(`/api/factions/${id}`)
-      const index = this.factions.findIndex((f) => f.id === id)
+      const index = this.factions.findIndex(f => f.id === id)
       if (index !== -1) {
         // Preserve _counts from the old entity (not returned by API)
         this.factions[index] = { ...this.factions[index], ...faction }
@@ -313,7 +325,7 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     async loadFactionCounts(id: number) {
-      const index = this.factions.findIndex((f) => f.id === id)
+      const index = this.factions.findIndex(f => f.id === id)
       if (index === -1) return
 
       try {
@@ -340,7 +352,8 @@ export const useEntitiesStore = defineStore('entities', {
         // Also update the composable's countsMap for reactive UI updates
         const { setCounts } = useFactionCounts()
         setCounts(id, counts)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to load counts for faction ${id}:`, error)
       }
     },
@@ -357,10 +370,12 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.locations = locations
         this.locationsLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch locations:', error)
         this.locations = []
-      } finally {
+      }
+      finally {
         this.locationsLoading = false
       }
     },
@@ -382,7 +397,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.locations.findIndex((l) => l.id === id)
+      const index = this.locations.findIndex(l => l.id === id)
       if (index !== -1) {
         this.locations[index] = location
       }
@@ -393,12 +408,12 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/locations/${id}`, {
         method: 'DELETE',
       })
-      this.locations = this.locations.filter((l) => l.id !== id)
+      this.locations = this.locations.filter(l => l.id !== id)
     },
 
     async refreshLocation(id: number) {
       const location = await $fetch<Location>(`/api/locations/${id}`)
-      const index = this.locations.findIndex((l) => l.id === id)
+      const index = this.locations.findIndex(l => l.id === id)
       if (index !== -1) {
         // Preserve _counts from the old entity (not returned by API)
         this.locations[index] = { ...this.locations[index], ...location }
@@ -418,10 +433,12 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.items = items
         this.itemsLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch items:', error)
         this.items = []
-      } finally {
+      }
+      finally {
         this.itemsLoading = false
       }
     },
@@ -443,7 +460,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.items.findIndex((i) => i.id === id)
+      const index = this.items.findIndex(i => i.id === id)
       if (index !== -1) {
         this.items[index] = item
       }
@@ -454,12 +471,12 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/items/${id}`, {
         method: 'DELETE',
       })
-      this.items = this.items.filter((i) => i.id !== id)
+      this.items = this.items.filter(i => i.id !== id)
     },
 
     async refreshItem(id: number) {
       const item = await $fetch<Item>(`/api/items/${id}`)
-      const index = this.items.findIndex((i) => i.id === id)
+      const index = this.items.findIndex(i => i.id === id)
       if (index !== -1) {
         // Preserve _counts from the old entity (not returned by API)
         this.items[index] = { ...this.items[index], ...item }
@@ -469,7 +486,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Load counts for a single Item and update it in the store
     async loadItemCounts(id: number) {
-      const index = this.items.findIndex((i) => i.id === id)
+      const index = this.items.findIndex(i => i.id === id)
       if (index === -1) return
 
       try {
@@ -495,7 +512,8 @@ export const useEntitiesStore = defineStore('entities', {
         // Also update the composable's countsMap for reactive UI updates
         const { setCounts } = useItemCounts()
         setCounts(id, counts)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to load counts for Item ${id}:`, error)
       }
     },
@@ -543,10 +561,12 @@ export const useEntitiesStore = defineStore('entities', {
 
         this.lore = lore
         this.loreLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch lore:', error)
         this.lore = []
-      } finally {
+      }
+      finally {
         this.loreLoading = false
       }
     },
@@ -568,7 +588,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.lore.findIndex((l) => l.id === id)
+      const index = this.lore.findIndex(l => l.id === id)
       if (index !== -1) {
         // Preserve _counts from old Lore and merge with new data
         const oldLore = this.lore[index]
@@ -583,12 +603,12 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/lore/${id}`, {
         method: 'DELETE',
       })
-      this.lore = this.lore.filter((l) => l.id !== id)
+      this.lore = this.lore.filter(l => l.id !== id)
     },
 
     async refreshLore(id: number) {
       const lore = await $fetch<Lore>(`/api/lore/${id}`)
-      const index = this.lore.findIndex((l) => l.id === id)
+      const index = this.lore.findIndex(l => l.id === id)
       if (index !== -1) {
         // Preserve _counts from the old entity (not returned by API)
         this.lore[index] = { ...this.lore[index], ...lore }
@@ -598,7 +618,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Load counts for a single Lore and update it in the store
     async loadLoreCounts(id: number) {
-      const index = this.lore.findIndex((l) => l.id === id)
+      const index = this.lore.findIndex(l => l.id === id)
       if (index === -1) return
 
       try {
@@ -624,7 +644,8 @@ export const useEntitiesStore = defineStore('entities', {
         // Also update the composable's countsMap for reactive UI updates
         const { setCounts } = useLoreCounts()
         setCounts(id, counts)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to load counts for Lore ${id}:`, error)
       }
     },
@@ -645,7 +666,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Set counts directly (without fetching) - used when we already have the data
     setLoreCounts(id: number, counts: Lore['_counts']) {
-      const index = this.lore.findIndex((l) => l.id === id)
+      const index = this.lore.findIndex(l => l.id === id)
       if (index === -1) return
 
       const loreItem = this.lore[index]
@@ -686,10 +707,12 @@ export const useEntitiesStore = defineStore('entities', {
 
         this.players = players
         this.playersLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch players:', error)
         this.players = []
-      } finally {
+      }
+      finally {
         this.playersLoading = false
       }
     },
@@ -705,7 +728,7 @@ export const useEntitiesStore = defineStore('entities', {
       this.players.push(player)
       // Load counts for new Player
       await this.loadPlayerCounts(player.id)
-      return this.players.find((p) => p.id === player.id) || player
+      return this.players.find(p => p.id === player.id) || player
     },
 
     async updatePlayer(id: number, data: Partial<Player>) {
@@ -713,7 +736,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.players.findIndex((p) => p.id === id)
+      const index = this.players.findIndex(p => p.id === id)
       if (index !== -1) {
         // Preserve _counts from old Player and merge with new data
         const oldPlayer = this.players[index]
@@ -728,12 +751,12 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/players/${id}`, {
         method: 'DELETE',
       })
-      this.players = this.players.filter((p) => p.id !== id)
+      this.players = this.players.filter(p => p.id !== id)
     },
 
     async refreshPlayer(id: number) {
       const player = await $fetch<Player>(`/api/players/${id}`)
-      const index = this.players.findIndex((p) => p.id === id)
+      const index = this.players.findIndex(p => p.id === id)
       if (index !== -1) {
         // Preserve _counts from the old entity (not returned by API)
         this.players[index] = { ...this.players[index], ...player }
@@ -743,7 +766,7 @@ export const useEntitiesStore = defineStore('entities', {
 
     // Load counts for a single Player and update it in the store
     async loadPlayerCounts(id: number) {
-      const index = this.players.findIndex((p) => p.id === id)
+      const index = this.players.findIndex(p => p.id === id)
       if (index === -1) return
 
       try {
@@ -770,14 +793,15 @@ export const useEntitiesStore = defineStore('entities', {
         // Also update the composable's countsMap for reactive UI updates
         const { setCounts } = usePlayerCounts()
         setCounts(id, counts)
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to load counts for Player ${id}:`, error)
       }
     },
 
     // Set counts directly (without fetching) - used when we already have the data
     setPlayerCounts(id: number, counts: Player['_counts']) {
-      const index = this.players.findIndex((p) => p.id === id)
+      const index = this.players.findIndex(p => p.id === id)
       if (index === -1) return
 
       const player = this.players[index]
@@ -801,10 +825,12 @@ export const useEntitiesStore = defineStore('entities', {
         })
         this.groups = groups
         this.groupsLoaded = true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch groups:', error)
         this.groups = []
-      } finally {
+      }
+      finally {
         this.groupsLoading = false
       }
     },
@@ -826,7 +852,7 @@ export const useEntitiesStore = defineStore('entities', {
         method: 'PATCH',
         body: data,
       })
-      const index = this.groups.findIndex((g) => g.id === id)
+      const index = this.groups.findIndex(g => g.id === id)
       if (index !== -1) {
         this.groups[index] = { ...this.groups[index], ...group }
       }
@@ -837,12 +863,12 @@ export const useEntitiesStore = defineStore('entities', {
       await $fetch(`/api/groups/${id}`, {
         method: 'DELETE',
       })
-      this.groups = this.groups.filter((g) => g.id !== id)
+      this.groups = this.groups.filter(g => g.id !== id)
     },
 
     async refreshGroup(id: number) {
       const group = await $fetch<EntityGroup>(`/api/groups/${id}`)
-      const index = this.groups.findIndex((g) => g.id === id)
+      const index = this.groups.findIndex(g => g.id === id)
       if (index !== -1) {
         this.groups[index] = { ...this.groups[index], ...group }
       }
@@ -865,6 +891,33 @@ export const useEntitiesStore = defineStore('entities', {
     },
 
     // ==================== Entity Images ====================
+
+    // Archive/unarchive an entity
+    async archiveEntity(id: number, archive: boolean) {
+      await $fetch(`/api/entities/${id}/archive`, {
+        method: 'PATCH',
+        body: { archive },
+      })
+
+      // Update local state
+      const updateArchived = (list: Array<{ id: number, archived_at?: string | null }>) => {
+        const entity = list.find(e => e.id === id)
+        if (entity) {
+          entity.archived_at = archive ? new Date().toISOString() : null
+        }
+      }
+
+      updateArchived(this.npcs)
+      updateArchived(this.factions)
+      updateArchived(this.locations)
+      updateArchived(this.items)
+      updateArchived(this.lore)
+      updateArchived(this.players)
+    },
+
+    toggleShowArchived() {
+      this.showArchived = !this.showArchived
+    },
 
     // Increment image version for an entity (triggers watchers to reload)
     incrementImageVersion(entityId: number) {

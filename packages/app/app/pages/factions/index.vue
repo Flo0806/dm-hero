@@ -199,11 +199,13 @@ async function executeSearch(query: string) {
     if (results.length > 0) {
       loadFactionCountsBatch(results)
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') return
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -274,7 +276,8 @@ watch(
 watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     highlightedId.value = null
     if (route.query.highlight || route.query.search) {
       router.replace({ query: {} })
@@ -288,7 +291,7 @@ watch(searchQuery, () => {
 const { loadAllCountsForCampaign, loadFactionCountsBatch } = useFactionCounts()
 const { downloadImage } = useImageDownload()
 
-const factions = computed(() => entitiesStore.factions)
+const factions = computed(() => entitiesStore.activeFactions)
 const pending = computed(() => entitiesStore.factionsLoading)
 
 onMounted(async () => {
@@ -411,9 +414,11 @@ async function confirmDelete() {
     await entitiesStore.deleteFaction(deletingFaction.value.id)
     showDeleteDialog.value = false
     deletingFaction.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete faction:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

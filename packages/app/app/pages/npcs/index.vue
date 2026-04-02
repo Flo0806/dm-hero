@@ -287,7 +287,8 @@ watch(searchQuery, () => {
   if (isFromGlobalSearch.value) {
     // First change after global search, keep highlight
     isFromGlobalSearch.value = false
-  } else {
+  }
+  else {
     // Manual search by user, clear highlight
     highlightedId.value = null
     // Remove query params from URL
@@ -298,7 +299,7 @@ watch(searchQuery, () => {
 })
 
 // Get data from stores
-const npcs = computed(() => entitiesStore.npcs)
+const npcs = computed(() => entitiesStore.activeNpcs)
 
 // Reference data for view dialog
 const races = ref<
@@ -383,14 +384,16 @@ async function executeSearch(query: string) {
     // Load counts for search results using the shared composable
     // This ensures NpcCard gets the counts via getCounts()
     loadNpcCountsBatch(results)
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -541,10 +544,11 @@ function handleEditFromView(npc: NPC) {
 
 // View NPC by ID (from relations in view dialog)
 async function viewNpcById(npcId: number) {
-  const npc = entitiesStore.npcs?.find((n) => n.id === npcId)
+  const npc = entitiesStore.npcs?.find(n => n.id === npcId)
   if (npc) {
     viewNpc(npc)
-  } else {
+  }
+  else {
     console.error('NPC not found in store:', npcId)
   }
 }
@@ -594,7 +598,7 @@ async function confirmDelete() {
 
     // If user is searching, remove from search results
     if (searchQuery.value && searchQuery.value.trim().length > 0) {
-      const deleteIndex = searchResults.value.findIndex((n) => n.id === deletingNpc.value?.id)
+      const deleteIndex = searchResults.value.findIndex(n => n.id === deletingNpc.value?.id)
       if (deleteIndex !== -1) {
         searchResults.value.splice(deleteIndex, 1)
       }
@@ -602,9 +606,11 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingNpc.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete NPC:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

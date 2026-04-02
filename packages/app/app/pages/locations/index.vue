@@ -320,7 +320,8 @@ function handleSearchInput(value: string) {
   if (value && value.trim().length > 0) {
     searching.value = true
     isInSearchMode.value = true
-  } else {
+  }
+  else {
     searching.value = false
     isInSearchMode.value = false
   }
@@ -401,7 +402,8 @@ onMounted(async () => {
   try {
     const response = await $fetch<{ hasKey: boolean }>('/api/settings/check-api-key')
     hasApiKey.value = response.hasKey
-  } catch {
+  }
+  catch {
     hasApiKey.value = false
   }
 })
@@ -432,7 +434,7 @@ watch(searchQuery, () => {
 })
 
 // Use store data
-const locations = computed(() => entitiesStore.locations)
+const locations = computed(() => entitiesStore.activeLocations)
 const pending = computed(() => entitiesStore.locationsLoading)
 
 // Debounce search with abort controller
@@ -464,14 +466,16 @@ async function executeSearch(query: string) {
       signal: abortController.signal, // Pass abort signal to fetch
     })
     searchResults.value = results
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     // Ignore abort errors (expected when user types fast)
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       return
     }
     console.error('Search failed:', error)
     searchResults.value = []
-  } finally {
+  }
+  finally {
     searching.value = false
     abortController = null
   }
@@ -528,7 +532,7 @@ interface TreeNode {
 
 // Helper: Get all parent IDs for a location
 function getParentIds(locationId: number, allLocations: Location[]): number[] {
-  const location = allLocations.find((l) => l.id === locationId)
+  const location = allLocations.find(l => l.id === locationId)
   if (!location || !location.parent_entity_id) return []
 
   return [location.parent_entity_id, ...getParentIds(location.parent_entity_id, allLocations)]
@@ -560,7 +564,7 @@ const treeItems = computed(() => {
       const parentIds = getParentIds(result.id, allLocations)
       parentIds.forEach((parentId) => {
         if (!addedLocationIds.has(parentId)) {
-          const parent = allLocations.find((l) => l.id === parentId)
+          const parent = allLocations.find(l => l.id === parentId)
           if (parent) {
             locationsToShow.push(parent)
             addedLocationIds.add(parentId)
@@ -568,7 +572,8 @@ const treeItems = computed(() => {
         }
       })
     })
-  } else {
+  }
+  else {
     // Not searching: Show all locations
     locationsToShow = searchResults
   }
@@ -597,11 +602,13 @@ const treeItems = computed(() => {
       const parent = locationMap.get(location.parent_entity_id)
       if (parent) {
         parent.children!.push(node)
-      } else {
+      }
+      else {
         // Parent not found (not in locationsToShow) - treat as root
         rootNodes.push(node)
       }
-    } else {
+    }
+    else {
       // No parent - is a root node
       rootNodes.push(node)
     }
@@ -643,7 +650,7 @@ watch(
 
         // Add all parent IDs to ensure the result is visible
         const parentIds = getParentIds(result.id, allLocations)
-        parentIds.forEach((id) => nodesToOpen.add(id))
+        parentIds.forEach(id => nodesToOpen.add(id))
       })
 
       openedNodes.value = Array.from(nodesToOpen)
@@ -653,7 +660,8 @@ watch(
         animationKey.value++
         isFromGlobalSearch.value = false // Reset flag
       }
-    } else if (!searching) {
+    }
+    else if (!searching) {
       // When not searching, collapse all
       openedNodes.value = []
     }
@@ -719,7 +727,7 @@ const loadingItems = ref(false)
 
 // Location Lore
 const locationLore = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const loadingLore = ref(false)
 
@@ -748,8 +756,8 @@ const locationFactions = ref<
 const loadingFactions = ref(false)
 
 // Location Documents & Images
-const locationDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const locationImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const locationDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const locationImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const loadingViewData = ref(false)
 
 async function viewLocation(location: Location) {
@@ -784,7 +792,8 @@ async function viewLocation(location: Location) {
     locationDocuments.value = documents
     locationImages.value = images
     viewDialogCounts.value = counts
-  } finally {
+  }
+  finally {
     loadingViewData.value = false
     loadingNpcs.value = false
     loadingItems.value = false
@@ -856,7 +865,8 @@ async function highlightAfterSave(locationId: number) {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       clearInterval(scrollInterval)
-    } else if (attempts >= maxAttempts) {
+    }
+    else if (attempts >= maxAttempts) {
       clearInterval(scrollInterval)
     }
   }, 200)
@@ -879,7 +889,7 @@ async function confirmDelete() {
 
   try {
     // Delete location (cascade deletes children)
-    const result = await $fetch<{ success: boolean; deletedCount: number; message: string }>(
+    const result = await $fetch<{ success: boolean, deletedCount: number, message: string }>(
       `/api/locations/${deletingLocation.value.id}`,
       { method: 'DELETE' },
     )
@@ -895,9 +905,11 @@ async function confirmDelete() {
 
     showDeleteDialog.value = false
     deletingLocation.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete location:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
@@ -920,7 +932,7 @@ function openQuickLinkMenu(event: MouseEvent, location: Location) {
   quickLinkState.showContextMenu = true
 }
 
-function handleQuickLinkSelect({ targetType, relationType }: { targetType: string; relationType: string }) {
+function handleQuickLinkSelect({ targetType, relationType }: { targetType: string, relationType: string }) {
   quickLinkState.targetType = targetType as typeof quickLinkState.targetType
   quickLinkState.relationType = relationType
   quickLinkState.showContextMenu = false
@@ -931,7 +943,6 @@ function handleLinked() {
   // Optionally reload data or show notification
   quickLinkState.showEntitySelectDialog = false
 }
-
 </script>
 
 <style scoped>
