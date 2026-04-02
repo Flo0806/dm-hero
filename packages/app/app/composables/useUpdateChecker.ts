@@ -88,6 +88,7 @@ export function useUpdateChecker() {
   const downloadProgress = ref<UpdateDownloadProgress | null>(null)
   const error = ref<string | null>(null)
   const isDismissed = ref(false)
+  const backupCreated = ref(false)
 
   const isBrowser = typeof window !== 'undefined'
   const electronAPI = isBrowser ? getElectronAPI() : null
@@ -159,6 +160,16 @@ export function useUpdateChecker() {
     if (!electronAPI) {
       console.error('[UpdateChecker] electronAPI is null!')
       return false
+    }
+
+    // Backup database before updating
+    try {
+      await $fetch('/api/backup', { method: 'POST' })
+      backupCreated.value = true
+    }
+    catch (e) {
+      console.error('[UpdateChecker] Backup failed:', e)
+      // Continue with update even if backup fails
     }
 
     updateState.value = 'downloading'
@@ -313,5 +324,6 @@ export function useUpdateChecker() {
     downloadUpdate,
     installUpdate,
     dismissUpdate,
+    backupCreated,
   }
 }
