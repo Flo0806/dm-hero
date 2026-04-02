@@ -131,6 +131,14 @@
                 class="mb-4"
               />
 
+              <v-textarea
+                v-model="form.metadata.notes"
+                :label="$t('npcs.notes')"
+                variant="outlined"
+                rows="3"
+                class="mb-4"
+              />
+
               <!-- Race & Class -->
               <v-row>
                 <v-col cols="12" md="6">
@@ -376,6 +384,14 @@
               class="mb-4"
             />
 
+            <v-textarea
+              v-model="form.metadata.notes"
+              :label="$t('npcs.notes')"
+              variant="outlined"
+              rows="3"
+              class="mb-4"
+            />
+
             <!-- Race & Class -->
             <v-row>
               <v-col cols="12" md="6">
@@ -609,6 +625,7 @@ const form = ref({
     gender: undefined as string | undefined,
     type: [] as NpcType[],
     status: undefined as NpcStatus | undefined,
+    notes: '' as string,
   },
 })
 
@@ -869,6 +886,7 @@ async function loadNpc(npcId: number) {
         gender: data.metadata?.gender as string | undefined,
         type: toArray(data.metadata?.type) as NpcType[],
         status: data.metadata?.status as NpcStatus | undefined,
+        notes: (data.metadata?.notes as string) || '',
       },
     }
 
@@ -998,6 +1016,7 @@ function resetForm() {
       gender: undefined,
       type: [] as NpcType[],
       status: undefined as NpcStatus | undefined,
+      notes: '',
     },
   }
   mapSyncData.value = null
