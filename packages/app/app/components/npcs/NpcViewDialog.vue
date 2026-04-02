@@ -108,6 +108,12 @@
                 <p class="text-body-2" style="white-space: pre-wrap">{{ npc.description }}</p>
               </div>
 
+              <!-- Notes -->
+              <div v-if="npc.metadata?.notes" class="mb-6">
+                <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('npcs.notes') }}</h3>
+                <p class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ npc.metadata.notes }}</p>
+              </div>
+
               <!-- Metadata Grid -->
               <v-row dense>
                 <v-col v-if="npc.metadata?.location" cols="12" sm="6">
