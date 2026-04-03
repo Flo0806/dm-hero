@@ -49,7 +49,7 @@
     "db:reset": "node scripts/test-data/reset-and-seed.js",
     "electron:rebuild": "node scripts/electron-rebuild.js",
     "electron:rebuild:linux": "cd $(find node_modules/.pnpm -type d -name 'better-sqlite3' -path '*/node_modules/better-sqlite3' | head -1) && HOME=~/.electron-gyp npx node-gyp rebuild --target=39.2.3 --arch=x64 --dist-url=https://electronjs.org/headers",
-    "electron:start": "cross-env NODE_ENV=production electron .",
+    "electron:start": "cross-env NODE_ENV=production electron . --ozone-platform=x11 --no-sandbox",
     "electron:build": "nuxt build && pnpm electron:rebuild && electron-builder --linux",
     "electron:build:win": "nuxt build && pnpm electron:rebuild && electron-builder --win",
     "mode:web": "pnpm rebuild better-sqlite3 && echo '✅ Switched to Web Mode (pnpm dev)'",
@@ -67,6 +67,10 @@
       "node_modules/electron-updater/**/*"
     ],
     "extraResources": [
+      {
+        "from": "electron/icons/icon-256.png",
+        "to": "icon-256.png"
+      },
       {
         "from": ".output",
         "to": ".output",
@@ -116,7 +120,9 @@
         "AppImage"
       ],
       "category": "Utility",
-      "artifactName": "DM-Hero-${version}.${ext}"
+      "icon": "electron/icons/icon.png",
+      "artifactName": "DM-Hero-${version}.${ext}",
+      "executableName": "dm-hero"
     },
     "mac": {
       "target": "dmg",

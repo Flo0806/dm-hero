@@ -1,4 +1,4 @@
-import { app, BrowserWindow, utilityProcess, ipcMain, dialog, shell, Menu } from 'electron'
+import { app, BrowserWindow, utilityProcess, ipcMain, dialog, shell, Menu, nativeImage } from 'electron'
 import pkg from 'electron-updater'
 import path from 'path'
 import { existsSync, mkdirSync, copyFileSync, writeFileSync, appendFileSync } from 'fs'
@@ -11,6 +11,14 @@ const __dirname = path.dirname(__filename)
 
 const isDev = process.env.NODE_ENV === 'development'
 const PROD_SERVER_PORT = 3456
+
+// Linux: Wayland support + sandbox fix for AppArmor (Ubuntu 24.04+/Kubuntu)
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
+  app.commandLine.appendSwitch('enable-features', 'WaylandWindowDecorations')
+  app.commandLine.appendSwitch('no-sandbox')
+  app.setName('DM Hero')
+}
 
 // ============================================================================
 // AUTO-UPDATER CONFIGURATION
@@ -284,7 +292,13 @@ function createWindow() {
     // Linux/macOS: Hide menu bar for cleaner look
     windowOptions.autoHideMenuBar = true
     // Set window icon (Linux needs this explicitly, Windows/macOS use app bundle icon)
-    windowOptions.icon = path.join(__dirname, 'icons', 'icon.png')
+    // In packaged app: use extraResources path (outside asar), fallback to dev path
+    // Use 256x256 icon for reliable Linux taskbar display
+    const iconName = 'icon-256.png'
+    const iconPath = app.isPackaged
+      ? path.join(process.resourcesPath, iconName)
+      : path.join(__dirname, 'icons', iconName)
+    windowOptions.icon = nativeImage.createFromPath(iconPath)
   }
 
   mainWindow = new BrowserWindow(windowOptions)
