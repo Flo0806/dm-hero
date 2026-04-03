@@ -1,5 +1,27 @@
 # @dm-hero/app
 
+## 1.3.0
+
+### Minor Changes
+
+- 6c7df89: Add archive/unarchive functionality for all entity types
+- 2d2f35b: Support multi-class and multi-type for NPCs with i18n search
+- d1531ba: Show nested locations in chaos graph and improve relation labels
+- 7609bd1: Add notes/info text field to NPC details tab
+- ec0f25c: Add textarea field type to stat blocks
+
+### Patch Changes
+
+- d3d4449: Auto-backup database before update download
+- 72f2e65: Preserve archived_at in export/import and add app version check
+- dd37de4: Fix image not updating in dialog and card after upload
+- 3cb595c: Fix Linux and Mac artifact names for auto-update downloads
+- 09d751e: Fix Linux sandbox crash and improve icon handling
+- f862c29: Fix hardcoded German relation type 'befindet sich in' → 'currentlyAt'
+- 1863f94: Fix incorrect relation types between lore and players
+- 52d53bf: Show linked NPCs and players in NPC preview dialog
+- 0e239d2: Add ship icon for location type 'ship'
+
 ## 1.2.0
 
 ### Minor Changes
