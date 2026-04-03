@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.3.1
+
+### Patch Changes
+
+- 4c203f1: Fix broken main.js and remove app.setName
+
 ## 1.3.0
 
 ### Minor Changes
