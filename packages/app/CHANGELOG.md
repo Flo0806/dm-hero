@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.3.1
+
+### Patch Changes
+
+- 9995e4e: Fix broken userData path from app.setName
+
 ## 1.3.0
 
 ### Minor Changes
