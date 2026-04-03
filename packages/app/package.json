@@ -137,6 +137,7 @@
     "dmg": {
       "sign": false
     },
+    "afterPack": "scripts/afterPack.cjs",
     "afterSign": "scripts/notarize.js",
     "npmRebuild": true,
     "publish": {
