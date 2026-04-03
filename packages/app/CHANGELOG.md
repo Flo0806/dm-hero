@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.3.0
+
+### Minor Changes
+
+- 232e28b: v1.3.0 release with archive, multi-class, Linux fixes
+
 ## 1.3.1
 
 ### Patch Changes
