@@ -85,10 +85,10 @@
               <v-col
                 v-for="f in group.fields"
                 :key="f.id"
-                cols="6"
-                sm="4"
-                md="3"
-                lg="2"
+                :cols="f.field_type === 'textarea' ? 12 : 6"
+                :sm="f.field_type === 'textarea' ? 12 : 4"
+                :md="f.field_type === 'textarea' ? 12 : 3"
+                :lg="f.field_type === 'textarea' ? 12 : 2"
               >
                 <div class="text-center pa-2 rounded stat-cell">
                   <div class="text-caption text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
@@ -132,6 +132,21 @@
                       variant="outlined"
                       density="compact"
                       hide-details
+                      @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
+                    />
+                  </template>
+                  <!-- Textarea -->
+                  <template v-else-if="f.field_type === 'textarea'">
+                    <div v-if="readonly" class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                    <v-textarea
+                      v-else
+                      :model-value="String(store.localValues[f.name] ?? '')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      rows="3"
+                      auto-grow
+                      max-rows="8"
                       @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
                     />
                   </template>
@@ -202,9 +217,9 @@
               <v-col
                 v-for="f in group.fields"
                 :key="f.id"
-                cols="12"
-                sm="6"
-                md="4"
+                :cols="f.field_type === 'textarea' ? 12 : 12"
+                :sm="f.field_type === 'textarea' ? 12 : 6"
+                :md="f.field_type === 'textarea' ? 12 : 4"
               >
                 <div class="pa-3 rounded stat-cell">
                   <div class="text-caption text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
@@ -308,6 +323,21 @@
                       @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
                     />
                   </template>
+                  <!-- Textarea -->
+                  <template v-else-if="f.field_type === 'textarea'">
+                    <div v-if="readonly" class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                    <v-textarea
+                      v-else
+                      :model-value="String(store.localValues[f.name] ?? '')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      rows="3"
+                      auto-grow
+                      max-rows="8"
+                      @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
+                    />
+                  </template>
                 </div>
               </v-col>
             </v-row>
@@ -364,6 +394,22 @@
                     variant="outlined"
                     density="compact"
                     hide-details
+                    class="flex-grow-1"
+                    @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
+                  />
+                </template>
+                <!-- Textarea -->
+                <template v-else-if="f.field_type === 'textarea'">
+                  <div v-if="readonly" class="text-body-2 flex-grow-1" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                  <v-textarea
+                    v-else
+                    :model-value="String(store.localValues[f.name] ?? '')"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    rows="3"
+                    auto-grow
+                    max-rows="8"
                     class="flex-grow-1"
                     @update:model-value="(v: string) => store.setFieldValue(f.name, v)"
                   />

@@ -71,7 +71,7 @@
                 :label="$t('locations.name')"
                 :rules="[(v: string) => !!v || $t('locations.nameRequired')]"
                 variant="outlined"
-                class="mb-4"
+                class="mt-2 mb-4"
               />
 
               <v-textarea
@@ -354,8 +354,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [location: Location]
-  created: [location: Location]
+  'saved': [location: Location]
+  'created': [location: Location]
 }>()
 
 const { t } = useI18n()
@@ -368,7 +368,7 @@ const { hasDirtyTabs, dirtyTabLabels } = useDialogDirtyStateProvider()
 // Internal state
 const internalShow = computed({
   get: () => props.show,
-  set: (value) => emit('update:show', value),
+  set: value => emit('update:show', value),
 })
 
 const loading = ref(false)
@@ -408,26 +408,26 @@ const linkedLore = ref<LinkedLore[]>([])
 // Available entities for dropdowns (from store, sorted alphabetically)
 // Use entity_id to filter out already linked entities
 const availableNpcs = computed(() => {
-  const linkedEntityIds = new Set(linkedNpcs.value.map((n) => n.entity_id))
+  const linkedEntityIds = new Set(linkedNpcs.value.map(n => n.entity_id))
   return (entitiesStore.npcs || [])
-    .filter((npc) => !linkedEntityIds.has(npc.id))
-    .map((npc) => ({ id: npc.id, name: npc.name }))
+    .filter(npc => !linkedEntityIds.has(npc.id))
+    .map(npc => ({ id: npc.id, name: npc.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableItems = computed(() => {
-  const linkedEntityIds = new Set(linkedItems.value.map((i) => i.entity_id))
+  const linkedEntityIds = new Set(linkedItems.value.map(i => i.entity_id))
   return (entitiesStore.items || [])
-    .filter((item) => !linkedEntityIds.has(item.id))
-    .map((item) => ({ id: item.id, name: item.name }))
+    .filter(item => !linkedEntityIds.has(item.id))
+    .map(item => ({ id: item.id, name: item.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const availableLore = computed(() => {
-  const linkedEntityIds = new Set(linkedLore.value.map((l) => l.entity_id))
+  const linkedEntityIds = new Set(linkedLore.value.map(l => l.entity_id))
   return (entitiesStore.lore || [])
-    .filter((lore) => !linkedEntityIds.has(lore.id))
-    .map((lore) => ({ id: lore.id, name: lore.name }))
+    .filter(lore => !linkedEntityIds.has(lore.id))
+    .map(lore => ({ id: lore.id, name: lore.name }))
     .sort((a, b) => a.name.localeCompare(b.name))
 })
 
@@ -435,21 +435,21 @@ const availableParentLocations = computed(() => {
   if (!entitiesStore.locations) return []
   // Exclude current location to prevent circular reference
   const filtered = location.value
-    ? entitiesStore.locations.filter((loc) => loc.id !== location.value?.id)
+    ? entitiesStore.locations.filter(loc => loc.id !== location.value?.id)
     : entitiesStore.locations
   return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Item relation type suggestions from TypeScript types
 const itemRelationTypeSuggestions = computed(() =>
-  LOCATION_ITEM_RELATION_TYPES.map((type) => ({
+  LOCATION_ITEM_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`locations.itemRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
 const locationTypes = computed(() =>
-  LOCATION_TYPES.map((type) => ({
+  LOCATION_TYPES.map(type => ({
     value: type,
     title: t(`locations.types.${type}`, type),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -466,13 +466,13 @@ const originalImageData = ref({
 // Check if image-critical fields have unsaved changes
 const hasUnsavedImageChanges = computed(() => {
   const currentType = getComboboxValue(
-    form.value.metadata.type as string | { value: string; title: string } | undefined,
+    form.value.metadata.type as string | { value: string, title: string } | undefined,
   )
   return (
-    form.value.name !== originalImageData.value.name ||
-    form.value.description !== originalImageData.value.description ||
-    currentType !== originalImageData.value.type ||
-    form.value.metadata.region !== originalImageData.value.region
+    form.value.name !== originalImageData.value.name
+    || form.value.description !== originalImageData.value.description
+    || currentType !== originalImageData.value.type
+    || form.value.metadata.region !== originalImageData.value.region
   )
 })
 
@@ -503,11 +503,13 @@ async function loadData(locationId: number | null | undefined) {
       await loadLocation(locationId)
       await loadRelations(locationId)
       await loadCounts(locationId)
-    } else {
+    }
+    else {
       // Create mode: reset form
       resetForm()
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -533,7 +535,7 @@ async function loadLocation(locationId: number) {
     // Find the matching location type object for the combobox
     // This ensures the translated title is displayed, not the raw key
     const typeKey = data.metadata?.type || ''
-    const typeObject = typeKey ? locationTypes.value.find((lt) => lt.value === typeKey) : undefined
+    const typeObject = typeKey ? locationTypes.value.find(lt => lt.value === typeKey) : undefined
 
     form.value = {
       name: data.name,
@@ -553,7 +555,8 @@ async function loadLocation(locationId: number) {
       type: typeKey || '',
       region: data.metadata?.region || '',
     }
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to load location:', e)
   }
 }
@@ -570,7 +573,8 @@ async function loadCounts(locationId: number) {
       images: number
     }>(`/api/locations/${locationId}/counts`)
     counts.value = data
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to load counts:', e)
   }
 }
@@ -602,7 +606,7 @@ async function loadRelations(locationId: number) {
     ])
 
     // Map NPCs: determine actual entity_id based on direction
-    linkedNpcs.value = npcsRaw.map((npc) => ({
+    linkedNpcs.value = npcsRaw.map(npc => ({
       id: npc.id, // relation_id
       entity_id: npc.direction === 'outgoing' ? npc.to_entity_id : npc.from_entity_id,
       name: npc.name,
@@ -611,7 +615,7 @@ async function loadRelations(locationId: number) {
     }))
 
     // Map Items: determine actual entity_id based on direction
-    linkedItems.value = itemsRaw.map((item) => ({
+    linkedItems.value = itemsRaw.map(item => ({
       id: item.id, // relation_id
       entity_id: item.direction === 'outgoing' ? item.to_entity_id : item.from_entity_id,
       name: item.name,
@@ -621,14 +625,15 @@ async function loadRelations(locationId: number) {
     }))
 
     // Map Lore: determine actual entity_id based on direction
-    linkedLore.value = loreRaw.map((l) => ({
+    linkedLore.value = loreRaw.map(l => ({
       id: l.id, // relation_id
       entity_id: l.direction === 'outgoing' ? l.to_entity_id : l.from_entity_id,
       name: l.name,
       description: l.description,
       image_url: l.image_url,
     }))
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to load relations:', e)
   }
 }
@@ -662,7 +667,7 @@ function resetForm() {
 // ============================================================================
 // Helper: Extract value from combobox selection (can be string or {value, title} object)
 // ============================================================================
-function getComboboxValue(val: string | { value: string; title: string } | undefined): string {
+function getComboboxValue(val: string | { value: string, title: string } | undefined): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -684,7 +689,7 @@ async function save() {
     // Extract actual values from combobox selections
     const metadata = {
       ...form.value.metadata,
-      type: getComboboxValue(form.value.metadata.type as string | { value: string; title: string } | undefined),
+      type: getComboboxValue(form.value.metadata.type as string | { value: string, title: string } | undefined),
     }
 
     if (location.value) {
@@ -700,13 +705,14 @@ async function save() {
       })
 
       // Update store
-      const index = entitiesStore.locations?.findIndex((l) => l.id === location.value!.id)
+      const index = entitiesStore.locations?.findIndex(l => l.id === location.value!.id)
       if (index !== undefined && index !== -1 && entitiesStore.locations) {
         entitiesStore.locations[index] = { ...entitiesStore.locations[index], ...updated }
       }
 
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new location
       const created = await $fetch<Location>('/api/locations', {
         method: 'POST',
@@ -726,9 +732,11 @@ async function save() {
     }
 
     close()
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to save:', e)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -753,7 +761,7 @@ async function addNpcRelation(payload: { npcId: number }) {
       },
     })
 
-    const npc = entitiesStore.npcs?.find((n) => n.id === payload.npcId)
+    const npc = entitiesStore.npcs?.find(n => n.id === payload.npcId)
     if (npc) {
       linkedNpcs.value.push({
         id: createdRelation.id, // relation_id from API
@@ -765,7 +773,8 @@ async function addNpcRelation(payload: { npcId: number }) {
     }
 
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to add NPC relation:', e)
   }
 }
@@ -779,14 +788,15 @@ async function removeNpcRelation(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedNpcs.value = linkedNpcs.value.filter((n) => n.id !== relationId)
+    linkedNpcs.value = linkedNpcs.value.filter(n => n.id !== relationId)
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to remove NPC relation:', e)
   }
 }
 
-async function addItemRelation(payload: { itemId: number; relationType?: string }) {
+async function addItemRelation(payload: { itemId: number, relationType?: string }) {
   if (!location.value || !payload.itemId) return
 
   try {
@@ -801,7 +811,8 @@ async function addItemRelation(payload: { itemId: number; relationType?: string 
 
     await loadRelations(location.value.id)
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to add item relation:', e)
   }
 }
@@ -813,7 +824,8 @@ async function removeItemRelation(relationId: number) {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
     await loadRelations(location.value.id)
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to remove item relation:', e)
   }
 }
@@ -831,7 +843,7 @@ async function addLoreRelation(loreId: number) {
       },
     })
 
-    const lore = entitiesStore.lore?.find((l) => l.id === loreId)
+    const lore = entitiesStore.lore?.find(l => l.id === loreId)
     if (lore) {
       linkedLore.value.push({
         id: createdRelation.id, // relation_id from API
@@ -843,7 +855,8 @@ async function addLoreRelation(loreId: number) {
     }
 
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to add lore relation:', e)
   }
 }
@@ -853,9 +866,10 @@ async function removeLoreRelation(relationId: number) {
 
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    linkedLore.value = linkedLore.value.filter((l) => l.id !== relationId)
+    linkedLore.value = linkedLore.value.filter(l => l.id !== relationId)
     await loadCounts(location.value.id)
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[LocationEditDialog] Failed to remove lore relation:', e)
   }
 }

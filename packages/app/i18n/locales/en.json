@@ -2353,7 +2353,8 @@
         "string": "Text",
         "number": "Number",
         "resource": "Resource (Current/Max)",
-        "boolean": "Yes/No"
+        "boolean": "Yes/No",
+        "textarea": "Multi-line Text"
       }
     }
   },

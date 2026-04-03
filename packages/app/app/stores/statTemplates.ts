@@ -10,7 +10,7 @@ interface PresetInfo {
     fields: Array<{
       name: string
       label: string
-      field_type: 'string' | 'number' | 'resource' | 'boolean'
+      field_type: 'string' | 'number' | 'resource' | 'boolean' | 'textarea'
       has_modifier: boolean
     }>
   }>

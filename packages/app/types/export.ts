@@ -540,7 +540,7 @@ export interface ExportStatTemplate {
     fields: Array<{
       name: string
       label: string
-      field_type: string // 'string' | 'number' | 'resource' | 'boolean'
+      field_type: string // 'string' | 'number' | 'resource' | 'boolean' | 'textarea'
       has_modifier: boolean
       sort_order: number
     }>

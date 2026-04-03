@@ -2329,7 +2329,8 @@
         "string": "Text",
         "number": "Zahl",
         "resource": "Ressource (Aktuell/Max)",
-        "boolean": "Ja/Nein"
+        "boolean": "Ja/Nein",
+        "textarea": "Mehrzeiliger Text"
       }
     }
   },

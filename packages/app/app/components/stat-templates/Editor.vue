@@ -217,7 +217,7 @@ import type { StatTemplate, SaveStatTemplatePayload } from '~~/types/stat-templa
 interface FieldData {
   name: string
   label: string
-  field_type: 'string' | 'number' | 'resource' | 'boolean'
+  field_type: 'string' | 'number' | 'resource' | 'boolean' | 'textarea'
   has_modifier: boolean
 }
 

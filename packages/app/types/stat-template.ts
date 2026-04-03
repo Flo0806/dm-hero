@@ -1,5 +1,5 @@
 // Field types supported in stat blocks
-export const STAT_FIELD_TYPES = ['string', 'number', 'resource', 'boolean'] as const
+export const STAT_FIELD_TYPES = ['string', 'number', 'resource', 'boolean', 'textarea'] as const
 export type StatFieldType = (typeof STAT_FIELD_TYPES)[number]
 
 // Group type suggestions (for i18n label display)

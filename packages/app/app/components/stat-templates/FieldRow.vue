@@ -116,6 +116,7 @@ const fieldTypeColor = computed(() => {
     number: 'green',
     resource: 'orange',
     boolean: 'purple',
+    textarea: 'teal',
   }
   return colors[props.field.field_type] || 'grey'
 })
