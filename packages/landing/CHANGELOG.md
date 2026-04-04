@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.4.0
+
+### Minor Changes
+
+- ea20374: Update landing page with v1.3 features, highlights banner and docs
+
 ## 1.3.0
 
 ### Minor Changes
