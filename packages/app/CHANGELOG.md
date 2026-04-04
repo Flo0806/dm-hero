@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.3.2
+
+### Patch Changes
+
+- b00ce9f: Linux AppImage wrapper for no-sandbox + v1.3 announcement dialog
+
 ## 1.3.1
 
 ### Patch Changes
