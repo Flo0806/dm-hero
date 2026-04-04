@@ -3,6 +3,36 @@
     "title": "DM Hero - Dein D&D Kampagnen-Begleiter",
     "description": "Das ultimative Kampagnen-Management-Tool für Spielleiter. Verwalte NPCs, Orte, Gegenstände und Sessions mit leistungsstarker Suche und KI-Funktionen."
   },
+  "highlights": {
+    "archive": {
+      "title": "Archiv-Funktion",
+      "subtitle": "Entities ausblenden statt löschen — mit einem Klick wiederherstellen"
+    },
+    "multiclass": {
+      "title": "Multi-Klasse & Multi-Typ",
+      "subtitle": "Mehrere Klassen und Typen pro NPC — mehrsprachig durchsuchbar"
+    },
+    "encounter": {
+      "title": "Encounter Tracker",
+      "subtitle": "Kampfmanagement mit Initiative, HP-Tracking und Effektsystem"
+    },
+    "statblocks": {
+      "title": "Werteblock-Vorlagen",
+      "subtitle": "Eigene Stat-Blocks für jedes Rollenspielsystem"
+    },
+    "chaosGraph": {
+      "title": "Chaosgraph",
+      "subtitle": "Visualisiere alle Verbindungen deiner Entities auf einen Blick"
+    },
+    "maps": {
+      "title": "Interaktive Karten",
+      "subtitle": "Weltkarten mit Markern, Gebieten und Entfernungsmessung"
+    },
+    "search": {
+      "title": "Fuzzy-Suche",
+      "subtitle": "Finde alles — auch mit Tippfehlern und in jeder Sprache"
+    }
+  },
   "nav": {
     "features": "Features",
     "screenshots": "Screenshots",
@@ -74,6 +104,22 @@
       "markdown": {
         "title": "Rich Markdown Editor",
         "description": "Schreibe wunderschöne Beschreibungen mit voller Markdown-Unterstützung, Syntax-Highlighting und Live-Vorschau."
+      },
+      "encounter": {
+        "title": "Encounter Tracker",
+        "description": "Kampfmanagement mit Initiative, Rundentracking, HP-Verwaltung, Effektsystem und integriertem 3D-Würfelroller."
+      },
+      "statblocks": {
+        "title": "Werteblock-Vorlagen",
+        "description": "Eigene Stat-Blocks für D&D 5e, Pathfinder, DSA und mehr. Mit Zahlen, Ressourcen, Text und mehrzeiligen Feldern."
+      },
+      "archive": {
+        "title": "Archiv-Funktion",
+        "description": "Archiviere irrelevante Entities statt sie zu löschen. Ein Klick zum Ausblenden, ein Klick zum Wiederherstellen."
+      },
+      "maps": {
+        "title": "Interaktive Karten",
+        "description": "Lade Weltkarten hoch, setze Marker für NPCs und Orte, markiere Gebiete und miss Entfernungen."
       }
     }
   },

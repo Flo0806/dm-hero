@@ -3,6 +3,36 @@
     "title": "DM Hero - Your D&D Campaign Companion",
     "description": "The ultimate campaign management tool for Dungeon Masters. Track NPCs, locations, items, and sessions with powerful search and AI features."
   },
+  "highlights": {
+    "archive": {
+      "title": "Archive Function",
+      "subtitle": "Hide entities instead of deleting — restore with one click"
+    },
+    "multiclass": {
+      "title": "Multi-Class & Multi-Type",
+      "subtitle": "NPCs with multiple classes and types — searchable in all languages"
+    },
+    "encounter": {
+      "title": "Encounter Tracker",
+      "subtitle": "Combat management with initiative, HP tracking and effects system"
+    },
+    "statblocks": {
+      "title": "Stat Block Templates",
+      "subtitle": "Custom stat blocks for any RPG system"
+    },
+    "chaosGraph": {
+      "title": "Chaos Graph",
+      "subtitle": "Visualize all entity connections at a glance"
+    },
+    "maps": {
+      "title": "Interactive Maps",
+      "subtitle": "World maps with markers, areas and distance measurement"
+    },
+    "search": {
+      "title": "Fuzzy Search",
+      "subtitle": "Find anything — even with typos and in any language"
+    }
+  },
   "nav": {
     "features": "Features",
     "screenshots": "Screenshots",
@@ -74,6 +104,22 @@
       "markdown": {
         "title": "Rich Markdown Editor",
         "description": "Write beautiful descriptions with full Markdown support, syntax highlighting, and live preview."
+      },
+      "encounter": {
+        "title": "Encounter Tracker",
+        "description": "Combat management with initiative, turn tracking, HP management, effects system and integrated 3D dice roller."
+      },
+      "statblocks": {
+        "title": "Stat Block Templates",
+        "description": "Custom stat blocks for D&D 5e, Pathfinder, DSA and more. With numbers, resources, text and multi-line fields."
+      },
+      "archive": {
+        "title": "Archive Function",
+        "description": "Archive irrelevant entities instead of deleting. One click to hide, one click to restore."
+      },
+      "maps": {
+        "title": "Interactive Maps",
+        "description": "Upload world maps, place markers for NPCs and locations, mark areas and measure distances."
       }
     }
   },

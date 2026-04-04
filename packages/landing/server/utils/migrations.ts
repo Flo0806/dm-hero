@@ -360,16 +360,10 @@ const migrations: Migration[] = [
       `ALTER TABLE adventure_files
         MODIFY COLUMN version_id INT NOT NULL`,
 
-      // Step 9: Add foreign keys (drop first if exists for idempotency)
-      `ALTER TABLE adventure_versions
-        DROP FOREIGN KEY IF EXISTS fk_version_adventure`,
-
+      // Step 9: Add foreign keys
       `ALTER TABLE adventure_versions
         ADD CONSTRAINT fk_version_adventure
         FOREIGN KEY (adventure_id) REFERENCES adventures(id) ON DELETE CASCADE`,
-
-      `ALTER TABLE adventure_files
-        DROP FOREIGN KEY IF EXISTS fk_file_version`,
 
       `ALTER TABLE adventure_files
         ADD CONSTRAINT fk_file_version
@@ -394,7 +388,7 @@ export async function runMigrations(): Promise<void> {
 
   // Get applied migrations
   const [rows] = await pool.execute('SELECT id FROM migrations')
-  const appliedIds = new Set((rows as { id: number }[]).map((r) => r.id))
+  const appliedIds = new Set((rows as { id: number }[]).map(r => r.id))
 
   // Run pending migrations
   for (const migration of migrations) {
@@ -409,13 +403,15 @@ export async function runMigrations(): Promise<void> {
       for (const sql of migration.up) {
         try {
           await pool.execute(sql)
-        } catch (stmtError: unknown) {
-          const err = stmtError as { code?: string; message?: string }
+        }
+        catch (stmtError: unknown) {
+          const err = stmtError as { code?: string, message?: string }
           // Ignore "already exists" and "doesn't exist" errors for idempotent migrations
           const ignorableCodes = ['ER_TABLE_EXISTS_ERROR', 'ER_DUP_FIELDNAME', 'ER_CANT_DROP_FIELD_OR_KEY', 'ER_DUP_ENTRY', 'ER_BAD_FIELD_ERROR', 'ER_INVALID_USE_OF_NULL']
           if (err.code && ignorableCodes.includes(err.code)) {
             console.log(`[Migration] Skipping (already applied): ${err.message}`)
-          } else {
+          }
+          else {
             throw stmtError
           }
         }
@@ -426,7 +422,8 @@ export async function runMigrations(): Promise<void> {
         migration.name,
       ])
       console.log(`[Migration] Completed: ${migration.id} - ${migration.name}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`[Migration] Failed: ${migration.id} - ${migration.name}`, error)
       throw error
     }

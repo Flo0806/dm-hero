@@ -2,7 +2,7 @@
 const { t } = useI18n()
 
 // Floating particles for background effect
-const particles = ref<{ id: number; left: string; size: number; delay: number }[]>([])
+const particles = ref<{ id: number, left: string, size: number, delay: number }[]>([])
 
 onMounted(() => {
   // Generate random particles
@@ -195,7 +195,7 @@ onMounted(() => {
 <style scoped>
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - 220px);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -280,7 +280,7 @@ onMounted(() => {
 }
 
 .min-h-screen {
-  min-height: 100vh;
+  min-height: calc(100vh - 220px);
 }
 
 .hero-logo {
