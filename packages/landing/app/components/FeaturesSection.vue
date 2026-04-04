@@ -42,6 +42,30 @@ const features = [
     icon: 'mdi-language-markdown',
     color: 'teal',
   },
+  {
+    key: 'encounter',
+    icon: 'mdi-shield-sword',
+    color: 'error',
+    badge: 'v1.2',
+  },
+  {
+    key: 'statblocks',
+    icon: 'mdi-clipboard-list-outline',
+    color: 'info',
+    badge: 'v1.2',
+  },
+  {
+    key: 'archive',
+    icon: 'mdi-archive-arrow-down',
+    color: 'warning',
+    badge: 'v1.3',
+    isNew: true,
+  },
+  {
+    key: 'maps',
+    icon: 'mdi-map-marker-radius',
+    color: 'success',
+  },
 ]
 </script>
 
@@ -93,6 +117,12 @@ const features = [
 
             <h3 class="feature-title mb-3">
               {{ t(`features.items.${feature.key}.title`) }}
+              <v-chip v-if="feature.badge" size="x-small" variant="tonal" color="primary" class="ml-1">
+                {{ feature.badge }}
+              </v-chip>
+              <v-chip v-if="feature.isNew" size="x-small" variant="elevated" color="success" class="ml-1">
+                NEW
+              </v-chip>
             </h3>
 
             <p class="feature-description">

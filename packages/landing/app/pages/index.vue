@@ -14,6 +14,7 @@ useSeoMeta({
 
 <template>
   <div class="landing-page">
+    <FeatureHighlightsBanner />
     <DiscordBanner />
     <HeroSection />
     <TestimonialsSection />
