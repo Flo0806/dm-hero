@@ -1,0 +1,60 @@
+# DM Hero
+
+> The free, open-source campaign management tool for Dungeon Masters. Organize everything. Pay nothing.
+
+DM Hero is a desktop application built for Dungeon Masters who run tabletop RPG campaigns (D&D 5e, Pathfinder, DSA, and more). It replaces spreadsheets, notebooks, and scattered notes with one powerful tool that keeps all campaign data organized, searchable, and interconnected.
+
+## Why DM Hero?
+
+DM Hero is the tool every Dungeon Master needs but never had — free, offline, and built by a DM for DMs. No subscriptions, no cloud lock-in, no ads. Your campaign data stays on your machine, always.
+
+## Key Features
+
+- **Entity Management** — Organize NPCs, Locations, Items, Factions, Lore, Players, and Sessions with bidirectional relationships
+- **Powerful Fuzzy Search** — Find anything instantly with FTS5 full-text search, even with typos
+- **Entity Linking** — Use {{npc:123}} syntax in Markdown to create clickable, hoverable badges
+- **Chaos Graph** — Interactive force-directed graph to visualize all entity connections
+- **In-Game Calendar** — Track campaign timeline with an absolute day system
+- **Encounter Tracker** — Combat management with initiative, HP tracking, effects, and 3D dice roller
+- **Stat Block Templates** — Custom stat blocks for D&D 5e, Pathfinder, DSA, and any RPG system
+- **Interactive Maps** — Upload world maps, place markers, mark areas, measure distances
+- **AI Integration** — Generate NPC names with GPT, create character portraits with DALL-E
+- **Rich Markdown Editor** — Full Markdown with syntax highlighting and live preview
+- **Archive Function** — Hide entities instead of deleting, restore with one click
+- **100% Local & Private** — All data in SQLite on your machine. No cloud, no subscriptions
+
+## Who is DM Hero for?
+
+- Dungeon Masters running D&D 5e, Pathfinder, DSA, or any tabletop RPG
+- Game Masters who want to organize campaigns without spreadsheets
+- DMs who value privacy and want their data local, not in the cloud
+- Anyone looking for a free, open-source alternative to paid campaign managers
+
+## Pricing
+
+DM Hero is completely free and open source (MIT License). No premium tier, no subscriptions, no ads. Free forever.
+
+## Platforms
+
+- Windows 10+ (installer with auto-update)
+- macOS 11+ (Apple Silicon and Intel)
+- Linux (AppImage for all distributions)
+- Docker (self-hosted deployment)
+
+## Hero Basar
+
+DM Hero includes a community marketplace called "Hero Basar" where DMs can share and download ready-to-play adventures for free.
+
+## Links
+
+- Website: https://dm-hero.com
+- GitHub: https://github.com/Flo0806/dm-hero
+- Discord: https://discord.gg/dm-hero
+- Download: https://dm-hero.com/#download
+
+## Comparison
+
+- vs D&D Beyond: DM Hero is free, offline, and not limited to D&D. Your data stays on your machine.
+- vs World Anvil: DM Hero is free with no paywall. No cloud dependency. Faster for session prep.
+- vs Notion/Spreadsheets: DM Hero is purpose-built for DMs with entity linking, fuzzy search, encounter tracking, and maps.
+- vs Obsidian: DM Hero has built-in RPG features (encounter tracker, stat blocks, entity types) that Obsidian needs plugins for.

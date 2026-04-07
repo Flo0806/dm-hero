@@ -1,30 +1,43 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 
-  modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content', '@pinia/nuxt'],
+  modules: ['@nuxt/eslint', '@nuxtjs/i18n', '@vueuse/motion/nuxt', '@nuxt/content', '@pinia/nuxt', '@nuxtjs/sitemap'],
   devtools: { enabled: true },
 
   app: {
     head: {
-      title: 'DM Hero - Your D&D Campaign Companion',
+      title: 'DM Hero - Free D&D Campaign Manager for Dungeon Masters',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
           content:
-            'The ultimate campaign management tool for Dungeon Masters. Track NPCs, locations, items, and sessions with powerful search and AI features.',
+            'DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions. Local-first, no subscriptions, works offline.',
         },
         { name: 'theme-color', content: '#1A1D29' },
-        { property: 'og:title', content: 'DM Hero - Your D&D Campaign Companion' },
+        { name: 'keywords', content: 'DM Hero, Dungeon Master, D&D, campaign manager, free, open source, NPC tracker, session planner, tabletop RPG, D&D tools, DM tools, campaign organizer' },
+        { property: 'og:title', content: 'DM Hero - Free D&D Campaign Manager for Dungeon Masters' },
         {
           property: 'og:description',
           content:
-            'The ultimate campaign management tool for Dungeon Masters. Track NPCs, locations, items, and sessions.',
+            'The free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, and sessions — offline, private, no subscriptions.',
         },
         { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: 'https://dm-hero.com' },
+        { property: 'og:image', content: 'https://dm-hero.com/og-image.png' },
+        { property: 'og:site_name', content: 'DM Hero' },
+        { property: 'og:locale', content: 'en_US' },
+        { property: 'og:locale:alternate', content: 'de_DE' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'DM Hero - Free D&D Campaign Manager for Dungeon Masters' },
+        { name: 'twitter:description', content: 'The free, open-source campaign management tool every Dungeon Master needs.' },
+        { name: 'twitter:image', content: 'https://dm-hero.com/og-image.png' },
       ],
-      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'canonical', href: 'https://dm-hero.com' },
+      ],
     },
   },
 
