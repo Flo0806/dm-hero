@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.5.0
+
+### Minor Changes
+
+- 8306456: SEO optimization: sitemap, og:image, Twitter Cards, llms.txt, robots.txt, keyword-optimized meta tags
+
 ## 1.4.0
 
 ### Minor Changes
