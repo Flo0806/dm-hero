@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.5.1
+
+### Patch Changes
+
+- f2e5d2d: Fix SEO indexing issues: replace hardcoded global canonical with dynamic per-page canonical, add noindex to auth and user pages
+
 ## 1.5.0
 
 ### Minor Changes
