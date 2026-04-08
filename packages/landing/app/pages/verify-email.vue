@@ -97,6 +97,8 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({ robots: 'noindex' })
+
 definePageMeta({
   layout: false,
 })

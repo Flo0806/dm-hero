@@ -138,6 +138,8 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({ robots: 'noindex' })
+
 definePageMeta({
   middleware: 'guest',
   layout: false,

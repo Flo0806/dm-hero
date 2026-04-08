@@ -122,6 +122,8 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({ robots: 'noindex' })
+
 import { useProfileStore } from '~/stores/profileStore'
 import { useApiFetch } from '~/composables/useApiFetch'
 import confetti from 'canvas-confetti'

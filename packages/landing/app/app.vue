@@ -1,12 +1,21 @@
 <script setup lang="ts">
 const { locale } = useI18n()
 const { state: snackbar } = useSnackbar()
+const route = useRoute()
 
-// Set HTML lang attribute
+const canonicalUrl = computed(() => {
+  const path = route.path === '/' ? '' : route.path
+  return `https://dm-hero.com${path}`
+})
+
+// Set HTML lang attribute + dynamic canonical
 useHead({
   htmlAttrs: {
     lang: locale,
   },
+  link: [
+    { rel: 'canonical', href: canonicalUrl },
+  ],
 })
 </script>
 

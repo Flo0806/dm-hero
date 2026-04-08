@@ -497,6 +497,8 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({ robots: 'noindex' })
+
 import { useAdventureStore } from '~/stores/adventureStore'
 import { useApiFetch } from '~/composables/useApiFetch'
 
