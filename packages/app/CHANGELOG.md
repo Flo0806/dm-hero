@@ -1,5 +1,12 @@
 # @dm-hero/app
 
+## 1.3.3
+
+### Patch Changes
+
+- 8997822: Linux: replace broken "Restart now" with "Show in folder" after auto-update download, since AppImage can't self-replace
+- de575dc: chore: run unit tests against an isolated in-memory database instead of the dev DB
+
 ## 1.3.2
 
 ### Patch Changes
