@@ -460,6 +460,9 @@ ipcMain.handle('check-for-updates', async () => {
 
 // Start downloading the update
 ipcMain.handle('download-update', async () => {
+  // Reset stale cached path so "show in folder" can't reveal a previous download.
+  downloadedUpdateFile = null
+
   if (isDev) {
     // DEV MODE: Simulate download progress
     console.log('[AutoUpdater] DEV MODE: Simulating download...')
@@ -527,6 +530,11 @@ ipcMain.handle('install-update', async () => {
 ipcMain.handle('show-update-file', async () => {
   if (!downloadedUpdateFile) {
     return { shown: false, error: 'No downloaded update file available' }
+  }
+  // File may have been deleted between download and click (cache cleanup, manual rm).
+  if (!existsSync(downloadedUpdateFile)) {
+    downloadedUpdateFile = null
+    return { shown: false, error: 'Downloaded update file no longer exists' }
   }
   shell.showItemInFolder(downloadedUpdateFile)
   return { shown: true, path: downloadedUpdateFile }
