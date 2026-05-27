@@ -26,10 +26,10 @@
   },
   "dependencies": {
     "nuxt": "^4.4.6",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0"
   }
 }
