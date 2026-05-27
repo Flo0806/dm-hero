@@ -591,7 +591,7 @@
           <p class="mb-3">{{ $t('calendar.setAsTodayConfirm', { date: `${selectedDay}. ${currentMonthName} ${viewYear}` }) }}</p>
 
           <v-alert v-if="isSelectedDayInPast" type="warning" variant="tonal" class="mb-0">
-            <strong>{{ $t('calendar.goingBackInTime') }}</strong><br/>
+            <strong>{{ $t('calendar.goingBackInTime') }}</strong><br />
             {{ $t('calendar.goingBackInTimeHint') }}
           </v-alert>
         </v-card-text>
@@ -782,8 +782,8 @@ const showSetTodayDialog = ref(false)
 const settingToday = ref(false)
 const validationResult = ref<{
   hasIssues: boolean
-  affectedEvents: Array<{ id: number; title: string; month: number; day: number; issue: string }>
-  affectedSessions: Array<{ id: number; title: string; session_number: number | null; issue: string }>
+  affectedEvents: Array<{ id: number, title: string, month: number, day: number, issue: string }>
+  affectedSessions: Array<{ id: number, title: string, session_number: number | null, issue: string }>
 } | null>(null)
 const router = useRouter()
 
@@ -815,7 +815,7 @@ const eventForm = ref({
 })
 
 // Entity options for linking
-const entityOptions = ref<Array<{ id: number; name: string; type: string }>>([])
+const entityOptions = ref<Array<{ id: number, name: string, type: string }>>([])
 
 // Computed
 const isConfigured = computed(() =>
@@ -876,7 +876,7 @@ const currentMoonPhases = computed(() => {
   const config = calendarConfig.value.config
   const totalDays = getTotalDays(config.current_year, config.current_month, config.current_day)
 
-  const phases: Array<{ name: string; phase: string; phaseIndex: number }> = []
+  const phases: Array<{ name: string, phase: string, phaseIndex: number }> = []
   for (const moon of calendarConfig.value.moons) {
     const dayInCycle = (totalDays + (moon.phase_offset || 0)) % moon.cycle_days
     const { phaseName, phaseIndex } = calculateMoonPhase(dayInCycle, moon)
@@ -912,8 +912,8 @@ const currentSeason = computed(() => {
     const season = sortedSeasons[i]
     if (!season) continue
     // Check if current month/day is >= this season's start
-    if (viewMonth.value > season.start_month ||
-        (viewMonth.value === season.start_month && 15 >= season.start_day)) {
+    if (viewMonth.value > season.start_month
+      || (viewMonth.value === season.start_month && 15 >= season.start_day)) {
       activeSeason = season
     }
   }
@@ -978,9 +978,9 @@ function getFirstDayOffset(): number {
 function isToday(day: number): boolean {
   const config = calendarConfig.value.config
   return (
-    viewYear.value === config.current_year &&
-    viewMonth.value === config.current_month &&
-    day === config.current_day
+    viewYear.value === config.current_year
+    && viewMonth.value === config.current_month
+    && day === config.current_day
   )
 }
 
@@ -1026,10 +1026,12 @@ async function confirmSetAsToday() {
     await loadConfig()
     showSetTodayDialog.value = false
     snackbarStore.success(t('calendar.todaySet'))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to set today:', error)
     snackbarStore.error(String(error))
-  } finally {
+  }
+  finally {
     settingToday.value = false
   }
 }
@@ -1051,7 +1053,7 @@ function compareDates(y1: number, m1: number, d1: number, y2: number, m2: number
 }
 
 // Get sessions that are active on a specific day (supports multi-day sessions)
-function getSessionsForDay(day: number): Array<CalendarSession & { isStart: boolean; isEnd: boolean; isContinuation: boolean }> {
+function getSessionsForDay(day: number): Array<CalendarSession & { isStart: boolean, isEnd: boolean, isContinuation: boolean }> {
   if (!showSessions.value) return []
 
   const viewY = viewYear.value
@@ -1179,7 +1181,7 @@ function isLeapYear(year: number): boolean {
 }
 
 // Calculate moon phase based on day in cycle and moon configuration
-function calculateMoonPhase(dayInCycle: number, moon: CalendarMoon): { phaseName: string; phaseIndex: number } {
+function calculateMoonPhase(dayInCycle: number, moon: CalendarMoon): { phaseName: string, phaseIndex: number } {
   const cycle = moon.cycle_days
   const newMoonDays = moon.new_moon_duration || 1
   const fullMoonDays = moon.full_moon_duration || 1
@@ -1223,8 +1225,8 @@ function calculateMoonPhase(dayInCycle: number, moon: CalendarMoon): { phaseName
 }
 
 // Get moon phases for a specific day
-function getMoonPhasesForDay(day: number): Array<{ name: string; phase: string; phasePercent: number; phaseIndex: number }> {
-  const phases: Array<{ name: string; phase: string; phasePercent: number; phaseIndex: number }> = []
+function getMoonPhasesForDay(day: number): Array<{ name: string, phase: string, phasePercent: number, phaseIndex: number }> {
+  const phases: Array<{ name: string, phase: string, phasePercent: number, phaseIndex: number }> = []
   const totalDays = getTotalDays(viewYear.value, viewMonth.value, day)
 
   for (const moon of calendarConfig.value.moons) {
@@ -1267,7 +1269,7 @@ const moonColors = [
 
 // Get color for a moon based on its index
 function getMoonColor(moonName: string): string {
-  const index = calendarConfig.value.moons.findIndex((m) => m.name === moonName)
+  const index = calendarConfig.value.moons.findIndex(m => m.name === moonName)
   if (index < 0) return moonColors[0] ?? '#C0C0C0'
   return moonColors[index % moonColors.length] ?? '#C0C0C0'
 }
@@ -1294,7 +1296,8 @@ function prevMonth() {
   if (viewMonth.value === 1) {
     viewMonth.value = calendarConfig.value.months.length
     viewYear.value--
-  } else {
+  }
+  else {
     viewMonth.value--
   }
   selectedDay.value = null
@@ -1306,7 +1309,8 @@ function nextMonth() {
   if (viewMonth.value === calendarConfig.value.months.length) {
     viewMonth.value = 1
     viewYear.value++
-  } else {
+  }
+  else {
     viewMonth.value++
   }
   selectedDay.value = null
@@ -1374,9 +1378,11 @@ async function advanceDay() {
     viewMonth.value = newMonth
     viewYear.value = newYear
     await loadEvents()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to advance day:', error)
-  } finally {
+  }
+  finally {
     advancingDay.value = false
   }
 }
@@ -1392,12 +1398,12 @@ function openSettingsDialog() {
     leapYearInterval: calendarConfig.value.config.leap_year_interval || 0,
     leapYearMonth: calendarConfig.value.config.leap_year_month || 1,
     leapYearExtraDays: calendarConfig.value.config.leap_year_extra_days || 1,
-    months: calendarConfig.value.months.map((m) => ({ ...m })),
-    weekdays: calendarConfig.value.weekdays.map((w) => ({ ...w })),
-    moons: calendarConfig.value.moons.map((moon) => ({ ...moon })),
+    months: calendarConfig.value.months.map(m => ({ ...m })),
+    weekdays: calendarConfig.value.weekdays.map(w => ({ ...w })),
+    moons: calendarConfig.value.moons.map(moon => ({ ...moon })),
   }
   // Copy seasons for editing
-  editingSeasons.value = seasons.value.map((s) => ({ ...s }))
+  editingSeasons.value = seasons.value.map(s => ({ ...s }))
   showSettingsDialog.value = true
 }
 
@@ -1420,8 +1426,8 @@ async function validateCalendarChanges() {
   try {
     const result = await $fetch<{
       hasIssues: boolean
-      affectedEvents: Array<{ id: number; title: string; month: number; day: number; issue: string }>
-      affectedSessions: Array<{ id: number; title: string; session_number: number | null; issue: string }>
+      affectedEvents: Array<{ id: number, title: string, month: number, day: number, issue: string }>
+      affectedSessions: Array<{ id: number, title: string, session_number: number | null, issue: string }>
     }>('/api/calendar/validate-changes', {
       method: 'POST',
       body: {
@@ -1430,7 +1436,8 @@ async function validateCalendarChanges() {
       },
     })
     return result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to validate calendar changes:', error)
     return null
   }
@@ -1451,7 +1458,8 @@ async function confirmStructureChange() {
         months: settingsForm.value.months,
       },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fix affected data:', error)
   }
 
@@ -1492,9 +1500,11 @@ async function doSaveSettings() {
     await loadEvents()
     await loadSessions()
     showSettingsDialog.value = false
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save calendar config:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -1504,8 +1514,8 @@ async function saveSeasons() {
   if (!campaignId) return
 
   // Find deleted seasons (in original but not in editing)
-  const editingIds = new Set(editingSeasons.value.filter((s) => s.id > 0).map((s) => s.id))
-  const deletedSeasons = seasons.value.filter((s) => !editingIds.has(s.id))
+  const editingIds = new Set(editingSeasons.value.filter(s => s.id > 0).map(s => s.id))
+  const deletedSeasons = seasons.value.filter(s => !editingIds.has(s.id))
 
   // Delete removed seasons
   for (const season of deletedSeasons) {
@@ -1529,7 +1539,8 @@ async function saveSeasons() {
           sortOrder: i,
         },
       })
-    } else {
+    }
+    else {
       // Create new
       await $fetch('/api/calendar/seasons', {
         method: 'POST',
@@ -1575,7 +1586,7 @@ function editEvent(event: CalendarEvent) {
     year: event.year || viewYear.value,
     isRecurring: !!event.is_recurring,
     entityId: event.entity_id,
-    entityIds: event.linked_entities?.map((le) => le.entity_id) || [],
+    entityIds: event.linked_entities?.map(le => le.entity_id) || [],
   }
   showEventDialog.value = true
 }
@@ -1597,7 +1608,8 @@ async function saveEvent() {
           entityIds: eventForm.value.entityIds, // New multi-entity
         },
       })
-    } else {
+    }
+    else {
       await $fetch('/api/calendar/events', {
         method: 'POST',
         body: {
@@ -1615,9 +1627,11 @@ async function saveEvent() {
     }
     await loadEvents()
     showEventDialog.value = false
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save event:', error)
-  } finally {
+  }
+  finally {
     savingEvent.value = false
   }
 }
@@ -1635,9 +1649,11 @@ async function confirmDeleteEvent() {
     await loadEvents()
     showDeleteDialog.value = false
     eventToDelete.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete event:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }
@@ -1679,7 +1695,8 @@ async function loadConfig() {
     viewMonth.value = data.config.current_month
     // Note: settingsForm is populated in openSettingsDialog() with deep copies
     // to avoid direct mutation when user edits but cancels
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load calendar config:', error)
   }
 }
@@ -1695,7 +1712,8 @@ async function loadEvents() {
       },
     })
     events.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load events:', error)
   }
 }
@@ -1705,34 +1723,35 @@ async function loadEntities() {
   try {
     // Load all entities for linking (NPCs, Locations, Items, Factions, Lore, Players)
     const [npcs, locations, items, factions, lore, players] = await Promise.all([
-      $fetch<Array<{ id: number; name: string }>>('/api/npcs', {
+      $fetch<Array<{ id: number, name: string }>>('/api/npcs', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
-      $fetch<Array<{ id: number; name: string }>>('/api/locations', {
+      $fetch<Array<{ id: number, name: string }>>('/api/locations', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
-      $fetch<Array<{ id: number; name: string }>>('/api/items', {
+      $fetch<Array<{ id: number, name: string }>>('/api/items', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
-      $fetch<Array<{ id: number; name: string }>>('/api/factions', {
+      $fetch<Array<{ id: number, name: string }>>('/api/factions', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
-      $fetch<Array<{ id: number; name: string }>>('/api/lore', {
+      $fetch<Array<{ id: number, name: string }>>('/api/lore', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
-      $fetch<Array<{ id: number; name: string }>>('/api/players', {
+      $fetch<Array<{ id: number, name: string }>>('/api/players', {
         query: { campaignId: campaignStore.activeCampaignId },
       }),
     ])
     entityOptions.value = [
-      ...npcs.map((n) => ({ ...n, type: 'NPC' })),
-      ...players.map((p) => ({ ...p, type: 'Player' })),
-      ...locations.map((l) => ({ ...l, type: 'Location' })),
-      ...items.map((i) => ({ ...i, type: 'Item' })),
-      ...factions.map((f) => ({ ...f, type: 'Faction' })),
-      ...lore.map((l) => ({ ...l, type: 'Lore' })),
+      ...npcs.map(n => ({ ...n, type: 'NPC' })),
+      ...players.map(p => ({ ...p, type: 'Player' })),
+      ...locations.map(l => ({ ...l, type: 'Location' })),
+      ...items.map(i => ({ ...i, type: 'Item' })),
+      ...factions.map(f => ({ ...f, type: 'Faction' })),
+      ...lore.map(l => ({ ...l, type: 'Lore' })),
     ]
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load entities:', error)
   }
 }
@@ -1744,7 +1763,8 @@ async function loadSessions() {
       query: { campaignId: campaignStore.activeCampaignId },
     })
     sessions.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load sessions:', error)
   }
 }
@@ -1756,7 +1776,8 @@ async function loadSeasons() {
       query: { campaignId: campaignStore.activeCampaignId },
     })
     seasons.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load seasons:', error)
   }
 }
@@ -1772,8 +1793,9 @@ async function loadWeather() {
       },
     })
     // Convert to map for efficient lookup
-    weather.value = new Map(data.map((w) => [w.day, w]))
-  } catch (error) {
+    weather.value = new Map(data.map(w => [w.day, w]))
+  }
+  catch (error) {
     console.error('Failed to load weather:', error)
   }
 }
@@ -1845,7 +1867,7 @@ async function doGenerateWeather(overwrite: boolean) {
 
   generatingWeather.value = true
   try {
-    const result = await $fetch<{ generated: number; weather: CalendarWeather[] }>('/api/calendar/weather/generate', {
+    const result = await $fetch<{ generated: number, weather: CalendarWeather[] }>('/api/calendar/weather/generate', {
       method: 'POST',
       body: {
         campaignId: campaignStore.activeCampaignId,
@@ -1861,10 +1883,12 @@ async function doGenerateWeather(overwrite: boolean) {
     if (result.generated > 0) {
       snackbarStore.success(t('calendar.weather.generated', { count: result.generated }))
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to generate weather:', error)
     snackbarStore.error(String(error))
-  } finally {
+  }
+  finally {
     generatingWeather.value = false
   }
 }

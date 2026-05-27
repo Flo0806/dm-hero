@@ -23,19 +23,19 @@ const props = defineProps<{
   markers?: MapMarker[]
   areas?: MapArea[]
   editMode?: boolean // Enable area drawing/editing
-  measurePoints?: { x: number; y: number }[] // Points for measurement tool
+  measurePoints?: { x: number, y: number }[] // Points for measurement tool
 }>()
 
 const emit = defineEmits<{
   markerClick: [marker: MapMarker]
   markerRightClick: [marker: MapMarker]
-  mapClick: [position: { x: number; y: number }]
-  markerDrag: [data: { marker: MapMarker; x: number; y: number }]
-  markerDragIntoArea: [data: { marker: MapMarker; area: MapArea; x: number; y: number }]
-  markerDragOutOfArea: [data: { marker: MapMarker; previousArea: MapArea; x: number; y: number }]
+  mapClick: [position: { x: number, y: number }]
+  markerDrag: [data: { marker: MapMarker, x: number, y: number }]
+  markerDragIntoArea: [data: { marker: MapMarker, area: MapArea, x: number, y: number }]
+  markerDragOutOfArea: [data: { marker: MapMarker, previousArea: MapArea, x: number, y: number }]
   areaClick: [area: MapArea]
   areaRightClick: [area: MapArea]
-  areaDrag: [data: { area: MapArea; x: number; y: number }]
+  areaDrag: [data: { area: MapArea, x: number, y: number }]
 }>()
 
 const mapContainer = ref<HTMLElement | null>(null)
@@ -49,8 +49,8 @@ const circleRefs = new Map<number, Circle>()
 
 // Drag state for areas
 const draggingArea = ref<MapArea | null>(null)
-const dragStartPos = ref<{ lat: number; lng: number } | null>(null)
-const areaStartCenter = ref<{ lat: number; lng: number } | null>(null)
+const dragStartPos = ref<{ lat: number, lng: number } | null>(null)
+const areaStartCenter = ref<{ lat: number, lng: number } | null>(null)
 
 // Flag to suppress click after drag/resize (only if actually moved)
 const justFinishedDragging = ref(false)
@@ -453,10 +453,12 @@ function updateMarkers() {
       if (!previousArea && newArea) {
         // Marker was dragged INTO an area
         emit('markerDragIntoArea', { marker, area: newArea, x: newX, y: newY })
-      } else if (previousArea && !newArea) {
+      }
+      else if (previousArea && !newArea) {
         // Marker was dragged OUT OF an area
         emit('markerDragOutOfArea', { marker, previousArea, x: newX, y: newY })
-      } else if (previousArea && newArea && previousArea.id !== newArea.id) {
+      }
+      else if (previousArea && newArea && previousArea.id !== newArea.id) {
         // Marker moved from one area to another - treat as out of old, into new
         emit('markerDragOutOfArea', { marker, previousArea, x: newX, y: newY })
         emit('markerDragIntoArea', { marker, area: newArea, x: newX, y: newY })
@@ -541,23 +543,25 @@ function buildTooltipContent(marker: MapMarker): string {
 }
 
 // LocalStorage helpers for map view state
-function saveMapState(mapId: number, state: { zoom: number; center: [number, number] }) {
+function saveMapState(mapId: number, state: { zoom: number, center: [number, number] }) {
   try {
     const key = `map-view-${mapId}`
     localStorage.setItem(key, JSON.stringify(state))
-  } catch {
+  }
+  catch {
     // localStorage might not be available
   }
 }
 
-function loadMapState(mapId: number): { zoom: number; center: [number, number] } | null {
+function loadMapState(mapId: number): { zoom: number, center: [number, number] } | null {
   try {
     const key = `map-view-${mapId}`
     const saved = localStorage.getItem(key)
     if (saved) {
       return JSON.parse(saved)
     }
-  } catch {
+  }
+  catch {
     // localStorage might not be available
   }
   return null

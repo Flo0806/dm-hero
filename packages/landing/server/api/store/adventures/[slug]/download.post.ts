@@ -99,7 +99,8 @@ export default defineEventHandler(async (event) => {
          VALUES (?, ?, ?)`,
         [user.id, adventure.id, ip],
       )
-    } catch {
+    }
+    catch {
       // Ignore tracking errors
     }
   }
@@ -170,17 +171,20 @@ export default defineEventHandler(async (event) => {
     passthrough.on('end', async () => {
       try {
         await rm(tempDir, { recursive: true, force: true })
-      } catch {
+      }
+      catch {
         // Ignore cleanup errors
       }
     })
 
     return passthrough
-  } catch (err) {
+  }
+  catch (err) {
     // Clean up on error
     try {
       await rm(tempDir, { recursive: true, force: true })
-    } catch {
+    }
+    catch {
       // Ignore cleanup errors
     }
 

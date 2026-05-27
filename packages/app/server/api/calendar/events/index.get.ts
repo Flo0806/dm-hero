@@ -73,7 +73,7 @@ export default defineEventHandler((event) => {
 
   // Fetch linked entities for all events
   if (events.length > 0) {
-    const eventIds = events.map((e) => e.id)
+    const eventIds = events.map(e => e.id)
     const placeholders = eventIds.map(() => '?').join(',')
 
     const linkedEntities = db

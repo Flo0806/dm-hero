@@ -38,10 +38,12 @@ export default defineEventHandler(async (event) => {
 
     if (existsSync(oldPath)) {
       filePath = oldPath
-    } else if (existsSync(newPath)) {
+    }
+    else if (existsSync(newPath)) {
       filePath = newPath
     }
-  } else {
+  }
+  else {
     // New format: DB has "uuid.pdf", file is at uploads/uuid.pdf
     const directPath = join(uploadPath, path)
     if (existsSync(directPath)) {
@@ -73,7 +75,8 @@ export default defineEventHandler(async (event) => {
         // Extract original filename from path (without UUID)
         const filename = path.split('/').pop() || 'document.pdf'
         setResponseHeader(event, 'Content-Disposition', `attachment; filename="${filename}"`)
-      } else {
+      }
+      else {
         // Allow inline viewing in browser (preview mode)
         setResponseHeader(event, 'Content-Type', 'application/pdf')
         setResponseHeader(event, 'Content-Disposition', 'inline')
@@ -86,7 +89,8 @@ export default defineEventHandler(async (event) => {
 
     // Return file stream
     return sendStream(event, createReadStream(filePath))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Document fetch error:', error)
     throw createError({
       statusCode: 404,

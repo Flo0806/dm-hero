@@ -39,7 +39,8 @@ export function createBackup() {
     copyFileSync(DB_PATH, backupPath)
     console.log(`✅ Backup created: ${backupPath}`)
     return backupPath
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Backup failed:', error)
     return null
   }
@@ -51,7 +52,8 @@ export function getCurrentVersion(database: Database.Database): number {
       .prepare('SELECT version FROM schema_version ORDER BY version DESC LIMIT 1')
       .get() as { version: number } | undefined
     return result?.version || 0
-  } catch {
+  }
+  catch {
     // Table doesn't exist yet
     return 0
   }

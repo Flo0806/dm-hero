@@ -55,7 +55,7 @@ function createLore(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || null,
-      options?.metadata ? JSON.stringify(options.metadata) : null
+      options?.metadata ? JSON.stringify(options.metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -74,7 +74,7 @@ describe('Lore - Basic CRUD', () => {
 
     const lore = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(loreId) as { id: number; name: string; type_id: number }
+      .get(loreId) as { id: number, name: string, type_id: number }
 
     expect(lore).toBeDefined()
     expect(lore.name).toBe('The Great Cataclysm')
@@ -89,18 +89,18 @@ describe('Lore - Basic CRUD', () => {
         type: 'event',
         era: 'Second Sundering',
         year: 1385,
-        isSecret: false
-      }
+        isSecret: false,
+      },
     })
 
     const lore = db
       .prepare('SELECT * FROM entities WHERE id = ?')
       .get(loreId) as {
-        name: string
-        description: string
-        image_url: string
-        metadata: string
-      }
+      name: string
+      description: string
+      image_url: string
+      metadata: string
+    }
 
     expect(lore.name).toBe('The Spellplague')
     expect(lore.description).toBe('A catastrophic event that changed the nature of magic')
@@ -119,7 +119,7 @@ describe('Lore - Basic CRUD', () => {
 
     const lore = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(loreId) as { name: string; description: string }
+      .get(loreId) as { name: string, description: string }
 
     expect(lore.name).toBe('New Legend')
     expect(lore.description).toBe('Updated description')

@@ -90,7 +90,7 @@ describe('Groups - Basic CRUD', () => {
 
     const group = db
       .prepare('SELECT * FROM entity_groups WHERE id = ?')
-      .get(groupId) as { id: number; name: string; campaign_id: number }
+      .get(groupId) as { id: number, name: string, campaign_id: number }
 
     expect(group).toBeDefined()
     expect(group.name).toBe('Dungeon West')
@@ -107,11 +107,11 @@ describe('Groups - Basic CRUD', () => {
     const group = db
       .prepare('SELECT * FROM entity_groups WHERE id = ?')
       .get(groupId) as {
-        name: string
-        description: string
-        color: string
-        icon: string
-      }
+      name: string
+      description: string
+      color: string
+      icon: string
+    }
 
     expect(group.name).toBe('Forest Encounter')
     expect(group.description).toBe('All entities for the forest encounter')
@@ -130,7 +130,7 @@ describe('Groups - Basic CRUD', () => {
 
     const group = db
       .prepare('SELECT name, description, color FROM entity_groups WHERE id = ?')
-      .get(groupId) as { name: string; description: string; color: string }
+      .get(groupId) as { name: string, description: string, color: string }
 
     expect(group.name).toBe('New Name')
     expect(group.description).toBe('Updated description')
@@ -281,7 +281,7 @@ describe('Groups - Member Counts', () => {
         WHERE gm.group_id = ?
         GROUP BY e.type_id
       `)
-      .all(groupId) as Array<{ type_name: string; count: number }>
+      .all(groupId) as Array<{ type_name: string, count: number }>
 
     expect(counts).toHaveLength(3)
 
@@ -447,7 +447,7 @@ describe('Groups - Entity in Multiple Groups', () => {
         WHERE gm.entity_id = ?
         AND g.deleted_at IS NULL
       `)
-      .all(npcId) as Array<{ id: number; name: string }>
+      .all(npcId) as Array<{ id: number, name: string }>
 
     expect(groups).toHaveLength(3)
     expect(groups.map(g => g.name).sort()).toEqual(['Adventure 1', 'Adventure 2', 'Important NPCs'])
@@ -730,7 +730,7 @@ describe('Groups - Data Integrity', () => {
 
     const group = db
       .prepare('SELECT created_at, updated_at FROM entity_groups WHERE id = ?')
-      .get(groupId) as { created_at: string; updated_at: string }
+      .get(groupId) as { created_at: string, updated_at: string }
 
     // Check timestamps are set and reasonable (same day)
     expect(group.created_at).toBeDefined()
@@ -869,7 +869,7 @@ describe('Groups - Import Integration (Merge Mode)', () => {
     // Verify the group was created
     const group = db
       .prepare('SELECT * FROM entity_groups WHERE id = ?')
-      .get(groupId) as { name: string; icon: string }
+      .get(groupId) as { name: string, icon: string }
 
     expect(group.name).toBe('Test Adventure Import')
     expect(group.icon).toBe('mdi-import')
@@ -993,7 +993,7 @@ describe('Groups - Import Integration (Merge Mode)', () => {
         WHERE gm.group_id = ?
         GROUP BY e.type_id
       `)
-      .all(groupId) as Array<{ type_name: string; count: number }>
+      .all(groupId) as Array<{ type_name: string, count: number }>
 
     expect(counts).toHaveLength(3) // NPC, Location, Item
 
@@ -1105,9 +1105,9 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
       LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
       GROUP BY g.id
-    `).all(testCampaignId) as Array<{ name: string; member_names: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, member_names: string | null }>
 
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       // Check group name
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       // Check member names
@@ -1138,9 +1138,9 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
       LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
       GROUP BY g.id
-    `).all(testCampaignId) as Array<{ name: string; member_names: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, member_names: string | null }>
 
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       if (g.member_names) {
         const members = g.member_names.split(',')
@@ -1169,9 +1169,9 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
       LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
       GROUP BY g.id
-    `).all(testCampaignId) as Array<{ name: string; member_names: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, member_names: string | null }>
 
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       if (g.member_names) {
         const members = g.member_names.split(',')
@@ -1201,10 +1201,10 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
       LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
       GROUP BY g.id
-    `).all(testCampaignId) as Array<{ name: string; member_names: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, member_names: string | null }>
 
     // Both should be found
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       if (g.member_names) {
         const members = g.member_names.split(',')
@@ -1236,9 +1236,9 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
       LEFT JOIN entities e ON e.id = gm.entity_id AND e.deleted_at IS NULL
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
       GROUP BY g.id
-    `).all(testCampaignId) as Array<{ name: string; member_names: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, member_names: string | null }>
 
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       if (g.member_names) {
         const members = g.member_names.split(',')
@@ -1258,9 +1258,9 @@ describe('Groups - Fuzzy Search with Levenshtein', () => {
 
     const groups = db.prepare(`
       SELECT name, description FROM entity_groups WHERE campaign_id = ? AND deleted_at IS NULL
-    `).all(testCampaignId) as Array<{ name: string; description: string | null }>
+    `).all(testCampaignId) as Array<{ name: string, description: string | null }>
 
-    const matches = groups.filter(g => {
+    const matches = groups.filter((g) => {
       if (fuzzyScore(g.name, searchTerm, maxDist) !== null) return true
       if (g.description && fuzzyScore(g.description, searchTerm, maxDist) !== null) return true
       return false
@@ -1424,7 +1424,7 @@ describe('Groups - Entity Card Chips (batch-counts groups)', () => {
     }>
 
     // Build groups map like batch-counts does
-    const groupsByEntity = new Map<number, Array<{ id: number; name: string; color: string | null; icon: string | null }>>()
+    const groupsByEntity = new Map<number, Array<{ id: number, name: string, color: string | null, icon: string | null }>>()
 
     for (const membership of groupMemberships) {
       if (!groupsByEntity.has(membership.entity_id)) {
@@ -1466,7 +1466,7 @@ describe('Groups - Entity Card Chips (batch-counts groups)', () => {
       FROM entity_group_members gm
       INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
       WHERE gm.entity_id = ?
-    `).all(npcId) as Array<{ id: number; name: string }>
+    `).all(npcId) as Array<{ id: number, name: string }>
 
     // Query for Location
     const locationGroups = db.prepare(`
@@ -1474,7 +1474,7 @@ describe('Groups - Entity Card Chips (batch-counts groups)', () => {
       FROM entity_group_members gm
       INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
       WHERE gm.entity_id = ?
-    `).all(locationId) as Array<{ id: number; name: string }>
+    `).all(locationId) as Array<{ id: number, name: string }>
 
     // Query for Item
     const itemGroups = db.prepare(`
@@ -1482,7 +1482,7 @@ describe('Groups - Entity Card Chips (batch-counts groups)', () => {
       FROM entity_group_members gm
       INNER JOIN entity_groups g ON g.id = gm.group_id AND g.deleted_at IS NULL
       WHERE gm.entity_id = ?
-    `).all(itemId) as Array<{ id: number; name: string }>
+    `).all(itemId) as Array<{ id: number, name: string }>
 
     // All should return the same group
     expect(npcGroups).toHaveLength(1)
@@ -1562,7 +1562,7 @@ describe('Groups - isAlreadyInGroup Logic (GroupEntitySelectDialog)', () => {
       existingMembers.some(m => m.entity_id === entityId)
 
     // All NPCs in group should be identified
-    npcs.forEach(npcId => {
+    npcs.forEach((npcId) => {
       expect(isAlreadyInGroup(npcId)).toBe(true)
     })
 
@@ -1693,7 +1693,7 @@ describe('Groups - Global Search Integration', () => {
         COALESCE(g.color, '#9370DB') as color
       FROM entity_groups g
       WHERE g.campaign_id = ? AND g.deleted_at IS NULL
-    `).all(testCampaignId) as Array<{ icon: string; color: string }>
+    `).all(testCampaignId) as Array<{ icon: string, color: string }>
 
     expect(groupResults[0]?.icon).toBe('mdi-folder-multiple')
     expect(groupResults[0]?.color).toBe('#9370DB')

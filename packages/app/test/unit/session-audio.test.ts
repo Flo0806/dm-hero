@@ -59,7 +59,7 @@ function createAudio(options?: {
       options?.description || null,
       options?.durationSeconds || 3600,
       options?.fileSizeBytes || 1024000,
-      options?.mimeType || 'audio/mpeg'
+      options?.mimeType || 'audio/mpeg',
     )
   return Number(result.lastInsertRowid)
 }
@@ -79,7 +79,7 @@ function createMarker(audioId: number, timestampSeconds: number, label: string, 
       timestampSeconds,
       label,
       options?.description || null,
-      options?.color || '#D4A574'
+      options?.color || '#D4A574',
     )
   return Number(result.lastInsertRowid)
 }
@@ -90,7 +90,7 @@ describe('Session Audio - Basic CRUD', () => {
 
     const audio = db
       .prepare('SELECT * FROM session_audio WHERE id = ?')
-      .get(audioId) as { id: number; session_id: number; title: string }
+      .get(audioId) as { id: number, session_id: number, title: string }
 
     expect(audio).toBeDefined()
     expect(audio.session_id).toBe(testSessionId)
@@ -103,18 +103,18 @@ describe('Session Audio - Basic CRUD', () => {
       description: 'Full recording of session 1',
       durationSeconds: 7200,
       fileSizeBytes: 2048000,
-      mimeType: 'audio/wav'
+      mimeType: 'audio/wav',
     })
 
     const audio = db
       .prepare('SELECT * FROM session_audio WHERE id = ?')
       .get(audioId) as {
-        title: string
-        description: string
-        duration_seconds: number
-        file_size_bytes: number
-        mime_type: string
-      }
+      title: string
+      description: string
+      duration_seconds: number
+      file_size_bytes: number
+      mime_type: string
+    }
 
     expect(audio.title).toBe('Session 1 Recording')
     expect(audio.description).toBe('Full recording of session 1')
@@ -131,7 +131,7 @@ describe('Session Audio - Basic CRUD', () => {
 
     const audio = db
       .prepare('SELECT title, description FROM session_audio WHERE id = ?')
-      .get(audioId) as { title: string; description: string }
+      .get(audioId) as { title: string, description: string }
 
     expect(audio.title).toBe('Updated Title')
     expect(audio.description).toBe('New description')
@@ -190,7 +190,7 @@ describe('Audio Markers - Basic CRUD', () => {
 
     const marker = db
       .prepare('SELECT * FROM audio_markers WHERE id = ?')
-      .get(markerId) as { id: number; audio_id: number; timestamp_seconds: number; label: string }
+      .get(markerId) as { id: number, audio_id: number, timestamp_seconds: number, label: string }
 
     expect(marker).toBeDefined()
     expect(marker.audio_id).toBe(audioId)
@@ -202,16 +202,16 @@ describe('Audio Markers - Basic CRUD', () => {
     const audioId = createAudio()
     const markerId = createMarker(audioId, 300, 'Boss Fight', {
       description: 'The party encountered the dragon',
-      color: '#FF5733'
+      color: '#FF5733',
     })
 
     const marker = db
       .prepare('SELECT * FROM audio_markers WHERE id = ?')
       .get(markerId) as {
-        label: string
-        description: string
-        color: string
-      }
+      label: string
+      description: string
+      color: string
+    }
 
     expect(marker.label).toBe('Boss Fight')
     expect(marker.description).toBe('The party encountered the dragon')
@@ -227,7 +227,7 @@ describe('Audio Markers - Basic CRUD', () => {
 
     const marker = db
       .prepare('SELECT label, timestamp_seconds FROM audio_markers WHERE id = ?')
-      .get(markerId) as { label: string; timestamp_seconds: number }
+      .get(markerId) as { label: string, timestamp_seconds: number }
 
     expect(marker.label).toBe('Updated')
     expect(marker.timestamp_seconds).toBe(90)
@@ -313,7 +313,7 @@ describe('Session Audio - Session Relationship', () => {
         JOIN sessions s ON s.id = sa.session_id
         WHERE sa.id = ?
       `)
-      .get(audioId) as { title: string; session_title: string }
+      .get(audioId) as { title: string, session_title: string }
 
     expect(result.title).toBe('Session Recording')
     expect(result.session_title).toBe('Test Session for Audio')
@@ -331,7 +331,7 @@ describe('Session Audio - Session Relationship', () => {
         WHERE s.id = ?
         GROUP BY s.id
       `)
-      .get(testSessionId) as { title: string; audio_count: number }
+      .get(testSessionId) as { title: string, audio_count: number }
 
     expect(result.title).toBe('Test Session for Audio')
     expect(result.audio_count).toBe(2)

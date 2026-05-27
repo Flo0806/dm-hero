@@ -72,17 +72,20 @@ const cometStyle = computed(() => {
     x = distance
     y = 0
     rotation = 90
-  } else if (distance < w + h) {
+  }
+  else if (distance < w + h) {
     // Right edge (top to bottom)
     x = w
     y = distance - w
     rotation = 180
-  } else if (distance < 2 * w + h) {
+  }
+  else if (distance < 2 * w + h) {
     // Bottom edge (right to left)
     x = w - (distance - w - h)
     y = h
     rotation = 270
-  } else {
+  }
+  else {
     // Left edge (bottom to top)
     x = 0
     y = h - (distance - 2 * w - h)

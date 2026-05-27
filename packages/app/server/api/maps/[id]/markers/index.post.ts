@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
   // Check if entity already has a marker on this map (for warning)
   const existingMarker = db
     .prepare('SELECT id, x, y FROM map_markers WHERE map_id = ? AND entity_id = ?')
-    .get(Number(mapId), body.entity_id) as { id: number; x: number; y: number } | undefined
+    .get(Number(mapId), body.entity_id) as { id: number, x: number, y: number } | undefined
 
   const result = db
     .prepare(

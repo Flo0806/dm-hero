@@ -14,7 +14,7 @@ export default defineEventHandler((event) => {
   // Check if currency exists and get info
   const currency = db
     .prepare('SELECT id, campaign_id, is_default, code FROM currencies WHERE id = ?')
-    .get(id) as { id: number; campaign_id: number; is_default: number; code: string } | undefined
+    .get(id) as { id: number, campaign_id: number, is_default: number, code: string } | undefined
 
   if (!currency) {
     throw createError({

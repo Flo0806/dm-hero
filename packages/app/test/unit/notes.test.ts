@@ -114,7 +114,7 @@ describe('Notes - Basic CRUD Operations', () => {
     const notes = getNotes()
 
     expect(notes).toHaveLength(3)
-    expect(notes.every((n) => n.content === 'Duplicate content')).toBe(true)
+    expect(notes.every(n => n.content === 'Duplicate content')).toBe(true)
   })
 })
 
@@ -276,7 +276,8 @@ describe('Notes - Campaign Isolation', () => {
         .all(secondCampaignId) as NoteRow[]
       expect(campaign2Notes).toHaveLength(1)
       expect(campaign2Notes[0]?.content).toBe('Campaign 2 Note')
-    } finally {
+    }
+    finally {
       // Clean up
       db.prepare('DELETE FROM campaign_notes WHERE campaign_id = ?').run(secondCampaignId)
       db.prepare('DELETE FROM campaigns WHERE id = ?').run(secondCampaignId)
@@ -322,7 +323,7 @@ describe('Notes - Clear Completed', () => {
     const notes = getNotes()
 
     expect(notes).toHaveLength(2)
-    expect(notes.every((n) => n.completed === 0)).toBe(true)
+    expect(notes.every(n => n.completed === 0)).toBe(true)
   })
 
   it('should not delete pending notes when clearing completed', () => {
@@ -409,7 +410,7 @@ describe('Notes - Store Getters Simulation', () => {
     createNote('Completed 1', true)
 
     const notes = getNotes()
-    const pendingCount = notes.filter((n) => n.completed === 0).length
+    const pendingCount = notes.filter(n => n.completed === 0).length
 
     expect(pendingCount).toBe(2)
   })
@@ -420,7 +421,7 @@ describe('Notes - Store Getters Simulation', () => {
     createNote('Completed 2', true)
 
     const notes = getNotes()
-    const completedCount = notes.filter((n) => n.completed === 1).length
+    const completedCount = notes.filter(n => n.completed === 1).length
 
     expect(completedCount).toBe(2)
   })

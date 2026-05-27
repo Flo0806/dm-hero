@@ -77,7 +77,7 @@ const locales = [
 ]
 
 const currentLocaleData = computed(() => {
-  return locales.find((l) => l.value === props.currentLocale) ?? locales[0]
+  return locales.find(l => l.value === props.currentLocale) ?? locales[0]
 })
 
 // Set to 100% by default, meaning the right edge of the window controls is at the far right of the window

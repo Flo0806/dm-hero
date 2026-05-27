@@ -53,7 +53,8 @@ export default defineEventHandler(async (event) => {
     if (rel.notes) {
       try {
         parsedNotes = JSON.parse(rel.notes)
-      } catch {
+      }
+      catch {
         parsedNotes = rel.notes
       }
     }

@@ -250,7 +250,7 @@ describe('Calendar Seasons - Weather Type Field', () => {
       .all(testCampaignId) as CalendarSeason[]
 
     expect(storedSeasons).toHaveLength(4)
-    expect(storedSeasons.map((s) => s.weather_type)).toEqual(['spring', 'summer', 'autumn', 'winter'])
+    expect(storedSeasons.map(s => s.weather_type)).toEqual(['spring', 'summer', 'autumn', 'winter'])
   })
 })
 
@@ -274,11 +274,11 @@ describe('Calendar Weather - Campaign Isolation', () => {
     // Query each campaign's weather
     const weather1 = db
       .prepare('SELECT weather_type, temperature FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? AND day = ?')
-      .get(testCampaignId, 1352, 1, 1) as { weather_type: string; temperature: number }
+      .get(testCampaignId, 1352, 1, 1) as { weather_type: string, temperature: number }
 
     const weather2 = db
       .prepare('SELECT weather_type, temperature FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? AND day = ?')
-      .get(campaign2Id, 1352, 1, 1) as { weather_type: string; temperature: number }
+      .get(campaign2Id, 1352, 1, 1) as { weather_type: string, temperature: number }
 
     expect(weather1.weather_type).toBe('sunny')
     expect(weather1.temperature).toBe(20)

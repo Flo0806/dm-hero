@@ -108,7 +108,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  edit: [group: EntityGroup]
+  'edit': [group: EntityGroup]
   'add-entities': [group: EntityGroup]
   'delete-all': [group: EntityGroup]
   'member-removed': [groupId: number]
@@ -117,7 +117,7 @@ const emit = defineEmits<{
 
 const internalShow = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const activeTab = ref('all')
@@ -146,8 +146,8 @@ const countsByType = computed(() => {
 // Only show tabs with members
 const visibleTabs = computed(() => {
   return entityTypes
-    .filter((et) => (countsByType.value[et.type] || 0) > 0)
-    .map((et) => ({
+    .filter(et => (countsByType.value[et.type] || 0) > 0)
+    .map(et => ({
       ...et,
       count: countsByType.value[et.type] || 0,
     }))
@@ -157,7 +157,7 @@ const totalMembers = computed(() => members.value.length)
 
 // Filter members by type
 function getMembersByType(type: string): GroupMember[] {
-  return members.value.filter((m) => m.entity_type === type)
+  return members.value.filter(m => m.entity_type === type)
 }
 
 // Load members when dialog opens
@@ -192,7 +192,7 @@ defineExpose({ refresh })
 async function removeMember(entityId: number) {
   if (!props.group) return
   await $fetch(`/api/groups/${props.group.id}/members/${entityId}`, { method: 'DELETE' })
-  members.value = members.value.filter((m) => m.entity_id !== entityId)
+  members.value = members.value.filter(m => m.entity_id !== entityId)
   emit('member-removed', props.group.id)
 }
 
@@ -204,5 +204,4 @@ function close() {
   emit('update:modelValue', false)
   activeTab.value = 'all'
 }
-
 </script>

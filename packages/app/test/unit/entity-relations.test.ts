@@ -77,7 +77,7 @@ describe('Entity Relations - Basic CRUD', () => {
 
     const relation = db
       .prepare('SELECT * FROM entity_relations WHERE id = ?')
-      .get(relationId) as { id: number; from_entity_id: number; to_entity_id: number; relation_type: string }
+      .get(relationId) as { id: number, from_entity_id: number, to_entity_id: number, relation_type: string }
 
     expect(relation).toBeDefined()
     expect(relation.from_entity_id).toBe(npcId)
@@ -95,7 +95,7 @@ describe('Entity Relations - Basic CRUD', () => {
 
     const relation = db
       .prepare('SELECT * FROM entity_relations WHERE id = ?')
-      .get(relationId) as { relation_type: string; notes: string }
+      .get(relationId) as { relation_type: string, notes: string }
 
     expect(relation.relation_type).toBe('carries')
     expect(relation.notes).toBe('Updated notes')
@@ -144,7 +144,7 @@ describe('Entity Relations - Bidirectional Queries', () => {
         FROM entity_relations
         WHERE from_entity_id = ?
       `)
-      .all(npcId) as Array<{ related_id: number; relation_type: string }>
+      .all(npcId) as Array<{ related_id: number, relation_type: string }>
 
     expect(outgoing).toHaveLength(1)
     expect(outgoing[0].related_id).toBe(itemId)
@@ -156,7 +156,7 @@ describe('Entity Relations - Bidirectional Queries', () => {
         FROM entity_relations
         WHERE to_entity_id = ?
       `)
-      .all(itemId) as Array<{ related_id: number; relation_type: string }>
+      .all(itemId) as Array<{ related_id: number, relation_type: string }>
 
     expect(incoming).toHaveLength(1)
     expect(incoming[0].related_id).toBe(npcId)
@@ -183,7 +183,7 @@ describe('Entity Relations - Bidirectional Queries', () => {
         FROM entity_relations
         WHERE to_entity_id = ?
       `)
-      .all(npcId, npcId) as Array<{ related_id: number; direction: string; relation_type: string }>
+      .all(npcId, npcId) as Array<{ related_id: number, direction: string, relation_type: string }>
 
     expect(allRelated).toHaveLength(2)
 
@@ -207,7 +207,7 @@ describe('Entity Relations - Cross-Entity Type Linking', () => {
         JOIN entities e ON e.id = er.to_entity_id
         WHERE er.from_entity_id = ?
       `)
-      .all(npcId) as Array<{ name: string; type_id: number; relation_type: string }>
+      .all(npcId) as Array<{ name: string, type_id: number, relation_type: string }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].name).toBe('Thieves Guild')
@@ -228,7 +228,7 @@ describe('Entity Relations - Cross-Entity Type Linking', () => {
         JOIN entities e ON e.id = er.to_entity_id
         WHERE er.from_entity_id = ? AND e.type_id = ?
       `)
-      .all(npcId, locationTypeId) as Array<{ name: string; relation_type: string }>
+      .all(npcId, locationTypeId) as Array<{ name: string, relation_type: string }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].name).toBe('The Golden Dragon Inn')
@@ -247,7 +247,7 @@ describe('Entity Relations - Cross-Entity Type Linking', () => {
         JOIN entities e ON e.id = er.to_entity_id
         WHERE er.from_entity_id = ? AND e.type_id = ?
       `)
-      .all(npcId, loreTypeId) as Array<{ name: string; relation_type: string }>
+      .all(npcId, loreTypeId) as Array<{ name: string, relation_type: string }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].name).toBe('Ancient Dragon Prophecy')
@@ -266,7 +266,7 @@ describe('Entity Relations - Cross-Entity Type Linking', () => {
         JOIN entities e ON e.id = er.to_entity_id
         WHERE er.from_entity_id = ?
       `)
-      .all(itemId) as Array<{ name: string; relation_type: string }>
+      .all(itemId) as Array<{ name: string, relation_type: string }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].name).toBe('Hidden Cave')
@@ -325,7 +325,7 @@ describe('Entity Relations - Multiple Relations', () => {
         FROM entity_relations
         WHERE from_entity_id = ? OR to_entity_id = ?
       `)
-      .all(npc2Id, npc2Id, npc2Id) as Array<{ related_id: number; relation_type: string }>
+      .all(npc2Id, npc2Id, npc2Id) as Array<{ related_id: number, relation_type: string }>
 
     expect(knightRelations).toHaveLength(2)
 
@@ -353,7 +353,7 @@ describe('Entity Relations - Relation Types', () => {
     expect(relations).toHaveLength(relationTypes.length)
 
     const storedTypes = relations.map(r => r.relation_type)
-    relationTypes.forEach(type => {
+    relationTypes.forEach((type) => {
       expect(storedTypes).toContain(type)
     })
   })
@@ -429,14 +429,14 @@ describe('Entity Relations - Query with Entity Details', () => {
         WHERE er.from_entity_id = ?
       `)
       .all(npcId) as Array<{
-        relation_id: number
-        relation_type: string
-        notes: string
-        id: number
-        name: string
-        description: string
-        image_url: string
-      }>
+      relation_id: number
+      relation_type: string
+      notes: string
+      id: number
+      name: string
+      description: string
+      image_url: string
+    }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].name).toBe('Golden Ring')
@@ -456,7 +456,7 @@ describe('Entity Relations - Faction to Faction', () => {
 
     const relation = db
       .prepare('SELECT * FROM entity_relations WHERE id = ?')
-      .get(relationId) as { id: number; from_entity_id: number; to_entity_id: number; relation_type: string }
+      .get(relationId) as { id: number, from_entity_id: number, to_entity_id: number, relation_type: string }
 
     expect(relation).toBeDefined()
     expect(relation.from_entity_id).toBe(faction1Id)
@@ -504,12 +504,12 @@ describe('Entity Relations - Faction to Faction', () => {
           AND e.deleted_at IS NULL
       `)
       .all(faction1Id, factionTypeId, faction1Id, factionTypeId) as Array<{
-        id: number
-        relation_type: string
-        related_faction_id: number
-        related_faction_name: string
-        direction: string
-      }>
+      id: number
+      relation_type: string
+      related_faction_id: number
+      related_faction_name: string
+      direction: string
+    }>
 
     expect(relations).toHaveLength(2)
 
@@ -542,7 +542,7 @@ describe('Entity Relations - Faction to Faction', () => {
     expect(relations).toHaveLength(relationTypes.length)
 
     const storedTypes = relations.map(r => r.relation_type)
-    relationTypes.forEach(type => {
+    relationTypes.forEach((type) => {
       expect(storedTypes).toContain(type)
     })
   })
@@ -598,7 +598,7 @@ describe('Entity Relations - Faction to Faction', () => {
           AND e.type_id = ?
           AND e.deleted_at IS NULL
       `)
-      .all(faction1Id, factionTypeId) as Array<{ id: number; name: string }>
+      .all(faction1Id, factionTypeId) as Array<{ id: number, name: string }>
 
     expect(relations).toHaveLength(0)
   })
@@ -612,7 +612,7 @@ describe('Entity Relations - Faction to Faction', () => {
 
     const relation = db
       .prepare('SELECT * FROM entity_relations WHERE id = ?')
-      .get(relationId) as { from_entity_id: number; to_entity_id: number }
+      .get(relationId) as { from_entity_id: number, to_entity_id: number }
 
     // DB allows self-reference - API must validate
     expect(relation.from_entity_id).toBe(relation.to_entity_id)
@@ -630,7 +630,7 @@ describe('Entity Relations - Faction to Faction', () => {
 
     const updated = db
       .prepare('SELECT relation_type, notes FROM entity_relations WHERE id = ?')
-      .get(relationId) as { relation_type: string; notes: string }
+      .get(relationId) as { relation_type: string, notes: string }
 
     expect(updated.relation_type).toBe('neutral')
     expect(updated.notes).toBe('Peace treaty signed')
@@ -687,7 +687,7 @@ describe('Entity Relations - Faction to Faction', () => {
         INNER JOIN entities e ON er.to_entity_id = e.id
         WHERE er.from_entity_id = ?
       `)
-      .all(faction1Id) as Array<{ related_faction_name: string; related_faction_image_url: string }>
+      .all(faction1Id) as Array<{ related_faction_name: string, related_faction_image_url: string }>
 
     expect(relations).toHaveLength(1)
     expect(relations[0].related_faction_name).toBe('Image Faction 2')

@@ -10,7 +10,6 @@ const batchLoading = ref(false)
  * Uses shared state so all PlayerCards share the same cache
  */
 export function usePlayerCounts() {
-
   async function loadPlayerCounts(player: Player): Promise<void> {
     // Skip if already loading
     if (loadingCounts.value.has(player.id)) {
@@ -33,9 +32,11 @@ export function usePlayerCounts() {
       countsMap[player.id] = counts
       // Also add to Player object for immediate access
       player._counts = counts
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to load counts for Player ${player.id}:`, error)
-    } finally {
+    }
+    finally {
       loadingCounts.value.delete(player.id)
     }
   }
@@ -44,7 +45,7 @@ export function usePlayerCounts() {
    * Load counts for multiple Players in parallel (legacy - uses individual requests)
    */
   async function loadPlayerCountsBatch(players: Player[]): Promise<void> {
-    const promises = players.map((player) => loadPlayerCounts(player))
+    const promises = players.map(player => loadPlayerCounts(player))
     await Promise.all(promises)
   }
 
@@ -66,9 +67,11 @@ export function usePlayerCounts() {
         const playerId = Number(playerIdStr)
         countsMap[playerId] = counts
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load Player counts batch:', error)
-    } finally {
+    }
+    finally {
       batchLoading.value = false
     }
   }
@@ -113,7 +116,8 @@ export function usePlayerCounts() {
       try {
         const counts = await $fetch<PlayerCounts>(`/api/players/${id}/counts`)
         countsMap[id] = counts
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to reload counts for Player ${id}:`, error)
       }
     })

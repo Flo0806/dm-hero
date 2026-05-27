@@ -39,8 +39,9 @@ export default defineNuxtPlugin(() => {
 
     try {
       return await $fetch<T>(url, fullOptions) as T
-    } catch (error) {
-      const fetchError = error as { statusCode?: number; status?: number }
+    }
+    catch (error) {
+      const fetchError = error as { statusCode?: number, status?: number }
       const status = fetchError.statusCode || fetchError.status
 
       // Only handle 401
@@ -50,11 +51,11 @@ export default defineNuxtPlugin(() => {
 
       // Skip auth endpoints to avoid infinite loops
       if (
-        url.includes('/api/auth/login') ||
-        url.includes('/api/auth/register') ||
-        url.includes('/api/auth/refresh') ||
-        url.includes('/api/auth/logout') ||
-        url.includes('/api/auth/me')
+        url.includes('/api/auth/login')
+        || url.includes('/api/auth/register')
+        || url.includes('/api/auth/refresh')
+        || url.includes('/api/auth/logout')
+        || url.includes('/api/auth/me')
       ) {
         throw error
       }
@@ -90,7 +91,8 @@ export default defineNuxtPlugin(() => {
           try {
             const result = await $fetch(pending.url, pending.options)
             pending.resolve(result)
-          } catch (err) {
+          }
+          catch (err) {
             pending.reject(err)
           }
         }
@@ -98,7 +100,8 @@ export default defineNuxtPlugin(() => {
 
         // Retry the current request
         return await $fetch<T>(url, fullOptions) as T
-      } finally {
+      }
+      finally {
         isRefreshing = false
         refreshPromise = null
       }
@@ -140,7 +143,8 @@ async function performRefresh(): Promise<boolean> {
     }
 
     return false
-  } catch {
+  }
+  catch {
     return false
   }
 }

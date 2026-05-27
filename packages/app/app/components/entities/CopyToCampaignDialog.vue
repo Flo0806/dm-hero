@@ -188,7 +188,7 @@
             {{ $t('entities.copyToCampaign.successDetails', {
               copied: copyResult.stats.entitiesCopied,
               skipped: copyResult.stats.entitiesSkipped,
-              updated: copyResult.stats.entitiesUpdated
+              updated: copyResult.stats.entitiesUpdated,
             }) }}
           </div>
         </v-alert>
@@ -266,7 +266,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  copied: [result: CopyResult]
+  'copied': [result: CopyResult]
 }>()
 
 const snackbarStore = useSnackbarStore()
@@ -274,7 +274,7 @@ const { t } = useI18n()
 
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const loading = ref(false)
@@ -291,7 +291,7 @@ const expandedPanel = ref<string | null>(null)
 
 // Filter out current campaign
 const availableCampaigns = computed(() =>
-  allCampaigns.value.filter((c) => c.id !== props.currentCampaignId),
+  allCampaigns.value.filter(c => c.id !== props.currentCampaignId),
 )
 
 // Group entities by type
@@ -348,7 +348,7 @@ function getEntityIcon(type: string): string {
 // Check if all entities of a type are selected
 function isAllSelected(type: string): boolean {
   const entities = groupedEntities.value[type] || []
-  return entities.length > 0 && entities.every((e) => selectedIds.value.has(e.id))
+  return entities.length > 0 && entities.every(e => selectedIds.value.has(e.id))
 }
 
 // Toggle all entities of a type
@@ -360,7 +360,8 @@ function toggleAllOfType(type: string) {
     for (const entity of entities) {
       selectedIds.value.delete(entity.id)
     }
-  } else {
+  }
+  else {
     for (const entity of entities) {
       selectedIds.value.add(entity.id)
     }
@@ -372,7 +373,8 @@ function toggleAllOfType(type: string) {
 function toggleEntity(entity: EntityWithType) {
   if (selectedIds.value.has(entity.id)) {
     selectedIds.value.delete(entity.id)
-  } else {
+  }
+  else {
     selectedIds.value.add(entity.id)
   }
   selectedIds.value = new Set(selectedIds.value)
@@ -392,9 +394,11 @@ async function fetchCampaigns() {
   try {
     const response = await $fetch<Campaign[]>('/api/campaigns')
     allCampaigns.value = response
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch campaigns:', error)
-  } finally {
+  }
+  finally {
     loadingCampaigns.value = false
   }
 }
@@ -410,9 +414,11 @@ async function fetchEntities() {
     }>(`/api/campaigns/${props.currentCampaignId}/export-preview`)
 
     allEntities.value = response.entities
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch entities:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -436,16 +442,19 @@ async function doCopy() {
 
     if (result.requiresConfirmation && result.duplicates) {
       duplicates.value = result.duplicates
-    } else if (result.success) {
+    }
+    else if (result.success) {
       emit('copied', result)
       snackbarStore.success(
         t('entities.copyToCampaign.successMessage', { count: result.stats.entitiesCopied }),
       )
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Copy failed:', error)
     snackbarStore.error(t('entities.copyToCampaign.error'))
-  } finally {
+  }
+  finally {
     copying.value = false
   }
 }

@@ -190,8 +190,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add', payload: { factionId: number; relationType: string; rank?: string }): void
-  (e: 'update', payload: { membershipId: number; relationType: string; rank?: string }): void
+  (e: 'add', payload: { factionId: number, relationType: string, rank?: string }): void
+  (e: 'update', payload: { membershipId: number, relationType: string, rank?: string }): void
   (e: 'remove', membershipId: number): void
 }
 
@@ -222,10 +222,10 @@ const isDirty = computed(() => {
 })
 
 // Notify parent dialog about dirty state
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const membershipTypeSuggestions = computed(() =>
-  FACTION_MEMBERSHIP_TYPES.map((type) => ({
+  FACTION_MEMBERSHIP_TYPES.map(type => ({
     value: type,
     title: t(`factions.membershipTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -276,7 +276,7 @@ function closeEditDialog() {
   editForm.value = { relationType: '', rank: '' }
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload factions to include the new faction
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {

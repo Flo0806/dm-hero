@@ -115,10 +115,12 @@ async function handleAccept() {
     showSuccess(t('tos.acceptedSuccess'))
     emit('update:modelValue', false)
     emit('accepted')
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to accept ToS:', err)
     showError(t('tos.acceptError'))
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

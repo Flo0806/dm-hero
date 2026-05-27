@@ -3,7 +3,7 @@ const { t, locale } = useI18n()
 
 // Fetch all docs using Nuxt Content v3 API
 const { data: allDocs } = await useAsyncData('docs-list', () =>
-  queryCollection('docs').order('stem', 'ASC').all()
+  queryCollection('docs').order('stem', 'ASC').all(),
 )
 
 // Filter docs based on current locale
@@ -18,7 +18,6 @@ const docs = computed(() => {
     return isGerman ? isInDeFolder : !isInDeFolder
   })
 })
-
 </script>
 
 <template>

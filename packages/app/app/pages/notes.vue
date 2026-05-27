@@ -260,7 +260,7 @@ async function clearCompleted() {
 
 // Drag end - save new order
 async function onDragEnd() {
-  const noteIds = localNotes.value.map((n) => n.id)
+  const noteIds = localNotes.value.map(n => n.id)
   await notesStore.reorderNotes(noteIds)
 }
 

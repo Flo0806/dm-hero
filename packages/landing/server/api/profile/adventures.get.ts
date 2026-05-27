@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const adventureIds = adventures.map((a) => a.id)
+  const adventureIds = adventures.map(a => a.id)
 
   // Get all versions for these adventures (to show latest + published)
   const versions = await query<VersionRow[]>(
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
   )
 
   // Create lookup maps
-  const ratingsMap = new Map(ratings.map((r) => [r.adventure_id, r]))
+  const ratingsMap = new Map(ratings.map(r => [r.adventure_id, r]))
 
   // Group versions by adventure_id
   const versionsMap = new Map<number, VersionRow[]>()
@@ -86,9 +86,9 @@ export default defineEventHandler(async (event) => {
 
   // Calculate total stats
   const totalDownloads = adventures.reduce((sum, a) => sum + a.download_count, 0)
-  const allRatings = ratings.flatMap((r) => [r])
-  const avgRating =
-    allRatings.length > 0
+  const allRatings = ratings.flatMap(r => [r])
+  const avgRating
+    = allRatings.length > 0
       ? allRatings.reduce((sum, r) => sum + Number(r.avg_rating), 0) / allRatings.length
       : 0
   const totalRatings = ratings.reduce((sum, r) => sum + Number(r.rating_count), 0)
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
 
       // Published version
       const publishedVersion = a.published_version_id
-        ? adventureVersions.find((v) => v.id === a.published_version_id) || null
+        ? adventureVersions.find(v => v.id === a.published_version_id) || null
         : null
 
       // Parse validation_result JSON from latest version
@@ -112,10 +112,12 @@ export default defineEventHandler(async (event) => {
         if (typeof latestVersion.validation_result === 'string') {
           try {
             validationResult = JSON.parse(latestVersion.validation_result)
-          } catch {
+          }
+          catch {
             // Ignore parse errors
           }
-        } else {
+        }
+        else {
           validationResult = latestVersion.validation_result
         }
       }
@@ -128,23 +130,23 @@ export default defineEventHandler(async (event) => {
         // Latest version info (what user last uploaded)
         latestVersion: latestVersion
           ? {
-            id: latestVersion.id,
-            versionNumber: latestVersion.version_number,
-            title: latestVersion.title,
-            coverImageUrl: latestVersion.cover_image_url,
-            status: latestVersion.status,
-            validationResult,
-            validatedAt: latestVersion.validated_at,
-          }
+              id: latestVersion.id,
+              versionNumber: latestVersion.version_number,
+              title: latestVersion.title,
+              coverImageUrl: latestVersion.cover_image_url,
+              status: latestVersion.status,
+              validationResult,
+              validatedAt: latestVersion.validated_at,
+            }
           : null,
         // Published version info (what public sees)
         publishedVersion: publishedVersion
           ? {
-            id: publishedVersion.id,
-            versionNumber: publishedVersion.version_number,
-            title: publishedVersion.title,
-            coverImageUrl: publishedVersion.cover_image_url,
-          }
+              id: publishedVersion.id,
+              versionNumber: publishedVersion.version_number,
+              title: publishedVersion.title,
+              coverImageUrl: publishedVersion.cover_image_url,
+            }
           : null,
         // For backwards compatibility - use latest version's status
         status: latestVersion?.status || 'draft',

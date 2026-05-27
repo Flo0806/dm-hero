@@ -76,7 +76,7 @@ export default defineEventHandler(async (event) => {
     color: string | null
   }>
 
-  const exportEntityTypes: ExportEntityType[] = entityTypes.map((t) => ({
+  const exportEntityTypes: ExportEntityType[] = entityTypes.map(t => ({
     id: t.id,
     name: t.name,
     icon: t.icon || undefined,
@@ -84,7 +84,7 @@ export default defineEventHandler(async (event) => {
   }))
 
   // Build type_id -> type_name lookup
-  const typeIdToName = new Map<number, string>(entityTypes.map((t) => [t.id, t.name]))
+  const typeIdToName = new Map<number, string>(entityTypes.map(t => [t.id, t.name]))
 
   // Collect files to include in ZIP
   const filesToInclude: FileToInclude[] = []
@@ -99,10 +99,12 @@ export default defineEventHandler(async (event) => {
     if (dbPath.startsWith('/api/uploads/')) {
       // API route path like /api/uploads/entities/xxx.png -> uploadPath/entities/xxx.png
       sourcePath = join(uploadPath, dbPath.replace('/api/uploads/', ''))
-    } else if (dbPath.startsWith('/') || dbPath.startsWith('C:')) {
+    }
+    else if (dbPath.startsWith('/') || dbPath.startsWith('C:')) {
       // Absolute path
       sourcePath = dbPath
-    } else {
+    }
+    else {
       // Relative path
       sourcePath = join(uploadPath, dbPath)
     }
@@ -151,7 +153,7 @@ export default defineEventHandler(async (event) => {
     archived_at: string | null
   }>
 
-  const entityIdSet = new Set(entities.map((e) => e.id))
+  const entityIdSet = new Set(entities.map(e => e.id))
 
   // Create export ID mapping
   const entityExportIdMap = new Map<number, string>()
@@ -224,8 +226,8 @@ export default defineEventHandler(async (event) => {
   }>
 
   const exportRelations: ExportRelation[] = relations
-    .filter((r) => entityIdSet.has(r.from_entity_id) && entityIdSet.has(r.to_entity_id))
-    .map((r) => ({
+    .filter(r => entityIdSet.has(r.from_entity_id) && entityIdSet.has(r.to_entity_id))
+    .map(r => ({
       from_entity: entityExportIdMap.get(r.from_entity_id)!,
       to_entity: entityExportIdMap.get(r.to_entity_id)!,
       relation_type: r.relation_type,
@@ -251,7 +253,7 @@ export default defineEventHandler(async (event) => {
   }>
 
   const exportEntityImages: ExportEntityImage[] = entityImages
-    .filter((img) => entityIdSet.has(img.entity_id))
+    .filter(img => entityIdSet.has(img.entity_id))
     .map((img) => {
       const archivePath = addFile(img.image_url, 'images/entities')
       return {
@@ -262,7 +264,7 @@ export default defineEventHandler(async (event) => {
         display_order: img.display_order,
       }
     })
-    .filter((img) => img.image_url)
+    .filter(img => img.image_url)
 
   // Entity Documents
   const entityDocs = db
@@ -290,7 +292,7 @@ export default defineEventHandler(async (event) => {
   let docIndex = 1
 
   const exportEntityDocuments: ExportEntityDocument[] = entityDocs
-    .filter((doc) => entityIdSet.has(doc.entity_id))
+    .filter(doc => entityIdSet.has(doc.entity_id))
     .map((doc) => {
       const exportId = `document:${docIndex++}`
       documentExportIdMap.set(doc.id, exportId)
@@ -366,7 +368,7 @@ export default defineEventHandler(async (event) => {
       sessionExportIdMap.set(s.id, `session:${i + 1}`)
     })
 
-    exportSessions = sessions.map((s) => ({
+    exportSessions = sessions.map(s => ({
       _exportId: sessionExportIdMap.get(s.id)!,
       session_number: s.session_number,
       title: s.title || undefined,
@@ -400,8 +402,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportSessionMentions = sessionMentions
-      .filter((m) => sessionExportIdMap.has(m.session_id) && entityIdSet.has(m.entity_id))
-      .map((m) => ({
+      .filter(m => sessionExportIdMap.has(m.session_id) && entityIdSet.has(m.entity_id))
+      .map(m => ({
         session: sessionExportIdMap.get(m.session_id)!,
         entity: entityExportIdMap.get(m.entity_id)!,
         context: m.context || undefined,
@@ -426,8 +428,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportSessionAttendance = sessionAttendance
-      .filter((a) => sessionExportIdMap.has(a.session_id) && entityIdSet.has(a.player_id))
-      .map((a) => ({
+      .filter(a => sessionExportIdMap.has(a.session_id) && entityIdSet.has(a.player_id))
+      .map(a => ({
         session: sessionExportIdMap.get(a.session_id)!,
         player: entityExportIdMap.get(a.player_id)!,
         character: a.character_id && entityIdSet.has(a.character_id) ? entityExportIdMap.get(a.character_id) : undefined,
@@ -454,7 +456,7 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportSessionImages = sessionImages
-      .filter((img) => sessionExportIdMap.has(img.session_id))
+      .filter(img => sessionExportIdMap.has(img.session_id))
       .map((img) => {
         const archivePath = addFile(img.image_url, 'images/sessions')
         return {
@@ -465,7 +467,7 @@ export default defineEventHandler(async (event) => {
           display_order: img.display_order,
         }
       })
-      .filter((img) => img.image_url)
+      .filter(img => img.image_url)
 
     // Session Audio
     const sessionAudio = db
@@ -491,7 +493,7 @@ export default defineEventHandler(async (event) => {
 
     let audioIndex = 1
     exportSessionAudio = sessionAudio
-      .filter((a) => sessionExportIdMap.has(a.session_id))
+      .filter(a => sessionExportIdMap.has(a.session_id))
       .map((a) => {
         const exportId = `audio:${audioIndex++}`
         audioExportIdMap.set(a.id, exportId)
@@ -528,8 +530,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportAudioMarkers = audioMarkers
-      .filter((m) => audioExportIdMap.has(m.audio_id))
-      .map((m) => ({
+      .filter(m => audioExportIdMap.has(m.audio_id))
+      .map(m => ({
         audio: audioExportIdMap.get(m.audio_id)!,
         timestamp_seconds: m.timestamp_seconds,
         label: m.label,
@@ -551,11 +553,11 @@ export default defineEventHandler(async (event) => {
 
     const calendarMonths = db
       .prepare('SELECT name, days, sort_order FROM calendar_months WHERE campaign_id = ? ORDER BY sort_order')
-      .all(campaignId) as Array<{ name: string; days: number; sort_order: number }>
+      .all(campaignId) as Array<{ name: string, days: number, sort_order: number }>
 
     const calendarWeekdays = db
       .prepare('SELECT name, sort_order FROM calendar_weekdays WHERE campaign_id = ? ORDER BY sort_order')
-      .all(campaignId) as Array<{ name: string; sort_order: number }>
+      .all(campaignId) as Array<{ name: string, sort_order: number }>
 
     const calendarMoons = db.prepare('SELECT * FROM calendar_moons WHERE campaign_id = ?').all(campaignId) as Array<{
       name: string
@@ -628,26 +630,26 @@ export default defineEventHandler(async (event) => {
       exportCalendar = {
         config: calendarConfig
           ? {
-            current_year: calendarConfig.current_year,
-            current_month: calendarConfig.current_month,
-            current_day: calendarConfig.current_day,
-            year_zero_name: calendarConfig.year_zero_name || undefined,
-            era_name: calendarConfig.era_name || undefined,
-            leap_year_interval: calendarConfig.leap_year_interval || undefined,
-            leap_year_month: calendarConfig.leap_year_month || undefined,
-            leap_year_extra_days: calendarConfig.leap_year_extra_days || undefined,
-          }
+              current_year: calendarConfig.current_year,
+              current_month: calendarConfig.current_month,
+              current_day: calendarConfig.current_day,
+              year_zero_name: calendarConfig.year_zero_name || undefined,
+              era_name: calendarConfig.era_name || undefined,
+              leap_year_interval: calendarConfig.leap_year_interval || undefined,
+              leap_year_month: calendarConfig.leap_year_month || undefined,
+              leap_year_extra_days: calendarConfig.leap_year_extra_days || undefined,
+            }
           : undefined,
         months: calendarMonths,
         weekdays: calendarWeekdays,
-        moons: calendarMoons.map((m) => ({
+        moons: calendarMoons.map(m => ({
           name: m.name,
           cycle_days: m.cycle_days,
           full_moon_duration: m.full_moon_duration || undefined,
           new_moon_duration: m.new_moon_duration || undefined,
           phase_offset: m.phase_offset || undefined,
         })),
-        seasons: calendarSeasons.map((s) => ({
+        seasons: calendarSeasons.map(s => ({
           name: s.name,
           start_month: s.start_month,
           start_day: s.start_day,
@@ -657,7 +659,7 @@ export default defineEventHandler(async (event) => {
           weather_type: (s.weather_type as 'winter' | 'spring' | 'summer' | 'autumn') || undefined,
           sort_order: s.sort_order,
         })),
-        events: calendarEvents.map((e) => ({
+        events: calendarEvents.map(e => ({
           _exportId: eventExportIdMap.get(e.id)!,
           title: e.title,
           description: e.description || undefined,
@@ -670,13 +672,13 @@ export default defineEventHandler(async (event) => {
           entity: e.entity_id && entityIdSet.has(e.entity_id) ? entityExportIdMap.get(e.entity_id) : undefined,
         })),
         eventEntities: calendarEventEntities
-          .filter((ee) => eventExportIdMap.has(ee.event_id) && entityIdSet.has(ee.entity_id))
-          .map((ee) => ({
+          .filter(ee => eventExportIdMap.has(ee.event_id) && entityIdSet.has(ee.entity_id))
+          .map(ee => ({
             event: eventExportIdMap.get(ee.event_id)!,
             entity: entityExportIdMap.get(ee.entity_id)!,
             entity_type: ee.entity_type,
           })),
-        weather: calendarWeather.map((w) => ({
+        weather: calendarWeather.map(w => ({
           year: w.year,
           month: w.month,
           day: w.day,
@@ -758,8 +760,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportMapMarkers = mapMarkers
-      .filter((m) => mapExportIdMap.has(m.map_id) && entityIdSet.has(m.entity_id))
-      .map((m) => ({
+      .filter(m => mapExportIdMap.has(m.map_id) && entityIdSet.has(m.entity_id))
+      .map(m => ({
         map: mapExportIdMap.get(m.map_id)!,
         entity: entityExportIdMap.get(m.entity_id)!,
         x: m.x,
@@ -790,8 +792,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportMapAreas = mapAreas
-      .filter((a) => mapExportIdMap.has(a.map_id) && entityIdSet.has(a.location_id))
-      .map((a) => ({
+      .filter(a => mapExportIdMap.has(a.map_id) && entityIdSet.has(a.location_id))
+      .map(a => ({
         map: mapExportIdMap.get(a.map_id)!,
         location: entityExportIdMap.get(a.location_id)!,
         center_x: a.center_x,
@@ -814,7 +816,7 @@ export default defineEventHandler(async (event) => {
       is_default: number
     }>
 
-    exportCurrencies = currencies.map((c) => ({
+    exportCurrencies = currencies.map(c => ({
       code: c.code,
       name: c.name,
       symbol: c.symbol || undefined,
@@ -834,7 +836,7 @@ export default defineEventHandler(async (event) => {
       updated_at: string
     }>
 
-    exportNotes = notes.map((n) => ({
+    exportNotes = notes.map(n => ({
       content: n.content,
       completed: n.completed === 1,
       sort_order: n.sort_order,
@@ -858,8 +860,8 @@ export default defineEventHandler(async (event) => {
     }>
 
     exportPinboard = pinboard
-      .filter((p) => entityIdSet.has(p.entity_id))
-      .map((p) => ({
+      .filter(p => entityIdSet.has(p.entity_id))
+      .map(p => ({
         entity: entityExportIdMap.get(p.entity_id)!,
         display_order: p.display_order,
       }))
@@ -871,7 +873,7 @@ export default defineEventHandler(async (event) => {
 
   const customRaceKeys = new Set<string>()
   const customClassKeys = new Set<string>()
-  const npcTypeId = entityTypes.find((t) => t.name === 'NPC')?.id
+  const npcTypeId = entityTypes.find(t => t.name === 'NPC')?.id
 
   for (const entity of exportEntities) {
     if (entity.type_id !== npcTypeId) continue
@@ -895,22 +897,22 @@ export default defineEventHandler(async (event) => {
   let exportRaces: ExportRace[] = []
   if (customRaceKeys.size > 0) {
     const placeholders = Array.from(customRaceKeys).map(() => '?').join(',')
-    const races = db.prepare(`SELECT name, name_de, name_en, description FROM races WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customRaceKeys) as Array<{ name: string; name_de: string | null; name_en: string | null; description: string | null }>
-    exportRaces = races.map((r) => ({ name: r.name, name_de: r.name_de || undefined, name_en: r.name_en || undefined, description: r.description || undefined }))
+    const races = db.prepare(`SELECT name, name_de, name_en, description FROM races WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customRaceKeys) as Array<{ name: string, name_de: string | null, name_en: string | null, description: string | null }>
+    exportRaces = races.map(r => ({ name: r.name, name_de: r.name_de || undefined, name_en: r.name_en || undefined, description: r.description || undefined }))
   }
 
   let exportClasses: ExportClass[] = []
   if (customClassKeys.size > 0) {
     const placeholders = Array.from(customClassKeys).map(() => '?').join(',')
-    const classes = db.prepare(`SELECT name, name_de, name_en, description FROM classes WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customClassKeys) as Array<{ name: string; name_de: string | null; name_en: string | null; description: string | null }>
-    exportClasses = classes.map((c) => ({ name: c.name, name_de: c.name_de || undefined, name_en: c.name_en || undefined, description: c.description || undefined }))
+    const classes = db.prepare(`SELECT name, name_de, name_en, description FROM classes WHERE LOWER(name) IN (${placeholders}) AND deleted_at IS NULL`).all(...customClassKeys) as Array<{ name: string, name_de: string | null, name_en: string | null, description: string | null }>
+    exportClasses = classes.map(c => ({ name: c.name, name_de: c.name_de || undefined, name_en: c.name_en || undefined, description: c.description || undefined }))
   }
 
   // ==========================================================================
   // STAT TEMPLATES & ENTITY STATS
   // ==========================================================================
 
-  let exportStatTemplates: ExportStatTemplate[] = []
+  const exportStatTemplates: ExportStatTemplate[] = []
   let exportEntityStats: ExportEntityStats[] = []
 
   // Get entity stats for exported entities
@@ -1040,13 +1042,15 @@ export default defineEventHandler(async (event) => {
         totalOriginalSize += result.originalSize
         totalCompressedSize += result.compressedSize
         imagesCompressed++
-      } catch (err) {
+      }
+      catch (err) {
         // Fallback to original file if compression fails
         console.warn(`[Export] Image compression failed for ${file.sourcePath}:`, err)
         compressionWarnings.push(basename(file.sourcePath))
         archive.file(file.sourcePath, { name: file.archivePath })
       }
-    } else {
+    }
+    else {
       // Non-image or compression disabled: add original file
       archive.file(file.sourcePath, { name: file.archivePath })
     }

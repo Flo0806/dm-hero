@@ -88,7 +88,8 @@ describe('Export - Custom Race Collection Logic', () => {
             customRaceKeys.add(raceKey)
           }
         }
-      } catch {
+      }
+      catch {
         // Invalid JSON, skip
       }
     }
@@ -192,7 +193,8 @@ describe('Export - Custom Class Collection Logic', () => {
             customClassKeys.add(classKey)
           }
         }
-      } catch {
+      }
+      catch {
         // Invalid JSON, skip
       }
     }
@@ -250,7 +252,7 @@ describe('Import - Race/Class Logic Simulation', () => {
    */
   function simulateRaceImport(
     existingRaces: Map<string, RaceRecord>,
-    manifestRaces: Array<{ name: string; name_de?: string; name_en?: string; description?: string }>,
+    manifestRaces: Array<{ name: string, name_de?: string, name_en?: string, description?: string }>,
     resolutions: Record<string, 'overwrite' | 'keep' | 'skip'> = {},
   ): ImportResult {
     const result: ImportResult = {
@@ -279,7 +281,8 @@ describe('Import - Race/Class Logic Simulation', () => {
         existing.description = race.description || null
         existing.deleted_at = null
         result.restored.push(key)
-      } else if (existing) {
+      }
+      else if (existing) {
         // Active: check resolution
         const resolution = resolutions[key]
         if (resolution === 'overwrite') {
@@ -287,13 +290,16 @@ describe('Import - Race/Class Logic Simulation', () => {
           existing.name_en = race.name_en || null
           existing.description = race.description || null
           result.overwrote.push(key)
-        } else if (resolution === 'skip') {
+        }
+        else if (resolution === 'skip') {
           result.skipped.push(key)
-        } else {
+        }
+        else {
           // No resolution provided = conflict
           result.conflicts.push(key)
         }
-      } else {
+      }
+      else {
         // Doesn't exist: insert
         existingRaces.set(key, {
           name: key,
@@ -489,7 +495,7 @@ describe('Import Flow - Complete Simulation', () => {
     // Simulate import with resolution "keep" for conflict
     function simulateImport(
       existing: Map<string, RaceRecord>,
-      manifest: Array<{ name: string; name_de?: string; name_en?: string }>,
+      manifest: Array<{ name: string, name_de?: string, name_en?: string }>,
       resolutions: Record<string, 'overwrite' | 'keep' | 'skip'> = {},
     ) {
       for (const item of manifest) {
@@ -500,14 +506,16 @@ describe('Import Flow - Complete Simulation', () => {
           ex.name_de = item.name_de || null
           ex.name_en = item.name_en || null
           ex.deleted_at = null
-        } else if (ex) {
+        }
+        else if (ex) {
           const resolution = resolutions[key]
           if (resolution === 'overwrite') {
             ex.name_de = item.name_de || null
             ex.name_en = item.name_en || null
           }
           // keep/skip: do nothing
-        } else {
+        }
+        else {
           existing.set(key, {
             name: key,
             name_de: item.name_de || null,
@@ -615,7 +623,8 @@ describe('Edge Cases', () => {
         if (metadata.race) {
           customRaceKeys.add(metadata.race.toLowerCase())
         }
-      } catch {
+      }
+      catch {
         // Skip invalid JSON
       }
     }
@@ -673,13 +682,13 @@ describe('Edge Cases', () => {
 describe('Conflict Detection Logic', () => {
   interface ConflictInfo {
     key: string
-    existing: { name_de: string | null; name_en: string | null }
-    incoming: { name_de: string | null; name_en: string | null }
+    existing: { name_de: string | null, name_en: string | null }
+    incoming: { name_de: string | null, name_en: string | null }
   }
 
   function detectConflicts(
     existing: Map<string, RaceRecord>,
-    manifest: Array<{ name: string; name_de?: string; name_en?: string }>,
+    manifest: Array<{ name: string, name_de?: string, name_en?: string }>,
   ): ConflictInfo[] {
     const conflicts: ConflictInfo[] = []
 
@@ -880,7 +889,7 @@ describe('Import - PDF Documents', () => {
 
     // Simulates creating document record from import
     const createDocumentFromImport = (
-      exportDoc: { title: string; content?: string; file_path?: string; file_type: 'markdown' | 'pdf'; date?: string },
+      exportDoc: { title: string, content?: string, file_path?: string, file_type: 'markdown' | 'pdf', date?: string },
     ): ImportDocument => {
       if (exportDoc.file_type === 'pdf') {
         return {

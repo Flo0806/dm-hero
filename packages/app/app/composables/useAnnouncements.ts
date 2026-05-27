@@ -79,9 +79,11 @@ function getInstallerPath(): string {
 
   if (platform.includes('win')) {
     return 'C:\\Users\\{User}\\AppData\\Local\\Programs\\DM Hero\\'
-  } else if (platform.includes('mac')) {
+  }
+  else if (platform.includes('mac')) {
     return '/Applications/DM Hero.app'
-  } else {
+  }
+  else {
     // Linux - AppImage is typically run from wherever it's placed
     return '~/Applications/ oder /opt/'
   }
@@ -97,9 +99,11 @@ function getOSName(): string {
 
   if (platform.includes('win')) {
     return 'Windows'
-  } else if (platform.includes('mac')) {
+  }
+  else if (platform.includes('mac')) {
     return 'macOS'
-  } else {
+  }
+  else {
     return 'Linux'
   }
 }

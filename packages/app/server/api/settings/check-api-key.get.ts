@@ -26,7 +26,8 @@ export default defineEventHandler(() => {
     const hasKey = decryptedValue && decryptedValue.length > 0 && decryptedValue.startsWith('sk-')
 
     return { hasKey: !!hasKey }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Settings] Failed to check API key:', error)
     return { hasKey: false }
   }

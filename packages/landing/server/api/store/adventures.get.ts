@@ -40,10 +40,12 @@ function transformAdventure(row: AdventureRow) {
   let highlights: string[] = []
   try {
     tags = row.tags ? JSON.parse(row.tags) : []
-  } catch { /* ignore */ }
+  }
+  catch { /* ignore */ }
   try {
     highlights = row.highlights ? JSON.parse(row.highlights) : []
-  } catch { /* ignore */ }
+  }
+  catch { /* ignore */ }
 
   return {
     id: row.id,

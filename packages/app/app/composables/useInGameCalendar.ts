@@ -26,7 +26,7 @@ export interface CalendarConfig {
 export interface CalendarData {
   config: CalendarConfig
   months: CalendarMonth[]
-  weekdays: Array<{ id: number; name: string; sort_order: number }>
+  weekdays: Array<{ id: number, name: string, sort_order: number }>
   moons: Array<{
     id: number
     name: string
@@ -62,10 +62,12 @@ export function useInGameCalendar() {
       })
       calendarData.value = data
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load calendar:', error)
       return null
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -107,9 +109,9 @@ export function useInGameCalendar() {
 
     // Add leap year extra days to the designated month
     if (
-      isLeapYear(year, config) &&
-      config.leap_year_month > 0 &&
-      monthIndex === config.leap_year_month - 1
+      isLeapYear(year, config)
+      && config.leap_year_month > 0
+      && monthIndex === config.leap_year_month - 1
     ) {
       days += config.leap_year_extra_days
     }

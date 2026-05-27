@@ -56,7 +56,7 @@ function createMap(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || 'map.jpg',
-      options?.versionName || null
+      options?.versionName || null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -75,7 +75,7 @@ describe('Maps - Basic CRUD', () => {
 
     const map = db
       .prepare('SELECT * FROM campaign_maps WHERE id = ?')
-      .get(mapId) as { id: number; name: string; campaign_id: number }
+      .get(mapId) as { id: number, name: string, campaign_id: number }
 
     expect(map).toBeDefined()
     expect(map.name).toBe('World Map')
@@ -86,17 +86,17 @@ describe('Maps - Basic CRUD', () => {
     const mapId = createMap('Detailed Map', {
       description: 'A detailed map of the realm',
       imageUrl: 'detailed-map.jpg',
-      versionName: '1.0'
+      versionName: '1.0',
     })
 
     const map = db
       .prepare('SELECT * FROM campaign_maps WHERE id = ?')
       .get(mapId) as {
-        name: string
-        description: string
-        image_url: string
-        version_name: string
-      }
+      name: string
+      description: string
+      image_url: string
+      version_name: string
+    }
 
     expect(map.name).toBe('Detailed Map')
     expect(map.description).toBe('A detailed map of the realm')
@@ -112,7 +112,7 @@ describe('Maps - Basic CRUD', () => {
 
     const map = db
       .prepare('SELECT name, description FROM campaign_maps WHERE id = ?')
-      .get(mapId) as { name: string; description: string }
+      .get(mapId) as { name: string, description: string }
 
     expect(map.name).toBe('New Map Name')
     expect(map.description).toBe('Updated description')
@@ -143,11 +143,11 @@ describe('Maps - Markers', () => {
     const marker = db
       .prepare('SELECT * FROM map_markers WHERE id = ?')
       .get(result.lastInsertRowid) as {
-        map_id: number
-        entity_id: number
-        x: number
-        y: number
-      }
+      map_id: number
+      entity_id: number
+      x: number
+      y: number
+    }
 
     expect(marker.map_id).toBe(mapId)
     expect(marker.entity_id).toBe(npcId)
@@ -166,9 +166,9 @@ describe('Maps - Markers', () => {
     const marker = db
       .prepare('SELECT * FROM map_markers WHERE id = ?')
       .get(result.lastInsertRowid) as {
-        custom_label: string
-        notes: string
-      }
+      custom_label: string
+      notes: string
+    }
 
     expect(marker.custom_label).toBe('Custom Label')
     expect(marker.notes).toBe('Important location')
@@ -187,7 +187,7 @@ describe('Maps - Markers', () => {
 
     const marker = db
       .prepare('SELECT x, y FROM map_markers WHERE id = ?')
-      .get(result.lastInsertRowid) as { x: number; y: number }
+      .get(result.lastInsertRowid) as { x: number, y: number }
 
     expect(marker.x).toBe(90)
     expect(marker.y).toBe(90)
@@ -241,7 +241,7 @@ describe('Maps - Markers', () => {
         JOIN entity_types et ON et.id = e.type_id
         WHERE mm.map_id = ?
       `)
-      .get(mapId) as { entity_name: string; entity_type: string }
+      .get(mapId) as { entity_name: string, entity_type: string }
 
     expect(markerWithEntity.entity_name).toBe('Detailed NPC')
     expect(markerWithEntity.entity_type).toBe('NPC')
@@ -260,12 +260,12 @@ describe('Maps - Areas (Location Circles)', () => {
     const area = db
       .prepare('SELECT * FROM map_areas WHERE id = ?')
       .get(result.lastInsertRowid) as {
-        map_id: number
-        location_id: number
-        center_x: number
-        center_y: number
-        radius: number
-      }
+      map_id: number
+      location_id: number
+      center_x: number
+      center_y: number
+      radius: number
+    }
 
     expect(area.map_id).toBe(mapId)
     expect(area.location_id).toBe(locationId)
@@ -302,7 +302,7 @@ describe('Maps - Areas (Location Circles)', () => {
 
     const area = db
       .prepare('SELECT center_x, center_y, radius FROM map_areas WHERE id = ?')
-      .get(result.lastInsertRowid) as { center_x: number; center_y: number; radius: number }
+      .get(result.lastInsertRowid) as { center_x: number, center_y: number, radius: number }
 
     expect(area.center_x).toBe(80)
     expect(area.center_y).toBe(80)
@@ -375,7 +375,7 @@ describe('Maps - Area Drag (Move Position)', () => {
 
     const area = db
       .prepare('SELECT center_x, center_y FROM map_areas WHERE id = ?')
-      .get(result.lastInsertRowid) as { center_x: number; center_y: number }
+      .get(result.lastInsertRowid) as { center_x: number, center_y: number }
 
     expect(area.center_x).toBe(60)
     expect(area.center_y).toBe(70)
@@ -405,7 +405,7 @@ describe('Maps - Area Drag (Move Position)', () => {
         WHERE mm.map_id = ?
           AND SQRT(POWER(mm.x - ma.center_x, 2) + POWER(mm.y - ma.center_y, 2)) <= ma.radius
       `)
-      .all(mapId) as Array<{ distance: number; radius: number }>
+      .all(mapId) as Array<{ distance: number, radius: number }>
 
     expect(markersInArea).toHaveLength(1)
     expect(markersInArea[0].distance).toBeLessThanOrEqual(markersInArea[0].radius)
@@ -482,7 +482,7 @@ describe('Maps - Area Drag (Move Position)', () => {
     // Verify marker moved with area
     const marker = db
       .prepare('SELECT x, y FROM map_markers WHERE id = ?')
-      .get(markerResult.lastInsertRowid) as { x: number; y: number }
+      .get(markerResult.lastInsertRowid) as { x: number, y: number }
 
     expect(marker.x).toBe(75) // 35 + 40
     expect(marker.y).toBe(75) // 35 + 40
@@ -490,7 +490,7 @@ describe('Maps - Area Drag (Move Position)', () => {
     // Verify marker is still inside the moved area
     const area = db
       .prepare('SELECT center_x, center_y, radius FROM map_areas WHERE id = ?')
-      .get(areaResult.lastInsertRowid) as { center_x: number; center_y: number; radius: number }
+      .get(areaResult.lastInsertRowid) as { center_x: number, center_y: number, radius: number }
 
     const distance = Math.sqrt(Math.pow(marker.x - area.center_x, 2) + Math.pow(marker.y - area.center_y, 2))
     expect(distance).toBeLessThanOrEqual(area.radius)
@@ -518,7 +518,7 @@ describe('Maps - Area Drag (Move Position)', () => {
     // Verify marker stayed in place
     const marker = db
       .prepare('SELECT x, y FROM map_markers WHERE id = ?')
-      .get(markerResult.lastInsertRowid) as { x: number; y: number }
+      .get(markerResult.lastInsertRowid) as { x: number, y: number }
 
     expect(marker.x).toBe(35)
     expect(marker.y).toBe(35)

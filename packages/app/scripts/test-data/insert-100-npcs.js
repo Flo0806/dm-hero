@@ -458,7 +458,8 @@ try {
   console.log('   - 40 medium filled NPCs')
   console.log('   - 40 minimal filled NPCs')
   console.log('\n🎮 Ready to test search functionality!')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error inserting NPCs:', error.message)
   process.exit(1)
 }

@@ -219,7 +219,7 @@ export default defineEventHandler((event) => {
     ORDER BY g.name
   `,
     )
-    .all(Number(itemId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+    .all(Number(itemId)) as Array<{ id: number, name: string, color: string | null, icon: string | null }>
 
   return {
     owners: ownersCount,

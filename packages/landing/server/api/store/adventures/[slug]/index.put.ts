@@ -64,8 +64,8 @@ export default defineEventHandler(async (event) => {
 
   // Extract fields
   const fields: Record<string, string> = {}
-  let coverImageFile: { data: Buffer; filename: string; type: string } | null = null
-  let adventureFile: { data: Buffer; filename: string } | null = null
+  let coverImageFile: { data: Buffer, filename: string, type: string } | null = null
+  let adventureFile: { data: Buffer, filename: string } | null = null
 
   for (const field of formData) {
     if (field.name === 'coverImage' && field.data.length > 0) {
@@ -74,12 +74,14 @@ export default defineEventHandler(async (event) => {
         filename: field.filename || 'cover.jpg',
         type: field.type || 'image/jpeg',
       }
-    } else if (field.name === 'adventureFile' && field.data.length > 0) {
+    }
+    else if (field.name === 'adventureFile' && field.data.length > 0) {
       adventureFile = {
         data: field.data,
         filename: field.filename || 'adventure.dmhero',
       }
-    } else if (field.name && field.data) {
+    }
+    else if (field.name && field.data) {
       fields[field.name] = field.data.toString()
     }
   }
@@ -103,7 +105,8 @@ export default defineEventHandler(async (event) => {
   try {
     highlights = JSON.parse(fields.highlights || '[]')
     tags = JSON.parse(fields.tags || '[]')
-  } catch {
+  }
+  catch {
     // Ignore parse errors
   }
 
@@ -115,8 +118,8 @@ export default defineEventHandler(async (event) => {
 
   // Determine which version number to use for file names
   const targetVersionNumber = versionAction.action === 'update'
-    ? (latestVersion?.version_number || 1)  // Keep same version for updates
-    : newVersionNumber                       // New version for creates
+    ? (latestVersion?.version_number || 1) // Keep same version for updates
+    : newVersionNumber // New version for creates
 
   // Handle cover image (save with version suffix for versioning)
   let coverImageUrl = latestVersion?.cover_image_url || null
@@ -166,7 +169,8 @@ export default defineEventHandler(async (event) => {
     )
     versionId = latestVersion.id
     finalVersionNumber = latestVersion.version_number
-  } else {
+  }
+  else {
     // CREATE new version (first draft edit after unpublish, or published/pending/rejected)
     const insertValidatedAt = versionAction.clearValidatedAt ? ', validated_at' : ''
     const insertValidatedAtValue = versionAction.clearValidatedAt ? ', NULL' : ''
@@ -228,7 +232,8 @@ export default defineEventHandler(async (event) => {
           versionId,
         ],
       )
-    } else {
+    }
+    else {
       // Insert new file record for new version
       await query(
         `INSERT INTO adventure_files (version_id, file_path, original_filename, file_size, version_number, checksum)
@@ -243,7 +248,8 @@ export default defineEventHandler(async (event) => {
         ],
       )
     }
-  } else if (!isDraftUpdate && latestVersion) {
+  }
+  else if (!isDraftUpdate && latestVersion) {
     // No new file and creating new version - copy file reference from previous version
     const previousFile = await queryOne<{
       file_path: string

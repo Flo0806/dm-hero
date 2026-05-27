@@ -104,18 +104,18 @@ const props = defineProps<{
   show: boolean
   mapId: number
   marker?: MapMarker | null
-  position?: { x: number; y: number } | null
+  position?: { x: number, y: number } | null
 }>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [marker: MapMarker]
-  deleted: [markerId: number]
+  'saved': [marker: MapMarker]
+  'deleted': [markerId: number]
 }>()
 
 const dialogVisible = computed({
   get: () => props.show,
-  set: (val) => emit('update:show', val),
+  set: val => emit('update:show', val),
 })
 
 const entityTypes = [
@@ -135,7 +135,7 @@ const form = ref({
 })
 
 const entitySearch = ref('')
-const entityOptions = ref<Array<{ id: number; name: string; image_url?: string }>>([])
+const entityOptions = ref<Array<{ id: number, name: string, image_url?: string }>>([])
 const searchLoading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
@@ -176,7 +176,8 @@ watch(() => props.show, async (val) => {
           image_url: props.marker.entity_image_url || undefined,
         }]
       }
-    } else {
+    }
+    else {
       // Create mode
       form.value = {
         entityType: 'npc',
@@ -207,16 +208,18 @@ async function loadEntities() {
     }
     const endpoint = typeEndpoints[form.value.entityType] || 'npcs'
 
-    const results = await $fetch<Array<{ id: number; name: string; image_url?: string }>>(`/api/${endpoint}`, {
+    const results = await $fetch<Array<{ id: number, name: string, image_url?: string }>>(`/api/${endpoint}`, {
       query: {
         campaignId: activeCampaignId.value,
         limit: 50,
       },
     })
     entityOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load entities:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -243,7 +246,7 @@ async function searchEntities(query: string) {
     }
     const endpoint = typeEndpoints[form.value.entityType] || 'npcs'
 
-    const results = await $fetch<Array<{ id: number; name: string; image_url?: string }>>(`/api/${endpoint}`, {
+    const results = await $fetch<Array<{ id: number, name: string, image_url?: string }>>(`/api/${endpoint}`, {
       query: {
         campaignId: activeCampaignId.value,
         search: query,
@@ -251,9 +254,11 @@ async function searchEntities(query: string) {
       },
     })
     entityOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to search entities:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -275,9 +280,10 @@ async function save() {
         },
       })
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new marker
-      const result = await $fetch<{ marker: MapMarker; warning: string | null }>(`/api/maps/${props.mapId}/markers`, {
+      const result = await $fetch<{ marker: MapMarker, warning: string | null }>(`/api/maps/${props.mapId}/markers`, {
         method: 'POST',
         body: {
           entity_id: form.value.entityId,
@@ -293,9 +299,11 @@ async function save() {
       emit('saved', result.marker)
     }
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save marker:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -314,9 +322,11 @@ async function deleteMarker() {
     })
     emit('deleted', props.marker.id)
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete marker:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

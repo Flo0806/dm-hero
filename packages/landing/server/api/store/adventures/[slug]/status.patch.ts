@@ -97,7 +97,8 @@ export default defineEventHandler(async (event) => {
       versionNumber: latestVersion.version_number,
       message: 'Adventure unpublished successfully',
     }
-  } else {
+  }
+  else {
     // Republish: set to pending_review for re-validation
     await query(
       'UPDATE adventure_versions SET status = ? WHERE id = ?',

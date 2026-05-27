@@ -20,7 +20,7 @@ const initials = computed(() => {
   if (!user.value?.displayName) return '?'
   return user.value.displayName
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
@@ -198,109 +198,109 @@ async function handleLogout() {
       temporary
       width="280"
     >
-    <v-list nav>
-      <v-list-item class="mb-4">
-        <template #prepend>
-          <img src="/logo.png" alt="DM Hero" class="drawer-logo" />
-        </template>
-        <v-list-item-title class="text-h6 font-weight-bold gradient-text">
-          DM Hero
-        </v-list-item-title>
-      </v-list-item>
+      <v-list nav>
+        <v-list-item class="mb-4">
+          <template #prepend>
+            <img src="/logo.png" alt="DM Hero" class="drawer-logo" />
+          </template>
+          <v-list-item-title class="text-h6 font-weight-bold gradient-text">
+            DM Hero
+          </v-list-item-title>
+        </v-list-item>
 
-      <v-divider class="mb-2" />
+        <v-divider class="mb-2" />
 
-      <template v-for="item in navItems" :key="item.key">
-        <v-list-item v-if="item.external" class="bmc-drawer-item">
-          <a
+        <template v-for="item in navItems" :key="item.key">
+          <v-list-item v-if="item.external" class="bmc-drawer-item">
+            <a
+              :href="item.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bmc-drawer-link"
+              @click="drawer = false"
+            >
+              <img
+                src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+                alt="Buy Me A Coffee"
+                class="bmc-drawer-button"
+              />
+            </a>
+          </v-list-item>
+          <v-list-item
+            v-else
             :href="item.href"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="bmc-drawer-link"
+            color="primary"
             @click="drawer = false"
           >
-            <img
-              src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-              alt="Buy Me A Coffee"
-              class="bmc-drawer-button"
-            />
-          </a>
-        </v-list-item>
+            <v-list-item-title>{{ t(`nav.${item.key}`) }}</v-list-item-title>
+          </v-list-item>
+        </template>
+
         <v-list-item
-          v-else
-          :href="item.href"
+          href="https://github.com/Flo0806/dm-hero"
+          target="_blank"
           color="primary"
-          @click="drawer = false"
         >
-          <v-list-item-title>{{ t(`nav.${item.key}`) }}</v-list-item-title>
-        </v-list-item>
-      </template>
-
-      <v-list-item
-        href="https://github.com/Flo0806/dm-hero"
-        target="_blank"
-        color="primary"
-      >
-        <template #prepend>
-          <v-icon>mdi-github</v-icon>
-        </template>
-        <v-list-item-title>GitHub</v-list-item-title>
-      </v-list-item>
-
-      <v-divider class="my-2" />
-
-      <v-list-item @click="toggleLanguage">
-        <template #prepend>
-          <v-icon>mdi-translate</v-icon>
-        </template>
-        <v-list-item-title>
-          {{ locale === 'en' ? 'Deutsch' : 'English' }}
-        </v-list-item-title>
-      </v-list-item>
-
-      <v-divider class="my-2" />
-
-      <!-- User Section (Mobile) -->
-      <template v-if="isAuthenticated">
-        <v-list-item class="mb-2">
           <template #prepend>
-            <v-avatar size="40" color="primary" class="mr-3">
-              <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
-              <span v-else class="text-body-2">{{ initials }}</span>
-            </v-avatar>
+            <v-icon>mdi-github</v-icon>
           </template>
-          <v-list-item-title class="font-weight-medium">
-            {{ user?.displayName }}
+          <v-list-item-title>GitHub</v-list-item-title>
+        </v-list-item>
+
+        <v-divider class="my-2" />
+
+        <v-list-item @click="toggleLanguage">
+          <template #prepend>
+            <v-icon>mdi-translate</v-icon>
+          </template>
+          <v-list-item-title>
+            {{ locale === 'en' ? 'Deutsch' : 'English' }}
           </v-list-item-title>
-          <v-list-item-subtitle class="text-caption">
-            {{ user?.email }}
-          </v-list-item-subtitle>
         </v-list-item>
 
-        <v-list-item to="/profile" color="primary" @click="drawer = false">
-          <template #prepend>
-            <v-icon>mdi-account</v-icon>
-          </template>
-          <v-list-item-title>{{ t('nav.profile') }}</v-list-item-title>
-        </v-list-item>
+        <v-divider class="my-2" />
 
-        <v-list-item base-color="error" @click="handleLogout">
-          <template #prepend>
-            <v-icon>mdi-logout</v-icon>
-          </template>
-          <v-list-item-title>{{ t('store.logout') }}</v-list-item-title>
-        </v-list-item>
-      </template>
+        <!-- User Section (Mobile) -->
+        <template v-if="isAuthenticated">
+          <v-list-item class="mb-2">
+            <template #prepend>
+              <v-avatar size="40" color="primary" class="mr-3">
+                <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
+                <span v-else class="text-body-2">{{ initials }}</span>
+              </v-avatar>
+            </template>
+            <v-list-item-title class="font-weight-medium">
+              {{ user?.displayName }}
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption">
+              {{ user?.email }}
+            </v-list-item-subtitle>
+          </v-list-item>
 
-      <template v-else>
-        <v-list-item to="/login" color="primary" @click="drawer = false">
-          <template #prepend>
-            <v-icon>mdi-login</v-icon>
-          </template>
-          <v-list-item-title>{{ t('store.login') }}</v-list-item-title>
-        </v-list-item>
-      </template>
-    </v-list>
+          <v-list-item to="/profile" color="primary" @click="drawer = false">
+            <template #prepend>
+              <v-icon>mdi-account</v-icon>
+            </template>
+            <v-list-item-title>{{ t('nav.profile') }}</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item base-color="error" @click="handleLogout">
+            <template #prepend>
+              <v-icon>mdi-logout</v-icon>
+            </template>
+            <v-list-item-title>{{ t('store.logout') }}</v-list-item-title>
+          </v-list-item>
+        </template>
+
+        <template v-else>
+          <v-list-item to="/login" color="primary" @click="drawer = false">
+            <template #prepend>
+              <v-icon>mdi-login</v-icon>
+            </template>
+            <v-list-item-title>{{ t('store.login') }}</v-list-item-title>
+          </v-list-item>
+        </template>
+      </v-list>
     </v-navigation-drawer>
   </ClientOnly>
 </template>

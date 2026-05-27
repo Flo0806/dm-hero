@@ -48,7 +48,7 @@ const initials = computed(() => {
   if (!props.user?.displayName) return '?'
   return props.user.displayName
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)

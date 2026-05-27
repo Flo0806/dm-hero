@@ -10,7 +10,6 @@ const batchLoading = ref(false)
  * Uses shared state so all ItemCards share the same cache
  */
 export function useItemCounts() {
-
   async function loadItemCounts(item: Item): Promise<void> {
     // Skip if already loading
     if (loadingCounts.value.has(item.id)) {
@@ -33,9 +32,11 @@ export function useItemCounts() {
       countsMap[item.id] = counts
       // Also add to Item object for immediate access
       item._counts = counts
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to load counts for Item ${item.id}:`, error)
-    } finally {
+    }
+    finally {
       loadingCounts.value.delete(item.id)
     }
   }
@@ -44,7 +45,7 @@ export function useItemCounts() {
    * Load counts for multiple Items in parallel (legacy - uses individual requests)
    */
   async function loadItemCountsBatch(items: Item[]): Promise<void> {
-    const promises = items.map((item) => loadItemCounts(item))
+    const promises = items.map(item => loadItemCounts(item))
     await Promise.all(promises)
   }
 
@@ -66,9 +67,11 @@ export function useItemCounts() {
         const itemId = Number(itemIdStr)
         countsMap[itemId] = counts
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load Item counts batch:', error)
-    } finally {
+    }
+    finally {
       batchLoading.value = false
     }
   }
@@ -113,7 +116,8 @@ export function useItemCounts() {
       try {
         const counts = await $fetch<ItemCounts>(`/api/items/${id}/counts`)
         countsMap[id] = counts
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to reload counts for Item ${id}:`, error)
       }
     })
@@ -127,7 +131,7 @@ export function useItemCounts() {
   function clearCountsCache(): void {
     // Clear all properties from reactive object
     Object.keys(countsMap).forEach((key) => {
-      countsMap[Number(key)] = undefined  
+      countsMap[Number(key)] = undefined
     })
     loadingCounts.value.clear()
   }

@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     )
     .all(Number(campaignId)) as MapRow[]
 
-  return maps.map((m) => ({
+  return maps.map(m => ({
     ...m,
     _markerCount: m.marker_count,
   })) as CampaignMap[]

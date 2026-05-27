@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     WHERE entity_id = ?
   `,
     )
-    .get(entityId) as { count: number; max_order: number }
+    .get(entityId) as { count: number, max_order: number }
 
   const displayOrder = stats.max_order + 1
 

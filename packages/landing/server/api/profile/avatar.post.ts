@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
   let formData
   try {
     formData = await readMultipartFormData(event)
-  } catch (err) {
+  }
+  catch (err) {
     console.error('[Avatar] Failed to parse multipart form:', err)
     throw createError({
       statusCode: 400,
@@ -25,9 +26,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const avatarFile = formData.find((f) => f.name === 'avatar')
+  const avatarFile = formData.find(f => f.name === 'avatar')
   if (!avatarFile || !avatarFile.data) {
-    console.error('[Avatar] No avatar file found in form. Fields:', formData.map((f) => f.name))
+    console.error('[Avatar] No avatar file found in form. Fields:', formData.map(f => f.name))
     throw createError({
       statusCode: 400,
       message: 'No avatar file provided',

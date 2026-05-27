@@ -191,8 +191,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add', payload: { factionId: number; relationType: string; notes?: string }): void
-  (e: 'update', payload: { relationId: number; relationType: string; notes?: string }): void
+  (e: 'add', payload: { factionId: number, relationType: string, notes?: string }): void
+  (e: 'update', payload: { relationId: number, relationType: string, notes?: string }): void
   (e: 'remove', relationId: number): void
 }
 
@@ -221,10 +221,10 @@ const isDirty = computed(() => {
   return !!localFactionId.value || hasRelationType || !!localNotes.value || editDialog.value
 })
 
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const factionRelationTypeSuggestions = computed(() =>
-  FACTION_RELATION_TYPES.map((type) => ({
+  FACTION_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`factions.factionRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -243,7 +243,8 @@ function getNotesText(notes: string | Record<string, unknown> | null): string {
       }
       // If parsed but no text property, return original string
       return notes
-    } catch {
+    }
+    catch {
       // Not JSON, return as plain text
       return notes
     }
@@ -257,7 +258,7 @@ function getNotesText(notes: string | Record<string, unknown> | null): string {
   return ''
 }
 
-function getComboboxValue(val: string | { value: string; title: string } | null): string {
+function getComboboxValue(val: string | { value: string, title: string } | null): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -272,7 +273,7 @@ function openEditDialog(relation: FactionRelation) {
 }
 
 function saveEdit() {
-  const relationType = getComboboxValue(editRelationType.value as string | { value: string; title: string })
+  const relationType = getComboboxValue(editRelationType.value as string | { value: string, title: string })
   if (!editRelationId.value || !relationType) return
 
   saving.value = true
@@ -286,7 +287,7 @@ function saveEdit() {
 }
 
 function handleAdd() {
-  const relationType = getComboboxValue(localRelationType.value as string | { value: string; title: string })
+  const relationType = getComboboxValue(localRelationType.value as string | { value: string, title: string })
   if (!localFactionId.value || !relationType) return
 
   emit('add', {
@@ -300,7 +301,7 @@ function handleAdd() {
   localNotes.value = ''
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
     await entitiesStore.fetchFactions(campaignId, true)

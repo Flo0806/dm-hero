@@ -168,8 +168,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add', payload: { locationId: number; relationType: string }): void
-  (e: 'update', payload: { relationId: number; relationType: string }): void
+  (e: 'add', payload: { locationId: number, relationType: string }): void
+  (e: 'update', payload: { relationId: number, relationType: string }): void
   (e: 'remove', relationId: number): void
 }
 
@@ -192,7 +192,7 @@ const saving = ref(false)
 
 // Track dirty state: form has selection or edit dialog is open
 const isDirty = computed(() => !!localLocationId.value || !!localRelationType.value || showEditDialog.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const FACTION_LOCATION_TYPES = [
   'headquarters',
@@ -210,7 +210,7 @@ const FACTION_LOCATION_TYPES = [
 ]
 
 const relationTypeSuggestions = computed(() =>
-  FACTION_LOCATION_TYPES.map((type) => ({
+  FACTION_LOCATION_TYPES.map(type => ({
     value: type,
     title: t(`factions.locationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -257,7 +257,7 @@ function closeEditDialog() {
   editForm.value = { relationType: '' }
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
     await entitiesStore.fetchLocations(campaignId, true)

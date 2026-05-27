@@ -28,7 +28,7 @@ export function parseSearchQuery(query: string): ParsedQuery {
   if (!hasOperators) {
     // Simple query WITHOUT quotes: split into words for multi-word matching
     // (e.g., "die grauen jäger" → ["die", "grauen", "jäger"])
-    const words = trimmed.split(/\s+/).filter((w) => w.length > 0)
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0)
 
     return {
       fts5Query: trimmed,
@@ -45,7 +45,7 @@ export function parseSearchQuery(query: string): ParsedQuery {
       const phrase = quoteMatch[1]
       // Split phrase into words for cross-entity search (Lore, Faction, Location names)
       // This allows "böser frosch" to match NPCs linked to Lore "Böser Frosch"
-      const words = phrase.split(/\s+/).filter((w) => w.length > 0)
+      const words = phrase.split(/\s+/).filter(w => w.length > 0)
       return {
         fts5Query: `"${phrase}"`,
         terms: words, // Split into words for Levenshtein cross-search
@@ -85,7 +85,8 @@ export function parseSearchQuery(query: string): ParsedQuery {
         const nextUpper = nextToken.toUpperCase()
         if (nextUpper === 'AND' || nextToken === '+') {
           fts5Parts.push('AND')
-        } else if (nextUpper === 'OR' || nextToken === '|') {
+        }
+        else if (nextUpper === 'OR' || nextToken === '|') {
           fts5Parts.push('OR')
         }
       }
@@ -121,7 +122,8 @@ export function parseSearchQuery(query: string): ParsedQuery {
       const nextUpper = nextToken.toUpperCase()
       if (nextUpper === 'AND' || nextToken === '+') {
         fts5Parts.push('AND')
-      } else if (nextUpper === 'OR' || nextToken === '|') {
+      }
+      else if (nextUpper === 'OR' || nextToken === '|') {
         fts5Parts.push('OR')
       }
     }

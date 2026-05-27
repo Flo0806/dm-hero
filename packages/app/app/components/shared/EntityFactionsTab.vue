@@ -197,7 +197,7 @@ const emit = defineEmits<{
 
 // State
 const factionRelations = ref<FactionRelation[]>([])
-const availableFactions = ref<{ id: number; name: string }[]>([])
+const availableFactions = ref<{ id: number, name: string }[]>([])
 const loadingFactions = ref(false)
 const adding = ref(false)
 const saving = ref(false)
@@ -218,16 +218,16 @@ const showQuickCreate = ref(false)
 
 // Track dirty state: form has unsaved selection or edit dialog is open
 const isDirty = computed(() => !!localFactionId.value || !!localRelationType.value || !!localNotes.value || showEditDialog.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const relationTypeSuggestions = computed(() =>
-  props.relationTypes.map((type) => ({
+  props.relationTypes.map(type => ({
     value: type,
     title: t(`${props.i18nPrefix}.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload factions to include the new faction
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
@@ -254,7 +254,7 @@ watch(
   () => entitiesStore.factions,
   (factions) => {
     if (factions) {
-      availableFactions.value = factions.map((f) => ({
+      availableFactions.value = factions.map(f => ({
         id: f.id,
         name: f.name,
       }))
@@ -281,7 +281,7 @@ async function loadFactions() {
       }>
     >(`/api/entities/${props.entityId}/related/factions`)
 
-    factionRelations.value = relations.map((rel) => ({
+    factionRelations.value = relations.map(rel => ({
       id: rel.id,
       to_entity_id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
       to_entity_name: rel.name,
@@ -290,10 +290,12 @@ async function loadFactions() {
       notes: rel.notes,
       image_url: rel.image_url,
     }))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load faction relations:', error)
     factionRelations.value = []
-  } finally {
+  }
+  finally {
     loadingFactions.value = false
   }
 }
@@ -314,7 +316,7 @@ async function handleAdd() {
       },
     })
 
-    const faction = availableFactions.value.find((f) => f.id === localFactionId.value)
+    const faction = availableFactions.value.find(f => f.id === localFactionId.value)
 
     factionRelations.value.push({
       id: relation.id,
@@ -332,9 +334,11 @@ async function handleAdd() {
     localNotes.value = ''
 
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to add faction relation:', error)
-  } finally {
+  }
+  finally {
     adding.value = false
   }
 }
@@ -362,7 +366,7 @@ async function saveRelation() {
       },
     })
 
-    const index = factionRelations.value.findIndex((r) => r.id === editingRelation.value!.id)
+    const index = factionRelations.value.findIndex(r => r.id === editingRelation.value!.id)
     if (index !== -1 && factionRelations.value[index]) {
       factionRelations.value[index].relation_type = updated.relation_type
       factionRelations.value[index].notes = updated.notes
@@ -370,9 +374,11 @@ async function saveRelation() {
 
     closeEditDialog()
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update relation:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -383,9 +389,10 @@ async function removeRelation(relationId: number) {
       method: 'DELETE',
     })
 
-    factionRelations.value = factionRelations.value.filter((r) => r.id !== relationId)
+    factionRelations.value = factionRelations.value.filter(r => r.id !== relationId)
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove relation:', error)
   }
 }

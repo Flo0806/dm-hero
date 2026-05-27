@@ -62,13 +62,14 @@ async function togglePin() {
         method: 'DELETE',
       })
       pinboardStore.removePin(pinId.value)
-    } else {
+    }
+    else {
       // Add pin - fetch full pin data to add to store
       const body = isGroup.value
         ? { campaignId: campaignId.value, groupId: props.groupId }
         : { campaignId: campaignId.value, entityId: props.entityId }
 
-      const result = await $fetch<{ pinId: number; success: boolean }>('/api/pinboard', {
+      const result = await $fetch<{ pinId: number, success: boolean }>('/api/pinboard', {
         method: 'POST',
         body,
       })
@@ -77,19 +78,22 @@ async function togglePin() {
       const pins = await $fetch<PinboardItem[]>('/api/pinboard', {
         query: { campaignId: campaignId.value },
       })
-      const newPin = pins.find((p) => p.pin_id === result.pinId)
+      const newPin = pins.find(p => p.pin_id === result.pinId)
       if (newPin) {
         pinboardStore.addPin(newPin)
       }
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 409) {
       // Already pinned - refresh store to sync state
       await pinboardStore.fetchPins(Number(campaignId.value))
-    } else {
+    }
+    else {
       console.error('Failed to toggle pin:', error)
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -98,7 +102,8 @@ async function togglePin() {
 watch(campaignId, async (newCampaignId) => {
   if (newCampaignId) {
     await pinboardStore.fetchPins(Number(newCampaignId))
-  } else {
+  }
+  else {
     pinboardStore.clearPins()
   }
 })

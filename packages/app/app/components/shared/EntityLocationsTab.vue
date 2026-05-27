@@ -197,7 +197,7 @@ const emit = defineEmits<{
 
 // State
 const locationRelations = ref<LocationRelation[]>([])
-const availableLocations = ref<{ id: number; name: string }[]>([])
+const availableLocations = ref<{ id: number, name: string }[]>([])
 const loadingLocations = ref(false)
 const adding = ref(false)
 const saving = ref(false)
@@ -217,7 +217,7 @@ const editForm = ref({
 const showQuickCreate = ref(false)
 
 const relationTypeSuggestions = computed(() =>
-  NPC_LOCATION_RELATION_TYPES.map((type) => ({
+  NPC_LOCATION_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`npcs.relationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -228,7 +228,7 @@ const isDirty = computed(() => {
   const hasFormData = !!localLocationId.value || !!localRelationType.value || !!localNotes.value
   return hasFormData || showEditDialog.value
 })
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 // Load locations on mount and when entityId changes
 watch(
@@ -244,7 +244,7 @@ watch(
   () => entitiesStore.locations,
   (locations) => {
     if (locations) {
-      availableLocations.value = locations.map((loc) => ({
+      availableLocations.value = locations.map(loc => ({
         id: loc.id,
         name: loc.name,
       }))
@@ -253,7 +253,7 @@ watch(
   { immediate: true },
 )
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload locations to include the new location
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
@@ -283,7 +283,7 @@ async function loadLocations() {
       }>
     >(`/api/entities/${props.entityId}/related/locations`)
 
-    locationRelations.value = relations.map((rel) => ({
+    locationRelations.value = relations.map(rel => ({
       id: rel.id, // Relation ID
       to_entity_id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
       to_entity_name: rel.name,
@@ -291,10 +291,12 @@ async function loadLocations() {
       relation_type: rel.relation_type,
       notes: rel.notes,
     }))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load location relations:', error)
     locationRelations.value = []
-  } finally {
+  }
+  finally {
     loadingLocations.value = false
   }
 }
@@ -316,7 +318,7 @@ async function handleAdd() {
     })
 
     // Get location name from availableLocations
-    const location = availableLocations.value.find((loc) => loc.id === localLocationId.value)
+    const location = availableLocations.value.find(loc => loc.id === localLocationId.value)
 
     locationRelations.value.push({
       id: relation.id,
@@ -333,9 +335,11 @@ async function handleAdd() {
     localNotes.value = ''
 
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to add location relation:', error)
-  } finally {
+  }
+  finally {
     adding.value = false
   }
 }
@@ -364,7 +368,7 @@ async function saveRelation() {
     })
 
     // Update in local array
-    const index = locationRelations.value.findIndex((r) => r.id === editingRelation.value!.id)
+    const index = locationRelations.value.findIndex(r => r.id === editingRelation.value!.id)
     if (index !== -1 && locationRelations.value[index]) {
       locationRelations.value[index].relation_type = updated.relation_type
       locationRelations.value[index].notes = updated.notes
@@ -372,9 +376,11 @@ async function saveRelation() {
 
     closeEditDialog()
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update relation:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -386,10 +392,11 @@ async function removeRelation(relationId: number) {
     })
 
     // Remove from local array
-    locationRelations.value = locationRelations.value.filter((r) => r.id !== relationId)
+    locationRelations.value = locationRelations.value.filter(r => r.id !== relationId)
 
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove relation:', error)
   }
 }

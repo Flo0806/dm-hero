@@ -29,7 +29,7 @@ function findBetterSqlite() {
 
   // Find better-sqlite3@* folder dynamically
   const entries = readdirSync(pnpmDir)
-  const betterSqliteFolder = entries.find((entry) => entry.startsWith('better-sqlite3@'))
+  const betterSqliteFolder = entries.find(entry => entry.startsWith('better-sqlite3@'))
 
   if (!betterSqliteFolder) {
     return null
@@ -77,7 +77,8 @@ try {
     },
   )
   console.log('✅ better-sqlite3 rebuilt for Electron successfully!')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Failed to rebuild better-sqlite3:', error.message)
   process.exit(1)
 }

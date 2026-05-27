@@ -236,11 +236,11 @@ describe('Location Linking - NPCs', () => {
     `,
       )
       .get(npcId, locationId) as {
-      id: number
-      from_entity_id: number
-      to_entity_id: number
-      relation_type: string
-    } | null
+        id: number
+        from_entity_id: number
+        to_entity_id: number
+        relation_type: string
+      } | null
 
     expect(foundRelation).not.toBeNull()
     expect(foundRelation?.id).toBe(relationId)
@@ -432,11 +432,11 @@ describe('Location Linking - Lore', () => {
     `,
       )
       .get(loreId, locationId) as {
-      id: number
-      from_entity_id: number
-      to_entity_id: number
-      relation_type: string
-    } | null
+        id: number
+        from_entity_id: number
+        to_entity_id: number
+        relation_type: string
+      } | null
 
     expect(foundRelation).not.toBeNull()
     expect(foundRelation?.id).toBe(relationId)

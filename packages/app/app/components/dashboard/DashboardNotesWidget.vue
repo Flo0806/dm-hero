@@ -58,7 +58,7 @@ const props = defineProps<{
 // Show first 3 pending notes as preview
 const previewNotes = computed(() => {
   return props.notes
-    .filter((n) => !n.completed)
+    .filter(n => !n.completed)
     .slice(0, 3)
 })
 </script>

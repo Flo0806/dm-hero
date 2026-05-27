@@ -60,7 +60,7 @@ function createEvent(title: string, month: number, day: number, options?: {
       day,
       options?.isRecurring ? 1 : 0,
       options?.entityId || null,
-      options?.color || null
+      options?.color || null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -79,7 +79,7 @@ describe('Calendar Events - Basic CRUD', () => {
 
     const event = db
       .prepare('SELECT * FROM calendar_events WHERE id = ?')
-      .get(eventId) as { id: number; title: string; month: number; day: number }
+      .get(eventId) as { id: number, title: string, month: number, day: number }
 
     expect(event).toBeDefined()
     expect(event.title).toBe('Festival of Lights')
@@ -93,21 +93,21 @@ describe('Calendar Events - Basic CRUD', () => {
       description: 'The dragon attacked the village',
       eventType: 'historical',
       isRecurring: false,
-      color: '#FF5733'
+      color: '#FF5733',
     })
 
     const event = db
       .prepare('SELECT * FROM calendar_events WHERE id = ?')
       .get(eventId) as {
-        title: string
-        year: number
-        month: number
-        day: number
-        description: string
-        event_type: string
-        is_recurring: number
-        color: string
-      }
+      title: string
+      year: number
+      month: number
+      day: number
+      description: string
+      event_type: string
+      is_recurring: number
+      color: string
+    }
 
     expect(event.title).toBe('Dragon Attack')
     expect(event.year).toBe(1492)
@@ -125,7 +125,7 @@ describe('Calendar Events - Basic CRUD', () => {
 
     const event = db
       .prepare('SELECT title, description, month, day FROM calendar_events WHERE id = ?')
-      .get(eventId) as { title: string; description: string; month: number; day: number }
+      .get(eventId) as { title: string, description: string, month: number, day: number }
 
     expect(event.title).toBe('Updated Event')
     expect(event.description).toBe('New description')
@@ -154,11 +154,11 @@ describe('Calendar Events - Event Types', () => {
     createEvent('Meeting', 3, 10, { eventType: 'custom' })
 
     const holidays = db
-      .prepare("SELECT * FROM calendar_events WHERE campaign_id = ? AND event_type = ?")
+      .prepare('SELECT * FROM calendar_events WHERE campaign_id = ? AND event_type = ?')
       .all(testCampaignId, 'holiday')
 
     const historical = db
-      .prepare("SELECT * FROM calendar_events WHERE campaign_id = ? AND event_type = ?")
+      .prepare('SELECT * FROM calendar_events WHERE campaign_id = ? AND event_type = ?')
       .all(testCampaignId, 'historical')
 
     expect(holidays).toHaveLength(1)
@@ -251,7 +251,7 @@ describe('Calendar Events - Entity Linking', () => {
         LEFT JOIN entities e ON e.id = ce.entity_id
         WHERE ce.campaign_id = ? AND ce.entity_id IS NOT NULL
       `)
-      .get(testCampaignId) as { title: string; entity_name: string }
+      .get(testCampaignId) as { title: string, entity_name: string }
 
     expect(result.title).toBe('Birthday of the Queen')
     expect(result.entity_name).toBe('Queen Guinevere')

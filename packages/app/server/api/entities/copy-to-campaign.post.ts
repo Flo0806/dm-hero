@@ -130,7 +130,7 @@ export default defineEventHandler(async (event): Promise<CopyResult> => {
   }
 
   // Check for existing copies in target campaign
-  const sourceIds = sourceEntities.map((e) => e.id)
+  const sourceIds = sourceEntities.map(e => e.id)
   const sourceIdsPlaceholders = sourceIds.map(() => '?').join(',')
 
   const existingCopies = db
@@ -147,7 +147,7 @@ export default defineEventHandler(async (event): Promise<CopyResult> => {
     .all(targetCampaignId, ...sourceIds) as ExistingCopy[]
 
   // Also check if any source entity was itself a copy and already exists
-  const originalSourceIds = sourceEntities.filter((e) => e.source_entity_id).map((e) => e.source_entity_id)
+  const originalSourceIds = sourceEntities.filter(e => e.source_entity_id).map(e => e.source_entity_id)
   let copiesOfSameOriginal: ExistingCopy[] = []
   if (originalSourceIds.length > 0) {
     const origPlaceholders = originalSourceIds.map(() => '?').join(',')
@@ -166,7 +166,7 @@ export default defineEventHandler(async (event): Promise<CopyResult> => {
   }
 
   const allExistingCopies = [...existingCopies, ...copiesOfSameOriginal]
-  const existingSourceIds = new Set(allExistingCopies.map((c) => c.source_entity_id))
+  const existingSourceIds = new Set(allExistingCopies.map(c => c.source_entity_id))
 
   // If we have duplicates and mode wasn't explicitly chosen, return for confirmation
   if (allExistingCopies.length > 0 && mode === 'skip') {
@@ -215,14 +215,15 @@ export default defineEventHandler(async (event): Promise<CopyResult> => {
         if (mode === 'skip') {
           stats.entitiesSkipped++
           // Still add to mapping so relations work
-          const existingCopy = allExistingCopies.find((c) => c.source_entity_id === originalSourceId)
+          const existingCopy = allExistingCopies.find(c => c.source_entity_id === originalSourceId)
           if (existingCopy) {
             idMapping.set(entity.id, existingCopy.id)
           }
           continue
-        } else if (mode === 'update') {
+        }
+        else if (mode === 'update') {
           // Find and update existing copy
-          const existingCopy = allExistingCopies.find((c) => c.source_entity_id === originalSourceId)
+          const existingCopy = allExistingCopies.find(c => c.source_entity_id === originalSourceId)
           if (existingCopy) {
             // Copy image if different
             let newImageUrl = entity.image_url
@@ -368,7 +369,8 @@ export default defineEventHandler(async (event): Promise<CopyResult> => {
       success: true,
       stats,
     }
-  } catch (error) {
+  }
+  catch (error) {
     db.exec('ROLLBACK')
     console.error('Copy to campaign failed:', error)
     throw createError({

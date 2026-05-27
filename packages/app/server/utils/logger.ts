@@ -67,7 +67,8 @@ function formatArgs(args: unknown[]): string {
       if (typeof arg === 'object') {
         try {
           return JSON.stringify(arg, null, 2)
-        } catch {
+        }
+        catch {
           return String(arg)
         }
       }
@@ -99,7 +100,8 @@ function rotateIfNeeded(): void {
     if (existsSync(oldestPath)) {
       try {
         unlinkSync(oldestPath)
-      } catch {
+      }
+      catch {
         // Ignore deletion errors
       }
     }
@@ -116,7 +118,8 @@ function rotateIfNeeded(): void {
 
     // Rename current log to .1
     renameSync(path, `${path}.1`)
-  } catch (err) {
+  }
+  catch (err) {
     // Ignore rotation errors - logging should not break the app
     console.warn('[Logger] Rotation failed:', err)
   }
@@ -135,7 +138,8 @@ export function writeLog(level: LogLevel, ...args: unknown[]): void {
 
     const path = getLogPath()
     appendFileSync(path, logLine, 'utf-8')
-  } catch (err) {
+  }
+  catch (err) {
     // Fallback to console if file logging fails
     console.warn('[Logger] Failed to write log:', err)
   }

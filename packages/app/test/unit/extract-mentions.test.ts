@@ -44,12 +44,12 @@ describe('extractMentionsFromMarkdown - New Format {{type:id}}', () => {
     const mentions = extractMentionsFromMarkdown(notes)
 
     expect(mentions).toHaveLength(6)
-    expect(mentions.map((m) => m.type)).toContain('npc')
-    expect(mentions.map((m) => m.type)).toContain('location')
-    expect(mentions.map((m) => m.type)).toContain('item')
-    expect(mentions.map((m) => m.type)).toContain('faction')
-    expect(mentions.map((m) => m.type)).toContain('lore')
-    expect(mentions.map((m) => m.type)).toContain('player')
+    expect(mentions.map(m => m.type)).toContain('npc')
+    expect(mentions.map(m => m.type)).toContain('location')
+    expect(mentions.map(m => m.type)).toContain('item')
+    expect(mentions.map(m => m.type)).toContain('faction')
+    expect(mentions.map(m => m.type)).toContain('lore')
+    expect(mentions.map(m => m.type)).toContain('player')
   })
 })
 
@@ -127,7 +127,7 @@ describe('extractMentionsFromMarkdown - Edge Cases', () => {
     // Only empty name might be valid, let's check
     const mentions = extractMentionsFromMarkdown(notes)
     // All should be invalid except maybe empty name
-    expect(mentions.filter((m) => m.type === 'npc' && m.entityId === 1)).toHaveLength(0)
+    expect(mentions.filter(m => m.type === 'npc' && m.entityId === 1)).toHaveLength(0)
   })
 
   it('should handle large entity IDs', () => {

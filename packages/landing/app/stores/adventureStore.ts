@@ -221,15 +221,15 @@ export const useAdventureStore = defineStore('adventure', {
   }),
 
   getters: {
-    getAdventureById: (state) => (id: number) => {
-      return state.adventures.find((a) => a.id === id)
+    getAdventureById: state => (id: number) => {
+      return state.adventures.find(a => a.id === id)
     },
 
-    getAdventureBySlug: (state) => (slug: string) => {
+    getAdventureBySlug: state => (slug: string) => {
       return state.adventureDetails[slug]
     },
 
-    getUserRating: (state) => (adventureId: number) => {
+    getUserRating: state => (adventureId: number) => {
       return state.userRatings[adventureId] || null
     },
   },
@@ -252,10 +252,12 @@ export const useAdventureStore = defineStore('adventure', {
 
         this.adventures = response.adventures.map(transformAdventure)
         this.totalPages = response.pagination.totalPages
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch adventures:', error)
         this.adventures = []
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -276,7 +278,7 @@ export const useAdventureStore = defineStore('adventure', {
         const detail: AdventureDetail = {
           ...transformDetailAdventure(response.adventure),
           author: response.adventure.author,
-          files: response.files.map((f) => ({
+          files: response.files.map(f => ({
             id: f.id,
             filePath: f.file_path,
             fileSize: f.file_size,
@@ -286,10 +288,12 @@ export const useAdventureStore = defineStore('adventure', {
 
         this.adventureDetails[slug] = detail
         return detail
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch adventure detail:', error)
         throw error
-      } finally {
+      }
+      finally {
         this.loadingDetail = false
       }
     },
@@ -298,7 +302,7 @@ export const useAdventureStore = defineStore('adventure', {
     async rateAdventure(adventureId: number, rating: number) {
       try {
         const $api = getApi()
-        const response = await $api<{ avgRating: string | number; ratingCount: number }>(
+        const response = await $api<{ avgRating: string | number, ratingCount: number }>(
           `/api/store/adventures/${adventureId}/rate`,
           {
             method: 'POST',
@@ -314,7 +318,7 @@ export const useAdventureStore = defineStore('adventure', {
         this.userRatings = { ...this.userRatings, [adventureId]: rating }
 
         // Update rating in list (replace array item to trigger reactivity)
-        const adventureIndex = this.adventures.findIndex((a) => a.id === adventureId)
+        const adventureIndex = this.adventures.findIndex(a => a.id === adventureId)
         if (adventureIndex !== -1) {
           const current = this.adventures[adventureIndex]
           this.adventures[adventureIndex] = {
@@ -346,7 +350,8 @@ export const useAdventureStore = defineStore('adventure', {
         }
 
         return { avgRating: newAvgRating, ratingCount: newRatingCount }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to rate adventure:', error)
         throw error
       }
@@ -363,7 +368,8 @@ export const useAdventureStore = defineStore('adventure', {
           this.userRatings[adventureId] = response.rating
         }
         return response.rating
-      } catch {
+      }
+      catch {
         // User not logged in or no rating - that's fine
         return null
       }
@@ -435,7 +441,7 @@ export const useAdventureStore = defineStore('adventure', {
         URL.revokeObjectURL(url)
 
         // Update download count locally (increment by 1)
-        const adventureIndex = this.adventures.findIndex((a) => a.slug === slug)
+        const adventureIndex = this.adventures.findIndex(a => a.slug === slug)
         if (adventureIndex !== -1) {
           const current = this.adventures[adventureIndex]
           if (!current) return
@@ -452,7 +458,8 @@ export const useAdventureStore = defineStore('adventure', {
             downloadCount: this.adventureDetails[slug].downloadCount + 1,
           } as AdventureDetail
         }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to download adventure:', error)
         throw error
       }

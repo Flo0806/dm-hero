@@ -35,7 +35,7 @@
             <p class="text-body-1 text-medium-emphasis mb-6">
               {{ errorMessage }}
             </p>
-            
+
             <!-- Resend form -->
             <div v-if="showResend" class="mt-6">
               <v-divider class="mb-6" />
@@ -117,31 +117,33 @@ const resendSuccess = ref(false)
 
 async function verifyEmail(token: string) {
   loading.value = true
-  
+
   try {
     await $fetch('/api/auth/verify-email', {
       method: 'POST',
       body: { token },
     })
     success.value = true
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     error.value = true
     const fetchError = err as { data?: { message?: string } }
     errorMessage.value = fetchError.data?.message || t('common.error')
-    
+
     // Show resend option for expired/invalid tokens
     showResend.value = true
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 async function handleResend() {
   if (!resendEmail.value) return
-  
+
   resending.value = true
   resendSuccess.value = false
-  
+
   try {
     await $fetch('/api/auth/resend-verification', {
       method: 'POST',
@@ -151,9 +153,11 @@ async function handleResend() {
       },
     })
     resendSuccess.value = true
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to resend verification email:', err)
-  } finally {
+  }
+  finally {
     resending.value = false
   }
 }

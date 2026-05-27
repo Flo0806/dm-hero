@@ -55,7 +55,7 @@ function createItem(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || null,
-      options?.metadata ? JSON.stringify(options.metadata) : null
+      options?.metadata ? JSON.stringify(options.metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -74,7 +74,7 @@ describe('Items - Basic CRUD', () => {
 
     const item = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(itemId) as { id: number; name: string; type_id: number }
+      .get(itemId) as { id: number, name: string, type_id: number }
 
     expect(item).toBeDefined()
     expect(item.name).toBe('Excalibur')
@@ -89,18 +89,18 @@ describe('Items - Basic CRUD', () => {
         type: 'weapon',
         rarity: 'legendary',
         attunement: true,
-        value: 50000
-      }
+        value: 50000,
+      },
     })
 
     const item = db
       .prepare('SELECT * FROM entities WHERE id = ?')
       .get(itemId) as {
-        name: string
-        description: string
-        image_url: string
-        metadata: string
-      }
+      name: string
+      description: string
+      image_url: string
+      metadata: string
+    }
 
     expect(item.name).toBe('Staff of Power')
     expect(item.description).toBe('A legendary staff imbued with arcane energy')
@@ -120,7 +120,7 @@ describe('Items - Basic CRUD', () => {
 
     const item = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(itemId) as { name: string; description: string }
+      .get(itemId) as { name: string, description: string }
 
     expect(item.name).toBe('New Sword')
     expect(item.description).toBe('Updated description')
@@ -214,7 +214,7 @@ describe('Items - Ownership Relations', () => {
         JOIN entities e ON e.id = er.from_entity_id
         WHERE er.to_entity_id = ?
       `)
-      .get(itemId) as { owner_name: string; relation_type: string }
+      .get(itemId) as { owner_name: string, relation_type: string }
 
     expect(relation.owner_name).toBe('Ring Owner')
     expect(relation.relation_type).toBe('owns')

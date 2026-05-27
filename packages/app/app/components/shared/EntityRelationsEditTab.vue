@@ -141,7 +141,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   remove: [relationId: number]
-  add: [data: { entityId: number; relationType: string }]
+  add: [data: { entityId: number, relationType: string }]
 }>()
 
 const { t } = useI18n()

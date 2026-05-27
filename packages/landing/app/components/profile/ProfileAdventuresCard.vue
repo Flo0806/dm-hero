@@ -321,11 +321,13 @@ watch(validationDialog, (isOpen) => {
           }
           selectedAdventure.value = fresh
         }
-      } finally {
+      }
+      finally {
         loadingDetails.value = false
       }
     }, 20 * 1000) // Every 20 seconds
-  } else {
+  }
+  else {
     // Stop polling
     if (dialogPollInterval) {
       clearInterval(dialogPollInterval)
@@ -348,7 +350,8 @@ async function showValidationDetails(adventure: UserAdventure) {
     if (fresh) {
       selectedAdventure.value = fresh
     }
-  } finally {
+  }
+  finally {
     loadingDetails.value = false
   }
 }

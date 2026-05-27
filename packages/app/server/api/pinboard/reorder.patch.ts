@@ -22,7 +22,8 @@ export default defineEventHandler(async (event): Promise<SuccessResponse> => {
   try {
     transaction(body.pinIds)
     return { success: true }
-  } catch {
+  }
+  catch {
     throw createError({ statusCode: 500, message: 'Failed to reorder pins' })
   }
 })

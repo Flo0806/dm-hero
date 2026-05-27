@@ -59,7 +59,7 @@ describe('Documents - Basic CRUD', () => {
 
     const doc = db
       .prepare('SELECT * FROM entity_documents WHERE id = ?')
-      .get(docId) as { id: number; entity_id: number; title: string; content: string }
+      .get(docId) as { id: number, entity_id: number, title: string, content: string }
 
     expect(doc).toBeDefined()
     expect(doc.entity_id).toBe(entityId)
@@ -76,7 +76,7 @@ describe('Documents - Basic CRUD', () => {
 
     const doc = db
       .prepare('SELECT title, content FROM entity_documents WHERE id = ?')
-      .get(docId) as { title: string; content: string }
+      .get(docId) as { title: string, content: string }
 
     expect(doc.title).toBe('New Title')
     expect(doc.content).toBe('New content')
@@ -248,7 +248,7 @@ describe('Documents - Query Patterns', () => {
         JOIN entities e ON e.id = ed.entity_id
         WHERE ed.entity_id = ?
       `)
-      .get(entityId) as { title: string; entity_name: string }
+      .get(entityId) as { title: string, entity_name: string }
 
     expect(result.title).toBe('Test Doc')
     expect(result.entity_name).toBe('Query NPC')
@@ -261,7 +261,7 @@ describe('Documents - Query Patterns', () => {
     createDocument(entityId, 'Notes', 'Other content')
 
     const backstoryDocs = db
-      .prepare("SELECT * FROM entity_documents WHERE entity_id = ? AND title LIKE ?")
+      .prepare('SELECT * FROM entity_documents WHERE entity_id = ? AND title LIKE ?')
       .all(entityId, 'Backstory%')
 
     expect(backstoryDocs).toHaveLength(2)
@@ -310,7 +310,7 @@ describe('Documents - PDF Support', () => {
     // Query by file_type
     const markdownDocs = db
       .prepare(
-        `SELECT * FROM entity_documents WHERE entity_id = ? AND (file_type IS NULL OR file_type = 'markdown')`,
+        'SELECT * FROM entity_documents WHERE entity_id = ? AND (file_type IS NULL OR file_type = \'markdown\')',
       )
       .all(entityId)
 

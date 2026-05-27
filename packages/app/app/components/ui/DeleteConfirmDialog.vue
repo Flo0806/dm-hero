@@ -32,7 +32,7 @@ withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   'update:model-value': [value: boolean]
-  confirm: []
-  cancel: []
+  'confirm': []
+  'cancel': []
 }>()
 </script>

@@ -302,7 +302,7 @@ const entitiesStore = useEntitiesStore()
 // ============================================================================
 const internalValue = computed({
   get: () => props.modelValue,
-  set: (v) => emit('update:modelValue', v),
+  set: v => emit('update:modelValue', v),
 })
 
 type EditorInsertBlock = {
@@ -480,12 +480,13 @@ const quickSearchResults = computed(() => {
 
   for (const type of typesToSearch) {
     const entities = getEntitiesForType(type)
-    const typeLabel = entityTypes.value.find((t) => t.value === type)?.label || type
+    const typeLabel = entityTypes.value.find(t => t.value === type)?.label || type
 
     for (const entity of entities) {
       if (!searchTerm) {
         results.push({ ...entity, type, typeLabel })
-      } else {
+      }
+      else {
         const nameMatch = entity.name.toLowerCase().includes(searchTerm)
         const displayMatch = entity.displayName?.toLowerCase().includes(searchTerm)
         if (nameMatch || displayMatch) {
@@ -505,7 +506,7 @@ const quickSearchResults = computed(() => {
 // ============================================================================
 function getEntitiesForType(
   type: EntityType,
-): Array<{ id: number; name: string; displayName?: string; subtitle?: string }> {
+): Array<{ id: number, name: string, displayName?: string, subtitle?: string }> {
   switch (type) {
     case 'npc':
       return entitiesStore.npcsForSelect || []
@@ -518,7 +519,7 @@ function getEntitiesForType(
     case 'lore':
       return entitiesStore.loreForSelect || []
     case 'player':
-      return (entitiesStore.players || []).map((p) => ({
+      return (entitiesStore.players || []).map(p => ({
         id: p.id,
         name: p.name,
         displayName: p.metadata?.player_name || p.name,
@@ -565,17 +566,17 @@ function getEntityColor(type: EntityType | string): string {
 function resolveEntityName(type: string, id: number): string {
   switch (type) {
     case 'npc':
-      return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
+      return entitiesStore.npcs?.find(e => e.id === id)?.name || `NPC #${id}`
     case 'location':
-      return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
+      return entitiesStore.locations?.find(e => e.id === id)?.name || `Location #${id}`
     case 'item':
-      return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
+      return entitiesStore.items?.find(e => e.id === id)?.name || `Item #${id}`
     case 'faction':
-      return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
+      return entitiesStore.factions?.find(e => e.id === id)?.name || `Faction #${id}`
     case 'lore':
-      return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
+      return entitiesStore.lore?.find(e => e.id === id)?.name || `Lore #${id}`
     case 'player': {
-      const player = entitiesStore.players?.find((e) => e.id === id)
+      const player = entitiesStore.players?.find(e => e.id === id)
       return player?.name || `Player #${id}`
     }
     case 'session': {
@@ -588,7 +589,7 @@ function resolveEntityName(type: string, id: number): string {
 }
 
 function resolvePlayerHumanName(id: number): string | null {
-  const player = entitiesStore.players?.find((e) => e.id === id)
+  const player = entitiesStore.players?.find(e => e.id === id)
   return player?.metadata?.player_name || null
 }
 
@@ -601,7 +602,7 @@ function showLinkEntityDialog(type: EntityType) {
   showEntityLinkDialog.value = true
 }
 
-function insertEntityLink(entity: { id: number; name: string }) {
+function insertEntityLink(entity: { id: number, name: string }) {
   const link = `{{${linkEntityType.value}:${entity.id}}}`
   insertAtCursor(link)
   showEntityLinkDialog.value = false
@@ -659,7 +660,7 @@ function onQuickSearchClose(isOpen: boolean) {
 
 function selectEntityType(type: EntityType) {
   // Use the actual shortcut from entityTypes
-  const typeInfo = entityTypes.value.find((t) => t.value === type)
+  const typeInfo = entityTypes.value.find(t => t.value === type)
   quickSearchQuery.value = (typeInfo?.shortcut || type) + ' '
   selectedResultIndex.value = 0
 }
@@ -677,9 +678,11 @@ function navigateQuickSearch(direction: number) {
   // Wrap around: going up from 0 goes to max, going down from max goes to 0
   if (newIndex < 0) {
     selectedResultIndex.value = max
-  } else if (newIndex > max) {
+  }
+  else if (newIndex > max) {
     selectedResultIndex.value = 0
-  } else {
+  }
+  else {
     selectedResultIndex.value = newIndex
   }
 }
@@ -691,7 +694,8 @@ function handleQuickSearchEnter() {
     if (selectedType) {
       selectEntityType(selectedType.value)
     }
-  } else {
+  }
+  else {
     // Query exists = selecting from search results
     if (quickSearchResults.value.length > 0) {
       const selected = quickSearchResults.value[selectedResultIndex.value]
@@ -702,7 +706,7 @@ function handleQuickSearchEnter() {
   }
 }
 
-function insertQuickEntity(entity: { id: number; type: EntityType }) {
+function insertQuickEntity(entity: { id: number, type: EntityType }) {
   const link = `{{${entity.type}:${entity.id}}}`
   insertAtCursor(link)
   closeQuickSearch()
@@ -719,7 +723,8 @@ function insertAtCursor(text: string) {
       deviationStart: 0,
       deviationEnd: 0,
     }))
-  } else {
+  }
+  else {
     // Fallback: append at end
     internalValue.value += text
   }
@@ -776,7 +781,8 @@ function sanitizeHtml(html: string): string {
       const humanName = resolvePlayerHumanName(entityId)
       if (humanName) {
         displayHtml = `${humanName} <span style="font-size: 0.75rem; opacity: 0.8;">(${name})</span>`
-      } else {
+      }
+      else {
         displayHtml = `<em>${name}</em>`
       }
     }

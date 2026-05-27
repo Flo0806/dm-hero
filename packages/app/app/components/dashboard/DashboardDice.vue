@@ -50,7 +50,8 @@ onMounted(async () => {
         diceBox.roll(props.notation)
       }, 500)
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to initialize DiceBox:', error)
   }
 })

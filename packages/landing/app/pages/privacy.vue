@@ -15,9 +15,9 @@
       {{ $t('legal.privacy.controllerTitle') }}
     </h2>
     <p class="text-body-2 mb-6">
-      {{ $t('legal.privacy.controller') }}<br>
-      {{ $t('legal.privacy.name') }}<br>
-      {{ $t('legal.privacy.address') }}<br>
+      {{ $t('legal.privacy.controller') }}<br />
+      {{ $t('legal.privacy.name') }}<br />
+      {{ $t('legal.privacy.address') }}<br />
       {{ $t('legal.privacy.email') }}
     </p>
 

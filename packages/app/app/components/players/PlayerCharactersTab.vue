@@ -169,29 +169,29 @@ const emit = defineEmits<{
 }>()
 
 const characters = ref<Character[]>([])
-const availableNpcs = ref<{ id: number; name: string }[]>([])
+const availableNpcs = ref<{ id: number, name: string }[]>([])
 const loading = ref(false)
 const adding = ref(false)
 const saving = ref(false)
 
 // Add form state
 const selectedNpcId = ref<number | null>(null)
-const selectedRelationType = ref<string | { value: string; title: string } | null>(null)
+const selectedRelationType = ref<string | { value: string, title: string } | null>(null)
 const selectedNotes = ref('')
 
 // Edit dialog state
 const editDialog = ref(false)
 const editRelationId = ref<number | null>(null)
-const editRelationType = ref<string | { value: string; title: string }>('')
+const editRelationType = ref<string | { value: string, title: string }>('')
 const editNotes = ref('')
 
 // Track dirty state: form has unsaved selection or edit dialog is open
 const isDirty = computed(() => !!selectedNpcId.value || !!selectedRelationType.value || !!selectedNotes.value || editDialog.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 // Relation type suggestions using PLAYER_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>
-  PLAYER_RELATION_TYPES.map((type) => ({
+  PLAYER_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`players.relationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -211,7 +211,7 @@ watch(
   () => entitiesStore.npcs,
   (npcs) => {
     if (npcs) {
-      availableNpcs.value = npcs.map((n) => ({ id: n.id, name: n.name }))
+      availableNpcs.value = npcs.map(n => ({ id: n.id, name: n.name }))
     }
   },
   { immediate: true },
@@ -254,7 +254,7 @@ async function loadCharacters() {
       }>
     >(`/api/entities/${props.entityId}/related/npcs`)
 
-    characters.value = relations.map((rel) => ({
+    characters.value = relations.map(rel => ({
       relation_id: rel.id,
       id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
       name: rel.name,
@@ -263,16 +263,18 @@ async function loadCharacters() {
       relation_type: rel.relation_type || 'friend',
       notes: getNotesText(rel.notes),
     }))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load characters:', error)
     characters.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 // Extract value from combobox selection (can be string or {value, title} object)
-function getRelationTypeValue(val: string | { value: string; title: string } | null): string {
+function getRelationTypeValue(val: string | { value: string, title: string } | null): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -295,8 +297,8 @@ async function addCharacter() {
       },
     })
 
-    const npc = availableNpcs.value.find((n) => n.id === selectedNpcId.value)
-    const npcFromStore = entitiesStore.npcs?.find((n) => n.id === selectedNpcId.value)
+    const npc = availableNpcs.value.find(n => n.id === selectedNpcId.value)
+    const npcFromStore = entitiesStore.npcs?.find(n => n.id === selectedNpcId.value)
 
     characters.value.push({
       relation_id: relation.id,
@@ -313,9 +315,11 @@ async function addCharacter() {
     selectedRelationType.value = null
     selectedNotes.value = ''
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to add character:', error)
-  } finally {
+  }
+  finally {
     adding.value = false
   }
 }
@@ -323,9 +327,10 @@ async function addCharacter() {
 async function removeCharacter(relationId: number) {
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    characters.value = characters.value.filter((c) => c.relation_id !== relationId)
+    characters.value = characters.value.filter(c => c.relation_id !== relationId)
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove character:', error)
   }
 }
@@ -333,7 +338,7 @@ async function removeCharacter(relationId: number) {
 function openEditDialog(character: Character) {
   editRelationId.value = character.relation_id
   // Find the matching suggestion object for proper display
-  const suggestion = relationTypeSuggestions.value.find((s) => s.value === character.relation_type)
+  const suggestion = relationTypeSuggestions.value.find(s => s.value === character.relation_type)
   editRelationType.value = suggestion || character.relation_type
   editNotes.value = character.notes || ''
   editDialog.value = true
@@ -354,7 +359,7 @@ async function saveEdit() {
     })
 
     // Update local state
-    const character = characters.value.find((c) => c.relation_id === editRelationId.value)
+    const character = characters.value.find(c => c.relation_id === editRelationId.value)
     if (character) {
       character.relation_type = relationType
       character.notes = editNotes.value || null
@@ -362,9 +367,11 @@ async function saveEdit() {
 
     editDialog.value = false
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update character relation:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }

@@ -77,7 +77,7 @@ const error = ref('')
 // Get adventure from store (reactive!)
 const adventure = computed(() => {
   // Try to find in list first
-  const fromList = adventures.value.find((a) => a.id === props.adventureId)
+  const fromList = adventures.value.find(a => a.id === props.adventureId)
   if (fromList) return fromList
 
   // Then check detail cache
@@ -121,10 +121,12 @@ async function onRatingChange(newRating: string | number) {
 
   try {
     await store.rateAdventure(props.adventureId, ratingValue)
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     const fetchError = err as { data?: { message?: string } }
     error.value = fetchError.data?.message || t('common.error')
-  } finally {
+  }
+  finally {
     submitting.value = false
   }
 }

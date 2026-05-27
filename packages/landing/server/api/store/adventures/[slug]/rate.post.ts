@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   )
 
   // Get updated average
-  const result = await queryOne<{ avg_rating: number; rating_count: number }>(
+  const result = await queryOne<{ avg_rating: number, rating_count: number }>(
     `SELECT
        COALESCE(AVG(rating), 0) as avg_rating,
        COUNT(*) as rating_count

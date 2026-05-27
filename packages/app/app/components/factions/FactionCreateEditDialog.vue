@@ -174,7 +174,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   'update:modelValue': [value: boolean]
-  save: [form: FactionForm]
+  'save': [form: FactionForm]
 }>()
 
 const activeTab = ref('details')

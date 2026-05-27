@@ -144,7 +144,7 @@ describe('Quoted Phrase Search - NPCs', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"Bernhard von Berg"', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"Bernhard von Berg"', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     // Should find ONLY the exact match
     expect(npcs).toHaveLength(1)
@@ -200,7 +200,7 @@ describe('Quoted Phrase Search - NPCs', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all(`"${normalizedSearch}"`, npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all(`"${normalizedSearch}"`, npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     // Should find the NPC (é → e, ü → u)
     expect(npcs).toHaveLength(1)
@@ -240,7 +240,7 @@ describe('Quoted Phrase Search - Items', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"Antigifte Phiole"', itemTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"Antigifte Phiole"', itemTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     expect(items).toHaveLength(1)
     expect(items[0].name).toBe('Antigifte Phiole')
@@ -306,7 +306,7 @@ describe('Quoted Phrase Search - Items', () => {
     })
 
     expect(matchedItems).toHaveLength(2)
-    expect(matchedItems.map((i) => i.name).sort()).toEqual(['Schild', 'Schwert'])
+    expect(matchedItems.map(i => i.name).sort()).toEqual(['Schild', 'Schwert'])
   })
 })
 
@@ -451,7 +451,7 @@ describe('Quoted Phrase Search - Factions', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"Die Harpers"', factionTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"Die Harpers"', factionTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     expect(factions).toHaveLength(1)
     expect(factions[0].name).toBe('Die Harpers')
@@ -571,7 +571,7 @@ describe('Quoted Phrase Search - Regression: Prevent Fuzzy Matches', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"Bernhard von Berg"', npcTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"Bernhard von Berg"', npcTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     // CRITICAL: Should find ONLY the exact match, not all NPCs with "von"
     expect(npcs).toHaveLength(1)
@@ -609,7 +609,7 @@ describe('Quoted Phrase Search - Regression: Prevent Fuzzy Matches', () => {
         AND e.deleted_at IS NULL
     `,
       )
-      .all('"Antigifte Phiole"', itemTypeId, testCampaignId) as Array<{ id: number; name: string }>
+      .all('"Antigifte Phiole"', itemTypeId, testCampaignId) as Array<{ id: number, name: string }>
 
     expect(items).toHaveLength(1)
     expect(items[0].name).toBe('Antigifte Phiole')

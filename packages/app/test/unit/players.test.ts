@@ -58,7 +58,7 @@ function createPlayer(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || null,
-      options?.metadata ? JSON.stringify(options.metadata) : null
+      options?.metadata ? JSON.stringify(options.metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -85,7 +85,7 @@ describe('Players - Basic CRUD', () => {
 
     const player = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(playerId) as { id: number; name: string; type_id: number }
+      .get(playerId) as { id: number, name: string, type_id: number }
 
     expect(player).toBeDefined()
     expect(player.name).toBe('John Doe')
@@ -99,18 +99,18 @@ describe('Players - Basic CRUD', () => {
       metadata: {
         email: 'jane@example.com',
         discord: 'jane#1234',
-        preferredRole: 'healer'
-      }
+        preferredRole: 'healer',
+      },
     })
 
     const player = db
       .prepare('SELECT * FROM entities WHERE id = ?')
       .get(playerId) as {
-        name: string
-        description: string
-        image_url: string
-        metadata: string
-      }
+      name: string
+      description: string
+      image_url: string
+      metadata: string
+    }
 
     expect(player.name).toBe('Jane Smith')
     expect(player.description).toBe('Experienced player, loves roleplay')
@@ -129,7 +129,7 @@ describe('Players - Basic CRUD', () => {
 
     const player = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(playerId) as { name: string; description: string }
+      .get(playerId) as { name: string, description: string }
 
     expect(player.name).toBe('New Name')
     expect(player.description).toBe('Updated bio')
@@ -200,7 +200,7 @@ describe('Players - Character Relations (Player-NPC)', () => {
         WHERE er.from_entity_id = ?
           AND e.type_id = ?
       `)
-      .all(playerId, npcTypeId) as Array<{ name: string; relation_type: string }>
+      .all(playerId, npcTypeId) as Array<{ name: string, relation_type: string }>
 
     expect(allCharacters).toHaveLength(3)
 

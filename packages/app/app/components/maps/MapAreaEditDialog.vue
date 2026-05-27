@@ -104,18 +104,18 @@ const props = defineProps<{
   show: boolean
   mapId: number
   area?: MapArea | null
-  position?: { x: number; y: number } | null
+  position?: { x: number, y: number } | null
 }>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [area: MapArea]
-  deleted: [areaId: number]
+  'saved': [area: MapArea]
+  'deleted': [areaId: number]
 }>()
 
 const dialogVisible = computed({
   get: () => props.show,
-  set: (val) => emit('update:show', val),
+  set: val => emit('update:show', val),
 })
 
 const form = ref({
@@ -125,7 +125,7 @@ const form = ref({
 })
 
 const locationSearch = ref('')
-const locationOptions = ref<Array<{ id: number; name: string; image_url?: string }>>([])
+const locationOptions = ref<Array<{ id: number, name: string, image_url?: string }>>([])
 const searchLoading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
@@ -165,7 +165,8 @@ watch(() => props.show, async (val) => {
           image_url: props.area.location_image_url || undefined,
         }]
       }
-    } else {
+    }
+    else {
       // Create mode
       form.value = {
         locationId: null,
@@ -185,16 +186,18 @@ async function loadLocations() {
 
   searchLoading.value = true
   try {
-    const results = await $fetch<Array<{ id: number; name: string; image_url?: string }>>('/api/locations', {
+    const results = await $fetch<Array<{ id: number, name: string, image_url?: string }>>('/api/locations', {
       query: {
         campaignId: activeCampaignId.value,
         limit: 50,
       },
     })
     locationOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load locations:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -204,7 +207,7 @@ async function searchLocations(query: string) {
 
   searchLoading.value = true
   try {
-    const results = await $fetch<Array<{ id: number; name: string; image_url?: string }>>('/api/locations', {
+    const results = await $fetch<Array<{ id: number, name: string, image_url?: string }>>('/api/locations', {
       query: {
         campaignId: activeCampaignId.value,
         search: query,
@@ -212,9 +215,11 @@ async function searchLocations(query: string) {
       },
     })
     locationOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to search locations:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -236,7 +241,8 @@ async function save() {
         },
       })
       emit('saved', updated)
-    } else {
+    }
+    else {
       // Create new area
       const result = await $fetch<MapArea>(`/api/maps/${props.mapId}/areas`, {
         method: 'POST',
@@ -251,9 +257,11 @@ async function save() {
       emit('saved', result)
     }
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save area:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -272,9 +280,11 @@ async function deleteArea() {
     })
     emit('deleted', props.area.id)
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete area:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

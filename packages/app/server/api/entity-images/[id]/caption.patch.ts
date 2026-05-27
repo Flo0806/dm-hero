@@ -17,9 +17,9 @@ export default defineEventHandler(async (event) => {
   // Get image info
   const image = db.prepare('SELECT id, entity_id FROM entity_images WHERE id = ?').get(imageId) as
     | {
-        id: number
-        entity_id: number
-      }
+      id: number
+      entity_id: number
+    }
     | undefined
 
   if (!image) {

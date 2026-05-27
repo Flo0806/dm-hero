@@ -50,7 +50,8 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
       html: options.html,
     })
     return true
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Email] Failed to send:', error)
     return false
   }
@@ -322,7 +323,7 @@ interface ValidationNotificationOptions {
   uploadedAt: string
   validatedAt: string
   status: 'published' | 'rejected'
-  errors?: Array<{ message: string; field?: string }>
+  errors?: Array<{ message: string, field?: string }>
   warnings?: Array<{ message: string }>
 }
 
@@ -336,11 +337,11 @@ export async function sendValidationNotificationEmail(
   const statusText = options.status === 'published' ? 'Published / Veröffentlicht' : 'Rejected / Abgelehnt'
 
   const errorsList = options.errors && options.errors.length > 0
-    ? options.errors.map((e) => `• ${e.field ? `[${e.field}] ` : ''}${e.message}`).join('\n')
+    ? options.errors.map(e => `• ${e.field ? `[${e.field}] ` : ''}${e.message}`).join('\n')
     : 'None / Keine'
 
   const warningsList = options.warnings && options.warnings.length > 0
-    ? options.warnings.map((w) => `• ${w.message}`).join('\n')
+    ? options.warnings.map(w => `• ${w.message}`).join('\n')
     : 'None / Keine'
 
   const subject = `${statusEmoji} Adventure Validation: ${options.adventureTitle}`
@@ -357,11 +358,13 @@ Validated / Validiert: ${options.validatedAt}
 
 Status: ${statusText}
 
-${options.status === 'rejected' ? `Errors / Fehler:
+${options.status === 'rejected'
+  ? `Errors / Fehler:
 ${errorsList}
 
 Warnings / Warnungen:
-${warningsList}` : `The adventure has been published successfully.
+${warningsList}`
+  : `The adventure has been published successfully.
 Das Abenteuer wurde erfolgreich veröffentlicht.`}
 
 ---
@@ -424,22 +427,26 @@ ${config.public.appUrl}/store`
         </tr>
       </table>
 
-      ${options.status === 'rejected' ? `
+      ${options.status === 'rejected'
+        ? `
       <div class="errors">
         <h4>❌ Errors / Fehler</h4>
         <ul>
-          ${options.errors?.map((e) => `<li>${e.field ? `<strong>[${e.field}]</strong> ` : ''}${e.message}</li>`).join('') || '<li>-</li>'}
+          ${options.errors?.map(e => `<li>${e.field ? `<strong>[${e.field}]</strong> ` : ''}${e.message}</li>`).join('') || '<li>-</li>'}
         </ul>
       </div>
-      ${options.warnings && options.warnings.length > 0 ? `
+      ${options.warnings && options.warnings.length > 0
+        ? `
       <div class="errors" style="background: #fff8e1; border-color: #ffc107;">
         <h4>⚠️ Warnings / Warnungen</h4>
         <ul>
-          ${options.warnings.map((w) => `<li>${w.message}</li>`).join('')}
+          ${options.warnings.map(w => `<li>${w.message}</li>`).join('')}
         </ul>
       </div>
-      ` : ''}
-      ` : `
+      `
+        : ''}
+      `
+        : `
       <div class="success-msg">
         ✅ The adventure has been published successfully and is now visible in the store.<br>
         Das Abenteuer wurde erfolgreich veröffentlicht und ist jetzt im Store sichtbar.

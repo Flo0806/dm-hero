@@ -4,7 +4,7 @@ const route = useRoute()
 const router = useRouter()
 
 // Floating particles for background effect
-const particles = ref<{ id: number; left: string; size: number; delay: number }[]>([])
+const particles = ref<{ id: number, left: string, size: number, delay: number }[]>([])
 
 onMounted(() => {
   // Generate random particles
@@ -18,7 +18,7 @@ onMounted(() => {
 
 // Fetch all docs for sidebar using Nuxt Content v3 API
 const { data: allDocs } = await useAsyncData('docs-list', () =>
-  queryCollection('docs').order('stem', 'ASC').all()
+  queryCollection('docs').order('stem', 'ASC').all(),
 )
 
 // Filter docs based on current locale
@@ -43,7 +43,8 @@ const localizedPath = computed(() => {
   if (isGerman && !isCurrentlyInDe) {
     // Switch to German: /docs/getting-started -> /docs/de/getting-started
     return currentPath.replace('/docs/', '/docs/de/')
-  } else if (!isGerman && isCurrentlyInDe) {
+  }
+  else if (!isGerman && isCurrentlyInDe) {
     // Switch to English: /docs/de/getting-started -> /docs/getting-started
     return currentPath.replace('/docs/de/', '/docs/')
   }
@@ -61,7 +62,7 @@ watch(locale, () => {
 const { data: page } = await useAsyncData(
   () => `docs-${localizedPath.value}`,
   () => queryCollection('docs').path(localizedPath.value).first(),
-  { watch: [localizedPath] }
+  { watch: [localizedPath] },
 )
 </script>
 

@@ -111,9 +111,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  view: [group: EntityGroup]
-  edit: [group: EntityGroup]
-  delete: [group: EntityGroup]
+  'view': [group: EntityGroup]
+  'edit': [group: EntityGroup]
+  'delete': [group: EntityGroup]
   'add-member': [group: EntityGroup, entityType: string]
   'open-tab': [group: EntityGroup, entityType: string]
 }>()
@@ -166,7 +166,6 @@ function getEntityTypeIcon(type: string): string {
   }
   return icons[type] || 'mdi-help'
 }
-
 </script>
 
 <style scoped>

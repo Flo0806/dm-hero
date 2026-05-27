@@ -73,7 +73,8 @@ export default defineEventHandler(async (event) => {
 
     // Stream file instead of loading into memory (crucial for large maps 25MB+)
     return sendStream(event, createReadStream(fullPath))
-  } catch (error) {
+  }
+  catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return // Let it fall through to 404
     }

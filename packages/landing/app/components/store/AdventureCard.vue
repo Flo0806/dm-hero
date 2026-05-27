@@ -196,9 +196,11 @@ async function toggleFavorite(event: Event) {
   favoriteLoading.value = true
   try {
     await favoritesStore.toggleFavorite(props.adventure.id)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to toggle favorite:', error)
-  } finally {
+  }
+  finally {
     favoriteLoading.value = false
   }
 }

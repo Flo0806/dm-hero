@@ -130,8 +130,8 @@ const snackbarStore = useSnackbarStore()
 
 interface Props {
   modelValue: boolean
-  position: { x: number; y: number }
-  sourceEntity: { id: number; name: string }
+  position: { x: number, y: number }
+  sourceEntity: { id: number, name: string }
   sourceType: SourceEntityType
   groups?: GroupInfo[] // Groups this entity is already in (for marking)
 }
@@ -150,7 +150,8 @@ watch(() => props.modelValue, async (isOpen) => {
         query: { campaignId: campaignStore.activeCampaignId },
       })
       allGroups.value = groups
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[QuickLinkContextMenu] Failed to load groups:', e)
       allGroups.value = []
     }
@@ -164,14 +165,14 @@ function isInGroup(groupId: number): boolean {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  select: [payload: { targetType: string; relationType: string }]
+  'select': [payload: { targetType: string, relationType: string }]
   'added-to-group': [] // Notify parent to refresh counts
   'create-group': []
 }>()
 
 const internalShow = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const menuStyle = computed(() => ({
@@ -207,7 +208,8 @@ async function handleAddToGroup(groupId: number) {
     })
     snackbarStore.success(t('groups.entitiesAdded', 1))
     emit('added-to-group') // Notify parent to refresh counts
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[QuickLinkContextMenu] Failed to add to group:', e)
     snackbarStore.error(t('common.error'))
   }

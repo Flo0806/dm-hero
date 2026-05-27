@@ -93,7 +93,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | null]
-  'update:mapSync': [data: { locationId: number | null; mapIds: number[] } | null]
+  'update:mapSync': [data: { locationId: number | null, mapIds: number[] } | null]
 }>()
 
 const campaignStore = useCampaignStore()
@@ -143,7 +143,8 @@ async function loadMaps() {
     availableMaps.value = await $fetch<CampaignMap[]>('/api/maps', {
       query: { campaignId: activeCampaignId.value },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load maps:', error)
   }
 }
@@ -160,9 +161,11 @@ async function loadLocations() {
       },
     })
     locationOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load locations:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -174,7 +177,8 @@ async function loadLocationDetails(locationId: number) {
     if (!locationOptions.value.find(l => l.id === locationId)) {
       locationOptions.value = [location, ...locationOptions.value]
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load location details:', error)
   }
 }
@@ -192,9 +196,11 @@ async function searchLocations(query: string) {
       },
     })
     locationOptions.value = results
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to search locations:', error)
-  } finally {
+  }
+  finally {
     searchLoading.value = false
   }
 }
@@ -210,7 +216,8 @@ function emitMapSync() {
       locationId: selectedLocationId.value,
       mapIds: selectedMapIds.value,
     })
-  } else {
+  }
+  else {
     emit('update:mapSync', null)
   }
 }

@@ -185,7 +185,7 @@ async function loadGroups() {
 
   // Load counts
   if (data.length > 0) {
-    await loadBatchCounts(data.map((g) => g.id))
+    await loadBatchCounts(data.map(g => g.id))
   }
 
   loading.value = false
@@ -211,7 +211,7 @@ async function executeSearch(query: string) {
   searchResults.value = results
 
   if (results.length > 0) {
-    await loadBatchCounts(results.map((g) => g.id))
+    await loadBatchCounts(results.map(g => g.id))
   }
 
   searching.value = false
@@ -341,7 +341,7 @@ function handleDialogClose(open: boolean) {
 
 async function handleGroupSaved(group: EntityGroup) {
   // Update in local list
-  const index = groups.value.findIndex((g) => g.id === group.id)
+  const index = groups.value.findIndex(g => g.id === group.id)
   if (index !== -1) {
     groups.value[index] = group
   }
@@ -398,7 +398,7 @@ async function confirmDelete() {
   await $fetch(`/api/groups/${deletingGroup.value.id}`, { method: 'DELETE' })
 
   // Remove from local list
-  groups.value = groups.value.filter((g) => g.id !== deletingGroup.value!.id)
+  groups.value = groups.value.filter(g => g.id !== deletingGroup.value!.id)
   snackbarStore.success(t('groups.deleted'))
 
   showDeleteDialog.value = false
@@ -431,7 +431,7 @@ async function confirmDeleteAll() {
   })
 
   // Remove from local list
-  groups.value = groups.value.filter((g) => g.id !== deleteAllGroup.value!.id)
+  groups.value = groups.value.filter(g => g.id !== deleteAllGroup.value!.id)
   snackbarStore.success(t('groups.deletedAll'))
 
   // Refresh all entity stores to reflect deleted entities

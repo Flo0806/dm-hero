@@ -17,8 +17,8 @@
         :key="spark.id"
         class="spark"
         :style="{
-          left: spark.x + 'px',
-          top: spark.y + 'px',
+          'left': spark.x + 'px',
+          'top': spark.y + 'px',
           '--spark-dx': spark.dx + 'px',
           '--spark-dy': spark.dy + 'px',
           '--spark-color': spark.color,
@@ -124,7 +124,7 @@ function createSparks(x: number, y: number) {
 
     // Remove spark after animation
     setTimeout(() => {
-      sparks.value = sparks.value.filter((s) => s.id !== spark.id)
+      sparks.value = sparks.value.filter(s => s.id !== spark.id)
     }, 600)
   }
 }
@@ -194,7 +194,6 @@ onUnmounted(() => {
   z-index: 0;
   background: radial-gradient(ellipse at 50% 0%, #1e2235 0%, #1A1D29 50%, #13151d 100%);
 }
-
 
 /* Mouse-following light */
 .mouse-light {

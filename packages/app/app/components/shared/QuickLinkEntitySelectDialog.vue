@@ -88,7 +88,7 @@ interface Entity {
 
 interface Props {
   modelValue: boolean
-  sourceEntity: { id: number; name: string }
+  sourceEntity: { id: number, name: string }
   sourceType: string
   targetType: 'NPC' | 'Location' | 'Item' | 'Faction' | 'Lore' | 'Player'
   relationType: string
@@ -98,12 +98,12 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  linked: [payload: { entityId: number; entityName: string }]
+  'linked': [payload: { entityId: number, entityName: string }]
 }>()
 
 const internalShow = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 // State
@@ -119,7 +119,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null
 // Get target config for icon and i18n
 const targetConfig = computed(() => {
   const configs = QUICK_LINK_CONFIG[props.sourceType] || []
-  return configs.find((c) => c.targetType === props.targetType)
+  return configs.find(c => c.targetType === props.targetType)
 })
 
 const targetIcon = computed(() => {
@@ -159,7 +159,7 @@ const dialogTitle = computed(() => {
 const filteredEntities = computed(() => {
   // Filter out the source entity itself AND already linked entities
   return entities.value.filter(
-    (e) => e.id !== props.sourceEntity.id && !existingLinkedIds.value.has(e.id),
+    e => e.id !== props.sourceEntity.id && !existingLinkedIds.value.has(e.id),
   )
 })
 
@@ -175,15 +175,16 @@ async function loadExistingLinkedEntities() {
       Player: 'players',
     }
     const typePath = typeMap[props.targetType] || props.targetType.toLowerCase()
-    const linked = await $fetch<Array<{ from_entity_id: number; to_entity_id: number }>>(
+    const linked = await $fetch<Array<{ from_entity_id: number, to_entity_id: number }>>(
       `/api/entities/${props.sourceEntity.id}/related/${typePath}`,
     )
     // Extract the linked entity IDs (could be from either direction)
-    const ids = linked.map((r) =>
+    const ids = linked.map(r =>
       r.from_entity_id === props.sourceEntity.id ? r.to_entity_id : r.from_entity_id,
     )
     existingLinkedIds.value = new Set(ids)
-  } catch {
+  }
+  catch {
     // If it fails, just show all entities
     existingLinkedIds.value = new Set()
   }
@@ -223,10 +224,12 @@ async function loadEntities(search?: string) {
   try {
     const data = await $fetch<Entity[]>(endpoint, { query })
     entities.value = data
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load entities:', error)
     entities.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
     searching.value = false
   }
@@ -275,15 +278,18 @@ async function selectEntity(entity: Entity) {
     emit('linked', { entityId: entity.id, entityName: entity.name })
     snackbarStore.success(t('quickLink.linked', { name: entity.name }))
     close()
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { statusCode?: number }
     if (err.statusCode === 409) {
       snackbarStore.error(t('quickLink.alreadyLinked'))
-    } else {
+    }
+    else {
       console.error('Failed to create relation:', error)
       snackbarStore.error(t('common.error'))
     }
-  } finally {
+  }
+  finally {
     linking.value = false
   }
 }

@@ -70,7 +70,7 @@ export default defineEventHandler((event) => {
       mimeType: audio.mime_type,
       displayOrder: audio.display_order,
       createdAt: audio.created_at,
-      markers: markers.map((m) => ({
+      markers: markers.map(m => ({
         id: m.id,
         timestampSeconds: m.timestamp_seconds,
         label: m.label,

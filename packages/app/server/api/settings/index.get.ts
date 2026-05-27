@@ -25,10 +25,12 @@ export default defineEventHandler(() => {
       if (setting.key.includes('api_key')) {
         formattedSettings[setting.key] = maskApiKey(decryptedValue)
         formattedSettings[`${setting.key}_full`] = decryptedValue // Full key for editing
-      } else {
+      }
+      else {
         formattedSettings[setting.key] = decryptedValue
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`[Settings] Failed to decrypt setting: ${setting.key}`, error)
       formattedSettings[setting.key] = null
     }

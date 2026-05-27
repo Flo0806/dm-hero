@@ -32,7 +32,7 @@ export type AdventureStatus = typeof ADVENTURE_STATUS[keyof typeof ADVENTURE_STA
 /**
  * Status labels for UI display
  */
-export const STATUS_LABELS: Record<AdventureStatus, { en: string; de: string }> = {
+export const STATUS_LABELS: Record<AdventureStatus, { en: string, de: string }> = {
   [ADVENTURE_STATUS.PENDING_REVIEW]: {
     en: 'Pending Review',
     de: 'Überprüfung ausstehend',
@@ -136,16 +136,18 @@ export function isProcessing(status: AdventureStatus): boolean {
 export function determineVersionAction(
   currentStatus: string,
   hasValidatedAt: boolean,
-): { action: 'create' | 'update'; resultStatus: string; clearValidatedAt: boolean } {
+): { action: 'create' | 'update', resultStatus: string, clearValidatedAt: boolean } {
   const isDraft = currentStatus === ADVENTURE_STATUS.DRAFT
 
   if (isDraft && !hasValidatedAt) {
     // Subsequent draft edits → UPDATE same version
     return { action: 'update', resultStatus: ADVENTURE_STATUS.DRAFT, clearValidatedAt: false }
-  } else if (isDraft && hasValidatedAt) {
+  }
+  else if (isDraft && hasValidatedAt) {
     // First edit after unpublish → CREATE new version, clear validated_at
     return { action: 'create', resultStatus: ADVENTURE_STATUS.DRAFT, clearValidatedAt: true }
-  } else {
+  }
+  else {
     // Published/pending/rejected → CREATE new version, go to pending_review
     return { action: 'create', resultStatus: ADVENTURE_STATUS.PENDING_REVIEW, clearValidatedAt: false }
   }

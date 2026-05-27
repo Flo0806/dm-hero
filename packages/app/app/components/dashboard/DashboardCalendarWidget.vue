@@ -90,7 +90,7 @@ const currentMonthName = computed(() => props.calendar?.currentMonthName || '')
 const currentYear = computed(() => props.calendar?.currentYear || 1)
 const eraName = computed(() => props.calendar?.eraName || '')
 
-const weatherTypes: Record<string, { icon: string; key: string }> = {
+const weatherTypes: Record<string, { icon: string, key: string }> = {
   sunny: { icon: 'mdi-weather-sunny', key: 'sunny' },
   partlyCloudy: { icon: 'mdi-weather-partly-cloudy', key: 'partlyCloudy' },
   cloudy: { icon: 'mdi-weather-cloudy', key: 'cloudy' },

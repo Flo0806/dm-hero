@@ -10,23 +10,23 @@ export const usePinboardStore = defineStore('pinboard', {
 
   getters: {
     // Check if an entity is pinned
-    isPinned: (state) => (entityId: number) => {
-      return state.pins.some((p) => p.id === entityId && p.type?.toLowerCase() !== 'group')
+    isPinned: state => (entityId: number) => {
+      return state.pins.some(p => p.id === entityId && p.type?.toLowerCase() !== 'group')
     },
 
     // Check if a group is pinned
-    isGroupPinned: (state) => (groupId: number) => {
-      return state.pins.some((p) => p.id === groupId && p.type?.toLowerCase() === 'group')
+    isGroupPinned: state => (groupId: number) => {
+      return state.pins.some(p => p.id === groupId && p.type?.toLowerCase() === 'group')
     },
 
     // Get pin ID for an entity
-    getPinId: (state) => (entityId: number) => {
-      return state.pins.find((p) => p.id === entityId && p.type?.toLowerCase() !== 'group')?.pin_id ?? null
+    getPinId: state => (entityId: number) => {
+      return state.pins.find(p => p.id === entityId && p.type?.toLowerCase() !== 'group')?.pin_id ?? null
     },
 
     // Get pin ID for a group
-    getGroupPinId: (state) => (groupId: number) => {
-      return state.pins.find((p) => p.id === groupId && p.type?.toLowerCase() === 'group')?.pin_id ?? null
+    getGroupPinId: state => (groupId: number) => {
+      return state.pins.find(p => p.id === groupId && p.type?.toLowerCase() === 'group')?.pin_id ?? null
     },
 
     // Get pins grouped by type
@@ -42,7 +42,7 @@ export const usePinboardStore = defineStore('pinboard', {
     },
 
     // Get pin count
-    pinCount: (state) => state.pins.length,
+    pinCount: state => state.pins.length,
 
     // Get pin counts by entity type (for dashboard cards)
     countsByType: (state) => {
@@ -67,10 +67,12 @@ export const usePinboardStore = defineStore('pinboard', {
         })
         this.pins = data
         this.lastFetchedCampaignId = campaignId
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch pins:', error)
         this.pins = []
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -78,19 +80,19 @@ export const usePinboardStore = defineStore('pinboard', {
     // Add a pin (called after successful API response)
     addPin(pin: PinboardItem) {
       // Avoid duplicates
-      if (!this.pins.some((p) => p.pin_id === pin.pin_id)) {
+      if (!this.pins.some(p => p.pin_id === pin.pin_id)) {
         this.pins.push(pin)
       }
     },
 
     // Remove a pin by pin_id
     removePin(pinId: number) {
-      this.pins = this.pins.filter((p) => p.pin_id !== pinId)
+      this.pins = this.pins.filter(p => p.pin_id !== pinId)
     },
 
     // Remove a pin by entity_id
     removePinByEntityId(entityId: number) {
-      this.pins = this.pins.filter((p) => p.id !== entityId)
+      this.pins = this.pins.filter(p => p.id !== entityId)
     },
 
     // Clear all pins (e.g., when switching campaigns)
@@ -101,9 +103,9 @@ export const usePinboardStore = defineStore('pinboard', {
 
     // Update pin order after reordering
     reorderPins(pinIds: number[]) {
-      const pinMap = new Map(this.pins.map((p) => [p.pin_id, p]))
+      const pinMap = new Map(this.pins.map(p => [p.pin_id, p]))
       this.pins = pinIds
-        .map((id) => pinMap.get(id))
+        .map(id => pinMap.get(id))
         .filter((p): p is PinboardItem => p !== undefined)
     },
   },

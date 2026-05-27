@@ -38,9 +38,9 @@ export default defineEventHandler((event) => {
   // Get all entity type IDs once
   const entityTypes = db
     .prepare('SELECT id, name FROM entity_types WHERE name IN (\'Player\', \'NPC\', \'Item\', \'Location\', \'Faction\', \'Lore\')')
-    .all() as Array<{ id: number; name: string }>
+    .all() as Array<{ id: number, name: string }>
 
-  const typeMap = Object.fromEntries(entityTypes.map((t) => [t.name, t.id]))
+  const typeMap = Object.fromEntries(entityTypes.map(t => [t.name, t.id]))
   const playerTypeId = typeMap['Player']
   const npcTypeId = typeMap['NPC']
   const itemTypeId = typeMap['Item']
@@ -106,7 +106,7 @@ export default defineEventHandler((event) => {
           AND npc.deleted_at IS NULL
       )
       GROUP BY player_id
-    `).all(Number(campaignId), playerTypeId, npcTypeId, Number(campaignId), playerTypeId, npcTypeId) as Array<{ player_id: number; count: number }>
+    `).all(Number(campaignId), playerTypeId, npcTypeId, Number(campaignId), playerTypeId, npcTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of charactersCounts) {
       if (result[row.player_id]) {
@@ -143,7 +143,7 @@ export default defineEventHandler((event) => {
           AND item.deleted_at IS NULL
       )
       GROUP BY player_id
-    `).all(Number(campaignId), playerTypeId, itemTypeId, Number(campaignId), playerTypeId, itemTypeId) as Array<{ player_id: number; count: number }>
+    `).all(Number(campaignId), playerTypeId, itemTypeId, Number(campaignId), playerTypeId, itemTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of itemsCounts) {
       if (result[row.player_id]) {
@@ -180,7 +180,7 @@ export default defineEventHandler((event) => {
           AND loc.deleted_at IS NULL
       )
       GROUP BY player_id
-    `).all(Number(campaignId), playerTypeId, locationTypeId, Number(campaignId), playerTypeId, locationTypeId) as Array<{ player_id: number; count: number }>
+    `).all(Number(campaignId), playerTypeId, locationTypeId, Number(campaignId), playerTypeId, locationTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of locationsCounts) {
       if (result[row.player_id]) {
@@ -217,7 +217,7 @@ export default defineEventHandler((event) => {
           AND faction.deleted_at IS NULL
       )
       GROUP BY player_id
-    `).all(Number(campaignId), playerTypeId, factionTypeId, Number(campaignId), playerTypeId, factionTypeId) as Array<{ player_id: number; count: number }>
+    `).all(Number(campaignId), playerTypeId, factionTypeId, Number(campaignId), playerTypeId, factionTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of factionsCounts) {
       if (result[row.player_id]) {
@@ -254,7 +254,7 @@ export default defineEventHandler((event) => {
           AND lore.deleted_at IS NULL
       )
       GROUP BY player_id
-    `).all(Number(campaignId), playerTypeId, loreTypeId, Number(campaignId), playerTypeId, loreTypeId) as Array<{ player_id: number; count: number }>
+    `).all(Number(campaignId), playerTypeId, loreTypeId, Number(campaignId), playerTypeId, loreTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of loreCounts) {
       if (result[row.player_id]) {
@@ -274,7 +274,7 @@ export default defineEventHandler((event) => {
       AND player.deleted_at IS NULL
       AND s.deleted_at IS NULL
     GROUP BY sm.entity_id
-  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number; count: number }>
+  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of sessionsCounts) {
     if (result[row.player_id]) {
@@ -292,7 +292,7 @@ export default defineEventHandler((event) => {
       AND player.deleted_at IS NULL
       AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
-  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number; count: number }>
+  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of documentsCounts) {
     if (result[row.player_id]) {
@@ -309,7 +309,7 @@ export default defineEventHandler((event) => {
       AND player.type_id = ?
       AND player.deleted_at IS NULL
     GROUP BY ei.entity_id
-  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number; count: number }>
+  `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of imagesCounts) {
     if (result[row.player_id]) {

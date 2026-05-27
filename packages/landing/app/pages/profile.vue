@@ -122,11 +122,11 @@
 </template>
 
 <script setup lang="ts">
-useSeoMeta({ robots: 'noindex' })
-
 import { useProfileStore } from '~/stores/profileStore'
 import { useApiFetch } from '~/composables/useApiFetch'
 import confetti from 'canvas-confetti'
+
+useSeoMeta({ robots: 'noindex' })
 
 definePageMeta({
   middleware: 'auth',
@@ -191,7 +191,8 @@ if (import.meta.client) {
   watch(() => profileStore.hasPendingAdventures, (hasPending) => {
     if (hasPending) {
       startPolling()
-    } else {
+    }
+    else {
       stopPolling()
     }
   })
@@ -231,7 +232,7 @@ function startPolling() {
 
     // Store previous statuses to detect changes
     const previousStatuses = new Map(
-      profileStore.adventures.map((a) => [a.id, a.status]),
+      profileStore.adventures.map(a => [a.id, a.status]),
     )
 
     await profileStore.fetchAdventures()
@@ -267,10 +268,12 @@ async function handleUpdateProfile(data: { displayName: string }) {
     await api.put('/api/profile', data)
     await fetchUser()
     showSuccess(t('profile.messages.profileUpdated'))
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to update profile:', err)
     showError(t('profile.messages.updateFailed'))
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -289,7 +292,8 @@ async function handleAvatarUpload(file: File) {
 
     await fetchUser()
     showSuccess(t('profile.messages.avatarUpdated'))
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to upload avatar:', err)
     const fetchError = err as { data?: { message?: string } }
     const message = fetchError.data?.message || ''
@@ -297,12 +301,15 @@ async function handleAvatarUpload(file: File) {
     // Map known error messages to i18n keys
     if (message.includes('too large')) {
       showError(t('profile.messages.fileTooLarge'))
-    } else if (message.includes('Invalid file type')) {
+    }
+    else if (message.includes('Invalid file type')) {
       showError(t('profile.messages.invalidFileType'))
-    } else {
+    }
+    else {
       showError(t('profile.messages.uploadFailed'))
     }
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -312,7 +319,8 @@ async function handleDeleteAdventure(adventureId: number) {
   try {
     await profileStore.deleteAdventure(adventureId)
     showSuccess(t('profile.messages.adventureDeleted'))
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to delete adventure:', err)
     showError(t('profile.messages.deleteFailed'))
   }
@@ -327,7 +335,8 @@ async function handleStatusChange(adventureId: number, action: 'unpublish' | 're
     })
     await profileStore.fetchAdventures()
     showSuccess(t(`profile.messages.${action}Success`))
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to change status:', err)
     showError(t(`profile.messages.${action}Failed`))
   }
@@ -364,11 +373,13 @@ async function handleDeleteAccount() {
     // Redirect to home with success message
     router.push('/')
     showSuccess(t('profile.deleteAccount.success'))
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to delete account:', err)
     const fetchError = err as { data?: { message?: string } }
     deleteEmailError.value = fetchError.data?.message || t('profile.deleteAccount.error')
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

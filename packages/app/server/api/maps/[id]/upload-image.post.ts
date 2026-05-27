@@ -35,7 +35,8 @@ async function streamBodyToFile(event: Parameters<typeof defineEventHandler>[0] 
       if (done) break
       writeStream.write(value)
     }
-  } finally {
+  }
+  finally {
     writeStream.end()
     await new Promise<void>((resolve, reject) => {
       writeStream.on('finish', resolve)
@@ -51,7 +52,7 @@ function getMultipartBoundary(contentType: string): string | null {
 }
 
 // Extract image from multipart data
-async function extractImageFromMultipart(rawFilePath: string, boundary: string): Promise<{ data: Buffer; contentType: string; filename: string } | null> {
+async function extractImageFromMultipart(rawFilePath: string, boundary: string): Promise<{ data: Buffer, contentType: string, filename: string } | null> {
   const { readFile } = await import('fs/promises')
 
   const raw = await readFile(rawFilePath)
@@ -197,7 +198,8 @@ export default defineEventHandler(async (event) => {
       .get(Number(id)) as CampaignMap
 
     return map
-  } finally {
+  }
+  finally {
     // Cleanup temp files
     await rm(tempDir, { recursive: true, force: true }).catch(() => {})
   }

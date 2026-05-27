@@ -100,7 +100,8 @@ export function useDiceBox() {
       const result = await diceBoxInstance.roll(notation)
       lastResult.value = result as RollResult
       return result as RollResult
-    } finally {
+    }
+    finally {
       isRolling.value = false
     }
   }

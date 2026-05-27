@@ -57,7 +57,7 @@ describe('Locations - Basic CRUD', () => {
 
     const location = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(locationId) as { id: number; name: string; type_id: number }
+      .get(locationId) as { id: number, name: string, type_id: number }
 
     expect(location).toBeDefined()
     expect(location.name).toBe('Test City')
@@ -72,7 +72,7 @@ describe('Locations - Basic CRUD', () => {
 
     const location = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(locationId) as { name: string; description: string }
+      .get(locationId) as { name: string, description: string }
 
     expect(location.name).toBe('New Name')
     expect(location.description).toBe('Updated description')
@@ -369,7 +369,7 @@ describe('Locations - Location Types', () => {
   ]
 
   it('should accept all predefined location types', () => {
-    locationTypes.forEach(type => {
+    locationTypes.forEach((type) => {
       const locationId = createLocation(`Test ${type}`, undefined, { type })
 
       const location = db

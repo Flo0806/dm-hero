@@ -387,7 +387,7 @@
         <v-card-text>
           <p>{{ $t('maps.assignLocationQuestion', {
             entity: pendingLocationAssign?.marker?.entity_name,
-            location: pendingLocationAssign?.area?.location_name
+            location: pendingLocationAssign?.area?.location_name,
           }) }}</p>
         </v-card-text>
         <v-card-actions>
@@ -412,7 +412,7 @@
         <v-card-text>
           <p>{{ $t('maps.removeLocationQuestion', {
             entity: pendingLocationRemove?.marker?.entity_name,
-            location: pendingLocationRemove?.previousArea?.location_name
+            location: pendingLocationRemove?.previousArea?.location_name,
           }) }}</p>
         </v-card-text>
         <v-card-actions>
@@ -438,7 +438,7 @@
           <p class="mb-4">
             {{ $t('maps.areaConflictMessage', {
               count: affectedMarkers.length,
-              location: pendingAreaChange?.area?.location_name
+              location: pendingAreaChange?.area?.location_name,
             }) }}
           </p>
 
@@ -527,7 +527,7 @@ const filteredMarkers = computed(() => {
     return selectedMapMarkers.value
   }
   return selectedMapMarkers.value.filter(
-    (marker) => marker.entity_type && activeFilters.value.has(marker.entity_type),
+    marker => marker.entity_type && activeFilters.value.has(marker.entity_type),
   )
 })
 
@@ -535,7 +535,8 @@ const filteredMarkers = computed(() => {
 function toggleFilter(entityType: string) {
   if (activeFilters.value.has(entityType)) {
     activeFilters.value.delete(entityType)
-  } else {
+  }
+  else {
     activeFilters.value.add(entityType)
   }
   // Trigger reactivity
@@ -571,7 +572,7 @@ const saving = ref(false)
 
 // Measurement tool state
 const measureMode = ref(false)
-const measurePoints = ref<{ x: number; y: number }[]>([])
+const measurePoints = ref<{ x: number, y: number }[]>([])
 
 // Calculate total measured distance
 const measuredDistance = computed(() => {
@@ -599,7 +600,8 @@ function toggleMeasureMode() {
   if (!measureMode.value) {
     // Clear measurement when exiting
     measurePoints.value = []
-  } else {
+  }
+  else {
     // Disable other modes
     addMode.value = null
   }
@@ -614,10 +616,10 @@ function clearMeasurement() {
 }
 
 const editingMarker = ref<MapMarker | null>(null)
-const markerPosition = ref<{ x: number; y: number } | null>(null)
+const markerPosition = ref<{ x: number, y: number } | null>(null)
 
 const editingArea = ref<MapArea | null>(null)
-const areaPosition = ref<{ x: number; y: number } | null>(null)
+const areaPosition = ref<{ x: number, y: number } | null>(null)
 
 // Entity preview state
 const previewEntityType = ref<EntityPreviewType>('npc')
@@ -668,9 +670,11 @@ async function loadMaps() {
     maps.value = await $fetch<CampaignMap[]>('/api/maps', {
       query: { campaignId: activeCampaignId.value },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load maps:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -681,11 +685,12 @@ async function selectMap(map: CampaignMap) {
   addMode.value = 'marker' // Default mode when opening map
 
   try {
-    const details = await $fetch<CampaignMap & { markers: MapMarker[]; areas: MapArea[] }>(`/api/maps/${map.id}`)
+    const details = await $fetch<CampaignMap & { markers: MapMarker[], areas: MapArea[] }>(`/api/maps/${map.id}`)
     selectedMap.value = details
     selectedMapMarkers.value = details.markers || []
     selectedMapAreas.value = details.areas || []
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load map details:', error)
   }
 }
@@ -737,18 +742,22 @@ async function uploadMap() {
 
     // Open the newly created map directly
     await selectMap(map)
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('Failed to upload map:', error)
     // Show translated error message
     const errorMessage = (error as { statusMessage?: string })?.statusMessage
     if (errorMessage === 'INVALID_FILE_TYPE') {
       snackbarStore.error(t('maps.errors.invalidFileType'))
-    } else if (errorMessage === 'FILE_TOO_LARGE') {
+    }
+    else if (errorMessage === 'FILE_TOO_LARGE') {
       snackbarStore.error(t('maps.errors.fileTooLarge'))
-    } else {
+    }
+    else {
       snackbarStore.error(t('maps.errors.uploadFailed'))
     }
-  } finally {
+  }
+  finally {
     uploading.value = false
   }
 }
@@ -769,7 +778,7 @@ function onMarkerRightClick(marker: MapMarker) {
   showAddMarkerDialog.value = true
 }
 
-function onMapClick(position: { x: number; y: number }) {
+function onMapClick(position: { x: number, y: number }) {
   // Measure mode: add point
   if (measureMode.value) {
     addMeasurePoint(position.x, position.y)
@@ -782,7 +791,8 @@ function onMapClick(position: { x: number; y: number }) {
     areaPosition.value = position
     showAddAreaDialog.value = true
     addMode.value = null
-  } else {
+  }
+  else {
     // Default: Create new marker at clicked position
     editingMarker.value = null
     markerPosition.value = position
@@ -812,7 +822,7 @@ async function onMarkerDeleted(_markerId: number) {
   await reloadMarkers()
 }
 
-async function onMarkerDrag(data: { marker: MapMarker; x: number; y: number }) {
+async function onMarkerDrag(data: { marker: MapMarker, x: number, y: number }) {
   // Update marker position via API
   try {
     await $fetch(`/api/maps/${selectedMap.value?.id}/markers/${data.marker.id}`, {
@@ -824,20 +834,21 @@ async function onMarkerDrag(data: { marker: MapMarker; x: number; y: number }) {
     })
     // Reload to get fresh data
     await reloadMarkers()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update marker position:', error)
   }
 }
 
 // Handler: Marker dragged INTO an area circle
-function onMarkerDragIntoArea(data: { marker: MapMarker; area: MapArea; x: number; y: number }) {
+function onMarkerDragIntoArea(data: { marker: MapMarker, area: MapArea, x: number, y: number }) {
   // Show confirmation dialog to assign location
   pendingLocationAssign.value = data
   showLocationAssignDialog.value = true
 }
 
 // Handler: Marker dragged OUT OF an area circle
-function onMarkerDragOutOfArea(data: { marker: MapMarker; previousArea: MapArea; x: number; y: number }) {
+function onMarkerDragOutOfArea(data: { marker: MapMarker, previousArea: MapArea, x: number, y: number }) {
   // Show confirmation dialog to remove location
   pendingLocationRemove.value = data
   showLocationRemoveDialog.value = true
@@ -861,9 +872,11 @@ async function confirmLocationAssign() {
 
     showLocationAssignDialog.value = false
     pendingLocationAssign.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to assign location:', error)
-  } finally {
+  }
+  finally {
     assigningLocation.value = false
   }
 }
@@ -892,9 +905,11 @@ async function confirmLocationRemove() {
 
     showLocationRemoveDialog.value = false
     pendingLocationRemove.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove location:', error)
-  } finally {
+  }
+  finally {
     removingLocation.value = false
   }
 }
@@ -926,13 +941,13 @@ function isMarkerInsideArea(marker: MapMarker, centerX: number, centerY: number,
 
 // Find markers that are inside the area at the given position/radius
 function findMarkersInsideArea(centerX: number, centerY: number, radius: number): MapMarker[] {
-  return selectedMapMarkers.value.filter((marker) =>
+  return selectedMapMarkers.value.filter(marker =>
     isMarkerInsideArea(marker, centerX, centerY, radius),
   )
 }
 
 // Handler: Area was dragged to new position
-function onAreaDrag(data: { area: MapArea; x: number; y: number }) {
+function onAreaDrag(data: { area: MapArea, x: number, y: number }) {
   const { area, x, y } = data
 
   // Find markers that were inside the old position but are outside the new position
@@ -940,7 +955,7 @@ function onAreaDrag(data: { area: MapArea; x: number; y: number }) {
   const newMarkers = findMarkersInsideArea(x, y, area.radius)
 
   // Markers that fall outside after the move
-  const markersOutside = oldMarkers.filter((m) => !newMarkers.some((nm) => nm.id === m.id))
+  const markersOutside = oldMarkers.filter(m => !newMarkers.some(nm => nm.id === m.id))
 
   if (markersOutside.length > 0) {
     // Show conflict dialog
@@ -956,21 +971,23 @@ function onAreaDrag(data: { area: MapArea; x: number; y: number }) {
     }
     areaConflictAction.value = 'move'
     showAreaConflictDialog.value = true
-  } else {
+  }
+  else {
     // No conflicts - apply directly
     applyAreaUpdate(area.id, { center_x: x, center_y: y })
   }
 }
 
 // Apply area update via API
-async function applyAreaUpdate(areaId: number, updates: { center_x?: number; center_y?: number; radius?: number }) {
+async function applyAreaUpdate(areaId: number, updates: { center_x?: number, center_y?: number, radius?: number }) {
   try {
     await $fetch(`/api/maps/${selectedMap.value?.id}/areas/${areaId}`, {
       method: 'PATCH',
       body: updates,
     })
     await reloadMapData()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update area:', error)
   }
 }
@@ -993,11 +1010,12 @@ async function confirmAreaChange() {
     const { area, type, newX, newY, newRadius, oldX, oldY, oldRadius } = pendingAreaChange.value
 
     // Build area update based on change type
-    const areaUpdate: { center_x?: number; center_y?: number; radius?: number } = {}
+    const areaUpdate: { center_x?: number, center_y?: number, radius?: number } = {}
     if (type === 'drag' && newX !== undefined && newY !== undefined) {
       areaUpdate.center_x = newX
       areaUpdate.center_y = newY
-    } else if (type === 'resize' && newRadius !== undefined) {
+    }
+    else if (type === 'resize' && newRadius !== undefined) {
       areaUpdate.radius = newRadius
     }
 
@@ -1019,7 +1037,8 @@ async function confirmAreaChange() {
               y: marker.y + dy,
             },
           })
-        } else if (type === 'resize') {
+        }
+        else if (type === 'resize') {
           // Scale marker position relative to center
           const relX = marker.x - oldX
           const relY = marker.y - oldY
@@ -1032,7 +1051,8 @@ async function confirmAreaChange() {
           })
         }
       }
-    } else if (areaConflictAction.value === 'remove') {
+    }
+    else if (areaConflictAction.value === 'remove') {
       // Remove location_id from affected entities
       for (const marker of affectedMarkers.value) {
         await $fetch(`/api/entities/${marker.entity_id}/location`, {
@@ -1049,9 +1069,11 @@ async function confirmAreaChange() {
     showAreaConflictDialog.value = false
     affectedMarkers.value = []
     pendingAreaChange.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to apply area change:', error)
-  } finally {
+  }
+  finally {
     applyingAreaChange.value = false
   }
 }
@@ -1084,10 +1106,11 @@ async function onAreaDeleted(_areaId: number) {
 async function reloadMapData() {
   if (selectedMap.value) {
     try {
-      const details = await $fetch<CampaignMap & { markers: MapMarker[]; areas: MapArea[] }>(`/api/maps/${selectedMap.value.id}`)
+      const details = await $fetch<CampaignMap & { markers: MapMarker[], areas: MapArea[] }>(`/api/maps/${selectedMap.value.id}`)
       selectedMapMarkers.value = details.markers || []
       selectedMapAreas.value = details.areas || []
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to reload map data:', error)
     }
   }
@@ -1138,7 +1161,7 @@ async function saveMapEdit() {
     }
 
     // Update in maps list
-    const index = maps.value.findIndex((m) => m.id === updated.id)
+    const index = maps.value.findIndex(m => m.id === updated.id)
     if (index !== -1) {
       maps.value[index] = { ...maps.value[index], ...updated }
     }
@@ -1150,18 +1173,22 @@ async function saveMapEdit() {
 
     showEditDialog.value = false
     editingMap.value = null
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error('Failed to update map:', error)
     // Show translated error message
     const errorMessage = (error as { statusMessage?: string })?.statusMessage
     if (errorMessage === 'INVALID_FILE_TYPE') {
       snackbarStore.error(t('maps.errors.invalidFileType'))
-    } else if (errorMessage === 'FILE_TOO_LARGE') {
+    }
+    else if (errorMessage === 'FILE_TOO_LARGE') {
       snackbarStore.error(t('maps.errors.fileTooLarge'))
-    } else {
+    }
+    else {
       snackbarStore.error(t('maps.errors.updateFailed'))
     }
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -1180,9 +1207,11 @@ async function confirmDelete() {
     await loadMaps()
     showDeleteDialog.value = false
     deletingMap.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete map:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

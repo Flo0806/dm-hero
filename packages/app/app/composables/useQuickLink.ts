@@ -26,7 +26,8 @@ export function useQuickLink(options: UseQuickLinkOptions) {
     set: (value: boolean) => {
       if (value) {
         contextMenuManager.setActive(entityId)
-      } else if (contextMenuManager.isActive(entityId)) {
+      }
+      else if (contextMenuManager.isActive(entityId)) {
         contextMenuManager.setActive(null)
       }
     },

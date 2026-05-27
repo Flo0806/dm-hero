@@ -26,7 +26,6 @@ const batchLoading = ref(false)
  * Uses shared state so all LoreCards share the same cache
  */
 export function useLoreCounts() {
-
   async function loadLoreCounts(lore: Lore): Promise<void> {
     // Skip if already loading
     if (loadingCounts.value.has(lore.id)) {
@@ -49,9 +48,11 @@ export function useLoreCounts() {
       countsMap[lore.id] = counts
       // Also add to Lore object for immediate access
       lore._counts = counts
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to load counts for Lore ${lore.id}:`, error)
-    } finally {
+    }
+    finally {
       loadingCounts.value.delete(lore.id)
     }
   }
@@ -60,7 +61,7 @@ export function useLoreCounts() {
    * Load counts for multiple Lore entries in parallel (legacy - uses individual requests)
    */
   async function loadLoreCountsBatch(loreEntries: Lore[]): Promise<void> {
-    const promises = loreEntries.map((lore) => loadLoreCounts(lore))
+    const promises = loreEntries.map(lore => loadLoreCounts(lore))
     await Promise.all(promises)
   }
 
@@ -82,9 +83,11 @@ export function useLoreCounts() {
         const loreId = Number(loreIdStr)
         countsMap[loreId] = counts
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load Lore counts batch:', error)
-    } finally {
+    }
+    finally {
       batchLoading.value = false
     }
   }
@@ -129,7 +132,8 @@ export function useLoreCounts() {
       try {
         const counts = await $fetch<LoreCounts>(`/api/lore/${id}/counts`)
         countsMap[id] = counts
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to reload counts for Lore ${id}:`, error)
       }
     })
@@ -143,7 +147,7 @@ export function useLoreCounts() {
   function clearCountsCache(): void {
     // Clear all properties from reactive object
     Object.keys(countsMap).forEach((key) => {
-      countsMap[Number(key)] = undefined  
+      countsMap[Number(key)] = undefined
     })
     loadingCounts.value.clear()
   }

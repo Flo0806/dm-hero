@@ -27,10 +27,12 @@ export function useLocationPath() {
       const path = await $fetch<PathItem[]>(`/api/locations/${locationId}/path`)
       locationPaths.value[locationId] = path
       return path
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to fetch location path:', error)
       return []
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -44,7 +46,7 @@ export function useLocationPath() {
 
     // Path is ordered from root to current location (depth DESC)
     // We want to show: root → ... → current
-    return path.map((item) => item.name).join(' → ')
+    return path.map(item => item.name).join(' → ')
   }
 
   /**

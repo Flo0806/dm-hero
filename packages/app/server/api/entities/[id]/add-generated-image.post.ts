@@ -57,7 +57,8 @@ export default defineEventHandler(async (event) => {
       imageId: result.lastInsertRowid,
       isPrimary: shouldBePrimary,
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Add Generated Image] Error:', error)
     throw createError({
       statusCode: 500,

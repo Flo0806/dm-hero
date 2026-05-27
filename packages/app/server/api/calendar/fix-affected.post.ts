@@ -21,7 +21,7 @@ export default defineEventHandler(async (event): Promise<FixResult> => {
   }
 
   const newMonthCount = newMonths.length
-  const newMonthDays = newMonths.map((m) => m.days)
+  const newMonthDays = newMonths.map(m => m.days)
   const totalDaysNew = newMonths.reduce((sum, m) => sum + m.days, 0)
 
   // Fix events with deleted months - move to last month, last day
