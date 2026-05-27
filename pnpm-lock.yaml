@@ -43,8 +43,8 @@ importers:
         specifier: ^0.11.3
         version: 0.11.3(magicast@0.5.3)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.35(typescript@6.0.3)))
       archiver:
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^7.0.1
+        version: 7.0.1
       better-sqlite3:
         specifier: ^12.10.0
         version: 12.10.0
@@ -239,8 +239,8 @@ importers:
         specifier: ^0.5.17
         version: 0.5.17
       archiver:
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^7.0.1
+        version: 7.0.1
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -3961,10 +3961,6 @@ packages:
     resolution: {integrity: sha512-ZcbTaIqJOfCc03QwD468Unz/5Ir8ATtvAHsK+FdXbDIbGfihqh9mrvdcYunQzqn4HrvWWaFyaxJhGZagaJJpPQ==}
     engines: {node: '>= 14'}
 
-  archiver@8.0.0:
-    resolution: {integrity: sha512-fV1orZfsnPn9BaSByR/qE67rJCLJEy2Ox5bq7nJh+jquWaNh6Sfec75kJ2T6PtdGUbPQlrVoSVCEOa5SdiTQ1g==}
-    engines: {node: '>=18'}
-
   are-docs-informative@0.0.2:
     resolution: {integrity: sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig==}
     engines: {node: '>=14'}
@@ -4436,10 +4432,6 @@ packages:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
 
-  compress-commons@7.0.1:
-    resolution: {integrity: sha512-g0S8KAD8qf4+V//pr3BfB1aBnARLXNz2Gx+jmHU0LEriUuoQUOPOulVquHKTJ8+EAIIO7fhseNDr9wK5Q9FKBQ==}
-    engines: {node: '>=18'}
-
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
@@ -4500,10 +4492,6 @@ packages:
   crc32-stream@6.0.0:
     resolution: {integrity: sha512-piICUB6ei4IlTv1+653yq5+KoqfBYmj9bw6LqXoOneTMDXk5nM1qt12mFW1caG3LlJXEKW1Bp0WggEmIfQB34g==}
     engines: {node: '>= 14'}
-
-  crc32-stream@7.0.1:
-    resolution: {integrity: sha512-IBWsY8xznyQrcHn8h4bC8/4ErNke5elzgG8GcqF4RFPw6aHkWWRc7Tgw6upjaTX/CT/yQgqYENkxYsTYN+hW2g==}
-    engines: {node: '>=18'}
 
   crc@3.8.0:
     resolution: {integrity: sha512-iX3mfgcTMIq3ZKLIsVFAbv7+Mc10kxabAGQb8HvjA1o3T1PIYprbakQ65d3I+2HGHt6nSKkM9PYjgoJO2KcFBQ==}
@@ -5802,10 +5790,6 @@ packages:
   is-stream@3.0.0:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
-  is-stream@4.0.1:
-    resolution: {integrity: sha512-Dnz92NInDqYckGEUJv689RbRiTSEHCQ7wOVeALbkOz999YpqT46yMRIGtSNl2iCL1waAZSx40+h59NV/EwzV/A==}
-    engines: {node: '>=18'}
 
   is-subdir@1.2.0:
     resolution: {integrity: sha512-2AT6j+gXe/1ueqbW6fLZJiIw3F8iXGJtt0yDrZaBhAZEG1raiTxKWU+IPqMCzQAXOUCKdA4UDMgacKH25XG2Cw==}
@@ -7366,10 +7350,6 @@ packages:
   readdir-glob@1.1.3:
     resolution: {integrity: sha512-v05I2k7xN8zXvPD9N+z/uhXPaj0sUFCe2rcWZIpBsqxfP7xXFQ0tipAd/wjj1YxWyWtUS5IDJpOG82JKt2EAVA==}
 
-  readdir-glob@3.0.0:
-    resolution: {integrity: sha512-AhNB2KgKeVJr16nK9LLZbJNWnYoT23ZrumNKFDebHBdkC8KHSqWo871JAUhoWC/RtjEVdqNMFpM6qrwRbaUqpw==}
-    engines: {node: '>=18'}
-
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
@@ -8777,10 +8757,6 @@ packages:
   zip-stream@6.0.1:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
-
-  zip-stream@7.0.5:
-    resolution: {integrity: sha512-dSvYKdvLsAHCDqPOhIwk/q5CvuWtTB3Dgpoe0uVEFjTzIOAmsQpprX25InCvrvJsirEbu1OHyy67n/kAj1Sw/w==}
-    engines: {node: '>=18'}
 
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
@@ -13338,22 +13314,6 @@ snapshots:
       - bare-buffer
       - react-native-b4a
 
-  archiver@8.0.0:
-    dependencies:
-      async: 3.2.6
-      buffer-crc32: 1.0.0
-      is-stream: 4.0.1
-      lazystream: 1.0.1
-      normalize-path: 3.0.0
-      readable-stream: 4.7.0
-      readdir-glob: 3.0.0
-      tar-stream: 3.2.0
-      zip-stream: 7.0.5
-    transitivePeerDependencies:
-      - bare-abort-controller
-      - bare-buffer
-      - react-native-b4a
-
   are-docs-informative@0.0.2: {}
 
   argparse@1.0.10:
@@ -13842,14 +13802,6 @@ snapshots:
       normalize-path: 3.0.0
       readable-stream: 4.7.0
 
-  compress-commons@7.0.1:
-    dependencies:
-      crc-32: 1.2.2
-      crc32-stream: 7.0.1
-      is-stream: 4.0.1
-      normalize-path: 3.0.0
-      readable-stream: 4.7.0
-
   concat-map@0.0.1: {}
 
   concurrently@9.2.1:
@@ -13903,11 +13855,6 @@ snapshots:
   crc-32@1.2.2: {}
 
   crc32-stream@6.0.0:
-    dependencies:
-      crc-32: 1.2.2
-      readable-stream: 4.7.0
-
-  crc32-stream@7.0.1:
     dependencies:
       crc-32: 1.2.2
       readable-stream: 4.7.0
@@ -15484,8 +15431,6 @@ snapshots:
   is-stream@2.0.1: {}
 
   is-stream@3.0.0: {}
-
-  is-stream@4.0.1: {}
 
   is-subdir@1.2.0:
     dependencies:
@@ -17848,10 +17793,6 @@ snapshots:
     dependencies:
       minimatch: 5.1.9
 
-  readdir-glob@3.0.0:
-    dependencies:
-      minimatch: 10.2.5
-
   readdirp@4.1.2: {}
 
   readdirp@5.0.0: {}
@@ -19499,12 +19440,6 @@ snapshots:
     dependencies:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
-      readable-stream: 4.7.0
-
-  zip-stream@7.0.5:
-    dependencies:
-      compress-commons: 7.0.1
-      normalize-path: 3.0.0
       readable-stream: 4.7.0
 
   zod-to-json-schema@3.25.2(zod@3.25.76):
