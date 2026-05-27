@@ -1,5 +1,13 @@
 # @dm-hero/app
 
+## 1.3.4
+
+### Patch Changes
+
+- 6d8b5c0: chore: upgrade archiver to 8 (esm-only release, switched to named `ZipArchive` export)
+- 40efe42: fix: drop pnpm version pin from ci workflows so it no longer conflicts with the packageManager field
+- 1685eb2: chore: update dependencies across the monorepo, upgrade electron from 39 to 41, pin node 24 and pnpm 10.34
+
 ## 1.3.3
 
 ### Patch Changes
