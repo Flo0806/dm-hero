@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Pinboard Tests
@@ -25,7 +25,7 @@ interface EntityRow {
 }
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number }

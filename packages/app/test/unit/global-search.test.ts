@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import { createLevenshtein } from '../../server/utils/levenshtein'
 import { normalizeText } from '../../server/utils/normalize'
 import type Database from 'better-sqlite3'
@@ -19,7 +19,7 @@ let playerTypeId: number
 const levenshtein = createLevenshtein()
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get type IDs
   const getTypeId = (name: string) => {

@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { existsSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 
 describe('Image Upload System', () => {
-  let db: ReturnType<typeof getDb>
+  let db: ReturnType<typeof getTestDb>
   let testEntityId: number
   const uploadsPath = join(process.cwd(), 'public', 'uploads')
 
   beforeEach(async () => {
-    db = getDb()
+    db = getTestDb()
 
     // Get campaign ID
     const campaign = db.prepare('SELECT id FROM campaigns LIMIT 1').get() as { id: number }

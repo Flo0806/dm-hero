@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Reference Data Tests
@@ -8,7 +8,7 @@ import type Database from 'better-sqlite3'
 let db: Database.Database
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 })
 
 afterAll(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import { normalizeText } from '../../server/utils/normalize'
 import { getRaceKey, getClassKey, getNpcTypeKey } from '../../server/utils/i18n-lookup'
 import { parseSearchQuery } from '../../server/utils/search-query-parser'
@@ -15,7 +15,7 @@ let factionTypeId: number
 let locationTypeId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import { normalizeText } from '../../server/utils/normalize'
 import { distance } from 'fastest-levenshtein'
 import type Database from 'better-sqlite3'
@@ -34,7 +34,7 @@ interface ScoredItem extends ItemWithLoreNames {
 }
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   const itemType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Item') as {
