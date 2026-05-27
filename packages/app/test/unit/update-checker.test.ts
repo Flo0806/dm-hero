@@ -390,6 +390,78 @@ describe('Update Checker - Dismiss Functionality', () => {
   })
 })
 
+describe('Update Checker - Linux Install Flow', () => {
+  // useElectron caches isElectron/electronAPI at module level, so each test
+  // here needs a fresh module to see a different fake window.electronAPI.
+  beforeEach(() => {
+    vi.resetModules()
+    // Re-install the globals that vi.resetModules() leaves behind but the
+    // composable depends on.
+    ;(globalThis as Record<string, unknown>).ref = ref
+    ;(globalThis as Record<string, unknown>).computed = computed
+    ;(globalThis as Record<string, unknown>).useRuntimeConfig = () => ({
+      public: mockConfig,
+    })
+  })
+
+  function installElectronMock(overrides: Partial<{ platform: string; showResult: { shown: boolean; path?: string; error?: string } }> = {}) {
+    const showUpdateFile = vi.fn().mockResolvedValue(
+      overrides.showResult ?? { shown: true, path: '/tmp/DM-Hero.AppImage' },
+    )
+    // window was defined non-writable up top; redefine it for this test.
+    Object.defineProperty(globalThis, 'window', {
+      value: {
+        electronAPI: {
+          isElectron: true,
+          platform: overrides.platform ?? 'linux',
+          showUpdateFile,
+          checkForUpdates: vi.fn().mockResolvedValue({ updateAvailable: false }),
+          downloadUpdate: vi.fn(),
+          installUpdate: vi.fn(),
+          onUpdateDownloadProgress: vi.fn(),
+          onUpdateDownloaded: vi.fn(),
+          onUpdateError: vi.fn(),
+        },
+      },
+      writable: true,
+      configurable: true,
+    })
+    return { showUpdateFile }
+  }
+
+  it('exposes isLinux=true when electron platform is linux', async () => {
+    installElectronMock({ platform: 'linux' })
+    const { useUpdateChecker: freshChecker } = await import('../../app/composables/useUpdateChecker')
+    const { isLinux } = freshChecker()
+    expect(isLinux.value).toBe(true)
+  })
+
+  it('exposes isLinux=false when electron platform is win32', async () => {
+    installElectronMock({ platform: 'win32' })
+    const { useUpdateChecker: freshChecker } = await import('../../app/composables/useUpdateChecker')
+    const { isLinux } = freshChecker()
+    expect(isLinux.value).toBe(false)
+  })
+
+  it('showUpdateFile delegates to electronAPI.showUpdateFile and returns true on success', async () => {
+    const { showUpdateFile: spy } = installElectronMock({ showResult: { shown: true, path: '/tmp/x.AppImage' } })
+    const { useUpdateChecker: freshChecker } = await import('../../app/composables/useUpdateChecker')
+    const { showUpdateFile } = freshChecker()
+    const ok = await showUpdateFile()
+    expect(ok).toBe(true)
+    expect(spy).toHaveBeenCalledOnce()
+  })
+
+  it('showUpdateFile surfaces error string from electronAPI and returns false', async () => {
+    installElectronMock({ showResult: { shown: false, error: 'No downloaded update file available' } })
+    const { useUpdateChecker: freshChecker } = await import('../../app/composables/useUpdateChecker')
+    const { showUpdateFile, error } = freshChecker()
+    const ok = await showUpdateFile()
+    expect(ok).toBe(false)
+    expect(error.value).toBe('No downloaded update file available')
+  })
+})
+
 describe('Update Checker - Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks()

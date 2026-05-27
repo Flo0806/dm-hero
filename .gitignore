@@ -53,3 +53,12 @@ CLAUDE.md
 # Temporary macOS icon creation tools
 packages/app/scripts/create-mac-icon.js
 packages/app/public/images/dm-hero-logo-transparent.png
+
+# Stray dice-box assets dropped at repo root by @3d-dice/dice-box postinstall
+# (real assets live in packages/app/public/dice-box/)
+/public/
+
+# Local-only notes (TODOs, draft announcement posts, etc.)
+/TODO.md
+/v*-discord.md
+/v*-linkedin.md

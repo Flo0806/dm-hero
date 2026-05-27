@@ -2175,9 +2175,12 @@
     "download": "Herunterladen",
     "downloadNow": "Jetzt herunterladen",
     "downloading": "Wird heruntergeladen...",
+    "downloaded": "Update heruntergeladen",
     "readyToInstall": "Update bereit",
     "restartNow": "Jetzt neu starten",
     "clickToRestart": "Klicken zum Neustarten",
+    "showInFolder": "Im Ordner anzeigen",
+    "linuxInstallHint": "AppImage kann sich nicht selbst aktualisieren. Schließe DM Hero, ersetze die alte AppImage durch die neue und starte sie erneut.",
     "dismiss": "Später",
     "backupCreated": "Datenbank-Backup erstellt"
   },

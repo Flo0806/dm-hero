@@ -18,10 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getDataPaths: () => ipcRenderer.invoke('get-data-paths'),
 
   // Save file with dialog (for campaign exports)
-  saveFileDialog: (options) => ipcRenderer.invoke('save-file-dialog', options),
+  saveFileDialog: options => ipcRenderer.invoke('save-file-dialog', options),
 
   // Open external URL in system browser
-  openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),
+  openExternalUrl: url => ipcRenderer.invoke('open-external-url', url),
 
   // ========================================
   // AUTO-UPDATER APIs
@@ -35,6 +35,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Install update and restart app
   installUpdate: () => ipcRenderer.invoke('install-update'),
+
+  // Reveal downloaded update file in OS file manager (Linux fallback for install)
+  showUpdateFile: () => ipcRenderer.invoke('show-update-file'),
+
+  // Platform identifier ('win32', 'darwin', 'linux')
+  platform: process.platform,
 
   // Event listeners for update progress
   onUpdateAvailable: (callback) => {

@@ -9,7 +9,7 @@
 export interface SaveFileOptions {
   defaultFileName: string
   fileData: ArrayBuffer
-  filters?: Array<{ name: string; extensions: string[] }>
+  filters?: Array<{ name: string, extensions: string[] }>
 }
 
 export interface SaveFileResult {
@@ -37,25 +37,29 @@ export interface UpdateDownloadProgress {
 
 export interface ElectronAPI {
   isElectron: boolean
-  exportDatabase: () => Promise<{ success: boolean; canceled?: boolean; filePath?: string; error?: string }>
-  openUploadsFolder: () => Promise<{ success: boolean; error?: string }>
-  openLogsFolder: () => Promise<{ success: boolean; error?: string }>
-  getDataPaths: () => Promise<{ databasePath: string; uploadPath: string; logsPath: string }>
+  exportDatabase: () => Promise<{ success: boolean, canceled?: boolean, filePath?: string, error?: string }>
+  openUploadsFolder: () => Promise<{ success: boolean, error?: string }>
+  openLogsFolder: () => Promise<{ success: boolean, error?: string }>
+  getDataPaths: () => Promise<{ databasePath: string, uploadPath: string, logsPath: string }>
   saveFileDialog: (options: SaveFileOptions) => Promise<SaveFileResult>
-  openExternalUrl: (url: string) => Promise<{ success: boolean; error?: string }>
+  openExternalUrl: (url: string) => Promise<{ success: boolean, error?: string }>
 
   // Auto-updater APIs
   checkForUpdates: () => Promise<UpdateCheckResult>
-  downloadUpdate: () => Promise<{ started: boolean; isDevMode?: boolean; error?: string }>
-  installUpdate: () => Promise<{ installed: boolean; isDevMode?: boolean }>
+  downloadUpdate: () => Promise<{ started: boolean, isDevMode?: boolean, error?: string }>
+  installUpdate: () => Promise<{ installed: boolean, isDevMode?: boolean }>
+  showUpdateFile: () => Promise<{ shown: boolean, path?: string, error?: string }>
 
   // Auto-updater event listeners
-  onUpdateAvailable: (callback: (data: { version: string; releaseNotes?: string }) => void) => void
+  onUpdateAvailable: (callback: (data: { version: string, releaseNotes?: string }) => void) => void
   onUpdateNotAvailable: (callback: () => void) => void
   onUpdateDownloadProgress: (callback: (progress: UpdateDownloadProgress) => void) => void
-  onUpdateDownloaded: (callback: (data?: { version?: string }) => void) => void
+  onUpdateDownloaded: (callback: (data?: { version?: string, downloadedFile?: string }) => void) => void
   onUpdateError: (callback: (error: { message: string }) => void) => void
   removeUpdateListeners: () => void
+
+  // Platform identifier from process.platform
+  platform: NodeJS.Platform
 }
 
 // Extend Window interface with electronAPI
@@ -105,7 +109,7 @@ export function useElectron() {
      * Save a file with a save dialog (Electron only)
      * Falls back to browser download if not in Electron
      */
-    async saveFile(blob: Blob, defaultFileName: string): Promise<{ success: boolean; error?: string }> {
+    async saveFile(blob: Blob, defaultFileName: string): Promise<{ success: boolean, error?: string }> {
       if (electronAPI) {
         // Electron: Show save dialog
         const arrayBuffer = await blob.arrayBuffer()
@@ -114,7 +118,8 @@ export function useElectron() {
           fileData: arrayBuffer,
         })
         return result
-      } else {
+      }
+      else {
         // Browser: Standard download
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -131,7 +136,7 @@ export function useElectron() {
     /**
      * Export the database (Electron only)
      */
-    async exportDatabase(): Promise<{ success: boolean; canceled?: boolean; filePath?: string; error?: string }> {
+    async exportDatabase(): Promise<{ success: boolean, canceled?: boolean, filePath?: string, error?: string }> {
       if (!electronAPI) {
         return { success: false, error: 'Not running in Electron' }
       }
@@ -141,7 +146,7 @@ export function useElectron() {
     /**
      * Open the uploads folder in file explorer (Electron only)
      */
-    async openUploadsFolder(): Promise<{ success: boolean; error?: string }> {
+    async openUploadsFolder(): Promise<{ success: boolean, error?: string }> {
       if (!electronAPI) {
         return { success: false, error: 'Not running in Electron' }
       }
@@ -151,7 +156,7 @@ export function useElectron() {
     /**
      * Open the logs folder in file explorer (Electron only)
      */
-    async openLogsFolder(): Promise<{ success: boolean; error?: string }> {
+    async openLogsFolder(): Promise<{ success: boolean, error?: string }> {
       if (!electronAPI) {
         return { success: false, error: 'Not running in Electron' }
       }
@@ -161,7 +166,7 @@ export function useElectron() {
     /**
      * Get data paths (database, uploads, and logs)
      */
-    async getDataPaths(): Promise<{ databasePath: string; uploadPath: string; logsPath: string } | null> {
+    async getDataPaths(): Promise<{ databasePath: string, uploadPath: string, logsPath: string } | null> {
       if (!electronAPI) return null
       return electronAPI.getDataPaths()
     },
@@ -170,10 +175,11 @@ export function useElectron() {
      * Open external URL in system browser
      * Falls back to window.open if not in Electron
      */
-    async openExternalUrl(url: string): Promise<{ success: boolean; error?: string }> {
+    async openExternalUrl(url: string): Promise<{ success: boolean, error?: string }> {
       if (electronAPI) {
         return electronAPI.openExternalUrl(url)
-      } else {
+      }
+      else {
         window.open(url, '_blank')
         return { success: true }
       }
