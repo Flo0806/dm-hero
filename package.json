@@ -22,8 +22,9 @@
     "changeset:status": "changeset status"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
+  "packageManager": "pnpm@10.34.0",
   "dependencies": {
     "nuxt": "^4.4.6",
     "zod": "^4.4.3"
