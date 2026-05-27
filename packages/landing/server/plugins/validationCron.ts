@@ -50,7 +50,8 @@ export default defineNitroPlugin((_nitroApp) => {
     console.log('[ValidationCron] Initial run starting...')
     try {
       await runValidation()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('[ValidationCron] Initial run failed:', error)
     }
   }, 5000)
@@ -59,7 +60,8 @@ export default defineNitroPlugin((_nitroApp) => {
   const intervalId = setInterval(async () => {
     try {
       await runValidation()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('[ValidationCron] Scheduled run failed:', error)
     }
   }, VALIDATION_INTERVAL)
@@ -99,7 +101,8 @@ async function runValidation() {
     }
 
     console.log('[ValidationCron] Validation run complete')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ValidationCron] Error during validation:', error)
   }
 }
@@ -178,7 +181,8 @@ async function validateSingleVersion(version: PendingVersion) {
         status: 'published',
         warnings: result.warnings,
       })
-    } else {
+    }
+    else {
       await updateVersionStatus(version.id, version.adventure_id, 'rejected', {
         errors: result.errors,
         warnings: result.warnings,
@@ -198,7 +202,8 @@ async function validateSingleVersion(version: PendingVersion) {
         warnings: result.warnings,
       })
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`[ValidationCron] Error validating version ${version.id}:`, error)
 
     // Mark as rejected with error
@@ -219,7 +224,7 @@ async function updateVersionStatus(
   versionId: number,
   adventureId: number,
   status: 'published' | 'rejected',
-  validationResult: { errors: unknown[]; warnings: unknown[] },
+  validationResult: { errors: unknown[], warnings: unknown[] },
 ): Promise<void> {
   // Update version status
   await query(

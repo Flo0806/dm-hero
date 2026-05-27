@@ -104,7 +104,7 @@ const initials = computed(() => {
   if (!props.user?.displayName) return '?'
   return props.user.displayName
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2)
@@ -112,7 +112,9 @@ const initials = computed(() => {
 
 // Track if we're on client (for consistent SSR)
 const isClient = ref(false)
-onMounted(() => { isClient.value = true })
+onMounted(() => {
+  isClient.value = true
+})
 
 const hasChanges = computed(() => {
   // On server, always return false to prevent hydration mismatch
@@ -120,7 +122,6 @@ const hasChanges = computed(() => {
   if (!props.user) return false
   return displayName.value !== props.user.displayName
 })
-
 
 function triggerFileInput() {
   fileInputRef.value?.click()

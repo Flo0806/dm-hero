@@ -26,10 +26,10 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    isEmailVerified: (state) => state.user?.emailVerified ?? false,
-    isCreator: (state) => state.user?.role === 'creator' || state.user?.role === 'admin',
-    isAdmin: (state) => state.user?.role === 'admin',
+    isAuthenticated: state => !!state.user,
+    isEmailVerified: state => state.user?.emailVerified ?? false,
+    isCreator: state => state.user?.role === 'creator' || state.user?.role === 'admin',
+    isAdmin: state => state.user?.role === 'admin',
   },
 
   actions: {
@@ -42,11 +42,14 @@ export const useAuthStore = defineStore('auth', {
           headers,
         })
         // Ensure emailVerified is a boolean (DB might return 0/1)
-        this.user = response.user ? {
-          ...response.user,
-          emailVerified: !!response.user.emailVerified,
-        } : null
-      } catch (err: unknown) {
+        this.user = response.user
+          ? {
+              ...response.user,
+              emailVerified: !!response.user.emailVerified,
+            }
+          : null
+      }
+      catch (err: unknown) {
         const fetchError = err as { statusCode?: number }
 
         // If 401, try to refresh token (client-side only)
@@ -60,7 +63,8 @@ export const useAuthStore = defineStore('auth', {
         }
 
         this.user = null
-      } finally {
+      }
+      finally {
         this.loading = false
         this.initialized = true
       }
@@ -76,16 +80,20 @@ export const useAuthStore = defineStore('auth', {
           body: { email, password },
         })
         // Ensure emailVerified is a boolean
-        this.user = response.user ? {
-          ...response.user,
-          emailVerified: !!response.user.emailVerified,
-        } : null
+        this.user = response.user
+          ? {
+              ...response.user,
+              emailVerified: !!response.user.emailVerified,
+            }
+          : null
         return true
-      } catch (err: unknown) {
+      }
+      catch (err: unknown) {
         const fetchError = err as { data?: { message?: string } }
         this.error = fetchError.data?.message || 'Login failed'
         return false
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -100,11 +108,13 @@ export const useAuthStore = defineStore('auth', {
           body: { email, password, displayName, locale },
         })
         return true
-      } catch (err: unknown) {
+      }
+      catch (err: unknown) {
         const fetchError = err as { data?: { message?: string } }
         this.error = fetchError.data?.message || 'Registration failed'
         return false
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -112,9 +122,11 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       try {
         await $fetch('/api/auth/logout', { method: 'POST' })
-      } catch {
+      }
+      catch {
         // Ignore errors
-      } finally {
+      }
+      finally {
         this.user = null
       }
     },
@@ -125,12 +137,15 @@ export const useAuthStore = defineStore('auth', {
           method: 'POST',
         })
         // Ensure emailVerified is a boolean
-        this.user = response.user ? {
-          ...response.user,
-          emailVerified: !!response.user.emailVerified,
-        } : null
+        this.user = response.user
+          ? {
+              ...response.user,
+              emailVerified: !!response.user.emailVerified,
+            }
+          : null
         return true
-      } catch {
+      }
+      catch {
         this.user = null
         return false
       }

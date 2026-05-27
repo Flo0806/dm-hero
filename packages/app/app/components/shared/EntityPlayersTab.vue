@@ -179,7 +179,7 @@ const emit = defineEmits<{
 
 // State
 const playerRelations = ref<PlayerRelation[]>([])
-const availablePlayers = ref<{ id: number; name: string }[]>([])
+const availablePlayers = ref<{ id: number, name: string }[]>([])
 const loadingPlayers = ref(false)
 const adding = ref(false)
 const saving = ref(false)
@@ -196,7 +196,7 @@ const editForm = ref({
 })
 
 const relationTypeSuggestions = computed(() =>
-  props.relationTypes.map((type) => ({
+  props.relationTypes.map(type => ({
     value: type,
     title: t(`${props.i18nPrefix}.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -207,7 +207,7 @@ const isDirty = computed(() => {
   const hasFormData = !!localPlayerId.value || !!localRelationType.value || !!localNotes.value
   return hasFormData || showEditDialog.value
 })
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 // Load players on mount and when entityId changes
 watch(
@@ -223,7 +223,7 @@ watch(
   () => entitiesStore.players,
   (players) => {
     if (players) {
-      availablePlayers.value = players.map((p) => ({
+      availablePlayers.value = players.map(p => ({
         id: p.id,
         name: p.name,
       }))
@@ -250,7 +250,7 @@ async function loadPlayers() {
       }>
     >(`/api/entities/${props.entityId}/related/players`)
 
-    playerRelations.value = relations.map((rel) => ({
+    playerRelations.value = relations.map(rel => ({
       id: rel.id,
       to_entity_id: rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id,
       to_entity_name: rel.name,
@@ -259,10 +259,12 @@ async function loadPlayers() {
       notes: rel.notes,
       image_url: rel.image_url,
     }))
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load player relations:', error)
     playerRelations.value = []
-  } finally {
+  }
+  finally {
     loadingPlayers.value = false
   }
 }
@@ -283,7 +285,7 @@ async function handleAdd() {
       },
     })
 
-    const player = availablePlayers.value.find((p) => p.id === localPlayerId.value)
+    const player = availablePlayers.value.find(p => p.id === localPlayerId.value)
 
     playerRelations.value.push({
       id: relation.id,
@@ -301,9 +303,11 @@ async function handleAdd() {
     localNotes.value = ''
 
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to add player relation:', error)
-  } finally {
+  }
+  finally {
     adding.value = false
   }
 }
@@ -331,7 +335,7 @@ async function saveRelation() {
       },
     })
 
-    const index = playerRelations.value.findIndex((r) => r.id === editingRelation.value!.id)
+    const index = playerRelations.value.findIndex(r => r.id === editingRelation.value!.id)
     if (index !== -1 && playerRelations.value[index]) {
       playerRelations.value[index].relation_type = updated.relation_type
       playerRelations.value[index].notes = updated.notes
@@ -339,9 +343,11 @@ async function saveRelation() {
 
     closeEditDialog()
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update relation:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -352,9 +358,10 @@ async function removeRelation(relationId: number) {
       method: 'DELETE',
     })
 
-    playerRelations.value = playerRelations.value.filter((r) => r.id !== relationId)
+    playerRelations.value = playerRelations.value.filter(r => r.id !== relationId)
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove relation:', error)
   }
 }

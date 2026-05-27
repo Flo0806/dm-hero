@@ -39,7 +39,8 @@ export default defineEventHandler(async (event) => {
          ORDER BY day`,
       )
       .all(campaignId, year, month) as CalendarWeather[]
-  } else {
+  }
+  else {
     // Get weather for entire year
     weather = db
       .prepare(

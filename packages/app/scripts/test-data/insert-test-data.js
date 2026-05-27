@@ -91,7 +91,8 @@ const cleanup = db.transaction(() => {
 try {
   const deleted = cleanup()
   console.log(`✅ Deleted ${deleted} existing NPCs, Items, Locations, and Factions`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error during cleanup:', error.message)
   process.exit(1)
 }
@@ -964,7 +965,8 @@ try {
 
   console.log(`✅ Inserted ${npcIds.length} NPCs successfully!`)
   console.log(`✅ Inserted ${itemIds.length} Items successfully!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error inserting data:', error.message)
   process.exit(1)
 }
@@ -1077,7 +1079,8 @@ const createRelations = db.transaction(() => {
 try {
   const relations = createRelations()
   console.log(`✅ Created ${relations} NPC→Item relations!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error creating NPC→Item relations:', error.message)
   process.exit(1)
 }
@@ -1327,7 +1330,8 @@ let locationIds
 try {
   locationIds = insertAllLocations()
   console.log(`✅ Inserted ${locationIds.length} Locations successfully!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error inserting locations:', error.message)
   process.exit(1)
 }
@@ -1473,7 +1477,8 @@ try {
   const hierarchyLinks = createHierarchy()
   console.log(`✅ Created ${hierarchyLinks} hierarchical location links!`)
   console.log('   Structure: Falkenpfeil (Stadt) → Viertel → Gebäude')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error creating hierarchy:', error.message)
   process.exit(1)
 }
@@ -1624,7 +1629,8 @@ let factionIds
 try {
   factionIds = insertAllFactions()
   console.log(`✅ Inserted ${factionIds.length} Factions successfully!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error inserting factions:', error.message)
   process.exit(1)
 }
@@ -1672,7 +1678,8 @@ const createFactionRelations = db.transaction(() => {
 try {
   const factionRelations = createFactionRelations()
   console.log(`✅ Created ${factionRelations} faction relations!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error creating faction relations:', error.message)
   process.exit(1)
 }
@@ -1844,7 +1851,8 @@ try {
   console.log('\n💡 Hierarchical Locations:')
   console.log('   - Create location with parent "Hafenviertel"')
   console.log('   - View location → See breadcrumb: "Taverne → Hafenviertel → Falkenpfeil"')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error creating location relations:', error.message)
   process.exit(1)
 }

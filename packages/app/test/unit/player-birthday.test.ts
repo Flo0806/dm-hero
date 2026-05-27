@@ -39,7 +39,7 @@ beforeEach(() => {
 // Helper to create a Player with optional birthday
 function createPlayer(name: string, options?: {
   description?: string
-  birthday?: { year: number; month: number; day: number } | null
+  birthday?: { year: number, month: number, day: number } | null
   showBirthdayInCalendar?: boolean
 }): number {
   const metadata: Record<string, unknown> = {}
@@ -55,7 +55,7 @@ function createPlayer(name: string, options?: {
       testCampaignId,
       name,
       options?.description || null,
-      Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null
+      Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -74,7 +74,7 @@ function createBirthdayEvent(playerId: number, playerName: string, month: number
       month,
       day,
       1, // is_recurring
-      playerId
+      playerId,
     )
   return Number(result.lastInsertRowid)
 }
@@ -83,7 +83,7 @@ describe('Player Birthday - Metadata Storage', () => {
   it('should store birthday in player metadata', () => {
     const playerId = createPlayer('Test Player', {
       birthday: { year: 1492, month: 6, day: 15 },
-      showBirthdayInCalendar: true
+      showBirthdayInCalendar: true,
     })
 
     const player = db
@@ -110,13 +110,13 @@ describe('Player Birthday - Metadata Storage', () => {
 
   it('should update birthday in metadata', () => {
     const playerId = createPlayer('Update Birthday Player', {
-      birthday: { year: 1490, month: 3, day: 10 }
+      birthday: { year: 1490, month: 3, day: 10 },
     })
 
     // Update birthday
     const newMetadata = JSON.stringify({
       birthday: { year: 1495, month: 8, day: 20 },
-      showBirthdayInCalendar: true
+      showBirthdayInCalendar: true,
     })
     db.prepare('UPDATE entities SET metadata = ? WHERE id = ?').run(newMetadata, playerId)
 
@@ -132,7 +132,7 @@ describe('Player Birthday - Metadata Storage', () => {
 
   it('should clear birthday from metadata', () => {
     const playerId = createPlayer('Clear Birthday Player', {
-      birthday: { year: 1492, month: 6, day: 15 }
+      birthday: { year: 1492, month: 6, day: 15 },
     })
 
     // Clear birthday by setting metadata to null
@@ -154,13 +154,13 @@ describe('Player Birthday - Calendar Event Integration', () => {
     const event = db
       .prepare('SELECT * FROM calendar_events WHERE id = ?')
       .get(eventId) as {
-        title: string
-        event_type: string
-        month: number
-        day: number
-        is_recurring: number
-        entity_id: number
-      }
+      title: string
+      event_type: string
+      month: number
+      day: number
+      is_recurring: number
+      entity_id: number
+    }
 
     expect(event.title).toBe('Geburtstag von Birthday Event Player')
     expect(event.event_type).toBe('birthday')
@@ -181,7 +181,7 @@ describe('Player Birthday - Calendar Event Integration', () => {
         JOIN entities e ON e.id = ce.entity_id
         WHERE ce.campaign_id = ? AND ce.event_type = 'birthday'
       `)
-      .get(testCampaignId) as { player_name: string; entity_id: number }
+      .get(testCampaignId) as { player_name: string, entity_id: number }
 
     expect(event.player_name).toBe('Linked Player')
     expect(event.entity_id).toBe(playerId)
@@ -197,7 +197,7 @@ describe('Player Birthday - Calendar Event Integration', () => {
 
     const event = db
       .prepare('SELECT month, day FROM calendar_events WHERE id = ?')
-      .get(eventId) as { month: number; day: number }
+      .get(eventId) as { month: number, day: number }
 
     expect(event.month).toBe(9)
     expect(event.day).toBe(25)
@@ -308,7 +308,7 @@ describe('Player Birthday - Sync showBirthdayInCalendar with Event Existence', (
   it('should detect when birthday event exists for player', () => {
     const playerId = createPlayer('Event Exists Player', {
       birthday: { year: 1500, month: 6, day: 15 },
-      showBirthdayInCalendar: true
+      showBirthdayInCalendar: true,
     })
     createBirthdayEvent(playerId, 'Event Exists Player', 6, 15)
 
@@ -327,7 +327,7 @@ describe('Player Birthday - Sync showBirthdayInCalendar with Event Existence', (
     // Create player with birthday and showBirthdayInCalendar=true
     const playerId = createPlayer('Deleted Event Player', {
       birthday: { year: 1500, month: 6, day: 15 },
-      showBirthdayInCalendar: true
+      showBirthdayInCalendar: true,
     })
 
     // Verify metadata says showBirthdayInCalendar: true
@@ -357,7 +357,7 @@ describe('Player Birthday - Sync showBirthdayInCalendar with Event Existence', (
   it('should keep showBirthdayInCalendar true when event exists', () => {
     const playerId = createPlayer('Synced Player', {
       birthday: { year: 1500, month: 6, day: 15 },
-      showBirthdayInCalendar: true
+      showBirthdayInCalendar: true,
     })
     createBirthdayEvent(playerId, 'Synced Player', 6, 15)
 
@@ -382,7 +382,7 @@ describe('Player Birthday - Sync showBirthdayInCalendar with Event Existence', (
 describe('Player Birthday - Date Validation', () => {
   it('should store birthday with valid in-game date components', () => {
     const playerId = createPlayer('Valid Date Player', {
-      birthday: { year: 1, month: 1, day: 1 }
+      birthday: { year: 1, month: 1, day: 1 },
     })
 
     const player = db
@@ -397,7 +397,7 @@ describe('Player Birthday - Date Validation', () => {
 
   it('should store large year values for fantasy calendars', () => {
     const playerId = createPlayer('High Year Player', {
-      birthday: { year: 9999, month: 12, day: 30 }
+      birthday: { year: 9999, month: 12, day: 30 },
     })
 
     const player = db

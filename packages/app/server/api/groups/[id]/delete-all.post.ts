@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
   const entityIds = db
     .prepare('SELECT entity_id FROM entity_group_members WHERE group_id = ?')
     .all(groupId) as Array<{ entity_id: number }>
-  const entityIdList = entityIds.map((e) => e.entity_id)
+  const entityIdList = entityIds.map(e => e.entity_id)
 
   if (entityIdList.length > 0) {
     const placeholders = entityIdList.map(() => '?').join(',')

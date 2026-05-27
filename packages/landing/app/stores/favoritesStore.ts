@@ -15,7 +15,7 @@ export const useFavoritesStore = defineStore('favorites', {
   }),
 
   getters: {
-    isFavorite: (state) => (adventureId: number) => {
+    isFavorite: state => (adventureId: number) => {
       return state.favoriteIds.has(adventureId)
     },
 
@@ -35,10 +35,12 @@ export const useFavoritesStore = defineStore('favorites', {
         const response = await $api<{ favoriteIds: number[] }>('/api/favorites/ids')
         this.favoriteIds = new Set(response.favoriteIds)
         this.initialized = true
-      } catch {
+      }
+      catch {
         // User not logged in or error - that's fine
         this.favoriteIds = new Set()
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -51,7 +53,8 @@ export const useFavoritesStore = defineStore('favorites', {
       try {
         const $api = getApi()
         await $api(`/api/favorites/${adventureId}`, { method: 'POST' })
-      } catch (error) {
+      }
+      catch (error) {
         // Rollback on error
         this.favoriteIds.delete(adventureId)
         throw error
@@ -66,7 +69,8 @@ export const useFavoritesStore = defineStore('favorites', {
       try {
         const $api = getApi()
         await $api(`/api/favorites/${adventureId}`, { method: 'DELETE' })
-      } catch (error) {
+      }
+      catch (error) {
         // Rollback on error
         this.favoriteIds.add(adventureId)
         throw error
@@ -78,7 +82,8 @@ export const useFavoritesStore = defineStore('favorites', {
       if (this.favoriteIds.has(adventureId)) {
         await this.removeFavorite(adventureId)
         return false
-      } else {
+      }
+      else {
         await this.addFavorite(adventureId)
         return true
       }

@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
+// Import after mocking
+import { hashPassword, verifyPassword } from '../../server/utils/auth'
+
 // Mock useRuntimeConfig for JWT tests
 const mockConfig = {
   jwtSecret: 'test-secret-key-for-testing-only',
@@ -11,9 +14,6 @@ const mockConfig = {
 vi.mock('#imports', () => ({
   useRuntimeConfig: () => mockConfig,
 }))
-
-// Import after mocking
-import { hashPassword, verifyPassword } from '../../server/utils/auth'
 
 describe('Auth Utilities', () => {
   describe('Password Hashing', () => {

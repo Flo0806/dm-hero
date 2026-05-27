@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     WHERE id = ?
   `,
     )
-    .get(imageId) as { id: number; session_id: number; image_url: string; is_primary: number } | undefined
+    .get(imageId) as { id: number, session_id: number, image_url: string, is_primary: number } | undefined
 
   if (!image) {
     throw createError({
@@ -39,7 +39,8 @@ export default defineEventHandler(async (event) => {
   try {
     const filePath = join(getUploadPath(), image.image_url)
     await unlink(filePath)
-  } catch (error) {
+  }
+  catch (error) {
     console.warn(`Failed to delete file ${image.image_url}:`, error)
     // Continue even if file deletion fails
   }

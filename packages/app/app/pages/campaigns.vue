@@ -206,15 +206,18 @@ async function saveCampaign() {
     if (editingCampaign.value) {
       // Update existing campaign via store
       await campaignStore.updateCampaign(editingCampaign.value.id, campaignForm.value)
-    } else {
+    }
+    else {
       // Create new campaign via store
       await campaignStore.createCampaign(campaignForm.value)
     }
 
     closeDialog()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save campaign:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -228,9 +231,11 @@ async function confirmDelete() {
     await campaignStore.deleteCampaign(deletingCampaign.value.id)
     showDeleteDialog.value = false
     deletingCampaign.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete campaign:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

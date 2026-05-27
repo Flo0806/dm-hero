@@ -291,7 +291,8 @@ onMounted(async () => {
     internalYear.value = props.modelValue.year
     internalMonth.value = props.modelValue.month
     internalDay.value = props.modelValue.day
-  } else if (calendarData.value && props.autoSetCurrentDate) {
+  }
+  else if (calendarData.value && props.autoSetCurrentDate) {
     // Default to current campaign date (only if autoSetCurrentDate is true)
     setToCurrentDate()
   }

@@ -34,7 +34,8 @@ export default defineEventHandler(async (event) => {
   if (existsSync(filePath)) {
     try {
       await unlink(filePath)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to delete audio file:', error)
     }
   }

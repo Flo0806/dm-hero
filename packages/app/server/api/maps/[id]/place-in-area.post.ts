@@ -76,7 +76,7 @@ export default defineEventHandler(async (event) => {
 
   // Check if marker already exists for this entity on this map
   const existingMarker = db
-    .prepare<[string, number], { id: number; x: number; y: number }>(
+    .prepare<[string, number], { id: number, x: number, y: number }>(
       'SELECT id, x, y FROM map_markers WHERE map_id = ? AND entity_id = ?',
     )
     .get(mapId, entity_id)
@@ -109,7 +109,8 @@ export default defineEventHandler(async (event) => {
       y: position.y,
       action: 'moved',
     }
-  } else {
+  }
+  else {
     // Create new marker
     const result = db
       .prepare(
@@ -131,8 +132,8 @@ function findFreeSpotInCircle(
   centerX: number,
   centerY: number,
   radius: number,
-  existingMarkers: Array<{ x: number; y: number }>,
-): { x: number; y: number } {
+  existingMarkers: Array<{ x: number, y: number }>,
+): { x: number, y: number } {
   const minDistance = 3 // Minimum distance between markers (in %)
 
   // Start from center and spiral outward
@@ -161,8 +162,8 @@ function generateSpiralPoints(
   centerY: number,
   radius: number,
   numRings: number,
-): Array<{ x: number; y: number }> {
-  const points: Array<{ x: number; y: number }> = []
+): Array<{ x: number, y: number }> {
+  const points: Array<{ x: number, y: number }> = []
 
   // Start with center
   points.push({ x: centerX, y: centerY })

@@ -39,7 +39,7 @@ describe('Campaigns - Basic CRUD', () => {
 
     const campaign = db
       .prepare('SELECT * FROM campaigns WHERE id = ?')
-      .get(campaignId) as { id: number; name: string }
+      .get(campaignId) as { id: number, name: string }
 
     expect(campaign).toBeDefined()
     expect(campaign.name).toBe('Test Campaign Alpha')
@@ -50,7 +50,7 @@ describe('Campaigns - Basic CRUD', () => {
 
     const campaign = db
       .prepare('SELECT * FROM campaigns WHERE id = ?')
-      .get(campaignId) as { name: string; description: string }
+      .get(campaignId) as { name: string, description: string }
 
     expect(campaign.name).toBe('Test Campaign Beta')
     expect(campaign.description).toBe('A grand adventure awaits')
@@ -64,7 +64,7 @@ describe('Campaigns - Basic CRUD', () => {
 
     const campaign = db
       .prepare('SELECT name, description FROM campaigns WHERE id = ?')
-      .get(campaignId) as { name: string; description: string }
+      .get(campaignId) as { name: string, description: string }
 
     expect(campaign.name).toBe('Test Campaign New Name')
     expect(campaign.description).toBe('Updated description')
@@ -130,7 +130,7 @@ describe('Campaigns - Multiple Campaigns', () => {
 
     const campaigns = db
       .prepare("SELECT * FROM campaigns WHERE name LIKE 'Test Campaign List%' ORDER BY name")
-      .all() as Array<{ id: number; name: string }>
+      .all() as Array<{ id: number, name: string }>
 
     expect(campaigns.length).toBeGreaterThanOrEqual(3)
 

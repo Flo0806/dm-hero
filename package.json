@@ -22,14 +22,15 @@
     "changeset:status": "changeset status"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
+  "packageManager": "pnpm@10.34.0",
   "dependencies": {
-    "nuxt": "^4.3.1",
-    "zod": "^3.25.76"
+    "nuxt": "^4.4.6",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.2",
-    "@changesets/cli": "^2.29.8"
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0"
   }
 }

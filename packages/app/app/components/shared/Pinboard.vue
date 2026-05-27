@@ -44,7 +44,7 @@ async function onDragEnd() {
   isDragging.value = false
 
   // Get new order of pin IDs
-  const pinIds = localPins.value.map((p) => p.pin_id)
+  const pinIds = localPins.value.map(p => p.pin_id)
 
   // Update store
   pinboardStore.reorderPins(pinIds)
@@ -55,7 +55,8 @@ async function onDragEnd() {
       method: 'PATCH',
       body: { pinIds },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save pin order:', error)
     // Revert on error
     await fetchPins()
@@ -69,7 +70,8 @@ async function removePin(pinId: number) {
       method: 'DELETE',
     })
     pinboardStore.removePin(pinId)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove pin:', error)
   }
 }
@@ -125,7 +127,8 @@ watch(
   (newId) => {
     if (newId) {
       fetchPins()
-    } else {
+    }
+    else {
       pinboardStore.clearPins()
     }
   },

@@ -33,7 +33,7 @@ export default defineEventHandler((event) => {
     )
     .all(sessionId) as SessionImageRow[]
 
-  return images.map((img) => ({
+  return images.map(img => ({
     id: img.id,
     sessionId: img.session_id,
     imageUrl: img.image_url,

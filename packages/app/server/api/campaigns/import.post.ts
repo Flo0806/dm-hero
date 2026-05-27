@@ -64,7 +64,8 @@ async function streamBodyToFile(event: Parameters<typeof defineEventHandler>[0] 
       if (done) break
       writeStream.write(value)
     }
-  } finally {
+  }
+  finally {
     writeStream.end()
     await new Promise<void>((resolve, reject) => {
       writeStream.on('finish', resolve)
@@ -80,7 +81,7 @@ function getMultipartBoundary(contentType: string): string | null {
 }
 
 // Extract file data from raw multipart body using streaming to handle large files
-async function extractFileFromMultipart(rawFilePath: string, boundary: string, tempDir: string): Promise<{ zipPath: string; options: ImportOptions }> {
+async function extractFileFromMultipart(rawFilePath: string, boundary: string, tempDir: string): Promise<{ zipPath: string, options: ImportOptions }> {
   const { stat } = await import('fs/promises')
   const { open } = await import('fs/promises')
 
@@ -146,7 +147,8 @@ async function extractFileFromMultipart(rawFilePath: string, boundary: string, t
         // Entire file is in the initial chunk
         zipWriteStream.write(initialFileContent.subarray(0, endIdx))
         bytesWritten = endIdx
-      } else {
+      }
+      else {
         // Need to stream the rest
         zipWriteStream.write(initialFileContent)
         bytesWritten = initialFileContent.length
@@ -169,14 +171,16 @@ async function extractFileFromMultipart(rawFilePath: string, boundary: string, t
             zipWriteStream.write(searchBuffer.subarray(0, endBoundaryIdx))
             bytesWritten += endBoundaryIdx
             break
-          } else {
+          }
+          else {
             // Write all but the last few bytes (boundary might span chunks)
             const safeWriteLength = searchBuffer.length - endBoundary.length
             if (safeWriteLength > 0) {
               zipWriteStream.write(searchBuffer.subarray(0, safeWriteLength))
               bytesWritten += safeWriteLength
               pendingBuffer = searchBuffer.subarray(safeWriteLength)
-            } else {
+            }
+            else {
               pendingBuffer = searchBuffer
             }
           }
@@ -213,7 +217,8 @@ async function extractFileFromMultipart(rawFilePath: string, boundary: string, t
       try {
         options = JSON.parse(optionsBody)
         console.log('[Import] Parsed options from tail:', options.mode, 'raceResolutions:', Object.keys(options.raceResolutions || {}))
-      } catch (e) {
+      }
+      catch (e) {
         console.log('[Import] Failed to parse options:', e)
       }
     }
@@ -264,7 +269,8 @@ export default defineEventHandler(async (event) => {
 
     // Remove raw upload file to free disk space
     await rm(rawFilePath, { force: true })
-  } catch (streamError) {
+  }
+  catch (streamError) {
     // Clean up on streaming error
     await rm(tempDir, { recursive: true, force: true }).catch(() => {})
     console.error('[Import] Streaming error:', streamError)
@@ -362,7 +368,7 @@ export default defineEventHandler(async (event) => {
       id: number
       name: string
     }>
-    const typeNameToLocalId = new Map<string, number>(localEntityTypes.map((t) => [t.name, t.id]))
+    const typeNameToLocalId = new Map<string, number>(localEntityTypes.map(t => [t.name, t.id]))
 
     // For v1.0 exports that don't have entityTypes, use a fallback (hardcoded for backwards compat)
     // v1.1+ exports include entityTypes and type_name on each entity
@@ -481,8 +487,8 @@ export default defineEventHandler(async (event) => {
 
     // Check if user has provided resolutions for all race/class conflicts
     // Only check conflicts that actually exist - don't require both raceResolutions AND classResolutions
-    const hasUnresolvedRaceClassConflicts = raceClassConflicts.length > 0 &&
-      raceClassConflicts.some((c) => {
+    const hasUnresolvedRaceClassConflicts = raceClassConflicts.length > 0
+      && raceClassConflicts.some((c) => {
         const resolutions = c.type === 'race' ? options.raceResolutions : options.classResolutions
         return !resolutions || !(c.key in resolutions)
       })
@@ -539,14 +545,16 @@ export default defineEventHandler(async (event) => {
         .prepare('INSERT INTO campaigns (name, description, created_at, updated_at) VALUES (?, ?, datetime(), datetime())')
         .run(campaignName, manifest.campaign.description || null)
       campaignId = result.lastInsertRowid as number
-    } else if (options.mode === 'merge' && options.targetCampaignId) {
+    }
+    else if (options.mode === 'merge' && options.targetCampaignId) {
       // Verify target campaign exists
       const existing = db.prepare('SELECT id FROM campaigns WHERE id = ? AND deleted_at IS NULL').get(options.targetCampaignId)
       if (!existing) {
         throw createError({ statusCode: 404, message: 'Target campaign not found' })
       }
       campaignId = options.targetCampaignId
-    } else {
+    }
+    else {
       throw createError({ statusCode: 400, message: 'Invalid import options' })
     }
 
@@ -566,7 +574,7 @@ export default defineEventHandler(async (event) => {
           AND json_extract(metadata, '$._importTracking.sourceAdventureSlug') = ?
         `,
           )
-          .all(campaignId, sourceAdventureSlug) as Array<{ id: number; name: string }>
+          .all(campaignId, sourceAdventureSlug) as Array<{ id: number, name: string }>
 
         if (existingFromSameAdventure.length > 0) {
           conflictInfo.isStoreUpdate = true
@@ -591,7 +599,7 @@ export default defineEventHandler(async (event) => {
             AND deleted_at IS NULL
           `,
             )
-            .get(campaignId, localTypeId, entity.name) as { id: number; name: string } | undefined
+            .get(campaignId, localTypeId, entity.name) as { id: number, name: string } | undefined
 
           if (existing) {
             conflictInfo.duplicates.push({
@@ -641,7 +649,8 @@ export default defineEventHandler(async (event) => {
             softDelete.run(entity.id)
           }
           stats.entitiesDeleted = toDelete.length
-        } else {
+        }
+        else {
           // Delete only duplicates by name+type
           for (const dup of conflictInfo.duplicates) {
             softDelete.run(dup.existingId)
@@ -706,7 +715,8 @@ export default defineEventHandler(async (event) => {
         // Frontend adds the appropriate route prefix when accessing (/uploads/ or /documents/)
         targetDir = uploadPath
         returnPath = fileName
-      } else {
+      }
+      else {
         // Maps, audio are stored in subfolders
         // DB stores 'folder/filename' (e.g., 'maps/abc123.png')
         targetDir = join(uploadPath, targetFolder)
@@ -807,7 +817,8 @@ export default defineEventHandler(async (event) => {
         if (fromId && toId) {
           insertRelation.run(fromId, toId, relation.relation_type, relation.notes || null)
           stats.relationsImported++
-        } else {
+        }
+        else {
           stats.warnings.push('Skipped relation: missing entity reference')
           stats.skipped++
         }
@@ -863,10 +874,10 @@ export default defineEventHandler(async (event) => {
         const result = insertDoc.run(
           entityId,
           doc.title,
-          doc.content || '',  // NOT NULL - use empty string as default
+          doc.content || '', // NOT NULL - use empty string as default
           filePath,
           doc.file_type,
-          doc.date || new Date().toISOString().split('T')[0],  // NOT NULL - use today as default
+          doc.date || new Date().toISOString().split('T')[0], // NOT NULL - use today as default
           doc.sort_order,
           doc.document_type || null,
         )
@@ -928,7 +939,8 @@ export default defineEventHandler(async (event) => {
 
         if (sessionId && entityId) {
           insertMention.run(sessionId, entityId, mention.context || null)
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -951,7 +963,8 @@ export default defineEventHandler(async (event) => {
 
         if (sessionId && playerId) {
           insertAttendance.run(sessionId, playerId, characterId || null, attendance.attended ? 1 : 0, attendance.notes || null)
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -1029,7 +1042,8 @@ export default defineEventHandler(async (event) => {
         const audioId = idMapping.audio.get(marker.audio)
         if (audioId) {
           insertMarker.run(audioId, marker.timestamp_seconds, marker.label, marker.description || null, marker.color || null)
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -1278,7 +1292,8 @@ export default defineEventHandler(async (event) => {
             marker.custom_label || null,
             marker.notes || null,
           )
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -1300,7 +1315,8 @@ export default defineEventHandler(async (event) => {
 
         if (mapId && locationId) {
           insertArea.run(mapId, locationId, area.center_x, area.center_y, area.radius, area.color || null)
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -1365,7 +1381,8 @@ export default defineEventHandler(async (event) => {
         const entityId = idMapping.entities.get(pin.entity)
         if (entityId) {
           insertPin.run(campaignId, entityId, pin.display_order)
-        } else {
+        }
+        else {
           stats.skipped++
         }
       }
@@ -1385,14 +1402,15 @@ export default defineEventHandler(async (event) => {
         }
 
         // Check if race exists at all (including soft-deleted)
-        const existing = db.prepare('SELECT id, deleted_at FROM races WHERE name = ?').get(key) as { id: number; deleted_at: string | null } | undefined
+        const existing = db.prepare('SELECT id, deleted_at FROM races WHERE name = ?').get(key) as { id: number, deleted_at: string | null } | undefined
 
         if (existing && existing.deleted_at) {
           // Soft-deleted: restore it with new data
           db.prepare('UPDATE races SET name_de = ?, name_en = ?, description = ?, deleted_at = NULL WHERE name = ?')
             .run(race.name_de || null, race.name_en || null, race.description || null, key)
           stats.racesImported++
-        } else if (existing) {
+        }
+        else if (existing) {
           // Active: check if conflict resolution provided
           const resolution = options.raceResolutions?.[key]
           if (resolution === 'overwrite') {
@@ -1401,7 +1419,8 @@ export default defineEventHandler(async (event) => {
             stats.racesImported++
           }
           // 'keep' or identical = do nothing, already exists
-        } else {
+        }
+        else {
           // Doesn't exist: insert new
           db.prepare('INSERT INTO races (name, name_de, name_en, description) VALUES (?, ?, ?, ?)')
             .run(key, race.name_de || null, race.name_en || null, race.description || null)
@@ -1424,14 +1443,15 @@ export default defineEventHandler(async (event) => {
         }
 
         // Check if class exists at all (including soft-deleted)
-        const existing = db.prepare('SELECT id, deleted_at FROM classes WHERE name = ?').get(key) as { id: number; deleted_at: string | null } | undefined
+        const existing = db.prepare('SELECT id, deleted_at FROM classes WHERE name = ?').get(key) as { id: number, deleted_at: string | null } | undefined
 
         if (existing && existing.deleted_at) {
           // Soft-deleted: restore it with new data
           db.prepare('UPDATE classes SET name_de = ?, name_en = ?, description = ?, deleted_at = NULL WHERE name = ?')
             .run(cls.name_de || null, cls.name_en || null, cls.description || null, key)
           stats.classesImported++
-        } else if (existing) {
+        }
+        else if (existing) {
           // Active: check if conflict resolution provided
           const resolution = options.classResolutions?.[key]
           if (resolution === 'overwrite') {
@@ -1440,7 +1460,8 @@ export default defineEventHandler(async (event) => {
             stats.classesImported++
           }
           // 'keep' or identical = do nothing, already exists
-        } else {
+        }
+        else {
           // Doesn't exist: insert new
           db.prepare('INSERT INTO classes (name, name_de, name_en, description) VALUES (?, ?, ?, ?)')
             .run(key, cls.name_de || null, cls.name_en || null, cls.description || null)
@@ -1540,7 +1561,7 @@ export default defineEventHandler(async (event) => {
     if (idMapping.sessions.size > 0) {
       const updateSession = db.prepare('UPDATE sessions SET notes = ?, summary = ? WHERE id = ?')
       for (const [_exportId, newId] of idMapping.sessions) {
-        const session = db.prepare('SELECT notes, summary FROM sessions WHERE id = ?').get(newId) as { notes: string | null; summary: string | null } | undefined
+        const session = db.prepare('SELECT notes, summary FROM sessions WHERE id = ?').get(newId) as { notes: string | null, summary: string | null } | undefined
         if (session) {
           const transformedNotes = transformEntityLinks(session.notes)
           const transformedSummary = transformEntityLinks(session.summary)
@@ -1602,7 +1623,8 @@ export default defineEventHandler(async (event) => {
       campaignId,
       stats,
     } as ImportResult
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Import] Error during import:', error)
     if (error instanceof Error) {
       console.error('[Import] Stack:', error.stack)
@@ -1611,7 +1633,8 @@ export default defineEventHandler(async (event) => {
     // Clean up temp directory on error
     try {
       await rm(tempDir, { recursive: true, force: true })
-    } catch {
+    }
+    catch {
       // Ignore cleanup errors
     }
 
@@ -1619,7 +1642,8 @@ export default defineEventHandler(async (event) => {
     if (campaignId && options.mode === 'new') {
       try {
         db.prepare('DELETE FROM campaigns WHERE id = ?').run(campaignId)
-      } catch {
+      }
+      catch {
         // Ignore cleanup errors
       }
     }

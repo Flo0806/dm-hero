@@ -54,11 +54,11 @@ describe('Calendar Config', () => {
     const config = db
       .prepare('SELECT * FROM calendar_config WHERE campaign_id = ?')
       .get(testCampaignId) as {
-        current_year: number
-        current_month: number
-        current_day: number
-        era_name: string
-      }
+      current_year: number
+      current_month: number
+      current_day: number
+      era_name: string
+    }
 
     expect(config.current_year).toBe(1352)
     expect(config.current_month).toBe(3)
@@ -80,7 +80,7 @@ describe('Calendar Config', () => {
 
     const config = db
       .prepare('SELECT current_year, current_month, current_day FROM calendar_config WHERE campaign_id = ?')
-      .get(testCampaignId) as { current_year: number; current_month: number; current_day: number }
+      .get(testCampaignId) as { current_year: number, current_month: number, current_day: number }
 
     expect(config.current_year).toBe(1353)
     expect(config.current_month).toBe(6)
@@ -106,7 +106,7 @@ describe('Calendar Months', () => {
 
     const storedMonths = db
       .prepare('SELECT * FROM calendar_months WHERE campaign_id = ? ORDER BY sort_order')
-      .all(testCampaignId) as Array<{ name: string; days: number; sort_order: number }>
+      .all(testCampaignId) as Array<{ name: string, days: number, sort_order: number }>
 
     expect(storedMonths).toHaveLength(4)
     expect(storedMonths[0].name).toBe('Hammer')
@@ -144,7 +144,7 @@ describe('Calendar Weekdays', () => {
 
     const storedDays = db
       .prepare('SELECT * FROM calendar_weekdays WHERE campaign_id = ? ORDER BY sort_order')
-      .all(testCampaignId) as Array<{ name: string; sort_order: number }>
+      .all(testCampaignId) as Array<{ name: string, sort_order: number }>
 
     expect(storedDays).toHaveLength(7)
     expect(storedDays[0].name).toBe('Moonday')
@@ -164,11 +164,11 @@ describe('Calendar Moons', () => {
     const moon = db
       .prepare('SELECT * FROM calendar_moons WHERE campaign_id = ?')
       .get(testCampaignId) as {
-        name: string
-        cycle_days: number
-        full_moon_duration: number
-        new_moon_duration: number
-      }
+      name: string
+      cycle_days: number
+      full_moon_duration: number
+      new_moon_duration: number
+    }
 
     expect(moon.name).toBe('Selûne')
     expect(moon.cycle_days).toBe(30)
@@ -208,10 +208,10 @@ describe('Calendar - Leap Year Configuration', () => {
     const config = db
       .prepare('SELECT leap_year_interval, leap_year_month, leap_year_extra_days FROM calendar_config WHERE campaign_id = ?')
       .get(testCampaignId) as {
-        leap_year_interval: number
-        leap_year_month: number
-        leap_year_extra_days: number
-      }
+      leap_year_interval: number
+      leap_year_month: number
+      leap_year_extra_days: number
+    }
 
     expect(config.leap_year_interval).toBe(4)
     expect(config.leap_year_month).toBe(2) // Extra day added to month 2

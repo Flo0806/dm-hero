@@ -161,7 +161,8 @@ async function handleLogin() {
     if (success) {
       router.push('/store')
     }
-  } catch {
+  }
+  catch {
     // Error is handled by useAuth
   }
 
@@ -184,9 +185,11 @@ async function handleResend() {
       body: { email: email.value, locale: locale.value },
     })
     resendSuccess.value = true
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to resend verification email:', err)
-  } finally {
+  }
+  finally {
     resending.value = false
   }
 }

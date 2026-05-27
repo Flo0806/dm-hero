@@ -45,7 +45,7 @@ export default defineEventHandler(async (event): Promise<ValidationResult> => {
   const totalDaysNew = newMonths.reduce((sum, m) => sum + m.days, 0)
 
   // Build month lookup for new configuration
-  const newMonthDays = newMonths.map((m) => m.days)
+  const newMonthDays = newMonths.map(m => m.days)
   const newMonthCount = newMonths.length
 
   // Find affected events
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event): Promise<ValidationResult> => {
       `SELECT id, title, month, day FROM calendar_events
        WHERE campaign_id = ? AND month IS NOT NULL AND day IS NOT NULL`,
     )
-    .all(campaignId) as Array<{ id: number; title: string; month: number; day: number }>
+    .all(campaignId) as Array<{ id: number, title: string, month: number, day: number }>
 
   const affectedEvents: ValidationResult['affectedEvents'] = []
 
@@ -68,7 +68,8 @@ export default defineEventHandler(async (event): Promise<ValidationResult> => {
         day: evt.day,
         issue: 'month_deleted',
       })
-    } else {
+    }
+    else {
       // Check if day still exists in that month
       const maxDays = newMonthDays[evt.month - 1] || 30
       if (evt.day > maxDays) {
@@ -113,7 +114,8 @@ export default defineEventHandler(async (event): Promise<ValidationResult> => {
         issue: 'day_overflow',
       })
     }
-  } else {
+  }
+  else {
     // Even if total days are same, check if individual month days changed
     // which would affect sessions in those months
     for (const sess of sessions) {

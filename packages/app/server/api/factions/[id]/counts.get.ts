@@ -160,8 +160,8 @@ export default defineEventHandler((event) => {
     `,
       )
       .get(Number(factionId), locationTypeId.id, Number(factionId), locationTypeId.id) as {
-        count: number
-      }
+      count: number
+    }
     locationsCount = locationsResult.count
   }
 
@@ -196,8 +196,8 @@ export default defineEventHandler((event) => {
     `,
       )
       .get(Number(factionId), playerTypeId.id, Number(factionId), playerTypeId.id) as {
-        count: number
-      }
+      count: number
+    }
     playersCount = playersResult.count
   }
 
@@ -243,8 +243,8 @@ export default defineEventHandler((event) => {
     `,
       )
       .get(Number(factionId), factionTypeId.id, Number(factionId), factionTypeId.id) as {
-        count: number
-      }
+      count: number
+    }
     relationsCount = relationsResult.count
   }
 
@@ -259,7 +259,7 @@ export default defineEventHandler((event) => {
     ORDER BY g.name
   `,
     )
-    .all(Number(factionId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+    .all(Number(factionId)) as Array<{ id: number, name: string, color: string | null, icon: string | null }>
 
   return {
     members: membersCount,

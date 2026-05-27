@@ -239,13 +239,13 @@ describe('NPC Counts - Notes via Session Mentions', () => {
 
     // Create 3 sessions mentioning this NPC
     const session1 = db.prepare(
-      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)'
+      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)',
     ).run(testCampaignId, 'Session 1', 1)
     const session2 = db.prepare(
-      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)'
+      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)',
     ).run(testCampaignId, 'Session 2', 2)
     const session3 = db.prepare(
-      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)'
+      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)',
     ).run(testCampaignId, 'Session 3', 3)
 
     db.prepare('INSERT INTO session_mentions (session_id, entity_id) VALUES (?, ?)').run(Number(session1.lastInsertRowid), npcId)
@@ -267,7 +267,7 @@ describe('NPC Counts - Notes via Session Mentions', () => {
     const npcId = createEntity(npcTypeId, 'Mentioned NPC')
 
     const session = db.prepare(
-      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)'
+      'INSERT INTO sessions (campaign_id, title, session_number) VALUES (?, ?, ?)',
     ).run(testCampaignId, 'Deleted Session', 1)
     const sessionId = Number(session.lastInsertRowid)
 

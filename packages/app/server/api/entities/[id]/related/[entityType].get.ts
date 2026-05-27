@@ -135,7 +135,8 @@ export default defineEventHandler(async (event) => {
     if (entity.notes) {
       try {
         parsedNotes = JSON.parse(entity.notes)
-      } catch {
+      }
+      catch {
         // If not valid JSON, keep as plain text string
         parsedNotes = entity.notes
       }
@@ -146,7 +147,8 @@ export default defineEventHandler(async (event) => {
     if (entity.entity_metadata) {
       try {
         parsedMetadata = JSON.parse(entity.entity_metadata)
-      } catch {
+      }
+      catch {
         // If not valid JSON, keep as null
         parsedMetadata = null
       }

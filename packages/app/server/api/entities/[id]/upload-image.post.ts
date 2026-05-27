@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
 
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
   const maxSize = 8 * 1024 * 1024 // 8MB
-  const uploadedImages: Array<{ id: number; imageUrl: string; isPrimary: boolean }> = []
+  const uploadedImages: Array<{ id: number, imageUrl: string, isPrimary: boolean }> = []
 
   const uploadsDir = getUploadPath()
   // Ensure uploads directory exists

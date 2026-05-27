@@ -2,505 +2,505 @@
   <div>
     <StoreBackground />
     <v-container class="py-8 position-relative" style="max-width: 900px; z-index: 1">
-    <!-- Header -->
-    <div class="d-flex align-center mb-8">
-      <v-btn icon="mdi-arrow-left" variant="text" @click="goBack" class="mr-4" />
-      <div>
-        <h1 class="text-h4 font-weight-light">
-          {{ isEditMode ? $t('store.upload.titleEdit') : $t('store.upload.title') }}
-        </h1>
-        <p class="text-body-2 text-medium-emphasis">
-          {{ isEditMode ? $t('store.upload.subtitleEdit') : $t('store.upload.subtitle') }}
-        </p>
+      <!-- Header -->
+      <div class="d-flex align-center mb-8">
+        <v-btn icon="mdi-arrow-left" variant="text" class="mr-4" @click="goBack" />
+        <div>
+          <h1 class="text-h4 font-weight-light">
+            {{ isEditMode ? $t('store.upload.titleEdit') : $t('store.upload.title') }}
+          </h1>
+          <p class="text-body-2 text-medium-emphasis">
+            {{ isEditMode ? $t('store.upload.subtitleEdit') : $t('store.upload.subtitle') }}
+          </p>
+        </div>
       </div>
-    </div>
 
-    <!-- BETA Banner -->
-    <v-alert
-      color="warning"
-      variant="tonal"
-      class="mb-6"
-      border="start"
-      prominent
-    >
-      <template #prepend>
-        <div class="beta-badge mr-4">
-          <span class="beta-text">{{ $t('store.upload.beta.title') }}</span>
-        </div>
-      </template>
-      <div>
-        <div class="text-body-1 font-weight-medium mb-1">
-          {{ $t('store.upload.beta.message') }}
-        </div>
-        <div class="text-body-2 mb-2">
-          {{ $t('store.upload.beta.feedback') }}
-        </div>
-        <div class="text-body-2 text-medium-emphasis mb-3">
-          {{ $t('store.upload.beta.thanks') }}
-        </div>
-        <v-btn
-          href="https://github.com/Flo0806/dm-hero/issues"
-          target="_blank"
-          variant="outlined"
-          color="warning"
-          size="small"
-          prepend-icon="mdi-github"
-        >
-          {{ $t('store.upload.beta.reportIssue') }}
-        </v-btn>
-      </div>
-    </v-alert>
-
-    <!-- Loading state for edit mode -->
-    <div v-if="loading" class="d-flex justify-center py-12">
-      <v-progress-circular indeterminate color="primary" />
-    </div>
-
-    <template v-if="!loading">
-    <!-- Email verification required alert -->
-    <v-alert
-      v-if="!isEmailVerified"
-      type="warning"
-      variant="tonal"
-      class="mb-6"
-      icon="mdi-email-alert"
-    >
-      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
-        <span>{{ $t('store.upload.verifyRequired') }}</span>
-        <v-btn
-          variant="outlined"
-          color="warning"
-          size="small"
-          :loading="resending"
-          @click="handleResend"
-        >
-          {{ $t('auth.verifyEmail.resendButton') }}
-        </v-btn>
-      </div>
+      <!-- BETA Banner -->
       <v-alert
-        v-if="resendSuccess"
-        type="success"
+        color="warning"
         variant="tonal"
-        density="compact"
-        class="mt-3"
+        class="mb-6"
+        border="start"
+        prominent
       >
-        {{ $t('auth.verifyEmail.resendSuccess') }}
-      </v-alert>
-    </v-alert>
-
-    <!-- ToS acceptance required alert -->
-    <v-alert
-      v-if="!tosAccepted && isEmailVerified"
-      type="error"
-      variant="tonal"
-      class="mb-6"
-      icon="mdi-file-document-alert"
-    >
-      <div class="d-flex align-center justify-space-between flex-wrap ga-4">
-        <span>{{ $t('tos.acceptRequired') }}</span>
-        <v-btn
-          variant="outlined"
-          color="error"
-          size="small"
-          @click="showTosDialog = true"
-        >
-          {{ $t('tos.readAndAccept') }}
-        </v-btn>
-      </div>
-    </v-alert>
-
-    <v-form ref="formRef" @submit.prevent="handleSubmit" class="position-relative">
-      <!-- Disabled overlay when ToS not accepted or email not verified -->
-      <div v-if="formDisabled" class="form-disabled-overlay">
-        <div class="overlay-content">
-          <v-icon icon="mdi-lock" size="48" class="mb-4" />
-          <div class="text-h6 mb-2">{{ $t('store.upload.formLocked') }}</div>
-          <div class="text-body-2 text-medium-emphasis">
-            {{ !isEmailVerified ? $t('store.upload.verifyFirst') : $t('store.upload.acceptTosFirst') }}
+        <template #prepend>
+          <div class="beta-badge mr-4">
+            <span class="beta-text">{{ $t('store.upload.beta.title') }}</span>
           </div>
-        </div>
-      </div>
-
-      <!-- Basic Info Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-information-outline" class="mr-2" />
-          {{ $t('store.upload.basicInfo') }}
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <!-- Title -->
-            <v-col cols="12">
-              <v-text-field
-                v-model="form.title"
-                :label="$t('store.upload.fields.title')"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <!-- Short Description -->
-            <v-col cols="12">
-              <v-textarea
-                v-model="form.shortDescription"
-                :label="$t('store.upload.fields.shortDescription')"
-                :hint="$t('store.upload.hints.shortDescription')"
-                :rules="[rules.required, rules.maxLength(500)]"
-                variant="outlined"
-                rows="2"
-                counter="500"
-                persistent-hint
-              />
-            </v-col>
-
-            <!-- Cover Image (Required) -->
-            <v-col cols="12">
-              <div class="cover-upload">
-                <div
-                  v-if="coverPreview"
-                  class="cover-preview"
-                  :style="{ backgroundImage: `url(${coverPreview})` }"
-                >
-                  <v-btn
-                    icon="mdi-close"
-                    size="small"
-                    color="error"
-                    class="remove-cover"
-                    @click="removeCover"
-                  />
-                </div>
-                <v-file-input
-                  v-else
-                  v-model="form.coverImage"
-                  :label="$t('store.upload.fields.coverImage') + ' *'"
-                  :rules="[rules.requiredFile]"
-                  accept="image/*"
-                  prepend-icon="mdi-image"
-                  variant="outlined"
-                  @update:model-value="onCoverSelected"
-                />
-                <p class="text-caption text-medium-emphasis mt-1">
-                  {{ $t('store.upload.hints.coverImage') }}
-                </p>
-              </div>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Description Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-text-box-outline" class="mr-2" />
-          {{ $t('store.upload.description') }}
-        </v-card-title>
-        <v-card-text>
-          <StoreRichTextEditor
-            v-model="form.description"
-            :placeholder="$t('store.upload.fields.descriptionPlaceholder')"
-          />
-        </v-card-text>
-      </v-card>
-
-      <!-- Highlights Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-star-outline" class="mr-2" />
-          {{ $t('store.upload.highlights') }}
-        </v-card-title>
-        <v-card-text>
-          <div v-for="(highlight, index) in form.highlights" :key="index" class="d-flex align-center mb-2">
-            <v-text-field
-              v-model="form.highlights[index]"
-              :placeholder="$t('store.upload.fields.highlightPlaceholder')"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="flex-grow-1"
-            />
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              size="small"
-              color="error"
-              class="ml-2"
-              @click="removeHighlight(index)"
-            />
+        </template>
+        <div>
+          <div class="text-body-1 font-weight-medium mb-1">
+            {{ $t('store.upload.beta.message') }}
+          </div>
+          <div class="text-body-2 mb-2">
+            {{ $t('store.upload.beta.feedback') }}
+          </div>
+          <div class="text-body-2 text-medium-emphasis mb-3">
+            {{ $t('store.upload.beta.thanks') }}
           </div>
           <v-btn
-            v-if="form.highlights.length < 6"
-            variant="tonal"
-            size="small"
-            prepend-icon="mdi-plus"
-            @click="addHighlight"
-          >
-            {{ $t('store.upload.addHighlight') }}
-          </v-btn>
-        </v-card-text>
-      </v-card>
-
-      <!-- Game Details Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-dice-d20" class="mr-2" />
-          {{ $t('store.upload.gameDetails') }}
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <!-- System -->
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.system"
-                :items="systemOptions"
-                item-title="title"
-                item-value="value"
-                :label="$t('store.upload.fields.system')"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <!-- Language -->
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.language"
-                :items="languageOptions"
-                item-title="title"
-                item-value="value"
-                :label="$t('store.upload.fields.language')"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <!-- Difficulty -->
-            <v-col cols="12">
-              <div class="mb-2 text-body-2">{{ $t('store.upload.fields.difficulty') }}</div>
-              <StoreDifficultyRating v-model="form.difficulty" />
-            </v-col>
-
-            <!-- Players -->
-            <v-col cols="12" md="6">
-              <div class="mb-2 text-body-2">{{ $t('store.upload.fields.players') }}</div>
-              <div class="d-flex align-center ga-4">
-                <v-text-field
-                  v-model.number="form.playersMin"
-                  type="number"
-                  :label="$t('store.upload.fields.min')"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  style="max-width: 100px"
-                  min="1"
-                  max="20"
-                />
-                <span class="text-medium-emphasis">–</span>
-                <v-text-field
-                  v-model.number="form.playersMax"
-                  type="number"
-                  :label="$t('store.upload.fields.max')"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  style="max-width: 100px"
-                  min="1"
-                  max="20"
-                />
-              </div>
-            </v-col>
-
-            <!-- Character Level -->
-            <v-col cols="12" md="6">
-              <div class="mb-2 text-body-2">{{ $t('store.upload.fields.characterLevel') }}</div>
-              <div class="d-flex align-center ga-4">
-                <v-text-field
-                  v-model.number="form.levelMin"
-                  type="number"
-                  :label="$t('store.upload.fields.min')"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  style="max-width: 100px"
-                  min="1"
-                  max="20"
-                />
-                <span class="text-medium-emphasis">–</span>
-                <v-text-field
-                  v-model.number="form.levelMax"
-                  type="number"
-                  :label="$t('store.upload.fields.max')"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  style="max-width: 100px"
-                  min="1"
-                  max="20"
-                />
-              </div>
-            </v-col>
-
-            <!-- Duration -->
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.durationHours"
-                :items="durationOptions"
-                item-title="title"
-                item-value="value"
-                :label="$t('store.upload.fields.duration')"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <!-- Tags -->
-            <v-col cols="12" md="6">
-              <v-combobox
-                v-model="form.tags"
-                :items="suggestedTags"
-                :label="$t('store.upload.fields.tags')"
-                variant="outlined"
-                density="comfortable"
-                chips
-                multiple
-                closable-chips
-              />
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Author Info Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-account-outline" class="mr-2" />
-          {{ $t('store.upload.authorInfo') }}
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.authorName"
-                :label="$t('store.upload.fields.authorName')"
-                :hint="$t('store.upload.hints.authorName')"
-                variant="outlined"
-                density="comfortable"
-                persistent-hint
-              />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.authorDiscord"
-                :label="$t('store.upload.fields.discord')"
-                :hint="$t('store.upload.hints.discord')"
-                variant="outlined"
-                density="comfortable"
-                persistent-hint
-              >
-                <template #prepend-inner>
-                  <IconsDiscordIcon :size="20" class="text-medium-emphasis" />
-                </template>
-              </v-text-field>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-
-      <!-- Adventure File Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-file-upload-outline" class="mr-2" />
-          {{ $t('store.upload.adventureFile') }}
-        </v-card-title>
-        <v-card-text>
-          <!-- Show existing file in edit mode -->
-          <div v-if="isEditMode && existingFileName && !form.adventureFile" class="mb-4">
-            <v-chip
-              color="success"
-              variant="tonal"
-              prepend-icon="mdi-check-circle"
-              class="mb-2"
-            >
-              {{ existingFileName }}
-              <span v-if="existingVersion" class="ml-1 text-medium-emphasis">(v{{ existingVersion }})</span>
-            </v-chip>
-            <p class="text-caption text-medium-emphasis">
-              {{ $t('store.upload.hints.fileExists') }}
-            </p>
-          </div>
-
-          <v-file-input
-            v-model="form.adventureFile"
-            :label="isEditMode && existingFileName ? $t('store.upload.fields.fileReplace') : $t('store.upload.fields.file')"
-            :rules="isEditMode && existingFileName ? [] : [rules.required]"
-            accept=".dmhero"
-            prepend-icon="mdi-treasure-chest"
+            href="https://github.com/Flo0806/dm-hero/issues"
+            target="_blank"
             variant="outlined"
-            :hint="$t('store.upload.hints.file')"
-            persistent-hint
-          />
-        </v-card-text>
-      </v-card>
-
-      <!-- Price Card -->
-      <v-card class="mb-6" elevation="0">
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-cash" class="mr-2" />
-          {{ $t('store.upload.pricing') }}
-        </v-card-title>
-        <v-card-text>
-          <v-chip color="success" variant="flat" prepend-icon="mdi-check" class="mb-3">
-            {{ $t('store.upload.fields.freeAdventure') }}
-          </v-chip>
-          <p class="text-body-2 text-medium-emphasis">
-            {{ $t('store.upload.hints.freeOnly') }}
-          </p>
-        </v-card-text>
-      </v-card>
-
-      <!-- Error Alert -->
-      <v-alert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = ''">
-        {{ error }}
+            color="warning"
+            size="small"
+            prepend-icon="mdi-github"
+          >
+            {{ $t('store.upload.beta.reportIssue') }}
+          </v-btn>
+        </div>
       </v-alert>
 
-      <!-- Actions -->
-      <div class="d-flex justify-end ga-4">
-        <v-btn variant="text" size="large" @click="goBack">
-          {{ $t('common.cancel') }}
-        </v-btn>
-        <v-btn
-          type="submit"
-          color="primary"
-          variant="flat"
-          size="large"
-          :loading="submitting"
-          :disabled="!isEmailVerified || !tosAccepted"
-          :prepend-icon="isEditMode ? 'mdi-content-save' : 'mdi-upload'"
-        >
-          {{ isEditMode ? $t('store.upload.submitEdit') : $t('store.upload.submit') }}
-        </v-btn>
+      <!-- Loading state for edit mode -->
+      <div v-if="loading" class="d-flex justify-center py-12">
+        <v-progress-circular indeterminate color="primary" />
       </div>
-    </v-form>
-    </template>
-  </v-container>
 
-  <!-- ToS Acceptance Dialog -->
-  <TosAcceptanceDialog
-    v-model="showTosDialog"
-    :tos-version="tosVersion"
-    @accepted="onTosAccepted"
-  />
+      <template v-if="!loading">
+        <!-- Email verification required alert -->
+        <v-alert
+          v-if="!isEmailVerified"
+          type="warning"
+          variant="tonal"
+          class="mb-6"
+          icon="mdi-email-alert"
+        >
+          <div class="d-flex align-center justify-space-between flex-wrap ga-4">
+            <span>{{ $t('store.upload.verifyRequired') }}</span>
+            <v-btn
+              variant="outlined"
+              color="warning"
+              size="small"
+              :loading="resending"
+              @click="handleResend"
+            >
+              {{ $t('auth.verifyEmail.resendButton') }}
+            </v-btn>
+          </div>
+          <v-alert
+            v-if="resendSuccess"
+            type="success"
+            variant="tonal"
+            density="compact"
+            class="mt-3"
+          >
+            {{ $t('auth.verifyEmail.resendSuccess') }}
+          </v-alert>
+        </v-alert>
 
-  <!-- Footer -->
-  <FooterSection />
+        <!-- ToS acceptance required alert -->
+        <v-alert
+          v-if="!tosAccepted && isEmailVerified"
+          type="error"
+          variant="tonal"
+          class="mb-6"
+          icon="mdi-file-document-alert"
+        >
+          <div class="d-flex align-center justify-space-between flex-wrap ga-4">
+            <span>{{ $t('tos.acceptRequired') }}</span>
+            <v-btn
+              variant="outlined"
+              color="error"
+              size="small"
+              @click="showTosDialog = true"
+            >
+              {{ $t('tos.readAndAccept') }}
+            </v-btn>
+          </div>
+        </v-alert>
+
+        <v-form ref="formRef" class="position-relative" @submit.prevent="handleSubmit">
+          <!-- Disabled overlay when ToS not accepted or email not verified -->
+          <div v-if="formDisabled" class="form-disabled-overlay">
+            <div class="overlay-content">
+              <v-icon icon="mdi-lock" size="48" class="mb-4" />
+              <div class="text-h6 mb-2">{{ $t('store.upload.formLocked') }}</div>
+              <div class="text-body-2 text-medium-emphasis">
+                {{ !isEmailVerified ? $t('store.upload.verifyFirst') : $t('store.upload.acceptTosFirst') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Basic Info Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-information-outline" class="mr-2" />
+              {{ $t('store.upload.basicInfo') }}
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <!-- Title -->
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="form.title"
+                    :label="$t('store.upload.fields.title')"
+                    :rules="[rules.required]"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+
+                <!-- Short Description -->
+                <v-col cols="12">
+                  <v-textarea
+                    v-model="form.shortDescription"
+                    :label="$t('store.upload.fields.shortDescription')"
+                    :hint="$t('store.upload.hints.shortDescription')"
+                    :rules="[rules.required, rules.maxLength(500)]"
+                    variant="outlined"
+                    rows="2"
+                    counter="500"
+                    persistent-hint
+                  />
+                </v-col>
+
+                <!-- Cover Image (Required) -->
+                <v-col cols="12">
+                  <div class="cover-upload">
+                    <div
+                      v-if="coverPreview"
+                      class="cover-preview"
+                      :style="{ backgroundImage: `url(${coverPreview})` }"
+                    >
+                      <v-btn
+                        icon="mdi-close"
+                        size="small"
+                        color="error"
+                        class="remove-cover"
+                        @click="removeCover"
+                      />
+                    </div>
+                    <v-file-input
+                      v-else
+                      v-model="form.coverImage"
+                      :label="$t('store.upload.fields.coverImage') + ' *'"
+                      :rules="[rules.requiredFile]"
+                      accept="image/*"
+                      prepend-icon="mdi-image"
+                      variant="outlined"
+                      @update:model-value="onCoverSelected"
+                    />
+                    <p class="text-caption text-medium-emphasis mt-1">
+                      {{ $t('store.upload.hints.coverImage') }}
+                    </p>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- Description Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-text-box-outline" class="mr-2" />
+              {{ $t('store.upload.description') }}
+            </v-card-title>
+            <v-card-text>
+              <StoreRichTextEditor
+                v-model="form.description"
+                :placeholder="$t('store.upload.fields.descriptionPlaceholder')"
+              />
+            </v-card-text>
+          </v-card>
+
+          <!-- Highlights Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-star-outline" class="mr-2" />
+              {{ $t('store.upload.highlights') }}
+            </v-card-title>
+            <v-card-text>
+              <div v-for="(highlight, index) in form.highlights" :key="index" class="d-flex align-center mb-2">
+                <v-text-field
+                  v-model="form.highlights[index]"
+                  :placeholder="$t('store.upload.fields.highlightPlaceholder')"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="flex-grow-1"
+                />
+                <v-btn
+                  icon="mdi-close"
+                  variant="text"
+                  size="small"
+                  color="error"
+                  class="ml-2"
+                  @click="removeHighlight(index)"
+                />
+              </div>
+              <v-btn
+                v-if="form.highlights.length < 6"
+                variant="tonal"
+                size="small"
+                prepend-icon="mdi-plus"
+                @click="addHighlight"
+              >
+                {{ $t('store.upload.addHighlight') }}
+              </v-btn>
+            </v-card-text>
+          </v-card>
+
+          <!-- Game Details Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-dice-d20" class="mr-2" />
+              {{ $t('store.upload.gameDetails') }}
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <!-- System -->
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="form.system"
+                    :items="systemOptions"
+                    item-title="title"
+                    item-value="value"
+                    :label="$t('store.upload.fields.system')"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+
+                <!-- Language -->
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="form.language"
+                    :items="languageOptions"
+                    item-title="title"
+                    item-value="value"
+                    :label="$t('store.upload.fields.language')"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+
+                <!-- Difficulty -->
+                <v-col cols="12">
+                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.difficulty') }}</div>
+                  <StoreDifficultyRating v-model="form.difficulty" />
+                </v-col>
+
+                <!-- Players -->
+                <v-col cols="12" md="6">
+                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.players') }}</div>
+                  <div class="d-flex align-center ga-4">
+                    <v-text-field
+                      v-model.number="form.playersMin"
+                      type="number"
+                      :label="$t('store.upload.fields.min')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 100px"
+                      min="1"
+                      max="20"
+                    />
+                    <span class="text-medium-emphasis">–</span>
+                    <v-text-field
+                      v-model.number="form.playersMax"
+                      type="number"
+                      :label="$t('store.upload.fields.max')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 100px"
+                      min="1"
+                      max="20"
+                    />
+                  </div>
+                </v-col>
+
+                <!-- Character Level -->
+                <v-col cols="12" md="6">
+                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.characterLevel') }}</div>
+                  <div class="d-flex align-center ga-4">
+                    <v-text-field
+                      v-model.number="form.levelMin"
+                      type="number"
+                      :label="$t('store.upload.fields.min')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 100px"
+                      min="1"
+                      max="20"
+                    />
+                    <span class="text-medium-emphasis">–</span>
+                    <v-text-field
+                      v-model.number="form.levelMax"
+                      type="number"
+                      :label="$t('store.upload.fields.max')"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      style="max-width: 100px"
+                      min="1"
+                      max="20"
+                    />
+                  </div>
+                </v-col>
+
+                <!-- Duration -->
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="form.durationHours"
+                    :items="durationOptions"
+                    item-title="title"
+                    item-value="value"
+                    :label="$t('store.upload.fields.duration')"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-col>
+
+                <!-- Tags -->
+                <v-col cols="12" md="6">
+                  <v-combobox
+                    v-model="form.tags"
+                    :items="suggestedTags"
+                    :label="$t('store.upload.fields.tags')"
+                    variant="outlined"
+                    density="comfortable"
+                    chips
+                    multiple
+                    closable-chips
+                  />
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- Author Info Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-account-outline" class="mr-2" />
+              {{ $t('store.upload.authorInfo') }}
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="form.authorName"
+                    :label="$t('store.upload.fields.authorName')"
+                    :hint="$t('store.upload.hints.authorName')"
+                    variant="outlined"
+                    density="comfortable"
+                    persistent-hint
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="form.authorDiscord"
+                    :label="$t('store.upload.fields.discord')"
+                    :hint="$t('store.upload.hints.discord')"
+                    variant="outlined"
+                    density="comfortable"
+                    persistent-hint
+                  >
+                    <template #prepend-inner>
+                      <IconsDiscordIcon :size="20" class="text-medium-emphasis" />
+                    </template>
+                  </v-text-field>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- Adventure File Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-file-upload-outline" class="mr-2" />
+              {{ $t('store.upload.adventureFile') }}
+            </v-card-title>
+            <v-card-text>
+              <!-- Show existing file in edit mode -->
+              <div v-if="isEditMode && existingFileName && !form.adventureFile" class="mb-4">
+                <v-chip
+                  color="success"
+                  variant="tonal"
+                  prepend-icon="mdi-check-circle"
+                  class="mb-2"
+                >
+                  {{ existingFileName }}
+                  <span v-if="existingVersion" class="ml-1 text-medium-emphasis">(v{{ existingVersion }})</span>
+                </v-chip>
+                <p class="text-caption text-medium-emphasis">
+                  {{ $t('store.upload.hints.fileExists') }}
+                </p>
+              </div>
+
+              <v-file-input
+                v-model="form.adventureFile"
+                :label="isEditMode && existingFileName ? $t('store.upload.fields.fileReplace') : $t('store.upload.fields.file')"
+                :rules="isEditMode && existingFileName ? [] : [rules.required]"
+                accept=".dmhero"
+                prepend-icon="mdi-treasure-chest"
+                variant="outlined"
+                :hint="$t('store.upload.hints.file')"
+                persistent-hint
+              />
+            </v-card-text>
+          </v-card>
+
+          <!-- Price Card -->
+          <v-card class="mb-6" elevation="0">
+            <v-card-title class="d-flex align-center">
+              <v-icon icon="mdi-cash" class="mr-2" />
+              {{ $t('store.upload.pricing') }}
+            </v-card-title>
+            <v-card-text>
+              <v-chip color="success" variant="flat" prepend-icon="mdi-check" class="mb-3">
+                {{ $t('store.upload.fields.freeAdventure') }}
+              </v-chip>
+              <p class="text-body-2 text-medium-emphasis">
+                {{ $t('store.upload.hints.freeOnly') }}
+              </p>
+            </v-card-text>
+          </v-card>
+
+          <!-- Error Alert -->
+          <v-alert v-if="error" type="error" variant="tonal" class="mb-6" closable @click:close="error = ''">
+            {{ error }}
+          </v-alert>
+
+          <!-- Actions -->
+          <div class="d-flex justify-end ga-4">
+            <v-btn variant="text" size="large" @click="goBack">
+              {{ $t('common.cancel') }}
+            </v-btn>
+            <v-btn
+              type="submit"
+              color="primary"
+              variant="flat"
+              size="large"
+              :loading="submitting"
+              :disabled="!isEmailVerified || !tosAccepted"
+              :prepend-icon="isEditMode ? 'mdi-content-save' : 'mdi-upload'"
+            >
+              {{ isEditMode ? $t('store.upload.submitEdit') : $t('store.upload.submit') }}
+            </v-btn>
+          </div>
+        </v-form>
+      </template>
+    </v-container>
+
+    <!-- ToS Acceptance Dialog -->
+    <TosAcceptanceDialog
+      v-model="showTosDialog"
+      :tos-version="tosVersion"
+      @accepted="onTosAccepted"
+    />
+
+    <!-- Footer -->
+    <FooterSection />
   </div>
 </template>
 
 <script setup lang="ts">
-useSeoMeta({ robots: 'noindex' })
-
 import { useAdventureStore } from '~/stores/adventureStore'
 import { useApiFetch } from '~/composables/useApiFetch'
+
+useSeoMeta({ robots: 'noindex' })
 
 definePageMeta({
   middleware: 'auth',
@@ -514,7 +514,8 @@ function goBack() {
   // Go back to previous page, or fallback to store
   if (window.history.length > 1) {
     router.back()
-  } else {
+  }
+  else {
     router.push('/store')
   }
 }
@@ -541,7 +542,8 @@ if (import.meta.client) {
       }>('/api/tos/status')
       tosVersion.value = status.currentVersion
       tosAccepted.value = !status.needsAcceptance
-    } catch {
+    }
+    catch {
       // If fetch fails, assume ToS not accepted
       tosAccepted.value = false
     }
@@ -636,18 +638,22 @@ async function loadAdventure(id: number) {
       existingFileName.value = adventure.currentFileName
       existingVersion.value = adventure.currentVersion
     }
-  } catch (err: unknown) {
-    const fetchError = err as { statusCode?: number; data?: { message?: string } }
+  }
+  catch (err: unknown) {
+    const fetchError = err as { statusCode?: number, data?: { message?: string } }
     if (fetchError.statusCode === 403) {
       error.value = t('store.upload.errors.notOwner')
       router.push('/store')
-    } else if (fetchError.statusCode === 404) {
+    }
+    else if (fetchError.statusCode === 404) {
       error.value = t('store.upload.errors.notFound')
       router.push('/store')
-    } else {
+    }
+    else {
       error.value = fetchError.data?.message || t('common.error')
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -673,9 +679,11 @@ async function handleResend() {
       body: { email: user.value.email, locale: locale.value },
     })
     resendSuccess.value = true
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Failed to resend verification email:', err)
-  } finally {
+  }
+  finally {
     resending.value = false
   }
 }
@@ -807,7 +815,7 @@ async function handleSubmit() {
     }
 
     // Highlights (filter empty)
-    const highlights = form.highlights.filter((h) => h.trim())
+    const highlights = form.highlights.filter(h => h.trim())
     formData.append('highlights', JSON.stringify(highlights))
 
     // Game details
@@ -843,7 +851,8 @@ async function handleSubmit() {
         body: formData,
       })
       adventureId = result.adventureId
-    } else {
+    }
+    else {
       // Create new adventure
       const result = await api.fetch<{ adventureId: number }>('/api/store/adventures', {
         method: 'POST',
@@ -855,10 +864,12 @@ async function handleSubmit() {
     // Refresh store data and redirect to profile with highlight
     await adventureStore.refresh()
     router.push(`/profile?highlight=${adventureId}`)
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     const fetchError = err as { data?: { message?: string } }
     error.value = fetchError.data?.message || t('common.error')
-  } finally {
+  }
+  finally {
     submitting.value = false
   }
 }

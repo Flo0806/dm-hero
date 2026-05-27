@@ -69,7 +69,7 @@ function createSession(title: string, options?: {
       options?.notes || null,
       options?.inGameDayStart || null,
       options?.inGameDayEnd || null,
-      options?.durationMinutes || null
+      options?.durationMinutes || null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -97,7 +97,7 @@ describe('Sessions - Basic CRUD', () => {
 
     const session = db
       .prepare('SELECT * FROM sessions WHERE id = ?')
-      .get(sessionId) as { id: number; title: string; campaign_id: number }
+      .get(sessionId) as { id: number, title: string, campaign_id: number }
 
     expect(session).toBeDefined()
     expect(session.title).toBe('Session 1: The Beginning')
@@ -112,20 +112,20 @@ describe('Sessions - Basic CRUD', () => {
       notes: 'Players were very engaged',
       inGameDayStart: 100,
       inGameDayEnd: 102,
-      durationMinutes: 240
+      durationMinutes: 240,
     })
 
     const session = db
       .prepare('SELECT * FROM sessions WHERE id = ?')
       .get(sessionId) as {
-        session_number: number
-        date: string
-        summary: string
-        notes: string
-        in_game_day_start: number
-        in_game_day_end: number
-        duration_minutes: number
-      }
+      session_number: number
+      date: string
+      summary: string
+      notes: string
+      in_game_day_start: number
+      in_game_day_end: number
+      duration_minutes: number
+    }
 
     expect(session.session_number).toBe(2)
     expect(session.date).toBe('2024-03-15')
@@ -144,7 +144,7 @@ describe('Sessions - Basic CRUD', () => {
 
     const session = db
       .prepare('SELECT title, summary FROM sessions WHERE id = ?')
-      .get(sessionId) as { title: string; summary: string }
+      .get(sessionId) as { title: string, summary: string }
 
     expect(session.title).toBe('Updated Title')
     expect(session.summary).toBe('New summary')
@@ -209,12 +209,12 @@ describe('Sessions - In-Game Calendar', () => {
   it('should store in-game day range', () => {
     const sessionId = createSession('Calendar Session', {
       inGameDayStart: 50,
-      inGameDayEnd: 52
+      inGameDayEnd: 52,
     })
 
     const session = db
       .prepare('SELECT in_game_day_start, in_game_day_end FROM sessions WHERE id = ?')
-      .get(sessionId) as { in_game_day_start: number; in_game_day_end: number }
+      .get(sessionId) as { in_game_day_start: number, in_game_day_end: number }
 
     expect(session.in_game_day_start).toBe(50)
     expect(session.in_game_day_end).toBe(52)
@@ -296,7 +296,7 @@ describe('Sessions - Mentions', () => {
         FROM sessions s
         WHERE s.id = ?
       `)
-      .get(sessionId) as { id: number; mentions_count: number }
+      .get(sessionId) as { id: number, mentions_count: number }
 
     expect(session.mentions_count).toBe(2)
   })

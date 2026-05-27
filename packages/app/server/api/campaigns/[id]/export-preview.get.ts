@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     id: number
     name: string
   }>
-  const TYPE_NAMES = new Map<number, string>(entityTypes.map((t) => [t.id, t.name]))
+  const TYPE_NAMES = new Map<number, string>(entityTypes.map(t => [t.id, t.name]))
 
   // Fetch all entities for this campaign
   const entities = db
@@ -33,27 +33,27 @@ export default defineEventHandler(async (event) => {
   }>
 
   // Fetch all relations for this campaign's entities
-  const entityIds = entities.map((e) => e.id)
+  const entityIds = entities.map(e => e.id)
   const placeholders = entityIds.map(() => '?').join(',')
 
-  const relations =
-    entityIds.length > 0
+  const relations
+    = entityIds.length > 0
       ? (db
-        .prepare(
-          `
+          .prepare(
+            `
     SELECT from_entity_id, to_entity_id
     FROM entity_relations
     WHERE from_entity_id IN (${placeholders}) OR to_entity_id IN (${placeholders})
   `,
-        )
-        .all(...entityIds, ...entityIds) as Array<{
+          )
+          .all(...entityIds, ...entityIds) as Array<{
           from_entity_id: number
           to_entity_id: number
         }>)
       : []
 
   // Build entity lookup
-  const entityMap = new Map(entities.map((e) => [e.id, e]))
+  const entityMap = new Map(entities.map(e => [e.id, e]))
 
   // Build linked entities for each entity
   const linkedMap = new Map<number, Set<number>>()
@@ -95,15 +95,15 @@ export default defineEventHandler(async (event) => {
   })
 
   // Count sessions and maps
-  const sessionCount =
-    (
+  const sessionCount
+    = (
       db
         .prepare('SELECT COUNT(*) as count FROM sessions WHERE campaign_id = ? AND deleted_at IS NULL')
         .get(campaignId) as { count: number }
     )?.count || 0
 
-  const mapCount =
-    (
+  const mapCount
+    = (
       db
         .prepare('SELECT COUNT(*) as count FROM campaign_maps WHERE campaign_id = ? AND deleted_at IS NULL')
         .get(campaignId) as { count: number }

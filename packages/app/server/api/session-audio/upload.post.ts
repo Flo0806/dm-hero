@@ -16,9 +16,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const sessionIdField = formData.find((f) => f.name === 'sessionId')
-  const audioFile = formData.find((f) => f.name === 'audio')
-  const titleField = formData.find((f) => f.name === 'title')
+  const sessionIdField = formData.find(f => f.name === 'sessionId')
+  const audioFile = formData.find(f => f.name === 'audio')
+  const titleField = formData.find(f => f.name === 'title')
 
   if (!sessionIdField || !audioFile) {
     throw createError({

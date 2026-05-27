@@ -75,7 +75,8 @@ export default defineEventHandler(async (event): Promise<AddPinResponse> => {
       pinId: result.lastInsertRowid,
       displayOrder,
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     // Handle duplicate pin attempt
     if (error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       throw createError({ statusCode: 409, message: 'Item is already pinned' })

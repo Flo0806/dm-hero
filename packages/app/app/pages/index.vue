@@ -298,7 +298,7 @@ const activeCampaignName = useCookie('activeCampaignName')
 // Data state
 const sessions = ref<Session[]>([])
 const maps = ref<CampaignMap[]>([])
-const currentWeather = ref<{ weatherType: string; temperature?: number } | null>(null)
+const currentWeather = ref<{ weatherType: string, temperature?: number } | null>(null)
 
 // Entity preview dialog
 const showEntityPreview = ref(false)
@@ -329,12 +329,12 @@ const sessionCount = computed(() => sessions.value.length)
 // Computed: total entities
 const totalEntities = computed(() => {
   return (
-    entitiesStore.npcs.length +
-    entitiesStore.locations.length +
-    entitiesStore.items.length +
-    entitiesStore.factions.length +
-    entitiesStore.lore.length +
-    entitiesStore.players.length
+    entitiesStore.npcs.length
+    + entitiesStore.locations.length
+    + entitiesStore.items.length
+    + entitiesStore.factions.length
+    + entitiesStore.lore.length
+    + entitiesStore.players.length
   )
 })
 
@@ -368,16 +368,16 @@ const daysSinceFirstSession = computed(() => {
 
   // Find sessions with complete in-game dates (year/month/day)
   const sessionsWithDate = sessions.value.filter(
-    (s) =>
-      s.in_game_year_start !== null &&
-      s.in_game_month_start !== null &&
-      s.in_game_day_start !== null,
+    s =>
+      s.in_game_year_start !== null
+      && s.in_game_month_start !== null
+      && s.in_game_day_start !== null,
   )
 
   if (sessionsWithDate.length === 0) return null
 
   // Recalculate absolute days using current calendar config
-  const absoluteDays = sessionsWithDate.map((s) =>
+  const absoluteDays = sessionsWithDate.map(s =>
     inGameCalendar.dateToAbsoluteDay(
       s.in_game_year_start!,
       s.in_game_month_start!,
@@ -530,7 +530,8 @@ async function fetchSessions(campaignId: number) {
     sessions.value = await $fetch<Session[]>('/api/sessions', {
       query: { campaignId },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch sessions:', error)
     sessions.value = []
   }
@@ -541,7 +542,8 @@ async function fetchMaps(campaignId: number) {
     maps.value = await $fetch<CampaignMap[]>('/api/maps', {
       query: { campaignId },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch maps:', error)
     maps.value = []
   }
@@ -556,7 +558,7 @@ async function fetchCalendar() {
   }
 }
 
-async function fetchCurrentWeather(config: { current_year: number; current_month: number; current_day: number }) {
+async function fetchCurrentWeather(config: { current_year: number, current_month: number, current_day: number }) {
   if (!activeCampaignId.value) return
 
   try {
@@ -574,7 +576,8 @@ async function fetchCurrentWeather(config: { current_year: number; current_month
         temperature: weather.temperature ?? undefined,
       }
     }
-  } catch {
+  }
+  catch {
     // Weather might not exist for this day
     currentWeather.value = null
   }

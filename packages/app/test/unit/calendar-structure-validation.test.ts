@@ -88,7 +88,7 @@ describe('Calendar Structure Validation - Month Deletion', () => {
     // Get current months
     const currentMonths = db
       .prepare('SELECT * FROM calendar_months WHERE campaign_id = ? ORDER BY sort_order')
-      .all(testCampaignId) as Array<{ name: string; days: number; sort_order: number }>
+      .all(testCampaignId) as Array<{ name: string, days: number, sort_order: number }>
 
     // Simulate new config with only 10 months
     const newMonths = currentMonths.slice(0, 10)
@@ -99,9 +99,9 @@ describe('Calendar Structure Validation - Month Deletion', () => {
         SELECT id, title, month, day FROM calendar_events
         WHERE campaign_id = ? AND month IS NOT NULL
       `)
-      .all(testCampaignId) as Array<{ id: number; title: string; month: number; day: number }>
+      .all(testCampaignId) as Array<{ id: number, title: string, month: number, day: number }>
 
-    const affectedEvents = events.filter((evt) => evt.month > newMonths.length)
+    const affectedEvents = events.filter(evt => evt.month > newMonths.length)
 
     expect(affectedEvents).toHaveLength(1)
     expect(affectedEvents[0].title).toBe('Winter Festival')
@@ -123,9 +123,9 @@ describe('Calendar Structure Validation - Month Deletion', () => {
         SELECT id, month FROM calendar_events
         WHERE campaign_id = ? AND month IS NOT NULL
       `)
-      .all(testCampaignId) as Array<{ id: number; month: number }>
+      .all(testCampaignId) as Array<{ id: number, month: number }>
 
-    const affectedEvents = events.filter((evt) => evt.month > newMonthCount)
+    const affectedEvents = events.filter(evt => evt.month > newMonthCount)
 
     expect(affectedEvents).toHaveLength(0)
   })
@@ -147,7 +147,7 @@ describe('Calendar Structure Validation - Day Overflow', () => {
         SELECT id, title, month, day FROM calendar_events
         WHERE campaign_id = ? AND month IS NOT NULL AND day IS NOT NULL
       `)
-      .all(testCampaignId) as Array<{ id: number; title: string; month: number; day: number }>
+      .all(testCampaignId) as Array<{ id: number, title: string, month: number, day: number }>
 
     const affectedEvents = events.filter((evt) => {
       const maxDays = newMonthDays[evt.month - 1] || 30
@@ -174,7 +174,7 @@ describe('Calendar Structure Validation - Day Overflow', () => {
         SELECT id, month, day FROM calendar_events
         WHERE campaign_id = ? AND month IS NOT NULL AND day IS NOT NULL
       `)
-      .all(testCampaignId) as Array<{ id: number; month: number; day: number }>
+      .all(testCampaignId) as Array<{ id: number, month: number, day: number }>
 
     const affectedEvents = events.filter((evt) => {
       const maxDays = newMonthDays[evt.month - 1] || 30
@@ -205,7 +205,7 @@ describe('Calendar Structure Validation - Session Impact', () => {
         FROM sessions
         WHERE campaign_id = ? AND (in_game_day_start IS NOT NULL OR in_game_day_end IS NOT NULL)
       `)
-      .all(testCampaignId) as Array<{ id: number; title: string; in_game_day_start: number | null; in_game_day_end: number | null }>
+      .all(testCampaignId) as Array<{ id: number, title: string, in_game_day_start: number | null, in_game_day_end: number | null }>
 
     // If total days changed, ALL sessions with dates are affected
     const affectedSessions = oldTotal !== newTotal ? sessions : []
@@ -275,7 +275,7 @@ describe('Calendar Structure Fix - Event Relocation', () => {
 
     const event = db
       .prepare('SELECT month, day FROM calendar_events WHERE id = ?')
-      .get(eventId) as { month: number; day: number }
+      .get(eventId) as { month: number, day: number }
 
     expect(event.month).toBe(10)
     expect(event.day).toBe(30)
@@ -299,7 +299,7 @@ describe('Calendar Structure Fix - Event Relocation', () => {
 
     const event = db
       .prepare('SELECT month, day FROM calendar_events WHERE id = ?')
-      .get(eventId) as { month: number; day: number }
+      .get(eventId) as { month: number, day: number }
 
     expect(event.month).toBe(2)
     expect(event.day).toBe(20)
@@ -317,7 +317,7 @@ describe('Calendar Structure Fix - Session Reset', () => {
     // Verify dates are set
     const before = db
       .prepare('SELECT in_game_day_start, in_game_day_end FROM sessions WHERE id = ?')
-      .get(sessionId) as { in_game_day_start: number; in_game_day_end: number }
+      .get(sessionId) as { in_game_day_start: number, in_game_day_end: number }
     expect(before.in_game_day_start).toBe(50)
     expect(before.in_game_day_end).toBe(55)
 
@@ -330,7 +330,7 @@ describe('Calendar Structure Fix - Session Reset', () => {
 
     const after = db
       .prepare('SELECT in_game_day_start, in_game_day_end FROM sessions WHERE id = ?')
-      .get(sessionId) as { in_game_day_start: number | null; in_game_day_end: number | null }
+      .get(sessionId) as { in_game_day_start: number | null, in_game_day_end: number | null }
 
     expect(after.in_game_day_start).toBeNull()
     expect(after.in_game_day_end).toBeNull()
@@ -353,7 +353,7 @@ describe('Calendar Seasons', () => {
 
     const season = db
       .prepare('SELECT * FROM calendar_seasons WHERE campaign_id = ?')
-      .get(testCampaignId) as { name: string; start_month: number; start_day: number; background_image: string }
+      .get(testCampaignId) as { name: string, start_month: number, start_day: number, background_image: string }
 
     expect(season.name).toBe('Spring')
     expect(season.start_month).toBe(1)
@@ -457,12 +457,12 @@ describe('Calendar Event - Multi-Entity Linking', () => {
         JOIN entity_types et ON et.id = e.type_id
         WHERE cee.event_id = ?
       `)
-      .all(eventId) as Array<{ entity_id: number; name: string; entity_type: string }>
+      .all(eventId) as Array<{ entity_id: number, name: string, entity_type: string }>
 
     expect(linkedEntities).toHaveLength(3)
-    expect(linkedEntities.map((e) => e.name)).toContain('Hero')
-    expect(linkedEntities.map((e) => e.name)).toContain('Villain')
-    expect(linkedEntities.map((e) => e.name)).toContain('Battle Arena')
+    expect(linkedEntities.map(e => e.name)).toContain('Hero')
+    expect(linkedEntities.map(e => e.name)).toContain('Villain')
+    expect(linkedEntities.map(e => e.name)).toContain('Battle Arena')
   })
 
   it('should remove entity links when event is deleted', () => {
@@ -534,7 +534,7 @@ describe('Calendar - Set as Today', () => {
 
     const config = db
       .prepare('SELECT current_year, current_month, current_day FROM calendar_config WHERE campaign_id = ?')
-      .get(testCampaignId) as { current_year: number; current_month: number; current_day: number }
+      .get(testCampaignId) as { current_year: number, current_month: number, current_day: number }
 
     expect(config.current_year).toBe(1352)
     expect(config.current_month).toBe(6)
@@ -557,7 +557,7 @@ describe('Calendar - Set as Today', () => {
 
     const config = db
       .prepare('SELECT current_year, current_month, current_day FROM calendar_config WHERE campaign_id = ?')
-      .get(testCampaignId) as { current_year: number; current_month: number; current_day: number }
+      .get(testCampaignId) as { current_year: number, current_month: number, current_day: number }
 
     expect(config.current_year).toBe(1352)
     expect(config.current_month).toBe(1)

@@ -109,7 +109,8 @@ export default defineEventHandler(async (event): Promise<AdventureDetailResponse
   try {
     highlights = typeof adventure.highlights === 'string' ? JSON.parse(adventure.highlights) : (adventure.highlights || [])
     tags = typeof adventure.tags === 'string' ? JSON.parse(adventure.tags) : (adventure.tags || [])
-  } catch {
+  }
+  catch {
     // Ignore parse errors
   }
 

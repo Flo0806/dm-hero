@@ -82,7 +82,7 @@ interface Entity {
   rarity?: string
   quantity?: number
   equipped?: boolean
-  metadata?: { type?: string | null; [key: string]: unknown } | null
+  metadata?: { type?: string | null, [key: string]: unknown } | null
   // Location-specific
   type?: string
   region?: string

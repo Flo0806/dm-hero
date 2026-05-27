@@ -20,8 +20,8 @@ export const useCampaignStore = defineStore('campaign', {
   }),
 
   getters: {
-    hasActiveCampaign: (state) => !!state.activeCampaignId,
-    activeCampaignIdNumber: (state) =>
+    hasActiveCampaign: state => !!state.activeCampaignId,
+    activeCampaignIdNumber: state =>
       state.activeCampaignId ? Number(state.activeCampaignId) : null,
   },
 
@@ -87,7 +87,8 @@ export const useCampaignStore = defineStore('campaign', {
       try {
         const campaign = await $fetch<Campaign>(`/api/campaigns/${this.activeCampaignId}`)
         this.currentCampaign = campaign
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to load current campaign:', error)
         // If campaign doesn't exist, clear everything including cookies
         this.clearActiveCampaign()
@@ -100,16 +101,18 @@ export const useCampaignStore = defineStore('campaign', {
       try {
         const campaigns = await $fetch<Campaign[]>('/api/campaigns')
         this.campaigns = campaigns
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to load campaigns:', error)
         this.campaigns = []
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
 
     // Create campaign
-    async createCampaign(data: { name: string; description?: string }) {
+    async createCampaign(data: { name: string, description?: string }) {
       const campaign = await $fetch<Campaign>('/api/campaigns', {
         method: 'POST',
         body: data,
@@ -119,12 +122,12 @@ export const useCampaignStore = defineStore('campaign', {
     },
 
     // Update campaign
-    async updateCampaign(id: number, data: { name?: string; description?: string }) {
+    async updateCampaign(id: number, data: { name?: string, description?: string }) {
       const campaign = await $fetch<Campaign>(`/api/campaigns/${id}`, {
         method: 'PATCH',
         body: data,
       })
-      const index = this.campaigns.findIndex((c) => c.id === id)
+      const index = this.campaigns.findIndex(c => c.id === id)
       if (index !== -1) {
         this.campaigns[index] = campaign
       }
@@ -139,7 +142,7 @@ export const useCampaignStore = defineStore('campaign', {
       await $fetch(`/api/campaigns/${id}`, {
         method: 'DELETE',
       })
-      this.campaigns = this.campaigns.filter((c) => c.id !== id)
+      this.campaigns = this.campaigns.filter(c => c.id !== id)
 
       // Check both store state AND cookie (store might not be initialized)
       // Use Number() for comparison to avoid string/number type mismatch

@@ -62,19 +62,19 @@ export function useDialogDirtyStateProvider() {
   }
 
   const hasDirtyTabs = computed(() => {
-    return Array.from(tabs.value.values()).some((tab) => tab.dirty)
+    return Array.from(tabs.value.values()).some(tab => tab.dirty)
   })
 
   const dirtyTabNames = computed(() => {
     return Array.from(tabs.value.values())
-      .filter((tab) => tab.dirty)
-      .map((tab) => tab.name)
+      .filter(tab => tab.dirty)
+      .map(tab => tab.name)
   })
 
   const dirtyTabLabels = computed(() => {
     return Array.from(tabs.value.values())
-      .filter((tab) => tab.dirty)
-      .map((tab) => tab.label || tab.name)
+      .filter(tab => tab.dirty)
+      .map(tab => tab.label || tab.name)
   })
 
   const context: DialogDirtyStateContext = {

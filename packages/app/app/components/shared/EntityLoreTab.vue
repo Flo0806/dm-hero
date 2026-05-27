@@ -117,7 +117,7 @@ const showQuickCreate = ref(false)
 
 // Track dirty state
 const isDirty = computed(() => !!localLoreId.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 function handleAdd() {
   if (!localLoreId.value) return
@@ -126,7 +126,7 @@ function handleAdd() {
   localLoreId.value = null
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload lore to include the new entry
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {

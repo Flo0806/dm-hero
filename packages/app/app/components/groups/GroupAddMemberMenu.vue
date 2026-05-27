@@ -28,19 +28,19 @@ const { t } = useI18n()
 
 interface Props {
   modelValue: boolean
-  position: { x: number; y: number }
+  position: { x: number, y: number }
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  select: [entityType: string]
+  'select': [entityType: string]
 }>()
 
 const showMenu = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const menuStyle = computed(() => ({

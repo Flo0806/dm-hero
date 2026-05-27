@@ -135,7 +135,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'audio-updated': []
-  uploading: [isUploading: boolean]
+  'uploading': [isUploading: boolean]
 }>()
 
 const { showUploadError } = useErrorHandler()
@@ -172,9 +172,11 @@ async function loadAudioFiles() {
   try {
     const result = await $fetch<SessionAudio[]>(`/api/session-audio/by-session/${props.sessionId}`)
     audioFiles.value = result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load session audio:', error)
-  } finally {
+  }
+  finally {
     loadingAudio.value = false
   }
 }
@@ -208,10 +210,12 @@ async function handleAudioUpload(event: Event) {
 
     await loadAudioFiles()
     emit('audio-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to upload audio:', error)
     showUploadError('audio')
-  } finally {
+  }
+  finally {
     uploadingAudio.value = false
     emit('uploading', false)
     if (target) target.value = ''
@@ -225,11 +229,12 @@ async function updateAudioTitle(audioId: number, title: string) {
       body: { title },
     })
 
-    const audio = audioFiles.value.find((a) => a.id === audioId)
+    const audio = audioFiles.value.find(a => a.id === audioId)
     if (audio) {
       audio.title = title
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update audio title:', error)
   }
 }
@@ -248,13 +253,15 @@ async function confirmDeleteAudio() {
       method: 'DELETE',
     })
 
-    audioFiles.value = audioFiles.value.filter((a) => a.id !== deletingAudio.value?.id)
+    audioFiles.value = audioFiles.value.filter(a => a.id !== deletingAudio.value?.id)
     emit('audio-updated')
     showDeleteDialog.value = false
     deletingAudio.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete audio:', error)
-  } finally {
+  }
+  finally {
     deletingAudioLoading.value = false
   }
 }

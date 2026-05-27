@@ -60,7 +60,7 @@ function createImage(entityId: number, imageUrl: string, options?: {
       imageUrl,
       options?.caption || null,
       options?.isPrimary ? 1 : 0,
-      options?.displayOrder || 0
+      options?.displayOrder || 0,
     )
   return Number(result.lastInsertRowid)
 }
@@ -72,7 +72,7 @@ describe('Entity Images - Basic CRUD', () => {
 
     const image = db
       .prepare('SELECT * FROM entity_images WHERE id = ?')
-      .get(imageId) as { id: number; entity_id: number; image_url: string }
+      .get(imageId) as { id: number, entity_id: number, image_url: string }
 
     expect(image).toBeDefined()
     expect(image.entity_id).toBe(entityId)
@@ -82,7 +82,7 @@ describe('Entity Images - Basic CRUD', () => {
   it('should create an image with caption', () => {
     const entityId = createEntity('Captioned NPC')
     const imageId = createImage(entityId, 'images/portrait.jpg', {
-      caption: 'Character portrait in battle armor'
+      caption: 'Character portrait in battle armor',
     })
 
     const image = db
@@ -101,7 +101,7 @@ describe('Entity Images - Basic CRUD', () => {
 
     const image = db
       .prepare('SELECT image_url, caption FROM entity_images WHERE id = ?')
-      .get(imageId) as { image_url: string; caption: string }
+      .get(imageId) as { image_url: string, caption: string }
 
     expect(image.image_url).toBe('images/new.jpg')
     expect(image.caption).toBe('Updated caption')
@@ -247,7 +247,7 @@ describe('Entity Images - Query Patterns', () => {
         JOIN entities e ON e.id = ei.entity_id
         WHERE ei.entity_id = ?
       `)
-      .get(entityId) as { image_url: string; entity_name: string; caption: string }
+      .get(entityId) as { image_url: string, entity_name: string, caption: string }
 
     expect(result.image_url).toBe('images/portrait.jpg')
     expect(result.entity_name).toBe('Query NPC')
@@ -269,7 +269,7 @@ describe('Entity Images - Query Patterns', () => {
         WHERE e.id = ?
         GROUP BY e.id
       `)
-      .get(entityId) as { name: string; image_count: number }
+      .get(entityId) as { name: string, image_count: number }
 
     expect(result.name).toBe('Count Query NPC')
     expect(result.image_count).toBe(3)
@@ -288,7 +288,7 @@ describe('Entity Images - Query Patterns', () => {
         LEFT JOIN entity_images ei ON ei.entity_id = e.id AND ei.is_primary = 1
         WHERE e.id = ?
       `)
-      .get(entityId) as { name: string; primary_image: string }
+      .get(entityId) as { name: string, primary_image: string }
 
     expect(result.name).toBe('Primary Query NPC')
     expect(result.primary_image).toBe('images/primary.jpg')

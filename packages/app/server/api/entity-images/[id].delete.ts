@@ -16,11 +16,11 @@ export default defineEventHandler(async (event) => {
     .prepare('SELECT id, entity_id, image_url, is_primary FROM entity_images WHERE id = ?')
     .get(imageId) as
     | {
-        id: number
-        entity_id: number
-        image_url: string
-        is_primary: number
-      }
+      id: number
+      entity_id: number
+      image_url: string
+      is_primary: number
+    }
     | undefined
 
   if (!image) {
@@ -34,7 +34,8 @@ export default defineEventHandler(async (event) => {
   const storage = useStorage('pictures')
   try {
     await storage.removeItem(image.image_url)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete image file:', error)
     // Continue anyway
   }
@@ -53,7 +54,7 @@ export default defineEventHandler(async (event) => {
       LIMIT 1
     `,
       )
-      .get(image.entity_id) as { id: number; image_url: string } | undefined
+      .get(image.entity_id) as { id: number, image_url: string } | undefined
 
     if (nextImage) {
       db.prepare('UPDATE entity_images SET is_primary = 1 WHERE id = ?').run(nextImage.id)
@@ -63,14 +64,16 @@ export default defineEventHandler(async (event) => {
         new Date().toISOString(),
         image.entity_id,
       )
-    } else {
+    }
+    else {
       // No more images, clear entities.image_url
       db.prepare('UPDATE entities SET image_url = NULL, updated_at = ? WHERE id = ?').run(
         new Date().toISOString(),
         image.entity_id,
       )
     }
-  } else {
+  }
+  else {
     // Update entity's updated_at
     db.prepare('UPDATE entities SET updated_at = ? WHERE id = ?').run(
       new Date().toISOString(),

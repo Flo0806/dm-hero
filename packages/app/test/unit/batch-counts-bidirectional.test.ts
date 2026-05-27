@@ -715,7 +715,7 @@ describe('QuickLink - Existing Linked Entities Filter', () => {
     const allNpcs = db.prepare(`
       SELECT id, name FROM entities
       WHERE campaign_id = ? AND type_id = ? AND deleted_at IS NULL
-    `).all(testCampaignId, npcTypeId) as Array<{ id: number; name: string }>
+    `).all(testCampaignId, npcTypeId) as Array<{ id: number, name: string }>
 
     // Get linked NPC IDs
     const linkedIds = db.prepare(`
@@ -793,7 +793,7 @@ describe('Batch Counts - Multiple NPCs Aggregation', () => {
     `).all(
       testCampaignId, npcTypeId, itemTypeId,
       testCampaignId, npcTypeId, itemTypeId,
-    ) as Array<{ npc_id: number; count: number }>
+    ) as Array<{ npc_id: number, count: number }>
 
     // Build count map
     const countMap = new Map(itemsCounts.map(r => [r.npc_id, r.count]))

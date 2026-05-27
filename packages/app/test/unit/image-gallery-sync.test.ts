@@ -54,7 +54,7 @@ describe('Image Gallery Synchronization', () => {
       // Verify image is in gallery
       const galleryImages = db
         .prepare('SELECT * FROM entity_images WHERE entity_id = ?')
-        .all(testEntityId) as Array<{ image_url: string; is_primary: number }>
+        .all(testEntityId) as Array<{ image_url: string, is_primary: number }>
 
       expect(galleryImages).toHaveLength(1)
       expect(galleryImages[0].image_url).toBe(imageUrl)
@@ -97,11 +97,11 @@ describe('Image Gallery Synchronization', () => {
       // Verify
       const images = db
         .prepare('SELECT image_url, is_primary FROM entity_images WHERE entity_id = ? ORDER BY display_order')
-        .all(testEntityId) as Array<{ image_url: string; is_primary: number }>
+        .all(testEntityId) as Array<{ image_url: string, is_primary: number }>
 
       expect(images).toHaveLength(2)
 
-      const primaryImage = images.find((img) => img.is_primary === 1)
+      const primaryImage = images.find(img => img.is_primary === 1)
       expect(primaryImage?.image_url).toBe(imageUrl)
     })
 
@@ -168,16 +168,16 @@ describe('Image Gallery Synchronization', () => {
       // Verify
       const images = db
         .prepare('SELECT image_url, is_primary FROM entity_images WHERE entity_id = ?')
-        .all(testEntityId) as Array<{ image_url: string; is_primary: number }>
+        .all(testEntityId) as Array<{ image_url: string, is_primary: number }>
 
       expect(images).toHaveLength(2)
 
-      const primaryImages = images.filter((img) => img.is_primary === 1)
+      const primaryImages = images.filter(img => img.is_primary === 1)
       expect(primaryImages).toHaveLength(1)
       expect(primaryImages[0].image_url).toBe(newImageUrl)
 
       // Old image should not be primary anymore
-      const oldImage = images.find((img) => img.image_url === 'old-primary.png')
+      const oldImage = images.find(img => img.image_url === 'old-primary.png')
       expect(oldImage?.is_primary).toBe(0)
     })
   })

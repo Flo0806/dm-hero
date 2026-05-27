@@ -23,7 +23,7 @@ export default defineEventHandler(async (event): Promise<CampaignNote[]> => {
     .all(campaignId) as CampaignNoteDbRow[]
 
   // Convert SQLite integer to boolean
-  return notes.map((note) => ({
+  return notes.map(note => ({
     ...note,
     completed: note.completed === 1,
   }))

@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Extract sessionId from form data
-  const sessionIdField = formData.find((f) => f.name === 'sessionId')
+  const sessionIdField = formData.find(f => f.name === 'sessionId')
 
   if (!sessionIdField || !sessionIdField.data) {
     throw createError({
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Process all image files
-  const imageFiles = formData.filter((f) => f.name === 'images' && f.data && f.data.length > 0)
+  const imageFiles = formData.filter(f => f.name === 'images' && f.data && f.data.length > 0)
 
   if (imageFiles.length === 0) {
     throw createError({
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const uploadedImages: Array<{ id: number; imageUrl: string }> = []
+  const uploadedImages: Array<{ id: number, imageUrl: string }> = []
   const uploadsDir = getUploadPath()
   // Ensure uploads directory exists
   await mkdir(uploadsDir, { recursive: true })

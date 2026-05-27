@@ -107,13 +107,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:show': [boolean]
-  saved: [WeatherData]
-  cleared: []
+  'saved': [WeatherData]
+  'cleared': []
 }>()
 
 const dialogVisible = computed({
   get: () => props.show,
-  set: (val) => emit('update:show', val),
+  set: val => emit('update:show', val),
 })
 
 const saving = ref(false)
@@ -171,7 +171,8 @@ watch(
           temperature: props.weather.temperature,
           notes: props.weather.notes || '',
         }
-      } else {
+      }
+      else {
         // Default for new weather
         form.value = {
           weatherType: 'sunny',
@@ -201,9 +202,11 @@ async function save() {
     })
     emit('saved', result)
     dialogVisible.value = false
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save weather:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -218,9 +221,11 @@ async function clearWeather() {
     })
     emit('cleared')
     dialogVisible.value = false
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to clear weather:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

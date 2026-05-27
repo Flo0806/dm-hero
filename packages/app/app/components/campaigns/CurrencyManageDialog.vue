@@ -196,7 +196,7 @@ const emit = defineEmits<{
 
 const dialogVisible = computed({
   get: () => props.show,
-  set: (val) => emit('update:show', val),
+  set: val => emit('update:show', val),
 })
 
 // State
@@ -235,9 +235,11 @@ async function loadCurrencies() {
     currencies.value = await $fetch<Currency[]>('/api/currencies', {
       query: { campaignId: props.campaignId },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load currencies:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -281,7 +283,8 @@ async function saveCurrency() {
         method: 'PATCH',
         body: currencyForm.value,
       })
-    } else {
+    }
+    else {
       // Create new
       await $fetch('/api/currencies', {
         method: 'POST',
@@ -293,9 +296,11 @@ async function saveCurrency() {
     }
     await loadCurrencies()
     closeEditDialog()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save currency:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }
@@ -311,7 +316,8 @@ async function confirmDeleteCurrency(currency: Currency) {
       query: { dryRun: true },
     }).catch(() => ({ itemsAffected: 0 }))
     deleteItemsAffected.value = result.itemsAffected || 0
-  } catch {
+  }
+  catch {
     // Ignore error, just show dialog
   }
 
@@ -329,9 +335,11 @@ async function deleteCurrency() {
     await loadCurrencies()
     showDeleteDialog.value = false
     deletingCurrency.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete currency:', error)
-  } finally {
+  }
+  finally {
     deleting.value = false
   }
 }

@@ -194,7 +194,7 @@ describe('Player Counts', () => {
       name: string
     }>
 
-    const typeMap = new Map(entityTypes.map((t) => [t.name, t.id]))
+    const typeMap = new Map(entityTypes.map(t => [t.name, t.id]))
 
     // Count characters (NPCs linked to this player)
     const characters = db

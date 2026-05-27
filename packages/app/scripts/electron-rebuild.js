@@ -4,7 +4,7 @@
  */
 
 import { execSync } from 'child_process'
-import { existsSync, readdirSync } from 'fs'
+import { existsSync, readdirSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -29,7 +29,7 @@ function findBetterSqlite() {
 
   // Find better-sqlite3@* folder dynamically
   const entries = readdirSync(pnpmDir)
-  const betterSqliteFolder = entries.find((entry) => entry.startsWith('better-sqlite3@'))
+  const betterSqliteFolder = entries.find(entry => entry.startsWith('better-sqlite3@'))
 
   if (!betterSqliteFolder) {
     return null
@@ -55,8 +55,13 @@ if (!betterSqlitePath) {
 console.log('🔧 Rebuilding better-sqlite3 for Electron...')
 console.log('   Path:', betterSqlitePath)
 
-// Electron version must match package.json
-const electronVersion = '39.2.3'
+// Electron version: read from package.json so we never go stale on bumps.
+const pkg = JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf-8'))
+const electronVersion = (pkg.devDependencies?.electron || pkg.dependencies?.electron || '').replace(/^[\^~]/, '')
+if (!electronVersion) {
+  console.error('❌ electron version not found in package.json')
+  process.exit(1)
+}
 
 // Support cross-compilation for different architectures (x64, arm64)
 // Set via: npm_config_arch=arm64 node scripts/electron-rebuild.js
@@ -77,7 +82,8 @@ try {
     },
   )
   console.log('✅ better-sqlite3 rebuilt for Electron successfully!')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Failed to rebuild better-sqlite3:', error.message)
   process.exit(1)
 }

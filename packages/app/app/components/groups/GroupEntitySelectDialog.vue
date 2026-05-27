@@ -123,12 +123,12 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  added: [count: number]
+  'added': [count: number]
 }>()
 
 const internalShow = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 // Entity type options
@@ -167,7 +167,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null
 
 // Check if entity is already in group
 function isAlreadyInGroup(entityId: number): boolean {
-  return props.existingMembers.some((m) => m.entity_id === entityId)
+  return props.existingMembers.some(m => m.entity_id === entityId)
 }
 
 // Filter out already selected/in-group entities for search
@@ -233,8 +233,9 @@ function toggleEntity(entityId: number) {
   const index = currentIds.indexOf(entityId)
   if (index === -1) {
     selectedEntityIds.value = [...currentIds, entityId]
-  } else {
-    selectedEntityIds.value = currentIds.filter((id) => id !== entityId)
+  }
+  else {
+    selectedEntityIds.value = currentIds.filter(id => id !== entityId)
   }
 }
 

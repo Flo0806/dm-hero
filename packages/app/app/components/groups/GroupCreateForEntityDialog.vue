@@ -19,7 +19,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  done: [group: EntityGroup]
+  'done': [group: EntityGroup]
 }>()
 
 const snackbarStore = useSnackbarStore()
@@ -34,7 +34,8 @@ async function handleCreated(group: EntityGroup) {
         body: { entityIds: [props.entityId] },
       })
       snackbarStore.success(t('groups.entityAddedToNewGroup', { groupName: group.name }))
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[GroupCreateForEntityDialog] Failed to add entity to group:', e)
     }
   }

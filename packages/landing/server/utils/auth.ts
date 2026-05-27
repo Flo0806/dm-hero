@@ -48,7 +48,8 @@ export function verifyAccessToken(token: string): JwtPayload | null {
   const config = useRuntimeConfig()
   try {
     return jwt.verify(token, config.jwtSecret) as JwtPayload
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -71,7 +72,7 @@ export async function generateRefreshToken(userId: number): Promise<string> {
 export async function verifyRefreshToken(token: string): Promise<number | null> {
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
 
-  const result = await queryOne<{ user_id: number; expires_at: string; revoked_at: string | null }>(
+  const result = await queryOne<{ user_id: number, expires_at: string, revoked_at: string | null }>(
     'SELECT user_id, expires_at, revoked_at FROM refresh_tokens WHERE token_hash = ?',
     [tokenHash],
   )

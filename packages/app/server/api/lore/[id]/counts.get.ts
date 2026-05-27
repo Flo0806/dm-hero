@@ -224,7 +224,7 @@ export default defineEventHandler((event) => {
     ORDER BY g.name
   `,
     )
-    .all(Number(loreId)) as Array<{ id: number; name: string; color: string | null; icon: string | null }>
+    .all(Number(loreId)) as Array<{ id: number, name: string, color: string | null, icon: string | null }>
 
   return {
     npcs: npcsCount,

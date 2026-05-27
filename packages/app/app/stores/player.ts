@@ -32,9 +32,11 @@ export const usePlayerStore = defineStore('player', {
 
         await this.loadCounts(playerId)
         await this.loadExistingBirthdayEvent(playerId)
-      } catch (e) {
+      }
+      catch (e) {
         console.error('[PlayerStore] Failed to load player:', e)
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -45,7 +47,8 @@ export const usePlayerStore = defineStore('player', {
         const counts = await $fetch<PlayerCounts>(`/api/players/${playerId}/counts`)
         this.counts = counts
         entitiesStore.setPlayerCounts(playerId, counts)
-      } catch (e) {
+      }
+      catch (e) {
         console.error('[PlayerStore] Failed to load counts:', e)
       }
     },
@@ -65,13 +68,14 @@ export const usePlayerStore = defineStore('player', {
         })
 
         const birthdayEvent = events.find(
-          (e) =>
-            e.event_type === 'birthday' &&
-            e.linked_entities?.some((le) => le.entity_id === playerId),
+          e =>
+            e.event_type === 'birthday'
+            && e.linked_entities?.some(le => le.entity_id === playerId),
         )
 
         this.existingBirthdayEventId = birthdayEvent?.id || null
-      } catch (e) {
+      }
+      catch (e) {
         console.error('[PlayerStore] Failed to load birthday event:', e)
       }
     },
@@ -95,7 +99,8 @@ export const usePlayerStore = defineStore('player', {
               method: 'DELETE',
             })
             this.existingBirthdayEventId = null
-          } catch (e) {
+          }
+          catch (e) {
             console.error('[PlayerStore] Failed to delete birthday event:', e)
           }
         }
@@ -116,10 +121,12 @@ export const usePlayerStore = defineStore('player', {
               entityIds: [playerId],
             },
           })
-        } catch (e) {
+        }
+        catch (e) {
           console.error('[PlayerStore] Failed to update birthday event:', e)
         }
-      } else {
+      }
+      else {
         // Create new event
         try {
           const result = await $fetch<{ id: number }>('/api/calendar/events', {
@@ -135,7 +142,8 @@ export const usePlayerStore = defineStore('player', {
             },
           })
           this.existingBirthdayEventId = result.id
-        } catch (e) {
+        }
+        catch (e) {
           console.error('[PlayerStore] Failed to create birthday event:', e)
         }
       }

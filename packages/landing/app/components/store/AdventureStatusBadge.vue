@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<{
 
 const { t } = useI18n()
 
-const statusConfig: Record<AdventureStatus, { color: string; icon: string; labelKey: string }> = {
+const statusConfig: Record<AdventureStatus, { color: string, icon: string, labelKey: string }> = {
   draft: { color: 'grey', icon: 'mdi-pencil-outline', labelKey: 'store.status.draft' },
   pending_review: { color: 'warning', icon: 'mdi-clock-outline', labelKey: 'store.status.pendingReview' },
   validating: { color: 'info', icon: 'mdi-sync', labelKey: 'store.status.validating' },

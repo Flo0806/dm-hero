@@ -422,7 +422,8 @@ async function togglePlay() {
   if (isPlaying.value) {
     audioElement.value.pause()
     isPlaying.value = false
-  } else {
+  }
+  else {
     // If not ready, load first
     if (!isReady.value) {
       isBuffering.value = true
@@ -471,7 +472,8 @@ function toggleMute() {
   if (volume.value > 0) {
     previousVolume.value = volume.value
     volume.value = 0
-  } else {
+  }
+  else {
     volume.value = previousVolume.value || 1
   }
 }
@@ -576,10 +578,12 @@ async function saveMarker() {
     timestampInput.value = formatTime(currentTime.value)
     timestampError.value = ''
     emit('markers-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save marker:', error)
     showError(error, 'audio.saveMarkerError')
-  } finally {
+  }
+  finally {
     savingMarker.value = false
   }
 }
@@ -589,9 +593,10 @@ async function deleteMarker(marker: AudioMarker) {
     await $fetch(`/api/audio-markers/${marker.id}`, {
       method: 'DELETE',
     })
-    markers.value = markers.value.filter((m) => m.id !== marker.id)
+    markers.value = markers.value.filter(m => m.id !== marker.id)
     emit('markers-updated')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete marker:', error)
   }
 }

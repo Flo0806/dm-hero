@@ -52,7 +52,7 @@ function createNpc(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || null,
-      options?.metadata ? JSON.stringify(options.metadata) : null
+      options?.metadata ? JSON.stringify(options.metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -63,7 +63,7 @@ describe('NPCs - Basic CRUD', () => {
 
     const npc = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(npcId) as { id: number; name: string; type_id: number }
+      .get(npcId) as { id: number, name: string, type_id: number }
 
     expect(npc).toBeDefined()
     expect(npc.name).toBe('Gandalf the Grey')
@@ -79,18 +79,18 @@ describe('NPCs - Basic CRUD', () => {
         class: 'wizard',
         alignment: 'chaoticGood',
         age: 1200,
-        occupation: 'Sage'
-      }
+        occupation: 'Sage',
+      },
     })
 
     const npc = db
       .prepare('SELECT * FROM entities WHERE id = ?')
       .get(npcId) as {
-        name: string
-        description: string
-        image_url: string
-        metadata: string
-      }
+      name: string
+      description: string
+      image_url: string
+      metadata: string
+    }
 
     expect(npc.name).toBe('Elminster Aumar')
     expect(npc.description).toBe('A powerful wizard of Faerûn')
@@ -110,7 +110,7 @@ describe('NPCs - Basic CRUD', () => {
 
     const npc = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(npcId) as { name: string; description: string }
+      .get(npcId) as { name: string, description: string }
 
     expect(npc.name).toBe('New Name')
     expect(npc.description).toBe('Updated description')
@@ -198,8 +198,8 @@ describe('NPCs - Metadata', () => {
         race: 'human',
         customField1: 'value1',
         customField2: 42,
-        nested: { key: 'value' }
-      }
+        nested: { key: 'value' },
+      },
     })
 
     const npc = db

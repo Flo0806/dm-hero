@@ -347,7 +347,7 @@ const hoveredConnectionId = ref<number | null>(null)
 const activeFilters = ref<string[]>([])
 
 // Entity type configuration for filters
-const entityTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
+const entityTypeConfig: Record<string, { icon: string, color: string, label: string }> = {
   NPC: { icon: 'mdi-account', color: '#4CAF50', label: 'NPCs' },
   Location: { icon: 'mdi-map-marker', color: '#2196F3', label: 'Locations' },
   Item: { icon: 'mdi-sword', color: '#FF9800', label: 'Items' },
@@ -381,14 +381,14 @@ const filteredConnections = computed(() => {
   if (activeFilters.value.length === 0) {
     return connections.value
   }
-  return connections.value.filter((conn) => activeFilters.value.includes(conn.entityType))
+  return connections.value.filter(conn => activeFilters.value.includes(conn.entityType))
 })
 
 // Computed: filtered inter-connections (only between visible entities)
 const filteredInterConnections = computed(() => {
-  const visibleEntityIds = new Set(filteredConnections.value.map((c) => c.entityId))
+  const visibleEntityIds = new Set(filteredConnections.value.map(c => c.entityId))
   return interConnections.value.filter(
-    (ic) => visibleEntityIds.has(ic.fromEntityId) && visibleEntityIds.has(ic.toEntityId),
+    ic => visibleEntityIds.has(ic.fromEntityId) && visibleEntityIds.has(ic.toEntityId),
   )
 })
 
@@ -401,7 +401,8 @@ function toggleFilter(type: string) {
   const index = activeFilters.value.indexOf(type)
   if (index === -1) {
     activeFilters.value.push(type)
-  } else {
+  }
+  else {
     activeFilters.value.splice(index, 1)
   }
   // Update lines after filter change
@@ -421,16 +422,16 @@ const viewingLore = ref<Lore | null>(null)
 const viewingPlayer = ref<Player | null>(null)
 
 // Lore view dialog data
-const viewDialogNpcs = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
-const viewDialogItems = ref<Array<{ id: number; name: string; description: string | null; image_url: string | null }>>([])
+const viewDialogNpcs = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
+const viewDialogItems = ref<Array<{ id: number, name: string, description: string | null, image_url: string | null }>>([])
 const viewDialogFactions = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
 const viewDialogLocations = ref<
-  Array<{ id: number; name: string; description: string | null; image_url: string | null }>
+  Array<{ id: number, name: string, description: string | null, image_url: string | null }>
 >([])
-const viewDialogDocuments = ref<Array<{ id: number; title: string; content: string }>>([])
-const viewDialogImages = ref<Array<{ id: number; image_url: string; is_primary: boolean }>>([])
+const viewDialogDocuments = ref<Array<{ id: number, title: string, content: string }>>([])
+const viewDialogImages = ref<Array<{ id: number, image_url: string, is_primary: boolean }>>([])
 const viewDialogCounts = ref<{
   npcs: number
   items: number
@@ -473,13 +474,13 @@ const interConnectionLines = ref<InterConnectionLine[]>([])
 
 const hoveredLine = computed(() => {
   if (hoveredConnectionId.value === null) return null
-  return connectionLines.value.find((line) => line.id === hoveredConnectionId.value) || null
+  return connectionLines.value.find(line => line.id === hoveredConnectionId.value) || null
 })
 
 // Get the entityId of the currently hovered connection
 const hoveredEntityId = computed(() => {
   if (hoveredConnectionId.value === null) return null
-  const conn = connections.value.find((c) => c.relationId === hoveredConnectionId.value)
+  const conn = connections.value.find(c => c.relationId === hoveredConnectionId.value)
   return conn?.entityId || null
 })
 
@@ -487,14 +488,14 @@ const hoveredEntityId = computed(() => {
 const hoveredInterLines = computed(() => {
   if (hoveredEntityId.value === null) return []
   return interConnectionLines.value.filter(
-    (line) => line.fromEntityId === hoveredEntityId.value || line.toEntityId === hoveredEntityId.value,
+    line => line.fromEntityId === hoveredEntityId.value || line.toEntityId === hoveredEntityId.value,
   )
 })
 
 // Check if an inter-connection line involves the hovered entity
 function isInterLineHovered(interLine: InterConnectionLine): boolean {
-  return hoveredEntityId.value !== null &&
-    (interLine.fromEntityId === hoveredEntityId.value || interLine.toEntityId === hoveredEntityId.value)
+  return hoveredEntityId.value !== null
+    && (interLine.fromEntityId === hoveredEntityId.value || interLine.toEntityId === hoveredEntityId.value)
 }
 
 // Get entity IDs that are connected to the hovered entity via inter-connections
@@ -504,7 +505,8 @@ const interConnectedEntityIds = computed(() => {
   hoveredInterLines.value.forEach((line) => {
     if (line.fromEntityId === hoveredEntityId.value) {
       ids.add(line.toEntityId)
-    } else {
+    }
+    else {
       ids.add(line.fromEntityId)
     }
   })
@@ -528,7 +530,7 @@ function getLineRectIntersection(
   rectWidth: number,
   rectHeight: number,
   padding: number = 4,
-): { x: number; y: number } {
+): { x: number, y: number } {
   // Add padding to create gap between line end and card border
   const rectLeft = rectX - padding
   const rectRight = rectX + rectWidth + padding
@@ -628,7 +630,7 @@ function updateLines() {
   const lines: ConnectionLine[] = []
 
   // Build a map of entityId -> card rect (relative to canvas)
-  const entityRects = new Map<number, { x: number; y: number; width: number; height: number }>()
+  const entityRects = new Map<number, { x: number, y: number, width: number, height: number }>()
 
   filteredConnections.value.forEach((conn) => {
     const cardEl = connectionRefs.value.get(conn.relationId)
@@ -739,7 +741,7 @@ async function loadEntity() {
 
     // Fetch entity and connections in parallel
     const [entityData, connectionsData] = await Promise.all([
-      $fetch<{ entity: Entity; type: EntityType }>(`/api/entities/${id}`),
+      $fetch<{ entity: Entity, type: EntityType }>(`/api/entities/${id}`),
       $fetch<ConnectionsResponse>(`/api/entities/${id}/connections`),
     ])
 
@@ -747,10 +749,12 @@ async function loadEntity() {
     entityType.value = entityData.type
     connections.value = connectionsData.connections
     interConnections.value = connectionsData.interConnections
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ChaosGraph] Failed to load entity:', e)
     error.value = 'Failed to load entity'
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -808,7 +812,6 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
     return
   }
 
-
   try {
     const data = await $fetch(`/api/${apiRoute}/${ent.id}`)
 
@@ -845,7 +848,8 @@ async function openViewDialog(ent: Entity, entType: EntityType) {
 
     viewDialogTypeName.value = entType.name
     viewDialogOpen.value = true
-  } catch (e) {
+  }
+  catch (e) {
     console.error('[ChaosGraph] Failed to load entity for view:', e)
   }
 }
@@ -859,7 +863,8 @@ function openEditDialog(ent: Entity, entType: EntityType) {
     editingEntityId.value = ent.id
     editDialogTypeName.value = entType.name
     editDialogOpen.value = true
-  } else {
+  }
+  else {
     // Fallback: navigate to list page with edit query
     const typeRoutes: Record<string, string> = {
       Player: 'players',
@@ -944,9 +949,11 @@ async function loadLoreViewData(loreId: number) {
     viewDialogDocuments.value = documents
     viewDialogImages.value = images
     viewDialogCounts.value = counts
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[ChaosGraph] Failed to load lore view data:', error)
-  } finally {
+  }
+  finally {
     loadingViewNpcs.value = false
     loadingViewItems.value = false
     loadingViewFactions.value = false

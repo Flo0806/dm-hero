@@ -10,7 +10,6 @@ const batchLoading = ref(false)
  * Uses shared state so all NpcCards share the same cache
  */
 export function useNpcCounts() {
-
   async function loadNpcCounts(npc: NPC): Promise<void> {
     // Skip if already loading
     if (loadingCounts.value.has(npc.id)) {
@@ -33,9 +32,11 @@ export function useNpcCounts() {
       countsMap[npc.id] = counts
       // Also add to NPC object for immediate access
       npc._counts = counts
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to load counts for NPC ${npc.id}:`, error)
-    } finally {
+    }
+    finally {
       loadingCounts.value.delete(npc.id)
     }
   }
@@ -44,7 +45,7 @@ export function useNpcCounts() {
    * Load counts for multiple NPCs in parallel (legacy - uses individual requests)
    */
   async function loadNpcCountsBatch(npcs: NPC[]): Promise<void> {
-    const promises = npcs.map((npc) => loadNpcCounts(npc))
+    const promises = npcs.map(npc => loadNpcCounts(npc))
     await Promise.all(promises)
   }
 
@@ -66,9 +67,11 @@ export function useNpcCounts() {
         const npcId = Number(npcIdStr)
         countsMap[npcId] = counts
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load NPC counts batch:', error)
-    } finally {
+    }
+    finally {
       batchLoading.value = false
     }
   }
@@ -93,7 +96,7 @@ export function useNpcCounts() {
    */
   async function reloadNpcCounts(npc: NPC): Promise<void> {
     // Remove from cache to force reload
-    countsMap[npc.id] = undefined  
+    countsMap[npc.id] = undefined
     loadingCounts.value.delete(npc.id)
     // Now load fresh
     await loadNpcCounts(npc)
@@ -134,7 +137,8 @@ export function useNpcCounts() {
       try {
         const counts = await $fetch<NpcCounts>(`/api/npcs/${id}/counts`)
         countsMap[id] = counts
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to reload counts for NPC ${id}:`, error)
       }
     })

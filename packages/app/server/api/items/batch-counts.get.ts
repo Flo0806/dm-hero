@@ -37,9 +37,9 @@ export default defineEventHandler((event) => {
   // Get all entity type IDs once
   const entityTypes = db
     .prepare('SELECT id, name FROM entity_types WHERE name IN (\'Item\', \'NPC\', \'Location\', \'Lore\', \'Faction\', \'Player\')')
-    .all() as Array<{ id: number; name: string }>
+    .all() as Array<{ id: number, name: string }>
 
-  const typeMap = Object.fromEntries(entityTypes.map((t) => [t.name, t.id]))
+  const typeMap = Object.fromEntries(entityTypes.map(t => [t.name, t.id]))
   const itemTypeId = typeMap['Item']
   const npcTypeId = typeMap['NPC']
   const locationTypeId = typeMap['Location']
@@ -106,7 +106,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), itemTypeId, npcTypeId,
       Number(campaignId), itemTypeId, npcTypeId,
-    ) as Array<{ item_id: number; count: number }>
+    ) as Array<{ item_id: number, count: number }>
 
     for (const row of ownersCounts) {
       if (result[row.item_id]) {
@@ -145,7 +145,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), itemTypeId, locationTypeId,
       Number(campaignId), itemTypeId, locationTypeId,
-    ) as Array<{ item_id: number; count: number }>
+    ) as Array<{ item_id: number, count: number }>
 
     for (const row of locationsCounts) {
       if (result[row.item_id]) {
@@ -184,7 +184,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), itemTypeId, loreTypeId,
       Number(campaignId), itemTypeId, loreTypeId,
-    ) as Array<{ item_id: number; count: number }>
+    ) as Array<{ item_id: number, count: number }>
 
     for (const row of loreCounts) {
       if (result[row.item_id]) {
@@ -223,7 +223,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), itemTypeId, factionTypeId,
       Number(campaignId), itemTypeId, factionTypeId,
-    ) as Array<{ item_id: number; count: number }>
+    ) as Array<{ item_id: number, count: number }>
 
     for (const row of factionsCounts) {
       if (result[row.item_id]) {
@@ -262,7 +262,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), itemTypeId, playerTypeId,
       Number(campaignId), itemTypeId, playerTypeId,
-    ) as Array<{ item_id: number; count: number }>
+    ) as Array<{ item_id: number, count: number }>
 
     for (const row of playersCounts) {
       if (result[row.item_id]) {
@@ -281,7 +281,7 @@ export default defineEventHandler((event) => {
       AND item.deleted_at IS NULL
       AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
-  `).all(Number(campaignId), itemTypeId) as Array<{ item_id: number; count: number }>
+  `).all(Number(campaignId), itemTypeId) as Array<{ item_id: number, count: number }>
 
   for (const row of documentsCounts) {
     if (result[row.item_id]) {
@@ -298,7 +298,7 @@ export default defineEventHandler((event) => {
       AND item.type_id = ?
       AND item.deleted_at IS NULL
     GROUP BY ei.entity_id
-  `).all(Number(campaignId), itemTypeId) as Array<{ item_id: number; count: number }>
+  `).all(Number(campaignId), itemTypeId) as Array<{ item_id: number, count: number }>
 
   for (const row of imagesCounts) {
     if (result[row.item_id]) {

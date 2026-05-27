@@ -1,13 +1,13 @@
 # ==========================================
 # Stage 1: Build Stage
 # ==========================================
-FROM node:22.20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Install build dependencies for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.0 --activate
 
 # Set working directory
 WORKDIR /app
@@ -41,13 +41,13 @@ RUN cd packages/app/node_modules/better-sqlite3 && npm run build-release
 # ==========================================
 # Stage 2: Production Stage
 # ==========================================
-FROM node:22.20-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Install build dependencies for native modules (needed for runtime)
 RUN apk add --no-cache python3 make g++
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.34.0 --activate
 
 # Set working directory
 WORKDIR /app

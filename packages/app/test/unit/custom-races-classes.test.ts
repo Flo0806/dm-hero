@@ -33,7 +33,7 @@ describe('Custom Races - CRUD', () => {
 
     const race = db
       .prepare('SELECT * FROM races WHERE name = ?')
-      .get('test_dragonborn') as { name: string; name_de: string; name_en: string }
+      .get('test_dragonborn') as { name: string, name_de: string, name_en: string }
 
     expect(race.name_de).toBe('Drachenblut')
     expect(race.name_en).toBe('Dragonborn')
@@ -48,7 +48,7 @@ describe('Custom Races - CRUD', () => {
 
     const race = db
       .prepare('SELECT * FROM races WHERE name = ?')
-      .get('test_update_race') as { name_de: string; name_en: string }
+      .get('test_update_race') as { name_de: string, name_en: string }
 
     expect(race.name_de).toBe('Neu')
     expect(race.name_en).toBe('New')
@@ -126,7 +126,7 @@ describe('Custom Classes - CRUD', () => {
 
     const cls = db
       .prepare('SELECT * FROM classes WHERE name = ?')
-      .get('test_artificer') as { name: string; name_de: string; name_en: string }
+      .get('test_artificer') as { name: string, name_de: string, name_en: string }
 
     expect(cls.name_de).toBe('Konstrukteur')
     expect(cls.name_en).toBe('Artificer')
@@ -141,7 +141,7 @@ describe('Custom Classes - CRUD', () => {
 
     const cls = db
       .prepare('SELECT * FROM classes WHERE name = ?')
-      .get('test_update_class') as { name_de: string; name_en: string }
+      .get('test_update_class') as { name_de: string, name_en: string }
 
     expect(cls.name_de).toBe('Neu')
     expect(cls.name_en).toBe('New')

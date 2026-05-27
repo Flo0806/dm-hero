@@ -61,7 +61,7 @@ const SEASON_TEMPS: Record<string, [number, number]> = {
   autumn: [5, 18],
 }
 
-function getRandomWeather(seasonName: string): { type: string; temp: number } {
+function getRandomWeather(seasonName: string): { type: string, temp: number } {
   const normalizedSeason = seasonName.toLowerCase()
   const weatherProbs = SEASON_WEATHER[normalizedSeason] || SEASON_WEATHER.summer
   const tempRange = SEASON_TEMPS[normalizedSeason] || SEASON_TEMPS.summer
@@ -157,8 +157,9 @@ export default defineEventHandler(async (event) => {
     const existing = db
       .prepare('SELECT day FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
       .all(campaignId, year, month) as Array<{ day: number }>
-    existing.forEach((w) => existingWeather.add(w.day))
-  } else {
+    existing.forEach(w => existingWeather.add(w.day))
+  }
+  else {
     // Delete existing weather for this month
     db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?').run(
       campaignId,

@@ -55,7 +55,7 @@ function createFaction(name: string, options?: {
       name,
       options?.description || null,
       options?.imageUrl || null,
-      options?.metadata ? JSON.stringify(options.metadata) : null
+      options?.metadata ? JSON.stringify(options.metadata) : null,
     )
   return Number(result.lastInsertRowid)
 }
@@ -74,7 +74,7 @@ describe('Factions - Basic CRUD', () => {
 
     const faction = db
       .prepare('SELECT * FROM entities WHERE id = ?')
-      .get(factionId) as { id: number; name: string; type_id: number }
+      .get(factionId) as { id: number, name: string, type_id: number }
 
     expect(faction).toBeDefined()
     expect(faction.name).toBe('Harpers')
@@ -88,18 +88,18 @@ describe('Factions - Basic CRUD', () => {
       metadata: {
         type: 'criminal',
         alignment: 'lawfulEvil',
-        headquarters: 'Darkhold'
-      }
+        headquarters: 'Darkhold',
+      },
     })
 
     const faction = db
       .prepare('SELECT * FROM entities WHERE id = ?')
       .get(factionId) as {
-        name: string
-        description: string
-        image_url: string
-        metadata: string
-      }
+      name: string
+      description: string
+      image_url: string
+      metadata: string
+    }
 
     expect(faction.name).toBe('Zhentarim')
     expect(faction.description).toBe('The Black Network, a shadowy organization')
@@ -118,7 +118,7 @@ describe('Factions - Basic CRUD', () => {
 
     const faction = db
       .prepare('SELECT name, description FROM entities WHERE id = ?')
-      .get(factionId) as { name: string; description: string }
+      .get(factionId) as { name: string, description: string }
 
     expect(faction.name).toBe('New Name')
     expect(faction.description).toBe('Updated description')
@@ -245,7 +245,7 @@ describe('Factions - Membership Relations', () => {
           AND e.deleted_at IS NULL
         GROUP BY er.relation_type
       `)
-      .all(factionId, npcTypeId) as Array<{ relation_type: string; count: number }>
+      .all(factionId, npcTypeId) as Array<{ relation_type: string, count: number }>
 
     expect(roles).toHaveLength(3)
     const leaderRole = roles.find(r => r.relation_type === 'leader')

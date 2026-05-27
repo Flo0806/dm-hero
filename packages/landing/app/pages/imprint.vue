@@ -10,8 +10,8 @@
     </h1>
 
     <p class="text-body-1 mb-4">
-      {{ $t('legal.imprint.info') }}<br>
-      {{ $t('legal.imprint.owner') }}<br>
+      {{ $t('legal.imprint.info') }}<br />
+      {{ $t('legal.imprint.owner') }}<br />
       {{ $t('legal.imprint.address') }}
     </p>
 
@@ -25,7 +25,7 @@
     </p>
 
     <p class="text-body-1 mb-8">
-      {{ $t('legal.imprint.responsible') }}:<br>
+      {{ $t('legal.imprint.responsible') }}:<br />
       Florian Heuberger
     </p>
 

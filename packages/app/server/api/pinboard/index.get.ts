@@ -62,7 +62,7 @@ export default defineEventHandler(async (event): Promise<PinboardItem[]> => {
     .all(campaignId) as PinboardDbRow[]
 
   // Parse metadata for entity pins
-  const parsedEntityPins: PinboardItem[] = entityPins.map((pin) => ({
+  const parsedEntityPins: PinboardItem[] = entityPins.map(pin => ({
     ...pin,
     type: pin.type as PinboardItem['type'],
     metadata: pin.metadata ? JSON.parse(pin.metadata) : {},
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event): Promise<PinboardItem[]> => {
 
   // Parse group pins (no metadata to parse)
   // Explicitly set all fields to ensure correct types
-  const parsedGroupPins: PinboardItem[] = groupPins.map((pin) => ({
+  const parsedGroupPins: PinboardItem[] = groupPins.map(pin => ({
     pin_id: pin.pin_id,
     display_order: pin.display_order,
     pinned_at: pin.pinned_at,

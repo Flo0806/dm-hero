@@ -38,9 +38,9 @@ export default defineEventHandler((event) => {
   // Get all entity type IDs once
   const entityTypes = db
     .prepare('SELECT id, name FROM entity_types WHERE name IN (\'Faction\', \'NPC\', \'Item\', \'Location\', \'Lore\', \'Player\')')
-    .all() as Array<{ id: number; name: string }>
+    .all() as Array<{ id: number, name: string }>
 
-  const typeMap = Object.fromEntries(entityTypes.map((t) => [t.name, t.id]))
+  const typeMap = Object.fromEntries(entityTypes.map(t => [t.name, t.id]))
   const factionTypeId = typeMap['Faction']
   const npcTypeId = typeMap['NPC']
   const itemTypeId = typeMap['Item']
@@ -108,7 +108,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), factionTypeId, npcTypeId,
       Number(campaignId), factionTypeId, npcTypeId,
-    ) as Array<{ faction_id: number; count: number }>
+    ) as Array<{ faction_id: number, count: number }>
 
     for (const row of membersCounts) {
       if (result[row.faction_id]) {
@@ -147,7 +147,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), factionTypeId, itemTypeId,
       Number(campaignId), factionTypeId, itemTypeId,
-    ) as Array<{ faction_id: number; count: number }>
+    ) as Array<{ faction_id: number, count: number }>
 
     for (const row of itemsCounts) {
       if (result[row.faction_id]) {
@@ -186,7 +186,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), factionTypeId, locationTypeId,
       Number(campaignId), factionTypeId, locationTypeId,
-    ) as Array<{ faction_id: number; count: number }>
+    ) as Array<{ faction_id: number, count: number }>
 
     for (const row of locationsCounts) {
       if (result[row.faction_id]) {
@@ -225,7 +225,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), factionTypeId, loreTypeId,
       Number(campaignId), factionTypeId, loreTypeId,
-    ) as Array<{ faction_id: number; count: number }>
+    ) as Array<{ faction_id: number, count: number }>
 
     for (const row of loreCounts) {
       if (result[row.faction_id]) {
@@ -264,7 +264,7 @@ export default defineEventHandler((event) => {
     `).all(
       Number(campaignId), factionTypeId, playerTypeId,
       Number(campaignId), factionTypeId, playerTypeId,
-    ) as Array<{ faction_id: number; count: number }>
+    ) as Array<{ faction_id: number, count: number }>
 
     for (const row of playersCounts) {
       if (result[row.faction_id]) {
@@ -302,7 +302,7 @@ export default defineEventHandler((event) => {
   `).all(
     Number(campaignId), factionTypeId, factionTypeId,
     Number(campaignId), factionTypeId, factionTypeId,
-  ) as Array<{ faction_id: number; count: number }>
+  ) as Array<{ faction_id: number, count: number }>
 
   for (const row of relationsCounts) {
     if (result[row.faction_id]) {
@@ -320,7 +320,7 @@ export default defineEventHandler((event) => {
       AND faction.deleted_at IS NULL
       AND (ed.document_type IS NULL OR ed.document_type != 'character_sheet')
     GROUP BY ed.entity_id
-  `).all(Number(campaignId), factionTypeId) as Array<{ faction_id: number; count: number }>
+  `).all(Number(campaignId), factionTypeId) as Array<{ faction_id: number, count: number }>
 
   for (const row of documentsCounts) {
     if (result[row.faction_id]) {
@@ -337,7 +337,7 @@ export default defineEventHandler((event) => {
       AND faction.type_id = ?
       AND faction.deleted_at IS NULL
     GROUP BY ei.entity_id
-  `).all(Number(campaignId), factionTypeId) as Array<{ faction_id: number; count: number }>
+  `).all(Number(campaignId), factionTypeId) as Array<{ faction_id: number, count: number }>
 
   for (const row of imagesCounts) {
     if (result[row.faction_id]) {

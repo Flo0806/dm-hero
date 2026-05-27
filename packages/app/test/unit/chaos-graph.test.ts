@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3'
 
 let db: Database.Database
 let testCampaignId: number
-let entityTypeIds: Record<string, number> = {}
+const entityTypeIds: Record<string, number> = {}
 
 beforeAll(() => {
   db = getTestDb()

@@ -287,14 +287,14 @@
                   <div class="flex-grow-1">
                     <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.imported') }}</div>
                     <div class="text-body-2">
-                      DE: {{ conflict.imported.name_de || '-' }}<br/>
+                      DE: {{ conflict.imported.name_de || '-' }}<br />
                       EN: {{ conflict.imported.name_en || '-' }}
                     </div>
                   </div>
                   <div class="flex-grow-1">
                     <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.existing') }}</div>
                     <div class="text-body-2">
-                      DE: {{ conflict.existing.name_de || '-' }}<br/>
+                      DE: {{ conflict.existing.name_de || '-' }}<br />
                       EN: {{ conflict.existing.name_en || '-' }}
                     </div>
                   </div>
@@ -475,7 +475,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  imported: [campaignId: number]
+  'imported': [campaignId: number]
 }>()
 
 const router = useRouter()
@@ -484,7 +484,7 @@ const entitiesStore = useEntitiesStore()
 
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 type Step = 'upload' | 'preview' | 'confirm' | 'importing' | 'success'
@@ -544,7 +544,8 @@ function setResolution(conflict: RaceClassConflict, value: string | null) {
   const resolution = value as 'overwrite' | 'keep' | 'skip'
   if (conflict.type === 'race') {
     raceResolutions.value[conflict.key] = resolution
-  } else {
+  }
+  else {
     classResolutions.value[conflict.key] = resolution
   }
 }
@@ -557,7 +558,8 @@ function initializeResolutions() {
       if (conflict.type === 'race' && !raceResolutions.value[conflict.key]) {
         // Default: keep existing for custom, skip for standard
         raceResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
-      } else if (conflict.type === 'class' && !classResolutions.value[conflict.key]) {
+      }
+      else if (conflict.type === 'class' && !classResolutions.value[conflict.key]) {
         classResolutions.value[conflict.key] = conflict.isStandard ? 'skip' : 'keep'
       }
     }
@@ -631,7 +633,8 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
       for (const t of manifest.entityTypes) {
         typeIdToName.set(t.id, t.name)
       }
-    } else {
+    }
+    else {
       // Fallback for v1.0 exports
       for (const [id, name] of Object.entries(fallbackTypeNames)) {
         typeIdToName.set(Number(id), name)
@@ -673,11 +676,13 @@ async function onFileSelected(filesOrFile: File[] | File | null) {
     // Store sourceAdventureSlug if present (from store downloads)
     sourceAdventureSlug.value = manifest.sourceAdventureSlug || null
     console.log('[Import] Preview ready:', preview.value)
-  } catch (err) {
+  }
+  catch (err) {
     console.error('[Import] Error parsing file:', err)
     error.value = err instanceof Error ? err.message : 'Failed to parse file'
     step.value = 'upload'
-  } finally {
+  }
+  finally {
     parsing.value = false
   }
 }
@@ -742,10 +747,12 @@ async function doImport(confirmedOverwrite: boolean = false) {
       }
 
       step.value = 'success'
-    } else {
+    }
+    else {
       throw new Error(result.errors?.join(', ') || 'Import failed')
     }
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     const fetchErr = err as { data?: { message?: string }, message?: string }
     error.value = fetchErr.data?.message || fetchErr.message || 'Import failed'
     step.value = 'preview'

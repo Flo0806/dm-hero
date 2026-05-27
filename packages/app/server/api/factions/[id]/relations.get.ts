@@ -88,7 +88,8 @@ export default defineEventHandler(async (event) => {
     if (rel.notes) {
       try {
         parsedNotes = JSON.parse(rel.notes)
-      } catch {
+      }
+      catch {
         // If not valid JSON, treat as plain text
         parsedNotes = rel.notes
       }

@@ -27,7 +27,6 @@ const batchLoading = ref(false)
  * Updates the Faction object reactively with _counts property
  */
 export function useFactionCounts() {
-
   async function loadFactionCounts(faction: Faction): Promise<void> {
     // Skip if already loading
     if (loadingCounts.value.has(faction.id)) {
@@ -50,9 +49,11 @@ export function useFactionCounts() {
       countsMap[faction.id] = counts
       // Also add to Faction object for immediate access
       faction._counts = counts
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`Failed to load counts for Faction ${faction.id}:`, error)
-    } finally {
+    }
+    finally {
       loadingCounts.value.delete(faction.id)
     }
   }
@@ -61,7 +62,7 @@ export function useFactionCounts() {
    * Load counts for multiple Factions in parallel (legacy - uses individual requests)
    */
   async function loadFactionCountsBatch(factions: Faction[]): Promise<void> {
-    const promises = factions.map((faction) => loadFactionCounts(faction))
+    const promises = factions.map(faction => loadFactionCounts(faction))
     await Promise.all(promises)
   }
 
@@ -83,9 +84,11 @@ export function useFactionCounts() {
         const factionId = Number(factionIdStr)
         countsMap[factionId] = counts
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to load Faction counts batch:', error)
-    } finally {
+    }
+    finally {
       batchLoading.value = false
     }
   }
@@ -130,7 +133,8 @@ export function useFactionCounts() {
       try {
         const counts = await $fetch<FactionCounts>(`/api/factions/${id}/counts`)
         countsMap[id] = counts
-      } catch (error) {
+      }
+      catch (error) {
         console.error(`Failed to reload counts for Faction ${id}:`, error)
       }
     })
@@ -144,7 +148,7 @@ export function useFactionCounts() {
   function clearCountsCache(): void {
     // Clear all properties from reactive object
     Object.keys(countsMap).forEach((key) => {
-      countsMap[Number(key)] = undefined  
+      countsMap[Number(key)] = undefined
     })
     loadingCounts.value.clear()
   }

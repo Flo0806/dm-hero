@@ -133,7 +133,8 @@ describe('Pinboard - Basic Operations', () => {
         .run(secondCampaignId, entityId, 0)
 
       expect(result2.lastInsertRowid).toBeGreaterThan(0)
-    } finally {
+    }
+    finally {
       // Clean up
       db.prepare('DELETE FROM pinboard WHERE campaign_id = ?').run(secondCampaignId)
       db.prepare('DELETE FROM campaigns WHERE id = ?').run(secondCampaignId)
@@ -171,7 +172,7 @@ describe('Pinboard - Multiple Entity Types', () => {
         JOIN entity_types et ON e.type_id = et.id
         WHERE p.campaign_id = ?
       `)
-      .get(testCampaignId) as { pin_id: number; display_order: number; name: string; type: string }
+      .get(testCampaignId) as { pin_id: number, display_order: number, name: string, type: string }
 
     expect(pinWithDetails).toBeDefined()
     expect(pinWithDetails.name).toBe('Detailed NPC')
@@ -328,7 +329,8 @@ describe('Pinboard - Campaign Isolation', () => {
         .all(secondCampaignId) as PinRow[]
       expect(campaign2Pins).toHaveLength(1)
       expect(campaign2Pins[0]?.entity_id).toBe(npc2)
-    } finally {
+    }
+    finally {
       // Clean up
       db.prepare('DELETE FROM pinboard WHERE campaign_id = ?').run(secondCampaignId)
       db.prepare('DELETE FROM entities WHERE campaign_id = ?').run(secondCampaignId)
@@ -339,7 +341,7 @@ describe('Pinboard - Campaign Isolation', () => {
 
 describe('Pinboard - Group Pinning', () => {
   // Helper to create a group
-  function createGroup(name: string, options?: { color?: string; icon?: string }): number {
+  function createGroup(name: string, options?: { color?: string, icon?: string }): number {
     const result = db
       .prepare(`
         INSERT INTO entity_groups (campaign_id, name, color, icon, created_at, updated_at)
@@ -408,7 +410,8 @@ describe('Pinboard - Group Pinning', () => {
         .run(secondCampaignId, groupId, 0)
 
       expect(result2.lastInsertRowid).toBeGreaterThan(0)
-    } finally {
+    }
+    finally {
       // Clean up
       db.prepare('DELETE FROM pinboard WHERE campaign_id = ?').run(secondCampaignId)
       db.prepare('DELETE FROM campaigns WHERE id = ?').run(secondCampaignId)
@@ -449,13 +452,13 @@ describe('Pinboard - Group Pinning', () => {
         WHERE p.campaign_id = ? AND p.group_id IS NOT NULL
       `)
       .get(testCampaignId) as {
-        pin_id: number
-        display_order: number
-        name: string
-        color: string
-        icon: string
-        type: string
-      }
+      pin_id: number
+      display_order: number
+      name: string
+      color: string
+      icon: string
+      type: string
+    }
 
     expect(pinWithDetails).toBeDefined()
     expect(pinWithDetails.name).toBe('Detailed Group')
@@ -520,7 +523,7 @@ describe('Pinboard - Group Pinning', () => {
         JOIN entity_groups g ON p.group_id = g.id
         WHERE p.campaign_id = ? AND p.group_id IS NOT NULL
       `)
-      .get(testCampaignId) as { pin_id: number; name: string; member_count: number }
+      .get(testCampaignId) as { pin_id: number, name: string, member_count: number }
 
     expect(pinWithCount).toBeDefined()
     expect(pinWithCount.name).toBe('Group with Members')
@@ -565,11 +568,11 @@ describe('Pinboard - Mixed Entity and Group Pins', () => {
     const allPins = db
       .prepare('SELECT * FROM pinboard WHERE campaign_id = ? ORDER BY display_order ASC')
       .all(testCampaignId) as Array<{
-        id: number
-        entity_id: number | null
-        group_id: number | null
-        display_order: number
-      }>
+      id: number
+      entity_id: number | null
+      group_id: number | null
+      display_order: number
+    }>
 
     expect(allPins).toHaveLength(3)
     expect(allPins[0]?.entity_id).toBe(npcId)
@@ -597,9 +600,9 @@ describe('Pinboard - Mixed Entity and Group Pins', () => {
     const pins = db
       .prepare('SELECT * FROM pinboard WHERE campaign_id = ? ORDER BY display_order ASC')
       .all(testCampaignId) as Array<{
-        entity_id: number | null
-        group_id: number | null
-      }>
+      entity_id: number | null
+      group_id: number | null
+    }>
 
     expect(pins[0]?.group_id).toBe(groupId) // Group first
     expect(pins[1]?.entity_id).toBe(locationId) // Location second
@@ -628,7 +631,7 @@ describe('Pinboard - Mixed Entity and Group Pins', () => {
         WHERE p.campaign_id = ? AND e.deleted_at IS NULL AND p.entity_id IS NOT NULL
         ORDER BY p.display_order ASC
       `)
-      .all(testCampaignId) as Array<{ pin_id: number; display_order: number; name: string; type: string }>
+      .all(testCampaignId) as Array<{ pin_id: number, display_order: number, name: string, type: string }>
 
     const groupPins = db
       .prepare(`
@@ -643,11 +646,11 @@ describe('Pinboard - Mixed Entity and Group Pins', () => {
         WHERE p.campaign_id = ? AND g.deleted_at IS NULL AND p.group_id IS NOT NULL
         ORDER BY p.display_order ASC
       `)
-      .all(testCampaignId) as Array<{ pin_id: number; display_order: number; name: string; type: string }>
+      .all(testCampaignId) as Array<{ pin_id: number, display_order: number, name: string, type: string }>
 
     // Combine and sort
     const allPins = [...entityPins, ...groupPins].sort(
-      (a, b) => a.display_order - b.display_order
+      (a, b) => a.display_order - b.display_order,
     )
 
     expect(allPins).toHaveLength(2)
@@ -697,7 +700,7 @@ describe('Pinboard - Edge Cases', () => {
         JOIN entities e ON p.entity_id = e.id
         WHERE p.campaign_id = ?
       `)
-      .get(testCampaignId) as { id: number; name: string; metadata: string }
+      .get(testCampaignId) as { id: number, name: string, metadata: string }
 
     expect(pinWithMetadata).toBeDefined()
     expect(pinWithMetadata.name).toBe('NPC with Metadata')

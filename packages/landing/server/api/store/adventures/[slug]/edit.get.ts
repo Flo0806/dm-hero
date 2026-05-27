@@ -93,7 +93,8 @@ export default defineEventHandler(async (event) => {
     tags = typeof latestVersion.tags === 'string'
       ? JSON.parse(latestVersion.tags)
       : (latestVersion.tags || [])
-  } catch {
+  }
+  catch {
     // Ignore parse errors
   }
 

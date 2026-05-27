@@ -63,11 +63,11 @@ export function syncSessionMentions(
     .prepare('SELECT entity_id FROM session_mentions WHERE session_id = ?')
     .all(sessionId) as Array<{ entity_id: number }>
 
-  const currentIds = new Set(currentMentions.map((m) => m.entity_id))
-  const newIds = new Set(mentions.map((m) => m.entityId))
+  const currentIds = new Set(currentMentions.map(m => m.entity_id))
+  const newIds = new Set(mentions.map(m => m.entityId))
 
   // Delete mentions that are no longer in notes
-  const toDelete = [...currentIds].filter((id) => !newIds.has(id))
+  const toDelete = [...currentIds].filter(id => !newIds.has(id))
   if (toDelete.length > 0) {
     const deleteStmt = db.prepare(
       'DELETE FROM session_mentions WHERE session_id = ? AND entity_id = ?',
@@ -78,17 +78,17 @@ export function syncSessionMentions(
   }
 
   // Add new mentions
-  const toAdd = mentions.filter((m) => !currentIds.has(m.entityId))
+  const toAdd = mentions.filter(m => !currentIds.has(m.entityId))
   if (toAdd.length > 0) {
     // Validate that entity_ids actually exist in entities table
     const placeholders = toAdd.map(() => '?').join(',')
     const existingEntities = db
       .prepare(`SELECT id FROM entities WHERE id IN (${placeholders}) AND deleted_at IS NULL`)
-      .all(...toAdd.map((m) => m.entityId)) as Array<{ id: number }>
-    const validIds = new Set(existingEntities.map((e) => e.id))
+      .all(...toAdd.map(m => m.entityId)) as Array<{ id: number }>
+    const validIds = new Set(existingEntities.map(e => e.id))
 
     // Filter to only valid mentions
-    const validMentions = toAdd.filter((m) => validIds.has(m.entityId))
+    const validMentions = toAdd.filter(m => validIds.has(m.entityId))
 
     if (validMentions.length > 0) {
       const insertStmt = db.prepare(

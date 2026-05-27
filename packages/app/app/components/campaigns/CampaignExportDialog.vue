@@ -26,7 +26,7 @@
             {{ $t('campaigns.export.fullExportDetails', {
               entities: entityStats.total,
               sessions: sessionCount,
-              maps: mapCount
+              maps: mapCount,
             }) }}
           </div>
         </v-alert>
@@ -197,7 +197,7 @@ const campaignName = computed(() => campaignStore.currentCampaign?.name || 'camp
 
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const exportMode = ref<'full' | 'partial'>('full')
@@ -265,7 +265,7 @@ function getEntityIcon(type: string): string {
 // Check if all entities of a type are selected
 function isAllSelected(type: string): boolean {
   const entities = groupedEntities.value[type] || []
-  return entities.length > 0 && entities.every((e) => selectedIds.value.has(e.id))
+  return entities.length > 0 && entities.every(e => selectedIds.value.has(e.id))
 }
 
 // Toggle all entities of a type
@@ -277,7 +277,8 @@ function toggleAllOfType(type: string) {
     for (const entity of entities) {
       selectedIds.value.delete(entity.id)
     }
-  } else {
+  }
+  else {
     for (const entity of entities) {
       selectedIds.value.add(entity.id)
     }
@@ -290,7 +291,8 @@ function toggleAllOfType(type: string) {
 function toggleEntity(entity: EntityWithLinks) {
   if (selectedIds.value.has(entity.id)) {
     selectedIds.value.delete(entity.id)
-  } else {
+  }
+  else {
     selectedIds.value.add(entity.id)
   }
   // Trigger reactivity
@@ -298,7 +300,7 @@ function toggleEntity(entity: EntityWithLinks) {
 }
 
 // Add linked entity to selection
-function addLinkedEntity(linked: { id: number; name: string; type: string }) {
+function addLinkedEntity(linked: { id: number, name: string, type: string }) {
   if (!selectedIds.value.has(linked.id)) {
     selectedIds.value.add(linked.id)
     selectedIds.value = new Set(selectedIds.value)
@@ -321,9 +323,11 @@ async function fetchEntities() {
     allEntities.value = response.entities
     sessionCount.value = response.sessionCount
     mapCount.value = response.mapCount
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch entities:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -356,9 +360,11 @@ async function doExport() {
     }
 
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Export failed:', error)
-  } finally {
+  }
+  finally {
     exporting.value = false
   }
 }

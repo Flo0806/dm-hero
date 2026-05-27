@@ -157,10 +157,12 @@ async function handleSubmit() {
       },
     })
     success.value = true
-  } catch (err: unknown) {
+  }
+  catch (err: unknown) {
     const fetchError = err as { data?: { message?: string } }
     error.value = fetchError.data?.message || t('auth.resetPassword.error')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

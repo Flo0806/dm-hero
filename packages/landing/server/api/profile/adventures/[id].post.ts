@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if user owns this adventure
-  const adventure = await queryOne<{ id: number; author_id: number }>(
+  const adventure = await queryOne<{ id: number, author_id: number }>(
     'SELECT id, author_id FROM adventures WHERE id = ?',
     [adventureId],
   )

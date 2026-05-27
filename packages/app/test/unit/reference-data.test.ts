@@ -26,7 +26,7 @@ describe('Races - Basic Operations', () => {
   it('should have default races seeded', () => {
     const races = db
       .prepare('SELECT * FROM races ORDER BY name')
-      .all() as Array<{ name: string; name_de: string; name_en: string }>
+      .all() as Array<{ name: string, name_de: string, name_en: string }>
 
     expect(races.length).toBeGreaterThan(0)
 
@@ -40,7 +40,7 @@ describe('Races - Basic Operations', () => {
   it('should have German and English translations', () => {
     const human = db
       .prepare('SELECT * FROM races WHERE name = ?')
-      .get('human') as { name: string; name_de: string; name_en: string }
+      .get('human') as { name: string, name_de: string, name_en: string }
 
     expect(human).toBeDefined()
     expect(human.name_de).toBe('Mensch')
@@ -56,7 +56,7 @@ describe('Races - Basic Operations', () => {
 
     const race = db
       .prepare('SELECT * FROM races WHERE name = ?')
-      .get('test_custom_race') as { name: string; name_de: string; name_en: string }
+      .get('test_custom_race') as { name: string, name_de: string, name_en: string }
 
     expect(race.name_de).toBe('Test Rasse')
     expect(race.name_en).toBe('Test Race')
@@ -65,7 +65,7 @@ describe('Races - Basic Operations', () => {
   it('should find race by key', () => {
     const race = db
       .prepare('SELECT * FROM races WHERE name = ?')
-      .get('elf') as { name: string; name_de: string }
+      .get('elf') as { name: string, name_de: string }
 
     expect(race).toBeDefined()
     expect(race.name_de).toBe('Elf')
@@ -74,7 +74,7 @@ describe('Races - Basic Operations', () => {
   it('should find race by German name', () => {
     const race = db
       .prepare('SELECT * FROM races WHERE name_de = ?')
-      .get('Zwerg') as { name: string; name_en: string }
+      .get('Zwerg') as { name: string, name_en: string }
 
     expect(race).toBeDefined()
     expect(race.name).toBe('dwarf')
@@ -84,7 +84,7 @@ describe('Races - Basic Operations', () => {
   it('should find race by English name', () => {
     const race = db
       .prepare('SELECT * FROM races WHERE name_en = ?')
-      .get('Halfling') as { name: string; name_de: string }
+      .get('Halfling') as { name: string, name_de: string }
 
     expect(race).toBeDefined()
     expect(race.name).toBe('halfling')
@@ -96,7 +96,7 @@ describe('Classes - Basic Operations', () => {
   it('should have default classes seeded', () => {
     const classes = db
       .prepare('SELECT * FROM classes ORDER BY name')
-      .all() as Array<{ name: string; name_de: string; name_en: string }>
+      .all() as Array<{ name: string, name_de: string, name_en: string }>
 
     expect(classes.length).toBeGreaterThan(0)
 
@@ -110,7 +110,7 @@ describe('Classes - Basic Operations', () => {
   it('should have German and English translations', () => {
     const wizard = db
       .prepare('SELECT * FROM classes WHERE name = ?')
-      .get('wizard') as { name: string; name_de: string; name_en: string }
+      .get('wizard') as { name: string, name_de: string, name_en: string }
 
     expect(wizard).toBeDefined()
     expect(wizard.name_de).toBe('Magier')
@@ -126,7 +126,7 @@ describe('Classes - Basic Operations', () => {
 
     const cls = db
       .prepare('SELECT * FROM classes WHERE name = ?')
-      .get('test_custom_class') as { name: string; name_de: string; name_en: string }
+      .get('test_custom_class') as { name: string, name_de: string, name_en: string }
 
     expect(cls.name_de).toBe('Test Klasse')
     expect(cls.name_en).toBe('Test Class')
@@ -135,7 +135,7 @@ describe('Classes - Basic Operations', () => {
   it('should find class by key', () => {
     const cls = db
       .prepare('SELECT * FROM classes WHERE name = ?')
-      .get('paladin') as { name: string; name_de: string }
+      .get('paladin') as { name: string, name_de: string }
 
     expect(cls).toBeDefined()
     expect(cls.name_de).toBe('Paladin')
@@ -144,7 +144,7 @@ describe('Classes - Basic Operations', () => {
   it('should find class by German name', () => {
     const cls = db
       .prepare('SELECT * FROM classes WHERE name_de = ?')
-      .get('Schurke') as { name: string; name_en: string }
+      .get('Schurke') as { name: string, name_en: string }
 
     expect(cls).toBeDefined()
     expect(cls.name).toBe('rogue')
@@ -156,7 +156,7 @@ describe('Entity Types - Seeded Data', () => {
   it('should have all entity types seeded', () => {
     const types = db
       .prepare('SELECT * FROM entity_types ORDER BY name')
-      .all() as Array<{ name: string; icon: string; color: string }>
+      .all() as Array<{ name: string, icon: string, color: string }>
 
     const typeNames = types.map(t => t.name)
 
@@ -171,7 +171,7 @@ describe('Entity Types - Seeded Data', () => {
   it('should have icons for each entity type', () => {
     const npc = db
       .prepare('SELECT * FROM entity_types WHERE name = ?')
-      .get('NPC') as { icon: string; color: string }
+      .get('NPC') as { icon: string, color: string }
 
     expect(npc.icon).toBeDefined()
     expect(npc.icon.length).toBeGreaterThan(0)
@@ -180,7 +180,7 @@ describe('Entity Types - Seeded Data', () => {
   it('should have colors for each entity type', () => {
     const item = db
       .prepare('SELECT * FROM entity_types WHERE name = ?')
-      .get('Item') as { icon: string; color: string }
+      .get('Item') as { icon: string, color: string }
 
     expect(item.color).toBeDefined()
     expect(item.color.length).toBeGreaterThan(0)
@@ -191,7 +191,7 @@ describe('Item Types - Seeded Data', () => {
   it('should have item types seeded', () => {
     const itemTypes = db
       .prepare('SELECT * FROM item_types ORDER BY name')
-      .all() as Array<{ name: string; name_de: string; name_en: string }>
+      .all() as Array<{ name: string, name_de: string, name_en: string }>
 
     expect(itemTypes.length).toBeGreaterThan(0)
   })
@@ -201,7 +201,7 @@ describe('Item Rarities - Seeded Data', () => {
   it('should have item rarities seeded', () => {
     const rarities = db
       .prepare('SELECT * FROM item_rarities ORDER BY name')
-      .all() as Array<{ name: string; name_de: string; name_en: string }>
+      .all() as Array<{ name: string, name_de: string, name_en: string }>
 
     expect(rarities.length).toBeGreaterThan(0)
 
@@ -215,7 +215,7 @@ describe('Item Rarities - Seeded Data', () => {
   it('should have German and English translations for rarities', () => {
     const common = db
       .prepare('SELECT * FROM item_rarities WHERE name = ?')
-      .get('common') as { name: string; name_de: string; name_en: string }
+      .get('common') as { name: string, name_de: string, name_en: string }
 
     expect(common).toBeDefined()
     expect(common.name_de).toBeDefined()
@@ -248,7 +248,7 @@ describe('Currencies - Campaign Specific', () => {
   it('should have currencies for the test campaign', () => {
     const currencies = db
       .prepare('SELECT * FROM currencies WHERE campaign_id = ? ORDER BY code')
-      .all(currencyTestCampaignId) as Array<{ name: string; code: string }>
+      .all(currencyTestCampaignId) as Array<{ name: string, code: string }>
 
     expect(currencies.length).toBe(2)
   })
@@ -256,7 +256,7 @@ describe('Currencies - Campaign Specific', () => {
   it('should find currency by code', () => {
     const gold = db
       .prepare('SELECT * FROM currencies WHERE campaign_id = ? AND code = ?')
-      .get(currencyTestCampaignId, 'gp') as { name: string; code: string; symbol: string }
+      .get(currencyTestCampaignId, 'gp') as { name: string, code: string, symbol: string }
 
     expect(gold).toBeDefined()
     expect(gold.name).toBe('Gold')

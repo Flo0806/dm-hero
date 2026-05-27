@@ -497,7 +497,7 @@ describe('Logger Utility', () => {
       writeLog('INFO', 'First')
 
       // Small delay
-      await new Promise((resolve) => setTimeout(resolve, 1100))
+      await new Promise(resolve => setTimeout(resolve, 1100))
 
       writeLog('INFO', 'Second')
 

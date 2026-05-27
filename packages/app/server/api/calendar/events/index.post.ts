@@ -61,7 +61,8 @@ export default defineEventHandler(async (event) => {
     for (const entityId of body.entityIds) {
       insertEntity.run(eventId, entityId)
     }
-  } else if (body.entityId) {
+  }
+  else if (body.entityId) {
     // If only legacy entityId provided, also add to junction table
     db.prepare(
       `

@@ -59,10 +59,10 @@ function createEntity(name: string): number {
 }
 
 // Helper to get mentions for a session
-function getMentions(): Array<{ entity_id: number; context: string }> {
+function getMentions(): Array<{ entity_id: number, context: string }> {
   return db
     .prepare('SELECT entity_id, context FROM session_mentions WHERE session_id = ?')
-    .all(testSessionId) as Array<{ entity_id: number; context: string }>
+    .all(testSessionId) as Array<{ entity_id: number, context: string }>
 }
 
 describe('syncSessionMentions - Adding Mentions', () => {
@@ -75,8 +75,8 @@ describe('syncSessionMentions - Adding Mentions', () => {
 
     const mentions = getMentions()
     expect(mentions).toHaveLength(2)
-    expect(mentions.map((m) => m.entity_id)).toContain(npc1)
-    expect(mentions.map((m) => m.entity_id)).toContain(npc2)
+    expect(mentions.map(m => m.entity_id)).toContain(npc1)
+    expect(mentions.map(m => m.entity_id)).toContain(npc2)
   })
 
   it('should store entity type as context', () => {
@@ -194,8 +194,8 @@ describe('syncSessionMentions - Mixed Operations', () => {
 
     const mentions = getMentions()
     expect(mentions).toHaveLength(2)
-    expect(mentions.map((m) => m.entity_id)).toContain(npc2)
-    expect(mentions.map((m) => m.entity_id)).toContain(npc3)
-    expect(mentions.map((m) => m.entity_id)).not.toContain(npc1)
+    expect(mentions.map(m => m.entity_id)).toContain(npc2)
+    expect(mentions.map(m => m.entity_id)).toContain(npc3)
+    expect(mentions.map(m => m.entity_id)).not.toContain(npc1)
   })
 })

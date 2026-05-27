@@ -39,7 +39,8 @@ export default async function notarizing(context) {
     })
 
     console.log('Notarization complete!')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Notarization failed:', error.message)
     throw error
   }

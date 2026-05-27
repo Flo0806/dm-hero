@@ -14,24 +14,24 @@ export default defineEventHandler((event) => {
   }
 
   // Count events
-  const eventsCount =
-    (
+  const eventsCount
+    = (
       db.prepare('SELECT COUNT(*) as count FROM calendar_events WHERE campaign_id = ?').get(campaignId) as {
         count: number
       }
     )?.count || 0
 
   // Count weather entries
-  const weatherCount =
-    (
+  const weatherCount
+    = (
       db.prepare('SELECT COUNT(*) as count FROM calendar_weather WHERE campaign_id = ?').get(campaignId) as {
         count: number
       }
     )?.count || 0
 
   // Count sessions with in-game dates
-  const sessionsWithDatesCount =
-    (
+  const sessionsWithDatesCount
+    = (
       db
         .prepare(
           `SELECT COUNT(*) as count FROM sessions
@@ -42,16 +42,16 @@ export default defineEventHandler((event) => {
     )?.count || 0
 
   // Count seasons
-  const seasonsCount =
-    (
+  const seasonsCount
+    = (
       db.prepare('SELECT COUNT(*) as count FROM calendar_seasons WHERE campaign_id = ?').get(campaignId) as {
         count: number
       }
     )?.count || 0
 
   // Count moons
-  const moonsCount =
-    (
+  const moonsCount
+    = (
       db.prepare('SELECT COUNT(*) as count FROM calendar_moons WHERE campaign_id = ?').get(campaignId) as {
         count: number
       }

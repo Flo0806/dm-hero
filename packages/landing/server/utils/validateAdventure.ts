@@ -90,7 +90,7 @@ const MAGIC_BYTES: Record<string, number[]> = {
  */
 export async function validateAdventure(
   filePath: string,
-  metadata?: { title?: string; description?: string; shortDescription?: string },
+  metadata?: { title?: string, description?: string, shortDescription?: string },
   locale: string = 'en',
   originalFilename?: string,
 ): Promise<ValidationResult> {
@@ -139,7 +139,8 @@ export async function validateAdventure(
   let zip: AdmZip
   try {
     zip = new AdmZip(filePath)
-  } catch {
+  }
+  catch {
     errors.push({
       type: 'structure',
       message: locale === 'de'
@@ -152,7 +153,7 @@ export async function validateAdventure(
   const entries = zip.getEntries()
 
   // Check for manifest.json
-  const manifestEntry = entries.find((e) => e.entryName === 'manifest.json')
+  const manifestEntry = entries.find(e => e.entryName === 'manifest.json')
   if (!manifestEntry) {
     errors.push({
       type: 'structure',
@@ -168,7 +169,8 @@ export async function validateAdventure(
   try {
     const manifestContent = manifestEntry.getData().toString('utf8')
     manifest = JSON.parse(manifestContent)
-  } catch {
+  }
+  catch {
     errors.push({
       type: 'format',
       message: locale === 'de'
@@ -254,7 +256,8 @@ export async function validateAdventure(
         ? `Gesamtgröße zu groß: ${formatBytes(totalSize)} (max. 35 MB)`
         : `Total size too large: ${formatBytes(totalSize)} (max 35 MB)`,
     })
-  } else if (totalSize > WARN_TOTAL_SIZE) {
+  }
+  else if (totalSize > WARN_TOTAL_SIZE) {
     warnings.push({
       type: 'size',
       message: locale === 'de'
@@ -305,8 +308,8 @@ function verifyImageType(buffer: Buffer, extension: string): boolean {
       return matchMagicBytes(buffer, MAGIC_BYTES.gif)
     case 'webp':
       // WebP starts with RIFF....WEBP
-      return matchMagicBytes(buffer, MAGIC_BYTES.webp) &&
-        buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+      return matchMagicBytes(buffer, MAGIC_BYTES.webp)
+        && buffer.subarray(8, 12).toString('ascii') === 'WEBP'
     default:
       return true // Allow unknown types to pass this check
   }
@@ -432,7 +435,7 @@ function validateManifestContent(manifest: Record<string, unknown>, locale: stri
  * Quick size check for file upload preview
  * Returns warnings without full validation
  */
-export function checkFileSize(fileSize: number): { warning?: string; blocked: boolean } {
+export function checkFileSize(fileSize: number): { warning?: string, blocked: boolean } {
   if (fileSize > MAX_TOTAL_SIZE) {
     return {
       warning: `File is too large (${formatBytes(fileSize)}). Maximum allowed: 35 MB`,

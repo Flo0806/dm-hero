@@ -28,7 +28,7 @@ describe('Quick Link Configuration', () => {
         const configs = QUICK_LINK_CONFIG[sourceType]
 
         it('should have no duplicate target types', () => {
-          const targetTypes = configs.map((c) => c.targetType)
+          const targetTypes = configs.map(c => c.targetType)
           const uniqueTargets = new Set(targetTypes)
           expect(targetTypes.length).toBe(uniqueTargets.size)
         })
@@ -36,7 +36,7 @@ describe('Quick Link Configuration', () => {
         it('should not link to itself (except NPC, Faction, Item)', () => {
           // NPC-to-NPC, Faction-to-Faction, and Item-to-Item relations are valid
           if (sourceType !== 'NPC' && sourceType !== 'Faction' && sourceType !== 'Item') {
-            const targetTypes = configs.map((c) => c.targetType)
+            const targetTypes = configs.map(c => c.targetType)
             expect(targetTypes).not.toContain(sourceType)
           }
         })
@@ -93,35 +93,35 @@ describe('Quick Link Configuration', () => {
   describe('bidirectional consistency', () => {
     // If NPC can link to Item, Item should be able to link to NPC
     it('NPC <-> Item links should be bidirectional', () => {
-      const npcToItem = QUICK_LINK_CONFIG.NPC.find((c) => c.targetType === 'Item')
-      const itemToNpc = QUICK_LINK_CONFIG.Item.find((c) => c.targetType === 'NPC')
+      const npcToItem = QUICK_LINK_CONFIG.NPC.find(c => c.targetType === 'Item')
+      const itemToNpc = QUICK_LINK_CONFIG.Item.find(c => c.targetType === 'NPC')
       expect(npcToItem).toBeDefined()
       expect(itemToNpc).toBeDefined()
     })
 
     it('NPC <-> Location links should be bidirectional', () => {
-      const npcToLocation = QUICK_LINK_CONFIG.NPC.find((c) => c.targetType === 'Location')
-      const locationToNpc = QUICK_LINK_CONFIG.Location.find((c) => c.targetType === 'NPC')
+      const npcToLocation = QUICK_LINK_CONFIG.NPC.find(c => c.targetType === 'Location')
+      const locationToNpc = QUICK_LINK_CONFIG.Location.find(c => c.targetType === 'NPC')
       expect(npcToLocation).toBeDefined()
       expect(locationToNpc).toBeDefined()
     })
 
     it('NPC <-> Faction links should be bidirectional', () => {
-      const npcToFaction = QUICK_LINK_CONFIG.NPC.find((c) => c.targetType === 'Faction')
-      const factionToNpc = QUICK_LINK_CONFIG.Faction.find((c) => c.targetType === 'NPC')
+      const npcToFaction = QUICK_LINK_CONFIG.NPC.find(c => c.targetType === 'Faction')
+      const factionToNpc = QUICK_LINK_CONFIG.Faction.find(c => c.targetType === 'NPC')
       expect(npcToFaction).toBeDefined()
       expect(factionToNpc).toBeDefined()
     })
 
     it('Location <-> Faction links should be bidirectional', () => {
-      const locationToFaction = QUICK_LINK_CONFIG.Location.find((c) => c.targetType === 'Faction')
-      const factionToLocation = QUICK_LINK_CONFIG.Faction.find((c) => c.targetType === 'Location')
+      const locationToFaction = QUICK_LINK_CONFIG.Location.find(c => c.targetType === 'Faction')
+      const factionToLocation = QUICK_LINK_CONFIG.Faction.find(c => c.targetType === 'Location')
       expect(locationToFaction).toBeDefined()
       expect(factionToLocation).toBeDefined()
     })
 
     it('Faction <-> Faction links should exist (faction relations)', () => {
-      const factionToFaction = QUICK_LINK_CONFIG.Faction.find((c) => c.targetType === 'Faction')
+      const factionToFaction = QUICK_LINK_CONFIG.Faction.find(c => c.targetType === 'Faction')
       expect(factionToFaction).toBeDefined()
     })
   })
@@ -138,7 +138,7 @@ describe('Quick Link Configuration', () => {
     })
 
     it('NPC-to-NPC should have multiple relation types (shows submenu)', () => {
-      const npcToNpc = QUICK_LINK_CONFIG.NPC.find((c) => c.targetType === 'NPC')
+      const npcToNpc = QUICK_LINK_CONFIG.NPC.find(c => c.targetType === 'NPC')
       expect(npcToNpc).toBeDefined()
       expect(npcToNpc!.relationTypes.length).toBeGreaterThan(1)
     })

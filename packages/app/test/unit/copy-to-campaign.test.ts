@@ -37,7 +37,7 @@ interface CopyResult {
     entitiesUpdated: number
     relationsCopied: number
   }
-  duplicates?: Array<{ id: number; source_entity_id: number; name: string }>
+  duplicates?: Array<{ id: number, source_entity_id: number, name: string }>
   requiresConfirmation?: boolean
 }
 
@@ -53,12 +53,12 @@ type CopyMode = 'skip' | 'update' | 'duplicate'
 function findExistingCopies(
   sourceEntities: Entity[],
   targetCampaignEntities: Entity[],
-): Array<{ id: number; source_entity_id: number; name: string }> {
-  const sourceIds = new Set(sourceEntities.map((e) => e.source_entity_id || e.id))
+): Array<{ id: number, source_entity_id: number, name: string }> {
+  const sourceIds = new Set(sourceEntities.map(e => e.source_entity_id || e.id))
 
   return targetCampaignEntities
-    .filter((e) => e.source_entity_id && sourceIds.has(e.source_entity_id))
-    .map((e) => ({
+    .filter(e => e.source_entity_id && sourceIds.has(e.source_entity_id))
+    .map(e => ({
       id: e.id,
       source_entity_id: e.source_entity_id!,
       name: e.name,
@@ -76,7 +76,7 @@ function simulateCopy(
   mode: CopyMode,
 ): CopyResult {
   const existingCopies = findExistingCopies(sourceEntities, targetCampaignEntities)
-  const existingSourceIds = new Set(existingCopies.map((c) => c.source_entity_id))
+  const existingSourceIds = new Set(existingCopies.map(c => c.source_entity_id))
 
   // If duplicates found and mode is 'skip' on first call, return for confirmation
   if (existingCopies.length > 0 && mode === 'skip') {
@@ -101,7 +101,7 @@ function simulateCopy(
   }
 
   const idMapping = new Map<number, number>()
-  let nextId = Math.max(...targetCampaignEntities.map((e) => e.id), 0) + 1
+  let nextId = Math.max(...targetCampaignEntities.map(e => e.id), 0) + 1
 
   for (const entity of sourceEntities) {
     const originalSourceId = entity.source_entity_id || entity.id
@@ -110,13 +110,14 @@ function simulateCopy(
     if (isDuplicate) {
       if (mode === 'skip') {
         stats.entitiesSkipped++
-        const existingCopy = existingCopies.find((c) => c.source_entity_id === originalSourceId)
+        const existingCopy = existingCopies.find(c => c.source_entity_id === originalSourceId)
         if (existingCopy) {
           idMapping.set(entity.id, existingCopy.id)
         }
         continue
-      } else if (mode === 'update') {
-        const existingCopy = existingCopies.find((c) => c.source_entity_id === originalSourceId)
+      }
+      else if (mode === 'update') {
+        const existingCopy = existingCopies.find(c => c.source_entity_id === originalSourceId)
         if (existingCopy) {
           idMapping.set(entity.id, existingCopy.id)
           stats.entitiesUpdated++

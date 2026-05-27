@@ -146,10 +146,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   'preview-image': [imagePath: string, entityName: string]
-  upload: []
-  generate: []
-  download: []
-  delete: []
+  'upload': []
+  'generate': []
+  'download': []
+  'delete': []
 }>()
 
 // Compute i18n keys based on entity type

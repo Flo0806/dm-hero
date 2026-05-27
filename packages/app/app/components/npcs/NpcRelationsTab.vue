@@ -196,8 +196,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'add', payload: { npcId: number; relationType: string; notes?: string }): void
-  (e: 'update', payload: { relationId: number; relationType: string; notes?: string }): void
+  (e: 'add', payload: { npcId: number, relationType: string, notes?: string }): void
+  (e: 'update', payload: { relationId: number, relationType: string, notes?: string }): void
   (e: 'remove', relationId: number): void
 }
 
@@ -229,10 +229,10 @@ const isDirty = computed(() => {
 })
 
 // Notify parent dialog about dirty state
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const npcRelationTypeSuggestions = computed(() =>
-  NPC_RELATION_TYPES.map((type) => ({
+  NPC_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`npcs.npcRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -250,7 +250,8 @@ function getNotesText(notes: string | Record<string, unknown> | null): string {
         return String(parsed.text)
       }
       return notes
-    } catch {
+    }
+    catch {
       return notes
     }
   }
@@ -271,7 +272,7 @@ function openEditDialog(relation: NpcRelation) {
 }
 
 // Extract value from combobox selection (can be string or {value, title} object)
-function getRelationTypeValue(val: string | { value: string; title: string } | null): string {
+function getRelationTypeValue(val: string | { value: string, title: string } | null): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -279,7 +280,7 @@ function getRelationTypeValue(val: string | { value: string; title: string } | n
 }
 
 function saveEdit() {
-  const relationType = getRelationTypeValue(editRelationType.value as string | { value: string; title: string })
+  const relationType = getRelationTypeValue(editRelationType.value as string | { value: string, title: string })
   if (!editRelationId.value || !relationType) return
 
   saving.value = true
@@ -295,7 +296,7 @@ function saveEdit() {
 }
 
 function handleAdd() {
-  const relationType = getRelationTypeValue(localRelationType.value as string | { value: string; title: string })
+  const relationType = getRelationTypeValue(localRelationType.value as string | { value: string, title: string })
   if (!localNpcId.value || !relationType) return
 
   emit('add', {
@@ -310,7 +311,7 @@ function handleAdd() {
   localNotes.value = ''
 }
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload NPCs to include the new NPC
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {

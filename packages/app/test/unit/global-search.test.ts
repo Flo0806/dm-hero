@@ -97,7 +97,7 @@ describe('Global Search - Name Matching', () => {
       .all(npcTypeId, testCampaignId) as Array<{ name: string }>
 
     const searchTerm = normalizeText('gandalf')
-    const matches = allNpcs.filter(npc => {
+    const matches = allNpcs.filter((npc) => {
       const normalized = normalizeText(npc.name)
       return normalized.includes(searchTerm) || levenshtein(searchTerm, normalized.split(' ')[0]) <= 2
     })
@@ -127,7 +127,7 @@ describe('Global Search - Name Matching', () => {
       .all(npcTypeId, testCampaignId) as Array<{ name: string }>
 
     const maxDist = 3
-    const matches = allNpcs.filter(npc => {
+    const matches = allNpcs.filter((npc) => {
       const normalized = normalizeText(npc.name)
       return levenshtein(searchTerm, normalized) <= maxDist
     })
@@ -156,7 +156,7 @@ describe('Global Search - Cross-Entity Matching', () => {
           AND l.campaign_id = ?
           AND l.deleted_at IS NULL
       `)
-      .get(npcTypeId, locationTypeId, testCampaignId) as { id: number; name: string; linked_npcs: string }
+      .get(npcTypeId, locationTypeId, testCampaignId) as { id: number, name: string, linked_npcs: string }
 
     expect(result.name).toBe('The Prancing Pony')
     expect(result.linked_npcs).toBe('Butterbur')
@@ -185,7 +185,7 @@ describe('Global Search - Cross-Entity Matching', () => {
           AND i.campaign_id = ?
           AND i.deleted_at IS NULL
       `)
-      .get(npcTypeId, itemTypeId, testCampaignId) as { name: string; linked_npcs: string }
+      .get(npcTypeId, itemTypeId, testCampaignId) as { name: string, linked_npcs: string }
 
     expect(result.name).toBe('Sting')
     expect(result.linked_npcs).toBe('Bilbo Baggins')
@@ -203,12 +203,12 @@ describe('Global Search - Multi-Type Results', () => {
 
     const searchTerm = normalizeText('dragon')
 
-    const results: Array<{ name: string; type_id: number }> = []
+    const results: Array<{ name: string, type_id: number }> = []
 
     // Query all entity types
     const allEntities = db
       .prepare('SELECT name, type_id FROM entities WHERE campaign_id = ? AND deleted_at IS NULL')
-      .all(testCampaignId) as Array<{ name: string; type_id: number }>
+      .all(testCampaignId) as Array<{ name: string, type_id: number }>
 
     for (const entity of allEntities) {
       if (normalizeText(entity.name).includes(searchTerm)) {
@@ -292,15 +292,17 @@ describe('Global Search - Score Ranking', () => {
       .all(npcTypeId, testCampaignId) as Array<{ name: string }>
 
     // Score results
-    const scored = allNpcs.map(npc => {
+    const scored = allNpcs.map((npc) => {
       const normalized = normalizeText(npc.name)
       let score = 1000
 
       if (normalized === searchTerm) {
         score -= 500 // Exact match
-      } else if (normalized.includes(searchTerm)) {
+      }
+      else if (normalized.includes(searchTerm)) {
         score -= 200 // Contains match
-      } else if (normalized.split(' ').some(word => levenshtein(searchTerm, word) <= 2)) {
+      }
+      else if (normalized.split(' ').some(word => levenshtein(searchTerm, word) <= 2)) {
         score -= 100 // Fuzzy match
       }
 

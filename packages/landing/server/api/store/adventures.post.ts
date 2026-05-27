@@ -27,8 +27,8 @@ export default defineEventHandler(async (event) => {
 
   // Extract fields
   const fields: Record<string, string> = {}
-  let coverImageFile: { data: Buffer; filename: string; type: string } | null = null
-  let adventureFile: { data: Buffer; filename: string } | null = null
+  let coverImageFile: { data: Buffer, filename: string, type: string } | null = null
+  let adventureFile: { data: Buffer, filename: string } | null = null
 
   for (const field of formData) {
     if (field.name === 'coverImage' && field.data.length > 0) {
@@ -37,12 +37,14 @@ export default defineEventHandler(async (event) => {
         filename: field.filename || 'cover.jpg',
         type: field.type || 'image/jpeg',
       }
-    } else if (field.name === 'adventureFile' && field.data.length > 0) {
+    }
+    else if (field.name === 'adventureFile' && field.data.length > 0) {
       adventureFile = {
         data: field.data,
         filename: field.filename || 'adventure.dmhero',
       }
-    } else if (field.name && field.data) {
+    }
+    else if (field.name && field.data) {
       fields[field.name] = field.data.toString()
     }
   }
@@ -95,7 +97,8 @@ export default defineEventHandler(async (event) => {
   try {
     highlights = JSON.parse(fields.highlights || '[]')
     tags = JSON.parse(fields.tags || '[]')
-  } catch {
+  }
+  catch {
     // Ignore parse errors
   }
 

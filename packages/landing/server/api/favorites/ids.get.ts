@@ -10,6 +10,6 @@ export default defineEventHandler(async (event) => {
   )
 
   return {
-    favoriteIds: favorites.map((f) => f.adventure_id),
+    favoriteIds: favorites.map(f => f.adventure_id),
   }
 })

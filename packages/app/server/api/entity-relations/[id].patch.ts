@@ -62,7 +62,8 @@ export default defineEventHandler(async (event) => {
   if (relation.notes) {
     try {
       parsedNotes = JSON.parse(relation.notes)
-    } catch {
+    }
+    catch {
       // If not valid JSON, treat as plain text
       parsedNotes = relation.notes
     }

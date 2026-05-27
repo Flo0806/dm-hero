@@ -20,7 +20,7 @@ export default defineEventHandler((event) => {
     WHERE id = ?
   `,
     )
-    .get(imageId) as { id: number; session_id: number } | undefined
+    .get(imageId) as { id: number, session_id: number } | undefined
 
   if (!image) {
     throw createError({

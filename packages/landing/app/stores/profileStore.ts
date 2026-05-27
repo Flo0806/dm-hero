@@ -75,30 +75,30 @@ export const useProfileStore = defineStore('profile', {
 
   getters: {
     // Get adventure by ID
-    getAdventureById: (state) => (id: number) => {
-      return state.adventures.find((a) => a.id === id)
+    getAdventureById: state => (id: number) => {
+      return state.adventures.find(a => a.id === id)
     },
 
     // Adventures by status
     pendingAdventures: (state) => {
-      return state.adventures.filter((a) => a.status === 'pending_review' || a.status === 'validating')
+      return state.adventures.filter(a => a.status === 'pending_review' || a.status === 'validating')
     },
 
     publishedAdventures: (state) => {
-      return state.adventures.filter((a) => a.status === 'published')
+      return state.adventures.filter(a => a.status === 'published')
     },
 
     rejectedAdventures: (state) => {
-      return state.adventures.filter((a) => a.status === 'rejected')
+      return state.adventures.filter(a => a.status === 'rejected')
     },
 
     // Has any adventures needing attention
     hasRejectedAdventures: (state) => {
-      return state.adventures.some((a) => a.status === 'rejected')
+      return state.adventures.some(a => a.status === 'rejected')
     },
 
     hasPendingAdventures: (state) => {
-      return state.adventures.some((a) => a.status === 'pending_review' || a.status === 'validating')
+      return state.adventures.some(a => a.status === 'pending_review' || a.status === 'validating')
     },
 
     // Count by status
@@ -126,24 +126,27 @@ export const useProfileStore = defineStore('profile', {
 
       try {
         // Use $fetch with headers for SSR, $api for client (auto-refresh)
-        let response: { adventures: UserAdventure[]; stats: UserStats }
+        let response: { adventures: UserAdventure[], stats: UserStats }
         if (headers) {
-          response = await $fetch<{ adventures: UserAdventure[]; stats: UserStats }>(
+          response = await $fetch<{ adventures: UserAdventure[], stats: UserStats }>(
             '/api/profile/adventures',
             { headers },
           )
-        } else {
+        }
+        else {
           const $api = getApi()
-          response = await $api<{ adventures: UserAdventure[]; stats: UserStats }>(
+          response = await $api<{ adventures: UserAdventure[], stats: UserStats }>(
             '/api/profile/adventures',
           )
         }
         this.adventures = response.adventures
         this.stats = response.stats
-      } catch (err) {
+      }
+      catch (err) {
         console.error('Failed to fetch user adventures:', err)
         this.error = 'Failed to load adventures'
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -158,7 +161,8 @@ export const useProfileStore = defineStore('profile', {
         })
         // Refresh the list
         await this.fetchAdventures()
-      } catch (err) {
+      }
+      catch (err) {
         console.error('Failed to delete adventure:', err)
         throw err
       }

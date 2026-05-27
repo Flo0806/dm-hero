@@ -77,7 +77,8 @@ export default defineEventHandler(async (event) => {
       ...relation,
       notes: relation.notes ? JSON.parse(relation.notes) : null,
     }
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
       throw createError({
         statusCode: 409,

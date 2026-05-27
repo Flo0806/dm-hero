@@ -189,16 +189,16 @@ const filteredNotes = computed(() => {
 
   const query = notesSearch.value.toLowerCase()
   return npcNotes.value.filter(
-    (note) =>
-      note.title?.toLowerCase().includes(query) ||
-      note.summary?.toLowerCase().includes(query) ||
-      note.notes?.toLowerCase().includes(query),
+    note =>
+      note.title?.toLowerCase().includes(query)
+      || note.summary?.toLowerCase().includes(query)
+      || note.notes?.toLowerCase().includes(query),
   )
 })
 
 // Track dirty state: dialog is open (creating or editing)
 const isDirty = computed(() => showNoteDialog.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 // Load notes on mount and when npcId changes
 watch(
@@ -219,10 +219,12 @@ async function loadNotes() {
       query: notesSearch.value ? { search: notesSearch.value } : {},
     })
     npcNotes.value = notes
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load notes:', error)
     npcNotes.value = []
-  } finally {
+  }
+  finally {
     loadingNotes.value = false
   }
 }
@@ -255,7 +257,8 @@ async function saveNote() {
           notes: noteForm.value.notes || null,
         },
       })
-    } else {
+    }
+    else {
       // Create new note
       await $fetch(`/api/npcs/${props.npcId}/notes`, {
         method: 'POST',
@@ -271,9 +274,11 @@ async function saveNote() {
 
     await loadNotes()
     closeNoteDialog()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save note:', error)
-  } finally {
+  }
+  finally {
     savingNote.value = false
   }
 }
@@ -296,9 +301,11 @@ async function confirmDeleteNote() {
     await loadNotes()
     showDeleteNoteDialog.value = false
     deletingNote.value = null
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to delete note:', error)
-  } finally {
+  }
+  finally {
     deletingNoteLoading.value = false
   }
 }

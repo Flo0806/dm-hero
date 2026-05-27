@@ -59,7 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  created: [entity: { id: number; name: string; type: EntityType }]
+  'created': [entity: { id: number, name: string, type: EntityType }]
 }>()
 
 const { t } = useI18n()
@@ -74,11 +74,11 @@ const form = ref({
 
 const show = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 // Entity type configuration
-const entityConfig: Record<EntityType, { icon: string; color: string; labelKey: string; apiPath: string }> = {
+const entityConfig: Record<EntityType, { icon: string, color: string, labelKey: string, apiPath: string }> = {
   NPC: { icon: 'mdi-account', color: '#D4A574', labelKey: 'entities.types.npc', apiPath: 'npcs' },
   Item: { icon: 'mdi-sword', color: '#CC8844', labelKey: 'entities.types.item', apiPath: 'items' },
   Location: { icon: 'mdi-map-marker', color: '#8B7355', labelKey: 'entities.types.location', apiPath: 'locations' },
@@ -124,7 +124,7 @@ async function create() {
   creating.value = true
 
   try {
-    const response = await $fetch<{ id: number; name: string }>(`/api/${apiPath.value}`, {
+    const response = await $fetch<{ id: number, name: string }>(`/api/${apiPath.value}`, {
       method: 'POST',
       body: {
         name: form.value.name.trim(),
@@ -140,9 +140,11 @@ async function create() {
     })
 
     close()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[QuickCreateEntityDialog] Failed to create entity:', error)
-  } finally {
+  }
+  finally {
     creating.value = false
   }
 }

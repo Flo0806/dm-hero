@@ -10,19 +10,19 @@ export const useNotesStore = defineStore('notes', {
 
   getters: {
     // Count of pending (not completed) notes
-    pendingCount: (state) => state.notes.filter((n) => !n.completed).length,
+    pendingCount: state => state.notes.filter(n => !n.completed).length,
 
     // Count of completed notes
-    completedCount: (state) => state.notes.filter((n) => n.completed).length,
+    completedCount: state => state.notes.filter(n => n.completed).length,
 
     // Total note count
-    noteCount: (state) => state.notes.length,
+    noteCount: state => state.notes.length,
 
     // Get pending notes
-    pendingNotes: (state) => state.notes.filter((n) => !n.completed),
+    pendingNotes: state => state.notes.filter(n => !n.completed),
 
     // Get completed notes
-    completedNotes: (state) => state.notes.filter((n) => n.completed),
+    completedNotes: state => state.notes.filter(n => n.completed),
   },
 
   actions: {
@@ -37,10 +37,12 @@ export const useNotesStore = defineStore('notes', {
         })
         this.notes = data
         this.lastFetchedCampaignId = campaignId
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to fetch notes:', error)
         this.notes = []
-      } finally {
+      }
+      finally {
         this.loading = false
       }
     },
@@ -54,25 +56,27 @@ export const useNotesStore = defineStore('notes', {
         })
         this.notes.push(note)
         return note
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to add note:', error)
         return null
       }
     },
 
     // Update a note
-    async updateNote(noteId: number, updates: { content?: string; completed?: boolean }): Promise<CampaignNote | null> {
+    async updateNote(noteId: number, updates: { content?: string, completed?: boolean }): Promise<CampaignNote | null> {
       try {
         const updated = await $fetch<CampaignNote>(`/api/notes/${noteId}`, {
           method: 'PATCH',
           body: updates,
         })
-        const index = this.notes.findIndex((n) => n.id === noteId)
+        const index = this.notes.findIndex(n => n.id === noteId)
         if (index !== -1) {
           this.notes[index] = updated
         }
         return updated
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to update note:', error)
         return null
       }
@@ -80,7 +84,7 @@ export const useNotesStore = defineStore('notes', {
 
     // Toggle note completed status
     async toggleCompleted(noteId: number): Promise<boolean> {
-      const note = this.notes.find((n) => n.id === noteId)
+      const note = this.notes.find(n => n.id === noteId)
       if (!note) return false
 
       const updated = await this.updateNote(noteId, { completed: !note.completed })
@@ -93,9 +97,10 @@ export const useNotesStore = defineStore('notes', {
         await $fetch(`/api/notes/${noteId}`, {
           method: 'DELETE',
         })
-        this.notes = this.notes.filter((n) => n.id !== noteId)
+        this.notes = this.notes.filter(n => n.id !== noteId)
         return true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to delete note:', error)
         return false
       }
@@ -103,7 +108,7 @@ export const useNotesStore = defineStore('notes', {
 
     // Clear all completed notes
     async clearCompleted(): Promise<void> {
-      const completed = this.notes.filter((n) => n.completed)
+      const completed = this.notes.filter(n => n.completed)
       for (const note of completed) {
         await this.deleteNote(note.id)
       }
@@ -112,9 +117,9 @@ export const useNotesStore = defineStore('notes', {
     // Reorder notes
     async reorderNotes(noteIds: number[]): Promise<boolean> {
       // Update local order first
-      const noteMap = new Map(this.notes.map((n) => [n.id, n]))
+      const noteMap = new Map(this.notes.map(n => [n.id, n]))
       this.notes = noteIds
-        .map((id) => noteMap.get(id))
+        .map(id => noteMap.get(id))
         .filter((n): n is CampaignNote => n !== undefined)
 
       try {
@@ -123,7 +128,8 @@ export const useNotesStore = defineStore('notes', {
           body: { noteIds },
         })
         return true
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Failed to reorder notes:', error)
         // Refetch on error to restore correct order
         if (this.lastFetchedCampaignId) {

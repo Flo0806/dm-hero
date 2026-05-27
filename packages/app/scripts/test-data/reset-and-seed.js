@@ -67,7 +67,8 @@ const cleanup = db.transaction(() => {
 try {
   cleanup()
   console.log('✅ Database completely cleaned!')
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error during cleanup:', error.message)
   process.exit(1)
 }
@@ -307,7 +308,8 @@ try {
   console.log(`✅ Inserted ${ids.factions.length} Factions`)
   console.log(`✅ Inserted ${ids.lore.length} Lore entries`)
   console.log(`✅ Inserted ${ids.players.length} Players`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error inserting data:', error.message)
   process.exit(1)
 }
@@ -496,7 +498,8 @@ const createRelations = db.transaction(() => {
 try {
   const totalRelations = createRelations()
   console.log(`\n✅ Created ${totalRelations} total relations!`)
-} catch (error) {
+}
+catch (error) {
   console.error('❌ Error creating relations:', error.message)
   process.exit(1)
 }

@@ -71,7 +71,8 @@ export default defineEventHandler(async (event) => {
       body.leapYearExtraDays || 1,
       body.campaignId,
     )
-  } else {
+  }
+  else {
     db.prepare(`
       INSERT INTO calendar_config (campaign_id, current_year, current_month, current_day, year_zero_name, era_name, leap_year_interval, leap_year_month, leap_year_extra_days)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

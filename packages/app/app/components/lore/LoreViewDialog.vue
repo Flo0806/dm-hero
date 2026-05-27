@@ -275,7 +275,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 defineEmits<{
   'update:modelValue': [value: boolean]
-  edit: [lore: Lore]
+  'edit': [lore: Lore]
   'preview-image': [imageUrl: string, title: string]
 }>()
 

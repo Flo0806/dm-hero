@@ -36,7 +36,8 @@ export default defineEventHandler(async (event) => {
         VALUES (?, ?, 1, ?)
       `,
       ).run(entityId, body.imageUrl, maxOrderResult.max_order + 1)
-    } else {
+    }
+    else {
       // Image exists - make it primary
       db.prepare('UPDATE entity_images SET is_primary = 0 WHERE entity_id = ?').run(entityId)
       db.prepare('UPDATE entity_images SET is_primary = 1 WHERE id = ?').run(existingImage.id)
@@ -52,7 +53,8 @@ export default defineEventHandler(async (event) => {
     ).run(body.imageUrl, id)
 
     return { success: true }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Set Image] Error:', error)
     throw createError({
       statusCode: 500,

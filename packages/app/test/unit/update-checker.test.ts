@@ -62,10 +62,10 @@ function createMockRelease(tagName: string, name?: string) {
 }
 
 // Helper to mock GitHub API response
-function mockGitHubResponse(releases: Array<{ tag_name: string; name?: string }>) {
+function mockGitHubResponse(releases: Array<{ tag_name: string, name?: string }>) {
   mockFetch.mockResolvedValueOnce({
     ok: true,
-    json: async () => releases.map((r) => createMockRelease(r.tag_name, r.name)),
+    json: async () => releases.map(r => createMockRelease(r.tag_name, r.name)),
   })
 }
 
@@ -404,7 +404,7 @@ describe('Update Checker - Linux Install Flow', () => {
     })
   })
 
-  function installElectronMock(overrides: Partial<{ platform: string; showResult: { shown: boolean; path?: string; error?: string } }> = {}) {
+  function installElectronMock(overrides: Partial<{ platform: string, showResult: { shown: boolean, path?: string, error?: string } }> = {}) {
     const showUpdateFile = vi.fn().mockResolvedValue(
       overrides.showResult ?? { shown: true, path: '/tmp/DM-Hero.AppImage' },
     )

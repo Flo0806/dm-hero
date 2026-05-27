@@ -234,8 +234,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  add: [payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean }]
-  update: [payload: { relationId: number; relationType?: string; quantity?: number; equipped?: boolean }]
+  add: [payload: { itemId: number, relationType?: string, quantity?: number, equipped?: boolean }]
+  update: [payload: { relationId: number, relationType?: string, quantity?: number, equipped?: boolean }]
   remove: [itemId: number]
 }>()
 
@@ -260,7 +260,7 @@ const snackbarStore = useSnackbarStore()
 const entitiesStore = useEntitiesStore()
 const campaignStore = useCampaignStore()
 
-async function handleQuickCreated(newEntity: { id: number; name: string }) {
+async function handleQuickCreated(newEntity: { id: number, name: string }) {
   // Reload items to include the new item
   const campaignId = campaignStore.activeCampaignId
   if (campaignId) {
@@ -280,7 +280,7 @@ const isDirty = computed(() => {
 })
 
 // Notify parent dialog about dirty state
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 const canAdd = computed(() => {
   if (!localItemId.value) return false
@@ -290,19 +290,19 @@ const canAdd = computed(() => {
 
 function getRarityColor(rarity: string): string {
   const colors: Record<string, string> = {
-    common: 'grey',
-    uncommon: 'success',
-    rare: 'info',
+    'common': 'grey',
+    'uncommon': 'success',
+    'rare': 'info',
     'very rare': 'warning',
-    legendary: 'error',
-    artifact: 'purple',
+    'legendary': 'error',
+    'artifact': 'purple',
   }
   return colors[rarity] || 'grey'
 }
 
 function getRelationTypeLabel(relationType: string): string {
   // Try to find in suggestions first
-  const suggestion = props.relationTypeSuggestions.find((s) => s.value === relationType)
+  const suggestion = props.relationTypeSuggestions.find(s => s.value === relationType)
   if (suggestion) return suggestion.title
   return relationType
 }
@@ -310,7 +310,7 @@ function getRelationTypeLabel(relationType: string): string {
 function handleAdd() {
   if (!localItemId.value) return
 
-  const payload: { itemId: number; relationType?: string; quantity?: number; equipped?: boolean } = {
+  const payload: { itemId: number, relationType?: string, quantity?: number, equipped?: boolean } = {
     itemId: localItemId.value,
   }
 

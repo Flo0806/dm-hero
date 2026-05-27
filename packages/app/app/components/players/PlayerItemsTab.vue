@@ -157,7 +157,7 @@ interface PlayerItem {
   image_url: string | null
   relation_type: string
   notes: string | null
-  metadata?: { type?: string | null; [key: string]: unknown } | null
+  metadata?: { type?: string | null, [key: string]: unknown } | null
 }
 
 interface Props {
@@ -171,29 +171,29 @@ const emit = defineEmits<{
 }>()
 
 const items = ref<PlayerItem[]>([])
-const availableItems = ref<{ id: number; name: string }[]>([])
+const availableItems = ref<{ id: number, name: string }[]>([])
 const loading = ref(false)
 const adding = ref(false)
 const saving = ref(false)
 
 // Add form state
 const selectedItemId = ref<number | null>(null)
-const selectedRelationType = ref<string | { value: string; title: string } | null>(null)
+const selectedRelationType = ref<string | { value: string, title: string } | null>(null)
 const selectedNotes = ref('')
 
 // Edit dialog state
 const editDialog = ref(false)
 const editRelationId = ref<number | null>(null)
-const editRelationType = ref<string | { value: string; title: string }>('')
+const editRelationType = ref<string | { value: string, title: string }>('')
 const editNotes = ref('')
 
 // Track dirty state: form has unsaved selection or edit dialog is open
 const isDirty = computed(() => !!selectedItemId.value || !!selectedRelationType.value || !!selectedNotes.value || editDialog.value)
-watch(isDirty, (dirty) => markDirty(dirty), { immediate: true })
+watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 
 // Relation type suggestions using NPC_ITEM_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>
-  NPC_ITEM_RELATION_TYPES.map((type) => ({
+  NPC_ITEM_RELATION_TYPES.map(type => ({
     value: type,
     title: t(`players.itemRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
@@ -212,7 +212,7 @@ watch(
   () => entitiesStore.items,
   (storeItems) => {
     if (storeItems) {
-      availableItems.value = storeItems.map((i) => ({ id: i.id, name: i.name }))
+      availableItems.value = storeItems.map(i => ({ id: i.id, name: i.name }))
     }
   },
   { immediate: true },
@@ -257,7 +257,7 @@ async function loadItems() {
     items.value = relations.map((rel) => {
       // Get metadata from store if available
       const itemFromStore = entitiesStore.items?.find(
-        (i) => i.id === (rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id),
+        i => i.id === (rel.direction === 'outgoing' ? rel.to_entity_id : rel.from_entity_id),
       )
       return {
         relation_id: rel.id,
@@ -270,16 +270,18 @@ async function loadItems() {
         metadata: itemFromStore?.metadata || null,
       }
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load items:', error)
     items.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 // Extract value from combobox selection (can be string or {value, title} object)
-function getRelationTypeValue(val: string | { value: string; title: string } | null): string {
+function getRelationTypeValue(val: string | { value: string, title: string } | null): string {
   if (!val) return ''
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -302,8 +304,8 @@ async function addItem() {
       },
     })
 
-    const item = availableItems.value.find((i) => i.id === selectedItemId.value)
-    const itemFromStore = entitiesStore.items?.find((i) => i.id === selectedItemId.value)
+    const item = availableItems.value.find(i => i.id === selectedItemId.value)
+    const itemFromStore = entitiesStore.items?.find(i => i.id === selectedItemId.value)
 
     items.value.push({
       relation_id: relation.id,
@@ -321,9 +323,11 @@ async function addItem() {
     selectedRelationType.value = null
     selectedNotes.value = ''
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to add item:', error)
-  } finally {
+  }
+  finally {
     adding.value = false
   }
 }
@@ -331,16 +335,17 @@ async function addItem() {
 async function removeItem(relationId: number) {
   try {
     await $fetch(`/api/entity-relations/${relationId}`, { method: 'DELETE' })
-    items.value = items.value.filter((i) => i.relation_id !== relationId)
+    items.value = items.value.filter(i => i.relation_id !== relationId)
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to remove item:', error)
   }
 }
 
 function openEditDialog(item: PlayerItem) {
   editRelationId.value = item.relation_id
-  const suggestion = relationTypeSuggestions.value.find((s) => s.value === item.relation_type)
+  const suggestion = relationTypeSuggestions.value.find(s => s.value === item.relation_type)
   editRelationType.value = suggestion || item.relation_type
   editNotes.value = item.notes || ''
   editDialog.value = true
@@ -360,7 +365,7 @@ async function saveEdit() {
       },
     })
 
-    const item = items.value.find((i) => i.relation_id === editRelationId.value)
+    const item = items.value.find(i => i.relation_id === editRelationId.value)
     if (item) {
       item.relation_type = relationType
       item.notes = editNotes.value || null
@@ -368,9 +373,11 @@ async function saveEdit() {
 
     editDialog.value = false
     emit('changed')
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to update item relation:', error)
-  } finally {
+  }
+  finally {
     saving.value = false
   }
 }

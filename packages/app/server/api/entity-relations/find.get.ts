@@ -27,11 +27,11 @@ export default defineEventHandler((event) => {
     )
     .get(fromEntityId, toEntityId, toEntityId, fromEntityId) as
     | {
-        id: number
-        from_entity_id: number
-        to_entity_id: number
-        relation_type: string
-      }
+      id: number
+      from_entity_id: number
+      to_entity_id: number
+      relation_type: string
+    }
     | undefined
 
   if (!relation) {

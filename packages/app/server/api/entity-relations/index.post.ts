@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
       .get(result.lastInsertRowid)
 
     return relation
-  } catch (error) {
+  }
+  catch (error) {
     const err = error as { message?: string }
     if (err.message?.includes('UNIQUE constraint failed')) {
       throw createError({

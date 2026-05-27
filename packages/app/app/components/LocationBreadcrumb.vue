@@ -29,7 +29,8 @@ onMounted(async () => {
     if (parentPath.length > 0) {
       breadcrumb.value = formatBreadcrumb(parentPath)
     }
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 })

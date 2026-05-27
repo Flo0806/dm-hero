@@ -172,7 +172,8 @@ function downloadPdf(doc: Document) {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to download PDF:', error)
   }
 }
@@ -180,29 +181,29 @@ function downloadPdf(doc: Document) {
 // Helper functions
 function resolveEntityName(type: string, id: number): string {
   switch (type) {
-  case 'npc':
-    return entitiesStore.npcs?.find((e) => e.id === id)?.name || `NPC #${id}`
-  case 'location':
-    return entitiesStore.locations?.find((e) => e.id === id)?.name || `Location #${id}`
-  case 'item':
-    return entitiesStore.items?.find((e) => e.id === id)?.name || `Item #${id}`
-  case 'faction':
-    return entitiesStore.factions?.find((e) => e.id === id)?.name || `Faction #${id}`
-  case 'lore':
-    return entitiesStore.lore?.find((e) => e.id === id)?.name || `Lore #${id}`
-  case 'player': {
-    const player = entitiesStore.players?.find((e) => e.id === id)
-    return player?.name || `Player #${id}`
-  }
-  case 'session':
-    return `Session #${id}`
-  default:
-    return `Entity #${id}`
+    case 'npc':
+      return entitiesStore.npcs?.find(e => e.id === id)?.name || `NPC #${id}`
+    case 'location':
+      return entitiesStore.locations?.find(e => e.id === id)?.name || `Location #${id}`
+    case 'item':
+      return entitiesStore.items?.find(e => e.id === id)?.name || `Item #${id}`
+    case 'faction':
+      return entitiesStore.factions?.find(e => e.id === id)?.name || `Faction #${id}`
+    case 'lore':
+      return entitiesStore.lore?.find(e => e.id === id)?.name || `Lore #${id}`
+    case 'player': {
+      const player = entitiesStore.players?.find(e => e.id === id)
+      return player?.name || `Player #${id}`
+    }
+    case 'session':
+      return `Session #${id}`
+    default:
+      return `Entity #${id}`
   }
 }
 
 function resolvePlayerHumanName(id: number): string | null {
-  const player = entitiesStore.players?.find((e) => e.id === id)
+  const player = entitiesStore.players?.find(e => e.id === id)
   return player?.metadata?.player_name || null
 }
 
@@ -239,7 +240,8 @@ function sanitizeHtml(html: string): string {
       const humanName = resolvePlayerHumanName(entityId)
       if (humanName) {
         displayHtml = `${humanName} <span style="font-size: 0.75rem; opacity: 0.8;">(${name})</span>`
-      } else {
+      }
+      else {
         displayHtml = `<em>${name}</em>`
       }
     }

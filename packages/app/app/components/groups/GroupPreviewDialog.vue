@@ -109,7 +109,7 @@ const router = useRouter()
 
 const dialogOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const loading = ref(false)
@@ -157,7 +157,8 @@ watch(
   async ([isOpen, groupId]) => {
     if (isOpen && groupId) {
       await loadGroup(groupId)
-    } else if (!isOpen) {
+    }
+    else if (!isOpen) {
       // Reset selected member when dialog closes
       selectedMemberId.value = null
     }
@@ -174,11 +175,13 @@ async function loadGroup(groupId: number) {
     ])
     group.value = groupData
     members.value = membersData
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load group:', error)
     group.value = null
     members.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }

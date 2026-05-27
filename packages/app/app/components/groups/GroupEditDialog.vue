@@ -132,8 +132,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  saved: [group: EntityGroup]
-  created: [group: EntityGroup]
+  'saved': [group: EntityGroup]
+  'created': [group: EntityGroup]
 }>()
 
 // Form state
@@ -155,14 +155,14 @@ const isValid = computed(() => !!form.value.name?.trim())
 
 // Icon suggestions
 const iconSuggestions = computed(() =>
-  GROUP_ICONS.map((icon) => ({
+  GROUP_ICONS.map(icon => ({
     title: icon.replace('mdi-', ''),
     value: icon,
   })),
 )
 
 // Helper to extract icon value from combobox (returns object when selected from list)
-function getIconValue(val: string | { value: string; title: string } | null): string | null {
+function getIconValue(val: string | { value: string, title: string } | null): string | null {
   if (!val) return null
   if (typeof val === 'string') return val
   if (typeof val === 'object' && 'value' in val) return val.value
@@ -170,7 +170,7 @@ function getIconValue(val: string | { value: string; title: string } | null): st
 }
 
 // Computed to get the actual icon string for display
-const displayIcon = computed(() => getIconValue(form.value.icon as string | { value: string; title: string } | null))
+const displayIcon = computed(() => getIconValue(form.value.icon as string | { value: string, title: string } | null))
 
 // Check if color is custom (not in preset list)
 const isCustomColor = computed(() => {
@@ -192,7 +192,8 @@ watch(
         color: group.color,
         icon: group.icon,
       }
-    } else {
+    }
+    else {
       // Reset form for create
       form.value = {
         name: '',
@@ -224,7 +225,7 @@ async function save() {
     name: form.value.name.trim(),
     description: form.value.description?.trim() || null,
     color: form.value.color || null,
-    icon: getIconValue(form.value.icon as string | { value: string; title: string } | null),
+    icon: getIconValue(form.value.icon as string | { value: string, title: string } | null),
   }
 
   if (props.groupId) {
@@ -235,7 +236,8 @@ async function save() {
     })
     snackbarStore.success(t('groups.saved'))
     emit('saved', updated)
-  } else {
+  }
+  else {
     // Create new group
     const created = await $fetch<EntityGroup>('/api/groups', {
       method: 'POST',
@@ -251,7 +253,6 @@ async function save() {
   saving.value = false
   close()
 }
-
 </script>
 
 <style scoped>
