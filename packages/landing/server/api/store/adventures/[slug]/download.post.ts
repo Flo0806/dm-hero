@@ -5,7 +5,7 @@ import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 import { pipeline } from 'stream/promises'
 import { PassThrough } from 'stream'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 import { query, queryOne } from '../../../../utils/db'
 import { getAuthUser } from '../../../../utils/requireAuth'
 
@@ -143,7 +143,7 @@ export default defineEventHandler(async (event) => {
     manifest.sourceVersion = version.version_number
 
     // Create new ZIP with archiver (same as dm-hero app export)
-    const archive = archiver('zip', { zlib: { level: 9 } })
+    const archive = new ZipArchive({ zlib: { level: 9 } })
     const passthrough = new PassThrough()
     archive.pipe(passthrough)
 

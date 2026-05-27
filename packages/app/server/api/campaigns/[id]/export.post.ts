@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs'
 import { join, basename } from 'path'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 import { PassThrough } from 'stream'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
@@ -1011,7 +1011,7 @@ export default defineEventHandler(async (event) => {
   // CREATE ZIP
   // ==========================================================================
 
-  const archive = archiver('zip', { zlib: { level: 9 } })
+  const archive = new ZipArchive({ zlib: { level: 9 } })
   const passthrough = new PassThrough()
 
   archive.pipe(passthrough)
