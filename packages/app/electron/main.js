@@ -12,18 +12,20 @@ const __dirname = path.dirname(__filename)
 const isDev = process.env.NODE_ENV === 'development'
 const PROD_SERVER_PORT = 3456
 
-// Linux: Sandbox fix for AppArmor (Ubuntu 24.04+/Kubuntu)
+// Linux: Sandbox fix for AppArmor (Ubuntu 24.04+/Kubuntu) and
+// force X11 ozone backend to avoid Electron 39 SIGSEGV on Wayland+NVIDIA (#286).
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('no-sandbox')
+  app.commandLine.appendSwitch('ozone-platform', 'x11')
 }
 
 // ============================================================================
 // AUTO-UPDATER CONFIGURATION
 // ============================================================================
 
-// DEV MODE: Set to true to test auto-update UI (simulates update available)
-// Set to false for real auto-update testing with nightly releases
-const FORCE_DEV_UPDATE = false
+// In development the auto-updater always runs a mock (no real GitHub fetch,
+// no real install). In production the real electron-updater flow is used.
+// Mock vs. real is gated on isDev alone — nothing else to toggle, nothing to forget.
 
 // Configure auto-updater
 autoUpdater.autoDownload = false // We control when to download
@@ -415,9 +417,14 @@ ipcMain.handle('open-external-url', async (event, url) => {
 // AUTO-UPDATER IPC HANDLERS
 // ============================================================================
 
+// Path of the downloaded update file (set in update-downloaded event).
+// On Linux, AppImage cannot self-replace, so we expose this so the renderer
+// can open the containing folder for the user.
+let downloadedUpdateFile = null
+
 // Check for updates
 ipcMain.handle('check-for-updates', async () => {
-  if (isDev && FORCE_DEV_UPDATE) {
+  if (isDev) {
     // DEV MODE: Simulate update available
     console.log('[AutoUpdater] DEV MODE: Simulating update available')
     return {
@@ -453,7 +460,7 @@ ipcMain.handle('check-for-updates', async () => {
 
 // Start downloading the update
 ipcMain.handle('download-update', async () => {
-  if (isDev && FORCE_DEV_UPDATE) {
+  if (isDev) {
     // DEV MODE: Simulate download progress
     console.log('[AutoUpdater] DEV MODE: Simulating download...')
 
@@ -470,9 +477,14 @@ ipcMain.handle('download-update', async () => {
           })
         }
       }
-      // Simulate download complete
+      // Simulate download complete.
+      // Use the running executable as a stand-in so showItemInFolder has a real file to reveal.
+      downloadedUpdateFile = app.getPath('exe')
       if (mainWindow) {
-        mainWindow.webContents.send('update-downloaded')
+        mainWindow.webContents.send('update-downloaded', {
+          version: '99.0.0-test',
+          downloadedFile: downloadedUpdateFile,
+        })
       }
     }
 
@@ -492,7 +504,7 @@ ipcMain.handle('download-update', async () => {
 
 // Install update and restart
 ipcMain.handle('install-update', async () => {
-  if (isDev && FORCE_DEV_UPDATE) {
+  if (isDev) {
     // DEV MODE: Just show a message, don't actually restart
     console.log('[AutoUpdater] DEV MODE: Would install and restart here')
     if (mainWindow) {
@@ -508,6 +520,16 @@ ipcMain.handle('install-update', async () => {
 
   autoUpdater.quitAndInstall(false, true)
   return { installed: true }
+})
+
+// Reveal the downloaded update file in the OS file manager.
+// Used on Linux where AppImage cannot self-install via quitAndInstall.
+ipcMain.handle('show-update-file', async () => {
+  if (!downloadedUpdateFile) {
+    return { shown: false, error: 'No downloaded update file available' }
+  }
+  shell.showItemInFolder(downloadedUpdateFile)
+  return { shown: true, path: downloadedUpdateFile }
 })
 
 // Auto-updater events -> send to renderer
@@ -536,10 +558,12 @@ autoUpdater.on('download-progress', (progress) => {
 })
 
 autoUpdater.on('update-downloaded', (info) => {
-  console.log('[AutoUpdater] Update downloaded:', info.version)
+  console.log('[AutoUpdater] Update downloaded:', info.version, 'file:', info.downloadedFile)
+  downloadedUpdateFile = info.downloadedFile || null
   if (mainWindow) {
     mainWindow.webContents.send('update-downloaded', {
       version: info.version,
+      downloadedFile: downloadedUpdateFile,
     })
   }
 })

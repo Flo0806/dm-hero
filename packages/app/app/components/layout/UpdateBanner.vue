@@ -92,7 +92,20 @@
 
           <!-- State: Ready to install -->
           <template v-else-if="isReadyToInstall">
+            <!-- Linux: AppImage can't self-install, reveal the downloaded file instead -->
             <v-btn
+              v-if="isLinux"
+              size="small"
+              color="success"
+              variant="flat"
+              block
+              @click="revealUpdateFile"
+            >
+              <v-icon start icon="mdi-folder-open" />
+              {{ $t('update.showInFolder') }}
+            </v-btn>
+            <v-btn
+              v-else
               size="small"
               color="success"
               variant="flat"
@@ -104,6 +117,14 @@
             </v-btn>
           </template>
         </div>
+
+        <!-- Linux hint for the manual install step (outside flex row so it wraps normally) -->
+        <p
+          v-if="isReadyToInstall && isLinux"
+          class="text-caption mt-2 mb-0"
+        >
+          {{ $t('update.linuxInstallHint') }}
+        </p>
 
         <!-- Dismiss button (only when not downloading/ready) -->
         <v-btn
@@ -164,9 +185,11 @@ const {
   isDownloading,
   isReadyToInstall,
   canAutoUpdate,
+  isLinux,
   checkForUpdates,
   downloadUpdate,
   installUpdate,
+  showUpdateFile,
   dismissUpdate,
   backupCreated,
 } = useUpdateChecker()
@@ -183,13 +206,15 @@ const headerIcon = computed(() => {
 })
 
 const headerText = computed(() => {
-  if (isReadyToInstall.value) return t('update.readyToInstall')
+  if (isReadyToInstall.value) {
+    return isLinux.value ? t('update.downloaded') : t('update.readyToInstall')
+  }
   if (isDownloading.value) return t('update.downloading')
   return t('update.newVersionAvailable')
 })
 
 const railIcon = computed(() => {
-  if (isReadyToInstall.value) return 'mdi-restart'
+  if (isReadyToInstall.value) return isLinux.value ? 'mdi-folder-open' : 'mdi-restart'
   return 'mdi-download'
 })
 
@@ -199,7 +224,9 @@ const railButtonColor = computed(() => {
 })
 
 const railTooltip = computed(() => {
-  if (isReadyToInstall.value) return t('update.clickToRestart')
+  if (isReadyToInstall.value) {
+    return isLinux.value ? t('update.showInFolder') : t('update.clickToRestart')
+  }
   if (isDownloading.value) return `${t('update.downloading')} ${Math.round(downloadProgress.value?.percent || 0)}%`
   return `${t('update.newVersionAvailable')}: ${updateInfo.value?.latestVersion}`
 })
@@ -222,12 +249,23 @@ async function restartAndInstall() {
   await installUpdate()
 }
 
+async function revealUpdateFile() {
+  await showUpdateFile()
+}
+
 function handleRailClick() {
   if (isReadyToInstall.value) {
-    restartAndInstall()
-  } else if (!isDownloading.value && canAutoUpdate.value) {
+    if (isLinux.value) {
+      revealUpdateFile()
+    }
+    else {
+      restartAndInstall()
+    }
+  }
+  else if (!isDownloading.value && canAutoUpdate.value) {
     startDownload()
-  } else if (!canAutoUpdate.value) {
+  }
+  else if (!canAutoUpdate.value) {
     openDownloadPage()
   }
 }

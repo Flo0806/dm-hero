@@ -148,7 +148,8 @@ export function useUpdateChecker() {
 
       updateState.value = 'idle'
       return null
-    } catch (e) {
+    }
+    catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
       updateState.value = 'error'
       return null
@@ -187,7 +188,8 @@ export function useUpdateChecker() {
       }
       // Progress events will update state to 'ready' when done
       return result.started
-    } catch (e) {
+    }
+    catch (e) {
       console.error('[UpdateChecker] Download exception:', e)
       error.value = e instanceof Error ? e.message : 'Download failed'
       updateState.value = 'error'
@@ -201,8 +203,28 @@ export function useUpdateChecker() {
     try {
       const result = await electronAPI.installUpdate()
       return result.installed
-    } catch (e) {
+    }
+    catch (e) {
       error.value = e instanceof Error ? e.message : 'Install failed'
+      return false
+    }
+  }
+
+  // AppImage cannot self-replace, so on Linux we reveal the downloaded
+  // file in the OS file manager instead of restarting in place.
+  async function showUpdateFile(): Promise<boolean> {
+    if (!electronAPI) return false
+
+    try {
+      const result = await electronAPI.showUpdateFile()
+      if (result.error) {
+        error.value = result.error
+        return false
+      }
+      return result.shown
+    }
+    catch (e) {
+      error.value = e instanceof Error ? e.message : 'Show file failed'
       return false
     }
   }
@@ -257,7 +279,8 @@ export function useUpdateChecker() {
       }
       updateState.value = 'idle'
       return updateInfo.value
-    } catch (e) {
+    }
+    catch (e) {
       error.value = e instanceof Error ? e.message : 'Unknown error'
       updateState.value = 'error'
       return null
@@ -284,7 +307,8 @@ export function useUpdateChecker() {
 
     if (isElectron()) {
       return checkForUpdatesElectron()
-    } else {
+    }
+    else {
       return checkForUpdatesBrowser()
     }
   }
@@ -303,6 +327,8 @@ export function useUpdateChecker() {
   const isDownloading = computed(() => updateState.value === 'downloading')
   const isReadyToInstall = computed(() => updateState.value === 'ready')
   const canAutoUpdate = computed(() => isElectron())
+  // AppImage cannot self-install via quitAndInstall — Linux gets a "show in folder" flow instead.
+  const isLinux = computed(() => electronAPI?.platform === 'linux')
 
   return {
     // State
@@ -318,11 +344,13 @@ export function useUpdateChecker() {
     isDownloading,
     isReadyToInstall,
     canAutoUpdate,
+    isLinux,
 
     // Actions
     checkForUpdates,
     downloadUpdate,
     installUpdate,
+    showUpdateFile,
     dismissUpdate,
     backupCreated,
   }
