@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 import { LOCATION_TYPES } from '../../types/location'
 
@@ -12,7 +12,7 @@ let locationTypeId: number
 let npcTypeId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   const locationType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Location') as { id: number }

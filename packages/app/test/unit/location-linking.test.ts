@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Location Linking Tests - Testing bidirectional NPC and Lore relations
@@ -27,7 +27,7 @@ interface IdOnlyResult {
 }
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as {

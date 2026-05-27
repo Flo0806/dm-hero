@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Entity Images Tests
@@ -10,7 +10,7 @@ let testCampaignId: number
 let npcTypeId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get NPC type ID
   const npcType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number }

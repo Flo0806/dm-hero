@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 /**
@@ -23,7 +23,7 @@ let loreTypeId: number
 let playerTypeId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   const getTypeId = (name: string) => {
     const type = db.prepare('SELECT id FROM entity_types WHERE name = ?').get(name) as { id: number }

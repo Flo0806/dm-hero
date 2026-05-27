@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 import type { StatTemplate, StatTemplateDbRow, StatTemplateGroupDbRow, StatTemplateFieldDbRow } from '../../types/stat-template'
 
@@ -66,7 +66,7 @@ function loadTemplate(id: number): StatTemplate | null {
 }
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   const playerType = db.prepare('SELECT id FROM entity_types WHERE name = ?').get('Player') as { id: number }
   playerTypeId = playerType.id

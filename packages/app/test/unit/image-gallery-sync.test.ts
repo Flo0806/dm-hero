@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 
 describe('Image Gallery Synchronization', () => {
-  let db: ReturnType<typeof getDb>
+  let db: ReturnType<typeof getTestDb>
   let testEntityId: number
 
   beforeEach(async () => {
-    db = getDb()
+    db = getTestDb()
 
     // Get campaign ID
     const campaign = db.prepare('SELECT id FROM campaigns LIMIT 1').get() as { id: number }

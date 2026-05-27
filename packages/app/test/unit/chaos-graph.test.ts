@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Chaos Graph Tests
@@ -10,7 +10,7 @@ let testCampaignId: number
 let entityTypeIds: Record<string, number> = {}
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get all entity type IDs
   const entityTypes = ['NPC', 'Location', 'Item', 'Faction', 'Lore', 'Player']

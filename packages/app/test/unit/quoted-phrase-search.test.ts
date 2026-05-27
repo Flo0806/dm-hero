@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import { normalizeText } from '../../server/utils/normalize'
 import { parseSearchQuery } from '../../server/utils/search-query-parser'
 import type Database from 'better-sqlite3'
@@ -28,7 +28,7 @@ let factionTypeId: number
 let _loreTypeId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Get entity type IDs
   npcTypeId = (

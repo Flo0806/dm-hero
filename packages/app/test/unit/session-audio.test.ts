@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { getDb } from '../../server/utils/db'
+import { getTestDb } from '../utils/test-db'
 import type Database from 'better-sqlite3'
 
 // Session Audio & Markers Tests
@@ -10,7 +10,7 @@ let testCampaignId: number
 let testSessionId: number
 
 beforeAll(() => {
-  db = getDb()
+  db = getTestDb()
 
   // Create test campaign
   const campaign = db
