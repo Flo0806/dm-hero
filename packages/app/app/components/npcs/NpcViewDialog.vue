@@ -192,7 +192,7 @@
                   :key="rel.relation_id"
                   class="mb-2"
                   style="cursor: pointer"
-                  @click="$emit('view-npc', rel.id)"
+                  @click="$emit('view-npc', rel.related_npc_id)"
                 >
                   <template #prepend>
                     <v-avatar color="primary" size="48">
@@ -201,7 +201,7 @@
                     </v-avatar>
                   </template>
                   <v-list-item-title class="font-weight-medium">
-                    {{ rel.name }}
+                    {{ rel.related_npc_name }}
                   </v-list-item-title>
                   <v-list-item-subtitle>
                     <div class="d-flex align-center ga-2 mt-1">
@@ -371,9 +371,9 @@ const counts = computed(() => (props.npc ? getCounts(props.npc.id) || props.npc.
 // Data refs
 const relations = ref<
   Array<{
-    id: number
     relation_id: number
-    name: string
+    related_npc_id: number
+    related_npc_name: string
     relation_type: string
     notes?: string
     image_url?: string
@@ -456,9 +456,9 @@ watch(
       const [relationsData, itemsData, locationsData, documentsData, imagesData, loreData, playersData] = await Promise.all([
         $fetch<
           Array<{
-            id: number
             relation_id: number
-            name: string
+            related_npc_id: number
+            related_npc_name: string
             relation_type: string
             notes?: string
             image_url?: string
