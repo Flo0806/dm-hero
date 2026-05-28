@@ -1497,7 +1497,7 @@
     "entityCount": "keine Einträge | {n} Eintrag | {n} Einträge",
     "deleteTitle": "Ordner löschen?",
     "deleteConfirm": "Ordner „{name}\" löschen?",
-    "deleteCascadeHint": "Der Ordner enthält noch keine Einträge | Die {n} Einträge bleiben erhalten und sind danach ohne Ordner | Die {n} Einträge bleiben erhalten und sind danach ohne Ordner"
+    "deleteCascadeHint": "Der Ordner enthält noch keine Einträge | Der {n} Eintrag bleibt erhalten und ist danach ohne Ordner | Die {n} Einträge bleiben erhalten und sind danach ohne Ordner"
   },
   "tags": {
     "manage": {

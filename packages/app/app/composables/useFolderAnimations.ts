@@ -94,6 +94,11 @@ export function useFolderAnimation(folderId: number, override?: string | null) {
     playing.value = false
   }
 
+  // Ensure the pending hover-out timer is cancelled when the host card
+  // unmounts (e.g. folder list re-renders after a move). Without this the
+  // setTimeout would fire on a disposed component and flip stale state.
+  onBeforeUnmount(stop)
+
   return { egg, playing, onHover, stop }
 }
 

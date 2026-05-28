@@ -12,7 +12,13 @@ export default defineEventHandler(async (event): Promise<{ id: number, folder_id
     throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'invalid id' })
   }
   const body = await readBody<Body>(event)
-  const targetFolderId = body?.folder_id ?? null
+  // Require `folder_id` to be present in the payload — null is a valid
+  // value (= remove from folder), but a missing key is a client bug we
+  // shouldn't silently treat as "unassign".
+  if (!body || !Object.hasOwn(body, 'folder_id')) {
+    throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'folder_id required' })
+  }
+  const targetFolderId = body.folder_id ?? null
 
   const db = getDb()
   const entity = db.prepare(

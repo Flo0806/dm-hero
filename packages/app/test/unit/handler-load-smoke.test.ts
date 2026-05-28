@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
 /**
  * Smoke-load tests for the export/import handlers.
@@ -18,9 +18,34 @@ import { describe, it, expect, beforeAll } from 'vitest'
  * "is this module shape valid?" question.
  */
 
+// Keys we stub on globalThis — restored on afterAll so the stubs don't leak
+// into the other test files.
+const STUBBED_KEYS = [
+  'defineEventHandler',
+  'defineNitroPlugin',
+  'readBody',
+  'readMultipartFormData',
+  'getQuery',
+  'getRouterParam',
+  'getRequestURL',
+  'getHeader',
+  'setResponseStatus',
+  'setResponseHeader',
+  'sendStream',
+  'createError',
+] as const
+
+const originalGlobals = new Map<string, { had: boolean, value: unknown }>()
+
 beforeAll(() => {
-  // Stub Nuxt/h3 auto-imports just enough for module-level code to run.
   const g = globalThis as Record<string, unknown>
+  for (const key of STUBBED_KEYS) {
+    originalGlobals.set(key, {
+      had: Object.hasOwn(g, key),
+      value: g[key],
+    })
+  }
+  // Stub Nuxt/h3 auto-imports just enough for module-level code to run.
   g.defineEventHandler = (handler: unknown) => handler
   g.defineNitroPlugin = (handler: unknown) => handler
   g.readBody = async () => ({})
@@ -33,6 +58,15 @@ beforeAll(() => {
   g.setResponseHeader = () => undefined
   g.sendStream = () => undefined
   g.createError = (opts: { message?: string }) => new Error(opts?.message ?? 'error')
+})
+
+afterAll(() => {
+  const g = globalThis as Record<string, unknown>
+  for (const [key, snapshot] of originalGlobals) {
+    if (snapshot.had) g[key] = snapshot.value
+    else delete g[key]
+  }
+  originalGlobals.clear()
 })
 
 describe('handler module load smoke', () => {

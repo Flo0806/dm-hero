@@ -2490,9 +2490,13 @@ export const migrations: Migration[] = [
         )
       `)
 
+      // COLLATE NOCASE on `name` so SQLite enforces case-insensitive
+      // uniqueness for active rows, matching the user-facing
+      // `uniqueFolderName()` JS helper. Without it the JS check and DB
+      // constraint would disagree on e.g. "Loot" vs "loot".
       db.exec(`
         CREATE UNIQUE INDEX IF NOT EXISTS idx_entity_folders_name_unique
-          ON entity_folders(campaign_id, entity_type, name)
+          ON entity_folders(campaign_id, entity_type, name COLLATE NOCASE)
           WHERE deleted_at IS NULL
       `)
       db.exec('CREATE INDEX IF NOT EXISTS idx_entity_folders_parent ON entity_folders(parent_folder_id)')

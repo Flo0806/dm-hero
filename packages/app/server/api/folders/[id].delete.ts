@@ -9,14 +9,29 @@ export default defineEventHandler((event): { success: true } => {
 
   const db = getDb()
 
-  // Soft-delete the folder and detach its entities (they fall back to root).
-  // Child folders (phase 2) likewise become roots — ON DELETE SET NULL on
-  // parent_folder_id only fires on hard-delete, so do it explicitly here.
+  // Phase 1 UI only creates root-level folders, but the schema (and POST
+  // endpoint) accept arbitrary parent_folder_id. To stay correct under that
+  // future, soft-delete the WHOLE subtree rooted at `id` and detach every
+  // entity that lived in any folder of the subtree. A recursive CTE walks the
+  // tree in one statement; `ON DELETE SET NULL` only fires on hard-delete so
+  // we mirror it manually.
   db.exec('BEGIN')
   try {
-    db.prepare('UPDATE entities SET folder_id = NULL WHERE folder_id = ?').run(id)
-    db.prepare('UPDATE entity_folders SET parent_folder_id = NULL WHERE parent_folder_id = ?').run(id)
-    db.prepare('UPDATE entity_folders SET deleted_at = datetime(\'now\') WHERE id = ?').run(id)
+    const subtreeCte = `
+      WITH RECURSIVE folder_subtree(id) AS (
+        SELECT id FROM entity_folders WHERE id = ?
+        UNION ALL
+        SELECT f.id FROM entity_folders f
+        JOIN folder_subtree s ON f.parent_folder_id = s.id
+        WHERE f.deleted_at IS NULL
+      )
+    `
+    db.prepare(
+      `${subtreeCte} UPDATE entities SET folder_id = NULL WHERE folder_id IN (SELECT id FROM folder_subtree)`,
+    ).run(id)
+    db.prepare(
+      `${subtreeCte} UPDATE entity_folders SET deleted_at = datetime('now') WHERE id IN (SELECT id FROM folder_subtree)`,
+    ).run(id)
     db.exec('COMMIT')
   }
   catch (err) {

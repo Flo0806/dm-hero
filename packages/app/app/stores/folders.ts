@@ -12,7 +12,10 @@ const cacheKey = (campaignId: number, entityType: EntityFolderType) => `${campai
 
 export const useFoldersStore = defineStore('folders', () => {
   const byKey = ref<Map<string, EntityFolderWithCount[]>>(new Map())
-  const loadingKeys = ref<Set<string>>(new Set())
+  // In-flight load promises keyed by cacheKey. A second `load()` call for
+  // the same key joins the existing fetch instead of returning the stale
+  // (or empty) cached value early.
+  const inFlight = new Map<string, Promise<EntityFolderWithCount[]>>()
 
   // Briefly-set folder id that just received an entity — components watch this
   // to flash the target folder card so users see WHERE the entity went.
@@ -51,23 +54,30 @@ export const useFoldersStore = defineStore('folders', () => {
   ): Promise<EntityFolderWithCount[]> {
     const key = cacheKey(campaignId, entityType)
     if (!force && byKey.value.has(key)) return byKey.value.get(key)!
-    if (loadingKeys.value.has(key)) return byKey.value.get(key) ?? []
 
-    loadingKeys.value.add(key)
-    try {
-      const list = await $fetch<EntityFolderWithCount[]>('/api/folders', {
-        query: { campaignId, entityType },
-      })
-      setFolders(campaignId, entityType, list)
-      return list
-    }
-    catch (e) {
-      console.error('[folders] load failed', e)
-      return byKey.value.get(key) ?? []
-    }
-    finally {
-      loadingKeys.value.delete(key)
-    }
+    // Coalesce concurrent loads — the second caller gets the SAME promise
+    // and resolves with the same authoritative data as the first.
+    const existing = inFlight.get(key)
+    if (existing) return existing
+
+    const promise = (async () => {
+      try {
+        const list = await $fetch<EntityFolderWithCount[]>('/api/folders', {
+          query: { campaignId, entityType },
+        })
+        setFolders(campaignId, entityType, list)
+        return list
+      }
+      catch (e) {
+        console.error('[folders] load failed', e)
+        return byKey.value.get(key) ?? []
+      }
+      finally {
+        inFlight.delete(key)
+      }
+    })()
+    inFlight.set(key, promise)
+    return promise
   }
 
   async function create(payload: {

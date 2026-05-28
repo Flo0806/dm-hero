@@ -1,11 +1,17 @@
 <template>
   <v-card
     hover
+    tabindex="0"
+    role="button"
+    :aria-label="folder.name"
     class="d-flex flex-column h-100"
     :class="{ 'folder-card-flash': isFlashing }"
     style="cursor: pointer"
     @click="$emit('open', folder)"
     @mouseenter="onHover"
+    @focus="onHover"
+    @keydown.enter.prevent="$emit('open', folder)"
+    @keydown.space.prevent="$emit('open', folder)"
   >
     <div class="d-flex align-center pa-4 ga-3 flex-grow-1">
       <div class="folder-icon-wrap flex-shrink-0">

@@ -502,7 +502,9 @@ export default defineEventHandler(async (event) => {
     // Only check conflicts that actually exist - don't require both raceResolutions AND classResolutions
     const hasUnresolvedRaceClassConflicts = raceClassConflicts.some((c) => {
       const resolutions = c.type === 'race' ? options.raceResolutions : options.classResolutions
-      return !resolutions || !(c.key in resolutions)
+      // Object.hasOwn so a prototype-polluted key (e.g. 'toString') can't
+      // falsely register as resolved.
+      return !resolutions || !Object.hasOwn(resolutions, c.key)
     })
 
     // ==========================================================================

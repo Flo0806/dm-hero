@@ -201,11 +201,14 @@ export default defineEventHandler(async (event) => {
   const folderById = new Map<number, { entity_type: string, name: string, color: string | null, icon: string | null, easter_egg: string | null }>()
   if (folderIdsReferenced.size > 0) {
     const placeholders = [...folderIdsReferenced].map(() => '?').join(',')
+    // Defensive campaign scoping: folder_id on entities is always within the
+    // same campaign, but the prepared statement enforces it so a future
+    // refactor can't accidentally leak folders across campaigns.
     const folderRows = db.prepare(`
       SELECT id, entity_type, name, color, icon, easter_egg
       FROM entity_folders
-      WHERE id IN (${placeholders}) AND deleted_at IS NULL
-    `).all(...folderIdsReferenced) as Array<{
+      WHERE id IN (${placeholders}) AND campaign_id = ? AND deleted_at IS NULL
+    `).all(...folderIdsReferenced, campaignId) as Array<{
       id: number
       entity_type: string
       name: string
