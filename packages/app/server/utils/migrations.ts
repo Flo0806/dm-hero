@@ -2509,6 +2509,59 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 50: Created entity_folders (deep-ready) and entities.folder_id')
     },
   },
+  {
+    version: 51,
+    name: 'climate_zones',
+    up: (db) => {
+      // Climate zones — per-campaign profiles that the weather generator can
+      // consult instead of the hardcoded season tables. One profile per
+      // (zone, season) tuple stores temperature range + weather distribution.
+      // active_climate_zone_id on campaigns lets the user quick-switch zones.
+      //
+      // Backwards compatible: when no zone is active the generator falls back
+      // to the legacy season-based behaviour. Existing campaigns get NULL.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS climate_zones (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          color TEXT,
+          icon TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          deleted_at TEXT
+        )
+      `)
+      // One profile per (zone, season): temperature range + JSON weather mix.
+      // weather_distribution holds e.g. {"sunny":35,"cloudy":15,"rain":20,…}
+      // — weights are percentage-like and normalised on read by the generator.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS climate_zone_seasons (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          zone_id INTEGER NOT NULL REFERENCES climate_zones(id) ON DELETE CASCADE,
+          season_id INTEGER NOT NULL REFERENCES calendar_seasons(id) ON DELETE CASCADE,
+          temp_min INTEGER NOT NULL,
+          temp_max INTEGER NOT NULL,
+          weather_distribution TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(zone_id, season_id)
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zones_campaign ON climate_zones(campaign_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zones_deleted_at ON climate_zones(deleted_at)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zone_seasons_zone ON climate_zone_seasons(zone_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zone_seasons_season ON climate_zone_seasons(season_id)')
+
+      // Active zone pointer on campaigns — nullable, falls back to no-zone
+      // (legacy generator) when unset.
+      db.exec(
+        'ALTER TABLE campaigns ADD COLUMN active_climate_zone_id INTEGER REFERENCES climate_zones(id) ON DELETE SET NULL',
+      )
+
+      console.log('✅ Migration 51: Created climate_zones, climate_zone_seasons, and active_climate_zone_id')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
