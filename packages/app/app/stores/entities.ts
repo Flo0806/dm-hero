@@ -172,6 +172,41 @@ export const useEntitiesStore = defineStore('entities', {
       return this.npcs[index] || npc
     },
 
+    /**
+     * Reactive in-place update of an entity's folder_id. The server PATCH
+     * happens via the folders store; this just keeps the cached entity in
+     * sync so cards re-render without a refetch.
+     *
+     * Generic for entity_types that support folders (NPC, Item, Faction, Lore).
+     */
+    setFolderForEntity(
+      collection: 'npcs' | 'items' | 'factions' | 'lore',
+      id: number,
+      folderId: number | null,
+    ) {
+      const list = this[collection] as Array<{ id: number, folder_id?: number | null }>
+      const idx = list.findIndex(e => e.id === id)
+      if (idx === -1) return
+      list[idx] = { ...list[idx]!, folder_id: folderId }
+    },
+
+    /**
+     * Detach every entity from a folder that was just deleted. Mirrors the
+     * server's behavior (DELETE /api/folders/[id] nulls entities.folder_id)
+     * so the cached list stays in sync without a refetch.
+     */
+    clearFolderForEntities(
+      collection: 'npcs' | 'items' | 'factions' | 'lore',
+      folderId: number,
+    ) {
+      const list = this[collection] as Array<{ id: number, folder_id?: number | null }>
+      for (let i = 0; i < list.length; i++) {
+        if (list[i]?.folder_id === folderId) {
+          list[i] = { ...list[i]!, folder_id: null }
+        }
+      }
+    },
+
     async deleteNPC(id: number) {
       const result = await $fetch<{ success: boolean, affectedNpcIds: number[] }>(
         `/api/npcs/${id}`,

@@ -432,6 +432,7 @@
         entity-type="npc"
         :current-folder-id="npc.folder_id ?? null"
         @moved="onMoved"
+        @move-error="onMoveError"
       />
       <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', npc)">
         <v-icon>mdi-pencil</v-icon>
@@ -518,7 +519,8 @@ const emit = defineEmits<{
   'create-group': [entityId: number]
   'linked': []
   'open-tab': [npc: NPC, tab: string]
-  'moved': [npc: NPC, toFolderId: number | null]
+  'moved': [npc: NPC, toFolderId: number | null, folderName: string | null]
+  'move-error': [error: unknown]
 }>()
 
 const campaignStore = useCampaignStore()
@@ -637,8 +639,12 @@ function getClassesDisplay(val: string | string[] | undefined): string {
 
 // Icon helpers imported from ~/utils/npc-icons
 
-function onMoved(payload: { toFolderId: number | null }) {
-  emit('moved', props.npc, payload.toFolderId)
+function onMoved(payload: { toFolderId: number | null, folderName: string | null }) {
+  emit('moved', props.npc, payload.toFolderId, payload.folderName)
+}
+
+function onMoveError(error: unknown) {
+  emit('move-error', error)
 }
 </script>
 

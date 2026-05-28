@@ -2,6 +2,7 @@
   <v-card
     hover
     class="d-flex flex-column h-100"
+    :class="{ 'folder-card-flash': isFlashing }"
     style="cursor: pointer"
     @click="$emit('open', folder)"
     @mouseenter="onHover"
@@ -24,10 +25,14 @@
       </div>
 
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-headline-small mb-1" style="line-height: 1.2">
+        <h3
+          class="text-headline-small mb-1 text-truncate"
+          style="line-height: 1.2"
+          :title="folder.name"
+        >
           {{ folder.name }}
         </h3>
-        <div class="text-body-small text-medium-emphasis">
+        <div class="text-body-small text-medium-emphasis text-truncate">
           {{ $t('folders.entityCount', folder.entity_count) }}
         </div>
       </div>
@@ -63,6 +68,7 @@
 <script setup lang="ts">
 import type { EntityFolderWithCount, FolderEasterEgg } from '~~/types/folder'
 import { useFolderAnimation } from '~/composables/useFolderAnimations'
+import { useFoldersStore } from '~/stores/folders'
 
 const props = defineProps<{ folder: EntityFolderWithCount }>()
 defineEmits<{
@@ -75,6 +81,9 @@ const { egg, playing, onHover } = useFolderAnimation(
   props.folder.id,
   props.folder.easter_egg,
 )
+
+const foldersStore = useFoldersStore()
+const isFlashing = computed(() => foldersStore.flashedFolderId === props.folder.id)
 
 const EGG_EMOJI: Record<FolderEasterEgg, string> = {
   kobold: '👺',
@@ -180,7 +189,20 @@ const EGG_EMOJI: Record<FolderEasterEgg, string> = {
   100% { transform: rotate(0deg) translateY(20px); opacity: 0; }
 }
 
+/* Brief outline pulse when this folder just received an entity. Two pulses
+   over ~1.2s — enough to draw the eye without being noisy. */
+.folder-card-flash {
+  animation: folder-card-flash 1.2s ease-in-out;
+}
+@keyframes folder-card-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0); }
+  25% { box-shadow: 0 0 0 4px rgba(var(--v-theme-primary), 0.5); }
+  50% { box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0); }
+  75% { box-shadow: 0 0 0 4px rgba(var(--v-theme-primary), 0.5); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .folder-egg { display: none !important; }
+  .folder-card-flash { animation: none; }
 }
 </style>

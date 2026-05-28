@@ -14,6 +14,20 @@ export const useFoldersStore = defineStore('folders', () => {
   const byKey = ref<Map<string, EntityFolderWithCount[]>>(new Map())
   const loadingKeys = ref<Set<string>>(new Set())
 
+  // Briefly-set folder id that just received an entity — components watch this
+  // to flash the target folder card so users see WHERE the entity went.
+  const flashedFolderId = ref<number | null>(null)
+  let flashTimer: ReturnType<typeof setTimeout> | null = null
+
+  function flashFolder(id: number) {
+    flashedFolderId.value = id
+    if (flashTimer) clearTimeout(flashTimer)
+    flashTimer = setTimeout(() => {
+      flashedFolderId.value = null
+      flashTimer = null
+    }, 1400)
+  }
+
   function folders(campaignId: number, entityType: EntityFolderType): EntityFolderWithCount[] {
     return byKey.value.get(cacheKey(campaignId, entityType)) ?? []
   }
@@ -109,6 +123,7 @@ export const useFoldersStore = defineStore('folders', () => {
       method: 'PATCH',
       body: { folder_id: toFolderId },
     })
+    if (toFolderId !== null) flashFolder(toFolderId)
 
     const list = byKey.value.get(cacheKey(campaignId, entityType))
     if (!list) return
@@ -126,6 +141,7 @@ export const useFoldersStore = defineStore('folders', () => {
 
   return {
     folders,
+    flashedFolderId,
     load,
     create,
     update,

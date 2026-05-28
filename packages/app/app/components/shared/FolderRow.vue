@@ -31,15 +31,18 @@
       </v-btn>
     </div>
 
-    <!-- Folder cards (collapsible) -->
+    <!-- Folder cards (collapsible). Denser grid than entity cards so users
+         can scan many folders at once: 1/2/3/4/6 per row on xs/sm/md/lg/xl. -->
     <v-expand-transition>
       <v-row v-if="folders.length > 0 && !collapsed" class="mb-2">
         <v-col
           v-for="folder in folders"
           :key="folder.id"
           cols="12"
-          md="6"
-          lg="4"
+          sm="6"
+          md="4"
+          lg="3"
+          xl="2"
         >
           <FoldersFolderCard
             :folder="folder"
@@ -96,8 +99,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  open: [folder: EntityFolderWithCount]
-  changed: []
+  'open': [folder: EntityFolderWithCount]
+  'changed': []
+  'folder-deleted': [folderId: number]
 }>()
 
 const foldersStore = useFoldersStore()
@@ -179,12 +183,14 @@ function confirmDelete(folder: EntityFolderWithCount) {
 
 async function doDelete() {
   if (!deletingFolder.value) return
+  const deletedId = deletingFolder.value.id
   deleting.value = true
   try {
-    await foldersStore.remove(props.campaignId, props.entityType, deletingFolder.value.id)
+    await foldersStore.remove(props.campaignId, props.entityType, deletedId)
     await foldersStore.load(props.campaignId, props.entityType, true)
     showDeleteConfirm.value = false
     deletingFolder.value = null
+    emit('folder-deleted', deletedId)
     emit('changed')
   }
   finally {

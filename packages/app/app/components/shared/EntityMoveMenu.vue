@@ -57,7 +57,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  moved: [payload: { entityId: number, fromFolderId: number | null, toFolderId: number | null }]
+  'moved': [payload: { entityId: number, fromFolderId: number | null, toFolderId: number | null, folderName: string | null }]
+  'move-error': [error: unknown]
 }>()
 
 const foldersStore = useFoldersStore()
@@ -75,13 +76,21 @@ onMounted(() => {
 async function onSelect(toFolderId: number | null) {
   if (toFolderId === props.currentFolderId) return
   const from = props.currentFolderId
-  await foldersStore.moveEntity(
-    props.campaignId,
-    props.entityType,
-    props.entityId,
-    from,
-    toFolderId,
-  )
-  emit('moved', { entityId: props.entityId, fromFolderId: from, toFolderId })
+  const folderName = toFolderId === null
+    ? null
+    : (folders.value.find(f => f.id === toFolderId)?.name ?? null)
+  try {
+    await foldersStore.moveEntity(
+      props.campaignId,
+      props.entityType,
+      props.entityId,
+      from,
+      toFolderId,
+    )
+    emit('moved', { entityId: props.entityId, fromFolderId: from, toFolderId, folderName })
+  }
+  catch (e) {
+    emit('move-error', e)
+  }
 }
 </script>

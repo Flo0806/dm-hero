@@ -42,6 +42,7 @@
       :campaign-id="activeCampaignIdNumber"
       entity-type="npc"
       @open="onFolderOpen"
+      @folder-deleted="onFolderDeleted"
     />
 
     <v-row v-if="entitiesStore.npcsLoading">
@@ -75,25 +76,30 @@
         </div>
       </v-overlay>
 
-      <!-- NPC Cards -->
+      <!-- NPC Cards (TransitionGroup animates the leave when an NPC is moved
+           into a folder and disappears from this list. tag="div" + display:contents
+           keeps Vuetify's row/col grid layout intact). -->
       <v-row>
-        <v-col v-for="npc in filteredNpcs" :key="npc.id" cols="12" md="6" lg="4">
-          <NpcCard
-            :npc="npc"
-            :is-highlighted="highlightedId === npc.id"
-            :races="races"
-            :classes="classes"
-            @view="viewNpc"
-            @edit="editNpc"
-            @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
-            @archive="archiveNpc"
-            @delete="deleteNpc"
-            @open-group="openGroupPreview"
-            @open-tab="openNpcTab"
-            @create-group="groupCreate.open"
-            @moved="onNpcMoved"
-          />
-        </v-col>
+        <TransitionGroup tag="div" name="card-move-out" class="card-grid-contents">
+          <v-col v-for="npc in filteredNpcs" :key="npc.id" cols="12" md="6" lg="4">
+            <NpcCard
+              :npc="npc"
+              :is-highlighted="highlightedId === npc.id"
+              :races="races"
+              :classes="classes"
+              @view="viewNpc"
+              @edit="editNpc"
+              @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
+              @archive="archiveNpc"
+              @delete="deleteNpc"
+              @open-group="openGroupPreview"
+              @open-tab="openNpcTab"
+              @create-group="groupCreate.open"
+              @moved="onNpcMoved"
+              @move-error="onNpcMoveError"
+            />
+          </v-col>
+        </TransitionGroup>
       </v-row>
     </div>
 
@@ -614,16 +620,28 @@ function onFolderOpen(folder: { name: string }) {
   snackbarStore.success($t('folders.openedSoon', { name: folder.name }))
 }
 
-const foldersStore = useFoldersStore()
+function onNpcMoved(npc: NPC, toFolderId: number | null, folderName: string | null) {
+  // Pinia is reactive — just patch the entity in-place. Folder counts were
+  // already updated optimistically by the folders store; no refetch needed.
+  entitiesStore.setFolderForEntity('npcs', npc.id, toFolderId)
+  const msg = toFolderId === null
+    ? $t('folders.movedOut', { name: npc.name })
+    : $t('folders.movedInto', { name: npc.name, folder: folderName ?? '' })
+  snackbarStore.success(msg)
+}
 
-async function onNpcMoved(_npc: NPC, _toFolderId: number | null) {
-  if (!activeCampaignIdNumber.value) return
-  // Force refresh both: entities (fresh folder_id on the moved npc) and
-  // folders (authoritative entity_count, not optimistic).
-  await Promise.all([
-    entitiesStore.fetchNPCs(activeCampaignIdNumber.value, true),
-    foldersStore.load(activeCampaignIdNumber.value, 'npc', true),
-  ])
+function onNpcMoveError(_error: unknown) {
+  snackbarStore.error($t('folders.moveError'))
+}
+
+function onFolderDeleted(folderId: number) {
+  // Server detached the entities (folder_id → NULL). Mirror that in the
+  // local cache so they reappear in the main list immediately. Also patch
+  // any cached search results so a running search reflects the change.
+  entitiesStore.clearFolderForEntities('npcs', folderId)
+  for (const npc of searchResults.value) {
+    if (npc.folder_id === folderId) npc.folder_id = null
+  }
 }
 
 async function archiveNpc(npc: NPC) {
@@ -675,6 +693,19 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
+/* TransitionGroup wrapper is invisible to layout; v-col stays the direct
+   grid child of v-row. */
+.card-grid-contents {
+  display: contents;
+}
+.card-move-out-leave-active {
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.card-move-out-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
 .image-download-btn {
   position: absolute;
   bottom: 8px;
