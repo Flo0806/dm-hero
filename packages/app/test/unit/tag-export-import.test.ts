@@ -18,7 +18,7 @@ import { getTestDb } from '../utils/test-db'
  */
 
 interface FakeManifest {
-  entities: Array<{ exportId: string, name: string, tags?: string[] }>
+  entities: Array<{ _exportId: string, name: string, tags?: string[] }>
   tags?: Array<{ name: string, color: string | null }>
 }
 
@@ -77,7 +77,7 @@ function importTags(
 
   for (const entity of manifest.entities) {
     if (!entity.tags?.length) continue
-    const newId = newIdByExportId.get(entity.exportId)
+    const newId = newIdByExportId.get(entity._exportId)
     if (!newId) continue
     for (const name of entity.tags) {
       const tagId = tagIdByName.get(name)
@@ -122,7 +122,7 @@ describe('tag export/import roundtrip', () => {
 
     const npcId = insertNpc(db, targetCampaignId, 'Imported NPC')
     const manifest: FakeManifest = {
-      entities: [{ exportId: 'entity:1', name: 'X', tags: ['kuh'] }],
+      entities: [{ _exportId: 'entity:1', name: 'X', tags: ['kuh'] }],
       tags: [{ name: 'kuh', color: '#E57373' }], // would create red — but it's silently ignored
     }
     importTags(db, manifest, new Map([['entity:1', npcId]]))
@@ -139,7 +139,7 @@ describe('tag export/import roundtrip', () => {
   it('rule 2: missing tag is created with exported color', () => {
     const npcId = insertNpc(db, targetCampaignId, 'X')
     const manifest: FakeManifest = {
-      entities: [{ exportId: 'entity:1', name: 'X', tags: ['fresh'] }],
+      entities: [{ _exportId: 'entity:1', name: 'X', tags: ['fresh'] }],
       tags: [{ name: 'fresh', color: '#BA68C8' }],
     }
     importTags(db, manifest, new Map([['entity:1', npcId]]))
@@ -152,7 +152,7 @@ describe('tag export/import roundtrip', () => {
   it('rule 3: manifest without any tags field runs through cleanly (backwards compat)', () => {
     const npcId = insertNpc(db, targetCampaignId, 'X')
     const manifest: FakeManifest = {
-      entities: [{ exportId: 'entity:1', name: 'X' /* no tags field */ }],
+      entities: [{ _exportId: 'entity:1', name: 'X' /* no tags field */ }],
       // no manifest.tags either
     }
     expect(() => importTags(db, manifest, new Map([['entity:1', npcId]]))).not.toThrow()
@@ -166,7 +166,7 @@ describe('tag export/import roundtrip', () => {
 
     const npcId = insertNpc(db, targetCampaignId, 'X')
     const manifest: FakeManifest = {
-      entities: [{ exportId: 'entity:1', name: 'X', tags: ['zombie'] }],
+      entities: [{ _exportId: 'entity:1', name: 'X', tags: ['zombie'] }],
       tags: [{ name: 'zombie', color: '#9575CD' }],
     }
     importTags(db, manifest, new Map([['entity:1', npcId]]))
@@ -193,8 +193,8 @@ describe('tag export/import roundtrip', () => {
     const palette = exportTags(db, [srcA, srcB])
     const manifest: FakeManifest = {
       entities: [
-        { exportId: 'entity:1', name: 'Alpha', tags: ['kuh', 'grumpy'] },
-        { exportId: 'entity:2', name: 'Beta', tags: ['kuh'] },
+        { _exportId: 'entity:1', name: 'Alpha', tags: ['kuh', 'grumpy'] },
+        { _exportId: 'entity:2', name: 'Beta', tags: ['kuh'] },
       ],
       tags: palette,
     }

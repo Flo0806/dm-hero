@@ -174,13 +174,19 @@ function onSearchInput() {
   search.value = normaliseTagName(search.value)
 }
 
-function onEnter() {
-  if (canCreate.value) {
-    createAndAdd()
-    return
+async function onEnter() {
+  if (busy.value) return // already submitting; ignore double-Enter
+  try {
+    if (canCreate.value) {
+      await createAndAdd()
+      return
+    }
+    const first = filteredCandidates.value[0]
+    if (first) await addExisting(first)
   }
-  const first = filteredCandidates.value[0]
-  if (first) addExisting(first)
+  catch (e) {
+    console.error('[tag-pinner] enter handler failed', e)
+  }
 }
 </script>
 

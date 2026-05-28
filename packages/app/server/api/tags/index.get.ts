@@ -15,7 +15,9 @@ export default defineEventHandler((): TagWithUsage[] => {
       t.id,
       t.name,
       t.color,
-      COUNT(DISTINCT et.entity_id) AS usage_count
+      -- Count via e.id so soft-deleted entities (NULLed by the LEFT JOIN below)
+      -- don't inflate the number.
+      COUNT(DISTINCT e.id) AS usage_count
     FROM tags t
     LEFT JOIN entity_tags et ON et.tag_id = t.id
     LEFT JOIN entities e ON e.id = et.entity_id AND e.deleted_at IS NULL

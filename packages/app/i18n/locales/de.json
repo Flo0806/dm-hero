@@ -1491,7 +1491,9 @@
       "deleteError": "Tag konnte nicht gelöscht werden",
       "deleteTitle": "Tag löschen?",
       "deleteConfirm": "Tag „{name}\" wird von allen Entitäten entfernt. Fortfahren?",
-      "empty": "Noch keine Tags angelegt. Klick „Neuer Tag\" zum Loslegen."
+      "empty": "Noch keine Tags angelegt. Klick „Neuer Tag\" zum Loslegen.",
+      "chooseColor": "Farbe {color} wählen",
+      "loadError": "Tags konnten nicht geladen werden"
     },
     "pinner": {
       "addTag": "Tag hinzufügen",

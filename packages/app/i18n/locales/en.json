@@ -1498,7 +1498,9 @@
       "deleteError": "Could not delete tag",
       "deleteTitle": "Delete tag?",
       "deleteConfirm": "Tag \"{name}\" will be removed from every entity. Continue?",
-      "empty": "No tags yet. Click \"New tag\" to get started."
+      "empty": "No tags yet. Click \"New tag\" to get started.",
+      "chooseColor": "Choose color {color}",
+      "loadError": "Could not load tags"
     },
     "pinner": {
       "addTag": "Add tag",

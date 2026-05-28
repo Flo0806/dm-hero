@@ -63,12 +63,21 @@
             @input="onNameInput"
           />
 
-          <div class="mt-4 mb-1 text-body-medium">{{ $t('tags.manage.colorLabel') }}</div>
-          <div class="d-flex flex-wrap ga-2">
+          <div id="tag-color-picker-label" class="mt-4 mb-1 text-body-medium">
+            {{ $t('tags.manage.colorLabel') }}
+          </div>
+          <div
+            class="d-flex flex-wrap ga-2"
+            role="radiogroup"
+            aria-labelledby="tag-color-picker-label"
+          >
             <button
               v-for="color in palette"
               :key="color"
               type="button"
+              role="radio"
+              :aria-checked="form.color === color"
+              :aria-label="$t('tags.manage.chooseColor', { color })"
               class="color-swatch"
               :class="{ 'color-swatch--active': form.color === color }"
               :style="{ background: color }"
@@ -172,6 +181,11 @@ async function load() {
   loading.value = true
   try {
     tags.value = await $fetch<TagWithUsage[]>('/api/tags')
+  }
+  catch (e) {
+    console.error('[tags] failed to load tag list', e)
+    tags.value = []
+    snackbarStore.error(t('tags.manage.loadError'))
   }
   finally {
     loading.value = false

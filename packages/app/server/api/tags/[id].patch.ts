@@ -39,7 +39,10 @@ export default defineEventHandler(async (event): Promise<Tag> => {
     }
   }
 
-  if (body?.color !== undefined && isValidTagColor(body.color)) {
+  if (body?.color !== undefined) {
+    if (!isValidTagColor(body.color)) {
+      throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'invalid tag color' })
+    }
     updates.push('color = ?')
     params.push(body.color)
   }

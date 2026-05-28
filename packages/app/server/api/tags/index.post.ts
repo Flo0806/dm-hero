@@ -19,11 +19,17 @@ export default defineEventHandler(async (event): Promise<Tag> => {
 
   const db = getDb()
 
-  // If a soft-deleted tag with the same name exists, revive it instead of failing the UNIQUE constraint.
-  const existing = db.prepare('SELECT id FROM tags WHERE name = ?').get(name) as { id: number } | undefined
-  if (existing) {
-    db.prepare('UPDATE tags SET color = ?, deleted_at = NULL WHERE id = ?').run(color, existing.id)
-    return db.prepare('SELECT id, name, color FROM tags WHERE id = ?').get(existing.id) as Tag
+  // If an *active* tag with this name already exists → just return it.
+  // Do NOT overwrite its color silently — color changes go through PATCH.
+  const active = db.prepare('SELECT id, name, color FROM tags WHERE name = ? AND deleted_at IS NULL').get(name) as Tag | undefined
+  if (active) return active
+
+  // Otherwise check for a soft-deleted row with the same name → revive it
+  // (avoids hitting the UNIQUE constraint on `tags.name`).
+  const buried = db.prepare('SELECT id FROM tags WHERE name = ? AND deleted_at IS NOT NULL').get(name) as { id: number } | undefined
+  if (buried) {
+    db.prepare('UPDATE tags SET color = ?, deleted_at = NULL WHERE id = ?').run(color, buried.id)
+    return db.prepare('SELECT id, name, color FROM tags WHERE id = ?').get(buried.id) as Tag
   }
 
   const result = db.prepare('INSERT INTO tags (name, color) VALUES (?, ?)').run(name, color)

@@ -45,8 +45,11 @@ export function extractTagFilters(input: string | undefined | null): ExtractedTa
  * typically `return []` early in that case.
  */
 export function resolveTagFilter(db: Database.Database, tagNames: string[]): Set<number> {
-  if (tagNames.length === 0) return new Set()
-  const placeholders = tagNames.map(() => '?').join(',')
+  // De-dupe defensively — HAVING COUNT(DISTINCT t.id) compares against the
+  // unique count, so a duplicate name in the input would produce a false miss.
+  const uniqueTags = [...new Set(tagNames)]
+  if (uniqueTags.length === 0) return new Set()
+  const placeholders = uniqueTags.map(() => '?').join(',')
   const rows = db.prepare(`
     SELECT et.entity_id
     FROM entity_tags et
@@ -54,6 +57,6 @@ export function resolveTagFilter(db: Database.Database, tagNames: string[]): Set
     WHERE t.name IN (${placeholders}) AND t.deleted_at IS NULL
     GROUP BY et.entity_id
     HAVING COUNT(DISTINCT t.id) = ?
-  `).all(...tagNames, tagNames.length) as Array<{ entity_id: number }>
+  `).all(...uniqueTags, uniqueTags.length) as Array<{ entity_id: number }>
   return new Set(rows.map(r => r.entity_id))
 }

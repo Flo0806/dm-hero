@@ -51,6 +51,9 @@ export const useTagsStore = defineStore('tags', () => {
       byEntity.value = next
     }
     catch (e) {
+      // Drop failed ids from `requested` so they can be retried on the next
+      // `requestTagsFor` call — otherwise a transient network blip stuck them.
+      for (const id of ids) requested.delete(id)
       console.error('[tags] batch fetch failed', e)
     }
   }
@@ -97,6 +100,13 @@ export const useTagsStore = defineStore('tags', () => {
    * Forces all subsequent `requestTagsFor` calls to re-fetch.
    */
   function invalidateAll() {
+    // Cancel any scheduled batch so a queued flush can't repopulate stale data
+    // right after we reset.
+    pending.clear()
+    if (flushTimer) {
+      clearTimeout(flushTimer)
+      flushTimer = null
+    }
     byEntity.value = new Map()
     requested.clear()
     catalogueLoaded.value = false
