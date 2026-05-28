@@ -3,6 +3,7 @@ import { createLevenshtein } from '../utils/levenshtein'
 import { normalizeText } from '../utils/normalize'
 import { getRaceKey, getClassKey, getNpcTypeKey, getLocaleFromEvent } from '../utils/i18n-lookup'
 import { getItemTypeIcon, getLocationTypeIcon } from '../utils/entity-icons'
+import { extractTagFilters, resolveTagFilter } from '../utils/searchQuery'
 
 const levenshtein = createLevenshtein()
 
@@ -22,13 +23,79 @@ interface EntityResult {
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
-  const searchQuery = query.q as string
+  const rawQ = query.q as string
   const campaignId = query.campaignId as string
 
-  if (!searchQuery || !campaignId) {
+  if (!rawQ || !campaignId) {
     return []
   }
 
+  // Extract `#tag` tokens. Tags are AND-combined and applied as a pre-filter;
+  // the rest is fed to the existing fuzzy/FTS search.
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawQ)
+
+  // Tag-only fast path: pure `#tag` queries don't need FTS at all.
+  if (tagFilters.length > 0 && !restAfterTags) {
+    const tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+    const ids = [...tagEntityIds]
+    const placeholders = ids.map(() => '?').join(',')
+    const rows = db.prepare(`
+      SELECT
+        e.id,
+        e.name,
+        e.description,
+        et.name AS type,
+        et.icon AS icon,
+        et.color AS color,
+        e.metadata,
+        e.archived_at
+      FROM entities e
+      JOIN entity_types et ON et.id = e.type_id
+      WHERE e.id IN (${placeholders})
+        AND e.campaign_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY e.name COLLATE NOCASE
+      LIMIT 50
+    `).all(...ids, campaignId) as Array<{
+      id: number
+      name: string
+      description: string | null
+      type: string
+      icon: string
+      color: string
+      metadata: string | null
+      archived_at: string | null
+    }>
+    return rows.map((r) => {
+      let icon = r.icon
+      if (r.metadata) {
+        try {
+          const meta = JSON.parse(r.metadata)
+          if (r.type === 'Item' && meta.type) icon = getItemTypeIcon(meta.type)
+          else if (r.type === 'Location' && meta.type) icon = getLocationTypeIcon(meta.type)
+        }
+        catch { /* ignore */ }
+      }
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        type: r.type,
+        icon,
+        color: r.color,
+        archived_at: r.archived_at,
+        linkedEntities: [] as string[],
+      }
+    })
+  }
+
+  // Mixed (tags + text) and text-only: resolve tag pre-filter ids (if any),
+  // then run the existing search using the text remainder.
+  const tagEntityIds = tagFilters.length > 0 ? resolveTagFilter(db, tagFilters) : null
+  if (tagEntityIds && tagEntityIds.size === 0) return []
+
+  const searchQuery = restAfterTags
   const searchTerm = normalizeText(searchQuery.trim())
 
   // Convert search term to race/class key (for metadata search)
@@ -689,6 +756,8 @@ export default defineEventHandler(async (event) => {
       return null
     })
     .filter((r): r is EntityResult & { _score: number } => r !== null)
+    // Tag pre-filter intersection (mixed tag + text queries)
+    .filter(r => !tagEntityIds || tagEntityIds.has(r.id))
     .sort((a, b) => a._score - b._score)
     .slice(0, 20)
 

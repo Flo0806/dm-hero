@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
@@ -29,7 +30,16 @@ export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
-  const searchQuery = query.search as string | undefined
+  const rawSearch = query.search as string | undefined
+
+  // Tag pre-filter
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
+  const searchQuery = restAfterTags || undefined
+  let tagEntityIds: Set<number> | null = null
+  if (tagFilters.length > 0) {
+    tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+  }
 
   if (!campaignId) {
     throw createError({
@@ -730,8 +740,13 @@ export default defineEventHandler((event) => {
       .all(npcTypeId, loreTypeId, entityType.id, campaignId) as FactionRow[]
   }
 
+  // Tag pre-filter intersection
+  const finalFactions = tagEntityIds
+    ? factions.filter(faction => tagEntityIds!.has(faction.id))
+    : factions
+
   // Parse metadata JSON
-  return factions.map(faction => ({
+  return finalFactions.map(faction => ({
     ...faction,
     metadata: faction.metadata ? JSON.parse(faction.metadata as string) : null,
   }))

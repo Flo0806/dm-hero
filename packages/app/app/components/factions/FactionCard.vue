@@ -341,6 +341,11 @@
           <span>{{ $t('factions.badgeTooltips.relations') }}</span>
         </v-tooltip>
       </div>
+
+      <!-- Tags Row -->
+      <div class="mt-2">
+        <SharedTagPinner :entity-id="faction.id" />
+      </div>
     </v-card-text>
 
     <!-- Actions -->

@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import {
   getRaceKey,
   getClassKey,
@@ -20,7 +21,19 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
-  const searchQuery = query.search as string | undefined
+  const rawSearch = query.search as string | undefined
+
+  // Strip `#tag` tokens from the search input — they are applied as a separate
+  // pre-filter on entity_tags. The rest (if any) is passed to the FTS5 path.
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
+  const searchQuery = restAfterTags || undefined
+
+  // Resolve tag-name filters to entity ids upfront (AND-combined).
+  let tagEntityIds: Set<number> | null = null
+  if (tagFilters.length > 0) {
+    tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+  }
 
   // Get user's locale from request (cookie or Accept-Language header)
   const locale = getLocaleFromEvent(event)
@@ -1176,6 +1189,31 @@ export default defineEventHandler(async (event) => {
       npcs = []
     }
   }
+  else if (tagEntityIds && tagEntityIds.size > 0) {
+    // Tag-only filter (no text search) — direct SQL over the tagged ids,
+    // skipping FTS5 entirely.
+    const ids = [...tagEntityIds]
+    const placeholders = ids.map(() => '?').join(',')
+    npcs = db
+      .prepare(`
+        SELECT
+          e.id,
+          e.name,
+          e.description,
+          e.image_url,
+          e.metadata,
+          e.created_at,
+          e.updated_at,
+          e.archived_at
+        FROM entities e
+        WHERE e.type_id = ?
+          AND e.campaign_id = ?
+          AND e.deleted_at IS NULL
+          AND e.id IN (${placeholders})
+        ORDER BY e.name ASC
+      `)
+      .all(entityType.id, campaignId, ...ids) as NpcRow[]
+  }
   else {
     // No search query - return all NPCs for this campaign
     npcs = db
@@ -1200,8 +1238,13 @@ export default defineEventHandler(async (event) => {
       .all(entityType.id, campaignId) as NpcRow[]
   }
 
+  // Post-filter by tag pre-filter set (intersection with FTS/Levenshtein result).
+  const finalNpcs = tagEntityIds
+    ? npcs.filter(npc => tagEntityIds!.has(npc.id))
+    : npcs
+
   // Parse metadata JSON
-  return npcs.map(npc => ({
+  return finalNpcs.map(npc => ({
     ...npc,
     metadata: npc.metadata ? JSON.parse(npc.metadata as string) : null,
   }))

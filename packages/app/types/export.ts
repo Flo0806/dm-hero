@@ -192,6 +192,17 @@ export interface CampaignExportManifest {
   // Stat templates & entity stats
   statTemplates?: ExportStatTemplate[]
   entityStats?: ExportEntityStats[]
+
+  // Tags — global (not campaign-scoped). All tags referenced by exported
+  // entities are listed here once with their color so the importer can recreate
+  // missing ones. Existing tags with the same name are silently reused.
+  // Field is optional for backwards compatibility with v1.x exports.
+  tags?: ExportTag[]
+}
+
+export interface ExportTag {
+  name: string
+  color: string | null
 }
 
 // =============================================================================
@@ -235,6 +246,9 @@ export interface ExportEntity {
   created_at?: string
   updated_at?: string
   archived_at?: string | null
+  // Tag names attached to this entity. Optional for backwards compatibility.
+  // Colors / palette are stored once in `CampaignExportManifest.tags`.
+  tags?: string[]
 }
 
 export interface ExportRelation {

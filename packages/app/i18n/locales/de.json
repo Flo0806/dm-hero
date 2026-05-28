@@ -1470,6 +1470,37 @@
     "timeMustBePositive": "Zeit muss positiv sein",
     "timeExceedsDuration": "Zeit überschreitet Audiodauer"
   },
+  "tags": {
+    "manage": {
+      "title": "Tags",
+      "subtitle": "Verwalte Tags um Entitäten flexibel zu kategorisieren und schnell zu finden.",
+      "newTag": "Neuer Tag",
+      "editTag": "Tag bearbeiten",
+      "colTag": "Tag",
+      "colUsage": "Verwendungen",
+      "nameLabel": "Name",
+      "nameHint": "Nur Kleinbuchstaben (a-z) und Bindestriche, z.B. kuh oder schwere-ruestung",
+      "nameInvalid": "Nur a-z und Bindestriche. Kein führender/abschließender Bindestrich.",
+      "nameDuplicate": "Ein Tag mit diesem Namen existiert bereits.",
+      "colorLabel": "Farbe",
+      "preview": "Vorschau",
+      "created": "Tag erstellt",
+      "updated": "Tag aktualisiert",
+      "deleted": "Tag gelöscht",
+      "saveError": "Tag konnte nicht gespeichert werden",
+      "deleteError": "Tag konnte nicht gelöscht werden",
+      "deleteTitle": "Tag löschen?",
+      "deleteConfirm": "Tag „{name}\" wird von allen Entitäten entfernt. Fortfahren?",
+      "empty": "Noch keine Tags angelegt. Klick „Neuer Tag\" zum Loslegen.",
+      "chooseColor": "Farbe {color} wählen",
+      "loadError": "Tags konnten nicht geladen werden"
+    },
+    "pinner": {
+      "addTag": "Tag hinzufügen",
+      "createNew": "„{name}\" als neuen Tag anlegen",
+      "noMatches": "Kein Tag gefunden"
+    }
+  },
   "common": {
     "name": "Name",
     "description": "Beschreibung",
