@@ -107,7 +107,7 @@
           </v-btn>
 
           <!-- AI Hint -->
-          <div v-if="!hasApiKey" class="text-caption text-medium-emphasis mt-3">
+          <div v-if="!hasApiKey" class="text-body-small text-medium-emphasis mt-3">
             <v-icon size="small" class="mr-1">mdi-information-outline</v-icon>
             KI-Generierung: OpenAI API-Key in Einstellungen hinterlegen
           </div>

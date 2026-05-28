@@ -31,7 +31,7 @@
       </v-card-title>
       <v-divider />
       <v-card-text style="max-height: 500px; overflow-y: auto">
-        <div v-if="searchQuery" class="text-caption text-disabled mb-2">
+        <div v-if="searchQuery" class="text-body-small text-disabled mb-2">
           {{ $t('search.searching', { query: searchQuery }) }}
         </div>
         <v-list v-if="searchResults.length > 0">

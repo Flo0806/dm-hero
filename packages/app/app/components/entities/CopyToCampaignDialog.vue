@@ -152,13 +152,13 @@
               <template #prepend>
                 <v-icon size="small" class="mr-2">{{ getEntityIcon(dup.type_name) }}</v-icon>
               </template>
-              <v-list-item-title class="text-body-2">{{ dup.name }}</v-list-item-title>
+              <v-list-item-title class="text-body-medium">{{ dup.name }}</v-list-item-title>
             </v-list-item>
           </v-list>
 
           <!-- Mode Selection -->
           <div class="mt-3">
-            <div class="text-body-2 mb-2">{{ $t('entities.copyToCampaign.howToHandle') }}</div>
+            <div class="text-body-medium mb-2">{{ $t('entities.copyToCampaign.howToHandle') }}</div>
             <v-btn-toggle v-model="copyMode" mandatory color="primary" density="compact">
               <v-btn value="skip" size="small">
                 <v-icon start size="small">mdi-skip-next</v-icon>
@@ -184,7 +184,7 @@
           class="mt-4"
         >
           <div class="font-weight-medium">{{ $t('entities.copyToCampaign.success') }}</div>
-          <div class="text-body-2 mt-1">
+          <div class="text-body-medium mt-1">
             {{ $t('entities.copyToCampaign.successDetails', {
               copied: copyResult.stats.entitiesCopied,
               skipped: copyResult.stats.entitiesSkipped,

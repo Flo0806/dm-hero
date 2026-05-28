@@ -26,7 +26,7 @@
       <v-tabs-window-item value="currencies">
         <div v-if="!activeCampaignId" class="text-center py-8">
           <v-icon icon="mdi-alert-circle-outline" size="48" color="warning" class="mb-4" />
-          <p class="text-body-1">{{ $t('referenceData.noCampaignSelected') }}</p>
+          <p class="text-body-large">{{ $t('referenceData.noCampaignSelected') }}</p>
         </div>
         <div v-else>
           <div class="d-flex justify-end mb-4">
@@ -238,7 +238,7 @@
           />
 
           <v-divider class="my-4" />
-          <div class="text-subtitle-2 mb-2">
+          <div class="text-title-small mb-2">
             {{ $t('referenceData.translations') }}
           </div>
 
@@ -300,7 +300,7 @@
           />
 
           <v-divider class="my-4" />
-          <div class="text-subtitle-2 mb-2">
+          <div class="text-title-small mb-2">
             {{ $t('referenceData.translations') }}
           </div>
 

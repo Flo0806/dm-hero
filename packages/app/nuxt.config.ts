@@ -12,6 +12,8 @@ export default defineNuxtConfig({
   },
 
   css: [
+    // MUST be first so the layer order is established before vuetify ships its layers
+    '@/assets/css/layer-order.css',
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.css',
     '@/assets/md-editor-theme.css',

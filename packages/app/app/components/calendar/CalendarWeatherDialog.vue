@@ -22,20 +22,20 @@
           variant="outlined"
           class="mb-3"
         >
-          <template #item="{ item, props: itemProps }">
+          <template #item="{ internalItem, props: itemProps }">
             <v-list-item v-bind="itemProps">
               <template #prepend>
-                <v-icon :color="item.value === 'sunny' ? 'amber' : 'blue-grey'">
-                  {{ getWeatherIcon(item.value) }}
+                <v-icon :color="internalItem.value === 'sunny' ? 'amber' : 'blue-grey'">
+                  {{ getWeatherIcon(internalItem.value) }}
                 </v-icon>
               </template>
             </v-list-item>
           </template>
-          <template #selection="{ item }">
-            <v-icon :color="item.value === 'sunny' ? 'amber' : 'blue-grey'" class="mr-2">
-              {{ getWeatherIcon(item.value) }}
+          <template #selection="{ internalItem }">
+            <v-icon :color="internalItem.value === 'sunny' ? 'amber' : 'blue-grey'" class="mr-2">
+              {{ getWeatherIcon(internalItem.value) }}
             </v-icon>
-            {{ item.title }}
+            {{ internalItem.title }}
           </template>
         </v-select>
 

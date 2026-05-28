@@ -40,7 +40,7 @@
           <div v-else-if="preview">
             <v-alert type="success" variant="tonal" class="mb-4">
               <div class="font-weight-medium">{{ preview.campaignName }}</div>
-              <div v-if="preview.description" class="text-body-2 mt-1">
+              <div v-if="preview.description" class="text-body-medium mt-1">
                 {{ preview.description }}
               </div>
             </v-alert>
@@ -137,7 +137,7 @@
                 <template #label>
                   <div>
                     <div class="font-weight-medium">{{ $t('campaigns.import.modeNew') }}</div>
-                    <div class="text-caption text-medium-emphasis">
+                    <div class="text-body-small text-medium-emphasis">
                       {{ $t('campaigns.import.modeNewHint') }}
                     </div>
                   </div>
@@ -152,7 +152,7 @@
                         "{{ activeCampaign.name }}"
                       </span>
                     </div>
-                    <div class="text-caption text-medium-emphasis">
+                    <div class="text-body-small text-medium-emphasis">
                       {{ activeCampaign
                         ? $t('campaigns.import.modeMergeHint')
                         : $t('campaigns.import.modeMergeNoActive')
@@ -232,7 +232,7 @@
 
           <!-- Store Update: Show count -->
           <div v-if="conflictInfo?.isStoreUpdate" class="mb-4">
-            <p class="text-body-2 mb-2">
+            <p class="text-body-medium mb-2">
               {{ $t('campaigns.import.storeUpdateDetails') }}
             </p>
             <v-chip color="primary" variant="tonal">
@@ -242,7 +242,7 @@
 
           <!-- Duplicates: Show list -->
           <div v-else-if="conflictInfo?.duplicates.length" class="mb-4">
-            <p class="text-body-2 mb-2">
+            <p class="text-body-medium mb-2">
               {{ $t('campaigns.import.duplicateDetails') }}
             </p>
             <v-list density="compact" max-height="200" class="overflow-y-auto">
@@ -285,15 +285,15 @@
                 <!-- Show imported vs existing -->
                 <div v-if="!conflict.isStandard" class="d-flex flex-column flex-sm-row ga-2 mb-2">
                   <div class="flex-grow-1">
-                    <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.imported') }}</div>
-                    <div class="text-body-2">
+                    <div class="text-body-small text-medium-emphasis">{{ $t('campaigns.import.imported') }}</div>
+                    <div class="text-body-medium">
                       DE: {{ conflict.imported.name_de || '-' }}<br />
                       EN: {{ conflict.imported.name_en || '-' }}
                     </div>
                   </div>
                   <div class="flex-grow-1">
-                    <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.existing') }}</div>
-                    <div class="text-body-2">
+                    <div class="text-body-small text-medium-emphasis">{{ $t('campaigns.import.existing') }}</div>
+                    <div class="text-body-medium">
                       DE: {{ conflict.existing.name_de || '-' }}<br />
                       EN: {{ conflict.existing.name_en || '-' }}
                     </div>
@@ -310,18 +310,18 @@
                 >
                   <v-radio v-if="conflict.isStandard" value="skip">
                     <template #label>
-                      <span class="text-body-2">{{ $t('campaigns.import.skipStandard') }}</span>
+                      <span class="text-body-medium">{{ $t('campaigns.import.skipStandard') }}</span>
                     </template>
                   </v-radio>
                   <template v-else>
                     <v-radio value="keep">
                       <template #label>
-                        <span class="text-body-2">{{ $t('campaigns.import.keepExisting') }}</span>
+                        <span class="text-body-medium">{{ $t('campaigns.import.keepExisting') }}</span>
                       </template>
                     </v-radio>
                     <v-radio value="overwrite">
                       <template #label>
-                        <span class="text-body-2">{{ $t('campaigns.import.overwriteExisting') }}</span>
+                        <span class="text-body-medium">{{ $t('campaigns.import.overwriteExisting') }}</span>
                       </template>
                     </v-radio>
                   </template>
@@ -339,7 +339,7 @@
 
             <v-card variant="outlined">
               <v-card-text class="pa-3">
-                <div class="text-body-2 mb-3">
+                <div class="text-body-medium mb-3">
                   {{ $t('campaigns.import.calendarConflictDetails') }}
                 </div>
 
@@ -351,16 +351,16 @@
                   <v-radio value="keep">
                     <template #label>
                       <div>
-                        <span class="text-body-2 font-weight-medium">{{ $t('campaigns.import.keepExistingCalendar') }}</span>
-                        <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.keepExistingCalendarHint') }}</div>
+                        <span class="text-body-medium font-weight-medium">{{ $t('campaigns.import.keepExistingCalendar') }}</span>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('campaigns.import.keepExistingCalendarHint') }}</div>
                       </div>
                     </template>
                   </v-radio>
                   <v-radio value="overwrite">
                     <template #label>
                       <div>
-                        <span class="text-body-2 font-weight-medium">{{ $t('campaigns.import.overwriteCalendar') }}</span>
-                        <div class="text-caption text-medium-emphasis">{{ $t('campaigns.import.overwriteCalendarHint') }}</div>
+                        <span class="text-body-medium font-weight-medium">{{ $t('campaigns.import.overwriteCalendar') }}</span>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('campaigns.import.overwriteCalendarHint') }}</div>
                       </div>
                     </template>
                   </v-radio>
@@ -377,8 +377,8 @@
         <!-- Step 4: Importing -->
         <div v-else-if="step === 'importing'" class="text-center py-8">
           <v-progress-circular indeterminate size="64" class="mb-4" />
-          <div class="text-h6">{{ $t('campaigns.import.importing') }}</div>
-          <div class="text-body-2 text-medium-emphasis">
+          <div class="text-headline-small">{{ $t('campaigns.import.importing') }}</div>
+          <div class="text-body-medium text-medium-emphasis">
             {{ $t('campaigns.import.pleaseWait') }}
           </div>
         </div>
@@ -386,8 +386,8 @@
         <!-- Step 4: Success -->
         <div v-else-if="step === 'success'" class="text-center py-8">
           <v-icon size="64" color="success" class="mb-4">mdi-check-circle</v-icon>
-          <div class="text-h6">{{ $t('campaigns.import.success') }}</div>
-          <div class="text-body-2 text-medium-emphasis">
+          <div class="text-headline-small">{{ $t('campaigns.import.success') }}</div>
+          <div class="text-body-medium text-medium-emphasis">
             {{ $t('campaigns.import.successDetails', importResult?.stats || {}) }}
           </div>
         </div>

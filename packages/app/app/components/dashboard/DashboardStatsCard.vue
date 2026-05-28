@@ -3,7 +3,7 @@
     <v-card-text class="pa-4">
       <div class="d-flex align-center mb-3">
         <v-icon icon="mdi-chart-timeline-variant" color="primary" size="24" class="mr-2" />
-        <span class="text-subtitle-1 font-weight-medium">{{ $t('dashboard.stats.title') }}</span>
+        <span class="text-title-medium font-weight-medium">{{ $t('dashboard.stats.title') }}</span>
       </div>
 
       <div class="stats-grid">
@@ -11,8 +11,8 @@
         <div class="stat-item d-flex align-center ga-3 pa-3 rounded-lg">
           <v-icon icon="mdi-clock-outline" size="20" color="primary" style="opacity: 0.8" />
           <div class="flex-grow-1">
-            <div class="text-h6 font-weight-bold">{{ formattedPlaytime }}</div>
-            <div class="stat-label text-caption text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.playtime') }}</div>
+            <div class="text-headline-small font-weight-bold">{{ formattedPlaytime }}</div>
+            <div class="stat-label text-body-small text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.playtime') }}</div>
           </div>
         </div>
 
@@ -20,8 +20,8 @@
         <div class="stat-item d-flex align-center ga-3 pa-3 rounded-lg">
           <v-icon icon="mdi-book-open-page-variant" size="20" color="primary" style="opacity: 0.8" />
           <div class="flex-grow-1">
-            <div class="text-h6 font-weight-bold">{{ sessionCount }}</div>
-            <div class="stat-label text-caption text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.sessions') }}</div>
+            <div class="text-headline-small font-weight-bold">{{ sessionCount }}</div>
+            <div class="stat-label text-body-small text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.sessions') }}</div>
           </div>
         </div>
 
@@ -29,8 +29,8 @@
         <div class="stat-item d-flex align-center ga-3 pa-3 rounded-lg">
           <v-icon icon="mdi-database" size="20" color="primary" style="opacity: 0.8" />
           <div class="flex-grow-1">
-            <div class="text-h6 font-weight-bold">{{ totalEntities }}</div>
-            <div class="stat-label text-caption text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.entities') }}</div>
+            <div class="text-headline-small font-weight-bold">{{ totalEntities }}</div>
+            <div class="stat-label text-body-small text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.entities') }}</div>
           </div>
         </div>
 
@@ -38,8 +38,8 @@
         <div class="stat-item d-flex align-center ga-3 pa-3 rounded-lg">
           <v-icon icon="mdi-pin" size="20" color="primary" style="opacity: 0.8" />
           <div class="flex-grow-1">
-            <div class="text-h6 font-weight-bold">{{ pinnedCount }}</div>
-            <div class="stat-label text-caption text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.pinned') }}</div>
+            <div class="text-headline-small font-weight-bold">{{ pinnedCount }}</div>
+            <div class="stat-label text-body-small text-medium-emphasis text-uppercase">{{ $t('dashboard.stats.pinned') }}</div>
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@
           <v-icon :icon="group.icon || 'mdi-folder-multiple'" size="24" :color="getContrastColor(group.color)" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h3 class="text-h6">{{ group.name }}</h3>
-          <div class="text-body-2 text-medium-emphasis">
+          <h3 class="text-headline-small">{{ group.name }}</h3>
+          <div class="text-body-medium text-medium-emphasis">
             {{ $t('groups.memberCount', totalMembers) }}
           </div>
         </div>
@@ -19,7 +19,7 @@
 
       <!-- Description (if exists) -->
       <v-card-text v-if="group.description" class="py-3">
-        <p class="text-body-2 mb-0">{{ group.description }}</p>
+        <p class="text-body-medium mb-0">{{ group.description }}</p>
       </v-card-text>
 
       <v-divider v-if="group.description" />
@@ -48,8 +48,8 @@
                 <v-icon v-else :icon="getTypeIcon(member.entity_type)" size="16" />
               </v-avatar>
             </template>
-            <v-list-item-title class="text-body-2">{{ member.entity_name }}</v-list-item-title>
-            <v-list-item-subtitle class="text-caption">
+            <v-list-item-title class="text-body-medium">{{ member.entity_name }}</v-list-item-title>
+            <v-list-item-subtitle class="text-body-small">
               {{ $t(`entityTypes.${member.entity_type}`) }}
             </v-list-item-subtitle>
             <template #append>

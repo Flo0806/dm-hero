@@ -47,7 +47,7 @@
     <!-- Search Loading Indicator (shown immediately when typing starts) -->
     <div v-else-if="searching && (!searchResults || searchResults.length === 0)" class="text-center py-16">
       <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-      <div class="text-h6">
+      <div class="text-headline-small">
         {{ $t('common.searching') }}
       </div>
     </div>
@@ -65,7 +65,7 @@
       >
         <div class="text-center">
           <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-          <div class="text-h6">
+          <div class="text-headline-small">
             {{ $t('common.searching') }}
           </div>
         </div>
@@ -80,63 +80,48 @@
           item-value="id"
           item-title="title"
           density="comfortable"
-          expand-icon=""
-          collapse-icon=""
         >
-          <!-- Custom prepend slot for expand button + icon -->
-          <template #prepend="{ item }">
-            <div
-              :class="{
-                'highlight-blink-prepend': highlightedId === item.raw.id,
-              }"
-              style="display: flex; align-items: center; gap: 4px; margin-left: -8px"
+          <!-- Location type icon (expand/collapse is handled by v-treeview default) -->
+          <template #prepend="{ internalItem }">
+            <v-icon
+              :class="{ 'highlight-blink-prepend': highlightedId === internalItem.raw.id }"
+              :color="getNodeColor(internalItem.raw)"
+              size="small"
             >
-              <!-- Expand/Collapse icon only if has children -->
-              <v-icon
-                v-if="item.children && item.children.length > 0"
-                :icon="openedNodes.includes(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-                size="small"
-                style="width: 20px"
-              />
-              <div v-else style="width: 20px" />
-
-              <!-- Location type icon -->
-              <v-icon :color="getNodeColor(item)" size="small">
-                {{ getNodeIcon(item) }}
-              </v-icon>
-            </div>
+              {{ getNodeIcon(internalItem.raw) }}
+            </v-icon>
           </template>
 
           <!-- Custom title to highlight search results -->
-          <template #title="{ item }">
+          <template #title="{ internalItem }">
             <div
-              :id="`location-${item.raw.id}`"
-              :key="`location-title-${item.raw.id}-${animationKey}`"
+              :id="`location-${internalItem.raw.id}`"
+              :key="`location-title-${internalItem.raw.id}-${animationKey}`"
               :class="{
-                'highlight-blink-title': highlightedId === item.raw.id,
+                'highlight-blink-title': highlightedId === internalItem.raw.id,
               }"
-              @contextmenu.prevent="openQuickLinkMenu($event, item.raw)"
+              @contextmenu.prevent="openQuickLinkMenu($event, internalItem.raw)"
             >
-              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }" :style="{ opacity: item.raw.archived_at ? 0.5 : 1 }">
-                {{ item.title }}
-                <v-chip v-if="item.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+              <span :class="{ 'text-primary font-weight-bold': internalItem.raw.isSearchResult }" :style="{ opacity: internalItem.raw.archived_at ? 0.5 : 1 }">
+                {{ internalItem.title }}
+                <v-chip v-if="internalItem.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
                   {{ $t('common.archived') }}
                 </v-chip>
               </span>
             </div>
           </template>
 
-          <template #append="{ item }">
+          <template #append="{ internalItem }">
             <div class="d-flex align-center ga-1">
               <!-- Type chip -->
               <v-chip
-                v-if="item.raw.metadata?.type"
+                v-if="internalItem.raw.metadata?.type"
                 size="x-small"
                 color="primary"
                 variant="tonal"
                 class="mr-2"
               >
-                {{ $t(`locations.types.${item.raw.metadata.type}`, item.raw.metadata.type) }}
+                {{ $t(`locations.types.${internalItem.raw.metadata.type}`, internalItem.raw.metadata.type) }}
               </v-chip>
 
               <!-- Actions -->
@@ -144,31 +129,31 @@
                 icon="mdi-eye"
                 size="x-small"
                 variant="text"
-                @click.stop="viewLocation(item.raw)"
+                @click.stop="viewLocation(internalItem.raw)"
               />
               <v-btn
                 icon="mdi-pencil"
                 size="x-small"
                 variant="text"
-                @click.stop="editLocation(item.raw)"
+                @click.stop="editLocation(internalItem.raw)"
               />
               <v-btn
                 icon="mdi-graph"
                 size="x-small"
                 variant="text"
                 color="primary"
-                @click.stop="openChaosGraph(item.raw)"
+                @click.stop="openChaosGraph(internalItem.raw)"
               />
               <v-btn
-                :icon="item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+                :icon="internalItem.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
                 size="x-small"
                 variant="text"
-                :color="item.raw.archived_at ? 'success' : 'warning'"
-                @click.stop="archiveLocation(item.raw)"
+                :color="internalItem.raw.archived_at ? 'success' : 'warning'"
+                @click.stop="archiveLocation(internalItem.raw)"
               >
-                <v-icon>{{ item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+                <v-icon>{{ internalItem.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
                 <v-tooltip activator="parent" location="bottom">
-                  {{ item.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+                  {{ internalItem.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
                 </v-tooltip>
               </v-btn>
               <v-btn
@@ -176,7 +161,7 @@
                 size="x-small"
                 variant="text"
                 color="error"
-                @click.stop="deleteLocation(item.raw)"
+                @click.stop="deleteLocation(internalItem.raw)"
               />
             </div>
           </template>
@@ -199,8 +184,8 @@
       <template #fallback>
         <v-container class="text-center py-16">
           <v-icon icon="mdi-map-marker-multiple" size="64" color="grey" class="mb-4" />
-          <h2 class="text-h5 mb-2">{{ $t('locations.empty') }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
+          <h2 class="text-headline-medium mb-2">{{ $t('locations.empty') }}</h2>
+          <p class="text-body-large text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('locations.create') }}
           </v-btn>
@@ -549,13 +534,15 @@ const filteredLocations = computed(() => {
   return [...(locations.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
-// Build tree structure from flat location list
-interface TreeNode {
-  id: number
+// Build tree structure from flat location list.
+// TreeNode extends Location so that all original fields (metadata, archived_at, …)
+// are directly accessible on the node — Vuetify 4's v-treeview slot prop is
+// `internalItem.raw = TreeNode`, so anything we want in the template must live
+// at the TreeNode level, not nested under another `.raw`.
+interface TreeNode extends Location {
   title: string
   children?: TreeNode[]
-  raw: Location
-  isSearchResult?: boolean // Mark if this is an actual search result
+  isSearchResult?: boolean
 }
 
 // Helper: Get all parent IDs for a location
@@ -610,13 +597,12 @@ const treeItems = computed(() => {
   const locationMap = new Map<number, TreeNode>()
   const rootNodes: TreeNode[] = []
 
-  // First pass: create all nodes
+  // First pass: create all nodes — spread Location so node has all its fields directly
   locationsToShow.forEach((location) => {
     locationMap.set(location.id, {
-      id: location.id,
+      ...location,
       title: location.name,
       children: [],
-      raw: location,
       isSearchResult: searchResultIds.has(location.id),
     })
   })
@@ -655,6 +641,20 @@ const treeItems = computed(() => {
 
   // Sort root nodes and all children
   sortNodes(rootNodes)
+
+  // v-treeview 4 treats any non-undefined children (even []) as expandable.
+  // Strip empty arrays so leaf nodes don't get an expand arrow.
+  const stripEmptyChildren = (nodes: TreeNode[]) => {
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        stripEmptyChildren(node.children)
+      }
+      else {
+        node.children = undefined
+      }
+    })
+  }
+  stripEmptyChildren(rootNodes)
 
   return rootNodes
 })
@@ -699,12 +699,12 @@ watch(
 
 // Get icon based on location type (uses composable)
 function getNodeIcon(item: TreeNode) {
-  return getLocationTypeIcon(item.raw?.metadata?.type)
+  return getLocationTypeIcon(item.metadata?.type)
 }
 
 // Get color based on location type (uses composable)
 function getNodeColor(item: TreeNode) {
-  return getLocationTypeColor(item.raw?.metadata?.type)
+  return getLocationTypeColor(item.metadata?.type)
 }
 
 // Form state
@@ -1001,9 +1001,11 @@ function handleLinked() {
   transform: scale(1.1);
 }
 
-/* Add consistent padding to all treeview items */
+/* Add consistent padding to all treeview items.
+ * NOTE: Only set padding-block — `padding` shorthand would kill the
+ * padding-inline-start that v-treeview uses for child indentation. */
 :deep(.v-treeview-item) {
-  padding: 4px 8px;
+  padding-block: 4px;
   margin: 2px 0;
   border-radius: 4px;
 }

@@ -34,7 +34,7 @@
 
       <!-- Name & Metadata -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+        <h3 class="text-headline-small mb-2" style="line-height: 1.2">
           {{ lore.name }}
           <v-chip v-if="lore.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
             {{ $t('common.archived') }}
@@ -55,7 +55,7 @@
 
         <!-- Date (for events) - always shown, takes same vertical space -->
         <div
-          class="text-caption text-medium-emphasis"
+          class="text-body-small text-medium-emphasis"
           :style="{ minHeight: lore.metadata?.type ? '20px' : '44px' }"
         >
           <template v-if="lore.metadata?.date">
@@ -69,10 +69,10 @@
     <!-- Description (Fixed 3 lines) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0">
       <div class="lore-description">
-        <p v-if="lore.description" class="text-body-2 text-medium-emphasis mb-0">
+        <p v-if="lore.description" class="text-body-medium text-medium-emphasis mb-0">
           {{ lore.description }}
         </p>
-        <p v-else class="text-body-2 text-disabled mb-0 font-italic">
+        <p v-else class="text-body-medium text-disabled mb-0 font-italic">
           {{ $t('common.noDescription') }}
         </p>
       </div>

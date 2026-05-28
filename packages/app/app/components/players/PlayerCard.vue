@@ -34,7 +34,7 @@
 
       <!-- Name & Contact Info -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">
+        <h3 class="text-headline-small mb-2" style="line-height: 1.2">
           {{ player.name }}
           <v-chip v-if="player.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
             {{ $t('common.archived') }}
@@ -43,15 +43,15 @@
 
         <!-- Contact Info -->
         <div class="d-flex flex-column" style="gap: 4px">
-          <div v-if="player.metadata?.discord" class="text-caption text-medium-emphasis d-flex align-center">
+          <div v-if="player.metadata?.discord" class="text-body-small text-medium-emphasis d-flex align-center">
             <v-icon size="14" class="mr-1">mdi-discord</v-icon>
             {{ player.metadata.discord }}
           </div>
-          <div v-if="player.metadata?.email" class="text-caption text-medium-emphasis d-flex align-center">
+          <div v-if="player.metadata?.email" class="text-body-small text-medium-emphasis d-flex align-center">
             <v-icon size="14" class="mr-1">mdi-email</v-icon>
             {{ player.metadata.email }}
           </div>
-          <div v-if="player.metadata?.phone" class="text-caption text-medium-emphasis d-flex align-center">
+          <div v-if="player.metadata?.phone" class="text-body-small text-medium-emphasis d-flex align-center">
             <v-icon size="14" class="mr-1">mdi-phone</v-icon>
             {{ player.metadata.phone }}
           </div>
@@ -62,10 +62,10 @@
     <!-- Description (Fixed 3 lines) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0">
       <div class="player-description">
-        <p v-if="player.description" class="text-body-2 text-medium-emphasis mb-0">
+        <p v-if="player.description" class="text-body-medium text-medium-emphasis mb-0">
           {{ player.description }}
         </p>
-        <p v-else class="text-body-2 text-disabled mb-0 font-italic">
+        <p v-else class="text-body-medium text-disabled mb-0 font-italic">
           {{ $t('common.noDescription') }}
         </p>
       </div>

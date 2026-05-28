@@ -135,7 +135,7 @@
 
             <!-- NPCs Tab -->
             <v-tabs-window-item value="npcs">
-              <div class="text-h6 mb-4">{{ $t('lore.linkedNpcs') }}</div>
+              <div class="text-headline-small mb-4">{{ $t('lore.linkedNpcs') }}</div>
 
               <v-list v-if="linkedNpcs.length > 0">
                 <v-list-item v-for="npc in linkedNpcs" :key="npc.id" class="mb-2" border>
@@ -170,7 +170,7 @@
 
               <v-divider class="my-4" />
 
-              <div class="text-h6 mb-4">{{ $t('lore.addNpc') }}</div>
+              <div class="text-headline-small mb-4">{{ $t('lore.addNpc') }}</div>
 
               <v-autocomplete
                 v-model="selectedNpcId"
@@ -201,7 +201,7 @@
 
             <!-- Factions Tab -->
             <v-tabs-window-item value="factions">
-              <div class="text-h6 mb-4">{{ $t('lore.linkedFactions') }}</div>
+              <div class="text-headline-small mb-4">{{ $t('lore.linkedFactions') }}</div>
 
               <v-list v-if="linkedFactions.length > 0">
                 <v-list-item v-for="faction in linkedFactions" :key="faction.id" class="mb-2" border>
@@ -230,7 +230,7 @@
 
               <v-divider class="my-4" />
 
-              <div class="text-h6 mb-4">{{ $t('lore.addFaction') }}</div>
+              <div class="text-headline-small mb-4">{{ $t('lore.addFaction') }}</div>
 
               <v-autocomplete
                 v-model="selectedFactionId"

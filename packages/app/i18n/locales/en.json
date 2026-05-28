@@ -34,7 +34,28 @@
     "referenceData": "Reference Data",
     "settings": "Settings",
     "theme": "Theme",
+    "themePickerTitle": "Pick a theme",
     "activeCampaign": "Active Campaign"
+  },
+  "themes": {
+    "dark": "Dark (Midnight Tavern)",
+    "hell": "Light (Aged Parchment)",
+    "linux": "Linux (Aubergine)",
+    "green": "Green (Forest)",
+    "blue": "Blue (Ocean)",
+    "purple": "Purple (Arcane)",
+    "orange": "Orange (Campfire)"
+  },
+  "featureTooltips": {
+    "newBadge": "New",
+    "dontShowAgain": "Don't show again",
+    "themeSwitcher": "Pick your favorite theme from 7 color variants. You can turn these hints off in Settings.",
+    "settings": {
+      "title": "New-feature hints",
+      "description": "Shows a small hint when a new feature is available.",
+      "showToggle": "Show new-feature hints",
+      "resetButton": "Show all dismissed hints again"
+    }
   },
   "search": {
     "placeholder": "Search for NPCs, locations, items, groups...",
@@ -1483,6 +1504,7 @@
     "view": "View",
     "close": "Close",
     "ok": "OK",
+    "reset": "Reset",
     "saveInTabHint": "Save changes directly in this tab",
     "unsavedTabChanges": "Save or cancel changes first: {tabs}",
     "clear": "Clear",

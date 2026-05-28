@@ -158,7 +158,7 @@
         >
           <div class="text-center">
             <v-progress-circular indeterminate size="64" color="primary" />
-            <div class="text-h6 mt-4">{{ $t('common.uploading') }}</div>
+            <div class="text-headline-small mt-4">{{ $t('common.uploading') }}</div>
           </div>
         </v-overlay>
 

@@ -29,11 +29,11 @@
           no-filter
           prepend-inner-icon="mdi-map-marker"
         >
-          <template #item="{ item, props: itemProps }">
+          <template #item="{ internalItem, props: itemProps }">
             <v-list-item v-bind="itemProps">
               <template #prepend>
                 <v-avatar size="32" color="#8B7355">
-                  <v-img v-if="item.raw.image_url" :src="`/uploads/${item.raw.image_url}`" />
+                  <v-img v-if="internalItem.raw.image_url" :src="`/uploads/${internalItem.raw.image_url}`" />
                   <v-icon v-else icon="mdi-map-marker" size="small" />
                 </v-avatar>
               </template>
@@ -52,7 +52,7 @@
           class="mb-3"
         >
           <template #append>
-            <span class="text-body-2">{{ form.radius }}%</span>
+            <span class="text-body-medium">{{ form.radius }}%</span>
           </template>
         </v-slider>
 

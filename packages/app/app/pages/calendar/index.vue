@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="d-flex justify-space-between align-center mb-4">
       <div>
-        <h1 class="text-h4">{{ $t('calendar.title') }}</h1>
+        <h1 class="text-headline-large">{{ $t('calendar.title') }}</h1>
         <p class="text-medium-emphasis">{{ $t('calendar.subtitle') }}</p>
       </div>
       <div class="d-flex ga-2 align-center">
@@ -43,7 +43,7 @@
     <!-- Calendar not configured -->
     <v-card v-if="!isConfigured" class="pa-8 text-center">
       <v-icon size="64" color="grey">mdi-calendar-blank</v-icon>
-      <h2 class="text-h5 mt-4">{{ $t('calendar.notConfigured') }}</h2>
+      <h2 class="text-headline-medium mt-4">{{ $t('calendar.notConfigured') }}</h2>
       <p class="text-medium-emphasis mt-2">{{ $t('calendar.notConfiguredHint') }}</p>
       <v-btn color="primary" class="mt-4" @click="openSettingsDialog">
         {{ $t('calendar.setup') }}
@@ -62,7 +62,7 @@
             </v-chip>
             <div v-for="moonPhase in currentMoonPhases" :key="moonPhase.name" class="d-flex align-center ga-2">
               <v-icon :color="getMoonColor(moonPhase.name)">{{ getMoonIconForPhase(moonPhase.phaseIndex) }}</v-icon>
-              <span class="text-body-2">{{ moonPhase.name }}: {{ moonPhase.phase }}</span>
+              <span class="text-body-medium">{{ moonPhase.name }}: {{ moonPhase.phase }}</span>
             </div>
           </div>
           <v-btn
@@ -88,10 +88,10 @@
         <v-card-title class="d-flex align-center justify-space-between">
           <v-btn icon="mdi-chevron-left" variant="text" @click="prevMonth" />
           <div class="text-center">
-            <span class="text-h5">{{ currentMonthName }}</span>
+            <span class="text-headline-medium">{{ currentMonthName }}</span>
             <div class="d-flex align-center justify-center ga-2 mt-1">
               <v-btn icon="mdi-chevron-left" size="x-small" variant="text" @click="prevYear" />
-              <span class="text-body-1">
+              <span class="text-body-large">
                 {{ $t('calendar.year') }} {{ viewYear }}
                 <span v-if="calendarConfig.config.era_name">{{ calendarConfig.config.era_name }}</span>
               </span>
@@ -110,7 +110,7 @@
             <div
               v-for="weekday in calendarConfig.weekdays"
               :key="weekday.id"
-              class="calendar-header text-center text-caption font-weight-bold py-2"
+              class="calendar-header text-center text-body-small font-weight-bold py-2"
             >
               {{ weekday.name }}
             </div>
@@ -209,10 +209,10 @@
                       </v-chip>
                       <strong>{{ session.title }}</strong>
                     </div>
-                    <div v-if="session.summary" class="text-caption mb-1">
+                    <div v-if="session.summary" class="text-body-small mb-1">
                       {{ session.summary.slice(0, 150) }}{{ session.summary.length > 150 ? '...' : '' }}
                     </div>
-                    <div class="d-flex ga-2 text-caption">
+                    <div class="d-flex ga-2 text-body-small">
                       <span v-if="session.attendance_count > 0">
                         <v-icon size="12">mdi-account-group</v-icon> {{ session.attendance_count }}
                       </span>
@@ -223,14 +223,14 @@
                         <v-icon size="12">mdi-calendar</v-icon> {{ session.date }}
                       </span>
                     </div>
-                    <div v-if="!session.isStart && !session.isEnd" class="text-caption mt-1 text-warning">
+                    <div v-if="!session.isStart && !session.isEnd" class="text-body-small mt-1 text-warning">
                       {{ $t('calendar.multiDaySession') }}
                     </div>
                   </div>
                 </v-tooltip>
                 <div
                   v-if="getSessionsForDay(day).length > 2"
-                  class="session-more text-caption text-medium-emphasis"
+                  class="session-more text-body-small text-medium-emphasis"
                 >
                   +{{ getSessionsForDay(day).length - 2 }} {{ $t('calendar.sessions').toLowerCase() }}
                 </div>
@@ -256,13 +256,13 @@
                   </template>
                   <div>
                     <strong>{{ event.title }}</strong>
-                    <div class="text-caption">{{ $t('calendar.eventTypes.' + event.event_type) }}</div>
-                    <div v-if="event.entity_name" class="text-caption">{{ event.entity_name }}</div>
+                    <div class="text-body-small">{{ $t('calendar.eventTypes.' + event.event_type) }}</div>
+                    <div v-if="event.entity_name" class="text-body-small">{{ event.entity_name }}</div>
                   </div>
                 </v-tooltip>
                 <div
                   v-if="getEventsForDay(day).length > 3"
-                  class="event-more text-caption text-medium-emphasis"
+                  class="event-more text-body-small text-medium-emphasis"
                 >
                   +{{ getEventsForDay(day).length - 3 }} {{ $t('calendar.events').toLowerCase() }}
                 </div>
@@ -346,7 +346,7 @@
         <v-card-text>
           <!-- Sessions for selected day -->
           <div v-if="selectedDaySessions.length > 0" class="mb-4">
-            <div class="text-overline text-medium-emphasis mb-2">
+            <div class="text-label-small text-medium-emphasis mb-2">
               <v-icon size="16" class="mr-1">mdi-book-open-page-variant</v-icon>
               {{ $t('calendar.sessions') }} ({{ selectedDaySessions.length }})
             </div>
@@ -394,7 +394,7 @@
 
           <!-- Events for selected day -->
           <div v-if="selectedDayEvents.length > 0">
-            <div class="text-overline text-medium-emphasis mb-2">
+            <div class="text-label-small text-medium-emphasis mb-2">
               <v-icon size="16" class="mr-1">mdi-calendar</v-icon>
               {{ $t('calendar.events') }} ({{ selectedDayEvents.length }})
             </div>
@@ -482,7 +482,7 @@
               </v-avatar>
               <div>
                 <div class="font-weight-medium">{{ eventToDelete.title }}</div>
-                <div class="text-caption text-medium-emphasis">
+                <div class="text-body-small text-medium-emphasis">
                   {{ eventToDelete.day }}. {{ calendarConfig.months[eventToDelete.month - 1]?.name }}
                   <span v-if="!eventToDelete.is_recurring"> {{ eventToDelete.year }}</span>
                   <v-chip v-if="eventToDelete.is_recurring" size="x-small" class="ml-1">
@@ -517,7 +517,7 @@
 
           <!-- Affected Events -->
           <div v-if="validationResult?.affectedEvents.length" class="mb-4">
-            <div class="text-subtitle-2 mb-2">
+            <div class="text-title-small mb-2">
               <v-icon size="18" class="mr-1">mdi-calendar</v-icon>
               {{ $t('calendar.affectedEvents', { count: validationResult.affectedEvents.length }) }}
             </div>
@@ -538,14 +538,14 @@
                 </v-list-item-title>
               </v-list-item>
             </v-list>
-            <div class="text-caption text-medium-emphasis mt-1">
+            <div class="text-body-small text-medium-emphasis mt-1">
               {{ $t('calendar.eventsWillBeMoved') }}
             </div>
           </div>
 
           <!-- Affected Sessions -->
           <div v-if="validationResult?.affectedSessions.length">
-            <div class="text-subtitle-2 mb-2">
+            <div class="text-title-small mb-2">
               <v-icon size="18" class="mr-1">mdi-book-open-page-variant</v-icon>
               {{ $t('calendar.affectedSessions', { count: validationResult.affectedSessions.length }) }}
             </div>
@@ -565,7 +565,7 @@
                 </v-list-item-title>
               </v-list-item>
             </v-list>
-            <div class="text-caption text-medium-emphasis mt-1">
+            <div class="text-body-small text-medium-emphasis mt-1">
               {{ $t('calendar.sessionsWillBeReset') }}
             </div>
           </div>

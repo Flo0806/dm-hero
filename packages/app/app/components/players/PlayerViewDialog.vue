@@ -9,9 +9,9 @@
         </v-avatar>
         <div class="flex-grow-1">
           <!-- Player Name (human) is primary -->
-          <h2 class="text-h5">{{ player.metadata?.player_name || player.name }}</h2>
+          <h2 class="text-headline-medium">{{ player.metadata?.player_name || player.name }}</h2>
           <!-- Character name as subtitle if player_name exists -->
-          <div v-if="player.metadata?.player_name" class="text-body-2 text-medium-emphasis">
+          <div v-if="player.metadata?.player_name" class="text-body-medium text-medium-emphasis">
             <v-icon size="x-small" class="mr-1">mdi-sword-cross</v-icon>
             {{ player.name }}
           </div>
@@ -92,8 +92,8 @@
             <div class="pa-4">
               <!-- Description -->
               <div v-if="player.description" class="mb-6">
-                <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('players.description') }}</h3>
-                <p class="text-body-2" style="white-space: pre-wrap">{{ player.description }}</p>
+                <h3 class="text-title-medium font-weight-bold mb-2">{{ $t('players.description') }}</h3>
+                <p class="text-body-medium" style="white-space: pre-wrap">{{ player.description }}</p>
               </div>
 
               <!-- Contact Info -->
@@ -103,7 +103,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-email</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('players.email') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('players.email') }}</div>
                         <a :href="`mailto:${player.metadata.email}`" class="font-weight-medium text-decoration-none">
                           {{ player.metadata.email }}
                         </a>
@@ -116,7 +116,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-discord</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('players.discord') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('players.discord') }}</div>
                         <div class="font-weight-medium">{{ player.metadata.discord }}</div>
                       </div>
                     </div>
@@ -127,7 +127,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-phone</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('players.phone') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('players.phone') }}</div>
                         <a :href="`tel:${player.metadata.phone}`" class="font-weight-medium text-decoration-none">
                           {{ player.metadata.phone }}
                         </a>
@@ -139,9 +139,9 @@
 
               <!-- Notes -->
               <div v-if="player.metadata?.notes" class="mt-6">
-                <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('players.notes') }}</h3>
+                <h3 class="text-title-medium font-weight-bold mb-2">{{ $t('players.notes') }}</h3>
                 <v-card variant="outlined" class="pa-3">
-                  <p class="text-body-2" style="white-space: pre-wrap">{{ player.metadata.notes }}</p>
+                  <p class="text-body-medium" style="white-space: pre-wrap">{{ player.metadata.notes }}</p>
                 </v-card>
               </div>
             </div>

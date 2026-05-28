@@ -25,10 +25,10 @@
 
       <!-- Name & Description -->
       <div class="flex-grow-1" style="min-width: 0">
-        <h3 class="text-h6 mb-2" style="line-height: 1.2">{{ group.name }}</h3>
+        <h3 class="text-headline-small mb-2" style="line-height: 1.2">{{ group.name }}</h3>
 
         <!-- Member Count -->
-        <div class="text-caption text-medium-emphasis">
+        <div class="text-body-small text-medium-emphasis">
           <span v-if="totalMembers > 0">{{ $t('groups.memberCount', totalMembers) }}</span>
           <span v-else class="text-disabled">{{ $t('groups.noMembers') }}</span>
         </div>
@@ -38,10 +38,10 @@
     <!-- Description (Fixed 3 lines) -->
     <v-card-text class="pt-0 pb-3" style="flex-grow: 0">
       <div class="group-description">
-        <p v-if="group.description" class="text-body-2 text-medium-emphasis mb-0">
+        <p v-if="group.description" class="text-body-medium text-medium-emphasis mb-0">
           {{ group.description }}
         </p>
-        <p v-else class="text-body-2 text-disabled mb-0 font-italic">
+        <p v-else class="text-body-medium text-disabled mb-0 font-italic">
           {{ $t('common.noDescription') }}
         </p>
       </div>

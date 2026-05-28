@@ -2,7 +2,7 @@
   <v-container>
     <!-- Page Header -->
     <div class="mb-6">
-      <h1 class="text-h4 mb-2">
+      <h1 class="text-headline-large mb-2">
         {{ $t('settings.title') }}
       </h1>
       <p class="text-medium-emphasis">
@@ -15,7 +15,7 @@
       <v-card-text>
         <!-- AI Integration Section -->
         <div class="mb-6">
-          <h2 class="text-h6 mb-4">
+          <h2 class="text-headline-small mb-4">
             {{ $t('settings.sections.ai') }}
           </h2>
 
@@ -59,7 +59,7 @@
               />
             </template>
             <template #details>
-              <a href="https://platform.openai.com/api-keys" target="_blank" class="text-caption text-primary">
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="text-body-small text-primary">
                 {{ $t('settings.ai.openaiHowToGetKey') }}
                 <v-icon size="x-small">mdi-open-in-new</v-icon>
               </a>
@@ -91,7 +91,7 @@
               />
             </template>
             <template #details>
-              <a href="https://aistudio.google.com/apikey" target="_blank" class="text-caption text-primary">
+              <a href="https://aistudio.google.com/apikey" target="_blank" class="text-body-small text-primary">
                 {{ $t('settings.ai.geminiHowToGetKey') }}
                 <v-icon size="x-small">mdi-open-in-new</v-icon>
               </a>
@@ -148,7 +148,7 @@
             @click:close="testResult = null"
           >
             {{ testResult.message }}
-            <div v-if="testResult.success && testResult.modelsAvailable" class="text-caption mt-1">
+            <div v-if="testResult.success && testResult.modelsAvailable" class="text-body-small mt-1">
               {{ testResult.modelsAvailable }} {{ $t('settings.ai.modelsAvailable') }}
             </div>
           </v-alert>
@@ -173,17 +173,17 @@
     <v-card v-if="isElectron" class="mt-6">
       <v-card-text>
         <div class="mb-6">
-          <h2 class="text-h6 mb-2">
+          <h2 class="text-headline-small mb-2">
             {{ $t('settings.dataManagement.title') }}
           </h2>
-          <p class="text-medium-emphasis text-body-2">
+          <p class="text-medium-emphasis text-body-medium">
             {{ $t('settings.dataManagement.subtitle') }}
           </p>
         </div>
 
         <!-- Storage Path Info -->
         <v-alert v-if="dataPaths" type="info" variant="tonal" density="compact" class="mb-4">
-          <div class="text-caption">
+          <div class="text-body-small">
             <strong>{{ $t('settings.dataManagement.storagePath') }}:</strong><br />
             {{ dataPaths.databasePath }}
           </div>
@@ -213,7 +213,7 @@
         </div>
 
         <!-- Hints -->
-        <div class="mt-3 text-caption text-medium-emphasis">
+        <div class="mt-3 text-body-small text-medium-emphasis">
           <p>{{ $t('settings.dataManagement.exportDatabaseHint') }}</p>
           <p>{{ $t('settings.dataManagement.openUploadsFolderHint') }}</p>
         </div>
@@ -224,17 +224,17 @@
     <v-card class="mt-6">
       <v-card-text>
         <div class="mb-4">
-          <h2 class="text-h6 mb-2">
+          <h2 class="text-headline-small mb-2">
             {{ $t('settings.sections.logs') }}
           </h2>
-          <p class="text-medium-emphasis text-body-2">
+          <p class="text-medium-emphasis text-body-medium">
             {{ $t('settings.logs.subtitle') }}
           </p>
         </div>
 
         <!-- Log Path Info -->
         <v-alert v-if="logPath" type="info" variant="tonal" density="compact" class="mb-4">
-          <div class="text-caption">
+          <div class="text-body-small">
             <strong>{{ $t('settings.logs.logPath') }}:</strong><br />
             {{ logPath }}
           </div>
@@ -251,7 +251,7 @@
           {{ $t('settings.logs.openFolder') }}
         </v-btn>
 
-        <div class="mt-2 text-caption text-medium-emphasis">
+        <div class="mt-2 text-body-small text-medium-emphasis">
           {{ $t('settings.logs.hint') }}
         </div>
       </v-card-text>
@@ -261,7 +261,7 @@
     <v-card class="mt-6">
       <v-card-text>
         <div class="mb-4">
-          <h2 class="text-h6 mb-2">
+          <h2 class="text-headline-small mb-2">
             {{ $t('settings.sections.announcements') }}
           </h2>
         </div>
@@ -276,9 +276,43 @@
           {{ $t('announcements.resetButton') }}
         </v-btn>
 
-        <div class="mt-2 text-caption text-medium-emphasis">
+        <div class="mt-2 text-body-small text-medium-emphasis">
           {{ hasSeenLatest ? $t('settings.announcements.alreadySeen') : $t('settings.announcements.notSeen') }}
         </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- Feature Tooltips Section -->
+    <v-card class="mt-6">
+      <v-card-text>
+        <div class="mb-4">
+          <h2 class="text-headline-small mb-2">
+            {{ $t('featureTooltips.settings.title') }}
+          </h2>
+          <p class="text-medium-emphasis text-body-medium mb-0">
+            {{ $t('featureTooltips.settings.description') }}
+          </p>
+        </div>
+
+        <v-switch
+          :model-value="featureTooltipsEnabled"
+          :label="$t('featureTooltips.settings.showToggle')"
+          color="primary"
+          hide-details
+          inset
+          density="comfortable"
+          @update:model-value="setFeatureTooltipsEnabled"
+        />
+
+        <v-btn
+          variant="outlined"
+          color="secondary"
+          class="mt-3"
+          @click="resetAllFeatureTooltips"
+        >
+          <v-icon start>mdi-restart</v-icon>
+          {{ $t('featureTooltips.settings.resetButton') }}
+        </v-btn>
       </v-card-text>
     </v-card>
 
@@ -292,12 +326,24 @@
 <script setup lang="ts">
 import { useAnnouncements } from '~/composables/useAnnouncements'
 import { useElectron } from '~/composables/useElectron'
+import { useFeatureTooltipSettings } from '~/composables/useFeatureTooltips'
 
 const { t } = useI18n()
 
 // Announcements
 const { resetAnnouncements: doResetAnnouncements, hasSeenLatest: checkHasSeenLatest } = useAnnouncements()
 const hasSeenLatest = ref(true)
+
+// Feature tooltips
+const featureTooltipSettings = useFeatureTooltipSettings()
+const featureTooltipsEnabled = featureTooltipSettings.globallyEnabled
+function setFeatureTooltipsEnabled(value: boolean | null) {
+  featureTooltipSettings.setGloballyEnabled(value ?? false)
+}
+function resetAllFeatureTooltips() {
+  featureTooltipSettings.resetAllDismissed()
+  snackbar.value = { show: true, color: 'success', message: t('featureTooltips.settings.resetButton') }
+}
 
 function resetAnnouncements() {
   doResetAnnouncements()

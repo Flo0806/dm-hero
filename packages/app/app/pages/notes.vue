@@ -3,10 +3,10 @@
     <!-- Redirect to campaigns if no campaign selected -->
     <div v-if="!campaignId" class="text-center py-16">
       <v-icon icon="mdi-notebook" size="64" class="mb-4" color="primary" />
-      <h2 class="text-h4 mb-4">
+      <h2 class="text-headline-large mb-4">
         {{ $t('notes.noCampaign.title') }}
       </h2>
-      <p class="text-body-1 text-medium-emphasis mb-6">
+      <p class="text-body-large text-medium-emphasis mb-6">
         {{ $t('notes.noCampaign.description') }}
       </p>
       <v-btn color="primary" size="large" to="/campaigns" prepend-icon="mdi-arrow-right">
@@ -20,11 +20,11 @@
         <v-col cols="12">
           <div class="d-flex align-center justify-space-between mb-4">
             <div>
-              <div class="text-h4 mb-2">
+              <div class="text-headline-large mb-2">
                 <v-icon icon="mdi-notebook-outline" size="36" class="mr-2" />
                 {{ $t('notes.title') }}
               </div>
-              <p class="text-body-1 text-medium-emphasis">
+              <p class="text-body-large text-medium-emphasis">
                 {{ $t('notes.subtitle') }}
               </p>
             </div>
@@ -76,10 +76,10 @@
 
             <v-card-text v-else-if="notesStore.noteCount === 0" class="text-center py-8">
               <v-icon icon="mdi-notebook-check-outline" size="64" class="mb-4" color="grey" />
-              <div class="text-h6 text-medium-emphasis mb-2">
+              <div class="text-headline-small text-medium-emphasis mb-2">
                 {{ $t('notes.empty') }}
               </div>
-              <div class="text-body-2 text-medium-emphasis">
+              <div class="text-body-medium text-medium-emphasis">
                 {{ $t('notes.emptyHint') }}
               </div>
             </v-card-text>
@@ -164,7 +164,7 @@
       <v-row v-if="notesStore.completedCount > 0" class="mt-4">
         <v-col cols="12">
           <div class="d-flex align-center justify-space-between">
-            <span class="text-body-2 text-medium-emphasis">
+            <span class="text-body-medium text-medium-emphasis">
               {{ notesStore.completedCount }} {{ $t('notes.completed') }}
             </span>
             <v-btn

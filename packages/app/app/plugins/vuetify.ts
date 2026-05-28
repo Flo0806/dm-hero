@@ -4,81 +4,21 @@ import * as directives from 'vuetify/directives'
 import { de, en } from 'vuetify/locale'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
-
-// DnD-inspired theme colors
-const lightTheme = {
-  dark: false,
-  colors: {
-    // "Aged Parchment" theme
-    'background': '#F5F1E8', // Warm parchment white
-    'surface': '#FFFFFF',
-    'surface-variant': '#E8DCC4',
-    'on-surface-variant': '#4A4035',
-    'primary': '#8B4513', // Saddle brown (leather binding)
-    'primary-darken-1': '#654321',
-    'secondary': '#B8860B', // Dark goldenrod (old gold)
-    'secondary-darken-1': '#996515',
-    'accent': '#8B0000', // Burgundy (sealing wax)
-    'error': '#C62828',
-    'info': '#5B7C99', // Gray-blue (ink)
-    'success': '#558B2F',
-    'warning': '#F57C00',
-    'on-background': '#2C1810',
-    'on-surface': '#2C1810',
-    'on-primary': '#FFFFFF',
-    'on-secondary': '#2C1810',
-  },
-  variables: {
-    // Custom CSS vars für md-editor-v3 (LIGHT)
-    'md-bg': '#FFFFFF',
-    'md-surface': '#F5F1E8',
-    'md-text': '#2C1810',
-    'md-muted': '#4A4035',
-    'md-border': '#E8DCC4',
-    'md-primary': '#8B4513',
-    'md-code-bg': '#FAF6EE',
-    'md-quote-bg': '#FFF9F0',
-    'md-table-stripe': '#FAF2E3',
-  },
-}
-
-const darkTheme = {
-  dark: true,
-  colors: {
-    // "Midnight Tavern" theme
-    'background': '#1A1D29', // Dark tavern
-    'surface': '#232632',
-    'surface-variant': '#2D3142',
-    'on-surface-variant': '#C5B8A0',
-    'primary': '#D4A574', // Warm gold
-    'primary-darken-1': '#B8935F',
-    'secondary': '#8B7355', // Dark leather
-    'secondary-darken-1': '#6B5742',
-    'accent': '#CC8844', // Amber
-    'error': '#D32F2F',
-    'info': '#7B92AB', // Moonlight blue
-    'success': '#689F38',
-    'warning': '#F57C00',
-    'on-background': '#E8DCC4',
-    'on-surface': '#E8DCC4',
-    'on-primary': '#1A1D29',
-    'on-secondary': '#E8DCC4',
-  },
-  variables: {
-    // Custom CSS vars für md-editor-v3 (DARK)
-    'md-bg': '#1A1D29',
-    'md-surface': '#232632',
-    'md-text': '#E8DCC4',
-    'md-muted': '#C5B8A0',
-    'md-border': '#2D3142',
-    'md-primary': '#D4A574',
-    'md-code-bg': '#11151F',
-    'md-quote-bg': '#202534',
-    'md-table-stripe': '#1F2330',
-  },
-}
+import { themes, DEFAULT_THEME, THEME_NAMES, type ThemeName } from '~/composables/themes'
+import { THEME_COOKIE } from '~/composables/useThemePreference'
 
 export default defineNuxtPlugin((nuxtApp) => {
+  // Read the saved theme cookie so SSR renders with the correct theme from
+  // the start — no flash of dark mode on first paint.
+  const savedTheme = useCookie<ThemeName>(THEME_COOKIE, {
+    default: () => DEFAULT_THEME,
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+  })
+  const initialTheme = (THEME_NAMES as readonly string[]).includes(savedTheme.value)
+    ? savedTheme.value
+    : DEFAULT_THEME
+
   const vuetify = createVuetify({
     components,
     directives,
@@ -88,10 +28,19 @@ export default defineNuxtPlugin((nuxtApp) => {
       messages: { de, en },
     },
     theme: {
-      defaultTheme: 'dark',
-      themes: {
-        light: lightTheme,
-        dark: darkTheme,
+      defaultTheme: initialTheme,
+      themes,
+    },
+    // Pin the v3 breakpoint thresholds so layouts written against v3 still match v4.
+    // v4 default breakpoints are smaller and shift everything down — see #301.
+    display: {
+      thresholds: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+        xxl: 2560,
       },
     },
     defaults: {

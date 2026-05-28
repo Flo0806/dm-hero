@@ -204,19 +204,19 @@
                     multiple
                     chips
                   >
-                    <template #item="{ props: itemProps, item }">
+                    <template #item="{ props: itemProps, internalItem }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-icon :icon="getNpcTypeIcon(item.value)" />
+                          <v-icon :icon="getNpcTypeIcon(internalItem.value)" />
                         </template>
                       </v-list-item>
                     </template>
-                    <template #selection="{ item }">
+                    <template #selection="{ internalItem }">
                       <v-chip>
                         <template #prepend>
-                          <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                          <v-icon :icon="getNpcTypeIcon(internalItem.value)" size="small" class="mr-1" />
                         </template>
-                        {{ item.title }}
+                        {{ internalItem.title }}
                       </v-chip>
                     </template>
                   </v-select>
@@ -229,19 +229,19 @@
                     variant="outlined"
                     clearable
                   >
-                    <template #item="{ props: itemProps, item }">
+                    <template #item="{ props: itemProps, internalItem }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-icon :icon="getNpcStatusIcon(item.value)" :color="getNpcStatusColor(item.value)" />
+                          <v-icon :icon="getNpcStatusIcon(internalItem.value)" :color="getNpcStatusColor(internalItem.value)" />
                         </template>
                       </v-list-item>
                     </template>
-                    <template #selection="{ item }">
-                      <v-chip :color="getNpcStatusColor(item.value)">
+                    <template #selection="{ internalItem }">
+                      <v-chip :color="getNpcStatusColor(internalItem.value)">
                         <template #prepend>
-                          <v-icon :icon="getNpcStatusIcon(item.value)" size="small" class="mr-1" />
+                          <v-icon :icon="getNpcStatusIcon(internalItem.value)" size="small" class="mr-1" />
                         </template>
-                        {{ item.title }}
+                        {{ internalItem.title }}
                       </v-chip>
                     </template>
                   </v-select>
@@ -457,19 +457,19 @@
                   multiple
                   chips
                 >
-                  <template #item="{ props: itemProps, item }">
+                  <template #item="{ props: itemProps, internalItem }">
                     <v-list-item v-bind="itemProps">
                       <template #prepend>
-                        <v-icon :icon="getNpcTypeIcon(item.value)" />
+                        <v-icon :icon="getNpcTypeIcon(internalItem.value)" />
                       </template>
                     </v-list-item>
                   </template>
-                  <template #selection="{ item }">
+                  <template #selection="{ internalItem }">
                     <v-chip>
                       <template #prepend>
-                        <v-icon :icon="getNpcTypeIcon(item.value)" size="small" class="mr-1" />
+                        <v-icon :icon="getNpcTypeIcon(internalItem.value)" size="small" class="mr-1" />
                       </template>
-                      {{ item.title }}
+                      {{ internalItem.title }}
                     </v-chip>
                   </template>
                 </v-select>
@@ -482,19 +482,19 @@
                   variant="outlined"
                   clearable
                 >
-                  <template #item="{ props: itemProps, item }">
+                  <template #item="{ props: itemProps, internalItem }">
                     <v-list-item v-bind="itemProps">
                       <template #prepend>
-                        <v-icon :icon="getNpcStatusIcon(item.value)" :color="getNpcStatusColor(item.value)" />
+                        <v-icon :icon="getNpcStatusIcon(internalItem.value)" :color="getNpcStatusColor(internalItem.value)" />
                       </template>
                     </v-list-item>
                   </template>
-                  <template #selection="{ item }">
-                    <v-chip :color="getNpcStatusColor(item.value)">
+                  <template #selection="{ internalItem }">
+                    <v-chip :color="getNpcStatusColor(internalItem.value)">
                       <template #prepend>
-                        <v-icon :icon="getNpcStatusIcon(item.value)" size="small" class="mr-1" />
+                        <v-icon :icon="getNpcStatusIcon(internalItem.value)" size="small" class="mr-1" />
                       </template>
-                      {{ item.title }}
+                      {{ internalItem.title }}
                     </v-chip>
                   </template>
                 </v-select>

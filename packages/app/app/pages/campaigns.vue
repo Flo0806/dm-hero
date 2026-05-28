@@ -27,13 +27,13 @@
             {{ campaign.name }}
           </v-card-title>
           <v-card-text class="flex-grow-1">
-            <div v-if="campaign.description" class="text-body-2 mb-4">
+            <div v-if="campaign.description" class="text-body-medium mb-4">
               {{ campaign.description }}
             </div>
-            <div v-else class="text-body-2 text-disabled mb-4">
+            <div v-else class="text-body-medium text-disabled mb-4">
               {{ $t('campaigns.noDescription') }}
             </div>
-            <div class="text-caption text-medium-emphasis">
+            <div class="text-body-small text-medium-emphasis">
               {{ $t('campaigns.created') }}: {{ formatDate(campaign.created_at) }}
             </div>
           </v-card-text>
@@ -70,8 +70,8 @@
       <template #fallback>
         <v-container class="text-center py-16">
           <v-icon icon="mdi-sword-cross" size="64" color="grey" class="mb-4" />
-          <h2 class="text-h5 mb-2">{{ $t('campaigns.empty') }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('campaigns.emptyText') }}</p>
+          <h2 class="text-headline-medium mb-2">{{ $t('campaigns.empty') }}</h2>
+          <p class="text-body-large text-medium-emphasis mb-4">{{ $t('campaigns.emptyText') }}</p>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('campaigns.create') }}
           </v-btn>

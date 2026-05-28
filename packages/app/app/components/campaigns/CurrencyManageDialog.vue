@@ -17,7 +17,7 @@
           >
             <template #prepend>
               <v-avatar color="primary" size="40">
-                <span class="text-body-1 font-weight-bold">{{ currency.symbol }}</span>
+                <span class="text-body-large font-weight-bold">{{ currency.symbol }}</span>
               </v-avatar>
             </template>
 
@@ -48,7 +48,7 @@
         <div v-else class="text-center py-8 text-medium-emphasis">
           <v-icon icon="mdi-cash-remove" size="48" class="mb-2" />
           <p>{{ $t('campaigns.currencies.empty') }}</p>
-          <p class="text-body-2">{{ $t('campaigns.currencies.emptyText') }}</p>
+          <p class="text-body-medium">{{ $t('campaigns.currencies.emptyText') }}</p>
         </div>
       </v-card-text>
 

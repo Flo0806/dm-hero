@@ -3,23 +3,23 @@
     <v-divider class="mb-3" />
     <div class="d-flex align-center ga-2 mb-2">
       <v-icon icon="mdi-clipboard-list-outline" size="small" />
-      <span class="text-subtitle-2 font-weight-medium">{{ template.name }}</span>
+      <span class="text-title-small font-weight-medium">{{ template.name }}</span>
     </div>
 
     <div v-for="group in template.groups" :key="group.id" class="mb-3">
-      <div class="text-caption text-medium-emphasis mb-1">{{ resolveLabel(group.name) }}</div>
+      <div class="text-body-small text-medium-emphasis mb-1">{{ resolveLabel(group.name) }}</div>
 
       <!-- Attributes: compact grid -->
       <v-row v-if="group.group_type === 'attributes'" dense>
         <v-col v-for="f in group.fields" :key="f.id" cols="4" sm="3" md="2">
           <div class="text-center pa-1 rounded stat-cell">
-            <div class="text-caption text-medium-emphasis stat-label" :title="resolveLabel(f.label)">{{ resolveLabel(f.label) }}</div>
+            <div class="text-body-small text-medium-emphasis stat-label" :title="resolveLabel(f.label)">{{ resolveLabel(f.label) }}</div>
             <template v-if="f.field_type === 'number'">
-              <div class="text-body-1 font-weight-bold">{{ getNumber(f.name) }}</div>
+              <div class="text-body-large font-weight-bold">{{ getNumber(f.name) }}</div>
               <v-chip v-if="f.has_modifier" size="x-small" variant="tonal">{{ formatMod(getModifier(f.name)) }}</v-chip>
             </template>
             <template v-else-if="f.field_type === 'resource'">
-              <div class="text-body-2 font-weight-bold">{{ getResource(f.name).current }}/{{ getResource(f.name).max }}</div>
+              <div class="text-body-medium font-weight-bold">{{ getResource(f.name).current }}/{{ getResource(f.name).max }}</div>
               <v-progress-linear
                 v-if="getResource(f.name).max"
                 :model-value="(getResource(f.name).current / getResource(f.name).max) * 100"
@@ -32,7 +32,7 @@
             <template v-else-if="f.field_type === 'boolean'">
               <v-icon :icon="values[f.name] ? 'mdi-check' : 'mdi-close'" :color="values[f.name] ? 'success' : 'grey'" size="small" />
             </template>
-            <div v-else class="text-body-2">{{ values[f.name] || '—' }}</div>
+            <div v-else class="text-body-medium">{{ values[f.name] || '—' }}</div>
           </div>
         </v-col>
       </v-row>
@@ -41,9 +41,9 @@
       <v-row v-else-if="group.group_type === 'resources'" dense>
         <v-col v-for="f in group.fields" :key="f.id" cols="6" sm="4">
           <div class="pa-2 rounded stat-cell">
-            <div class="text-caption text-medium-emphasis stat-label" :title="resolveLabel(f.label)">{{ resolveLabel(f.label) }}</div>
+            <div class="text-body-small text-medium-emphasis stat-label" :title="resolveLabel(f.label)">{{ resolveLabel(f.label) }}</div>
             <template v-if="f.field_type === 'resource'">
-              <div class="text-body-2 font-weight-bold">{{ getResource(f.name).current }} / {{ getResource(f.name).max }}</div>
+              <div class="text-body-medium font-weight-bold">{{ getResource(f.name).current }} / {{ getResource(f.name).max }}</div>
               <v-progress-linear
                 v-if="getResource(f.name).max"
                 :model-value="(getResource(f.name).current / getResource(f.name).max) * 100"
@@ -53,7 +53,7 @@
                 class="mt-1"
               />
             </template>
-            <div v-else class="text-body-2 font-weight-bold">{{ values[f.name] || '—' }}</div>
+            <div v-else class="text-body-medium font-weight-bold">{{ values[f.name] || '—' }}</div>
           </div>
         </v-col>
       </v-row>
@@ -61,18 +61,18 @@
       <!-- Other groups: compact rows -->
       <div v-else>
         <div v-for="f in group.fields" :key="f.id" class="d-flex align-center ga-2 py-1">
-          <span class="text-caption text-medium-emphasis" style="min-width: 100px;">{{ resolveLabel(f.label) }}</span>
+          <span class="text-body-small text-medium-emphasis" style="min-width: 100px;">{{ resolveLabel(f.label) }}</span>
           <template v-if="f.field_type === 'number'">
-            <span class="text-body-2 font-weight-bold">{{ getNumber(f.name) }}</span>
+            <span class="text-body-medium font-weight-bold">{{ getNumber(f.name) }}</span>
             <v-chip v-if="f.has_modifier" size="x-small" variant="tonal">{{ formatMod(getModifier(f.name)) }}</v-chip>
           </template>
           <template v-else-if="f.field_type === 'resource'">
-            <span class="text-body-2 font-weight-bold">{{ getResource(f.name).current }}/{{ getResource(f.name).max }}</span>
+            <span class="text-body-medium font-weight-bold">{{ getResource(f.name).current }}/{{ getResource(f.name).max }}</span>
           </template>
           <template v-else-if="f.field_type === 'boolean'">
             <v-icon :icon="values[f.name] ? 'mdi-check' : 'mdi-close'" :color="values[f.name] ? 'success' : 'grey'" size="small" />
           </template>
-          <span v-else class="text-body-2">{{ values[f.name] || '—' }}</span>
+          <span v-else class="text-body-medium">{{ values[f.name] || '—' }}</span>
         </div>
       </div>
     </div>

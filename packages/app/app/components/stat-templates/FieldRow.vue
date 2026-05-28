@@ -8,7 +8,7 @@
     <!-- Display mode -->
     <template v-if="!editing">
       <div class="flex-grow-1 d-flex align-center ga-2">
-        <span class="text-body-2 font-weight-medium">{{ displayLabel }}</span>
+        <span class="text-body-medium font-weight-medium">{{ displayLabel }}</span>
         <v-chip size="x-small" variant="tonal" :color="fieldTypeColor">
           {{ $t(`statTemplates.fields.types.${field.field_type}`) }}
         </v-chip>

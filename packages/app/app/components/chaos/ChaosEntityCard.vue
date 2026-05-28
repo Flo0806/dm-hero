@@ -47,7 +47,7 @@
     </div>
 
     <!-- Entity Name -->
-    <div class="chaos-entity-card__name" :class="{ 'text-body-1': isCenter, 'text-body-2': !isCenter }">
+    <div class="chaos-entity-card__name" :class="{ 'text-body-large': isCenter, 'text-body-medium': !isCenter }">
       {{ entity.name }}
     </div>
 

@@ -8,8 +8,8 @@
           <v-icon v-else icon="mdi-account" size="32" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h2 class="text-h5">{{ npc.name }}</h2>
-          <div class="text-body-2 text-medium-emphasis">
+          <h2 class="text-headline-medium">{{ npc.name }}</h2>
+          <div class="text-body-medium text-medium-emphasis">
             <span v-if="npc.metadata?.race">{{ getRaceDisplayName(npc.metadata.race) }}</span>
             <span v-if="npc.metadata?.race && toArray(npc.metadata?.class).length"> • </span>
             <span v-if="toArray(npc.metadata?.class).length">{{ getClassesDisplay(npc.metadata?.class) }}</span>
@@ -104,14 +104,14 @@
 
               <!-- Description -->
               <div v-if="npc.description" class="mb-6">
-                <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('npcs.description') }}</h3>
-                <p class="text-body-2" style="white-space: pre-wrap">{{ npc.description }}</p>
+                <h3 class="text-title-medium font-weight-bold mb-2">{{ $t('npcs.description') }}</h3>
+                <p class="text-body-medium" style="white-space: pre-wrap">{{ npc.description }}</p>
               </div>
 
               <!-- Notes -->
               <div v-if="npc.metadata?.notes" class="mb-6">
-                <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ $t('npcs.notes') }}</h3>
-                <p class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ npc.metadata.notes }}</p>
+                <h3 class="text-title-medium font-weight-bold mb-2">{{ $t('npcs.notes') }}</h3>
+                <p class="text-body-medium" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ npc.metadata.notes }}</p>
               </div>
 
               <!-- Metadata Grid -->
@@ -121,7 +121,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-map-marker</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('npcs.location') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('npcs.location') }}</div>
                         <div class="font-weight-medium">{{ npc.metadata.location }}</div>
                       </div>
                     </div>
@@ -132,7 +132,7 @@
                     <div class="d-flex align-start">
                       <v-icon class="mr-3 mt-1" color="secondary">mdi-shield-account</v-icon>
                       <div class="flex-grow-1" style="min-width: 0">
-                        <div class="text-caption text-medium-emphasis mb-1">
+                        <div class="text-body-small text-medium-emphasis mb-1">
                           {{ $t('npcs.faction', counts.factions.length) }}
                         </div>
                         <div class="d-flex flex-wrap" style="gap: 6px">
@@ -144,7 +144,7 @@
                             color="secondary"
                           >
                             {{ faction.name }}
-                            <span class="text-caption ml-1 opacity-70">({{ translateMembershipType(faction.relationType) }})</span>
+                            <span class="text-body-small ml-1 opacity-70">({{ translateMembershipType(faction.relationType) }})</span>
                           </v-chip>
                         </div>
                       </div>
@@ -156,7 +156,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3">mdi-calendar</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('npcs.age') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('npcs.age') }}</div>
                         <div class="font-weight-medium">{{ npc.metadata.age }}</div>
                       </div>
                     </div>
@@ -167,7 +167,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3">mdi-gender-male-female</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('npcs.gender') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('npcs.gender') }}</div>
                         <div class="font-weight-medium">{{ $t(`npcs.genders.${npc.metadata.gender}`) }}</div>
                       </div>
                     </div>
@@ -208,7 +208,7 @@
                       <v-chip size="x-small" color="primary" variant="tonal">
                         {{ $t(`npcs.npcRelationTypes.${rel.relation_type}`, rel.relation_type) }}
                       </v-chip>
-                      <span v-if="getNotesText(rel.notes)" class="text-caption">{{ getNotesText(rel.notes) }}</span>
+                      <span v-if="getNotesText(rel.notes)" class="text-body-small">{{ getNotesText(rel.notes) }}</span>
                     </div>
                   </v-list-item-subtitle>
                 </v-list-item>

@@ -8,7 +8,7 @@
       <v-card-title class="d-flex justify-space-between align-center">
         <div class="d-flex flex-column flex-grow-1">
           <span>{{ title }}</span>
-          <span v-if="subtitle" class="text-caption text-medium-emphasis">{{ subtitle }}</span>
+          <span v-if="subtitle" class="text-body-small text-medium-emphasis">{{ subtitle }}</span>
         </div>
         <v-btn icon="mdi-close" variant="text" @click="$emit('update:model-value', false)" />
       </v-card-title>

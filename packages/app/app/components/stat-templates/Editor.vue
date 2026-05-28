@@ -13,14 +13,14 @@
         style="max-width: 500px;"
         :disabled="isDirty"
       >
-        <template #item="{ item, props: itemProps }">
+        <template #item="{ internalItem, props: itemProps }">
           <v-list-item v-bind="itemProps">
-            <template v-if="item.raw.systemKey || item.raw.isImported" #append>
-              <v-chip v-if="item.raw.isImported" size="x-small" variant="tonal" color="info" class="mr-1">
+            <template v-if="internalItem.raw.systemKey || internalItem.raw.isImported" #append>
+              <v-chip v-if="internalItem.raw.isImported" size="x-small" variant="tonal" color="info" class="mr-1">
                 {{ $t('statTemplates.importedBadge') }}
               </v-chip>
-              <v-chip v-if="item.raw.systemKey" size="x-small" variant="tonal" color="primary">
-                {{ $t(`statPresets.${item.raw.systemKey}.name`, item.raw.systemKey) }}
+              <v-chip v-if="internalItem.raw.systemKey" size="x-small" variant="tonal" color="primary">
+                {{ $t(`statPresets.${internalItem.raw.systemKey}.name`, internalItem.raw.systemKey) }}
               </v-chip>
             </template>
           </v-list-item>
@@ -94,8 +94,8 @@
     <!-- No template selected -->
     <div v-if="!currentTemplate" class="text-center py-8">
       <v-icon icon="mdi-clipboard-list-outline" size="48" color="grey" class="mb-4" />
-      <p class="text-body-1 text-medium-emphasis">{{ $t('statTemplates.noTemplates') }}</p>
-      <p class="text-body-2 text-medium-emphasis">{{ $t('statTemplates.noTemplatesHint') }}</p>
+      <p class="text-body-large text-medium-emphasis">{{ $t('statTemplates.noTemplates') }}</p>
+      <p class="text-body-medium text-medium-emphasis">{{ $t('statTemplates.noTemplatesHint') }}</p>
     </div>
 
     <!-- Template editor: name + description + groups -->
@@ -130,7 +130,7 @@
             </v-chip>
           </template>
           <v-card min-width="280" max-width="400">
-            <v-card-title class="text-subtitle-2 py-2">
+            <v-card-title class="text-title-small py-2">
               {{ $t('statTemplates.usedBy') }}
             </v-card-title>
             <v-divider />

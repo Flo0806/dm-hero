@@ -1,0 +1,6 @@
+/*
+ * CSS cascade layer order — must be loaded BEFORE vuetify/styles.
+ * Vuetify 4 puts all its styles in the `vuetify` layer; our overrides go in
+ * `overrides` which sits after it, so app-level CSS wins without !important.
+ */
+@layer base, vuetify, overrides;

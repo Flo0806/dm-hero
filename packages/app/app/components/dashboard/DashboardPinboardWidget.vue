@@ -4,7 +4,7 @@
       <div class="d-flex align-center justify-space-between mb-3">
         <div class="d-flex align-center">
           <v-icon icon="mdi-pin" color="primary" size="24" class="mr-2" />
-          <span class="text-subtitle-1 font-weight-medium">{{ $t('dashboard.pinboard.title') }}</span>
+          <span class="text-title-medium font-weight-medium">{{ $t('dashboard.pinboard.title') }}</span>
         </div>
       </div>
 
@@ -36,20 +36,20 @@
               </template>
             </div>
             <div class="flex-grow-1 overflow-hidden">
-              <div class="text-body-2 font-weight-medium text-truncate">{{ pin.name }}</div>
-              <div class="text-caption text-medium-emphasis">{{ getTypeLabel(pin.type) }}</div>
+              <div class="text-body-medium font-weight-medium text-truncate">{{ pin.name }}</div>
+              <div class="text-body-small text-medium-emphasis">{{ getTypeLabel(pin.type) }}</div>
             </div>
           </div>
         </div>
 
-        <div v-if="pins.length > 4" class="text-caption text-medium-emphasis mt-2 text-center">
+        <div v-if="pins.length > 4" class="text-body-small text-medium-emphasis mt-2 text-center">
           {{ $t('dashboard.pinboard.more', { count: pins.length - 4 }) }}
         </div>
       </div>
 
       <div v-else class="d-flex flex-column align-center text-center py-4">
         <v-icon icon="mdi-pin-off" size="32" class="text-medium-emphasis mb-2" />
-        <p class="text-body-2 text-medium-emphasis">
+        <p class="text-body-medium text-medium-emphasis">
           {{ $t('dashboard.pinboard.empty') }}
         </p>
       </div>

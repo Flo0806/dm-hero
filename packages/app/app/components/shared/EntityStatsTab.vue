@@ -5,10 +5,10 @@
     <!-- No template assigned -->
     <div v-else-if="!store.template" class="text-center py-8">
       <v-icon icon="mdi-clipboard-list-outline" size="48" color="grey" class="mb-4" />
-      <p class="text-body-1 text-medium-emphasis mb-2">{{ $t('entityStats.noTemplate') }}</p>
+      <p class="text-body-large text-medium-emphasis mb-2">{{ $t('entityStats.noTemplate') }}</p>
 
       <template v-if="!readonly">
-        <p class="text-body-2 text-medium-emphasis mb-6">{{ $t('entityStats.noTemplateHint') }}</p>
+        <p class="text-body-medium text-medium-emphasis mb-6">{{ $t('entityStats.noTemplateHint') }}</p>
 
         <div class="d-flex justify-center align-center ga-3 mb-4">
           <v-select
@@ -30,7 +30,7 @@
           </v-btn>
         </div>
 
-        <NuxtLink to="/reference-data" class="text-caption text-medium-emphasis">
+        <NuxtLink to="/reference-data" class="text-body-small text-medium-emphasis">
           {{ $t('entityStats.createTemplateLink') }}
         </NuxtLink>
       </template>
@@ -41,7 +41,7 @@
       <!-- Header -->
       <div class="d-flex align-center ga-2 mb-4">
         <v-icon icon="mdi-clipboard-list-outline" size="small" />
-        <span class="text-subtitle-1 font-weight-medium">{{ store.template.name }}</span>
+        <span class="text-title-medium font-weight-medium">{{ store.template.name }}</span>
         <v-chip v-if="store.template.system_key" size="x-small" variant="tonal" color="primary">
           {{ store.template.system_key }}
         </v-chip>
@@ -72,7 +72,7 @@
       <!-- Groups -->
       <div v-for="group in store.template.groups" :key="group.id" class="mb-4">
         <v-card variant="outlined">
-          <v-card-title class="text-subtitle-2 py-2 px-4">
+          <v-card-title class="text-title-small py-2 px-4">
             {{ resolveLabel(group.name) }}
             <v-chip size="x-small" variant="tonal" class="ml-2">
               {{ $t(`statTemplates.groups.types.${group.group_type}`, group.group_type) }}
@@ -91,11 +91,11 @@
                 :lg="f.field_type === 'textarea' ? 12 : 2"
               >
                 <div class="text-center pa-2 rounded stat-cell">
-                  <div class="text-caption text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
+                  <div class="text-body-small text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
                   <!-- Number -->
                   <template v-if="f.field_type === 'number'">
                     <template v-if="readonly">
-                      <div class="text-h5 font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</div>
+                      <div class="text-headline-medium font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</div>
                       <div v-if="f.has_modifier" class="d-flex justify-center mt-1">
                         <v-chip size="small" variant="tonal">{{ formatModifier(getNumberParsed(f.name).modifier) }}</v-chip>
                       </div>
@@ -125,7 +125,7 @@
                   </template>
                   <!-- String -->
                   <template v-else-if="f.field_type === 'string'">
-                    <div v-if="readonly" class="text-body-1">{{ store.localValues[f.name] || '—' }}</div>
+                    <div v-if="readonly" class="text-body-large">{{ store.localValues[f.name] || '—' }}</div>
                     <v-text-field
                       v-else
                       :model-value="String(store.localValues[f.name] ?? '')"
@@ -137,7 +137,7 @@
                   </template>
                   <!-- Textarea -->
                   <template v-else-if="f.field_type === 'textarea'">
-                    <div v-if="readonly" class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                    <div v-if="readonly" class="text-body-medium" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
                     <v-textarea
                       v-else
                       :model-value="String(store.localValues[f.name] ?? '')"
@@ -174,7 +174,7 @@
                           style="max-width: 70px;"
                           @update:model-value="(v: string) => onResourceCurrentChange(f.name, Number(v) || 0)"
                         />
-                        <span class="text-body-2 text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
+                        <span class="text-body-medium text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
                       </div>
                     </template>
                     <template v-else>
@@ -222,7 +222,7 @@
                 :md="f.field_type === 'textarea' ? 12 : 4"
               >
                 <div class="pa-3 rounded stat-cell">
-                  <div class="text-caption text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
+                  <div class="text-body-small text-medium-emphasis mb-1">{{ resolveLabel(f.label) }}</div>
                   <!-- Resource -->
                   <template v-if="f.field_type === 'resource'">
                     <template v-if="readonly">
@@ -237,7 +237,7 @@
                           style="max-width: 100px;"
                           @update:model-value="(v: string) => onResourceCurrentChange(f.name, Number(v) || 0)"
                         />
-                        <span class="text-body-2 text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
+                        <span class="text-body-medium text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
                       </div>
                     </template>
                     <template v-else>
@@ -274,7 +274,7 @@
                   <!-- Number -->
                   <template v-else-if="f.field_type === 'number'">
                     <template v-if="readonly">
-                      <div class="text-h6 font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</div>
+                      <div class="text-headline-small font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</div>
                       <div v-if="f.has_modifier" class="mt-1">
                         <v-chip size="small" variant="tonal">{{ formatModifier(getNumberParsed(f.name).modifier) }}</v-chip>
                       </div>
@@ -313,7 +313,7 @@
                   </template>
                   <!-- String -->
                   <template v-else-if="f.field_type === 'string'">
-                    <div v-if="readonly" class="text-body-1">{{ store.localValues[f.name] || '—' }}</div>
+                    <div v-if="readonly" class="text-body-large">{{ store.localValues[f.name] || '—' }}</div>
                     <v-text-field
                       v-else
                       :model-value="String(store.localValues[f.name] ?? '')"
@@ -325,7 +325,7 @@
                   </template>
                   <!-- Textarea -->
                   <template v-else-if="f.field_type === 'textarea'">
-                    <div v-if="readonly" class="text-body-2" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                    <div v-if="readonly" class="text-body-medium" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
                     <v-textarea
                       v-else
                       :model-value="String(store.localValues[f.name] ?? '')"
@@ -349,13 +349,13 @@
                 :key="f.id"
                 class="d-flex align-center ga-3 py-2 px-2 rounded field-row"
               >
-                <span class="text-body-2 font-weight-medium" style="min-width: 140px;">
+                <span class="text-body-medium font-weight-medium" style="min-width: 140px;">
                   {{ resolveLabel(f.label) }}
                 </span>
                 <!-- Number -->
                 <template v-if="f.field_type === 'number'">
                   <template v-if="readonly">
-                    <span class="text-body-1 font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</span>
+                    <span class="text-body-large font-weight-bold">{{ getNumberParsed(f.name).value || '—' }}</span>
                     <v-chip v-if="f.has_modifier" size="small" variant="tonal">
                       {{ formatModifier(getNumberParsed(f.name).modifier) }}
                     </v-chip>
@@ -387,7 +387,7 @@
                 </template>
                 <!-- String -->
                 <template v-else-if="f.field_type === 'string'">
-                  <span v-if="readonly" class="text-body-2">{{ store.localValues[f.name] || '—' }}</span>
+                  <span v-if="readonly" class="text-body-medium">{{ store.localValues[f.name] || '—' }}</span>
                   <v-text-field
                     v-else
                     :model-value="String(store.localValues[f.name] ?? '')"
@@ -400,7 +400,7 @@
                 </template>
                 <!-- Textarea -->
                 <template v-else-if="f.field_type === 'textarea'">
-                  <div v-if="readonly" class="text-body-2 flex-grow-1" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
+                  <div v-if="readonly" class="text-body-medium flex-grow-1" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto">{{ store.localValues[f.name] || '—' }}</div>
                   <v-textarea
                     v-else
                     :model-value="String(store.localValues[f.name] ?? '')"
@@ -437,7 +437,7 @@
                         style="max-width: 80px;"
                         @update:model-value="(v: string) => onResourceCurrentChange(f.name, Number(v) || 0)"
                       />
-                      <span class="text-body-2 text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
+                      <span class="text-body-medium text-medium-emphasis">/ {{ getResource(f.name).max }}</span>
                     </div>
                   </template>
                   <template v-else>
@@ -473,7 +473,7 @@
       <v-divider class="my-4" />
       <div class="d-flex align-center ga-2 mb-3">
         <v-icon icon="mdi-file-pdf-box" size="small" />
-        <span class="text-subtitle-2">{{ $t('entityStats.characterSheet') }}</span>
+        <span class="text-title-small">{{ $t('entityStats.characterSheet') }}</span>
         <v-spacer />
         <template v-if="!readonly">
           <v-btn
@@ -497,7 +497,7 @@
 
       <template v-if="store.characterSheets.length > 0">
         <v-card v-for="sheet in store.characterSheets" :key="sheet.id" variant="outlined" class="mb-3">
-          <v-card-title class="d-flex align-center text-subtitle-2 py-2 px-4">
+          <v-card-title class="d-flex align-center text-title-small py-2 px-4">
             <v-icon icon="mdi-file-pdf-box" color="error" class="mr-2" size="small" />
             {{ sheet.title }}
             <v-spacer />

@@ -50,7 +50,7 @@
       >
         <div class="text-center">
           <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-          <div class="text-h6">
+          <div class="text-headline-small">
             {{ $t('common.searching') }}
           </div>
         </div>
@@ -80,10 +80,10 @@
     <v-card v-else>
       <v-card-text class="text-center pa-8">
         <v-icon icon="mdi-book-open-variant" size="64" color="grey" class="mb-4" />
-        <div class="text-h6 mb-2">
+        <div class="text-headline-small mb-2">
           {{ $t('lore.empty') }}
         </div>
-        <div class="text-body-2 text-medium-emphasis mb-4">
+        <div class="text-body-medium text-medium-emphasis mb-4">
           {{ $t('lore.emptyText') }}
         </div>
         <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">

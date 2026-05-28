@@ -42,11 +42,11 @@
           no-filter
           :disabled="!form.entityType"
         >
-          <template #item="{ item, props: itemProps }">
+          <template #item="{ internalItem, props: itemProps }">
             <v-list-item v-bind="itemProps">
               <template #prepend>
                 <v-avatar size="32" :color="getEntityColor(form.entityType)">
-                  <v-img v-if="item.raw.image_url" :src="`/uploads/${item.raw.image_url}`" />
+                  <v-img v-if="internalItem.raw.image_url" :src="`/uploads/${internalItem.raw.image_url}`" />
                   <v-icon v-else :icon="getEntityIcon(form.entityType)" size="small" />
                 </v-avatar>
               </template>

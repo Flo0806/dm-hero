@@ -8,8 +8,8 @@
           <v-icon v-else icon="mdi-shield-account" size="32" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h2 class="text-h5">{{ faction.name }}</h2>
-          <div v-if="faction.leader_name" class="text-body-2 text-medium-emphasis">
+          <h2 class="text-headline-medium">{{ faction.name }}</h2>
+          <div v-if="faction.leader_name" class="text-body-medium text-medium-emphasis">
             {{ $t('factions.leader') }}: {{ faction.leader_name }}
           </div>
         </div>
@@ -94,10 +94,10 @@
 
               <!-- Description -->
               <div v-if="faction.description" class="mb-6">
-                <h3 class="text-subtitle-1 font-weight-bold mb-2">
+                <h3 class="text-title-medium font-weight-bold mb-2">
                   {{ $t('factions.description') }}
                 </h3>
-                <p class="text-body-2" style="white-space: pre-wrap">{{ faction.description }}</p>
+                <p class="text-body-medium" style="white-space: pre-wrap">{{ faction.description }}</p>
               </div>
 
               <!-- Metadata Grid -->
@@ -107,7 +107,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-home-city</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">
+                        <div class="text-body-small text-medium-emphasis">
                           {{ $t('factions.headquarters') }}
                         </div>
                         <div class="font-weight-medium">{{ faction.metadata.headquarters }}</div>
@@ -120,7 +120,7 @@
                     <div class="d-flex align-start">
                       <v-icon class="mr-3 mt-1" color="secondary">mdi-target</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">
+                        <div class="text-body-small text-medium-emphasis">
                           {{ $t('factions.goals') }}
                         </div>
                         <div class="font-weight-medium" style="white-space: pre-wrap">{{ faction.metadata.goals }}</div>
@@ -133,7 +133,7 @@
                     <div class="d-flex align-start">
                       <v-icon class="mr-3 mt-1">mdi-note-text</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">
+                        <div class="text-body-small text-medium-emphasis">
                           {{ $t('factions.notes') }}
                         </div>
                         <div class="font-weight-medium" style="white-space: pre-wrap">{{ faction.metadata.notes }}</div>

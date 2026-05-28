@@ -34,7 +34,28 @@
     "referenceData": "Referenzdaten",
     "settings": "Einstellungen",
     "theme": "Theme",
+    "themePickerTitle": "Theme auswählen",
     "activeCampaign": "Aktive Kampagne"
+  },
+  "themes": {
+    "dark": "Dunkel (Mitternachts-Taverne)",
+    "hell": "Hell (Altes Pergament)",
+    "linux": "Linux (Aubergine)",
+    "green": "Grün (Wald)",
+    "blue": "Blau (Ozean)",
+    "purple": "Lila (Arkane Magie)",
+    "orange": "Orange (Lagerfeuer)"
+  },
+  "featureTooltips": {
+    "newBadge": "Neu",
+    "dontShowAgain": "Nicht mehr zeigen",
+    "themeSwitcher": "Wähle dein Lieblings-Theme aus 7 Farbvarianten. Du kannst diese Hinweise in den Einstellungen ausschalten.",
+    "settings": {
+      "title": "Hinweise für neue Funktionen",
+      "description": "Zeigt einen kleinen Hinweis an, wenn ein neues Feature verfügbar ist.",
+      "showToggle": "Hinweise für neue Funktionen zeigen",
+      "resetButton": "Alle ausgeblendeten Hinweise wieder anzeigen"
+    }
   },
   "search": {
     "placeholder": "Suche nach NPCs, Orten, Items, Gruppen...",
@@ -1476,6 +1497,7 @@
     "view": "Ansehen",
     "close": "Schließen",
     "ok": "OK",
+    "reset": "Zurücksetzen",
     "saveInTabHint": "Änderungen in diesem Tab direkt speichern",
     "unsavedTabChanges": "Erst Änderungen speichern oder abbrechen: {tabs}",
     "clear": "Löschen",

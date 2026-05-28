@@ -4,7 +4,7 @@
       <div class="d-flex align-center justify-space-between mb-3">
         <div class="d-flex align-center">
           <v-icon icon="mdi-notebook-outline" color="primary" size="24" class="mr-2" />
-          <span class="text-subtitle-1 font-weight-medium">{{ $t('dashboard.notes.title') }}</span>
+          <span class="text-title-medium font-weight-medium">{{ $t('dashboard.notes.title') }}</span>
           <v-badge
             v-if="pendingCount > 0"
             :content="pendingCount"
@@ -28,18 +28,18 @@
             :color="note.completed ? 'success' : 'grey'"
             class="mr-2"
           />
-          <span class="note-text flex-grow-1 text-body-2 text-truncate" :class="{ 'text-decoration-line-through': note.completed }">
+          <span class="note-text flex-grow-1 text-body-medium text-truncate" :class="{ 'text-decoration-line-through': note.completed }">
             {{ note.content }}
           </span>
         </div>
-        <div v-if="pendingCount > 3" class="text-caption text-medium-emphasis mt-2">
+        <div v-if="pendingCount > 3" class="text-body-small text-medium-emphasis mt-2">
           {{ $t('dashboard.notes.more', { count: pendingCount - 3 }) }}
         </div>
       </div>
 
       <div v-else class="d-flex flex-column align-center text-center py-2">
         <v-icon icon="mdi-check-circle" size="32" color="success" class="mb-2" />
-        <p class="text-body-2 text-medium-emphasis">
+        <p class="text-body-medium text-medium-emphasis">
           {{ $t('dashboard.notes.allDone') }}
         </p>
       </div>

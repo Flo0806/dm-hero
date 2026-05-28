@@ -11,25 +11,25 @@
         <!-- HTML content (formatted announcements) -->
         <div
           v-if="currentAnnouncement?.html"
-          class="text-body-1 mb-4"
+          class="text-body-large mb-4"
           v-html="$t(currentAnnouncement?.contentKey || '')"
         />
         <!-- eslint-enable vue/no-v-html -->
         <!-- Plain text content (legacy) -->
-        <p v-else class="text-body-1 mb-4">
+        <p v-else class="text-body-large mb-4">
           {{ $t(currentAnnouncement?.contentKey || '') }}
         </p>
 
         <!-- OS-specific installer path -->
         <template v-if="currentAnnouncement?.showInstallerPath">
           <v-alert type="info" variant="tonal" class="mb-4">
-            <div class="text-subtitle-2 mb-1">
+            <div class="text-title-small mb-1">
               {{ $t('announcements.installerPath', { os: osName }) }}
             </div>
-            <code class="text-body-2">{{ installerPath }}</code>
+            <code class="text-body-medium">{{ installerPath }}</code>
           </v-alert>
 
-          <p class="text-body-2 text-medium-emphasis">
+          <p class="text-body-medium text-medium-emphasis">
             {{ $t('announcements.autoUpdateHint') }}
           </p>
         </template>

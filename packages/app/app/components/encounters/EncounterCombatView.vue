@@ -43,7 +43,7 @@
             @click.stop="confirmRemove(participant)"
           />
         </div>
-        <div class="combat-tile__name text-caption text-center text-truncate mt-1">
+        <div class="combat-tile__name text-body-small text-center text-truncate mt-1">
           {{ participant.display_name }}
           <span v-if="participant.duplicate_index > 0">({{ participant.duplicate_index + 1 }})</span>
         </div>
@@ -71,7 +71,7 @@
             <v-icon v-else>{{ getEntityIcon(activeParticipant.entity_type) }}</v-icon>
           </v-avatar>
           <div>
-            <div class="text-h6">
+            <div class="text-headline-small">
               {{ activeParticipant.display_name }}
               <span v-if="activeParticipant.duplicate_index > 0" class="text-medium-emphasis">({{ activeParticipant.duplicate_index + 1 }})</span>
             </div>
@@ -97,7 +97,7 @@
               :label="$t('encounters.hp')"
               style="max-width: 90px;"
             />
-            <span class="text-h6">/</span>
+            <span class="text-headline-small">/</span>
             <v-text-field
               v-model.number="liveMaxHp"
               type="number"
@@ -107,7 +107,7 @@
               label="Max"
               style="max-width: 90px;"
             />
-            <span v-if="activeParticipant.temp_hp > 0" class="text-info text-body-2">(+{{ activeParticipant.temp_hp }} {{ $t('encounters.tempHp') }})</span>
+            <span v-if="activeParticipant.temp_hp > 0" class="text-info text-body-medium">(+{{ activeParticipant.temp_hp }} {{ $t('encounters.tempHp') }})</span>
           </div>
           <v-progress-linear
             :model-value="liveHpPct"
@@ -150,7 +150,7 @@
         <!-- Effects -->
         <div class="mb-3">
           <div class="d-flex align-center ga-2 mb-2">
-            <span class="text-body-2 font-weight-medium">{{ $t('encounters.effects') }}</span>
+            <span class="text-body-medium font-weight-medium">{{ $t('encounters.effects') }}</span>
             <v-spacer />
             <v-btn size="small" variant="tonal" prepend-icon="mdi-plus" @click="showEffectInput = !showEffectInput">
               {{ $t('encounters.addEffect') }}
@@ -205,7 +205,7 @@
               <span v-if="effect.duration_type === 'rounds'" class="ml-1">({{ effect.remaining_rounds }})</span>
             </v-chip>
           </div>
-          <div v-else class="text-caption text-medium-emphasis">{{ $t('encounters.noEffects') }}</div>
+          <div v-else class="text-body-small text-medium-emphasis">{{ $t('encounters.noEffects') }}</div>
         </div>
 
         <!-- Notes -->

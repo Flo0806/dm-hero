@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="d-flex align-center ga-2 mb-4">
       <v-btn icon="mdi-arrow-left" variant="text" @click="encounterStore.closeEncounter()" />
-      <span class="text-h5">{{ encounter.name }}</span>
+      <span class="text-headline-medium">{{ encounter.name }}</span>
       <v-chip size="small" :color="statusColor(encounter.status)" variant="tonal">
         {{ $t(`encounters.statuses.${encounter.status}`) }}
       </v-chip>

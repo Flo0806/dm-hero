@@ -7,8 +7,8 @@
           <v-icon :icon="group.icon || 'mdi-folder-multiple'" size="32" :color="getContrastColor(group.color)" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h2 class="text-h5">{{ group.name }}</h2>
-          <div class="text-body-2 text-medium-emphasis">
+          <h2 class="text-headline-medium">{{ group.name }}</h2>
+          <div class="text-body-medium text-medium-emphasis">
             {{ $t('groups.memberCount', totalMembers) }}
           </div>
         </div>
@@ -18,7 +18,7 @@
 
       <!-- Description (if exists) -->
       <v-card-text v-if="group.description" class="py-3">
-        <p class="text-body-2 mb-0">{{ group.description }}</p>
+        <p class="text-body-medium mb-0">{{ group.description }}</p>
       </v-card-text>
 
       <v-divider v-if="group.description" />

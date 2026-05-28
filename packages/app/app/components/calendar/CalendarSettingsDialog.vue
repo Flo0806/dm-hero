@@ -235,19 +235,19 @@
                     variant="outlined"
                     style="width: 200px"
                   >
-                    <template #selection="{ item }">
+                    <template #selection="{ internalItem }">
                       <div class="d-flex align-center ga-2">
-                        <v-icon size="18" :color="getWeatherTypeColor(item.value)">
-                          {{ getWeatherTypeIcon(item.value) }}
+                        <v-icon size="18" :color="getWeatherTypeColor(internalItem.value)">
+                          {{ getWeatherTypeIcon(internalItem.value) }}
                         </v-icon>
-                        <span>{{ item.title }}</span>
+                        <span>{{ internalItem.title }}</span>
                       </div>
                     </template>
-                    <template #item="{ item, props: itemProps }">
+                    <template #item="{ internalItem, props: itemProps }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-icon :color="getWeatherTypeColor(item.value)" class="mr-2">
-                            {{ getWeatherTypeIcon(item.value) }}
+                          <v-icon :color="getWeatherTypeColor(internalItem.value)" class="mr-2">
+                            {{ getWeatherTypeIcon(internalItem.value) }}
                           </v-icon>
                         </template>
                       </v-list-item>
@@ -265,19 +265,19 @@
                     style="width: 180px"
                     :rules="[v => !!v || $t('calendar.seasonBackgroundRequired')]"
                   >
-                    <template #selection="{ item }">
+                    <template #selection="{ internalItem }">
                       <div class="d-flex align-center ga-2">
-                        <v-avatar v-if="item.value" size="20" rounded="sm">
-                          <v-img :src="item.value" />
+                        <v-avatar v-if="internalItem.value" size="20" rounded="sm">
+                          <v-img :src="internalItem.value" />
                         </v-avatar>
-                        <span>{{ item.title }}</span>
+                        <span>{{ internalItem.title }}</span>
                       </div>
                     </template>
-                    <template #item="{ item, props: itemProps }">
+                    <template #item="{ internalItem, props: itemProps }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-avatar v-if="item.value" size="28" rounded="sm" class="mr-2">
-                            <v-img :src="item.value" />
+                          <v-avatar v-if="internalItem.value" size="28" rounded="sm" class="mr-2">
+                            <v-img :src="internalItem.value" />
                           </v-avatar>
                         </template>
                       </v-list-item>
@@ -304,7 +304,7 @@
 
           <!-- Current Date Tab -->
           <v-window-item value="current">
-            <h3 class="text-h6 mb-4">{{ $t('calendar.currentDate') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.currentDate') }}</h3>
             <v-row>
               <v-col cols="4">
                 <v-text-field
@@ -337,7 +337,7 @@
             </v-row>
 
             <v-divider class="my-4" />
-            <h3 class="text-h6 mb-4">{{ $t('calendar.eraName') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.eraName') }}</h3>
             <v-text-field
               v-model="form.eraName"
               :label="$t('calendar.eraName')"
@@ -347,7 +347,7 @@
             />
 
             <v-divider class="my-4" />
-            <h3 class="text-h6 mb-4">{{ $t('calendar.leapYear') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.leapYear') }}</h3>
             <v-row>
               <v-col cols="4">
                 <v-text-field
@@ -502,11 +502,14 @@ const calendarStats = ref<{
 
 async function confirmReset() {
   if (!campaignStore.activeCampaignId) return
-  // Load stats first
+  // Load stats first.
+  // Note: query is inlined in the URL so we skip $fetch's heavy generic
+  // type-inference path, which currently trips "Excessive stack depth" in the
+  // ts-plugin on Nuxt 4.4 + Nitro 2.13. tsc --noEmit is clean either way.
   try {
-    calendarStats.value = await $fetch('/api/calendar/stats', {
-      query: { campaignId: campaignStore.activeCampaignId },
-    })
+    calendarStats.value = await $fetch<typeof calendarStats.value>(
+      `/api/calendar/stats?campaignId=${campaignStore.activeCampaignId}`,
+    )
   }
   catch {
     calendarStats.value = null
@@ -518,9 +521,8 @@ async function executeReset() {
   if (!campaignStore.activeCampaignId) return
   resetting.value = true
   try {
-    await $fetch('/api/calendar/reset', {
+    await $fetch(`/api/calendar/reset?campaignId=${campaignStore.activeCampaignId}`, {
       method: 'DELETE',
-      query: { campaignId: campaignStore.activeCampaignId },
     })
     showResetDialog.value = false
     modelValue.value = false

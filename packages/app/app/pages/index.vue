@@ -3,10 +3,10 @@
     <!-- Redirect to campaigns if no campaign selected -->
     <div v-if="!activeCampaignId" class="text-center py-16">
       <v-icon icon="mdi-sword-cross" size="64" class="mb-4" color="primary" />
-      <h2 class="text-h4 mb-4">
+      <h2 class="text-headline-large mb-4">
         {{ $t('dashboard.noCampaign.title') }}
       </h2>
-      <p class="text-body-1 text-medium-emphasis mb-6">
+      <p class="text-body-large text-medium-emphasis mb-6">
         {{ $t('dashboard.noCampaign.description') }}
       </p>
       <v-btn color="primary" size="large" to="/campaigns" prepend-icon="mdi-arrow-right">
@@ -25,10 +25,10 @@
             </ClientOnly>
             <!-- Title with left margin to make room for dice -->
             <div style="margin-left: 230px;" class="mb-6 mt-4">
-              <div class="text-h3 font-weight-bold mb-1">
+              <div class="text-display-small font-weight-bold mb-1">
                 {{ $t('app.welcome') }}
               </div>
-              <p class="text-body-1 text-medium-emphasis">
+              <p class="text-body-large text-medium-emphasis">
                 {{ $t('app.subtitle') }}
               </p>
             </div>
@@ -102,7 +102,7 @@
       <!-- Category Cards -->
       <v-row class="mb-4">
         <v-col cols="12">
-          <div class="text-h6 font-weight-medium">
+          <div class="text-headline-small font-weight-medium">
             {{ $t('dashboard.categories.title') }}
           </div>
         </v-col>
@@ -126,7 +126,7 @@
       <v-row class="mb-4 mt-6">
         <v-col cols="12">
           <div class="d-flex align-center flex-wrap ga-2 mb-2">
-            <div class="text-h6 font-weight-medium">
+            <div class="text-headline-small font-weight-medium">
               {{ $t('dashboard.dataManagement') }}
             </div>
             <v-chip color="warning" size="small">Beta</v-chip>
@@ -155,8 +155,8 @@
               <div class="d-flex align-center">
                 <v-icon icon="mdi-export" size="28" color="primary" class="mr-3" />
                 <div>
-                  <div class="text-subtitle-1 font-weight-medium">{{ $t('campaigns.export.title') }}</div>
-                  <div class="text-body-2 text-medium-emphasis">
+                  <div class="text-title-medium font-weight-medium">{{ $t('campaigns.export.title') }}</div>
+                  <div class="text-body-medium text-medium-emphasis">
                     {{ $t('dashboard.exportHint') }}
                   </div>
                 </div>
@@ -170,8 +170,8 @@
               <div class="d-flex align-center">
                 <v-icon icon="mdi-import" size="28" color="secondary" class="mr-3" />
                 <div>
-                  <div class="text-subtitle-1 font-weight-medium">{{ $t('campaigns.import.title') }}</div>
-                  <div class="text-body-2 text-medium-emphasis">
+                  <div class="text-title-medium font-weight-medium">{{ $t('campaigns.import.title') }}</div>
+                  <div class="text-body-medium text-medium-emphasis">
                     {{ $t('dashboard.importHint') }}
                   </div>
                 </div>
@@ -185,8 +185,8 @@
               <div class="d-flex align-center">
                 <v-icon icon="mdi-content-copy" size="28" color="info" class="mr-3" />
                 <div>
-                  <div class="text-subtitle-1 font-weight-medium">{{ $t('entities.copyToCampaign.title') }}</div>
-                  <div class="text-body-2 text-medium-emphasis">
+                  <div class="text-title-medium font-weight-medium">{{ $t('entities.copyToCampaign.title') }}</div>
+                  <div class="text-body-medium text-medium-emphasis">
                     {{ $t('dashboard.copyHint') }}
                   </div>
                 </div>

@@ -39,10 +39,10 @@
         >
           <v-tooltip activator="parent" location="top">
             <strong>{{ marker.label }}</strong>
-            <span v-if="marker.description" class="d-block text-caption">
+            <span v-if="marker.description" class="d-block text-body-small">
               {{ marker.description }}
             </span>
-            <span class="text-caption">{{ formatTime(marker.timestampSeconds) }}</span>
+            <span class="text-body-small">{{ formatTime(marker.timestampSeconds) }}</span>
           </v-tooltip>
         </div>
 
@@ -151,7 +151,7 @@
       <v-expand-transition>
         <div v-if="markers.length > 0" class="mt-3">
           <v-divider class="mb-2" />
-          <div class="text-caption text-medium-emphasis mb-2">
+          <div class="text-body-small text-medium-emphasis mb-2">
             {{ $t('audio.markers') }} ({{ markers.length }})
           </div>
           <div class="markers-list">
@@ -222,7 +222,7 @@
             </v-btn>
           </div>
           <div class="mt-3">
-            <v-label class="text-caption">{{ $t('audio.markerColor') }}</v-label>
+            <v-label class="text-body-small">{{ $t('audio.markerColor') }}</v-label>
             <div class="d-flex ga-3 mt-1">
               <v-btn
                 v-for="color in markerColors"

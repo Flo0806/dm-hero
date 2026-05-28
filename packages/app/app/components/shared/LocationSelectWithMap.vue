@@ -18,17 +18,17 @@
       persistent-hint
       @update:model-value="onLocationChange"
     >
-      <template #item="{ item, props: itemProps }">
+      <template #item="{ internalItem, props: itemProps }">
         <v-list-item v-bind="itemProps">
           <template #prepend>
             <v-avatar size="32" color="#8B7355">
-              <v-img v-if="item.raw.image_url" :src="`/uploads/${item.raw.image_url}`" />
+              <v-img v-if="internalItem.raw.image_url" :src="`/uploads/${internalItem.raw.image_url}`" />
               <v-icon v-else icon="mdi-map-marker" size="small" />
             </v-avatar>
           </template>
           <template #subtitle>
-            <span v-if="item.raw.description" class="text-truncate">
-              {{ item.raw.description?.substring(0, 50) }}{{ item.raw.description?.length > 50 ? '...' : '' }}
+            <span v-if="internalItem.raw.description" class="text-truncate">
+              {{ internalItem.raw.description?.substring(0, 50) }}{{ internalItem.raw.description?.length > 50 ? '...' : '' }}
             </span>
           </template>
         </v-list-item>
@@ -63,9 +63,9 @@
             :hint="$t('entities.selectMapsHint')"
             persistent-hint
           >
-            <template #chip="{ item, props: chipProps }">
+            <template #chip="{ internalItem, props: chipProps }">
               <v-chip v-bind="chipProps" size="small">
-                {{ item.title }}
+                {{ internalItem.title }}
               </v-chip>
             </template>
           </v-select>

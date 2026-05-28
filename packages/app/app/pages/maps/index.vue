@@ -280,7 +280,7 @@
             class="mb-3"
           />
           <v-divider class="my-4" />
-          <div class="text-subtitle-2 mb-2">{{ $t('maps.scale') }}</div>
+          <div class="text-title-small mb-2">{{ $t('maps.scale') }}</div>
           <v-row dense>
             <v-col cols="6">
               <v-text-field
@@ -304,7 +304,7 @@
               />
             </v-col>
           </v-row>
-          <div class="text-caption text-medium-emphasis mb-3">
+          <div class="text-body-small text-medium-emphasis mb-3">
             {{ $t('maps.scaleHint') }}
           </div>
 

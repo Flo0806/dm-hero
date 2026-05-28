@@ -114,7 +114,7 @@
 
         <div v-else class="text-center py-6 text-medium-emphasis">
           <div>{{ $t('common.noResults') }}</div>
-          <div class="text-body-2 mt-1">{{ $t('encounters.onlyWithStats') }}</div>
+          <div class="text-body-medium mt-1">{{ $t('encounters.onlyWithStats') }}</div>
         </div>
       </v-card-text>
     </v-card>

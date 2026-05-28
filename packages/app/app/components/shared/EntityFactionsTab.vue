@@ -26,7 +26,7 @@
           <v-chip v-if="relation.relation_type" size="small" class="mr-1">
             {{ $t(`${i18nPrefix}.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
-          <span v-if="relation.notes" class="text-caption">
+          <span v-if="relation.notes" class="text-body-small">
             {{ relation.notes }}
           </span>
         </v-list-item-subtitle>
