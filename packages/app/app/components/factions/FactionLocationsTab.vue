@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="text-h6 mb-4">
+    <div class="text-headline-small mb-4">
       {{ $t('factions.locationsList') }}
     </div>
 
@@ -73,7 +73,7 @@
 
     <v-divider class="my-4" />
 
-    <div class="text-h6 mb-4">
+    <div class="text-headline-small mb-4">
       {{ $t('factions.addLocation') }}
     </div>
 

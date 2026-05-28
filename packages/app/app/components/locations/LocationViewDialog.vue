@@ -7,8 +7,8 @@
           <v-icon v-else icon="mdi-map-marker" size="32" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h2 class="text-h5">{{ location.name }}</h2>
-          <div v-if="location.metadata?.type" class="text-body-2 text-medium-emphasis">
+          <h2 class="text-headline-medium">{{ location.name }}</h2>
+          <div v-if="location.metadata?.type" class="text-body-medium text-medium-emphasis">
             {{ $t(`locations.types.${location.metadata.type}`, location.metadata.type) }}
           </div>
         </div>
@@ -76,10 +76,10 @@
               />
 
               <div v-if="location.description" class="mb-4">
-                <h3 class="text-h6 mb-2">
+                <h3 class="text-headline-small mb-2">
                   {{ $t('locations.description') }}
                 </h3>
-                <p class="text-body-1" style="white-space: pre-wrap">
+                <p class="text-body-large" style="white-space: pre-wrap">
                   {{ location.description }}
                 </p>
               </div>
@@ -91,7 +91,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-shape</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('locations.type') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('locations.type') }}</div>
                         <div class="font-weight-medium">{{ $t(`locations.types.${location.metadata.type}`, location.metadata.type) }}</div>
                       </div>
                     </div>
@@ -102,7 +102,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="secondary">mdi-map</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('locations.region') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('locations.region') }}</div>
                         <div class="font-weight-medium">{{ location.metadata.region }}</div>
                       </div>
                     </div>
@@ -113,7 +113,7 @@
                     <div class="d-flex align-start">
                       <v-icon class="mr-3 mt-1">mdi-note-text</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('locations.notes') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('locations.notes') }}</div>
                         <div class="font-weight-medium" style="white-space: pre-wrap">{{ location.metadata.notes }}</div>
                       </div>
                     </div>

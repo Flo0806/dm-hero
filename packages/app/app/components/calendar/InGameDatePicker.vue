@@ -8,7 +8,7 @@
     <!-- No Calendar Configured -->
     <div v-else-if="!calendarData || calendarData.months.length === 0" class="text-center pa-4">
       <v-icon size="48" color="warning" class="mb-2">mdi-calendar-alert</v-icon>
-      <p class="text-body-2 text-medium-emphasis">
+      <p class="text-body-medium text-medium-emphasis">
         {{ $t('calendar.noCalendarConfigured') }}
       </p>
     </div>
@@ -18,7 +18,7 @@
       <v-row dense>
         <!-- Day Selector -->
         <v-col cols="12" sm="3">
-          <v-label class="text-caption mb-1">{{ $t('calendar.day') }}</v-label>
+          <v-label class="text-body-small mb-1">{{ $t('calendar.day') }}</v-label>
           <v-select
             v-model="internalDay"
             :items="dayItems"
@@ -30,7 +30,7 @@
 
         <!-- Month Selector -->
         <v-col cols="12" sm="5">
-          <v-label class="text-caption mb-1">{{ $t('calendar.month') }}</v-label>
+          <v-label class="text-body-small mb-1">{{ $t('calendar.month') }}</v-label>
           <v-select
             v-model="internalMonth"
             :items="monthItems"
@@ -44,7 +44,7 @@
 
         <!-- Year Selector -->
         <v-col cols="12" sm="4">
-          <v-label class="text-caption mb-1">{{ $t('calendar.year') }}</v-label>
+          <v-label class="text-body-small mb-1">{{ $t('calendar.year') }}</v-label>
           <div class="d-flex align-center">
             <v-btn
               icon="mdi-minus"

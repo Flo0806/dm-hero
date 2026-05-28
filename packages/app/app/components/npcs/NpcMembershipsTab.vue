@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="text-h6 mb-4">
+    <div class="text-headline-small mb-4">
       {{ $t('npcs.factionMemberships') }}
     </div>
 
@@ -18,7 +18,7 @@
           </v-chip>
           <span
             v-if="membership.notes && typeof membership.notes === 'object' && 'rank' in membership.notes"
-            class="text-caption"
+            class="text-body-small"
           >
             {{ $t('npcs.rank') }}: {{ membership.notes.rank }}
           </span>
@@ -50,7 +50,7 @@
 
     <v-divider class="my-4" />
 
-    <div class="text-h6 mb-4">
+    <div class="text-headline-small mb-4">
       {{ $t('npcs.addFactionMembership') }}
     </div>
 

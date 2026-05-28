@@ -52,7 +52,7 @@
           class="mb-3"
         >
           <template #append>
-            <span class="text-body-2">{{ form.radius }}%</span>
+            <span class="text-body-medium">{{ form.radius }}%</span>
           </template>
         </v-slider>
 

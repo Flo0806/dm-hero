@@ -67,7 +67,7 @@
               </v-chip>
             </div>
 
-            <div class="text-caption text-medium-emphasis mt-2">
+            <div class="text-body-small text-medium-emphasis mt-2">
               {{ formatDate(encounter.created_at) }}
             </div>
           </v-card-text>
@@ -96,8 +96,8 @@
       <template #fallback>
         <v-container class="text-center py-16">
           <v-icon icon="mdi-sword-cross" size="64" color="grey" class="mb-4" />
-          <h2 class="text-h5 mb-2">{{ $t('encounters.empty') }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('encounters.emptyText') }}</p>
+          <h2 class="text-headline-medium mb-2">{{ $t('encounters.empty') }}</h2>
+          <p class="text-body-large text-medium-emphasis mb-4">{{ $t('encounters.emptyText') }}</p>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('encounters.create') }}
           </v-btn>

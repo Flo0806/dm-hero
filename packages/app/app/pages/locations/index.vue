@@ -47,7 +47,7 @@
     <!-- Search Loading Indicator (shown immediately when typing starts) -->
     <div v-else-if="searching && (!searchResults || searchResults.length === 0)" class="text-center py-16">
       <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-      <div class="text-h6">
+      <div class="text-headline-small">
         {{ $t('common.searching') }}
       </div>
     </div>
@@ -65,7 +65,7 @@
       >
         <div class="text-center">
           <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-          <div class="text-h6">
+          <div class="text-headline-small">
             {{ $t('common.searching') }}
           </div>
         </div>
@@ -199,8 +199,8 @@
       <template #fallback>
         <v-container class="text-center py-16">
           <v-icon icon="mdi-map-marker-multiple" size="64" color="grey" class="mb-4" />
-          <h2 class="text-h5 mb-2">{{ $t('locations.empty') }}</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
+          <h2 class="text-headline-medium mb-2">{{ $t('locations.empty') }}</h2>
+          <p class="text-body-large text-medium-emphasis mb-4">{{ $t('locations.emptyText') }}</p>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="showCreateDialog = true">
             {{ $t('locations.create') }}
           </v-btn>

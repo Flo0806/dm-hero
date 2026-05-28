@@ -27,7 +27,7 @@
           <v-icon icon="mdi-note-text" color="primary" />
         </template>
         <v-list-item-title>
-          <span class="text-caption text-medium-emphasis mr-2">
+          <span class="text-body-small text-medium-emphasis mr-2">
             {{ formatDate(note.date || note.created_at) }}
           </span>
           <span v-if="note.title" class="font-weight-medium">

@@ -7,8 +7,8 @@
           <v-icon v-else icon="mdi-treasure-chest" size="32" />
         </v-avatar>
         <div class="flex-grow-1">
-          <h2 class="text-h5">{{ item.name }}</h2>
-          <div v-if="item.metadata?.type || item.metadata?.rarity" class="text-body-2">
+          <h2 class="text-headline-medium">{{ item.name }}</h2>
+          <div v-if="item.metadata?.type || item.metadata?.rarity" class="text-body-medium">
             <v-chip
               v-if="item.metadata?.rarity"
               :color="getRarityColor(item.metadata.rarity)"
@@ -90,10 +90,10 @@
 
               <!-- Description -->
               <div v-if="item.description" class="mb-4">
-                <h3 class="text-h6 mb-2">
+                <h3 class="text-headline-small mb-2">
                   {{ $t('items.description') }}
                 </h3>
-                <p class="text-body-1" style="white-space: pre-wrap">
+                <p class="text-body-large" style="white-space: pre-wrap">
                   {{ item.description }}
                 </p>
               </div>
@@ -105,7 +105,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="amber">mdi-currency-usd</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('items.value') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('items.value') }}</div>
                         <div class="font-weight-medium">{{ item.metadata.value }}</div>
                       </div>
                     </div>
@@ -116,7 +116,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="grey">mdi-weight</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('items.weight') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('items.weight') }}</div>
                         <div class="font-weight-medium">{{ item.metadata.weight }}</div>
                       </div>
                     </div>
@@ -127,7 +127,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="blue">mdi-lightning-bolt</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('items.charges') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('items.charges') }}</div>
                         <div class="font-weight-medium">{{ item.metadata.charges }}</div>
                       </div>
                     </div>
@@ -138,7 +138,7 @@
                     <div class="d-flex align-center">
                       <v-icon class="mr-3" color="primary">mdi-star</v-icon>
                       <div>
-                        <div class="text-caption text-medium-emphasis">{{ $t('items.properties') }}</div>
+                        <div class="text-body-small text-medium-emphasis">{{ $t('items.properties') }}</div>
                         <div class="font-weight-medium">{{ item.metadata.properties }}</div>
                       </div>
                     </div>

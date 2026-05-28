@@ -165,8 +165,8 @@ defineExpose({
 
           <div v-else-if="localPins.length === 0" class="text-center py-4 text-medium-emphasis">
             <v-icon size="48" class="mb-2" color="grey">mdi-pin-off</v-icon>
-            <div class="text-body-2">{{ t('pinboard.empty') }}</div>
-            <div class="text-caption">{{ t('pinboard.emptyHint') }}</div>
+            <div class="text-body-medium">{{ t('pinboard.empty') }}</div>
+            <div class="text-body-small">{{ t('pinboard.emptyHint') }}</div>
           </div>
 
           <draggable

@@ -81,7 +81,7 @@
                 <v-icon start icon="mdi-star" />
                 {{ $t('common.primary') }}
               </v-chip>
-              <span class="text-caption text-medium-emphasis">
+              <span class="text-body-small text-medium-emphasis">
                 {{ new Date(image.created_at).toLocaleDateString('de-DE') }}
               </span>
             </div>

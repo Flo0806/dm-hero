@@ -44,7 +44,7 @@
     <div v-else class="text-center py-8 text-medium-emphasis">
       <v-icon icon="mdi-account-group-outline" size="48" class="mb-2" />
       <div>{{ $t('encounters.noParticipants') }}</div>
-      <div class="text-body-2">{{ $t('encounters.noParticipantsHint') }}</div>
+      <div class="text-body-medium">{{ $t('encounters.noParticipantsHint') }}</div>
     </div>
   </div>
 </template>

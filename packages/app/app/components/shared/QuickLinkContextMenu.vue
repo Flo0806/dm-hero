@@ -18,7 +18,7 @@
           <template #prepend>
             <v-icon :icon="config.icon" size="small" class="mr-2" />
           </template>
-          <v-list-item-title class="text-body-2">
+          <v-list-item-title class="text-body-medium">
             {{ $t(config.labelKey) }}
           </v-list-item-title>
         </v-list-item>
@@ -28,7 +28,7 @@
           <template #prepend>
             <v-icon :icon="config.icon" size="small" class="mr-2" />
           </template>
-          <v-list-item-title class="text-body-2">
+          <v-list-item-title class="text-body-medium">
             {{ $t(config.labelKey) }}
           </v-list-item-title>
           <template #append>
@@ -50,7 +50,7 @@
                 class="px-3"
                 @click="handleSelect(config.targetType, relationType)"
               >
-                <v-list-item-title class="text-body-2">
+                <v-list-item-title class="text-body-medium">
                   {{ $t(`${config.i18nPrefix}.${relationType}`, relationType) }}
                 </v-list-item-title>
               </v-list-item>
@@ -67,7 +67,7 @@
         <template #prepend>
           <v-icon icon="mdi-folder-plus" size="small" class="mr-2" />
         </template>
-        <v-list-item-title class="text-body-2">
+        <v-list-item-title class="text-body-medium">
           {{ $t('quickLink.addToGroup') }}
         </v-list-item-title>
         <template #append>
@@ -95,7 +95,7 @@
                   <v-icon :icon="group.icon || 'mdi-folder'" size="small" />
                 </v-avatar>
               </template>
-              <v-list-item-title class="text-body-2">
+              <v-list-item-title class="text-body-medium">
                 {{ group.name }}
               </v-list-item-title>
               <template v-if="isInGroup(group.id)" #append>
@@ -109,7 +109,7 @@
               <template #prepend>
                 <v-icon icon="mdi-plus" size="small" class="mr-2" />
               </template>
-              <v-list-item-title class="text-body-2">
+              <v-list-item-title class="text-body-medium">
                 {{ $t('quickLink.createGroup') }}
               </v-list-item-title>
             </v-list-item>

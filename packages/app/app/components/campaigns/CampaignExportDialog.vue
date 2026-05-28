@@ -22,7 +22,7 @@
         <!-- Full Export Info -->
         <v-alert v-if="exportMode === 'full'" type="info" variant="tonal" class="mb-4">
           <div class="font-weight-medium">{{ $t('campaigns.export.fullExportInfo') }}</div>
-          <div class="text-body-2 mt-1">
+          <div class="text-body-medium mt-1">
             {{ $t('campaigns.export.fullExportDetails', {
               entities: entityStats.total,
               sessions: sessionCount,

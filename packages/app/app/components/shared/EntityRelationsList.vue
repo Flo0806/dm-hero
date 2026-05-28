@@ -60,7 +60,7 @@
             </v-chip>
 
             <!-- Description -->
-            <span v-if="entity.description" class="text-caption text-medium-emphasis">
+            <span v-if="entity.description" class="text-body-small text-medium-emphasis">
               {{ entity.description }}
             </span>
           </div>

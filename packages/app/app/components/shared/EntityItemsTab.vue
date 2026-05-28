@@ -93,10 +93,10 @@
           <v-chip v-if="showRelationType && item.relation_type" size="small" class="mr-1" color="primary" variant="tonal">
             {{ getRelationTypeLabel(item.relation_type) }}
           </v-chip>
-          <span v-if="showQuantity && item.quantity && item.quantity > 1" class="text-caption mr-2">
+          <span v-if="showQuantity && item.quantity && item.quantity > 1" class="text-body-small mr-2">
             {{ item.quantity }}x
           </span>
-          <span v-if="item.description" class="text-caption text-medium-emphasis">
+          <span v-if="item.description" class="text-body-small text-medium-emphasis">
             {{ item.description.substring(0, 100) }}{{ item.description.length > 100 ? '...' : '' }}
           </span>
         </v-list-item-subtitle>

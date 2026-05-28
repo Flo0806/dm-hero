@@ -115,7 +115,7 @@
 
               <v-divider class="my-4" />
 
-              <div class="text-h6 mb-4">{{ $t('items.metadata') }}</div>
+              <div class="text-headline-small mb-4">{{ $t('items.metadata') }}</div>
 
               <v-row>
                 <v-col cols="12" md="6">

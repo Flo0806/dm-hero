@@ -6,13 +6,13 @@
           <v-icon :icon="icon" size="22" color="white" />
         </v-avatar>
         <div class="flex-grow-1">
-          <div class="text-subtitle-1 font-weight-medium">{{ title }}</div>
-          <div class="text-caption text-medium-emphasis">{{ count }} {{ $t('dashboard.category.entries') }}</div>
+          <div class="text-title-medium font-weight-medium">{{ title }}</div>
+          <div class="text-body-small text-medium-emphasis">{{ count }} {{ $t('dashboard.category.entries') }}</div>
         </div>
         <v-icon icon="mdi-chevron-right" size="20" class="text-medium-emphasis" />
       </div>
 
-      <p class="text-body-2 text-medium-emphasis mb-3">
+      <p class="text-body-medium text-medium-emphasis mb-3">
         {{ description }}
       </p>
 

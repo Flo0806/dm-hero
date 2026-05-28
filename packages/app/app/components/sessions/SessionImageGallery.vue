@@ -30,7 +30,7 @@
       <!-- AI Image Generation Section -->
       <v-card variant="tonal" class="mb-4">
         <v-card-text>
-          <div class="text-subtitle-2 mb-2">
+          <div class="text-title-small mb-2">
             <v-icon size="small" class="mr-1">mdi-creation</v-icon>
             {{ $t('sessions.generateCoverImage') }}
           </div>
@@ -57,7 +57,7 @@
             >
               {{ $t('common.generateImage') }}
             </v-btn>
-            <span v-if="!hasApiKey" class="text-caption text-medium-emphasis">
+            <span v-if="!hasApiKey" class="text-body-small text-medium-emphasis">
               {{ $t('settings.noApiKey') }}
             </span>
           </div>
@@ -106,7 +106,7 @@
                 <v-icon start icon="mdi-star" />
                 {{ $t('common.primary') }}
               </v-chip>
-              <span class="text-caption text-medium-emphasis">
+              <span class="text-body-small text-medium-emphasis">
                 {{ new Date(image.createdAt).toLocaleDateString('de-DE') }}
               </span>
             </div>

@@ -51,7 +51,7 @@
       >
         <div class="text-center">
           <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-          <div class="text-h6">
+          <div class="text-headline-small">
             {{ $t('common.searching') }}
           </div>
         </div>

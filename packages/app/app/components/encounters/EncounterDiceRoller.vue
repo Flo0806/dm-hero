@@ -28,7 +28,7 @@
         <v-btn icon size="x-small" variant="text" @click="modifier--">
           <v-icon size="16">mdi-minus</v-icon>
         </v-btn>
-        <span class="text-body-2 font-weight-bold" style="min-width: 32px; text-align: center;">
+        <span class="text-body-medium font-weight-bold" style="min-width: 32px; text-align: center;">
           {{ modifier >= 0 ? `+${modifier}` : modifier }}
         </span>
         <v-btn icon size="x-small" variant="text" @click="modifier++">
@@ -60,9 +60,9 @@
 
     <!-- Result -->
     <div v-if="lastResult" class="mt-2 d-flex align-center ga-2">
-      <span class="text-h6 font-weight-bold text-primary">{{ lastResult.total }}</span>
-      <span class="text-body-2 text-medium-emphasis">=</span>
-      <span class="text-body-2 text-medium-emphasis">{{ lastResult.breakdown }}</span>
+      <span class="text-headline-small font-weight-bold text-primary">{{ lastResult.total }}</span>
+      <span class="text-body-medium text-medium-emphasis">=</span>
+      <span class="text-body-medium text-medium-emphasis">{{ lastResult.breakdown }}</span>
     </div>
   </div>
 </template>

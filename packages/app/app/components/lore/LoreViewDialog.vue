@@ -8,7 +8,7 @@
           <v-icon v-else icon="mdi-book-open-variant" size="32" />
         </v-avatar>
         <div class="flex-grow-1">
-          <div class="text-h5">{{ lore.name }}</div>
+          <div class="text-headline-medium">{{ lore.name }}</div>
           <div v-if="lore.metadata?.type" class="mt-1">
             <v-chip :color="getTypeColor(lore.metadata.type)" size="small">
               {{ $t(`lore.types.${lore.metadata.type}`) }}
@@ -74,7 +74,7 @@
               <!-- Date Card -->
               <v-card v-if="lore.metadata?.date" variant="tonal" class="mb-4">
                 <v-card-text>
-                  <div class="text-caption text-medium-emphasis mb-1">
+                  <div class="text-body-small text-medium-emphasis mb-1">
                     {{ $t('lore.date') }}
                   </div>
                   <div class="d-flex align-center">
@@ -87,10 +87,10 @@
               <!-- Description -->
               <v-card v-if="lore.description" variant="tonal">
                 <v-card-text>
-                  <div class="text-caption text-medium-emphasis mb-2">
+                  <div class="text-body-small text-medium-emphasis mb-2">
                     {{ $t('lore.description') }}
                   </div>
-                  <div class="text-body-1" style="white-space: pre-wrap">
+                  <div class="text-body-large" style="white-space: pre-wrap">
                     {{ lore.description }}
                   </div>
                 </v-card-text>

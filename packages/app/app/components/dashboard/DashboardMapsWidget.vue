@@ -4,7 +4,7 @@
       <div class="d-flex align-center justify-space-between mb-3">
         <div class="d-flex align-center">
           <v-icon icon="mdi-map" color="primary" size="24" class="mr-2" />
-          <span class="text-subtitle-1 font-weight-medium">{{ $t('dashboard.maps.title') }}</span>
+          <span class="text-title-medium font-weight-medium">{{ $t('dashboard.maps.title') }}</span>
         </div>
         <v-icon icon="mdi-chevron-right" size="20" class="text-medium-emphasis" />
       </div>
@@ -19,7 +19,7 @@
             class="rounded"
           >
             <div class="map-overlay d-flex align-center justify-space-between py-2 px-3">
-              <span class="text-body-2 font-weight-medium text-white">{{ primaryMap.name }}</span>
+              <span class="text-body-medium font-weight-medium text-white">{{ primaryMap.name }}</span>
               <v-chip size="x-small" color="primary" variant="flat">
                 {{ primaryMap._markerCount || 0 }} {{ $t('dashboard.maps.markers') }}
               </v-chip>
@@ -28,11 +28,11 @@
         </div>
 
         <div class="dashboard-info-box d-flex justify-space-between py-2 px-3 rounded">
-          <div class="text-body-2">
+          <div class="text-body-medium">
             <v-icon icon="mdi-map" size="16" class="mr-1" />
             {{ maps.length }} {{ $t('dashboard.maps.count') }}
           </div>
-          <div class="text-body-2">
+          <div class="text-body-medium">
             <v-icon icon="mdi-map-marker" size="16" class="mr-1" />
             {{ totalMarkers }} {{ $t('dashboard.maps.totalMarkers') }}
           </div>
@@ -41,7 +41,7 @@
 
       <div v-else class="d-flex flex-column align-center text-center py-4">
         <v-icon icon="mdi-map-plus" size="32" class="text-medium-emphasis mb-2" />
-        <p class="text-body-2 text-medium-emphasis mb-2">
+        <p class="text-body-medium text-medium-emphasis mb-2">
           {{ $t('dashboard.maps.empty') }}
         </p>
         <v-btn size="small" color="primary" variant="tonal" to="/maps">

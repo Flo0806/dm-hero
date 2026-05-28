@@ -114,7 +114,7 @@
             <v-card variant="outlined" class="mb-3 pa-3">
               <div class="d-flex align-center mb-2">
                 <v-icon class="mr-2" color="primary">mdi-cake-variant</v-icon>
-                <span class="text-subtitle-2">{{ $t('players.characterBirthday') }}</span>
+                <span class="text-title-small">{{ $t('players.characterBirthday') }}</span>
                 <v-tooltip v-if="!hasCalendar" location="top">
                   <template #activator="{ props: tooltipProps }">
                     <v-icon v-bind="tooltipProps" class="ml-2" size="small" color="warning">
@@ -146,7 +146,7 @@
                   />
                 </div>
               </div>
-              <div v-else class="text-medium-emphasis text-body-2">
+              <div v-else class="text-medium-emphasis text-body-medium">
                 {{ $t('players.noCalendarForBirthday') }}
               </div>
             </v-card>
@@ -163,7 +163,7 @@
 
             <!-- Inspiration Counter -->
             <div class="d-flex align-center mb-3">
-              <span class="text-body-1 mr-4">{{ $t('players.inspiration') }}</span>
+              <span class="text-body-large mr-4">{{ $t('players.inspiration') }}</span>
               <v-btn
                 icon="mdi-minus"
                 size="small"
@@ -171,7 +171,7 @@
                 :disabled="(form.inspiration || 0) <= 0"
                 @click="form.inspiration = Math.max(0, (form.inspiration || 0) - 1)"
               />
-              <v-chip size="large" class="mx-2 text-h6" variant="tonal" color="primary">
+              <v-chip size="large" class="mx-2 text-headline-small" variant="tonal" color="primary">
                 {{ form.inspiration || 0 }}
               </v-chip>
               <v-btn
@@ -339,7 +339,7 @@
 
           <!-- Inspiration Counter -->
           <div class="d-flex align-center mb-3">
-            <span class="text-body-1 mr-4">{{ $t('players.inspiration') }}</span>
+            <span class="text-body-large mr-4">{{ $t('players.inspiration') }}</span>
             <v-btn
               icon="mdi-minus"
               size="small"
@@ -347,7 +347,7 @@
               :disabled="(form.inspiration || 0) <= 0"
               @click="form.inspiration = Math.max(0, (form.inspiration || 0) - 1)"
             />
-            <v-chip size="large" class="mx-2 text-h6" variant="tonal" color="primary">
+            <v-chip size="large" class="mx-2 text-headline-small" variant="tonal" color="primary">
               {{ form.inspiration || 0 }}
             </v-chip>
             <v-btn

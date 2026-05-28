@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Title -->
-    <div class="text-h6 mb-4">
+    <div class="text-headline-small mb-4">
       {{ title }}
     </div>
 

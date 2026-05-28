@@ -21,7 +21,7 @@
           <v-chip size="small" class="mr-1" color="primary" variant="tonal">
             {{ $t(`factions.factionRelationTypes.${relation.relation_type}`, relation.relation_type) }}
           </v-chip>
-          <span v-if="getNotesText(relation.notes)" class="text-caption">
+          <span v-if="getNotesText(relation.notes)" class="text-body-small">
             {{ getNotesText(relation.notes) }}
           </span>
         </v-list-item-subtitle>

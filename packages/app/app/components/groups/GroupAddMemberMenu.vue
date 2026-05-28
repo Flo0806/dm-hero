@@ -17,7 +17,7 @@
         <template #prepend>
           <v-icon :icon="entityType.icon" size="small" class="mr-2" />
         </template>
-        <v-list-item-title class="text-body-2">{{ entityType.title }}</v-list-item-title>
+        <v-list-item-title class="text-body-medium">{{ entityType.title }}</v-list-item-title>
       </v-list-item>
     </v-list>
   </v-menu>

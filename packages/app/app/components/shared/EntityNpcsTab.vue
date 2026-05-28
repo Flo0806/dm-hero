@@ -73,10 +73,10 @@
           <v-chip v-if="showMembershipType && npc.relation_type" size="small" class="mr-1" color="primary" variant="tonal">
             {{ getMembershipTypeLabel(npc.relation_type) }}
           </v-chip>
-          <span v-if="showRank && npc.notes?.rank" class="text-caption mr-2">
+          <span v-if="showRank && npc.notes?.rank" class="text-body-small mr-2">
             {{ $t('common.rank') }}: {{ npc.notes.rank }}
           </span>
-          <span v-if="npc.description" class="text-caption text-medium-emphasis">
+          <span v-if="npc.description" class="text-body-small text-medium-emphasis">
             {{ npc.description.substring(0, 100) }}{{ npc.description.length > 100 ? '...' : '' }}
           </span>
         </v-list-item-subtitle>

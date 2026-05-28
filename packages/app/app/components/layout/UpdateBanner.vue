@@ -11,13 +11,13 @@
         <!-- Header -->
         <div class="d-flex align-center mb-2">
           <v-icon :icon="headerIcon" class="mr-2" />
-          <span class="text-body-2 font-weight-medium">
+          <span class="text-body-medium font-weight-medium">
             {{ headerText }}
           </span>
         </div>
 
         <!-- Version info -->
-        <div v-if="updateInfo" class="text-caption mb-2">
+        <div v-if="updateInfo" class="text-body-small mb-2">
           {{ updateInfo.latestVersion }}
           <v-chip
             v-if="updateInfo.isDevMode"
@@ -37,7 +37,7 @@
             height="8"
             rounded
           />
-          <div class="text-caption mt-1 d-flex justify-space-between">
+          <div class="text-body-small mt-1 d-flex justify-space-between">
             <span>{{ Math.round(downloadProgress.percent) }}%</span>
             <span>{{ formatSpeed(downloadProgress.bytesPerSecond) }}</span>
           </div>
@@ -121,7 +121,7 @@
         <!-- Linux hint for the manual install step (outside flex row so it wraps normally) -->
         <p
           v-if="isReadyToInstall && isLinux"
-          class="text-caption mt-2 mb-0"
+          class="text-body-small mt-2 mb-0"
         >
           {{ $t('update.linuxInstallHint') }}
         </p>

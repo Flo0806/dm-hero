@@ -6,8 +6,8 @@
         <v-icon>mdi-arrow-left</v-icon>
       </v-btn>
       <div class="chaos-title">
-        <h1 class="text-h5">{{ $t('chaos.title') }}</h1>
-        <span v-if="entity" class="text-body-2 text-medium-emphasis">
+        <h1 class="text-headline-medium">{{ $t('chaos.title') }}</h1>
+        <span v-if="entity" class="text-body-medium text-medium-emphasis">
           {{ entity.name }} · {{ filteredConnections.length }} {{ $t('chaos.connections') }}
           <span v-if="activeFilters.length > 0" class="text-disabled">
             ({{ connections.length }} {{ $t('chaos.total') }})
@@ -35,13 +35,13 @@
     <!-- Loading State -->
     <div v-if="loading" class="chaos-loading">
       <v-progress-circular indeterminate size="64" color="primary" />
-      <p class="mt-4 text-body-1">{{ $t('common.loading') }}</p>
+      <p class="mt-4 text-body-large">{{ $t('common.loading') }}</p>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="chaos-error">
       <v-icon size="64" color="error">mdi-alert-circle</v-icon>
-      <p class="mt-4 text-body-1">{{ error }}</p>
+      <p class="mt-4 text-body-large">{{ error }}</p>
       <v-btn color="primary" class="mt-4" @click="goBack">
         {{ $t('common.back') }}
       </v-btn>
@@ -142,8 +142,8 @@
 
       <!-- No Connections Message -->
       <div v-else class="chaos-no-connections">
-        <p class="text-body-1 text-medium-emphasis">{{ $t('chaos.noConnections') }}</p>
-        <p class="text-body-2 text-disabled">{{ $t('chaos.noConnectionsText') }}</p>
+        <p class="text-body-large text-medium-emphasis">{{ $t('chaos.noConnections') }}</p>
+        <p class="text-body-medium text-disabled">{{ $t('chaos.noConnectionsText') }}</p>
       </div>
     </div>
 

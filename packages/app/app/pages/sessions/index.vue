@@ -35,11 +35,11 @@
         <template #opposite>
           <div class="timeline-date-section text-right">
             <!-- Real Date -->
-            <div class="text-body-2 font-weight-medium">
+            <div class="text-body-medium font-weight-medium">
               {{ formatRealDate(session.date) }}
             </div>
             <!-- In-Game Date -->
-            <div v-if="session.in_game_year_start" class="text-caption text-primary mt-1">
+            <div v-if="session.in_game_year_start" class="text-body-small text-primary mt-1">
               <v-icon size="x-small" class="mr-1">mdi-sword-cross</v-icon>
               {{ formatSessionDate(session) }}
               <span v-if="session.in_game_year_end && hasDateRange(session)">
@@ -77,10 +77,10 @@
 
           <v-card-text class="pt-2">
             <!-- Summary -->
-            <div v-if="session.summary" class="text-body-2 mb-3">
+            <div v-if="session.summary" class="text-body-medium mb-3">
               {{ truncateText(session.summary, 200) }}
             </div>
-            <div v-else class="text-body-2 text-disabled mb-3">
+            <div v-else class="text-body-medium text-disabled mb-3">
               {{ $t('sessions.noSummary') }}
             </div>
 
@@ -234,14 +234,14 @@
                 </v-card-title>
                 <v-card-text v-if="!hasCalendar" class="text-center py-4">
                   <v-icon size="48" color="warning" class="mb-2">mdi-calendar-alert</v-icon>
-                  <p class="text-body-2 text-medium-emphasis">
+                  <p class="text-body-medium text-medium-emphasis">
                     {{ $t('calendar.noCalendarConfigured') }}
                   </p>
                 </v-card-text>
                 <v-card-text v-else-if="useInGameDate" class="pt-0">
                   <v-row>
                     <v-col cols="12" md="6">
-                      <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
+                      <v-label class="text-title-small mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                       <CalendarInGameDatePicker
                         v-model="inGameDateStart"
                         :calendar-data="calendarData"
@@ -250,7 +250,7 @@
                       />
                     </v-col>
                     <v-col cols="12" md="6">
-                      <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
+                      <v-label class="text-title-small mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
                       <CalendarInGameDatePicker
                         v-model="inGameDateEnd"
                         :calendar-data="calendarData"
@@ -273,7 +273,7 @@
               />
 
               <div class="d-flex align-center mb-4">
-                <div class="text-h6">
+                <div class="text-headline-small">
                   {{ $t('sessions.notes') }}
                 </div>
                 <v-spacer />
@@ -302,7 +302,7 @@
                 >
                   <div class="text-center">
                     <v-progress-circular indeterminate size="64" color="primary" />
-                    <div class="text-h6 mt-4">{{ smoothingText ? $t('sessions.smoothingText') : $t('common.uploading') }}</div>
+                    <div class="text-headline-small mt-4">{{ smoothingText ? $t('sessions.smoothingText') : $t('common.uploading') }}</div>
                   </div>
                 </v-overlay>
 
@@ -343,7 +343,7 @@
 
             <!-- Attendance Tab -->
             <v-tabs-window-item value="attendance">
-              <div class="text-h6 mb-4">
+              <div class="text-headline-small mb-4">
                 {{ $t('sessions.playerAttendance') }}
               </div>
 
@@ -351,7 +351,7 @@
                 <v-progress-circular indeterminate />
               </div>
 
-              <div v-else-if="allPlayers.length === 0" class="text-body-2 text-disabled">
+              <div v-else-if="allPlayers.length === 0" class="text-body-medium text-disabled">
                 {{ $t('sessions.noPlayers') }}
               </div>
 
@@ -393,7 +393,7 @@
 
             <!-- Mentions Tab -->
             <v-tabs-window-item value="mentions">
-              <div class="text-h6 mb-4">
+              <div class="text-headline-small mb-4">
                 {{ $t('sessions.linkedEntities') }}
               </div>
 
@@ -411,7 +411,7 @@
                   {{ mention.name }}
                 </v-chip>
               </div>
-              <div v-else class="text-body-2 text-disabled">
+              <div v-else class="text-body-medium text-disabled">
                 {{ $t('sessions.noMentions') }}
               </div>
             </v-tabs-window-item>
@@ -484,14 +484,14 @@
               </v-card-title>
               <v-card-text v-if="!hasCalendar" class="text-center py-4">
                 <v-icon size="48" color="warning" class="mb-2">mdi-calendar-alert</v-icon>
-                <p class="text-body-2 text-medium-emphasis">
+                <p class="text-body-medium text-medium-emphasis">
                   {{ $t('calendar.noCalendarConfigured') }}
                 </p>
               </v-card-text>
               <v-card-text v-else-if="useInGameDate" class="pt-0">
                 <v-row>
                   <v-col cols="12" md="6">
-                    <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
+                    <v-label class="text-title-small mb-2">{{ $t('sessions.inGameDateStart') }}</v-label>
                     <CalendarInGameDatePicker
                       v-model="inGameDateStart"
                       :calendar-data="calendarData"
@@ -500,7 +500,7 @@
                     />
                   </v-col>
                   <v-col cols="12" md="6">
-                    <v-label class="text-subtitle-2 mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
+                    <v-label class="text-title-small mb-2">{{ $t('sessions.inGameDateEnd') }}</v-label>
                     <CalendarInGameDatePicker
                       v-model="inGameDateEnd"
                       :calendar-data="calendarData"
@@ -523,7 +523,7 @@
             />
 
             <div class="d-flex align-center mb-4">
-              <div class="text-h6">
+              <div class="text-headline-small">
                 {{ $t('sessions.notes') }}
               </div>
               <v-spacer />
@@ -552,7 +552,7 @@
               >
                 <div class="text-center">
                   <v-progress-circular indeterminate size="64" color="primary" />
-                  <div class="text-h6 mt-4">{{ smoothingText ? $t('sessions.smoothingText') : $t('common.uploading') }}</div>
+                  <div class="text-headline-small mt-4">{{ smoothingText ? $t('sessions.smoothingText') : $t('common.uploading') }}</div>
                 </div>
               </v-overlay>
 
@@ -603,7 +603,7 @@
         </v-card-subtitle>
 
         <v-card-text style="max-height: 70vh">
-          <div v-if="viewingSession.summary" class="text-body-1 mb-4">
+          <div v-if="viewingSession.summary" class="text-body-large mb-4">
             {{ viewingSession.summary }}
           </div>
 

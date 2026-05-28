@@ -304,7 +304,7 @@
 
           <!-- Current Date Tab -->
           <v-window-item value="current">
-            <h3 class="text-h6 mb-4">{{ $t('calendar.currentDate') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.currentDate') }}</h3>
             <v-row>
               <v-col cols="4">
                 <v-text-field
@@ -337,7 +337,7 @@
             </v-row>
 
             <v-divider class="my-4" />
-            <h3 class="text-h6 mb-4">{{ $t('calendar.eraName') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.eraName') }}</h3>
             <v-text-field
               v-model="form.eraName"
               :label="$t('calendar.eraName')"
@@ -347,7 +347,7 @@
             />
 
             <v-divider class="my-4" />
-            <h3 class="text-h6 mb-4">{{ $t('calendar.leapYear') }}</h3>
+            <h3 class="text-headline-small mb-4">{{ $t('calendar.leapYear') }}</h3>
             <v-row>
               <v-col cols="4">
                 <v-text-field

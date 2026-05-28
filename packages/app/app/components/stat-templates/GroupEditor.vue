@@ -5,7 +5,7 @@
         mdi-drag-horizontal
       </v-icon>
 
-      <span class="text-subtitle-1 font-weight-medium flex-grow-1">
+      <span class="text-title-medium font-weight-medium flex-grow-1">
         {{ displayName }}
       </span>
 

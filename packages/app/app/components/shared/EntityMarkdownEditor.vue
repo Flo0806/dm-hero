@@ -114,7 +114,7 @@
           </NormalToolbar>
         </template>
       </MdEditor>
-      <div class="editor-hint text-caption text-medium-emphasis mt-1 d-flex align-center">
+      <div class="editor-hint text-body-small text-medium-emphasis mt-1 d-flex align-center">
         <v-hotkey keys="ctrl+shift+space" :platform="platform" class="mr-2" />
         <span>{{ $t('editor.quickSearchHintText') }}</span>
       </div>
@@ -131,7 +131,7 @@
       @update:model-value="onQuickSearchClose"
     >
       <v-card min-width="350" height="380" elevation="12" class="quick-search-card d-flex flex-column">
-        <v-card-title class="text-body-1 py-2 flex-grow-0 flex-shrink-0">
+        <v-card-title class="text-body-large py-2 flex-grow-0 flex-shrink-0">
           <v-icon start size="small">mdi-lightning-bolt</v-icon>
           {{ $t('editor.quickInsert') }}
         </v-card-title>

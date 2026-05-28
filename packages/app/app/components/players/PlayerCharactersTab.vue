@@ -18,7 +18,7 @@
           <v-chip size="small" class="mr-1" color="primary" variant="tonal">
             {{ $t(`players.relationTypes.${npc.relation_type}`, npc.relation_type) }}
           </v-chip>
-          <span v-if="npc.notes" class="text-caption">
+          <span v-if="npc.notes" class="text-body-small">
             {{ npc.notes.substring(0, 80) }}{{ npc.notes.length > 80 ? '...' : '' }}
           </span>
         </v-list-item-subtitle>

@@ -45,7 +45,7 @@
     <!-- Search Loading State (when searching with no previous results) -->
     <div v-else-if="searching && filteredNpcs.length === 0" class="text-center py-16">
       <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-      <div class="text-h6">{{ $t('common.searching') }}</div>
+      <div class="text-headline-small">{{ $t('common.searching') }}</div>
     </div>
 
     <!-- NPC Cards with Search Overlay -->
@@ -61,7 +61,7 @@
       >
         <div class="text-center">
           <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
-          <div class="text-h6">
+          <div class="text-headline-small">
             {{ $t('common.searching') }}
           </div>
         </div>
@@ -104,8 +104,8 @@
         <template #fallback>
           <v-container class="text-center py-16">
             <v-icon icon="mdi-account-group" size="64" color="grey" class="mb-4" />
-            <h2 class="text-h5 mb-2">{{ $t('npcs.empty') }}</h2>
-            <p class="text-body-1 text-medium-emphasis mb-4">{{ $t('npcs.emptyText') }}</p>
+            <h2 class="text-headline-medium mb-2">{{ $t('npcs.empty') }}</h2>
+            <p class="text-body-large text-medium-emphasis mb-4">{{ $t('npcs.emptyText') }}</p>
             <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
               {{ $t('npcs.create') }}
             </v-btn>
