@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
@@ -10,7 +11,16 @@ export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
-  const searchQuery = query.search as string | undefined
+  const rawSearch = query.search as string | undefined
+
+  // Tag pre-filter
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
+  const searchQuery = restAfterTags || undefined
+  let tagEntityIds: Set<number> | null = null
+  if (tagFilters.length > 0) {
+    tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+  }
 
   if (!campaignId) {
     throw createError({
@@ -783,8 +793,13 @@ export default defineEventHandler((event) => {
       .all(npcTypeId, itemTypeId, loreTypeId, entityType.id, campaignId) as LocationRow[]
   }
 
+  // Tag pre-filter intersection
+  const finalLocations = tagEntityIds
+    ? locations.filter(location => tagEntityIds!.has(location.id))
+    : locations
+
   // Parse metadata JSON
-  return locations.map(location => ({
+  return finalLocations.map(location => ({
     ...location,
     image_url: location.primary_image_url || location.image_url, // Fallback to old image_url
     metadata: location.metadata ? JSON.parse(location.metadata as string) : null,

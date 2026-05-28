@@ -1,7 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
-import { extractTagFilters } from '../../utils/searchQuery'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import {
   getRaceKey,
   getClassKey,
@@ -28,20 +28,10 @@ export default defineEventHandler(async (event) => {
   const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
   const searchQuery = restAfterTags || undefined
 
-  // Resolve tag-name filters to entity ids upfront. Entity must have ALL tags
-  // (AND-combined). Empty result → short-circuit with [].
+  // Resolve tag-name filters to entity ids upfront (AND-combined).
   let tagEntityIds: Set<number> | null = null
   if (tagFilters.length > 0) {
-    const placeholders = tagFilters.map(() => '?').join(',')
-    const rows = db.prepare(`
-      SELECT et.entity_id
-      FROM entity_tags et
-      JOIN tags t ON t.id = et.tag_id
-      WHERE t.name IN (${placeholders}) AND t.deleted_at IS NULL
-      GROUP BY et.entity_id
-      HAVING COUNT(DISTINCT t.id) = ?
-    `).all(...tagFilters, tagFilters.length) as Array<{ entity_id: number }>
-    tagEntityIds = new Set(rows.map(r => r.entity_id))
+    tagEntityIds = resolveTagFilter(db, tagFilters)
     if (tagEntityIds.size === 0) return []
   }
 

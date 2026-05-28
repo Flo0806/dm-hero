@@ -1,6 +1,7 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
 import { parseSearchQuery } from '../../utils/search-query-parser'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import { getItemTypeKey, getItemRarityKey, getLocaleFromEvent } from '../../utils/i18n-lookup'
 import { normalizeText } from '../../utils/normalize'
 
@@ -32,7 +33,19 @@ export default defineEventHandler(async (event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
-  const searchQuery = query.search as string | undefined
+  const rawSearch = query.search as string | undefined
+
+  // Extract `#tag` filters from the search input. Tags are AND-combined and
+  // resolved to entity ids upfront; the remaining text (if any) is then run
+  // through the regular FTS5/Levenshtein pipeline.
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
+  const searchQuery = restAfterTags || undefined
+
+  let tagEntityIds: Set<number> | null = null
+  if (tagFilters.length > 0) {
+    tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+  }
 
   // Get user's locale from request (cookie or Accept-Language header)
   const locale = getLocaleFromEvent(event)
@@ -819,8 +832,13 @@ export default defineEventHandler(async (event) => {
       .all(entityType.id, campaignId) as ItemRow[]
   }
 
+  // Tag pre-filter intersection (if a #tag query was present)
+  const finalItems = tagEntityIds
+    ? items.filter(item => tagEntityIds!.has(item.id))
+    : items
+
   // Parse metadata JSON
-  return items.map(item => ({
+  return finalItems.map(item => ({
     ...item,
     metadata: item.metadata ? JSON.parse(item.metadata as string) : null,
   }))

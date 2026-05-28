@@ -1,3 +1,4 @@
+import type Database from 'better-sqlite3'
 import { normaliseTagName, isValidTagName } from '../../types/tag'
 
 export interface ExtractedTags {
@@ -36,4 +37,23 @@ export function extractTagFilters(input: string | undefined | null): ExtractedTa
   }
 
   return { tags: [...tags], rest: restParts.join(' ') }
+}
+
+/**
+ * Resolve a list of tag names to the set of entity ids that have ALL of them
+ * (AND-combined). Returns an empty set if any name doesn't exist; callers
+ * typically `return []` early in that case.
+ */
+export function resolveTagFilter(db: Database.Database, tagNames: string[]): Set<number> {
+  if (tagNames.length === 0) return new Set()
+  const placeholders = tagNames.map(() => '?').join(',')
+  const rows = db.prepare(`
+    SELECT et.entity_id
+    FROM entity_tags et
+    JOIN tags t ON t.id = et.tag_id
+    WHERE t.name IN (${placeholders}) AND t.deleted_at IS NULL
+    GROUP BY et.entity_id
+    HAVING COUNT(DISTINCT t.id) = ?
+  `).all(...tagNames, tagNames.length) as Array<{ entity_id: number }>
+  return new Set(rows.map(r => r.entity_id))
 }

@@ -1,5 +1,6 @@
 import { getDb } from '../../utils/db'
 import { createLevenshtein } from '../../utils/levenshtein'
+import { extractTagFilters, resolveTagFilter } from '../../utils/searchQuery'
 import { normalizeText } from '../../utils/normalize'
 
 // Initialize Levenshtein function once
@@ -9,7 +10,16 @@ export default defineEventHandler((event) => {
   const db = getDb()
   const query = getQuery(event)
   const campaignId = query.campaignId as string
-  const searchQuery = query.search as string | undefined
+  const rawSearch = query.search as string | undefined
+
+  // Tag pre-filter
+  const { tags: tagFilters, rest: restAfterTags } = extractTagFilters(rawSearch)
+  const searchQuery = restAfterTags || undefined
+  let tagEntityIds: Set<number> | null = null
+  if (tagFilters.length > 0) {
+    tagEntityIds = resolveTagFilter(db, tagFilters)
+    if (tagEntityIds.size === 0) return []
+  }
 
   if (!campaignId) {
     throw createError({
@@ -204,8 +214,13 @@ export default defineEventHandler((event) => {
       .all(entityType.id, campaignId)
   }
 
+  // Tag pre-filter intersection
+  const finalLore = tagEntityIds
+    ? loreEntries.filter(lore => tagEntityIds!.has(lore.id))
+    : loreEntries
+
   // Parse metadata JSON
-  return loreEntries.map(lore => ({
+  return finalLore.map(lore => ({
     ...lore,
     metadata: lore.metadata ? JSON.parse(lore.metadata) : null,
   }))
