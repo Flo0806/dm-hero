@@ -21,6 +21,14 @@ export default defineEventHandler(async (event): Promise<Tag> => {
   const body = await readBody<{ tagId?: number, name?: string, color?: string }>(event)
   const db = getDb()
 
+  // Guard: tags only work on rows from the `entities` table.
+  // Groups (and similar containers in their own tables) would otherwise hit
+  // the entity_tags foreign-key constraint and return a confusing 500.
+  const entityExists = db.prepare('SELECT 1 FROM entities WHERE id = ? AND deleted_at IS NULL').get(entityId)
+  if (!entityExists) {
+    throw createApiError({ statusCode: 404, code: ErrorCodes.NOT_FOUND, message: 'entity not found' })
+  }
+
   let tagRow: Tag | undefined
 
   if (body?.tagId) {
