@@ -612,11 +612,16 @@ function onFolderOpen(folder: { name: string }) {
   snackbarStore.success($t('folders.openedSoon', { name: folder.name }))
 }
 
+const foldersStore = useFoldersStore()
+
 async function onNpcMoved(_npc: NPC, _toFolderId: number | null) {
-  // Re-fetch so the moved NPC reflects its new folder_id in the list.
-  if (activeCampaignId.value) {
-    await entitiesStore.fetchNPCs(activeCampaignId.value)
-  }
+  if (!activeCampaignIdNumber.value) return
+  // Force refresh both: entities (fresh folder_id on the moved npc) and
+  // folders (authoritative entity_count, not optimistic).
+  await Promise.all([
+    entitiesStore.fetchNPCs(activeCampaignIdNumber.value, true),
+    foldersStore.load(activeCampaignIdNumber.value, 'npc', true),
+  ])
 }
 
 async function archiveNpc(npc: NPC) {

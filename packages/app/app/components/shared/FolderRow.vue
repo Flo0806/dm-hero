@@ -1,8 +1,20 @@
 <template>
   <div>
-    <!-- Header: title + create button -->
+    <!-- Header: collapse toggle + title + create button -->
     <div class="d-flex align-center mb-3">
-      <h3 class="text-headline-small flex-grow-1">
+      <v-btn
+        v-if="folders.length > 0"
+        :icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-down'"
+        size="small"
+        variant="text"
+        class="mr-1"
+        @click="toggleCollapsed"
+      />
+      <h3
+        class="text-headline-small flex-grow-1 user-select-none"
+        :style="folders.length > 0 ? 'cursor: pointer' : ''"
+        @click="folders.length > 0 && toggleCollapsed()"
+      >
         {{ $t('folders.title') }}
         <span v-if="folders.length > 0" class="text-medium-emphasis text-body-medium ml-2">
           ({{ folders.length }})
@@ -19,23 +31,25 @@
       </v-btn>
     </div>
 
-    <!-- Folder cards -->
-    <v-row v-if="folders.length > 0" class="mb-2">
-      <v-col
-        v-for="folder in folders"
-        :key="folder.id"
-        cols="12"
-        md="6"
-        lg="4"
-      >
-        <FoldersFolderCard
-          :folder="folder"
-          @open="$emit('open', folder)"
-          @edit="openEdit"
-          @delete="confirmDelete"
-        />
-      </v-col>
-    </v-row>
+    <!-- Folder cards (collapsible) -->
+    <v-expand-transition>
+      <v-row v-if="folders.length > 0 && !collapsed" class="mb-2">
+        <v-col
+          v-for="folder in folders"
+          :key="folder.id"
+          cols="12"
+          md="6"
+          lg="4"
+        >
+          <FoldersFolderCard
+            :folder="folder"
+            @open="$emit('open', folder)"
+            @edit="openEdit"
+            @delete="confirmDelete"
+          />
+        </v-col>
+      </v-row>
+    </v-expand-transition>
 
     <!-- Divider before entities -->
     <v-divider class="mb-4 mt-2" />
@@ -89,6 +103,35 @@ const emit = defineEmits<{
 const foldersStore = useFoldersStore()
 
 const folders = computed(() => foldersStore.folders(props.campaignId, props.entityType))
+
+// Collapse state persists per entity type (NPC users may want it collapsed,
+// Item users expanded). Stored in localStorage so it survives reloads.
+const collapseKey = computed(() => `dm-hero-folders-collapsed-${props.entityType}`)
+const collapsed = ref(false)
+
+function hydrateCollapsed() {
+  if (typeof localStorage === 'undefined') return
+  try {
+    collapsed.value = localStorage.getItem(collapseKey.value) === '1'
+  }
+  catch {
+    // ignore
+  }
+}
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value
+  if (typeof localStorage === 'undefined') return
+  try {
+    if (collapsed.value) localStorage.setItem(collapseKey.value, '1')
+    else localStorage.removeItem(collapseKey.value)
+  }
+  catch {
+    // ignore
+  }
+}
+
+if (import.meta.client) hydrateCollapsed()
 
 onMounted(() => {
   if (import.meta.client) {
