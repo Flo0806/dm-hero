@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref, computed } from 'vue'
 
 // Mock vue auto-imports used by the composable
-;(globalThis as Record<string, unknown>).ref = ref
-;(globalThis as Record<string, unknown>).computed = computed
+const globalThisRecord = globalThis as Record<string, unknown>
+globalThisRecord.ref = ref
+globalThisRecord.computed = computed
 
 Object.defineProperty(globalThis, 'window', { value: {}, configurable: true })
 
@@ -15,10 +16,10 @@ const localStorageMock = {
     storage[k] = v
   },
   removeItem: (k: string) => {
-    delete storage[k]
+    Reflect.deleteProperty(storage, k)
   },
   clear: () => {
-    for (const k of Object.keys(storage)) delete storage[k]
+    for (const k of Object.keys(storage)) Reflect.deleteProperty(storage, k)
   },
 }
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, configurable: true })
