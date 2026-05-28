@@ -316,6 +316,30 @@
       </v-card-text>
     </v-card>
 
+    <!-- Playfulness / Easter eggs -->
+    <v-card class="mt-6">
+      <v-card-text>
+        <div class="mb-4">
+          <h2 class="text-headline-small mb-2">
+            {{ $t('playfulness.title') }}
+          </h2>
+          <p class="text-medium-emphasis text-body-medium mb-0">
+            {{ $t('playfulness.description') }}
+          </p>
+        </div>
+
+        <v-switch
+          :model-value="folderAnimationsEnabled"
+          :label="$t('playfulness.folderAnimationsLabel')"
+          color="primary"
+          hide-details
+          inset
+          density="comfortable"
+          @update:model-value="setFolderAnimationsEnabled"
+        />
+      </v-card-text>
+    </v-card>
+
     <!-- Success/Error Snackbar -->
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
       {{ snackbar.message }}
@@ -327,6 +351,7 @@
 import { useAnnouncements } from '~/composables/useAnnouncements'
 import { useElectron } from '~/composables/useElectron'
 import { useFeatureTooltipSettings } from '~/composables/useFeatureTooltips'
+import { useFolderAnimationSettings } from '~/composables/useFolderAnimations'
 
 const { t } = useI18n()
 
@@ -343,6 +368,13 @@ function setFeatureTooltipsEnabled(value: boolean | null) {
 function resetAllFeatureTooltips() {
   featureTooltipSettings.resetAllDismissed()
   snackbar.value = { show: true, color: 'success', message: t('featureTooltips.settings.resetButton') }
+}
+
+// Playful folder hover animations (kobold, snake, spaceship, …)
+const folderAnimationSettings = useFolderAnimationSettings()
+const folderAnimationsEnabled = folderAnimationSettings.enabled
+function setFolderAnimationsEnabled(value: boolean | null) {
+  folderAnimationSettings.setEnabled(value ?? false)
 }
 
 function resetAnnouncements() {

@@ -8,8 +8,8 @@
       </template>
     </UiPageHeader>
 
-    <!-- Search Bar -->
-    <div class="d-flex align-center ga-3 mb-4">
+    <!-- Search Bar (hidden while a folder is open) -->
+    <div v-if="!openedFolder" class="d-flex align-center ga-3 mb-4">
       <v-text-field
         v-model="searchQuery"
         :placeholder="$t('common.search')"
@@ -32,14 +32,80 @@
       </v-btn>
     </div>
 
-    <v-row v-if="pending">
+    <!-- Folders -->
+    <SharedFolderRow
+      v-if="activeCampaignIdNumber && !openedFolder"
+      :campaign-id="activeCampaignIdNumber"
+      entity-type="item"
+      @open="onFolderOpen"
+      @folder-deleted="onFolderDeleted"
+    />
+
+    <!-- Folder open view -->
+    <SharedFolderOpenView
+      v-if="openedFolder"
+      :folder="openedFolder"
+      @close="closeFolder"
+    >
+      <template #contents>
+        <v-row v-if="itemsInOpenFolder.length > 0">
+          <v-col v-for="item in itemsInOpenFolder" :key="item.id" cols="12" md="6" lg="4">
+            <ItemCard
+              :item="item"
+              @view="viewItem"
+              @edit="editItem"
+              @download="(item: Item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
+              @archive="archiveEntity"
+              @delete="deleteItem"
+              @chaos="openChaosGraph"
+              @open-group="openGroupPreview"
+              @open-tab="openItemTab"
+              @create-group="groupCreate.open"
+              @moved="onItemMoved"
+              @move-error="onItemMoveError"
+            />
+          </v-col>
+        </v-row>
+        <div v-else class="text-center text-medium-emphasis py-6">
+          {{ $t('folders.emptyContents') }}
+        </div>
+      </template>
+      <template #pool>
+        <div v-if="itemsAvailableForFolder.length === 0" class="text-center text-medium-emphasis py-4">
+          {{ $t('folders.emptyPool') }}
+        </div>
+        <v-row v-else>
+          <v-col v-for="item in itemsAvailableForFolder" :key="item.id" cols="12" sm="6" md="4" lg="3">
+            <div class="d-flex align-center ga-1">
+              <SharedCompactEntityCard
+                :entity="toCompactEntity(item)"
+                fallback-icon="mdi-sword"
+                class="flex-grow-1"
+                style="min-width: 0"
+                @open="viewItem(item)"
+              />
+              <v-btn
+                icon="mdi-folder-arrow-left-outline"
+                size="small"
+                variant="text"
+                color="primary"
+                :title="$t('folders.moveHere')"
+                @click="moveIntoOpenFolder(item)"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </template>
+    </SharedFolderOpenView>
+
+    <v-row v-if="!openedFolder && pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <!-- Item Cards with Search Overlay -->
-    <div v-else-if="filteredItems && filteredItems.length > 0" class="position-relative">
+    <div v-else-if="!openedFolder && filteredItems && filteredItems.length > 0" class="position-relative">
       <!-- Search Loading Overlay -->
       <v-overlay
         :model-value="searching"
@@ -57,25 +123,29 @@
 
       <!-- Item Cards -->
       <v-row>
-        <v-col v-for="item in filteredItems" :key="item.id" cols="12" md="6" lg="4">
-          <ItemCard
-            :item="item"
-            :is-highlighted="highlightedId === item.id"
-            @view="viewItem"
-            @edit="editItem"
-            @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
-            @archive="archiveEntity"
-            @delete="deleteItem"
-            @chaos="openChaosGraph"
-            @open-group="openGroupPreview"
-            @open-tab="openItemTab"
-            @create-group="groupCreate.open"
-          />
-        </v-col>
+        <TransitionGroup tag="div" name="card-move-out" class="card-grid-contents">
+          <v-col v-for="item in filteredItems" :key="item.id" cols="12" md="6" lg="4">
+            <ItemCard
+              :item="item"
+              :is-highlighted="highlightedId === item.id"
+              @view="viewItem"
+              @edit="editItem"
+              @download="(item) => downloadImage(`/uploads/${item.image_url}`, item.name)"
+              @archive="archiveEntity"
+              @delete="deleteItem"
+              @chaos="openChaosGraph"
+              @open-group="openGroupPreview"
+              @open-tab="openItemTab"
+              @create-group="groupCreate.open"
+              @moved="onItemMoved"
+              @move-error="onItemMoveError"
+            />
+          </v-col>
+        </TransitionGroup>
       </v-row>
     </div>
 
-    <ClientOnly v-else>
+    <ClientOnly v-else-if="!openedFolder">
       <v-empty-state icon="mdi-sword" :title="$t('items.empty')" :text="$t('items.emptyText')">
         <template #actions>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
@@ -198,6 +268,7 @@ const snackbarStore = useSnackbarStore()
 const { loadItemCountsBatch } = useItemCounts()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const activeCampaignIdNumber = computed(() => campaignStore.activeCampaignIdNumber)
 
 // ============================================================================
 // Search
@@ -257,12 +328,14 @@ watch(searchQuery, async (query) => {
 })
 
 const filteredItems = computed(() => {
-  // If user is actively searching, show search results (keep relevance order from FTS5)
+  // Active search transcends folders (find anything by name).
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  // Otherwise show all cached items sorted alphabetically
-  return [...(items.value || [])].sort((a, b) => a.name.localeCompare(b.name))
+  // Default view hides items that live in a folder — folder card surfaces them.
+  return [...(items.value || [])]
+    .filter(item => !item.folder_id)
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================
@@ -487,6 +560,90 @@ const showDeleteDialog = ref(false)
 const deletingItem = ref<Item | null>(null)
 const deleting = ref(false)
 
+// ----------------------------------------------------------------------------
+// Folder integration — mirrors the NPC page pattern.
+// ----------------------------------------------------------------------------
+const foldersStore = useFoldersStore()
+const openedFolderId = ref<number | null>(null)
+
+const openedFolder = computed(() => {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return null
+  return foldersStore.folders(activeCampaignIdNumber.value, 'item')
+    .find(f => f.id === openedFolderId.value) ?? null
+})
+
+const itemsInOpenFolder = computed(() => {
+  if (openedFolderId.value === null) return []
+  return (items.value ?? [])
+    .filter((i: Item) => i.folder_id === openedFolderId.value)
+    .sort((a: Item, b: Item) => a.name.localeCompare(b.name))
+})
+
+const itemsAvailableForFolder = computed(() => {
+  return (items.value ?? [])
+    .filter((i: Item) => !i.folder_id)
+    .sort((a: Item, b: Item) => a.name.localeCompare(b.name))
+})
+
+function onFolderOpen(folder: { id: number }) {
+  openedFolderId.value = folder.id
+}
+
+function closeFolder() {
+  openedFolderId.value = null
+}
+
+function onItemMoved(item: Item, toFolderId: number | null, folderName: string | null) {
+  entitiesStore.setFolderForEntity('items', item.id, toFolderId)
+  const msg = toFolderId === null
+    ? $t('folders.movedOut', { name: item.name })
+    : $t('folders.movedInto', { name: item.name, folder: folderName ?? '' })
+  snackbarStore.success(msg)
+}
+
+function onItemMoveError(_error: unknown) {
+  snackbarStore.error($t('folders.moveError'))
+}
+
+function onFolderDeleted(folderId: number) {
+  entitiesStore.clearFolderForEntities('items', folderId)
+  for (const item of searchResults.value) {
+    if (item.folder_id === folderId) item.folder_id = null
+  }
+}
+
+// Compact-card subtitle for items: type · rarity (localized).
+function toCompactEntity(item: Item) {
+  const type = item.metadata?.type ? $t(`items.types.${item.metadata.type}`, item.metadata.type) : ''
+  const rarity = item.metadata?.rarity ? $t(`items.rarities.${item.metadata.rarity}`, item.metadata.rarity) : ''
+  const subtitle = [type, rarity].filter(Boolean).join(' · ') || null
+  return {
+    id: item.id,
+    name: item.name,
+    image_url: item.image_url,
+    subtitle,
+  }
+}
+
+async function moveIntoOpenFolder(item: Item) {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return
+  const target = openedFolderId.value
+  const folderName = openedFolder.value?.name ?? null
+  try {
+    await foldersStore.moveEntity(
+      activeCampaignIdNumber.value,
+      'item',
+      item.id,
+      item.folder_id ?? null,
+      target,
+    )
+    onItemMoved(item, target, folderName)
+  }
+  catch (e) {
+    onItemMoveError(e)
+  }
+}
+
 async function archiveEntity(entity: Item) {
   try {
     const archive = !entity.archived_at
@@ -565,5 +722,17 @@ async function handleGroupCreated() {
   bottom: 24px;
   right: 24px;
   z-index: 100;
+}
+
+/* Card move-out fade — TransitionGroup wrapper is invisible to layout. */
+.card-grid-contents {
+  display: contents;
+}
+.card-move-out-leave-active {
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.card-move-out-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
 }
 </style>

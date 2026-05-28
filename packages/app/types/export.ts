@@ -198,11 +198,30 @@ export interface CampaignExportManifest {
   // missing ones. Existing tags with the same name are silently reused.
   // Field is optional for backwards compatibility with v1.x exports.
   tags?: ExportTag[]
+
+  // Folders — per (campaign, entity_type) scoped, listed once with their
+  // color/icon. On import, name collisions in the target campaign are silently
+  // renamed via `uniqueFolderName` ("Loot (1)", "Loot (2)", …) so the user
+  // never sees a conflict dialog. Optional for backwards compatibility with
+  // exports made before folder support shipped.
+  folders?: ExportFolder[]
 }
 
 export interface ExportTag {
   name: string
   color: string | null
+}
+
+export interface ExportFolder {
+  // Folder names are unique per (campaign, entity_type), so (entity_type, name)
+  // uniquely identifies a folder within the export. parent_name is reserved
+  // for the phase-2 nested-folder feature; phase-1 exports always omit it.
+  entity_type: 'npc' | 'item' | 'faction' | 'lore'
+  name: string
+  parent_name?: string | null
+  color?: string | null
+  icon?: string | null
+  easter_egg?: string | null
 }
 
 // =============================================================================
@@ -249,6 +268,9 @@ export interface ExportEntity {
   // Tag names attached to this entity. Optional for backwards compatibility.
   // Colors / palette are stored once in `CampaignExportManifest.tags`.
   tags?: string[]
+  // Folder this entity belongs to (by name, scoped to its entity_type). The
+  // matching entry lives in `manifest.folders`. Optional for backwards compat.
+  folder_name?: string | null
 }
 
 export interface ExportRelation {
@@ -680,6 +702,7 @@ export interface ImportResult {
     classesImported: number
     statTemplatesImported: number
     statsImported: number
+    foldersImported?: number // Folders newly created in the target (may be renamed on collision)
     skipped: number
     warnings: string[]
     entitiesDeleted?: number // How many were soft-deleted before import

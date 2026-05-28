@@ -46,6 +46,11 @@
     "purple": "Purple (Arcane)",
     "orange": "Orange (Campfire)"
   },
+  "playfulness": {
+    "title": "Playfulness",
+    "description": "Small, random animations — a snake snapping out of a folder, a kobold peeking. Rare, never annoying, switchable.",
+    "folderAnimationsLabel": "Folder hover animations"
+  },
   "featureTooltips": {
     "newBadge": "New",
     "dontShowAgain": "Don't show again",
@@ -1476,6 +1481,30 @@
     "invalidTimeFormat": "Invalid format (e.g. 1:30)",
     "timeMustBePositive": "Time must be positive",
     "timeExceedsDuration": "Time exceeds audio duration"
+  },
+  "folders": {
+    "title": "Folders",
+    "create": "New folder",
+    "edit": "Edit folder",
+    "name": "Name",
+    "color": "Color",
+    "colorDefault": "Default",
+    "moveTo": "Move to",
+    "movedInto": "\"{name}\" moved into folder \"{folder}\"",
+    "movedOut": "\"{name}\" removed from folder",
+    "moveError": "Move failed",
+    "openedSoon": "Folder \"{name}\" – folder view coming next",
+    "contentsLabel": "Contents",
+    "poolLabel": "Other entities (move in)",
+    "moveHere": "Move into this folder",
+    "emptyContents": "No entries in this folder yet",
+    "emptyPool": "No more folder-less entries",
+    "removeFromFolder": "Remove from folder",
+    "noneYet": "No folders yet",
+    "entityCount": "no entries | {n} entry | {n} entries",
+    "deleteTitle": "Delete folder?",
+    "deleteConfirm": "Delete folder \"{name}\"?",
+    "deleteCascadeHint": "The folder is empty | The {n} entry remains and will be folder-less | The {n} entries remain and will be folder-less"
   },
   "tags": {
     "manage": {

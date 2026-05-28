@@ -8,8 +8,8 @@
       </template>
     </UiPageHeader>
 
-    <!-- Search Bar -->
-    <div class="d-flex align-center ga-3 mb-4">
+    <!-- Search Bar (hidden while a folder is open) -->
+    <div v-if="!openedFolder" class="d-flex align-center ga-3 mb-4">
       <v-text-field
         v-model="searchQuery"
         :placeholder="$t('common.search')"
@@ -31,14 +31,80 @@
       </v-btn>
     </div>
 
-    <v-row v-if="pending">
+    <!-- Folders -->
+    <SharedFolderRow
+      v-if="activeCampaignIdNumber && !openedFolder"
+      :campaign-id="activeCampaignIdNumber"
+      entity-type="lore"
+      @open="onFolderOpen"
+      @folder-deleted="onFolderDeleted"
+    />
+
+    <!-- Folder open view -->
+    <SharedFolderOpenView
+      v-if="openedFolder"
+      :folder="openedFolder"
+      @close="closeFolder"
+    >
+      <template #contents>
+        <v-row v-if="loreInOpenFolder.length > 0">
+          <v-col v-for="loreEntry in loreInOpenFolder" :key="loreEntry.id" cols="12" md="6" lg="4">
+            <LoreCard
+              :lore="loreEntry"
+              @view="viewLore"
+              @edit="editLore"
+              @download="(lore: Lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
+              @archive="archiveEntity"
+              @delete="confirmDelete"
+              @chaos="openChaos"
+              @open-group="openGroupPreview"
+              @open-tab="openLoreTab"
+              @create-group="groupCreate.open"
+              @moved="onLoreMoved"
+              @move-error="onLoreMoveError"
+            />
+          </v-col>
+        </v-row>
+        <div v-else class="text-center text-medium-emphasis py-6">
+          {{ $t('folders.emptyContents') }}
+        </div>
+      </template>
+      <template #pool>
+        <div v-if="loreAvailableForFolder.length === 0" class="text-center text-medium-emphasis py-4">
+          {{ $t('folders.emptyPool') }}
+        </div>
+        <v-row v-else>
+          <v-col v-for="loreEntry in loreAvailableForFolder" :key="loreEntry.id" cols="12" sm="6" md="4" lg="3">
+            <div class="d-flex align-center ga-1">
+              <SharedCompactEntityCard
+                :entity="toCompactEntity(loreEntry)"
+                fallback-icon="mdi-book-open-variant"
+                class="flex-grow-1"
+                style="min-width: 0"
+                @open="viewLore(loreEntry)"
+              />
+              <v-btn
+                icon="mdi-folder-arrow-left-outline"
+                size="small"
+                variant="text"
+                color="primary"
+                :title="$t('folders.moveHere')"
+                @click="moveIntoOpenFolder(loreEntry)"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </template>
+    </SharedFolderOpenView>
+
+    <v-row v-if="!openedFolder && pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <!-- Lore Cards with Search Overlay -->
-    <div v-else-if="filteredLore && filteredLore.length > 0" class="position-relative">
+    <div v-else-if="!openedFolder && filteredLore && filteredLore.length > 0" class="position-relative">
       <!-- Search Loading Overlay -->
       <v-overlay
         :model-value="searching"
@@ -58,26 +124,30 @@
 
       <!-- Lore Cards -->
       <v-row>
-        <v-col v-for="loreEntry in filteredLore" :key="loreEntry.id" cols="12" md="6" lg="4">
-          <LoreCard
-            :lore="loreEntry"
-            :is-highlighted="highlightedId === loreEntry.id"
-            @view="viewLore"
-            @edit="editLore"
-            @download="(lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
-            @archive="archiveEntity"
-            @delete="confirmDelete"
-            @chaos="openChaos"
-            @open-group="openGroupPreview"
-            @open-tab="openLoreTab"
-            @create-group="groupCreate.open"
-          />
-        </v-col>
+        <TransitionGroup tag="div" name="card-move-out" class="card-grid-contents">
+          <v-col v-for="loreEntry in filteredLore" :key="loreEntry.id" cols="12" md="6" lg="4">
+            <LoreCard
+              :lore="loreEntry"
+              :is-highlighted="highlightedId === loreEntry.id"
+              @view="viewLore"
+              @edit="editLore"
+              @download="(lore) => downloadImage(`/uploads/${lore.image_url}`, lore.name)"
+              @archive="archiveEntity"
+              @delete="confirmDelete"
+              @chaos="openChaos"
+              @open-group="openGroupPreview"
+              @open-tab="openLoreTab"
+              @create-group="groupCreate.open"
+              @moved="onLoreMoved"
+              @move-error="onLoreMoveError"
+            />
+          </v-col>
+        </TransitionGroup>
       </v-row>
     </div>
 
     <!-- Empty State -->
-    <v-card v-else>
+    <v-card v-else-if="!openedFolder">
       <v-card-text class="text-center pa-8">
         <v-icon icon="mdi-book-open-variant" size="64" color="grey" class="mb-4" />
         <div class="text-headline-small mb-2">
@@ -193,6 +263,7 @@ const searching = ref(false)
 
 // Get active campaign from store
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const activeCampaignIdNumber = computed(() => campaignStore.activeCampaignIdNumber)
 
 // Get lore from store
 const lore = computed(() => entitiesStore.activeLore)
@@ -321,13 +392,96 @@ watch(searchQuery, async (query) => {
 
 // Computed filtered lore (search results OR cached data)
 const filteredLore = computed(() => {
-  // If user is actively searching, show search results (keep relevance order from FTS5)
+  // Active search transcends folders.
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  // Otherwise show all cached lore sorted alphabetically
-  return [...(lore.value || [])].sort((a, b) => a.name.localeCompare(b.name))
+  // Default view hides lore in folders.
+  return [...(lore.value || [])]
+    .filter(l => !l.folder_id)
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
+
+// Folder integration (mirrors NPC/Item/Faction pages).
+const foldersStore = useFoldersStore()
+const openedFolderId = ref<number | null>(null)
+
+const openedFolder = computed(() => {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return null
+  return foldersStore.folders(activeCampaignIdNumber.value, 'lore')
+    .find(f => f.id === openedFolderId.value) ?? null
+})
+
+const loreInOpenFolder = computed(() => {
+  if (openedFolderId.value === null) return []
+  return (lore.value ?? [])
+    .filter((l: Lore) => l.folder_id === openedFolderId.value)
+    .sort((a: Lore, b: Lore) => a.name.localeCompare(b.name))
+})
+
+const loreAvailableForFolder = computed(() => {
+  return (lore.value ?? [])
+    .filter((l: Lore) => !l.folder_id)
+    .sort((a: Lore, b: Lore) => a.name.localeCompare(b.name))
+})
+
+function onFolderOpen(folder: { id: number }) {
+  openedFolderId.value = folder.id
+}
+
+function closeFolder() {
+  openedFolderId.value = null
+}
+
+function onLoreMoved(loreEntry: Lore, toFolderId: number | null, folderName: string | null) {
+  entitiesStore.setFolderForEntity('lore', loreEntry.id, toFolderId)
+  const msg = toFolderId === null
+    ? $t('folders.movedOut', { name: loreEntry.name })
+    : $t('folders.movedInto', { name: loreEntry.name, folder: folderName ?? '' })
+  snackbarStore.success(msg)
+}
+
+function onLoreMoveError(_error: unknown) {
+  snackbarStore.error($t('folders.moveError'))
+}
+
+function onFolderDeleted(folderId: number) {
+  entitiesStore.clearFolderForEntities('lore', folderId)
+  for (const l of searchResults.value) {
+    if (l.folder_id === folderId) l.folder_id = null
+  }
+}
+
+function toCompactEntity(loreEntry: Lore) {
+  const type = loreEntry.metadata?.type
+    ? $t(`lore.types.${loreEntry.metadata.type}`, loreEntry.metadata.type)
+    : ''
+  return {
+    id: loreEntry.id,
+    name: loreEntry.name,
+    image_url: loreEntry.image_url,
+    subtitle: type || null,
+  }
+}
+
+async function moveIntoOpenFolder(loreEntry: Lore) {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return
+  const target = openedFolderId.value
+  const folderName = openedFolder.value?.name ?? null
+  try {
+    await foldersStore.moveEntity(
+      activeCampaignIdNumber.value,
+      'lore',
+      loreEntry.id,
+      loreEntry.folder_id ?? null,
+      target,
+    )
+    onLoreMoved(loreEntry, target, folderName)
+  }
+  catch (e) {
+    onLoreMoveError(e)
+  }
+}
 
 // Open create dialog
 function openCreateDialog() {
@@ -518,6 +672,18 @@ async function handleGroupCreated() {
 </script>
 
 <style scoped>
+/* Card move-out fade for folder moves. */
+.card-grid-contents {
+  display: contents;
+}
+.card-move-out-leave-active {
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.card-move-out-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
 .highlighted-card {
   animation: highlight-pulse 2s ease-in-out;
   box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.5) !important;

@@ -53,6 +53,7 @@ export default defineEventHandler((event) => {
     created_at: string
     updated_at: string
     archived_at: string | null
+    folder_id: number | null
   }
 
   let loreEntries: LoreRow[]
@@ -66,7 +67,7 @@ export default defineEventHandler((event) => {
     const allLoreEntries = db
       .prepare<unknown[], LoreRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at, e.folder_id,
              ei.image_url
       FROM entities e
       LEFT JOIN (
@@ -171,7 +172,7 @@ export default defineEventHandler((event) => {
         const additionalLore = db
           .prepare<unknown[], LoreRow>(
             `
-          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
+          SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at, e.folder_id,
                  ei.image_url
           FROM entities e
           LEFT JOIN (
@@ -197,7 +198,7 @@ export default defineEventHandler((event) => {
     loreEntries = db
       .prepare<unknown[], LoreRow>(
         `
-      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at,
+      SELECT e.id, e.name, e.description, e.metadata, e.created_at, e.updated_at, e.archived_at, e.folder_id,
              ei.image_url
       FROM entities e
       LEFT JOIN (

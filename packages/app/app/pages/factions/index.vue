@@ -8,8 +8,8 @@
       </template>
     </UiPageHeader>
 
-    <!-- Search Bar -->
-    <div class="d-flex align-center ga-3 mb-4">
+    <!-- Search Bar (hidden while a folder is open) -->
+    <div v-if="!openedFolder" class="d-flex align-center ga-3 mb-4">
       <v-text-field
         v-model="searchQuery"
         :placeholder="$t('common.search')"
@@ -32,14 +32,80 @@
       </v-btn>
     </div>
 
-    <v-row v-if="pending">
+    <!-- Folders -->
+    <SharedFolderRow
+      v-if="activeCampaignIdNumber && !openedFolder"
+      :campaign-id="activeCampaignIdNumber"
+      entity-type="faction"
+      @open="onFolderOpen"
+      @folder-deleted="onFolderDeleted"
+    />
+
+    <!-- Folder open view -->
+    <SharedFolderOpenView
+      v-if="openedFolder"
+      :folder="openedFolder"
+      @close="closeFolder"
+    >
+      <template #contents>
+        <v-row v-if="factionsInOpenFolder.length > 0">
+          <v-col v-for="faction in factionsInOpenFolder" :key="faction.id" cols="12" md="6" lg="4">
+            <FactionCard
+              :faction="faction"
+              @view="viewFaction"
+              @edit="editFaction"
+              @download="(f: Faction) => downloadImage(`/uploads/${f.image_url}`, f.name)"
+              @archive="archiveEntity"
+              @delete="deleteFaction"
+              @chaos="openChaosGraph"
+              @open-group="openGroupPreview"
+              @open-tab="openFactionTab"
+              @create-group="groupCreate.open"
+              @moved="onFactionMoved"
+              @move-error="onFactionMoveError"
+            />
+          </v-col>
+        </v-row>
+        <div v-else class="text-center text-medium-emphasis py-6">
+          {{ $t('folders.emptyContents') }}
+        </div>
+      </template>
+      <template #pool>
+        <div v-if="factionsAvailableForFolder.length === 0" class="text-center text-medium-emphasis py-4">
+          {{ $t('folders.emptyPool') }}
+        </div>
+        <v-row v-else>
+          <v-col v-for="faction in factionsAvailableForFolder" :key="faction.id" cols="12" sm="6" md="4" lg="3">
+            <div class="d-flex align-center ga-1">
+              <SharedCompactEntityCard
+                :entity="toCompactEntity(faction)"
+                fallback-icon="mdi-shield-account-outline"
+                class="flex-grow-1"
+                style="min-width: 0"
+                @open="viewFaction(faction)"
+              />
+              <v-btn
+                icon="mdi-folder-arrow-left-outline"
+                size="small"
+                variant="text"
+                color="primary"
+                :title="$t('folders.moveHere')"
+                @click="moveIntoOpenFolder(faction)"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </template>
+    </SharedFolderOpenView>
+
+    <v-row v-if="!openedFolder && pending">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <!-- Faction Cards with Search Overlay -->
-    <div v-else-if="filteredFactions && filteredFactions.length > 0" class="position-relative">
+    <div v-else-if="!openedFolder && filteredFactions && filteredFactions.length > 0" class="position-relative">
       <!-- Search Loading Overlay -->
       <v-overlay
         :model-value="searching"
@@ -57,25 +123,29 @@
 
       <!-- Faction Cards -->
       <v-row>
-        <v-col v-for="faction in filteredFactions" :key="faction.id" cols="12" md="6" lg="4">
-          <FactionCard
-            :faction="faction"
-            :is-highlighted="highlightedId === faction.id"
-            @view="viewFaction"
-            @edit="editFaction"
-            @download="(f) => downloadImage(`/uploads/${f.image_url}`, f.name)"
-            @archive="archiveEntity"
-            @delete="deleteFaction"
-            @chaos="openChaosGraph"
-            @open-group="openGroupPreview"
-            @open-tab="openFactionTab"
-            @create-group="groupCreate.open"
-          />
-        </v-col>
+        <TransitionGroup tag="div" name="card-move-out" class="card-grid-contents">
+          <v-col v-for="faction in filteredFactions" :key="faction.id" cols="12" md="6" lg="4">
+            <FactionCard
+              :faction="faction"
+              :is-highlighted="highlightedId === faction.id"
+              @view="viewFaction"
+              @edit="editFaction"
+              @download="(f) => downloadImage(`/uploads/${f.image_url}`, f.name)"
+              @archive="archiveEntity"
+              @delete="deleteFaction"
+              @chaos="openChaosGraph"
+              @open-group="openGroupPreview"
+              @open-tab="openFactionTab"
+              @create-group="groupCreate.open"
+              @moved="onFactionMoved"
+              @move-error="onFactionMoveError"
+            />
+          </v-col>
+        </TransitionGroup>
       </v-row>
     </div>
 
-    <ClientOnly v-else>
+    <ClientOnly v-else-if="!openedFolder">
       <v-empty-state icon="mdi-shield-account-outline" :title="$t('factions.empty')" :text="$t('factions.emptyText')">
         <template #actions>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateDialog">
@@ -183,6 +253,7 @@ const entitiesStore = useEntitiesStore()
 const snackbarStore = useSnackbarStore()
 
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const activeCampaignIdNumber = computed(() => campaignStore.activeCampaignIdNumber)
 
 // ============================================================================
 // Search
@@ -241,13 +312,96 @@ watch(searchQuery, async (query) => {
   searchTimeout = setTimeout(() => executeSearch(query), 300)
 })
 
+// Folder integration (mirrors NPC/Item pages).
+const foldersStore = useFoldersStore()
+const openedFolderId = ref<number | null>(null)
+
+const openedFolder = computed(() => {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return null
+  return foldersStore.folders(activeCampaignIdNumber.value, 'faction')
+    .find(f => f.id === openedFolderId.value) ?? null
+})
+
+const factionsInOpenFolder = computed(() => {
+  if (openedFolderId.value === null) return []
+  return (factions.value ?? [])
+    .filter((f: Faction) => f.folder_id === openedFolderId.value)
+    .sort((a: Faction, b: Faction) => a.name.localeCompare(b.name))
+})
+
+const factionsAvailableForFolder = computed(() => {
+  return (factions.value ?? [])
+    .filter((f: Faction) => !f.folder_id)
+    .sort((a: Faction, b: Faction) => a.name.localeCompare(b.name))
+})
+
+function onFolderOpen(folder: { id: number }) {
+  openedFolderId.value = folder.id
+}
+
+function closeFolder() {
+  openedFolderId.value = null
+}
+
+function onFactionMoved(faction: Faction, toFolderId: number | null, folderName: string | null) {
+  entitiesStore.setFolderForEntity('factions', faction.id, toFolderId)
+  const msg = toFolderId === null
+    ? $t('folders.movedOut', { name: faction.name })
+    : $t('folders.movedInto', { name: faction.name, folder: folderName ?? '' })
+  snackbarStore.success(msg)
+}
+
+function onFactionMoveError(_error: unknown) {
+  snackbarStore.error($t('folders.moveError'))
+}
+
+function onFolderDeleted(folderId: number) {
+  entitiesStore.clearFolderForEntities('factions', folderId)
+  for (const f of searchResults.value) {
+    if (f.folder_id === folderId) f.folder_id = null
+  }
+}
+
+function toCompactEntity(faction: Faction) {
+  const type = faction.metadata?.type
+    ? $t(`factions.types.${faction.metadata.type}`, faction.metadata.type)
+    : ''
+  return {
+    id: faction.id,
+    name: faction.name,
+    image_url: faction.image_url,
+    subtitle: type || null,
+  }
+}
+
+async function moveIntoOpenFolder(faction: Faction) {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return
+  const target = openedFolderId.value
+  const folderName = openedFolder.value?.name ?? null
+  try {
+    await foldersStore.moveEntity(
+      activeCampaignIdNumber.value,
+      'faction',
+      faction.id,
+      faction.folder_id ?? null,
+      target,
+    )
+    onFactionMoved(faction, target, folderName)
+  }
+  catch (e) {
+    onFactionMoveError(e)
+  }
+}
+
 const filteredFactions = computed(() => {
-  // If user is actively searching, show search results (keep relevance order from FTS5)
+  // Active search transcends folders.
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-  // Otherwise show all cached factions sorted alphabetically
-  return [...(factions.value || [])].sort((a, b) => a.name.localeCompare(b.name))
+  // Default view hides factions in folders.
+  return [...(factions.value || [])]
+    .filter(f => !f.folder_id)
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================
@@ -491,5 +645,17 @@ async function handleGroupCreated() {
   bottom: 24px;
   right: 24px;
   z-index: 100;
+}
+
+/* Card move-out fade for folder moves. */
+.card-grid-contents {
+  display: contents;
+}
+.card-move-out-leave-active {
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.card-move-out-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
 }
 </style>

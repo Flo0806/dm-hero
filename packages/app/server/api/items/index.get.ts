@@ -90,6 +90,7 @@ export default defineEventHandler(async (event) => {
     created_at: string
     updated_at: string
     archived_at: string | null
+    folder_id: number | null
     fts_score?: number
     owner_names?: string | null
     linked_lore_names?: string | null
@@ -209,7 +210,8 @@ export default defineEventHandler(async (event) => {
           e.metadata,
           e.created_at,
           e.updated_at,
-          e.archived_at
+          e.archived_at,
+          e.folder_id
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         WHERE entities_fts MATCH ?
@@ -281,7 +283,8 @@ export default defineEventHandler(async (event) => {
             e.metadata,
             e.created_at,
             e.updated_at,
-            e.archived_at
+            e.archived_at,
+            e.folder_id
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           WHERE entities_fts MATCH ?
@@ -351,6 +354,7 @@ export default defineEventHandler(async (event) => {
             e.created_at,
             e.updated_at,
             e.archived_at,
+            e.folder_id,
             GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names
           FROM entities e
@@ -818,6 +822,7 @@ export default defineEventHandler(async (event) => {
         e.created_at,
         e.updated_at,
         e.archived_at,
+        e.folder_id,
         GROUP_CONCAT(DISTINCT owner_npc.name) as owner_names
       FROM entities e
       LEFT JOIN entity_relations owner_rel ON owner_rel.to_entity_id = e.id
