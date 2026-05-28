@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     '@/assets/md-editor-theme.css',
     '@/assets/css/animations.css',
     '@/assets/css/dashboard.css',
+    '@/assets/css/emily-theme.css',
   ],
 
   runtimeConfig: {

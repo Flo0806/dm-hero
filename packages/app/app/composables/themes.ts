@@ -1,7 +1,7 @@
 import type { ThemeDefinition } from 'vuetify'
 
 /**
- * DM Hero themes — 7 total: dark (default), hell, and 5 colored.
+ * DM Hero themes — 8 total: dark (default), hell, 5 colored, and emily.
  * Each defines vuetify palette + md-editor-v3 css vars.
  */
 
@@ -250,6 +250,45 @@ const orange: ThemeDefinition = {
   },
 }
 
+// "Emily" — Deep Lagoon. Community tribute. Brighter cyan-teal primary with
+// a sunset coral accent. Companion CSS (gradient bg, hover glow, swoosh) ships
+// alongside this palette; see issue #318.
+const emily: ThemeDefinition = {
+  dark: true,
+  colors: {
+    'background': '#0B2622',
+    'surface': '#143733',
+    'surface-variant': '#1D4A45',
+    'on-surface-variant': '#A8D5D0',
+    'primary': '#4DD0E1',
+    'primary-darken-1': '#26A8B8',
+    'secondary': '#6FA8B0',
+    'secondary-darken-1': '#4F858D',
+    'accent': '#FF7B69',
+    // Destructive actions use the theme's coral so they read as part of Emily
+    // rather than stock Material red.
+    'error': '#FF7B69',
+    'info': '#4FC3F7',
+    'success': '#66BB6A',
+    'warning': '#FFB74D',
+    'on-background': '#E0F5F3',
+    'on-surface': '#E0F5F3',
+    'on-primary': '#0B2622',
+    'on-secondary': '#0B2622',
+  },
+  variables: {
+    'md-bg': '#0B2622',
+    'md-surface': '#143733',
+    'md-text': '#E0F5F3',
+    'md-muted': '#A8D5D0',
+    'md-border': '#1D4A45',
+    'md-primary': '#4DD0E1',
+    'md-code-bg': '#061B17',
+    'md-quote-bg': '#133029',
+    'md-table-stripe': '#103127',
+  },
+}
+
 export const themes = {
   dark,
   hell,
@@ -258,11 +297,12 @@ export const themes = {
   blue,
   purple,
   orange,
+  emily,
 } as const
 
 export type ThemeName = keyof typeof themes
 
-export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange']
+export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange', 'emily']
 
 export const DEFAULT_THEME: ThemeName = 'dark'
 

@@ -44,7 +44,8 @@
     "green": "Green (Forest)",
     "blue": "Blue (Ocean)",
     "purple": "Purple (Arcane)",
-    "orange": "Orange (Campfire)"
+    "orange": "Orange (Campfire)",
+    "emily": "Emily (Deep Lagoon)"
   },
   "playfulness": {
     "title": "Playfulness",
@@ -54,7 +55,7 @@
   "featureTooltips": {
     "newBadge": "New",
     "dontShowAgain": "Don't show again",
-    "themeSwitcher": "Pick your favorite theme from 7 color variants. You can turn these hints off in Settings.",
+    "themeSwitcher": "Pick your favorite theme from 8 color variants. You can turn these hints off in Settings.",
     "settings": {
       "title": "New-feature hints",
       "description": "Shows a small hint when a new feature is available.",

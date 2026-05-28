@@ -1,0 +1,36 @@
+/*
+ * Emily theme — Deep Lagoon ambient layer.
+ *
+ * Active only when Vuetify applies `.v-theme--emily` on the root. A layered
+ * radial gradient turns the flat palette `background` color into something
+ * with depth — moonlight pooling at the top, darker water at the bottom,
+ * a hint of the coral accent up top-right. The lightning component handles
+ * the motion side of the theme; this file is purely the still picture.
+ */
+
+@layer overrides {
+  .v-theme--emily .v-application__wrap,
+  .v-theme--emily.v-application {
+    position: relative;
+    background-image:
+      /* Top-left moonlight pool */
+      radial-gradient(
+        ellipse 60% 50% at 20% 0%,
+        rgba(77, 208, 225, 0.10) 0%,
+        rgba(77, 208, 225, 0) 60%
+      ),
+      /* Bottom depth — pulls the eye downward into darker water */
+      radial-gradient(
+        ellipse 80% 60% at 50% 110%,
+        rgba(0, 0, 0, 0.35) 0%,
+        rgba(0, 0, 0, 0) 70%
+      ),
+      /* Subtle warm coral hint top-right — picks up the accent color */
+      radial-gradient(
+        ellipse 30% 30% at 90% 5%,
+        rgba(255, 123, 105, 0.06) 0%,
+        rgba(255, 123, 105, 0) 80%
+      );
+    background-attachment: fixed;
+  }
+}

@@ -25,16 +25,27 @@ const COOLDOWN_MS = 10_000
 const globallyEnabled = ref(true)
 let hydratedFromStorage = false
 
-function hydrateFromLocalStorage() {
-  if (hydratedFromStorage) return
+function readFromLocalStorage() {
   if (typeof localStorage === 'undefined') return
-  hydratedFromStorage = true
   try {
     globallyEnabled.value = localStorage.getItem(SETTINGS_KEY) !== '1'
   }
   catch {
     // ignore quota / privacy errors
   }
+}
+
+function hydrateFromLocalStorage() {
+  if (hydratedFromStorage) return
+  if (typeof window === 'undefined') return
+  hydratedFromStorage = true
+  readFromLocalStorage()
+  // Cross-tab sync: another tab toggled the setting → mirror it here. Listener
+  // is attached once per browser session at module level since `globallyEnabled`
+  // is also module-scoped; no per-component cleanup needed.
+  window.addEventListener('storage', (event) => {
+    if (event.key === SETTINGS_KEY) readFromLocalStorage()
+  })
 }
 
 /** Stable hash for picking the deterministic egg per folder id. */
