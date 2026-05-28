@@ -6,34 +6,38 @@
     @click="$emit('update:rail', false)"
     @update:model-value="$emit('update:model-value', $event)"
   >
-    <v-list-item
-      :prepend-icon="rail ? 'mdi-dice-d20' : 'mdi-dice-d20'"
-      :title="rail ? '' : 'DM Hero'"
-      nav
-    >
-      <template #append>
-        <v-btn
-          :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-          variant="text"
-          @click.stop="$emit('update:rail', !rail)"
-        />
-      </template>
-    </v-list-item>
+    <!-- Fixed top: app title + active campaign -->
+    <template #prepend>
+      <v-list-item
+        :prepend-icon="rail ? 'mdi-dice-d20' : 'mdi-dice-d20'"
+        :title="rail ? '' : 'DM Hero'"
+        nav
+      >
+        <template #append>
+          <v-btn
+            :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+            variant="text"
+            @click.stop="$emit('update:rail', !rail)"
+          />
+        </template>
+      </v-list-item>
 
-    <v-divider />
+      <v-divider />
 
-    <!-- Active Campaign Display -->
-    <v-list-item
-      v-if="activeCampaignName && !rail"
-      prepend-icon="mdi-sword-cross"
-      :title="activeCampaignName || ''"
-      :subtitle="$t('nav.activeCampaign')"
-      class="mb-2"
-      @click="router.push('/campaigns')"
-    />
+      <!-- Active Campaign Display -->
+      <v-list-item
+        v-if="activeCampaignName && !rail"
+        prepend-icon="mdi-sword-cross"
+        :title="activeCampaignName || ''"
+        :subtitle="$t('nav.activeCampaign')"
+        class="mb-2"
+        @click="router.push('/campaigns')"
+      />
 
-    <v-divider v-if="activeCampaignName && !rail" />
+      <v-divider v-if="activeCampaignName && !rail" />
+    </template>
 
+    <!-- Scrollable middle: nav items -->
     <v-list density="compact" nav>
       <v-list-item
         prepend-icon="mdi-view-dashboard"
