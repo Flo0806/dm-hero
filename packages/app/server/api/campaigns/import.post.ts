@@ -13,6 +13,13 @@ import {
   normaliseTagName,
   DEFAULT_TAG_COLOR,
 } from '~~/types/tag'
+import {
+  FOLDER_ENTITY_TYPES,
+  isValidFolderName,
+  isValidEasterEgg,
+  type EntityFolderType,
+} from '~~/types/folder'
+import { resolveUniqueFolderName, entityTypeToFolderType } from '~~/server/utils/folders'
 import type {
   RaceClassConflict,
   CampaignExportManifest,
@@ -493,11 +500,10 @@ export default defineEventHandler(async (event) => {
 
     // Check if user has provided resolutions for all race/class conflicts
     // Only check conflicts that actually exist - don't require both raceResolutions AND classResolutions
-    const hasUnresolvedRaceClassConflicts = raceClassConflicts.length > 0
-      && raceClassConflicts.some((c) => {
-        const resolutions = c.type === 'race' ? options.raceResolutions : options.classResolutions
-        return !resolutions || !(c.key in resolutions)
-      })
+    const hasUnresolvedRaceClassConflicts = raceClassConflicts.some((c) => {
+      const resolutions = c.type === 'race' ? options.raceResolutions : options.classResolutions
+      return !resolutions || !(c.key in resolutions)
+    })
 
     // ==========================================================================
     // CALENDAR CONFLICT DETECTION (merge mode only, can check before campaign creation)
@@ -766,7 +772,7 @@ export default defineEventHandler(async (event) => {
 
         // Merge import tracking into metadata
         const metadataWithTracking = {
-          ...(entity.metadata || {}),
+          ...entity.metadata,
           _importTracking: importTracking,
         }
 
@@ -859,6 +865,48 @@ export default defineEventHandler(async (event) => {
             const tagId = tagIdByName.get(normalised)
             if (tagId) attach.run(newId, tagId)
           }
+        }
+      }
+
+      // Fourth pass: folders. Rules (per spec):
+      //  - Name collision in target → silent rename ("Loot" → "Loot (1)").
+      //    Never merge — folders are always created fresh per import.
+      //  - No `folders` in manifest → noop (backwards compat with pre-folder exports).
+      //  - Entity has folder_name but no matching folder entry → noop.
+      // Lookup key is `(entity_type, original_name)` so renames don't lose entities.
+      if (manifest.folders && manifest.folders.length > 0) {
+        const newFolderIdByKey = new Map<string, number>()
+        const insertFolder = db.prepare(`
+          INSERT INTO entity_folders (campaign_id, entity_type, name, color, icon, easter_egg)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `)
+        for (const folder of manifest.folders) {
+          const entityType = folder.entity_type as EntityFolderType
+          if (!(FOLDER_ENTITY_TYPES as readonly string[]).includes(entityType)) continue
+          if (!isValidFolderName(folder.name)) continue
+          const finalName = resolveUniqueFolderName(db, campaignId, entityType, folder.name)
+          const easter = folder.easter_egg && isValidEasterEgg(folder.easter_egg) ? folder.easter_egg : null
+          const result = insertFolder.run(
+            campaignId,
+            entityType,
+            finalName,
+            folder.color ?? null,
+            folder.icon ?? null,
+            easter,
+          )
+          newFolderIdByKey.set(`${entityType}:${folder.name}`, Number(result.lastInsertRowid))
+          stats.foldersImported = (stats.foldersImported ?? 0) + 1
+        }
+
+        const assignFolder = db.prepare('UPDATE entities SET folder_id = ? WHERE id = ?')
+        for (const entity of manifest.entities) {
+          if (!entity.folder_name) continue
+          const newId = idMapping.entities.get(entity._exportId)
+          if (!newId) continue
+          const folderType = entityTypeToFolderType(entity.type_name)
+          if (!folderType) continue
+          const folderId = newFolderIdByKey.get(`${folderType}:${entity.folder_name}`)
+          if (folderId) assignFolder.run(folderId, newId)
         }
       }
     }
