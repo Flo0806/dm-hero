@@ -282,6 +282,40 @@
       </v-card-text>
     </v-card>
 
+    <!-- Feature Tooltips Section -->
+    <v-card class="mt-6">
+      <v-card-text>
+        <div class="mb-4">
+          <h2 class="text-headline-small mb-2">
+            {{ $t('featureTooltips.settings.title') }}
+          </h2>
+          <p class="text-medium-emphasis text-body-medium mb-0">
+            {{ $t('featureTooltips.settings.description') }}
+          </p>
+        </div>
+
+        <v-switch
+          :model-value="featureTooltipsEnabled"
+          :label="$t('featureTooltips.settings.showToggle')"
+          color="primary"
+          hide-details
+          inset
+          density="comfortable"
+          @update:model-value="setFeatureTooltipsEnabled"
+        />
+
+        <v-btn
+          variant="outlined"
+          color="secondary"
+          class="mt-3"
+          @click="resetAllFeatureTooltips"
+        >
+          <v-icon start>mdi-restart</v-icon>
+          {{ $t('featureTooltips.settings.resetButton') }}
+        </v-btn>
+      </v-card-text>
+    </v-card>
+
     <!-- Success/Error Snackbar -->
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="3000">
       {{ snackbar.message }}
@@ -292,12 +326,24 @@
 <script setup lang="ts">
 import { useAnnouncements } from '~/composables/useAnnouncements'
 import { useElectron } from '~/composables/useElectron'
+import { useFeatureTooltipSettings } from '~/composables/useFeatureTooltips'
 
 const { t } = useI18n()
 
 // Announcements
 const { resetAnnouncements: doResetAnnouncements, hasSeenLatest: checkHasSeenLatest } = useAnnouncements()
 const hasSeenLatest = ref(true)
+
+// Feature tooltips
+const featureTooltipSettings = useFeatureTooltipSettings()
+const featureTooltipsEnabled = featureTooltipSettings.globallyEnabled
+function setFeatureTooltipsEnabled(value: boolean | null) {
+  featureTooltipSettings.setGloballyEnabled(value ?? false)
+}
+function resetAllFeatureTooltips() {
+  featureTooltipSettings.resetAllDismissed()
+  snackbar.value = { show: true, color: 'success', message: t('featureTooltips.settings.resetButton') }
+}
 
 function resetAnnouncements() {
   doResetAnnouncements()
