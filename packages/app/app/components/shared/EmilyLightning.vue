@@ -71,6 +71,7 @@
  * Self-cleans on unmount and on theme change mid-strike.
  */
 import { useThemePreference } from '~/composables/useThemePreference'
+import { useFolderAnimationSettings } from '~/composables/useFolderAnimations'
 
 // Dashboard-only deployment: shorter cadence (4–15 s) because the user is
 // idling there and the strikes are part of the ambience. On work pages this
@@ -79,16 +80,17 @@ const MIN_INTERVAL_MS = 4_000
 const MAX_INTERVAL_MS = 15_000
 const STRIKE_DURATION_MS = 900 // matches CSS keyframe length
 
-const ANIMATIONS_DISABLED_KEY = 'dm-hero-folder-animations-disabled'
-
 const { current } = useThemePreference()
+// Shares the global on/off ref with the folder hover animations — toggling
+// "Spielereien" in Settings affects both, and the composable handles
+// cross-tab storage events for us.
+const { enabled: animationsEnabled } = useFolderAnimationSettings()
 
 const active = ref(false)
 const boltPath = ref('')
 const branchPath = ref<string | null>(null)
 const vw = ref(1920)
 const vh = ref(1080)
-const animationsEnabled = ref(true)
 // Each strike rotates the flash origin slightly so a sequence feels alive.
 const strikeStyle = ref<Record<string, string>>({})
 const filterId = ref('emily-bolt-glow-0')
@@ -104,16 +106,6 @@ function prefersReducedMotion(): boolean {
 
 function pickInterval(): number {
   return MIN_INTERVAL_MS + Math.random() * (MAX_INTERVAL_MS - MIN_INTERVAL_MS)
-}
-
-function hydrateAnimationToggle() {
-  if (typeof localStorage === 'undefined') return
-  try {
-    animationsEnabled.value = localStorage.getItem(ANIMATIONS_DISABLED_KEY) !== '1'
-  }
-  catch {
-    // ignore quota / privacy errors
-  }
 }
 
 /**
@@ -210,7 +202,7 @@ function scheduleNext() {
 
 onMounted(() => {
   if (!import.meta.client) return
-  hydrateAnimationToggle()
+  // animationsEnabled hydration is handled by the shared composable.
   vw.value = window.innerWidth
   vh.value = window.innerHeight
   scheduleNext()
