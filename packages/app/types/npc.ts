@@ -206,6 +206,7 @@ export interface NPC {
   created_at: string
   updated_at: string
   archived_at?: string | null
+  folder_id?: number | null
   // Async loaded counts (optional, loaded on demand)
   _counts?: NpcCounts
 }

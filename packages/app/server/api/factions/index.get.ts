@@ -81,6 +81,7 @@ export default defineEventHandler((event) => {
     created_at: string
     updated_at: string
     archived_at: string | null
+    folder_id: number | null
     fts_score?: number
     leader_id?: number | null
     leader_name?: string | null
@@ -154,6 +155,7 @@ export default defineEventHandler((event) => {
           e.created_at,
           e.updated_at,
           e.archived_at,
+          e.folder_id,
           leader_rel.from_entity_id as leader_id,
           leader_npc.name as leader_name,
           GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -194,6 +196,7 @@ export default defineEventHandler((event) => {
             e.created_at,
             e.updated_at,
             e.archived_at,
+            e.folder_id,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
             GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -235,6 +238,7 @@ export default defineEventHandler((event) => {
             e.created_at,
             e.updated_at,
             e.archived_at,
+            e.folder_id,
             leader_rel.from_entity_id as leader_id,
             leader_npc.name as leader_name,
             GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
@@ -719,6 +723,7 @@ export default defineEventHandler((event) => {
         e.created_at,
         e.updated_at,
         e.archived_at,
+        e.folder_id,
         leader_rel.from_entity_id as leader_id,
         leader_npc.name as leader_name,
         GROUP_CONCAT(DISTINCT member_npc.name) as linked_npc_names,
