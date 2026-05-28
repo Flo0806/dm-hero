@@ -46,6 +46,11 @@
     "purple": "Lila (Arkane Magie)",
     "orange": "Orange (Lagerfeuer)"
   },
+  "playfulness": {
+    "title": "Spielereien",
+    "description": "Kleine, zufällige Animationen — z.B. eine Schlange, die aus einem Ordner schnappt, oder ein Kobold, der lugt. Selten, nie nervig, aber abschaltbar.",
+    "folderAnimationsLabel": "Ordner-Animationen beim Hovern"
+  },
   "featureTooltips": {
     "newBadge": "Neu",
     "dontShowAgain": "Nicht mehr zeigen",

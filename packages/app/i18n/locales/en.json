@@ -46,6 +46,11 @@
     "purple": "Purple (Arcane)",
     "orange": "Orange (Campfire)"
   },
+  "playfulness": {
+    "title": "Playfulness",
+    "description": "Small, random animations — a snake snapping out of a folder, a kobold peeking. Rare, never annoying, switchable.",
+    "folderAnimationsLabel": "Folder hover animations"
+  },
   "featureTooltips": {
     "newBadge": "New",
     "dontShowAgain": "Don't show again",

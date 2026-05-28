@@ -17,18 +17,23 @@ const SETTINGS_KEY = 'dm-hero-folder-animations-disabled'
 const TRIGGER_CHANCE = 0.15
 const COOLDOWN_MS = 10_000
 
-// Module-scope reactive state
+// Module-scope reactive state. Hydration happens in `onMounted` (i.e. AFTER
+// SSR render is committed on the client) so server and client agree on the
+// first render and Vue then patches the switch DOM via reactivity. Top-level
+// `if (localStorage)` reads were unreliable because v-switch latched the SSR
+// value before our reactive update propagated on first paint after F5.
 const globallyEnabled = ref(true)
-let hydrated = false
+let hydratedFromStorage = false
 
-function hydrate() {
-  if (hydrated || typeof localStorage === 'undefined') return
-  hydrated = true
+function hydrateFromLocalStorage() {
+  if (hydratedFromStorage) return
+  if (typeof localStorage === 'undefined') return
+  hydratedFromStorage = true
   try {
     globallyEnabled.value = localStorage.getItem(SETTINGS_KEY) !== '1'
   }
   catch {
-    // ignore
+    // ignore quota / privacy errors
   }
 }
 
@@ -60,7 +65,7 @@ function prefersReducedMotion(): boolean {
  *  - `onHover()` — call from `@mouseenter` on the card root
  */
 export function useFolderAnimation(folderId: number, override?: string | null) {
-  hydrate()
+  onMounted(hydrateFromLocalStorage)
   const egg = easterEggForFolder(folderId, override)
   const playing = ref(false)
   const lastTrigger = ref(0)
@@ -94,7 +99,7 @@ export function useFolderAnimation(folderId: number, override?: string | null) {
 
 /** Settings-level controls. */
 export function useFolderAnimationSettings() {
-  hydrate()
+  onMounted(hydrateFromLocalStorage)
   function setEnabled(value: boolean) {
     globallyEnabled.value = value
     if (typeof localStorage === 'undefined') return
