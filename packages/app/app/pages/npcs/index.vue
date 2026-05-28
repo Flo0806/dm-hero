@@ -13,8 +13,8 @@
       </template>
     </UiPageHeader>
 
-    <!-- Search Bar -->
-    <div class="d-flex align-center ga-3 mb-4">
+    <!-- Search Bar (hidden while a folder is open — close via X to search again) -->
+    <div v-if="!openedFolder" class="d-flex align-center ga-3 mb-4">
       <v-text-field
         v-model="searchQuery"
         :placeholder="$t('common.search')"
@@ -36,29 +36,87 @@
       </v-btn>
     </div>
 
-    <!-- Folders -->
+    <!-- Folders row (hidden while a folder is open) -->
     <SharedFolderRow
-      v-if="activeCampaignIdNumber"
+      v-if="activeCampaignIdNumber && !openedFolder"
       :campaign-id="activeCampaignIdNumber"
       entity-type="npc"
       @open="onFolderOpen"
       @folder-deleted="onFolderDeleted"
     />
 
-    <v-row v-if="entitiesStore.npcsLoading">
+    <!-- Folder-open view: contents above + pool below -->
+    <SharedFolderOpenView
+      v-if="openedFolder"
+      :folder="openedFolder"
+      @close="closeFolder"
+    >
+      <template #contents>
+        <v-row v-if="npcsInOpenFolder.length > 0">
+          <v-col v-for="npc in npcsInOpenFolder" :key="npc.id" cols="12" md="6" lg="4">
+            <NpcCard
+              :npc="npc"
+              :races="races"
+              :classes="classes"
+              @view="viewNpc"
+              @edit="editNpc"
+              @download="(npc: NPC) => downloadImage(`/uploads/${npc.image_url}`, npc.name)"
+              @archive="archiveNpc"
+              @delete="deleteNpc"
+              @open-group="openGroupPreview"
+              @open-tab="openNpcTab"
+              @create-group="groupCreate.open"
+              @moved="onNpcMoved"
+              @move-error="onNpcMoveError"
+            />
+          </v-col>
+        </v-row>
+        <div v-else class="text-center text-medium-emphasis py-6">
+          {{ $t('folders.emptyContents') }}
+        </div>
+      </template>
+      <template #pool>
+        <div v-if="npcsAvailableForFolder.length === 0" class="text-center text-medium-emphasis py-4">
+          {{ $t('folders.emptyPool') }}
+        </div>
+        <v-row v-else>
+          <v-col v-for="npc in npcsAvailableForFolder" :key="npc.id" cols="12" sm="6" md="4" lg="3">
+            <div class="d-flex align-center ga-1">
+              <SharedCompactEntityCard
+                :entity="toCompactEntity(npc)"
+                fallback-icon="mdi-account"
+                class="flex-grow-1"
+                style="min-width: 0"
+                @open="viewNpc(npc)"
+              />
+              <v-btn
+                icon="mdi-folder-arrow-left-outline"
+                size="small"
+                variant="text"
+                color="primary"
+                :title="$t('folders.moveHere')"
+                @click="moveIntoOpenFolder(npc)"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </template>
+    </SharedFolderOpenView>
+
+    <v-row v-if="!openedFolder && entitiesStore.npcsLoading">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
 
     <!-- Search Loading State (when searching with no previous results) -->
-    <div v-else-if="searching && filteredNpcs.length === 0" class="text-center py-16">
+    <div v-else-if="!openedFolder && searching && filteredNpcs.length === 0" class="text-center py-16">
       <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
       <div class="text-headline-small">{{ $t('common.searching') }}</div>
     </div>
 
     <!-- NPC Cards with Search Overlay -->
-    <div v-else-if="filteredNpcs && filteredNpcs.length > 0" class="position-relative">
+    <div v-else-if="!openedFolder && filteredNpcs && filteredNpcs.length > 0" class="position-relative">
       <!-- Search Loading Overlay -->
       <v-overlay
         :model-value="searching"
@@ -103,7 +161,7 @@
       </v-row>
     </div>
 
-    <div v-else>
+    <div v-else-if="!openedFolder">
       <ClientOnly>
         <v-empty-state
           icon="mdi-account-group"
@@ -615,9 +673,85 @@ watch(showViewDialog, (isOpen) => {
   }
 })
 
-// Phase 1: folder click is a no-op (folder-open view ships next).
-function onFolderOpen(folder: { name: string }) {
-  snackbarStore.success($t('folders.openedSoon', { name: folder.name }))
+// Folder open/close state — drives the inline folder view above.
+const openedFolderId = ref<number | null>(null)
+const foldersStore = useFoldersStore()
+
+const openedFolder = computed(() => {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return null
+  return foldersStore.folders(activeCampaignIdNumber.value, 'npc')
+    .find(f => f.id === openedFolderId.value) ?? null
+})
+
+const npcsInOpenFolder = computed(() => {
+  if (openedFolderId.value === null) return []
+  return (npcs.value ?? [])
+    .filter(n => n.folder_id === openedFolderId.value)
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+
+// "Drag-pool": NPCs not yet in any folder — candidates to move into the open one.
+const npcsAvailableForFolder = computed(() => {
+  return (npcs.value ?? [])
+    .filter(n => !n.folder_id)
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+
+function onFolderOpen(folder: { id: number }) {
+  openedFolderId.value = folder.id
+}
+
+function closeFolder() {
+  openedFolderId.value = null
+}
+
+// Compact-card mapping: NPC → { id, name, image_url, subtitle: race · class }
+function lookupRaceLabel(key: string | undefined): string {
+  if (!key) return ''
+  const r = races.value.find(x => x.key === key)
+  if (!r) return key
+  return (locale.value === 'de' ? r.name_de : r.name_en) ?? r.name
+}
+
+function lookupClassLabels(val: string | string[] | undefined): string {
+  if (!val) return ''
+  const arr = Array.isArray(val) ? val : [val]
+  return arr.map((k) => {
+    const c = classes.value.find(x => x.key === k)
+    if (!c) return k
+    return (locale.value === 'de' ? c.name_de : c.name_en) ?? c.name
+  }).join(', ')
+}
+
+function toCompactEntity(npc: NPC) {
+  const race = lookupRaceLabel(npc.metadata?.race)
+  const classesLabel = lookupClassLabels(npc.metadata?.class)
+  const subtitle = [race, classesLabel].filter(Boolean).join(' · ') || null
+  return {
+    id: npc.id,
+    name: npc.name,
+    image_url: npc.image_url,
+    subtitle,
+  }
+}
+
+async function moveIntoOpenFolder(npc: NPC) {
+  if (openedFolderId.value === null || !activeCampaignIdNumber.value) return
+  const target = openedFolderId.value
+  const folderName = openedFolder.value?.name ?? null
+  try {
+    await foldersStore.moveEntity(
+      activeCampaignIdNumber.value,
+      'npc',
+      npc.id,
+      npc.folder_id ?? null,
+      target,
+    )
+    onNpcMoved(npc, target, folderName)
+  }
+  catch (e) {
+    onNpcMoveError(e)
+  }
 }
 
 function onNpcMoved(npc: NPC, toFolderId: number | null, folderName: string | null) {
