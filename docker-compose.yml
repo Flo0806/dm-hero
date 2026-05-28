@@ -10,8 +10,9 @@ services:
     volumes:
       # Persist SQLite database
       - ./data:/app/data
-      # Persist uploaded images (note: .output/public/ path in container)
-      - ./public/uploads:/app/.output/public/uploads
+      # Persist uploaded files (images, audio, etc.) — the server writes to
+      # process.cwd()/uploads, which is /app/uploads inside the container.
+      - ./uploads:/app/uploads
     environment:
       # Nuxt runtime config
       NODE_ENV: production
