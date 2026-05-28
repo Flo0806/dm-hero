@@ -142,11 +142,7 @@
           :title="rail ? '' : $t('nav.settings')"
           to="/settings"
         />
-        <v-list-item
-          :prepend-icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-          :title="rail ? '' : $t('nav.theme')"
-          @click="$emit('toggle-theme')"
-        />
+        <LayoutThemeSwitcher :rail="rail" />
       </v-list>
     </template>
   </v-navigation-drawer>
@@ -166,7 +162,6 @@ interface Props {
   rail: boolean
   hasActiveCampaign: boolean
   activeCampaignName?: string | null
-  isDark: boolean
   isSearchActive: boolean
 }
 
@@ -176,7 +171,6 @@ defineEmits<{
   'update:model-value': [value: boolean]
   'update:rail': [value: boolean]
   'search-click': []
-  'toggle-theme': []
 }>()
 </script>
 
