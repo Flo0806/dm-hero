@@ -19,6 +19,10 @@
         <v-icon start> mdi-clipboard-list-outline </v-icon>
         {{ $t('statTemplates.title') }}
       </v-tab>
+      <v-tab value="tags">
+        <v-icon start> mdi-tag-multiple </v-icon>
+        {{ $t('tags.manage.title') }}
+      </v-tab>
     </v-tabs>
 
     <v-tabs-window v-model="tab">
@@ -187,6 +191,11 @@
           class="mt-2"
           @request-delete="confirmDeleteTemplate"
         />
+      </v-tabs-window-item>
+
+      <!-- Tags Tab -->
+      <v-tabs-window-item value="tags">
+        <ReferenceDataTagsManager class="mt-2" />
       </v-tabs-window-item>
     </v-tabs-window>
 

@@ -1477,6 +1477,35 @@
     "timeMustBePositive": "Time must be positive",
     "timeExceedsDuration": "Time exceeds audio duration"
   },
+  "tags": {
+    "manage": {
+      "title": "Tags",
+      "subtitle": "Manage tags to categorize entities flexibly and find them fast.",
+      "newTag": "New tag",
+      "editTag": "Edit tag",
+      "colTag": "Tag",
+      "colUsage": "Usage",
+      "nameLabel": "Name",
+      "nameHint": "Lowercase letters (a-z) and hyphens only, e.g. cow or heavy-armor",
+      "nameInvalid": "Only a-z and hyphens. No leading/trailing hyphen.",
+      "nameDuplicate": "A tag with this name already exists.",
+      "colorLabel": "Color",
+      "preview": "Preview",
+      "created": "Tag created",
+      "updated": "Tag updated",
+      "deleted": "Tag deleted",
+      "saveError": "Could not save tag",
+      "deleteError": "Could not delete tag",
+      "deleteTitle": "Delete tag?",
+      "deleteConfirm": "Tag \"{name}\" will be removed from every entity. Continue?",
+      "empty": "No tags yet. Click \"New tag\" to get started."
+    },
+    "pinner": {
+      "addTag": "Add tag",
+      "createNew": "Create \"{name}\" as new tag",
+      "noMatches": "No tag found"
+    }
+  },
   "common": {
     "name": "Name",
     "description": "Description",
