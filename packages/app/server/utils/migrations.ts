@@ -2462,6 +2462,49 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 49: Added indexes on tags and entity_tags')
     },
   },
+  {
+    version: 50,
+    name: 'entity_folders',
+    up: (db) => {
+      // entity_folders: per-campaign folders for grouping entities of one type.
+      // parent_folder_id is in the schema from day one so phase 2 (nested
+      // folders) needs zero migration. phase 1 UI enforces parent_folder_id IS
+      // NULL on create/move; the column accepts arbitrary depth.
+      //
+      // name uniqueness: per (campaign_id, entity_type) globally, regardless of
+      // nesting. callers de-dupe on insert/import via "Name (1)", "Name (2)"…
+      // a partial unique index enforces this at the DB level for active rows.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS entity_folders (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+          entity_type TEXT NOT NULL,
+          name TEXT NOT NULL,
+          parent_folder_id INTEGER REFERENCES entity_folders(id) ON DELETE SET NULL,
+          color TEXT,
+          icon TEXT,
+          easter_egg TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          deleted_at TEXT
+        )
+      `)
+
+      db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_entity_folders_name_unique
+          ON entity_folders(campaign_id, entity_type, name)
+          WHERE deleted_at IS NULL
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entity_folders_parent ON entity_folders(parent_folder_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entity_folders_campaign_type ON entity_folders(campaign_id, entity_type)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entity_folders_deleted_at ON entity_folders(deleted_at)')
+
+      db.exec('ALTER TABLE entities ADD COLUMN folder_id INTEGER REFERENCES entity_folders(id) ON DELETE SET NULL')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entities_folder_id ON entities(folder_id)')
+
+      console.log('✅ Migration 50: Created entity_folders (deep-ready) and entities.folder_id')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
