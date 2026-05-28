@@ -6,10 +6,8 @@
         v-model:rail="rail"
         :has-active-campaign="hasActiveCampaign"
         :active-campaign-name="activeCampaignName"
-        :is-dark="theme.global.current.value.dark"
         :is-search-active="showSearch"
         @search-click="showSearch = true"
-        @toggle-theme="toggleTheme"
       />
     </ClientOnly>
 
@@ -57,12 +55,11 @@
 </template>
 
 <script setup lang="ts">
-import { useTheme, useLocale } from 'vuetify'
+import { useLocale } from 'vuetify'
 import NavigationDrawer from '~/components/layout/NavigationDrawer.vue'
 import AppBar from '~/components/layout/AppBar.vue'
 import GlobalSearch from '~/components/layout/GlobalSearch.vue'
 
-const theme = useTheme()
 const vuetifyLocale = useLocale()
 const { locale, setLocale } = useI18n()
 const drawer = ref(true)
@@ -139,10 +136,6 @@ if (import.meta.client) {
     },
     { immediate: true },
   )
-}
-
-function toggleTheme() {
-  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
 }
 
 function changeLocale(newLocale: string) {
