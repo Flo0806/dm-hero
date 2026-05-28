@@ -300,6 +300,11 @@
           <span>{{ $t('lore.badgeTooltips.images') }}</span>
         </v-tooltip>
       </div>
+
+      <!-- Tags Row -->
+      <div class="mt-2">
+        <SharedTagPinner :entity-id="lore.id" />
+      </div>
     </v-card-text>
 
     <!-- Actions -->

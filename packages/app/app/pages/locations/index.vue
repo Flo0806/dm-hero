@@ -124,6 +124,9 @@
                 {{ $t(`locations.types.${internalItem.raw.metadata.type}`, internalItem.raw.metadata.type) }}
               </v-chip>
 
+              <!-- Tag pinner inline with type-chip + actions -->
+              <SharedTagPinner :entity-id="internalItem.raw.id" class="mr-2" />
+
               <!-- Actions -->
               <v-btn
                 icon="mdi-eye"

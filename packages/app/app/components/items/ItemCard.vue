@@ -308,6 +308,11 @@
           <span>{{ $t('items.badgeTooltips.images') }}</span>
         </v-tooltip>
       </div>
+
+      <!-- Tags Row -->
+      <div class="mt-2">
+        <SharedTagPinner :entity-id="item.id" />
+      </div>
     </v-card-text>
 
     <!-- Actions -->
