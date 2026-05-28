@@ -1470,6 +1470,21 @@
     "timeMustBePositive": "Zeit muss positiv sein",
     "timeExceedsDuration": "Zeit überschreitet Audiodauer"
   },
+  "folders": {
+    "title": "Ordner",
+    "create": "Neuer Ordner",
+    "edit": "Ordner bearbeiten",
+    "name": "Name",
+    "color": "Farbe",
+    "colorDefault": "Standard",
+    "moveTo": "Verschieben nach",
+    "removeFromFolder": "Aus Ordner entfernen",
+    "noneYet": "Noch keine Ordner",
+    "entityCount": "keine Einträge | {n} Eintrag | {n} Einträge",
+    "deleteTitle": "Ordner löschen?",
+    "deleteConfirm": "Ordner „{name}\" löschen?",
+    "deleteCascadeHint": "Der Ordner enthält noch keine Einträge | Die {n} Einträge bleiben erhalten und sind danach ohne Ordner | Die {n} Einträge bleiben erhalten und sind danach ohne Ordner"
+  },
   "tags": {
     "manage": {
       "title": "Tags",

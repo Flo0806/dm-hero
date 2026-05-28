@@ -1477,6 +1477,21 @@
     "timeMustBePositive": "Time must be positive",
     "timeExceedsDuration": "Time exceeds audio duration"
   },
+  "folders": {
+    "title": "Folders",
+    "create": "New folder",
+    "edit": "Edit folder",
+    "name": "Name",
+    "color": "Color",
+    "colorDefault": "Default",
+    "moveTo": "Move to",
+    "removeFromFolder": "Remove from folder",
+    "noneYet": "No folders yet",
+    "entityCount": "no entries | {n} entry | {n} entries",
+    "deleteTitle": "Delete folder?",
+    "deleteConfirm": "Delete folder \"{name}\"?",
+    "deleteCascadeHint": "The folder is empty | The {n} entry remains and will be folder-less | The {n} entries remain and will be folder-less"
+  },
   "tags": {
     "manage": {
       "title": "Tags",
