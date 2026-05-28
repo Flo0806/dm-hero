@@ -7,6 +7,12 @@ import { pipeline } from 'stream/promises'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
 import { STANDARD_RACE_KEYS, STANDARD_CLASS_KEYS } from '~~/server/utils/i18n-lookup'
+import {
+  isValidTagName,
+  isValidTagColor,
+  normaliseTagName,
+  DEFAULT_TAG_COLOR,
+} from '~~/types/tag'
 import type {
   RaceClassConflict,
   CampaignExportManifest,
@@ -796,6 +802,63 @@ export default defineEventHandler(async (event) => {
 
         if (locationId || parentId) {
           updateRefs.run(locationId || null, parentId || null, newId)
+        }
+      }
+
+      // Third pass: tags (silently reuse existing names by id, create missing).
+      // Rules:
+      //  - same name already exists → use that tag, ignore exported color
+      //  - name doesn't exist → create with exported color (default if invalid)
+      //  - exports without a `tags` field at all → noop (backwards compat)
+      const referencedTagNames = new Set<string>()
+      for (const entity of manifest.entities) {
+        if (entity.tags?.length) {
+          for (const name of entity.tags) {
+            const normalised = normaliseTagName(name)
+            if (isValidTagName(normalised)) referencedTagNames.add(normalised)
+          }
+        }
+      }
+      // Add palette colors from manifest.tags for tags we'd otherwise have to create.
+      const importPalette = new Map<string, string | null>()
+      if (manifest.tags) {
+        for (const t of manifest.tags) {
+          const normalised = normaliseTagName(t.name)
+          if (isValidTagName(normalised)) importPalette.set(normalised, t.color)
+        }
+      }
+
+      if (referencedTagNames.size > 0) {
+        const tagIdByName = new Map<string, number>()
+        const findExisting = db.prepare('SELECT id, deleted_at FROM tags WHERE name = ?')
+        const reviveExisting = db.prepare('UPDATE tags SET deleted_at = NULL WHERE id = ?')
+        const insertNew = db.prepare('INSERT INTO tags (name, color) VALUES (?, ?)')
+
+        for (const name of referencedTagNames) {
+          const existing = findExisting.get(name) as { id: number, deleted_at: string | null } | undefined
+          if (existing) {
+            // Silent reuse — keep the user's existing color/state. Revive if soft-deleted.
+            if (existing.deleted_at) reviveExisting.run(existing.id)
+            tagIdByName.set(name, existing.id)
+          }
+          else {
+            const exportedColor = importPalette.get(name)
+            const color = exportedColor && isValidTagColor(exportedColor) ? exportedColor : DEFAULT_TAG_COLOR
+            const result = insertNew.run(name, color)
+            tagIdByName.set(name, Number(result.lastInsertRowid))
+          }
+        }
+
+        const attach = db.prepare('INSERT OR IGNORE INTO entity_tags (entity_id, tag_id) VALUES (?, ?)')
+        for (const entity of manifest.entities) {
+          if (!entity.tags?.length) continue
+          const newId = idMapping.entities.get(entity._exportId)
+          if (!newId) continue
+          for (const name of entity.tags) {
+            const normalised = normaliseTagName(name)
+            const tagId = tagIdByName.get(normalised)
+            if (tagId) attach.run(newId, tagId)
+          }
         }
       }
     }

@@ -185,10 +185,34 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Tags attached to any exported entity. Two passes:
+  //   1. Pull the rows for all entity ids in one query.
+  //   2. Build per-entity name lists + the global palette (name + color).
+  // Tags are global (not campaign-scoped), so name is the natural identity.
+  const tagsByEntity = new Map<number, string[]>()
+  const tagPalette = new Map<string, string | null>()
+  if (entityIdSet.size > 0) {
+    const tagPlaceholders = [...entityIdSet].map(() => '?').join(',')
+    const tagRows = db.prepare(`
+      SELECT et.entity_id, t.name, t.color
+      FROM entity_tags et
+      JOIN tags t ON t.id = et.tag_id
+      WHERE et.entity_id IN (${tagPlaceholders}) AND t.deleted_at IS NULL
+      ORDER BY t.name COLLATE NOCASE
+    `).all(...entityIdSet) as Array<{ entity_id: number, name: string, color: string | null }>
+    for (const row of tagRows) {
+      const list = tagsByEntity.get(row.entity_id) ?? []
+      list.push(row.name)
+      tagsByEntity.set(row.entity_id, list)
+      if (!tagPalette.has(row.name)) tagPalette.set(row.name, row.color)
+    }
+  }
+
   // Transform entities
   const exportEntities: ExportEntity[] = entities.map((e) => {
     const exportId = entityExportIdMap.get(e.id)!
     const imageArchivePath = addFile(e.image_url, 'images/entities')
+    const entityTags = tagsByEntity.get(e.id)
 
     return {
       _exportId: exportId,
@@ -206,8 +230,14 @@ export default defineEventHandler(async (event) => {
       created_at: e.created_at,
       updated_at: e.updated_at,
       archived_at: e.archived_at || null,
+      tags: entityTags && entityTags.length > 0 ? entityTags : undefined,
     }
   })
+
+  // Global tag palette referenced by the entity tag lists above.
+  const exportTags = tagPalette.size > 0
+    ? [...tagPalette.entries()].map(([name, color]) => ({ name, color }))
+    : undefined
 
   // Relations (only between exported entities)
   const relations = db
@@ -1005,6 +1035,7 @@ export default defineEventHandler(async (event) => {
     classes: exportClasses.length > 0 ? exportClasses : undefined,
     statTemplates: exportStatTemplates.length > 0 ? exportStatTemplates : undefined,
     entityStats: exportEntityStats.length > 0 ? exportEntityStats : undefined,
+    tags: exportTags,
   }
 
   // ==========================================================================
