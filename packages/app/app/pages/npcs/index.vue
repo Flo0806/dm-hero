@@ -458,15 +458,17 @@ watch(locale, () => {
   }
 })
 
-// Show search results OR cached NPCs
+// Show search results OR cached NPCs.
+// Default view hides NPCs that live in a folder (the folder card already
+// surfaces them via its count). An active search transcends folders so users
+// can always find an NPC by name even if they don't remember where it lives.
 const filteredNpcs = computed(() => {
-  // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
     return searchResults.value
   }
-
-  // Otherwise show all cached NPCs sorted alphabetically
-  return [...(npcs.value || [])].sort((a, b) => a.name.localeCompare(b.name))
+  return [...(npcs.value || [])]
+    .filter(npc => !npc.folder_id)
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // ============================================================================
