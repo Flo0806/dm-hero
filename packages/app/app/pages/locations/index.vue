@@ -80,31 +80,16 @@
           item-value="id"
           item-title="title"
           density="comfortable"
-          expand-icon=""
-          collapse-icon=""
         >
-          <!-- Custom prepend slot for expand button + icon -->
+          <!-- Location type icon (expand/collapse is handled by v-treeview default) -->
           <template #prepend="{ internalItem }">
-            <div
-              :class="{
-                'highlight-blink-prepend': highlightedId === internalItem.raw.id,
-              }"
-              style="display: flex; align-items: center; gap: 4px; margin-left: -8px"
+            <v-icon
+              :class="{ 'highlight-blink-prepend': highlightedId === internalItem.raw.id }"
+              :color="getNodeColor(internalItem.raw)"
+              size="small"
             >
-              <!-- Expand/Collapse icon only if has children -->
-              <v-icon
-                v-if="internalItem.children && internalItem.children.length > 0"
-                :icon="openedNodes.includes(internalItem.value) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-                size="small"
-                style="width: 20px"
-              />
-              <div v-else style="width: 20px" />
-
-              <!-- Location type icon -->
-              <v-icon :color="getNodeColor(internalItem.raw)" size="small">
-                {{ getNodeIcon(internalItem.raw) }}
-              </v-icon>
-            </div>
+              {{ getNodeIcon(internalItem.raw) }}
+            </v-icon>
           </template>
 
           <!-- Custom title to highlight search results -->
@@ -549,13 +534,15 @@ const filteredLocations = computed(() => {
   return [...(locations.value || [])].sort((a, b) => a.name.localeCompare(b.name))
 })
 
-// Build tree structure from flat location list
-interface TreeNode {
-  id: number
+// Build tree structure from flat location list.
+// TreeNode extends Location so that all original fields (metadata, archived_at, …)
+// are directly accessible on the node — Vuetify 4's v-treeview slot prop is
+// `internalItem.raw = TreeNode`, so anything we want in the template must live
+// at the TreeNode level, not nested under another `.raw`.
+interface TreeNode extends Location {
   title: string
   children?: TreeNode[]
-  raw: Location
-  isSearchResult?: boolean // Mark if this is an actual search result
+  isSearchResult?: boolean
 }
 
 // Helper: Get all parent IDs for a location
@@ -610,13 +597,12 @@ const treeItems = computed(() => {
   const locationMap = new Map<number, TreeNode>()
   const rootNodes: TreeNode[] = []
 
-  // First pass: create all nodes
+  // First pass: create all nodes — spread Location so node has all its fields directly
   locationsToShow.forEach((location) => {
     locationMap.set(location.id, {
-      id: location.id,
+      ...location,
       title: location.name,
       children: [],
-      raw: location,
       isSearchResult: searchResultIds.has(location.id),
     })
   })
@@ -655,6 +641,20 @@ const treeItems = computed(() => {
 
   // Sort root nodes and all children
   sortNodes(rootNodes)
+
+  // v-treeview 4 treats any non-undefined children (even []) as expandable.
+  // Strip empty arrays so leaf nodes don't get an expand arrow.
+  const stripEmptyChildren = (nodes: TreeNode[]) => {
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        stripEmptyChildren(node.children)
+      }
+      else {
+        node.children = undefined
+      }
+    })
+  }
+  stripEmptyChildren(rootNodes)
 
   return rootNodes
 })
@@ -699,12 +699,12 @@ watch(
 
 // Get icon based on location type (uses composable)
 function getNodeIcon(item: TreeNode) {
-  return getLocationTypeIcon(item.raw?.metadata?.type)
+  return getLocationTypeIcon(item.metadata?.type)
 }
 
 // Get color based on location type (uses composable)
 function getNodeColor(item: TreeNode) {
-  return getLocationTypeColor(item.raw?.metadata?.type)
+  return getLocationTypeColor(item.metadata?.type)
 }
 
 // Form state
@@ -1001,9 +1001,11 @@ function handleLinked() {
   transform: scale(1.1);
 }
 
-/* Add consistent padding to all treeview items */
+/* Add consistent padding to all treeview items.
+ * NOTE: Only set padding-block — `padding` shorthand would kill the
+ * padding-inline-start that v-treeview uses for child indentation. */
 :deep(.v-treeview-item) {
-  padding: 4px 8px;
+  padding-block: 4px;
   margin: 2px 0;
   border-radius: 4px;
 }
