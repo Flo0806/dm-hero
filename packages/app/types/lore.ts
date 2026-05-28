@@ -81,5 +81,6 @@ export interface Lore {
   created_at: string
   updated_at: string
   archived_at?: string | null
+  folder_id?: number | null
   _counts?: LoreCounts
 }

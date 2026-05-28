@@ -1,5 +1,9 @@
 import { existsSync, readFileSync } from 'fs'
 import { join, basename } from 'path'
+// archiver@8 is ESM and exports `ZipArchive` directly. The bundled types
+// (@types/archiver@7) are stale and don't list it — suppress until upstream
+// updates. Runtime is correct.
+// @ts-expect-error -- ZipArchive exists at runtime in archiver@8
 import { ZipArchive } from 'archiver'
 import { PassThrough } from 'stream'
 import { getDb } from '~~/server/utils/db'
@@ -127,7 +131,7 @@ export default defineEventHandler(async (event) => {
 
   // Entities
   let entitiesQuery = `
-    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, created_at, updated_at, archived_at
+    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, folder_id, created_at, updated_at, archived_at
     FROM entities
     WHERE campaign_id = ? AND deleted_at IS NULL
   `
@@ -148,6 +152,7 @@ export default defineEventHandler(async (event) => {
     image_url: string | null
     location_id: number | null
     parent_entity_id: number | null
+    folder_id: number | null
     created_at: string
     updated_at: string
     archived_at: string | null
@@ -185,6 +190,43 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Folders — only those actually referenced by exported entities. Names are
+  // unique per (campaign, entity_type) so (entity_type, name) is the natural
+  // key on the receiving side. parent_name is reserved for phase-2 nesting;
+  // phase-1 exports always emit null.
+  const folderIdsReferenced = new Set<number>()
+  for (const e of entities) {
+    if (e.folder_id != null) folderIdsReferenced.add(e.folder_id)
+  }
+  const folderById = new Map<number, { entity_type: string, name: string, color: string | null, icon: string | null, easter_egg: string | null }>()
+  if (folderIdsReferenced.size > 0) {
+    const placeholders = [...folderIdsReferenced].map(() => '?').join(',')
+    // Defensive campaign scoping: folder_id on entities is always within the
+    // same campaign, but the prepared statement enforces it so a future
+    // refactor can't accidentally leak folders across campaigns.
+    const folderRows = db.prepare(`
+      SELECT id, entity_type, name, color, icon, easter_egg
+      FROM entity_folders
+      WHERE id IN (${placeholders}) AND campaign_id = ? AND deleted_at IS NULL
+    `).all(...folderIdsReferenced, campaignId) as Array<{
+      id: number
+      entity_type: string
+      name: string
+      color: string | null
+      icon: string | null
+      easter_egg: string | null
+    }>
+    for (const row of folderRows) {
+      folderById.set(row.id, {
+        entity_type: row.entity_type,
+        name: row.name,
+        color: row.color,
+        icon: row.icon,
+        easter_egg: row.easter_egg,
+      })
+    }
+  }
+
   // Tags attached to any exported entity. Two passes:
   //   1. Pull the rows for all entity ids in one query.
   //   2. Build per-entity name lists + the global palette (name + color).
@@ -213,6 +255,7 @@ export default defineEventHandler(async (event) => {
     const exportId = entityExportIdMap.get(e.id)!
     const imageArchivePath = addFile(e.image_url, 'images/entities')
     const entityTags = tagsByEntity.get(e.id)
+    const folder = e.folder_id != null ? folderById.get(e.folder_id) : null
 
     return {
       _exportId: exportId,
@@ -231,6 +274,7 @@ export default defineEventHandler(async (event) => {
       updated_at: e.updated_at,
       archived_at: e.archived_at || null,
       tags: entityTags && entityTags.length > 0 ? entityTags : undefined,
+      folder_name: folder ? folder.name : undefined,
     }
   })
 
@@ -238,6 +282,20 @@ export default defineEventHandler(async (event) => {
   const exportTags = tagPalette.size > 0
     ? [...tagPalette.entries()].map(([name, color]) => ({ name, color }))
     : undefined
+
+  // Folder list referenced by exported entities. Phase 1 emits parent_name as
+  // null; the field is part of the contract for forward-compat with nesting.
+  const exportFolders: { entity_type: 'npc' | 'item' | 'faction' | 'lore', name: string, parent_name: null, color: string | null, icon: string | null, easter_egg: string | null }[] = []
+  for (const folder of folderById.values()) {
+    exportFolders.push({
+      entity_type: folder.entity_type as 'npc' | 'item' | 'faction' | 'lore',
+      name: folder.name,
+      parent_name: null,
+      color: folder.color,
+      icon: folder.icon,
+      easter_egg: folder.easter_egg,
+    })
+  }
 
   // Relations (only between exported entities)
   const relations = db
@@ -1036,6 +1094,7 @@ export default defineEventHandler(async (event) => {
     statTemplates: exportStatTemplates.length > 0 ? exportStatTemplates : undefined,
     entityStats: exportEntityStats.length > 0 ? exportEntityStats : undefined,
     tags: exportTags,
+    folders: exportFolders.length > 0 ? exportFolders : undefined,
   }
 
   // ==========================================================================

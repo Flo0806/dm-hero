@@ -18,6 +18,9 @@ export default defineConfig({
           alias: {
             '~': fileURLToPath(new URL('./app', import.meta.url)),
             '@': fileURLToPath(new URL('./app', import.meta.url)),
+            // Nuxt's `~~` (workspace root) — needed for the server-side
+            // smoke-load tests that import handler files using `~~/...`.
+            '~~': fileURLToPath(new URL('./', import.meta.url)),
           },
         },
       },
