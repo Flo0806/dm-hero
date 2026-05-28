@@ -502,11 +502,14 @@ const calendarStats = ref<{
 
 async function confirmReset() {
   if (!campaignStore.activeCampaignId) return
-  // Load stats first
+  // Load stats first.
+  // Note: query is inlined in the URL so we skip $fetch's heavy generic
+  // type-inference path, which currently trips "Excessive stack depth" in the
+  // ts-plugin on Nuxt 4.4 + Nitro 2.13. tsc --noEmit is clean either way.
   try {
-    calendarStats.value = await $fetch('/api/calendar/stats', {
-      query: { campaignId: campaignStore.activeCampaignId },
-    })
+    calendarStats.value = await $fetch<typeof calendarStats.value>(
+      `/api/calendar/stats?campaignId=${campaignStore.activeCampaignId}`,
+    )
   }
   catch {
     calendarStats.value = null
@@ -518,9 +521,8 @@ async function executeReset() {
   if (!campaignStore.activeCampaignId) return
   resetting.value = true
   try {
-    await $fetch('/api/calendar/reset', {
+    await $fetch(`/api/calendar/reset?campaignId=${campaignStore.activeCampaignId}`, {
       method: 'DELETE',
-      query: { campaignId: campaignStore.activeCampaignId },
     })
     showResetDialog.value = false
     modelValue.value = false
