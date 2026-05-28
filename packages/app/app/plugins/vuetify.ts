@@ -94,6 +94,18 @@ export default defineNuxtPlugin((nuxtApp) => {
         dark: darkTheme,
       },
     },
+    // Pin the v3 breakpoint thresholds so layouts written against v3 still match v4.
+    // v4 default breakpoints are smaller and shift everything down — see #301.
+    display: {
+      thresholds: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+        xxl: 2560,
+      },
+    },
     defaults: {
       global: {
         elevation: 0, // No elevation as requested

@@ -1,77 +1,80 @@
 /* assets/md-editor-theme.css */
-.v-theme--light .md-editor {
-  background: var(--v-md-bg);
-  color: var(--v-md-text);
-}
-.v-theme--light .md-editor .md-toolbar-wrapper {
-  background: var(--v-md-surface);
-  border-bottom: 1px solid var(--v-md-border);
-}
-.v-theme--light .md-editor .md-editor-toolbar-item {
-  color: var(--v-md-muted);
-}
-.v-theme--light .md-editor .md-editor-toolbar-item:hover {
-  color: var(--v-md-primary);
-}
-.v-theme--light .md-editor .md-editor-content-editor {
-  background: var(--v-md-bg);
-}
-.v-theme--light .md-editor pre,
-.v-theme--light .md-editor code {
-  background: var(--v-md-code-bg);
-}
-
-/* Dark */
-.v-theme--dark .md-editor {
-  background: var(--v-md-bg);
-  color: var(--v-md-text);
-}
-.v-theme--dark .md-editor .md-toolbar-wrapper {
-  background: var(--v-md-surface);
-  border-bottom: 1px solid var(--v-md-border);
-}
-.v-theme--dark .md-editor .md-editor-toolbar-item {
-  color: var(--v-md-muted);
-}
-.v-theme--dark .md-editor .md-editor-toolbar-item:hover {
-  color: var(--v-md-primary);
-}
-.v-theme--dark .md-editor .md-editor-content-editor {
-  background: var(--v-md-bg);
-}
-.v-theme--dark .md-editor pre,
-.v-theme--dark .md-editor code {
-  background: var(--v-md-code-bg);
-}
-
-/* Fix: Prevent breaking words mid-character (override md-editor-v3 defaults) */
-.md-editor,
-.md-editor *,
-.md-editor .cm-editor,
-.md-editor .cm-editor .cm-scroller,
-.md-editor .cm-editor .cm-content,
-.md-editor .cm-editor .cm-line,
-.md-editor .md-editor-input-wrapper,
-.md-editor .md-editor-input-wrapper textarea,
-.md-editor-preview-wrapper,
-.md-editor-preview-wrapper *,
-.md-editor-preview,
-.md-editor-preview *,
-.md-editor-preview h1,
-.md-editor-preview h2,
-.md-editor-preview h3,
-.md-editor-preview h4,
-.md-editor-preview h5,
-.md-editor-preview h6,
-.md-editor-preview p,
-.md-editor-preview li,
-.md-editor-preview blockquote,
-.md-editor-preview td,
-.md-editor-preview th,
-.md-editor-catalog,
-.md-editor-catalog * {
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
-  word-wrap: break-word !important;
-  hyphens: auto;
+/* Wrapped in @layer overrides so it wins over Vuetify and md-editor-v3 base styles. */
+@layer overrides {
+  .v-theme--light .md-editor {
+    background: var(--v-md-bg);
+    color: var(--v-md-text);
+  }
+  .v-theme--light .md-editor .md-toolbar-wrapper {
+    background: var(--v-md-surface);
+    border-bottom: 1px solid var(--v-md-border);
+  }
+  .v-theme--light .md-editor .md-editor-toolbar-item {
+    color: var(--v-md-muted);
+  }
+  .v-theme--light .md-editor .md-editor-toolbar-item:hover {
+    color: var(--v-md-primary);
+  }
+  .v-theme--light .md-editor .md-editor-content-editor {
+    background: var(--v-md-bg);
+  }
+  .v-theme--light .md-editor pre,
+  .v-theme--light .md-editor code {
+    background: var(--v-md-code-bg);
+  }
+  
+  /* Dark */
+  .v-theme--dark .md-editor {
+    background: var(--v-md-bg);
+    color: var(--v-md-text);
+  }
+  .v-theme--dark .md-editor .md-toolbar-wrapper {
+    background: var(--v-md-surface);
+    border-bottom: 1px solid var(--v-md-border);
+  }
+  .v-theme--dark .md-editor .md-editor-toolbar-item {
+    color: var(--v-md-muted);
+  }
+  .v-theme--dark .md-editor .md-editor-toolbar-item:hover {
+    color: var(--v-md-primary);
+  }
+  .v-theme--dark .md-editor .md-editor-content-editor {
+    background: var(--v-md-bg);
+  }
+  .v-theme--dark .md-editor pre,
+  .v-theme--dark .md-editor code {
+    background: var(--v-md-code-bg);
+  }
+  
+  /* Fix: Prevent breaking words mid-character (override md-editor-v3 defaults) */
+  .md-editor,
+  .md-editor *,
+  .md-editor .cm-editor,
+  .md-editor .cm-editor .cm-scroller,
+  .md-editor .cm-editor .cm-content,
+  .md-editor .cm-editor .cm-line,
+  .md-editor .md-editor-input-wrapper,
+  .md-editor .md-editor-input-wrapper textarea,
+  .md-editor-preview-wrapper,
+  .md-editor-preview-wrapper *,
+  .md-editor-preview,
+  .md-editor-preview *,
+  .md-editor-preview h1,
+  .md-editor-preview h2,
+  .md-editor-preview h3,
+  .md-editor-preview h4,
+  .md-editor-preview h5,
+  .md-editor-preview h6,
+  .md-editor-preview p,
+  .md-editor-preview li,
+  .md-editor-preview blockquote,
+  .md-editor-preview td,
+  .md-editor-preview th,
+  .md-editor-catalog,
+  .md-editor-catalog * {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    hyphens: auto;
+  }
 }
