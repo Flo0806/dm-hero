@@ -72,26 +72,26 @@
           :hint="$t('calendar.linkedEntitiesHint')"
           persistent-hint
         >
-          <template #chip="{ props: chipProps, item }">
+          <template #chip="{ props: chipProps, internalItem }">
             <v-chip
               v-bind="chipProps"
-              :color="getEntityColor(item.raw.type)"
+              :color="getEntityColor(internalItem.raw.type)"
               size="small"
-              :class="{ 'text-decoration-line-through': item.raw.deleted }"
+              :class="{ 'text-decoration-line-through': internalItem.raw.deleted }"
             >
-              <v-icon start size="small">{{ getEntityIcon(item.raw.type) }}</v-icon>
-              {{ item.raw.name }}
+              <v-icon start size="small">{{ getEntityIcon(internalItem.raw.type) }}</v-icon>
+              {{ internalItem.raw.name }}
             </v-chip>
           </template>
-          <template #item="{ props: itemProps, item }">
+          <template #item="{ props: itemProps, internalItem }">
             <v-list-item
               v-bind="itemProps"
-              :title="item.raw.name"
-              :subtitle="$t(`entityTypes.${item.raw.type}`)"
+              :title="internalItem.raw.name"
+              :subtitle="$t(`entityTypes.${internalItem.raw.type}`)"
             >
               <template #prepend>
-                <v-icon :color="getEntityColor(item.raw.type)" size="small">
-                  {{ getEntityIcon(item.raw.type) }}
+                <v-icon :color="getEntityColor(internalItem.raw.type)" size="small">
+                  {{ getEntityIcon(internalItem.raw.type) }}
                 </v-icon>
               </template>
             </v-list-item>

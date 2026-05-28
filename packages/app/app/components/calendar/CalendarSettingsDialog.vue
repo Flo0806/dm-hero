@@ -235,19 +235,19 @@
                     variant="outlined"
                     style="width: 200px"
                   >
-                    <template #selection="{ item }">
+                    <template #selection="{ internalItem }">
                       <div class="d-flex align-center ga-2">
-                        <v-icon size="18" :color="getWeatherTypeColor(item.value)">
-                          {{ getWeatherTypeIcon(item.value) }}
+                        <v-icon size="18" :color="getWeatherTypeColor(internalItem.value)">
+                          {{ getWeatherTypeIcon(internalItem.value) }}
                         </v-icon>
-                        <span>{{ item.title }}</span>
+                        <span>{{ internalItem.title }}</span>
                       </div>
                     </template>
-                    <template #item="{ item, props: itemProps }">
+                    <template #item="{ internalItem, props: itemProps }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-icon :color="getWeatherTypeColor(item.value)" class="mr-2">
-                            {{ getWeatherTypeIcon(item.value) }}
+                          <v-icon :color="getWeatherTypeColor(internalItem.value)" class="mr-2">
+                            {{ getWeatherTypeIcon(internalItem.value) }}
                           </v-icon>
                         </template>
                       </v-list-item>
@@ -265,19 +265,19 @@
                     style="width: 180px"
                     :rules="[v => !!v || $t('calendar.seasonBackgroundRequired')]"
                   >
-                    <template #selection="{ item }">
+                    <template #selection="{ internalItem }">
                       <div class="d-flex align-center ga-2">
-                        <v-avatar v-if="item.value" size="20" rounded="sm">
-                          <v-img :src="item.value" />
+                        <v-avatar v-if="internalItem.value" size="20" rounded="sm">
+                          <v-img :src="internalItem.value" />
                         </v-avatar>
-                        <span>{{ item.title }}</span>
+                        <span>{{ internalItem.title }}</span>
                       </div>
                     </template>
-                    <template #item="{ item, props: itemProps }">
+                    <template #item="{ internalItem, props: itemProps }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
-                          <v-avatar v-if="item.value" size="28" rounded="sm" class="mr-2">
-                            <v-img :src="item.value" />
+                          <v-avatar v-if="internalItem.value" size="28" rounded="sm" class="mr-2">
+                            <v-img :src="internalItem.value" />
                           </v-avatar>
                         </template>
                       </v-list-item>

@@ -13,14 +13,14 @@
         style="max-width: 500px;"
         :disabled="isDirty"
       >
-        <template #item="{ item, props: itemProps }">
+        <template #item="{ internalItem, props: itemProps }">
           <v-list-item v-bind="itemProps">
-            <template v-if="item.raw.systemKey || item.raw.isImported" #append>
-              <v-chip v-if="item.raw.isImported" size="x-small" variant="tonal" color="info" class="mr-1">
+            <template v-if="internalItem.raw.systemKey || internalItem.raw.isImported" #append>
+              <v-chip v-if="internalItem.raw.isImported" size="x-small" variant="tonal" color="info" class="mr-1">
                 {{ $t('statTemplates.importedBadge') }}
               </v-chip>
-              <v-chip v-if="item.raw.systemKey" size="x-small" variant="tonal" color="primary">
-                {{ $t(`statPresets.${item.raw.systemKey}.name`, item.raw.systemKey) }}
+              <v-chip v-if="internalItem.raw.systemKey" size="x-small" variant="tonal" color="primary">
+                {{ $t(`statPresets.${internalItem.raw.systemKey}.name`, internalItem.raw.systemKey) }}
               </v-chip>
             </template>
           </v-list-item>

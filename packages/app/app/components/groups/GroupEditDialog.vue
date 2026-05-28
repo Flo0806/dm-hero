@@ -93,10 +93,10 @@
           <template #prepend-inner>
             <v-icon v-if="displayIcon" :icon="displayIcon" />
           </template>
-          <template #item="{ item, props: itemProps }">
+          <template #item="{ internalItem, props: itemProps }">
             <v-list-item v-bind="itemProps">
               <template #prepend>
-                <v-icon :icon="item.value" class="mr-2" />
+                <v-icon :icon="internalItem.value" class="mr-2" />
               </template>
             </v-list-item>
           </template>

@@ -126,10 +126,10 @@
                     variant="outlined"
                     clearable
                   >
-                    <template #item="{ props: itemProps, item: selectItem }">
+                    <template #item="{ props: itemProps, internalItem: selectItem }">
                       <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
                     </template>
-                    <template #selection="{ item: selectItem }">
+                    <template #selection="{ internalItem: selectItem }">
                       {{ $t(`items.types.${selectItem.value}`) }}
                     </template>
                   </v-select>
@@ -142,10 +142,10 @@
                     variant="outlined"
                     clearable
                   >
-                    <template #item="{ props: itemProps, item: selectItem }">
+                    <template #item="{ props: itemProps, internalItem: selectItem }">
                       <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
                     </template>
-                    <template #selection="{ item: selectItem }">
+                    <template #selection="{ internalItem: selectItem }">
                       {{ $t(`items.rarities.${selectItem.value}`) }}
                     </template>
                   </v-select>
@@ -189,14 +189,14 @@
                     item-value="id"
                     density="default"
                   >
-                    <template #item="{ props: itemProps, item: selectItem }">
+                    <template #item="{ props: itemProps, internalItem: selectItem }">
                       <v-list-item v-bind="itemProps">
                         <template #prepend>
                           <span class="font-weight-bold mr-2">{{ selectItem.raw.symbol }}</span>
                         </template>
                       </v-list-item>
                     </template>
-                    <template #selection="{ item: selectItem }">
+                    <template #selection="{ internalItem: selectItem }">
                       {{ selectItem.raw.symbol }}
                     </template>
                   </v-select>
@@ -558,10 +558,10 @@
                   variant="outlined"
                   clearable
                 >
-                  <template #item="{ props: itemProps, item: selectItem }">
+                  <template #item="{ props: itemProps, internalItem: selectItem }">
                     <v-list-item v-bind="itemProps" :title="$t(`items.types.${selectItem.value}`)" />
                   </template>
-                  <template #selection="{ item: selectItem }">
+                  <template #selection="{ internalItem: selectItem }">
                     {{ $t(`items.types.${selectItem.value}`) }}
                   </template>
                 </v-select>
@@ -574,10 +574,10 @@
                   variant="outlined"
                   clearable
                 >
-                  <template #item="{ props: itemProps, item: selectItem }">
+                  <template #item="{ props: itemProps, internalItem: selectItem }">
                     <v-list-item v-bind="itemProps" :title="$t(`items.rarities.${selectItem.value}`)" />
                   </template>
-                  <template #selection="{ item: selectItem }">
+                  <template #selection="{ internalItem: selectItem }">
                     {{ $t(`items.rarities.${selectItem.value}`) }}
                   </template>
                 </v-select>
