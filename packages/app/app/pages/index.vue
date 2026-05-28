@@ -1,5 +1,11 @@
 <template>
   <v-container>
+    <!-- Emily theme distant lightning — dashboard ambience only, self-gates
+         on theme + settings. -->
+    <ClientOnly>
+      <SharedEmilyLightning />
+    </ClientOnly>
+
     <!-- Redirect to campaigns if no campaign selected -->
     <div v-if="!activeCampaignId" class="text-center py-16">
       <v-icon icon="mdi-sword-cross" size="64" class="mb-4" color="primary" />
