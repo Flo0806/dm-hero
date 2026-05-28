@@ -2447,6 +2447,21 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 48: Added archived_at column to entities')
     },
   },
+  {
+    version: 49,
+    name: 'tag_indexes',
+    up: (db) => {
+      // tags + entity_tags tables exist since migration 1 but weren't surfaced
+      // to the frontend. add indexes that the query patterns (lookup by name,
+      // list tags of an entity, list entities of a tag) will use.
+      db.exec('CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_tags_deleted_at ON tags(deleted_at)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entity_tags_entity_id ON entity_tags(entity_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_entity_tags_tag_id ON entity_tags(tag_id)')
+
+      console.log('✅ Migration 49: Added indexes on tags and entity_tags')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
