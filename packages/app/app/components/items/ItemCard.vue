@@ -343,6 +343,15 @@
         </v-tooltip>
       </v-btn>
       <v-spacer />
+      <SharedEntityMoveMenu
+        v-if="campaignStore.activeCampaignIdNumber"
+        :entity-id="item.id"
+        :campaign-id="campaignStore.activeCampaignIdNumber"
+        entity-type="item"
+        :current-folder-id="item.folder_id ?? null"
+        @moved="onMoved"
+        @move-error="onMoveError"
+      />
       <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', item)">
         <v-icon>mdi-pencil</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -429,7 +438,19 @@ const emit = defineEmits<{
   'create-group': [entityId: number]
   'linked': []
   'open-tab': [item: Item, tab: string]
+  'moved': [item: Item, toFolderId: number | null, folderName: string | null]
+  'move-error': [error: unknown]
 }>()
+
+const campaignStore = useCampaignStore()
+
+function onMoved(payload: { toFolderId: number | null, folderName: string | null }) {
+  emit('moved', props.item, payload.toFolderId, payload.folderName)
+}
+
+function onMoveError(error: unknown) {
+  emit('move-error', error)
+}
 
 const { getCounts } = useItemCounts()
 const { getItemTypeIcon } = useEntityIcons()
