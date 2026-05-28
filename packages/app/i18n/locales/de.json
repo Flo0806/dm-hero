@@ -1478,6 +1478,7 @@
     "color": "Farbe",
     "colorDefault": "Standard",
     "moveTo": "Verschieben nach",
+    "openedSoon": "Ordner „{name}\" – Folder-Ansicht kommt im nächsten Schritt",
     "removeFromFolder": "Aus Ordner entfernen",
     "noneYet": "Noch keine Ordner",
     "entityCount": "keine Einträge | {n} Eintrag | {n} Einträge",

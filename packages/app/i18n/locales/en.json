@@ -1485,6 +1485,7 @@
     "color": "Color",
     "colorDefault": "Default",
     "moveTo": "Move to",
+    "openedSoon": "Folder \"{name}\" – folder view coming next",
     "removeFromFolder": "Remove from folder",
     "noneYet": "No folders yet",
     "entityCount": "no entries | {n} entry | {n} entries",

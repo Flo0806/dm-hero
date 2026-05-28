@@ -425,6 +425,14 @@
       </v-btn>
 
       <v-spacer />
+      <SharedEntityMoveMenu
+        v-if="campaignStore.activeCampaignIdNumber"
+        :entity-id="npc.id"
+        :campaign-id="campaignStore.activeCampaignIdNumber"
+        entity-type="npc"
+        :current-folder-id="npc.folder_id ?? null"
+        @moved="onMoved"
+      />
       <v-btn icon="mdi-pencil" size="small" variant="text" @click.stop="$emit('edit', npc)">
         <v-icon>mdi-pencil</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -510,7 +518,10 @@ const emit = defineEmits<{
   'create-group': [entityId: number]
   'linked': []
   'open-tab': [npc: NPC, tab: string]
+  'moved': [npc: NPC, toFolderId: number | null]
 }>()
+
+const campaignStore = useCampaignStore()
 
 const { locale, t, te } = useI18n()
 const { getCounts } = useNpcCounts()
@@ -625,6 +636,10 @@ function getClassesDisplay(val: string | string[] | undefined): string {
 }
 
 // Icon helpers imported from ~/utils/npc-icons
+
+function onMoved(payload: { toFolderId: number | null }) {
+  emit('moved', props.npc, payload.toFolderId)
+}
 </script>
 
 <style scoped>

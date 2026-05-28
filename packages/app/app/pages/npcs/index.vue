@@ -36,6 +36,14 @@
       </v-btn>
     </div>
 
+    <!-- Folders -->
+    <SharedFolderRow
+      v-if="activeCampaignIdNumber"
+      :campaign-id="activeCampaignIdNumber"
+      entity-type="npc"
+      @open="onFolderOpen"
+    />
+
     <v-row v-if="entitiesStore.npcsLoading">
       <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
@@ -83,6 +91,7 @@
             @open-group="openGroupPreview"
             @open-tab="openNpcTab"
             @create-group="groupCreate.open"
+            @moved="onNpcMoved"
           />
         </v-col>
       </v-row>
@@ -238,6 +247,7 @@ const { loadNpcCountsBatch } = useNpcCounts()
 
 // Get active campaign from campaign store
 const activeCampaignId = computed(() => campaignStore.activeCampaignId)
+const activeCampaignIdNumber = computed(() => campaignStore.activeCampaignIdNumber)
 
 // Check if campaign is selected
 onMounted(async () => {
@@ -596,6 +606,18 @@ watch(showViewDialog, (isOpen) => {
     viewingNpc.value = null
   }
 })
+
+// Phase 1: folder click is a no-op (folder-open view ships next).
+function onFolderOpen(folder: { name: string }) {
+  snackbarStore.success($t('folders.openedSoon', { name: folder.name }))
+}
+
+async function onNpcMoved(_npc: NPC, _toFolderId: number | null) {
+  // Re-fetch so the moved NPC reflects its new folder_id in the list.
+  if (activeCampaignId.value) {
+    await entitiesStore.fetchNPCs(activeCampaignId.value)
+  }
+}
 
 async function archiveNpc(npc: NPC) {
   try {
