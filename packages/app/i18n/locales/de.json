@@ -44,7 +44,8 @@
     "green": "Grün (Wald)",
     "blue": "Blau (Ozean)",
     "purple": "Lila (Arkane Magie)",
-    "orange": "Orange (Lagerfeuer)"
+    "orange": "Orange (Lagerfeuer)",
+    "emily": "Emily (Tiefe Lagune)"
   },
   "featureTooltips": {
     "newBadge": "Neu",

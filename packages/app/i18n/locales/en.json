@@ -44,7 +44,8 @@
     "green": "Green (Forest)",
     "blue": "Blue (Ocean)",
     "purple": "Purple (Arcane)",
-    "orange": "Orange (Campfire)"
+    "orange": "Orange (Campfire)",
+    "emily": "Emily (Deep Lagoon)"
   },
   "featureTooltips": {
     "newBadge": "New",
