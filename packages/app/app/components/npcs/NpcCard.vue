@@ -389,6 +389,11 @@
           <span>{{ $t('npcs.badgeTooltips.players') }}</span>
         </v-tooltip>
       </div>
+
+      <!-- Tags Row -->
+      <div class="mt-2">
+        <SharedTagPinner :entity-id="npc.id" />
+      </div>
     </v-card-text>
 
     <!-- Actions -->
