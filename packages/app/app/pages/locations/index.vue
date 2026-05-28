@@ -84,59 +84,59 @@
           collapse-icon=""
         >
           <!-- Custom prepend slot for expand button + icon -->
-          <template #prepend="{ item }">
+          <template #prepend="{ internalItem }">
             <div
               :class="{
-                'highlight-blink-prepend': highlightedId === item.raw.id,
+                'highlight-blink-prepend': highlightedId === internalItem.raw.id,
               }"
               style="display: flex; align-items: center; gap: 4px; margin-left: -8px"
             >
               <!-- Expand/Collapse icon only if has children -->
               <v-icon
-                v-if="item.children && item.children.length > 0"
-                :icon="openedNodes.includes(item.id) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                v-if="internalItem.children && internalItem.children.length > 0"
+                :icon="openedNodes.includes(internalItem.value) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
                 size="small"
                 style="width: 20px"
               />
               <div v-else style="width: 20px" />
 
               <!-- Location type icon -->
-              <v-icon :color="getNodeColor(item)" size="small">
-                {{ getNodeIcon(item) }}
+              <v-icon :color="getNodeColor(internalItem.raw)" size="small">
+                {{ getNodeIcon(internalItem.raw) }}
               </v-icon>
             </div>
           </template>
 
           <!-- Custom title to highlight search results -->
-          <template #title="{ item }">
+          <template #title="{ internalItem }">
             <div
-              :id="`location-${item.raw.id}`"
-              :key="`location-title-${item.raw.id}-${animationKey}`"
+              :id="`location-${internalItem.raw.id}`"
+              :key="`location-title-${internalItem.raw.id}-${animationKey}`"
               :class="{
-                'highlight-blink-title': highlightedId === item.raw.id,
+                'highlight-blink-title': highlightedId === internalItem.raw.id,
               }"
-              @contextmenu.prevent="openQuickLinkMenu($event, item.raw)"
+              @contextmenu.prevent="openQuickLinkMenu($event, internalItem.raw)"
             >
-              <span :class="{ 'text-primary font-weight-bold': item.isSearchResult }" :style="{ opacity: item.raw.archived_at ? 0.5 : 1 }">
-                {{ item.title }}
-                <v-chip v-if="item.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
+              <span :class="{ 'text-primary font-weight-bold': internalItem.raw.isSearchResult }" :style="{ opacity: internalItem.raw.archived_at ? 0.5 : 1 }">
+                {{ internalItem.title }}
+                <v-chip v-if="internalItem.raw.archived_at" size="x-small" color="warning" variant="tonal" class="ml-1">
                   {{ $t('common.archived') }}
                 </v-chip>
               </span>
             </div>
           </template>
 
-          <template #append="{ item }">
+          <template #append="{ internalItem }">
             <div class="d-flex align-center ga-1">
               <!-- Type chip -->
               <v-chip
-                v-if="item.raw.metadata?.type"
+                v-if="internalItem.raw.metadata?.type"
                 size="x-small"
                 color="primary"
                 variant="tonal"
                 class="mr-2"
               >
-                {{ $t(`locations.types.${item.raw.metadata.type}`, item.raw.metadata.type) }}
+                {{ $t(`locations.types.${internalItem.raw.metadata.type}`, internalItem.raw.metadata.type) }}
               </v-chip>
 
               <!-- Actions -->
@@ -144,31 +144,31 @@
                 icon="mdi-eye"
                 size="x-small"
                 variant="text"
-                @click.stop="viewLocation(item.raw)"
+                @click.stop="viewLocation(internalItem.raw)"
               />
               <v-btn
                 icon="mdi-pencil"
                 size="x-small"
                 variant="text"
-                @click.stop="editLocation(item.raw)"
+                @click.stop="editLocation(internalItem.raw)"
               />
               <v-btn
                 icon="mdi-graph"
                 size="x-small"
                 variant="text"
                 color="primary"
-                @click.stop="openChaosGraph(item.raw)"
+                @click.stop="openChaosGraph(internalItem.raw)"
               />
               <v-btn
-                :icon="item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
+                :icon="internalItem.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down'"
                 size="x-small"
                 variant="text"
-                :color="item.raw.archived_at ? 'success' : 'warning'"
-                @click.stop="archiveLocation(item.raw)"
+                :color="internalItem.raw.archived_at ? 'success' : 'warning'"
+                @click.stop="archiveLocation(internalItem.raw)"
               >
-                <v-icon>{{ item.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
+                <v-icon>{{ internalItem.raw.archived_at ? 'mdi-package-up' : 'mdi-archive-arrow-down' }}</v-icon>
                 <v-tooltip activator="parent" location="bottom">
-                  {{ item.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
+                  {{ internalItem.raw.archived_at ? $t('common.unarchive') : $t('common.archive') }}
                 </v-tooltip>
               </v-btn>
               <v-btn
@@ -176,7 +176,7 @@
                 size="x-small"
                 variant="text"
                 color="error"
-                @click.stop="deleteLocation(item.raw)"
+                @click.stop="deleteLocation(internalItem.raw)"
               />
             </div>
           </template>
