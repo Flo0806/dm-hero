@@ -71,10 +71,13 @@ RUN cd $(find node_modules/.pnpm -type d -name "better-sqlite3" -path "*/node_mo
 # Go back to app root
 WORKDIR /app
 
-# Create data directory for SQLite database and upload directories
+# Create data directory for SQLite database and upload directories.
+# Uploads land in /app/uploads (process.cwd()/uploads) — the /uploads/*
+# route is served by server/middleware/uploads.ts, not by serving the
+# .output/public folder.
 RUN mkdir -p /app/data && \
-    mkdir -p /app/.output/public/uploads && \
-    mkdir -p /app/.output/public/uploads/audio && \
+    mkdir -p /app/uploads && \
+    mkdir -p /app/uploads/audio && \
     chown -R node:node /app
 
 # Use non-root user for security
