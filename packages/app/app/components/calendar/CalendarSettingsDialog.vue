@@ -8,6 +8,7 @@
           <v-tab value="weekdays">{{ $t('calendar.weekdays') }}</v-tab>
           <v-tab value="moons">{{ $t('calendar.moons') }}</v-tab>
           <v-tab value="seasons">{{ $t('calendar.seasons') }}</v-tab>
+          <v-tab value="climateZones">{{ $t('calendar.climateZones') }}</v-tab>
           <v-tab value="current">{{ $t('calendar.currentDate') }}</v-tab>
         </v-tabs>
 
@@ -302,6 +303,104 @@
             </v-btn>
           </v-window-item>
 
+          <!-- Climate Zones Tab -->
+          <v-window-item value="climateZones">
+            <v-alert type="info" variant="tonal" class="mb-4">
+              {{ $t('calendar.climateZonesHint') }}
+            </v-alert>
+
+            <div v-if="zonesLoading" class="d-flex justify-center py-8">
+              <v-progress-circular indeterminate color="primary" />
+            </div>
+
+            <v-row v-else>
+              <v-col
+                v-for="zone in climateZones"
+                :key="zone.id"
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-card variant="outlined" class="pa-3 h-100 d-flex flex-column">
+                  <div class="d-flex align-center ga-2 mb-2">
+                    <v-icon :icon="zone.icon || 'mdi-earth'" :color="zone.color || 'primary'" size="32" />
+                    <h4 class="text-headline-small flex-grow-1 text-truncate" :title="zone.name">
+                      {{ zone.name }}
+                    </h4>
+                    <v-btn
+                      icon="mdi-delete"
+                      size="small"
+                      variant="text"
+                      color="error"
+                      :title="$t('calendar.deleteClimateZone')"
+                      @click="confirmDeleteZone(zone)"
+                    />
+                  </div>
+                  <div class="text-body-small text-medium-emphasis">
+                    {{ zone.profiles.length }} / {{ seasons.length }} {{ $t('calendar.seasons') }}
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <v-btn class="mt-4" color="primary" variant="tonal" @click="openCreateZoneDialog">
+              <v-icon start>mdi-plus</v-icon>
+              {{ $t('calendar.newClimateZone') }}
+            </v-btn>
+
+            <!-- Create dialog -->
+            <v-dialog v-model="showCreateZoneDialog" max-width="500" persistent>
+              <v-card>
+                <v-card-title>{{ $t('calendar.newClimateZone') }}</v-card-title>
+                <v-card-text>
+                  <v-text-field
+                    v-model="newZoneName"
+                    :label="$t('calendar.climateZoneName')"
+                    variant="outlined"
+                    density="comfortable"
+                    autofocus
+                    @keyup.enter="createZone"
+                  />
+                  <v-select
+                    v-model="newZonePresetName"
+                    :items="presetOptions"
+                    item-title="title"
+                    item-value="value"
+                    :label="$t('calendar.cloneFromPreset')"
+                    variant="outlined"
+                    density="comfortable"
+                  />
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn variant="text" @click="showCreateZoneDialog = false">
+                    {{ $t('common.cancel') }}
+                  </v-btn>
+                  <v-btn color="primary" variant="flat" :loading="zoneSaving" @click="createZone">
+                    {{ $t('common.save') }}
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+
+            <!-- Delete confirm -->
+            <v-dialog v-model="showDeleteZoneDialog" max-width="440">
+              <v-card v-if="deletingZone">
+                <v-card-title>{{ $t('calendar.deleteClimateZone') }}</v-card-title>
+                <v-card-text>
+                  {{ $t('calendar.deleteClimateZoneConfirm', { name: deletingZone.name }) }}
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn variant="text" @click="showDeleteZoneDialog = false">{{ $t('common.cancel') }}</v-btn>
+                  <v-btn color="error" variant="flat" :loading="zoneDeleting" @click="doDeleteZone">
+                    {{ $t('common.delete') }}
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-window-item>
+
           <!-- Current Date Tab -->
           <v-window-item value="current">
             <h3 class="text-headline-small mb-4">{{ $t('calendar.currentDate') }}</h3>
@@ -440,6 +539,7 @@
 
 <script setup lang="ts">
 import type { CalendarSeason } from '~~/types/calendar'
+import { CLIMATE_ZONE_PRESETS, type ClimateZoneWithProfiles, type ClimateZone } from '~~/types/climate-zone'
 
 interface CalendarMonth {
   id?: number
@@ -550,6 +650,105 @@ const form = defineModel<SettingsForm>('form', { required: true })
 const { t } = useI18n()
 
 const activeTab = ref('months')
+
+// ----------------------------------------------------------------------------
+// Climate zones (slice 3): list + create dialog. Profile editor ships next.
+// ----------------------------------------------------------------------------
+const climateZones = ref<ClimateZoneWithProfiles[]>([])
+const zonesLoading = ref(false)
+
+const showCreateZoneDialog = ref(false)
+const newZoneName = ref('')
+const newZonePresetName = ref<string | null>(null)
+const zoneSaving = ref(false)
+
+const showDeleteZoneDialog = ref(false)
+const deletingZone = ref<ClimateZoneWithProfiles | null>(null)
+const zoneDeleting = ref(false)
+
+const presetOptions = computed(() => [
+  { title: t('calendar.noPreset'), value: null },
+  ...CLIMATE_ZONE_PRESETS.map(p => ({ title: p.name, value: p.name })),
+])
+
+async function loadClimateZones() {
+  if (!campaignStore.activeCampaignIdNumber) return
+  zonesLoading.value = true
+  try {
+    climateZones.value = await $fetch<ClimateZoneWithProfiles[]>(
+      `/api/campaigns/${campaignStore.activeCampaignIdNumber}/climate-zones`,
+    )
+  }
+  catch (e) {
+    console.error('[climate-zones] load failed', e)
+  }
+  finally {
+    zonesLoading.value = false
+  }
+}
+
+// Load on first switch to the tab so the auto-seed only fires when the user
+// actually visits the climate-zones section.
+watch(activeTab, (next) => {
+  if (next === 'climateZones' && climateZones.value.length === 0 && !zonesLoading.value) {
+    void loadClimateZones()
+  }
+})
+
+function openCreateZoneDialog() {
+  newZoneName.value = ''
+  newZonePresetName.value = null
+  showCreateZoneDialog.value = true
+}
+
+async function createZone() {
+  const name = newZoneName.value.trim()
+  if (!name || !campaignStore.activeCampaignIdNumber) return
+  zoneSaving.value = true
+  try {
+    await $fetch<ClimateZone>(
+      `/api/campaigns/${campaignStore.activeCampaignIdNumber}/climate-zones`,
+      {
+        method: 'POST',
+        body: { name, cloneFromPreset: newZonePresetName.value ?? undefined },
+      },
+    )
+    await loadClimateZones()
+    showCreateZoneDialog.value = false
+    snackbarStore.success(t('calendar.climateZoneCreated'))
+  }
+  catch (e) {
+    console.error('[climate-zones] create failed', e)
+    snackbarStore.error(t('calendar.climateZoneError'))
+  }
+  finally {
+    zoneSaving.value = false
+  }
+}
+
+function confirmDeleteZone(zone: ClimateZoneWithProfiles) {
+  deletingZone.value = zone
+  showDeleteZoneDialog.value = true
+}
+
+async function doDeleteZone() {
+  if (!deletingZone.value) return
+  zoneDeleting.value = true
+  try {
+    await $fetch(`/api/climate-zones/${deletingZone.value.id}`, { method: 'DELETE' })
+    await loadClimateZones()
+    showDeleteZoneDialog.value = false
+    deletingZone.value = null
+    snackbarStore.success(t('calendar.climateZoneDeleted'))
+  }
+  catch (e) {
+    console.error('[climate-zones] delete failed', e)
+    snackbarStore.error(t('calendar.climateZoneError'))
+  }
+  finally {
+    zoneDeleting.value = false
+  }
+}
 
 // Computed: Max days in currently selected month
 const maxDaysInCurrentMonth = computed(() => {
