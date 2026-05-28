@@ -321,7 +321,13 @@
                 sm="6"
                 md="4"
               >
-                <v-card variant="outlined" class="pa-3 h-100 d-flex flex-column">
+                <v-card
+                  variant="outlined"
+                  class="pa-3 h-100 d-flex flex-column"
+                  hover
+                  style="cursor: pointer"
+                  @click="openEditZoneDialog(zone)"
+                >
                   <div class="d-flex align-center ga-2 mb-2">
                     <v-icon :icon="zone.icon || 'mdi-earth'" :color="zone.color || 'primary'" size="32" />
                     <h4 class="text-headline-small flex-grow-1 text-truncate" :title="zone.name">
@@ -333,7 +339,7 @@
                       variant="text"
                       color="error"
                       :title="$t('calendar.deleteClimateZone')"
-                      @click="confirmDeleteZone(zone)"
+                      @click.stop="confirmDeleteZone(zone)"
                     />
                   </div>
                   <div class="text-body-small text-medium-emphasis">
@@ -382,6 +388,14 @@
                 </v-card-actions>
               </v-card>
             </v-dialog>
+
+            <!-- Edit dialog (zone metadata + per-season profile editor) -->
+            <ClimateZoneEditDialog
+              v-model:show="showEditZoneDialog"
+              :zone="editingZone"
+              :seasons="seasons"
+              @saved="loadClimateZones"
+            />
 
             <!-- Delete confirm -->
             <v-dialog v-model="showDeleteZoneDialog" max-width="440">
@@ -540,6 +554,7 @@
 <script setup lang="ts">
 import type { CalendarSeason } from '~~/types/calendar'
 import { CLIMATE_ZONE_PRESETS, type ClimateZoneWithProfiles, type ClimateZone } from '~~/types/climate-zone'
+import ClimateZoneEditDialog from '~/components/calendar/ClimateZoneEditDialog.vue'
 
 interface CalendarMonth {
   id?: number
@@ -665,6 +680,14 @@ const zoneSaving = ref(false)
 const showDeleteZoneDialog = ref(false)
 const deletingZone = ref<ClimateZoneWithProfiles | null>(null)
 const zoneDeleting = ref(false)
+
+const showEditZoneDialog = ref(false)
+const editingZone = ref<ClimateZoneWithProfiles | null>(null)
+
+function openEditZoneDialog(zone: ClimateZoneWithProfiles) {
+  editingZone.value = zone
+  showEditZoneDialog.value = true
+}
 
 const presetOptions = computed(() => [
   { title: t('calendar.noPreset'), value: null },
