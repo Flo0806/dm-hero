@@ -1041,6 +1041,9 @@ async function onClimateAreaDrag(data: { area: MapClimateArea, x: number, y: num
   }
   catch (error) {
     console.error('Failed to move climate area:', error)
+    snackbarStore.error(t('calendar.climateZoneError'))
+    // Revert the optimistic drag to the server position.
+    await reloadClimateAreas()
   }
 }
 
@@ -1053,6 +1056,9 @@ async function deleteClimateArea() {
   }
   catch (error) {
     console.error('Failed to delete climate area:', error)
+    snackbarStore.error(t('calendar.climateZoneError'))
+    // Keep the dialog open + resync so the circle stays consistent with the DB.
+    await reloadClimateAreas()
   }
 }
 

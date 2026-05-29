@@ -404,6 +404,8 @@ function updateClimateAreas() {
     })
     // Tooltip: zone name + current weather (temp + type) when available, plus
     // a small lock hint. No separate popup — everything lives in the tooltip.
+    // Build the DOM with textContent so user-controlled values (zone name) are
+    // never interpreted as HTML (XSS-safe).
     const w = props.climateWeather?.[area.id]
     const parts = [area.zone_name || 'Zone']
     if (w) {
@@ -411,10 +413,17 @@ function updateClimateAreas() {
       parts.push(`${temp}${t(`calendar.weather.types.${w.weather_type}`, w.weather_type)}`)
     }
     const lockHint = unlocked ? t('maps.climateUnlocked') : t('maps.climateLocked')
-    lockMarker.bindTooltip(
-      `<strong>${parts.join(' · ')}</strong><br><span style="opacity:0.7;font-size:0.85em">${lockHint}</span>`,
-      { direction: 'top' },
-    )
+    const tooltipEl = document.createElement('div')
+    const titleEl = document.createElement('strong')
+    titleEl.textContent = parts.join(' · ')
+    const hintEl = document.createElement('span')
+    hintEl.style.opacity = '0.7'
+    hintEl.style.fontSize = '0.85em'
+    hintEl.textContent = lockHint
+    tooltipEl.appendChild(titleEl)
+    tooltipEl.appendChild(document.createElement('br'))
+    tooltipEl.appendChild(hintEl)
+    lockMarker.bindTooltip(tooltipEl, { direction: 'top' })
     lockMarker.on('mouseover', () => circle.setStyle({ fillOpacity: HOVER_FILL }))
     lockMarker.on('mouseout', () => circle.setStyle({ fillOpacity: unlocked ? UNLOCKED_FILL : LOCKED_FILL }))
     lockMarker.on('click', (e: LeafletMouseEvent) => {
