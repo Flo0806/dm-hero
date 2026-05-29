@@ -1,5 +1,25 @@
 # @dm-hero/app
 
+## 1.4.0
+
+### Minor Changes
+
+- 3482ae9: feat: AI bulk-import via MCP (#321) — connect an external AI assistant (Claude, Cursor …) to DM Hero through a small stdio MCP server and let it fill a campaign for you. A self-describing contract endpoint tells the AI exactly what's possible (entity types, relation keys, per-type metadata, available races/classes/item types), so it can build valid payloads without the source. The AI can: list/create campaigns; search existing entities to get their ids; create NPCs/Locations/Items/Factions/Lore with tags, folders and relations; link new content to entities that already exist ("existing:<id>"); and edit existing entities (merge metadata, replace tags, move folder). Every write is strictly validated server-side and previewable as a dry-run before commit. The dashboard gains a "Connect your AI" dialog with copy-paste setup for common assistants, and the app shows a snackbar + refreshes its lists automatically after an AI import or edit (only for AI changes, never manual ones).
+- 9a4fa7a: feat: climate zones for weather generation — per-campaign zones with temperature + weather-distribution profiles per season, a per-zone weather generator (zone A sunny while zone B rains on the same day), a zone view-switcher in the calendar, and zones drawn as circles on maps (lockable per circle, weather shown in the hover tooltip). Export/import carries zones, profiles, per-zone weather and map circles — fully backwards compatible (older exports import unchanged). Migration runner hardened against the dev double-init race.
+- c0b3579: feat: emily teal "Deep Lagoon" theme (community tribute) with layered radial-gradient page background, coral-accented destructive actions, and a procedural distant-lightning easter egg on the dashboard (every 4–15 s, fresh bolt + branch each strike, screen-blend flash stays behind cards). Reduced-motion + animations toggle respected.
+- b13ed45: feat: folders for NPCs, items, factions and lore — flat phase-1 UI on a nesting-ready schema, move menu, folder-open view with drag-pool, easter-egg hover animations (toggle in Settings), backwards-compatible export/import with silent `Name (1)` rename on collision
+- 791a7c7: feat: tags for all entities with `#tag` search, color picker, batched store, and export/import preservation
+- d28a327: feat: per-theme dashboard ambience (#322) — every theme now has its own fitting background animation on the dashboard. Seven themes use a parameterised particle field with distinct modes (rising embers/bubbles, falling dust, drifting motes, twinkling sparkles, fireflies, diagonal streaks), each in the theme's palette; the "emily" theme keeps its bespoke lightning (now a livelier cadence). All ambience sits behind the cards, is purely decorative, and is gated on the existing "Spielereien" setting + prefers-reduced-motion.
+- 09bc84c: feat: upgrade to vuetify 4 with 7 themes, persistent theme switcher and reusable feature-tooltip bubble
+
+### Patch Changes
+
+- dcbccb3: fix: persist uploaded files in docker — `docker-compose.yml` and the dockerfile now use `/app/uploads`, which is where the server actually writes. previously uploads landed in a directory that was not the docker volume mount and were lost on container restart.
+- 71d5356: fix: merge-import no longer wipes the target campaign's calendar when the import file carries an "empty" calendar (a default config row but zero months). Both the conflict check and the import step now share one guard (`hasImportableCalendar`), so a calendar is only deleted/replaced when the import actually has months. (#297)
+- db60a50: fix: NPC search no longer drops the typed term when it fuzzily matches a race/class (#313). A 5-character query like "Baldu" fuzzily matched the class "barde" (Levenshtein 2) and replaced the search, so the NPC "Balduwan" was never found. Race/class/type expansion now ADDS its variants alongside the literal term prefix instead of replacing it, so name prefix matches always survive.
+- ca00b6e: fix: show npc names and use correct id in the npc view relations tab (map api fields `related_npc_name` / `related_npc_id` instead of the non-existent `name` / `id`)
+- f8f6041: feat: show a per-release codename in the header — each minor release gets its own name in its own font (1.4 = "The Summoning", Pirata One). Fonts are bundled locally (offline-safe).
+
 ## 1.3.4
 
 ### Patch Changes
