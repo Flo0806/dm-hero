@@ -61,7 +61,9 @@
   },
   "aiImport": {
     "imported": "AI imported {count} entries into this campaign",
-    "importedOther": "AI imported {count} entries into another campaign"
+    "importedOther": "AI imported {count} entries into another campaign",
+    "updated": "AI edited {count} entries in this campaign",
+    "updatedOther": "AI edited {count} entries in another campaign"
   },
   "playfulness": {
     "title": "Playfulness",

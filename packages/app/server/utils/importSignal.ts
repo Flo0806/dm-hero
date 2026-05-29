@@ -10,21 +10,25 @@
  * It resets on server restart, which is fine: the app re-syncs its baseline on
  * the next poll and only reacts to imports that happen while it is running.
  */
+export type ImportAction = 'import' | 'update'
+
 export interface ImportSignal {
   seq: number
   at: string | null
+  action: ImportAction | null
   campaignId: number | null
   byType: Record<string, number> | null
   total: number
 }
 
-let signal: ImportSignal = { seq: 0, at: null, campaignId: null, byType: null, total: 0 }
+let signal: ImportSignal = { seq: 0, at: null, action: null, campaignId: null, byType: null, total: 0 }
 
-export function recordImport(campaignId: number, byType: Record<string, number>) {
+export function recordImport(campaignId: number, byType: Record<string, number>, action: ImportAction = 'import') {
   const total = Object.values(byType).reduce((sum, n) => sum + n, 0)
   signal = {
     seq: signal.seq + 1,
     at: new Date().toISOString(),
+    action,
     campaignId,
     byType,
     total,

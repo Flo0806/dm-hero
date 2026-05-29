@@ -3,6 +3,7 @@ import { convertMetadataToKeys, getLocaleFromEvent } from '~~/server/utils/i18n-
 import { normaliseTagName, isValidTagName, DEFAULT_TAG_COLOR } from '~~/types/tag'
 import { entityTypeToFolderType } from '~~/server/utils/folders'
 import { recordImport } from '~~/server/utils/importSignal'
+import { parseExistingId } from '~~/server/utils/importRefs'
 
 /**
  * AI bulk-import: create entities + relations in one validated call.
@@ -80,13 +81,31 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // --- validate relations reference known refs ---
+  // --- validate relations: each end is a payload ref OR existing:<id> ---
+  const existingIds = new Set<number>()
   for (const [i, r] of relations.entries()) {
     const at = `relations[${i}]`
     if (!r.type || !String(r.type).trim()) errors.push(`${at}: type is required`)
-    if (!r.from || !refs.has(r.from)) errors.push(`${at}: from "${r.from}" is not a known entity ref`)
-    if (!r.to || !refs.has(r.to)) errors.push(`${at}: to "${r.to}" is not a known entity ref`)
+    for (const end of ['from', 'to'] as const) {
+      const v = r[end]
+      const exId = parseExistingId(v)
+      if (exId !== null) existingIds.add(exId)
+      else if (!v || !refs.has(v)) errors.push(`${at}: ${end} "${v}" is not a known entity ref or "existing:<id>"`)
+    }
     if (r.from && r.from === r.to) errors.push(`${at}: from and to are the same`)
+  }
+
+  // Verify referenced existing entities really live in this campaign.
+  if (existingIds.size > 0 && Number.isFinite(campaignId) && campaignId > 0) {
+    const ids = [...existingIds]
+    const placeholders = ids.map(() => '?').join(',')
+    const found = db
+      .prepare(`SELECT id FROM entities WHERE id IN (${placeholders}) AND campaign_id = ? AND deleted_at IS NULL`)
+      .all(...ids, campaignId) as { id: number }[]
+    const foundSet = new Set(found.map(row => row.id))
+    for (const id of ids) {
+      if (!foundSet.has(id)) errors.push(`relations: existing entity ${id} not found in this campaign`)
+    }
   }
 
   if (errors.length > 0) {
@@ -191,8 +210,8 @@ export default defineEventHandler(async (event) => {
     // Relations (bidirectional store: one row, queried both directions elsewhere)
     let relationsCreated = 0
     for (const r of relations) {
-      const fromId = refToId.get(r.from!)
-      const toId = refToId.get(r.to!)
+      const fromId = parseExistingId(r.from) ?? refToId.get(r.from!)
+      const toId = parseExistingId(r.to) ?? refToId.get(r.to!)
       if (fromId && toId) {
         insertRelation.run(fromId, toId, String(r.type))
         relationsCreated++

@@ -181,21 +181,23 @@ if (import.meta.client) {
   const { t } = useI18n()
   let lastSeq = -1
 
-  const handleAiImport = async (campaignId: number | null, total: number) => {
+  const handleAiImport = async (action: 'import' | 'update', campaignId: number | null, total: number) => {
     const active = campaignStore.activeCampaignIdNumber
-    if (campaignId && active === campaignId) {
-      snackbarStore.success(t('aiImport.imported', { count: total }))
-      await entitiesStore.refetchLoaded(active)
+    const here = !!campaignId && active === campaignId
+    const key = `aiImport.${action === 'update' ? 'updated' : 'imported'}${here ? '' : 'Other'}`
+    if (here) {
+      snackbarStore.success(t(key, { count: total }))
+      await entitiesStore.refetchLoaded(active!)
       await foldersStore.refetchLoaded()
     }
     else {
-      snackbarStore.info(t('aiImport.importedOther', { count: total }))
+      snackbarStore.info(t(key, { count: total }))
     }
   }
 
   const pollImportSignal = async () => {
     try {
-      const sig = await $fetch<{ seq: number, campaignId: number | null, total: number }>(
+      const sig = await $fetch<{ seq: number, action: 'import' | 'update' | null, campaignId: number | null, total: number }>(
         '/api/import/status',
       )
       // First poll establishes the baseline so we don't react to imports that
@@ -206,7 +208,7 @@ if (import.meta.client) {
       }
       if (sig.seq > lastSeq) {
         lastSeq = sig.seq
-        await handleAiImport(sig.campaignId, sig.total)
+        await handleAiImport(sig.action ?? 'import', sig.campaignId, sig.total)
       }
     }
     catch {

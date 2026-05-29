@@ -78,9 +78,18 @@ const entitySchema = z.object({
   folder: z.string().optional().describe('Folder name for NPC/Item/Faction/Lore; created if missing.'),
 })
 const relationSchema = z.object({
-  from: z.string().describe('An entity ref from this payload.'),
-  to: z.string().describe('An entity ref from this payload.'),
+  from: z.string().describe('A payload ref ("npc:1"), OR an entity that already exists as "existing:<id>" (find ids with search_entities).'),
+  to: z.string().describe('A payload ref ("item:1"), OR an entity that already exists as "existing:<id>".'),
   type: z.string().describe('Relation key — see get_contract.relationTypes (e.g. owns, knows, livesIn).'),
+})
+
+const updateSchema = z.object({
+  id: z.number().int().positive().describe('Existing entity id (get it via search_entities).'),
+  name: z.string().optional().describe('New name.'),
+  description: z.string().optional().describe('New description ("" clears it).'),
+  metadata: z.record(z.string(), z.any()).optional().describe('Fields to MERGE into existing metadata; set a key to null to remove it. See get_contract for per-type fields.'),
+  folder: z.string().nullable().optional().describe('Folder name (created if missing); "" or null removes from folder.'),
+  tags: z.array(z.string()).optional().describe('REPLACES the entity\'s whole tag set (lowercase a-z + hyphens).'),
 })
 
 const server = new McpServer({ name: 'dm-hero', version: '1.0.0' })
@@ -142,6 +151,45 @@ server.registerTool('import_entities', {
   },
 }, async (payload) => {
   const r = await callApi('/api/import/bulk', { method: 'POST', body: JSON.stringify(payload) })
+  return asText(r.body)
+})
+
+server.registerTool('search_entities', {
+  description: 'Find entities that ALREADY EXIST in a campaign and get their ids. Real use: a PDF says "lives in Eichwald, knows Mayor Hane, owns the Sword of Y" — search each name to get its id, then reference it in a relation as "existing:<id>" (import_entities) or edit it (update_entities). With no query it lists what the campaign has (optionally filtered by type). ALWAYS prefer linking to an existing entity over creating a duplicate.',
+  inputSchema: {
+    campaignId: z.number().int().positive(),
+    query: z.string().optional().describe('Name to search for (case-insensitive substring). Omit to list all.'),
+    type: z.enum(['NPC', 'Location', 'Item', 'Faction', 'Lore']).optional(),
+    limit: z.number().int().positive().optional().describe('Max results (default 100, capped 500).'),
+  },
+}, async ({ campaignId, query, type, limit }) => {
+  const params = new URLSearchParams({ campaignId: String(campaignId) })
+  if (query) params.set('q', query)
+  if (type) params.set('type', type)
+  if (limit) params.set('limit', String(limit))
+  const r = await callApi(`/api/import/entities?${params.toString()}`)
+  return asText(r.body)
+})
+
+server.registerTool('preview_update', {
+  description: 'Dry-run an edit of existing entities: validates and returns what WOULD change (merged metadata, resolved folder/tags) WITHOUT writing. Always preview before updating so the user can confirm.',
+  inputSchema: {
+    campaignId: z.number().int().positive(),
+    updates: z.array(updateSchema).min(1),
+  },
+}, async (payload) => {
+  const r = await callApi('/api/import/update?dryRun=true', { method: 'POST', body: JSON.stringify(payload) })
+  return asText(r.body)
+})
+
+server.registerTool('update_entities', {
+  description: 'Edit existing entities the user asked you to change: set name/description, MERGE metadata (a key set to null removes it), move to a folder, or REPLACE tags. Target each by its id (from search_entities). Only the fields you pass change. Preview with preview_update first and only commit after the user confirms.',
+  inputSchema: {
+    campaignId: z.number().int().positive(),
+    updates: z.array(updateSchema).min(1),
+  },
+}, async (payload) => {
+  const r = await callApi('/api/import/update', { method: 'POST', body: JSON.stringify(payload) })
   return asText(r.body)
 })
 

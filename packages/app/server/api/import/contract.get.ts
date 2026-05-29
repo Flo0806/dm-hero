@@ -115,7 +115,14 @@ export default defineEventHandler((event) => {
       ],
     },
 
-    note: 'Relations are bidirectional. `type` is stored verbatim — pick from relationTypes for proper labels.',
+    // Linking to entities that already exist, and editing them.
+    workingWithExisting: {
+      search: 'GET /api/import/entities?campaignId&q&type — find existing entities by name/type and get their ids. Always prefer linking to an existing entity over creating a duplicate.',
+      linkExisting: 'In a relation, a `from`/`to` may be a payload ref ("npc:1") OR an existing entity as "existing:<id>". So a new NPC can link to an entity that already exists (e.g. { from: "npc:1", to: "existing:123", type: "livesIn" }), and two existing entities can be linked too.',
+      edit: 'POST /api/import/update — change existing entities by id: { campaignId, updates: [{ id, name?, description?, metadata?, folder?, tags? }] }. metadata is MERGED (a key set to null removes it); tags REPLACE the set. Supports ?dryRun=true.',
+    },
+
+    note: 'Relations are bidirectional. `type` is stored verbatim — pick from relationTypes for proper labels. Relation ends accept "existing:<id>" to link to entities that already exist (find ids via GET /api/import/entities).',
     campaignId: getQuery(event).campaignId ?? null,
   }
 })

@@ -61,7 +61,9 @@
   },
   "aiImport": {
     "imported": "KI hat {count} Einträge in diese Kampagne importiert",
-    "importedOther": "KI hat {count} Einträge in eine andere Kampagne importiert"
+    "importedOther": "KI hat {count} Einträge in eine andere Kampagne importiert",
+    "updated": "KI hat {count} Einträge in dieser Kampagne bearbeitet",
+    "updatedOther": "KI hat {count} Einträge in einer anderen Kampagne bearbeitet"
   },
   "playfulness": {
     "title": "Spielereien",
