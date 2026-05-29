@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto'
 import { pipeline } from 'stream/promises'
 import { getDb } from '~~/server/utils/db'
 import { getUploadPath } from '~~/server/utils/paths'
+import { hasImportableCalendar } from '~~/server/utils/calendarImport'
 import { STANDARD_RACE_KEYS, STANDARD_CLASS_KEYS } from '~~/server/utils/i18n-lookup'
 import {
   isValidTagName,
@@ -516,9 +517,14 @@ export default defineEventHandler(async (event) => {
     // CALENDAR CONFLICT DETECTION (merge mode only, can check before campaign creation)
     // ==========================================================================
 
+    // Only a calendar WITH months counts as real — an empty one would wipe the
+    // target campaign's calendar on import. Shared by the conflict check and the
+    // import below so they can never diverge again. (#297)
+    const importHasCalendar = hasImportableCalendar(manifest.calendar)
+
     if (options.mode === 'merge' && options.targetCampaignId) {
       // Check for calendar conflict using targetCampaignId
-      if (manifest.calendar && manifest.calendar.months && manifest.calendar.months.length > 0) {
+      if (importHasCalendar) {
         const existingMonths = db
           .prepare('SELECT COUNT(*) as count FROM calendar_months WHERE campaign_id = ?')
           .get(options.targetCampaignId) as { count: number }
@@ -1171,8 +1177,9 @@ export default defineEventHandler(async (event) => {
     // IMPORT CALENDAR
     // ==========================================================================
 
-    // Skip calendar import if user chose to keep existing
-    const shouldImportCalendar = manifest.calendar && options.calendarResolution !== 'keep'
+    // Skip calendar import if there's no real calendar to import (see #297) or
+    // the user chose to keep the existing one.
+    const shouldImportCalendar = importHasCalendar && options.calendarResolution !== 'keep'
 
     if (shouldImportCalendar) {
       const cal = manifest.calendar!
