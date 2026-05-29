@@ -83,10 +83,10 @@
           color="primary"
           closable
           class="mr-2"
-          :prepend-icon="addMode === 'marker' ? 'mdi-map-marker-plus' : 'mdi-map-marker-radius'"
+          :prepend-icon="addModeIcon"
           @click:close="addMode = null"
         >
-          {{ addMode === 'marker' ? $t('maps.addingMarker') : $t('maps.addingArea') }}
+          {{ addModeLabel }}
         </v-chip>
 
         <!-- Entity type filters -->
@@ -128,6 +128,11 @@
               :title="$t('maps.addArea')"
               @click="startAddArea"
             />
+            <v-list-item
+              prepend-icon="mdi-weather-partly-cloudy"
+              :title="$t('maps.addClimateArea')"
+              @click="startAddClimate"
+            />
           </v-list>
         </v-menu>
       </div>
@@ -139,6 +144,7 @@
             :map="selectedMap"
             :markers="filteredMarkers"
             :areas="selectedMapAreas"
+            :climate-areas="selectedMapClimateAreas"
             :measure-points="measurePoints"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
@@ -149,6 +155,8 @@
             @area-click="onAreaClick"
             @area-right-click="onAreaRightClick"
             @area-drag="onAreaDrag"
+            @climate-area-right-click="onClimateAreaRightClick"
+            @climate-area-drag="onClimateAreaDrag"
           />
         </ClientOnly>
         <!-- Help badges -->
@@ -361,6 +369,65 @@
       @deleted="onAreaDeleted"
     />
 
+    <!-- Pick a climate zone to paint at the clicked spot -->
+    <v-dialog v-model="showAddClimateDialog" max-width="420">
+      <v-card>
+        <v-card-title>{{ $t('maps.addClimateArea') }}</v-card-title>
+        <v-card-text>
+          <div v-if="climateZoneOptions.length === 0" class="text-medium-emphasis">
+            {{ $t('maps.noClimateZones') }}
+          </div>
+          <v-list v-else density="compact">
+            <v-list-item
+              v-for="zone in climateZoneOptions"
+              :key="zone.id"
+              :prepend-icon="zone.icon || 'mdi-earth'"
+              :title="zone.name"
+              @click="createClimateArea(zone.id)"
+            >
+              <template #prepend>
+                <v-avatar :color="zone.color || 'primary'" size="20" class="mr-3" />
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showAddClimateDialog = false">{{ $t('common.cancel') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Resize / delete a climate circle (right-click) -->
+    <v-dialog v-model="showEditClimateDialog" max-width="420">
+      <v-card v-if="editingClimateArea">
+        <v-card-title class="d-flex align-center ga-2">
+          <v-avatar :color="editingClimateArea.zone_color || 'primary'" size="20" />
+          {{ editingClimateArea.zone_name }}
+        </v-card-title>
+        <v-card-text>
+          <div class="text-body-small text-medium-emphasis mb-1">{{ $t('maps.radius') }}</div>
+          <v-slider
+            v-model="climateAreaRadius"
+            :min="2"
+            :max="50"
+            :step="1"
+            thumb-label
+            color="primary"
+            hide-details
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="error" variant="text" prepend-icon="mdi-delete" @click="deleteClimateArea">
+            {{ $t('common.delete') }}
+          </v-btn>
+          <v-spacer />
+          <v-btn variant="text" @click="showEditClimateDialog = false">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="primary" variant="flat" @click="saveClimateAreaRadius">{{ $t('common.save') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Delete Confirmation -->
     <UiDeleteConfirmDialog
       v-model="showDeleteDialog"
@@ -475,7 +542,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
+import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
 import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
 import type { EntityPreviewType } from '~/components/shared/EntityPreviewDialog.vue'
 import { useSnackbarStore } from '~/stores/snackbar'
@@ -495,16 +562,38 @@ const showUploadDialog = ref(false)
 const showEditDialog = ref(false)
 const showAddMarkerDialog = ref(false)
 const showAddAreaDialog = ref(false)
+const showAddClimateDialog = ref(false)
+const showEditClimateDialog = ref(false)
+const editingClimateArea = ref<MapClimateArea | null>(null)
+const climateAreaRadius = ref(8)
 const showDeleteDialog = ref(false)
 const showEntityPreview = ref(false)
 
+// Climate-area placement: clicked position + the campaign's zones to pick from.
+const climatePosition = ref<{ x: number, y: number } | null>(null)
+interface ClimateZoneOption { id: number, name: string, color: string | null, icon: string | null }
+const climateZoneOptions = ref<ClimateZoneOption[]>([])
+
+async function loadClimateZoneOptions() {
+  if (!activeCampaignId.value) return
+  try {
+    climateZoneOptions.value = await $fetch<ClimateZoneOption[]>(
+      `/api/campaigns/${activeCampaignId.value}/climate-zones`,
+    )
+  }
+  catch (error) {
+    console.error('Failed to load climate zones:', error)
+  }
+}
+
 // Mode for what happens on map click
-type AddMode = 'marker' | 'area' | null
+type AddMode = 'marker' | 'area' | 'climate' | null
 const addMode = ref<AddMode>(null)
 
 const selectedMap = ref<CampaignMap | null>(null)
 const selectedMapMarkers = ref<MapMarker[]>([])
 const selectedMapAreas = ref<MapArea[]>([])
+const selectedMapClimateAreas = ref<MapClimateArea[]>([])
 const deletingMap = ref<CampaignMap | null>(null)
 
 // Entity type filter
@@ -685,10 +774,12 @@ async function selectMap(map: CampaignMap) {
   addMode.value = 'marker' // Default mode when opening map
 
   try {
-    const details = await $fetch<CampaignMap & { markers: MapMarker[], areas: MapArea[] }>(`/api/maps/${map.id}`)
+    const details = await $fetch<CampaignMap & { markers: MapMarker[], areas: MapArea[], climateAreas: MapClimateArea[] }>(`/api/maps/${map.id}`)
     selectedMap.value = details
     selectedMapMarkers.value = details.markers || []
     selectedMapAreas.value = details.areas || []
+    selectedMapClimateAreas.value = details.climateAreas || []
+    await loadClimateZoneOptions()
   }
   catch (error) {
     console.error('Failed to load map details:', error)
@@ -700,9 +791,22 @@ function closeMap() {
   selectedMap.value = null
   selectedMapMarkers.value = []
   selectedMapAreas.value = []
+  selectedMapClimateAreas.value = []
   addMode.value = null
   measureMode.value = false
   measurePoints.value = []
+}
+
+// Reload just the climate areas for the current map.
+async function reloadClimateAreas() {
+  if (!selectedMap.value) return
+  try {
+    const details = await $fetch<{ climateAreas: MapClimateArea[] }>(`/api/maps/${selectedMap.value.id}`)
+    selectedMapClimateAreas.value = details.climateAreas || []
+  }
+  catch (error) {
+    console.error('Failed to reload climate areas:', error)
+  }
 }
 
 // Upload new map
@@ -785,6 +889,14 @@ function onMapClick(position: { x: number, y: number }) {
     return
   }
 
+  if (addMode.value === 'climate') {
+    // Pick which zone to paint at the clicked position.
+    climatePosition.value = position
+    showAddClimateDialog.value = true
+    addMode.value = null
+    return
+  }
+
   if (addMode.value === 'area') {
     // Create new area at clicked position
     editingArea.value = null
@@ -810,6 +922,96 @@ function startAddMarker() {
 function startAddArea() {
   addMode.value = 'area'
   // User will click on map to set position
+}
+
+function startAddClimate() {
+  addMode.value = 'climate'
+  // User will click on the map, then pick a zone in the dialog
+}
+
+const addModeIcon = computed(() => {
+  if (addMode.value === 'marker') return 'mdi-map-marker-plus'
+  if (addMode.value === 'climate') return 'mdi-weather-partly-cloudy'
+  return 'mdi-map-marker-radius'
+})
+const addModeLabel = computed(() => {
+  if (addMode.value === 'marker') return t('maps.addingMarker')
+  if (addMode.value === 'climate') return t('maps.addingClimate')
+  return t('maps.addingArea')
+})
+
+// Create a climate circle once the user picked a zone for the clicked position.
+async function createClimateArea(zoneId: number) {
+  if (!selectedMap.value || !climatePosition.value) return
+  try {
+    await $fetch(`/api/maps/${selectedMap.value.id}/climate-areas`, {
+      method: 'POST',
+      body: {
+        zone_id: zoneId,
+        center_x: climatePosition.value.x,
+        center_y: climatePosition.value.y,
+      },
+    })
+    await reloadClimateAreas()
+  }
+  catch (error) {
+    console.error('Failed to create climate area:', error)
+    snackbarStore.error(t('calendar.climateZoneError'))
+  }
+  finally {
+    showAddClimateDialog.value = false
+    climatePosition.value = null
+  }
+}
+
+// Right-click opens an edit popup: resize (radius) + delete. Mirrors how
+// location areas are edited.
+function onClimateAreaRightClick(area: MapClimateArea) {
+  editingClimateArea.value = area
+  climateAreaRadius.value = area.radius
+  showEditClimateDialog.value = true
+}
+
+async function saveClimateAreaRadius() {
+  if (!selectedMap.value || !editingClimateArea.value) return
+  try {
+    await $fetch(`/api/maps/${selectedMap.value.id}/climate-areas/${editingClimateArea.value.id}`, {
+      method: 'PATCH',
+      body: { radius: climateAreaRadius.value },
+    })
+    await reloadClimateAreas()
+    showEditClimateDialog.value = false
+  }
+  catch (error) {
+    console.error('Failed to resize climate area:', error)
+    snackbarStore.error(t('calendar.climateZoneError'))
+  }
+}
+
+async function onClimateAreaDrag(data: { area: MapClimateArea, x: number, y: number }) {
+  if (!selectedMap.value) return
+  try {
+    await $fetch(`/api/maps/${selectedMap.value.id}/climate-areas/${data.area.id}`, {
+      method: 'PATCH',
+      body: { center_x: data.x, center_y: data.y },
+    })
+    await reloadClimateAreas()
+  }
+  catch (error) {
+    console.error('Failed to move climate area:', error)
+  }
+}
+
+async function deleteClimateArea() {
+  if (!selectedMap.value || !editingClimateArea.value) return
+  try {
+    await $fetch(`/api/maps/${selectedMap.value.id}/climate-areas/${editingClimateArea.value.id}`, { method: 'DELETE' })
+    await reloadClimateAreas()
+    showEditClimateDialog.value = false
+  }
+  catch (error) {
+    console.error('Failed to delete climate area:', error)
+  }
 }
 
 async function onMarkerSaved(_marker: MapMarker) {
