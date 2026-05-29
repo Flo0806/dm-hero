@@ -2,7 +2,7 @@ import pkg from './package.json'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt'],
+  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt', 'nuxt-spyglass'],
   devtools: { enabled: true },
 
   app: {
@@ -76,6 +76,14 @@ export default defineNuxtConfig({
     compilation: {
       strictMessage: false, // Allow HTML in i18n messages (for announcements)
     },
+  },
+
+  // Dev-only unified browser+server log capture for AI debugging. Module is a
+  // no-op in production builds (it checks `nuxt.options.dev` internally).
+  // Logs land in .data/spyglass/logs.ndjson (gitignored by default).
+  spyglass: {
+    enabled: true,
+    logFile: '.data/spyglass/logs.ndjson',
   },
 })
 
