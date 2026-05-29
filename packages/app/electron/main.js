@@ -151,6 +151,10 @@ async function startServer() {
       UPLOAD_PATH: paths.uploadPath,
       LOG_PATH: paths.logsPath,
       NITRO_OUTPUT_DIR: outputDir,
+      // For the dashboard "Connect your AI" dialog: the app's API URL + the
+      // bundled MCP bin path (extraResources → resources/mcp/mcp.mjs).
+      DM_HERO_APP_URL: `http://127.0.0.1:${PROD_SERVER_PORT}`,
+      DM_HERO_MCP_PATH: path.join(process.resourcesPath, 'mcp', 'mcp.mjs'),
     },
     cwd: outputDir,
     stdio: 'pipe',

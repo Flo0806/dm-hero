@@ -47,9 +47,28 @@
     "orange": "Orange (Campfire)",
     "emily": "Emily (Deep Lagoon)"
   },
+  "connectAi": {
+    "button": "Connect your AI",
+    "title": "Connect DM Hero to your AI",
+    "intro": "Connect an AI assistant (Claude, Cursor …) via MCP - it can then create NPCs, locations, items, factions and lore directly in DM Hero. Keep DM Hero open while it works.",
+    "notBuilt": "The MCP server isn't built yet. Run once in the project:",
+    "claudeCode": "Run in your terminal (Claude Code):",
+    "claudeDesktop": "Add to Claude Desktop's config:",
+    "cursor": "Add to Cursor:",
+    "appUrl": "App address",
+    "afterConnectTitle": "Important: start a new AI session",
+    "afterConnect": "MCP servers load only at session start. After connecting, start a fresh session - then say e.g. \"Read this PDF and create the NPCs in DM Hero.\"",
+    "loadFailed": "Couldn't load the connection details. Is DM Hero reachable? Close the dialog and try again."
+  },
+  "aiImport": {
+    "imported": "AI imported {count} entries into this campaign",
+    "importedOther": "AI imported {count} entries into another campaign",
+    "updated": "AI edited {count} entries in this campaign",
+    "updatedOther": "AI edited {count} entries in another campaign"
+  },
   "playfulness": {
     "title": "Playfulness",
-    "description": "Small, random animations — a snake snapping out of a folder, a kobold peeking. Rare, never annoying, switchable.",
+    "description": "Small, random animations - a snake snapping out of a folder, a kobold peeking. Rare, never annoying, switchable.",
     "folderAnimationsLabel": "Folder hover animations"
   },
   "featureTooltips": {
@@ -2088,7 +2107,7 @@
     "tempMax": "Max temperature",
     "weatherDistribution": "Weather distribution",
     "weatherSum": "Total: {n}% (normalized to 100 on save)",
-    "weatherSumZero": "No weather mix — please set at least one type.",
+    "weatherSumZero": "No weather mix - please set at least one type.",
     "tempRangeInvalid": "Max must be greater than min.",
     "profileSummary": "{min}° to {max}° • total {sum}%",
     "seasonBackgrounds": {
@@ -2214,6 +2233,7 @@
       "modeUpdate": "Update",
       "modeDuplicate": "Duplicate",
       "copy": "Copy",
+      "copied": "Copied",
       "copyWithMode": "Copy",
       "success": "Successfully copied",
       "successDetails": "{copied} copied, {skipped} skipped, {updated} updated",
@@ -2276,10 +2296,10 @@
     "addingMarker": "Adding marker",
     "addingArea": "Adding area",
     "addClimateArea": "Draw climate zone",
-    "addingClimate": "Drawing climate zone — click the map",
-    "noClimateZones": "No climate zones yet — create some in the calendar.",
-    "climateLocked": "Climate zones locked — unlock to move",
-    "climateUnlocked": "Climate zones unlocked — circles movable",
+    "addingClimate": "Drawing climate zone - click the map",
+    "noClimateZones": "No climate zones yet - create some in the calendar.",
+    "climateLocked": "Climate zones locked - unlock to move",
+    "climateUnlocked": "Climate zones unlocked - circles movable",
     "replaceImage": "Replace map image",
     "replaceImageHint": "Warning: Marker and area positions may be offset!",
     "scale": "Map Scale",
@@ -2346,11 +2366,11 @@
     },
     "v120": {
       "title": "Version 1.2 is here!",
-      "content": "<p><strong>New in this version:</strong></p><ul><li><strong>Encounter Tracker</strong> — Combat management with initiative, turn tracking, HP management, effects system and dice roller</li><li><strong>Multi-Provider AI</strong> — Choose between OpenAI and Google Gemini, model selection per provider (e.g. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat Block Templates</strong> — Template system for monster and NPC stat blocks</li><li><strong>macOS Support</strong> — Native macOS builds with auto-updates</li></ul><p><strong>Improvements & Fixes:</strong></p><ul><li>Text formatting preserved in view dialogs</li><li>NPC-player relations including context menu improved</li><li>Linux menu bar minimized like macOS</li><li>Required season fields shown correctly</li><li>AI-generated images no longer contain text</li></ul>"
+      "content": "<p><strong>New in this version:</strong></p><ul><li><strong>Encounter Tracker</strong> - Combat management with initiative, turn tracking, HP management, effects system and dice roller</li><li><strong>Multi-Provider AI</strong> - Choose between OpenAI and Google Gemini, model selection per provider (e.g. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat Block Templates</strong> - Template system for monster and NPC stat blocks</li><li><strong>macOS Support</strong> - Native macOS builds with auto-updates</li></ul><p><strong>Improvements & Fixes:</strong></p><ul><li>Text formatting preserved in view dialogs</li><li>NPC-player relations including context menu improved</li><li>Linux menu bar minimized like macOS</li><li>Required season fields shown correctly</li><li>AI-generated images no longer contain text</li></ul>"
     },
     "v130": {
       "title": "Version 1.3 is here!",
-      "content": "<h3 style='margin-bottom: 12px'>New in this version:</h3><ul><li><strong>Archive Function</strong> — Archive entities instead of deleting, toggle to show/hide, with date</li><li><strong>Multi-Class & Multi-Type</strong> — NPCs can have multiple classes and types, with i18n search</li><li><strong>Type Search</strong> — Search NPCs by type (e.g. \"Servant\", \"Merchant\") in all languages</li><li><strong>Multi-line Text in Stat Blocks</strong> — New \"Textarea\" field type for abilities, attacks etc.</li><li><strong>NPC Notes</strong> — Separate notes field in NPC detail tab</li><li><strong>Nested Locations in Chaos Graph</strong> — Child locations shown as connected nodes</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Improvements & Fixes:</h3><ul><li>Image updates in dialog and cards after upload</li><li>NPC preview shows linked NPCs and players</li><li>Lore-player relation types fixed</li><li>Export/import preserves archive status + app version check</li><li>Auto-backup database before updates</li><li>Linux sandbox fix for Ubuntu 24.04+/Kubuntu</li></ul>"
+      "content": "<h3 style='margin-bottom: 12px'>New in this version:</h3><ul><li><strong>Archive Function</strong> - Archive entities instead of deleting, toggle to show/hide, with date</li><li><strong>Multi-Class & Multi-Type</strong> - NPCs can have multiple classes and types, with i18n search</li><li><strong>Type Search</strong> - Search NPCs by type (e.g. \"Servant\", \"Merchant\") in all languages</li><li><strong>Multi-line Text in Stat Blocks</strong> - New \"Textarea\" field type for abilities, attacks etc.</li><li><strong>NPC Notes</strong> - Separate notes field in NPC detail tab</li><li><strong>Nested Locations in Chaos Graph</strong> - Child locations shown as connected nodes</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Improvements & Fixes:</h3><ul><li>Image updates in dialog and cards after upload</li><li>NPC preview shows linked NPCs and players</li><li>Lore-player relation types fixed</li><li>Export/import preserves archive status + app version check</li><li>Auto-backup database before updates</li><li>Linux sandbox fix for Ubuntu 24.04+/Kubuntu</li></ul>"
     },
     "installerPath": "Installation path ({os}):",
     "autoUpdateHint": "After installation via the installer, the app will automatically update whenever a new version is available.",

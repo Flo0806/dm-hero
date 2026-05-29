@@ -55,10 +55,14 @@ export const useFoldersStore = defineStore('folders', () => {
     const key = cacheKey(campaignId, entityType)
     if (!force && byKey.value.has(key)) return byKey.value.get(key)!
 
-    // Coalesce concurrent loads — the second caller gets the SAME promise
-    // and resolves with the same authoritative data as the first.
-    const existing = inFlight.get(key)
-    if (existing) return existing
+    // Coalesce concurrent loads — the second caller gets the SAME promise and
+    // resolves with the same authoritative data as the first. A forced load
+    // (e.g. refresh after an AI import) must NOT join a stale in-flight request;
+    // it starts a fresh fetch and supersedes the pending entry.
+    if (!force) {
+      const existing = inFlight.get(key)
+      if (existing) return existing
+    }
 
     const promise = (async () => {
       try {
@@ -149,6 +153,19 @@ export const useFoldersStore = defineStore('folders', () => {
     byKey.value = new Map()
   }
 
+  /**
+   * Force-reload every folder slot that is currently cached. Used when the app
+   * regains focus so folders created by an external change (e.g. AI bulk-import)
+   * appear — without emptying the tree first like invalidateAll() would.
+   */
+  async function refetchLoaded() {
+    const keys = [...byKey.value.keys()]
+    await Promise.all(keys.map((k) => {
+      const [cid, type] = k.split(':')
+      return load(Number(cid), type as EntityFolderType, true)
+    }))
+  }
+
   return {
     folders,
     flashedFolderId,
@@ -159,5 +176,6 @@ export const useFoldersStore = defineStore('folders', () => {
     moveEntity,
     invalidate,
     invalidateAll,
+    refetchLoaded,
   }
 })

@@ -968,6 +968,41 @@ export const useEntitiesStore = defineStore('entities', {
       return this.entityImageVersions[entityId] || 0
     },
 
+    /**
+     * Refetch only the entity lists that are already loaded, forcing fresh data.
+     * Used when the app regains focus so externally-created entities (e.g. an AI
+     * bulk-import via the MCP) appear without the user having to reload — and
+     * without force-loading lists the user never opened. A brief skeleton flash
+     * during the refetch is acceptable; the point is a clean, authoritative reload.
+     *
+     * Card count chips spin until their counts arrive, so after replacing each
+     * list we also reload that type's counts (npc/item/lore via store actions,
+     * faction/player via their shared count composables).
+     */
+    async refetchLoaded(campaignId: string | number) {
+      const tasks: Promise<unknown>[] = []
+      if (this.npcsLoaded) tasks.push(this.fetchNPCs(campaignId, true))
+      if (this.factionsLoaded) tasks.push(this.fetchFactions(campaignId, true))
+      if (this.locationsLoaded) tasks.push(this.fetchLocations(campaignId, true))
+      if (this.itemsLoaded) tasks.push(this.fetchItems(campaignId, true))
+      if (this.loreLoaded) tasks.push(this.fetchLore(campaignId, true))
+      if (this.playersLoaded) tasks.push(this.fetchPlayers(campaignId, true))
+      if (this.groupsLoaded) tasks.push(this.fetchGroups(campaignId, true))
+      await Promise.all(tasks)
+
+      const countTasks: Promise<unknown>[] = []
+      if (this.npcsLoaded) countTasks.push(this.loadAllNpcCounts(campaignId))
+      if (this.itemsLoaded) countTasks.push(this.loadAllItemCounts(campaignId))
+      if (this.loreLoaded) countTasks.push(this.loadAllLoreCounts(campaignId))
+      if (this.factionsLoaded) countTasks.push(useFactionCounts().loadAllCountsForCampaign(campaignId))
+      if (this.playersLoaded) countTasks.push(usePlayerCounts().loadAllCountsForCampaign(campaignId))
+      // allSettled: a single failed count must not abort the whole refresh.
+      const results = await Promise.allSettled(countTasks)
+      for (const r of results) {
+        if (r.status === 'rejected') console.error('[refetchLoaded] count refresh failed:', r.reason)
+      }
+    },
+
     // Clear all data (e.g., when switching campaigns)
     clearAll() {
       this.npcs = []

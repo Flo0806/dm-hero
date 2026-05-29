@@ -47,9 +47,28 @@
     "orange": "Orange (Lagerfeuer)",
     "emily": "Emily (Tiefe Lagune)"
   },
+  "connectAi": {
+    "button": "Mit KI verbinden",
+    "title": "DM Hero mit deiner KI verbinden",
+    "intro": "Verbinde einen KI-Assistenten (Claude, Cursor …) per MCP - dann kann er NPCs, Orte, Items, Fraktionen und Wissen direkt in DM Hero anlegen. Halte DM Hero dabei geöffnet.",
+    "notBuilt": "Der MCP-Server ist noch nicht gebaut. Einmalig im Projekt ausführen:",
+    "claudeCode": "Im Terminal ausführen (Claude Code):",
+    "claudeDesktop": "In Claude Desktops Konfiguration eintragen:",
+    "cursor": "In Cursor eintragen:",
+    "appUrl": "App-Adresse",
+    "afterConnectTitle": "Wichtig: neue KI-Sitzung starten",
+    "afterConnect": "MCP-Server werden nur beim Sitzungsstart geladen. Starte nach dem Verbinden eine neue Sitzung - dann z.B. sagen: „Lies dieses PDF und lege die NPCs in DM Hero an.\"",
+    "loadFailed": "Verbindungsdaten konnten nicht geladen werden. Ist DM Hero erreichbar? Schließe den Dialog und versuche es erneut."
+  },
+  "aiImport": {
+    "imported": "KI hat {count} Einträge in diese Kampagne importiert",
+    "importedOther": "KI hat {count} Einträge in eine andere Kampagne importiert",
+    "updated": "KI hat {count} Einträge in dieser Kampagne bearbeitet",
+    "updatedOther": "KI hat {count} Einträge in einer anderen Kampagne bearbeitet"
+  },
   "playfulness": {
     "title": "Spielereien",
-    "description": "Kleine, zufällige Animationen — z.B. eine Schlange, die aus einem Ordner schnappt, oder ein Kobold, der lugt. Selten, nie nervig, aber abschaltbar.",
+    "description": "Kleine, zufällige Animationen - z.B. eine Schlange, die aus einem Ordner schnappt, oder ein Kobold, der lugt. Selten, nie nervig, aber abschaltbar.",
     "folderAnimationsLabel": "Ordner-Animationen beim Hovern"
   },
   "featureTooltips": {
@@ -2074,7 +2093,7 @@
     "tempMax": "Max. Temperatur",
     "weatherDistribution": "Wetterverteilung",
     "weatherSum": "Summe: {n}% (wird beim Speichern auf 100 normalisiert)",
-    "weatherSumZero": "Keine Wetterverteilung — bitte mindestens einen Typ setzen.",
+    "weatherSumZero": "Keine Wetterverteilung - bitte mindestens einen Typ setzen.",
     "tempRangeInvalid": "Max. muss größer als Min. sein.",
     "profileSummary": "{min}° bis {max}° • Summe {sum}%",
     "seasonBackgrounds": {
@@ -2190,6 +2209,7 @@
       "modeUpdate": "Aktualisieren",
       "modeDuplicate": "Duplizieren",
       "copy": "Kopieren",
+      "copied": "Kopiert",
       "copyWithMode": "Kopieren",
       "success": "Erfolgreich kopiert",
       "successDetails": "{copied} kopiert, {skipped} übersprungen, {updated} aktualisiert",
@@ -2252,10 +2272,10 @@
     "addingMarker": "Markierung hinzufügen",
     "addingArea": "Bereich hinzufügen",
     "addClimateArea": "Klimazone einzeichnen",
-    "addingClimate": "Klimazone einzeichnen — auf Karte klicken",
-    "noClimateZones": "Noch keine Klimazonen — lege welche im Kalender an.",
-    "climateLocked": "Klimazonen gesperrt — zum Verschieben entsperren",
-    "climateUnlocked": "Klimazonen entsperrt — Kreise verschiebbar",
+    "addingClimate": "Klimazone einzeichnen - auf Karte klicken",
+    "noClimateZones": "Noch keine Klimazonen - lege welche im Kalender an.",
+    "climateLocked": "Klimazonen gesperrt - zum Verschieben entsperren",
+    "climateUnlocked": "Klimazonen entsperrt - Kreise verschiebbar",
     "replaceImage": "Kartenbild ersetzen",
     "replaceImageHint": "Achtung: Die Positionen von Markierungen und Bereichen könnten versetzt werden!",
     "scale": "Kartenmaßstab",
@@ -2322,11 +2342,11 @@
     },
     "v120": {
       "title": "Version 1.2 ist da!",
-      "content": "<p><strong>Neu in dieser Version:</strong></p><ul><li><strong>Encounter Tracker</strong> — Kampfmanagement mit Initiative, Rundentracking, HP-Verwaltung, Effektsystem und Würfelroller</li><li><strong>Multi-Provider KI</strong> — Wahl zwischen OpenAI und Google Gemini, Modellauswahl pro Anbieter (z.B. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat-Block-Vorlagen</strong> — Vorlagensystem für Monster- und NPC-Statblöcke</li><li><strong>macOS-Support</strong> — Native macOS-Builds mit Auto-Updates</li></ul><p><strong>Verbesserungen & Fixes:</strong></p><ul><li>Textformatierung in Ansichtsdialogen bleibt erhalten</li><li>NPC-Spieler-Beziehungen inkl. Kontextmenü verbessert</li><li>Linux-Menüleiste minimiert wie macOS</li><li>Pflichtfelder bei Jahreszeiten korrekt angezeigt</li><li>KI-generierte Bilder enthalten keinen Text mehr</li></ul>"
+      "content": "<p><strong>Neu in dieser Version:</strong></p><ul><li><strong>Encounter Tracker</strong> - Kampfmanagement mit Initiative, Rundentracking, HP-Verwaltung, Effektsystem und Würfelroller</li><li><strong>Multi-Provider KI</strong> - Wahl zwischen OpenAI und Google Gemini, Modellauswahl pro Anbieter (z.B. GPT-4o, Gemini 2.5 Flash)</li><li><strong>Stat-Block-Vorlagen</strong> - Vorlagensystem für Monster- und NPC-Statblöcke</li><li><strong>macOS-Support</strong> - Native macOS-Builds mit Auto-Updates</li></ul><p><strong>Verbesserungen & Fixes:</strong></p><ul><li>Textformatierung in Ansichtsdialogen bleibt erhalten</li><li>NPC-Spieler-Beziehungen inkl. Kontextmenü verbessert</li><li>Linux-Menüleiste minimiert wie macOS</li><li>Pflichtfelder bei Jahreszeiten korrekt angezeigt</li><li>KI-generierte Bilder enthalten keinen Text mehr</li></ul>"
     },
     "v130": {
       "title": "Version 1.3 ist da!",
-      "content": "<h3 style='margin-bottom: 12px'>Neu in dieser Version:</h3><ul><li><strong>Archiv-Funktion</strong> — Entities archivieren statt löschen, Toggle zum Ein-/Ausblenden, mit Datum</li><li><strong>Multi-Klasse & Multi-Typ</strong> — NPCs können mehrere Klassen und Typen haben, mit i18n-Suche</li><li><strong>Typ-Suche</strong> — NPCs nach Typ durchsuchen (z.B. \"Diener\", \"Händler\") in allen Sprachen</li><li><strong>Mehrzeiliger Text in Stat-Blocks</strong> — Neuer Feldtyp \"Textarea\" für Fähigkeiten, Angriffe etc.</li><li><strong>NPC-Notizen</strong> — Separates Notizfeld im NPC-Detail-Tab</li><li><strong>Verschachtelte Orte im Chaosgraph</strong> — Kind-Orte werden als Knoten angezeigt</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Verbesserungen & Fixes:</h3><ul><li>Bild-Update im Dialog und auf Karten nach Upload</li><li>NPC-Vorschau zeigt verknüpfte NPCs und Spieler</li><li>Lore-Spieler-Beziehungstypen korrigiert</li><li>Export/Import bewahrt Archiv-Status + App-Versions-Check</li><li>Auto-Backup der Datenbank vor Updates</li><li>Linux Sandbox-Fix für Ubuntu 24.04+/Kubuntu</li></ul>"
+      "content": "<h3 style='margin-bottom: 12px'>Neu in dieser Version:</h3><ul><li><strong>Archiv-Funktion</strong> - Entities archivieren statt löschen, Toggle zum Ein-/Ausblenden, mit Datum</li><li><strong>Multi-Klasse & Multi-Typ</strong> - NPCs können mehrere Klassen und Typen haben, mit i18n-Suche</li><li><strong>Typ-Suche</strong> - NPCs nach Typ durchsuchen (z.B. \"Diener\", \"Händler\") in allen Sprachen</li><li><strong>Mehrzeiliger Text in Stat-Blocks</strong> - Neuer Feldtyp \"Textarea\" für Fähigkeiten, Angriffe etc.</li><li><strong>NPC-Notizen</strong> - Separates Notizfeld im NPC-Detail-Tab</li><li><strong>Verschachtelte Orte im Chaosgraph</strong> - Kind-Orte werden als Knoten angezeigt</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Verbesserungen & Fixes:</h3><ul><li>Bild-Update im Dialog und auf Karten nach Upload</li><li>NPC-Vorschau zeigt verknüpfte NPCs und Spieler</li><li>Lore-Spieler-Beziehungstypen korrigiert</li><li>Export/Import bewahrt Archiv-Status + App-Versions-Check</li><li>Auto-Backup der Datenbank vor Updates</li><li>Linux Sandbox-Fix für Ubuntu 24.04+/Kubuntu</li></ul>"
     },
     "installerPath": "Installationspfad ({os}):",
     "autoUpdateHint": "Nach der Installation über den Installer wird die App automatisch aktualisiert, sobald eine neue Version verfügbar ist.",

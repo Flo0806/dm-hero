@@ -105,4 +105,9 @@ describe('handler module load smoke', () => {
     await expect(import('../../server/api/maps/[id]/climate-areas/[areaId].patch.ts')).resolves.toBeDefined()
     await expect(import('../../server/api/maps/[id]/climate-areas/[areaId].delete.ts')).resolves.toBeDefined()
   })
+
+  it('ai bulk-import handlers load', async () => {
+    await expect(import('../../server/api/import/contract.get.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/import/bulk.post.ts')).resolves.toBeDefined()
+  })
 })

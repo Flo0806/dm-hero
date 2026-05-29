@@ -1,0 +1,22 @@
+{
+  "name": "@dm-hero/mcp",
+  "version": "1.0.0",
+  "description": "stdio MCP server that lets an AI agent create NPCs, locations, items, factions and lore in a running DM Hero instance",
+  "type": "module",
+  "bin": {
+    "dm-hero-mcp": "./dist/mcp.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --outfile=dist/mcp.mjs --banner:js='#!/usr/bin/env node' --legal-comments=none && node -e \"try{require('fs').chmodSync('dist/mcp.mjs',0o755)}catch{}\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

@@ -172,6 +172,60 @@ function navigateToResult(result: (typeof searchResults.value)[0]) {
   searchQuery.value = ''
 }
 
+// Watch for AI/MCP bulk-imports: poll the import signal and, when it advances,
+// show a snackbar and refresh the loaded lists + card counts ONCE. This fires
+// only for external (AI) imports — the app's own create endpoints never touch
+// the signal — so manual user creation does not trigger a reload.
+if (import.meta.client) {
+  const foldersStore = useFoldersStore()
+  const { t } = useI18n()
+  let lastSeq = -1
+
+  const handleAiImport = async (action: 'import' | 'update', campaignId: number | null, total: number) => {
+    const active = campaignStore.activeCampaignIdNumber
+    const here = !!campaignId && active === campaignId
+    const key = `aiImport.${action === 'update' ? 'updated' : 'imported'}${here ? '' : 'Other'}`
+    if (here) {
+      snackbarStore.success(t(key, { count: total }))
+      await entitiesStore.refetchLoaded(active!)
+      await foldersStore.refetchLoaded()
+    }
+    else {
+      snackbarStore.info(t(key, { count: total }))
+    }
+  }
+
+  const pollImportSignal = async () => {
+    try {
+      const sig = await $fetch<{ seq: number, action: 'import' | 'update' | null, campaignId: number | null, total: number }>(
+        '/api/import/status',
+      )
+      // First poll establishes the baseline so we don't react to imports that
+      // happened before the app was opened.
+      if (lastSeq === -1) {
+        lastSeq = sig.seq
+        return
+      }
+      if (sig.seq > lastSeq) {
+        lastSeq = sig.seq
+        await handleAiImport(sig.action ?? 'import', sig.campaignId, sig.total)
+      }
+    }
+    catch {
+      // server not reachable yet / transient — try again next tick
+    }
+  }
+
+  let timer: ReturnType<typeof setInterval> | undefined
+  onMounted(() => {
+    pollImportSignal()
+    timer = setInterval(pollImportSignal, 5000)
+  })
+  onUnmounted(() => {
+    if (timer) clearInterval(timer)
+  })
+}
+
 // Keyboard Shortcuts
 onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {
