@@ -112,6 +112,36 @@ export interface CreateMapAreaPayload {
   color?: string | null
 }
 
+// Climate-zone circles painted on a map. Color/name/icon are joined from the
+// zone; a zone may have multiple circles per map.
+export interface MapClimateArea {
+  id: number
+  map_id: number
+  zone_id: number
+  center_x: number // Position as percentage (0-100)
+  center_y: number // Position as percentage (0-100)
+  radius: number // Radius as percentage
+  created_at: string
+  updated_at: string
+  // Joined from climate_zones
+  zone_name?: string
+  zone_color?: string | null
+  zone_icon?: string | null
+}
+
+export interface CreateMapClimateAreaPayload {
+  zone_id: number
+  center_x: number
+  center_y: number
+  radius?: number
+}
+
+export interface UpdateMapClimateAreaPayload {
+  center_x?: number
+  center_y?: number
+  radius?: number
+}
+
 export interface UpdateMapAreaPayload {
   center_x?: number
   center_y?: number

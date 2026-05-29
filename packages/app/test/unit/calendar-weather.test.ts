@@ -96,11 +96,13 @@ describe('Calendar Weather - Basic CRUD', () => {
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(testCampaignId, 1352, 5, 10, 'sunny', 25)
 
-    // Upsert with new data
+    // Upsert with new data. Since migration 52 weather is per (day, zone) with
+    // uniqueness enforced by a partial index, so the ON CONFLICT target must
+    // include the `WHERE zone_id IS NULL` predicate (global weather).
     db.prepare(`
       INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature, notes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(campaign_id, year, month, day)
+      ON CONFLICT(campaign_id, year, month, day) WHERE zone_id IS NULL
       DO UPDATE SET
         weather_type = excluded.weather_type,
         temperature = excluded.temperature,
@@ -570,7 +572,7 @@ describe('Calendar Weather Overwrite', () => {
       db.prepare(`
         INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
         VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT(campaign_id, year, month, day)
+        ON CONFLICT(campaign_id, year, month, day) WHERE zone_id IS NULL
         DO UPDATE SET
           weather_type = excluded.weather_type,
           temperature = excluded.temperature

@@ -22,6 +22,10 @@ export function getDb() {
     db = new Database(DB_PATH)
     db.pragma('journal_mode = WAL') // Write-Ahead Logging for better performance
     db.pragma('foreign_keys = ON') // Enable foreign keys
+    // Wait instead of throwing SQLITE_BUSY when another process/connection holds
+    // a write lock — the dev server spins up two DB connections and they can
+    // race on migrations (see runMigrations' BEGIN IMMEDIATE).
+    db.pragma('busy_timeout = 5000')
   }
   return db
 }

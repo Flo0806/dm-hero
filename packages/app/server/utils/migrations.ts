@@ -2622,6 +2622,35 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 52: Rebuilt calendar_weather with per-zone weather support')
     },
   },
+  {
+    version: 53,
+    name: 'map_climate_areas',
+    up: (db) => {
+      // Circles that paint a climate zone onto a campaign map. Mirrors
+      // map_areas (location circles) — position + radius as percentages so they
+      // scale with the image. A zone may have MANY circles on a map (a climate
+      // region can span several blobs), so there is NO unique(map,zone).
+      // Color is taken from the zone itself at render time.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS map_climate_areas (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          map_id INTEGER NOT NULL,
+          zone_id INTEGER NOT NULL,
+          center_x REAL NOT NULL,
+          center_y REAL NOT NULL,
+          radius REAL NOT NULL DEFAULT 8.0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (map_id) REFERENCES campaign_maps(id) ON DELETE CASCADE,
+          FOREIGN KEY (zone_id) REFERENCES climate_zones(id) ON DELETE CASCADE
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_map_climate_areas_map_id ON map_climate_areas(map_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_map_climate_areas_zone_id ON map_climate_areas(zone_id)')
+
+      console.log('✅ Migration 53: Created map_climate_areas')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
@@ -2639,10 +2668,18 @@ export async function runMigrations(db: Database.Database) {
   createBackup()
 
   for (const migration of pendingMigrations) {
-    console.log(`  📦 Applying migration ${migration.version}: ${migration.name}`)
+    // BEGIN IMMEDIATE grabs the write lock up front. If a second connection
+    // (the dev server opens two) is mid-migration, this one blocks here until
+    // the first commits — then the re-check below sees the bumped version and
+    // skips, instead of both racing to INSERT the same schema_version row.
+    db.exec('BEGIN IMMEDIATE')
+    if (getCurrentVersion(db) >= migration.version) {
+      db.exec('ROLLBACK')
+      continue
+    }
 
+    console.log(`  📦 Applying migration ${migration.version}: ${migration.name}`)
     try {
-      db.exec('BEGIN TRANSACTION')
       migration.up(db)
       setVersion(db, migration.version)
       db.exec('COMMIT')
