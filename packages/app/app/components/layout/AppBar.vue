@@ -85,13 +85,16 @@ const RELEASE_CODENAMES: Record<string, { name: string, font: string }> = {
 }
 const codename = computed(() => {
   const [major, minor] = version.split('.')
-  // Exact major.minor match; otherwise fall back to the newest codename so the
-  // upcoming release's name is already visible during its dev cycle.
-  return (
-    RELEASE_CODENAMES[`${major}.${minor}`]
-    ?? RELEASE_CODENAMES[Object.keys(RELEASE_CODENAMES).sort().at(-1)!]
-    ?? null
-  )
+  const exact = RELEASE_CODENAMES[`${major}.${minor}`]
+  if (exact) return exact
+  // Fallback: highest codename by NUMERIC major.minor (not lexicographic, so
+  // e.g. 1.10 beats 1.9) — shows the upcoming release's name during its dev cycle.
+  const latestKey = Object.keys(RELEASE_CODENAMES).sort((a, b) => {
+    const [am, an] = a.split('.').map(Number)
+    const [bm, bn] = b.split('.').map(Number)
+    return am - bm || an - bn
+  }).at(-1)
+  return latestKey ? RELEASE_CODENAMES[latestKey] : null
 })
 
 const locales = [
