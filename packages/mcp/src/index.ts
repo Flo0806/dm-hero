@@ -85,6 +85,31 @@ const relationSchema = z.object({
 
 const server = new McpServer({ name: 'dm-hero', version: '1.0.0' })
 
+server.registerTool('list_campaigns', {
+  description: 'List the campaigns in DM Hero (id + name). Call this whenever you need a campaignId. NEVER guess a campaignId — if the user has not clearly named which campaign to import into, call this and ASK the user which one. Entities must land in the campaign the user intends, never a random one.',
+  inputSchema: {},
+}, async () => {
+  const r = await callApi('/api/campaigns')
+  if (!r.ok) return asText(r.body)
+  const list = Array.isArray(r.body)
+    ? (r.body as { id: number, name: string }[]).map(c => ({ id: c.id, name: c.name }))
+    : r.body
+  return asText(list)
+})
+
+server.registerTool('create_campaign', {
+  description: 'Create a NEW campaign in DM Hero and return its id + name. Use this when the user wants the imported content to live in a fresh campaign rather than an existing one — then pass the returned id to preview_import / import_entities. Ask the user before creating; do not invent campaigns unprompted.',
+  inputSchema: {
+    name: z.string().min(1).describe('Campaign name.'),
+    description: z.string().optional().describe('Optional short description.'),
+  },
+}, async ({ name, description }) => {
+  const r = await callApi('/api/campaigns', { method: 'POST', body: JSON.stringify({ name, description }) })
+  if (!r.ok) return asText(r.body)
+  const c = r.body as { id: number, name: string }
+  return asText({ id: c.id, name: c.name })
+})
+
 server.registerTool('get_contract', {
   description: 'ALWAYS CALL THIS FIRST. Returns DM Hero\'s import contract: valid entity types, all relation-type keys (grouped by what they connect), available races/classes/item-types/rarities, the metadata shape per entity type, and a full example payload. Use it to build a valid import.',
   inputSchema: {
