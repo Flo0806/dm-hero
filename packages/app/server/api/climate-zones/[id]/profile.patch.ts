@@ -30,8 +30,9 @@ export default defineEventHandler(async (event): Promise<ClimateZoneSeason> => {
   if (!Number.isFinite(tempMin) || !Number.isFinite(tempMax)) {
     throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'temp_min/max required' })
   }
-  if (tempMin > tempMax) {
-    throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'temp_min > temp_max' })
+  // max must be strictly greater than min — never equal, never less.
+  if (tempMax <= tempMin) {
+    throw createApiError({ statusCode: 400, code: ErrorCodes.VALIDATION_FAILED, message: 'temp_max must be greater than temp_min' })
   }
 
   // Whitelist the distribution keys so a client can't sneak in arbitrary

@@ -2562,6 +2562,66 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 51: Created climate_zones, climate_zone_seasons, and active_climate_zone_id')
     },
   },
+  {
+    version: 52,
+    name: 'weather_per_zone',
+    up: (db) => {
+      // Make weather per (day, zone) instead of one weather per day. The wish
+      // behind climate zones is multiple coexisting weathers — zone A sunny,
+      // zone B rainy on the same day — later drawn on the map.
+      //
+      // SQLite can't drop the old table-level UNIQUE(campaign,y,m,d), so we
+      // rebuild. zone_id NULL = the legacy "global" weather used when a campaign
+      // has no zones; a non-null zone_id ties the row to one climate zone.
+      // Two partial unique indexes enforce: at most one global row per day, and
+      // at most one row per (day, zone). The active_climate_zone_id on campaigns
+      // becomes "which zone's weather the calendar currently shows".
+      db.exec('ALTER TABLE calendar_weather RENAME TO calendar_weather_old')
+      db.exec(`
+        CREATE TABLE calendar_weather (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          zone_id INTEGER,
+          year INTEGER NOT NULL,
+          month INTEGER NOT NULL,
+          day INTEGER NOT NULL,
+          weather_type TEXT NOT NULL,
+          temperature INTEGER,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY (zone_id) REFERENCES climate_zones(id) ON DELETE CASCADE
+        )
+      `)
+      // Carry existing weather over as global (zone_id NULL) — nothing lost.
+      db.exec(`
+        INSERT INTO calendar_weather (id, campaign_id, zone_id, year, month, day, weather_type, temperature, notes, created_at, updated_at)
+        SELECT id, campaign_id, NULL, year, month, day, weather_type, temperature, notes, created_at, updated_at
+        FROM calendar_weather_old
+      `)
+      db.exec('DROP TABLE calendar_weather_old')
+
+      // One global weather per day (zone_id NULL — SQLite treats NULLs as
+      // distinct in a plain unique index, so this partial index is required to
+      // actually enforce singularity).
+      db.exec(`
+        CREATE UNIQUE INDEX idx_calendar_weather_global
+          ON calendar_weather(campaign_id, year, month, day)
+          WHERE zone_id IS NULL
+      `)
+      // One weather per (day, zone).
+      db.exec(`
+        CREATE UNIQUE INDEX idx_calendar_weather_zone
+          ON calendar_weather(campaign_id, year, month, day, zone_id)
+          WHERE zone_id IS NOT NULL
+      `)
+      db.exec('CREATE INDEX idx_calendar_weather_lookup ON calendar_weather(campaign_id, year, month)')
+      db.exec('CREATE INDEX idx_calendar_weather_zone_id ON calendar_weather(zone_id)')
+
+      console.log('✅ Migration 52: Rebuilt calendar_weather with per-zone weather support')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

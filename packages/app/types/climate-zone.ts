@@ -26,6 +26,50 @@ export type WeatherType = typeof WEATHER_TYPES[number]
 /** Distribution: keys are weather types, values are unnormalised weights. */
 export type WeatherDistribution = Partial<Record<WeatherType, number>>
 
+/**
+ * Curated color palette for zones — a fixed set so users can't type arbitrary
+ * (and possibly broken) values into a free field. Reads well on dark + light.
+ */
+export const CLIMATE_ZONE_COLORS = [
+  '#4CAF50', // green (tropical)
+  '#81C784', // soft green (temperate)
+  '#26A69A', // teal (boreal)
+  '#4DD0E1', // cyan
+  '#90CAF9', // ice blue (tundra)
+  '#FFB74D', // amber (subtropical)
+  '#FFA726', // orange (arid)
+  '#E57373', // red (volcanic / hot)
+  '#BA68C8', // purple (magical)
+  '#A1887F', // brown (mountain)
+] as const
+
+export type ClimateZoneColor = typeof CLIMATE_ZONE_COLORS[number]
+
+/** Curated terrain/climate icons — fixed set, no free text. */
+export const CLIMATE_ZONE_ICONS = [
+  'mdi-earth',
+  'mdi-palm-tree',
+  'mdi-tree',
+  'mdi-pine-tree',
+  'mdi-snowflake',
+  'mdi-cactus',
+  'mdi-image-filter-hdr', // mountains
+  'mdi-island',
+  'mdi-waves',
+  'mdi-weather-sunny',
+  'mdi-weather-fog',
+  'mdi-fire', // volcanic
+] as const
+
+export type ClimateZoneIcon = typeof CLIMATE_ZONE_ICONS[number]
+
+export const DEFAULT_ZONE_COLOR: ClimateZoneColor = CLIMATE_ZONE_COLORS[0]
+export const DEFAULT_ZONE_ICON: ClimateZoneIcon = CLIMATE_ZONE_ICONS[0]
+
+/** Sensible starting temperature range for a fresh profile (never min === max). */
+export const DEFAULT_TEMP_MIN = 5
+export const DEFAULT_TEMP_MAX = 20
+
 export interface ClimateZone {
   id: number
   campaign_id: number

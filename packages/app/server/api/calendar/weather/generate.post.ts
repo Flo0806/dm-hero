@@ -1,4 +1,5 @@
 import { getDb } from '~~/server/utils/db'
+import type { WeatherDistribution } from '~~/types/climate-zone'
 
 interface GenerateWeatherInput {
   campaignId: number
@@ -13,6 +14,13 @@ interface Season {
   start_month: number
   start_day: number
   weather_type: string | null // 'winter' | 'spring' | 'summer' | 'autumn'
+}
+
+interface ZoneProfile {
+  season_id: number
+  temp_min: number
+  temp_max: number
+  weather_distribution: WeatherDistribution
 }
 
 // Season-based weather probabilities
@@ -61,49 +69,77 @@ const SEASON_TEMPS: Record<string, [number, number]> = {
   autumn: [5, 18],
 }
 
-function getRandomWeather(seasonName: string): { type: string, temp: number } {
-  const normalizedSeason = seasonName.toLowerCase()
-  const weatherProbs = SEASON_WEATHER[normalizedSeason] || SEASON_WEATHER.summer
-  const tempRange = SEASON_TEMPS[normalizedSeason] || SEASON_TEMPS.summer
-
-  // Weighted random selection
-  const total = Object.values(weatherProbs).reduce((a, b) => a + b, 0)
+function pickFromDistribution(weights: Record<string, number>): string {
+  const total = Object.values(weights).reduce((a, b) => a + b, 0)
+  if (total <= 0) return 'sunny'
   let random = Math.random() * total
-
-  let weatherType = 'sunny'
-  for (const [type, prob] of Object.entries(weatherProbs)) {
+  for (const [type, prob] of Object.entries(weights)) {
     random -= prob
-    if (random <= 0) {
-      weatherType = type
-      break
-    }
+    if (random <= 0) return type
   }
-
-  // Random temperature within range with some variance
-  const [minTemp, maxTemp] = tempRange
-  const temp = Math.round(minTemp + Math.random() * (maxTemp - minTemp))
-
-  return { type: weatherType, temp }
+  return Object.keys(weights)[0] ?? 'sunny'
 }
 
-function getSeasonForDay(seasons: Season[], month: number, day: number): string {
-  if (seasons.length === 0) return 'summer'
+function randomTemp(minTemp: number, maxTemp: number): number {
+  return Math.round(minTemp + Math.random() * (maxTemp - minTemp))
+}
 
-  // Sort seasons by start date
+/**
+ * Legacy weather generator — used when no climate zone is active. Looks up
+ * fixed per-season tables (`SEASON_WEATHER`/`SEASON_TEMPS`) keyed by the
+ * season's `weather_type` ('winter' | 'spring' | 'summer' | 'autumn').
+ */
+function getRandomWeather(seasonName: string): { type: string, temp: number } {
+  const normalizedSeason = seasonName.toLowerCase()
+  const weatherProbs = SEASON_WEATHER[normalizedSeason] ?? SEASON_WEATHER.summer!
+  const tempRange = SEASON_TEMPS[normalizedSeason] ?? SEASON_TEMPS.summer!
+  return {
+    type: pickFromDistribution(weatherProbs),
+    temp: randomTemp(tempRange[0], tempRange[1]),
+  }
+}
+
+/**
+ * Zone-aware weather: uses the active climate zone's profile for the day's
+ * season. Falls back to the legacy generator when no profile exists for the
+ * season (e.g. user hasn't set Winter yet).
+ */
+function getZoneWeather(
+  seasonId: number,
+  seasonName: string,
+  profiles: Map<number, ZoneProfile>,
+): { type: string, temp: number } {
+  const profile = profiles.get(seasonId)
+  if (!profile) return getRandomWeather(seasonName)
+  const weights = profile.weather_distribution as Record<string, number>
+  if (!weights || Object.keys(weights).length === 0) {
+    return getRandomWeather(seasonName)
+  }
+  return {
+    type: pickFromDistribution(weights),
+    temp: randomTemp(profile.temp_min, profile.temp_max),
+  }
+}
+
+function getSeasonObjectForDay(seasons: Season[], month: number, day: number): Season | null {
+  if (seasons.length === 0) return null
   const sortedSeasons = [...seasons].sort((a, b) => {
     if (a.start_month !== b.start_month) return a.start_month - b.start_month
     return a.start_day - b.start_day
   })
-
-  // Find which season the day falls into
-  let currentSeason = sortedSeasons[sortedSeasons.length - 1] // Default to last season (wraps around)
-
+  let currentSeason = sortedSeasons[sortedSeasons.length - 1]!
   for (let i = 0; i < sortedSeasons.length; i++) {
-    const season = sortedSeasons[i]
+    const season = sortedSeasons[i]!
     if (month > season.start_month || (month === season.start_month && day >= season.start_day)) {
       currentSeason = season
     }
   }
+  return currentSeason
+}
+
+function getSeasonForDay(seasons: Season[], month: number, day: number): string {
+  const currentSeason = getSeasonObjectForDay(seasons, month, day)
+  if (!currentSeason) return 'summer'
 
   // Use explicit weather_type if set, otherwise fall back to name-based detection
   if (currentSeason.weather_type) {
@@ -151,45 +187,87 @@ export default defineEventHandler(async (event) => {
     .prepare('SELECT * FROM calendar_seasons WHERE campaign_id = ? ORDER BY start_month, start_day')
     .all(campaignId) as Season[]
 
-  // Get existing weather if not overwriting
-  const existingWeather = new Set<number>()
-  if (!overwrite) {
-    const existing = db
-      .prepare('SELECT day FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
-      .all(campaignId, year, month) as Array<{ day: number }>
-    existing.forEach(w => existingWeather.add(w.day))
-  }
-  else {
-    // Delete existing weather for this month
-    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?').run(
-      campaignId,
-      year,
-      month,
-    )
+  // Load every climate zone of this campaign plus its per-season profiles.
+  // Weather is generated PER ZONE — zone A can be sunny while zone B rains on
+  // the same day. If the campaign has no zones, we generate a single "global"
+  // weather (zone_id NULL) exactly like before.
+  const zones = db
+    .prepare('SELECT id FROM climate_zones WHERE campaign_id = ? AND deleted_at IS NULL ORDER BY id')
+    .all(campaignId) as Array<{ id: number }>
+
+  // zoneId -> (seasonId -> profile). Built once up-front.
+  const profilesByZone = new Map<number, Map<number, ZoneProfile>>()
+  if (zones.length > 0) {
+    const zoneIds = zones.map(z => z.id)
+    const placeholders = zoneIds.map(() => '?').join(',')
+    const rows = db.prepare(`
+      SELECT zone_id, season_id, temp_min, temp_max, weather_distribution
+      FROM climate_zone_seasons
+      WHERE zone_id IN (${placeholders})
+    `).all(...zoneIds) as Array<{ zone_id: number, season_id: number, temp_min: number, temp_max: number, weather_distribution: string }>
+    for (const row of rows) {
+      let dist: WeatherDistribution = {}
+      try {
+        dist = JSON.parse(row.weather_distribution) as WeatherDistribution
+      }
+      catch {
+        // ignore — falls back to legacy for this season
+      }
+      const map = profilesByZone.get(row.zone_id) ?? new Map<number, ZoneProfile>()
+      map.set(row.season_id, {
+        season_id: row.season_id,
+        temp_min: row.temp_min,
+        temp_max: row.temp_max,
+        weather_distribution: dist,
+      })
+      profilesByZone.set(row.zone_id, map)
+    }
   }
 
-  // Generate weather for each day
+  // The "targets" we generate for: each zone id, or a single null (global)
+  // when there are no zones.
+  const targets: Array<number | null> = zones.length > 0 ? zones.map(z => z.id) : [null]
+
+  // Overwrite wipes the whole month (all zones); otherwise we skip the
+  // (day, zone) combos that already have weather.
+  const existing = new Set<string>() // key: `${day}:${zoneId ?? 'null'}`
+  if (overwrite) {
+    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
+      .run(campaignId, year, month)
+  }
+  else {
+    const rows = db
+      .prepare('SELECT day, zone_id FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
+      .all(campaignId, year, month) as Array<{ day: number, zone_id: number | null }>
+    for (const r of rows) existing.add(`${r.day}:${r.zone_id ?? 'null'}`)
+  }
+
   const insertStmt = db.prepare(`
-    INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO calendar_weather (campaign_id, zone_id, year, month, day, weather_type, temperature)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
 
   let generated = 0
   for (let day = 1; day <= monthConfig.days; day++) {
-    if (!overwrite && existingWeather.has(day)) {
-      continue
+    const seasonObj = getSeasonObjectForDay(seasons, month, day)
+    const seasonName = seasonObj?.weather_type ?? getSeasonForDay(seasons, month, day)
+
+    for (const zoneId of targets) {
+      if (!overwrite && existing.has(`${day}:${zoneId ?? 'null'}`)) continue
+
+      const zoneProfiles = zoneId !== null ? profilesByZone.get(zoneId) : undefined
+      const { type, temp } = zoneId !== null && seasonObj && zoneProfiles
+        ? getZoneWeather(seasonObj.id, seasonName, zoneProfiles)
+        : getRandomWeather(seasonName)
+
+      insertStmt.run(campaignId, zoneId, year, month, day, type, temp)
+      generated++
     }
-
-    const seasonName = getSeasonForDay(seasons, month, day)
-    const { type, temp } = getRandomWeather(seasonName)
-
-    insertStmt.run(campaignId, year, month, day, type, temp)
-    generated++
   }
 
-  // Return the generated weather
+  // Return the full month across all zones.
   const weather = db
-    .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ORDER BY day')
+    .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ORDER BY day, zone_id')
     .all(campaignId, year, month)
 
   return {

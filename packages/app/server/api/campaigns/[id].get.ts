@@ -19,6 +19,7 @@ export default defineEventHandler((event) => {
       id,
       name,
       description,
+      active_climate_zone_id,
       created_at,
       updated_at
     FROM campaigns
