@@ -59,6 +59,10 @@
     "afterConnectTitle": "Important: start a new AI session",
     "afterConnect": "MCP servers load only at session start. After connecting, start a fresh session - then say e.g. \"Read this PDF and create the NPCs in DM Hero.\""
   },
+  "aiImport": {
+    "imported": "AI imported {count} entries into this campaign",
+    "importedOther": "AI imported {count} entries into another campaign"
+  },
   "playfulness": {
     "title": "Playfulness",
     "description": "Small, random animations - a snake snapping out of a folder, a kobold peeking. Rare, never annoying, switchable.",

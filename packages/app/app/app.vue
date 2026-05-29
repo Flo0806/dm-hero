@@ -172,6 +172,55 @@ function navigateToResult(result: (typeof searchResults.value)[0]) {
   searchQuery.value = ''
 }
 
+// Watch for AI/MCP bulk-imports: poll the import signal and, when it advances,
+// show a snackbar and refresh the loaded lists + card counts ONCE. This fires
+// only for external (AI) imports — the app's own create endpoints never touch
+// the signal — so manual user creation does not trigger a reload.
+if (import.meta.client) {
+  const foldersStore = useFoldersStore()
+  const { t } = useI18n()
+  let lastSeq = -1
+
+  const handleAiImport = async (campaignId: number | null, total: number) => {
+    const active = campaignStore.activeCampaignIdNumber
+    if (campaignId && active === campaignId) {
+      snackbarStore.success(t('aiImport.imported', { count: total }))
+      await entitiesStore.refetchLoaded(active)
+      await foldersStore.refetchLoaded()
+    }
+    else {
+      snackbarStore.info(t('aiImport.importedOther', { count: total }))
+    }
+  }
+
+  const pollImportSignal = async () => {
+    try {
+      const sig = await $fetch<{ seq: number, campaignId: number | null, total: number }>(
+        '/api/import/status',
+      )
+      // First poll establishes the baseline so we don't react to imports that
+      // happened before the app was opened.
+      if (lastSeq === -1) {
+        lastSeq = sig.seq
+        return
+      }
+      if (sig.seq > lastSeq) {
+        lastSeq = sig.seq
+        await handleAiImport(sig.campaignId, sig.total)
+      }
+    }
+    catch {
+      // server not reachable yet / transient — try again next tick
+    }
+  }
+
+  onMounted(() => {
+    pollImportSignal()
+    const timer = setInterval(pollImportSignal, 5000)
+    onUnmounted(() => clearInterval(timer))
+  })
+}
+
 // Keyboard Shortcuts
 onMounted(() => {
   const handleKeydown = (e: KeyboardEvent) => {

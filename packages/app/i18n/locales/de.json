@@ -59,6 +59,10 @@
     "afterConnectTitle": "Wichtig: neue KI-Sitzung starten",
     "afterConnect": "MCP-Server werden nur beim Sitzungsstart geladen. Starte nach dem Verbinden eine neue Sitzung - dann z.B. sagen: „Lies dieses PDF und lege die NPCs in DM Hero an.\""
   },
+  "aiImport": {
+    "imported": "KI hat {count} Einträge in diese Kampagne importiert",
+    "importedOther": "KI hat {count} Einträge in eine andere Kampagne importiert"
+  },
   "playfulness": {
     "title": "Spielereien",
     "description": "Kleine, zufällige Animationen - z.B. eine Schlange, die aus einem Ordner schnappt, oder ein Kobold, der lugt. Selten, nie nervig, aber abschaltbar.",

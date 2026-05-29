@@ -149,6 +149,19 @@ export const useFoldersStore = defineStore('folders', () => {
     byKey.value = new Map()
   }
 
+  /**
+   * Force-reload every folder slot that is currently cached. Used when the app
+   * regains focus so folders created by an external change (e.g. AI bulk-import)
+   * appear — without emptying the tree first like invalidateAll() would.
+   */
+  async function refetchLoaded() {
+    const keys = [...byKey.value.keys()]
+    await Promise.all(keys.map((k) => {
+      const [cid, type] = k.split(':')
+      return load(Number(cid), type as EntityFolderType, true)
+    }))
+  }
+
   return {
     folders,
     flashedFolderId,
@@ -159,5 +172,6 @@ export const useFoldersStore = defineStore('folders', () => {
     moveEntity,
     invalidate,
     invalidateAll,
+    refetchLoaded,
   }
 })

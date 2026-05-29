@@ -2,6 +2,7 @@ import { getDb } from '~~/server/utils/db'
 import { convertMetadataToKeys, getLocaleFromEvent } from '~~/server/utils/i18n-lookup'
 import { normaliseTagName, isValidTagName, DEFAULT_TAG_COLOR } from '~~/types/tag'
 import { entityTypeToFolderType } from '~~/server/utils/folders'
+import { recordImport } from '~~/server/utils/importSignal'
 
 /**
  * AI bulk-import: create entities + relations in one validated call.
@@ -199,6 +200,10 @@ export default defineEventHandler(async (event) => {
     }
 
     db.exec('COMMIT')
+
+    // Signal the app that an external (AI/MCP) import happened, so it can show
+    // a snackbar + refresh. Only this endpoint records it — manual creates don't.
+    recordImport(campaignId, perType)
 
     return {
       dryRun: false,
