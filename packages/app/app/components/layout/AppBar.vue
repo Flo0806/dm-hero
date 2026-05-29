@@ -6,6 +6,13 @@
       <v-chip size="x-small" variant="outlined" class="ml-2 version-badge-inline">
         v{{ version }}
       </v-chip>
+      <span
+        v-if="codename"
+        class="release-codename text-primary ml-2"
+        :style="{ fontFamily: `'${codename.font}', serif` }"
+      >
+        {{ codename.name }}
+      </span>
     </v-app-bar-title>
 
     <v-spacer />
@@ -71,6 +78,25 @@ defineEmits<{
 
 const version = packageJson.version
 
+// Each minor release gets its own codename, shown in the header in its OWN
+// font — every release looks different. Add an entry per minor as it ships.
+const RELEASE_CODENAMES: Record<string, { name: string, font: string }> = {
+  1.4: { name: 'The Summoning', font: 'Pirata One' },
+}
+const codename = computed(() => {
+  const [major, minor] = version.split('.')
+  const exact = RELEASE_CODENAMES[`${major}.${minor}`]
+  if (exact) return exact
+  // Fallback: highest codename by NUMERIC major.minor (not lexicographic, so
+  // e.g. 1.10 beats 1.9) — shows the upcoming release's name during its dev cycle.
+  const latestKey = Object.keys(RELEASE_CODENAMES).sort((a, b) => {
+    const [am, an] = a.split('.').map(Number)
+    const [bm, bn] = b.split('.').map(Number)
+    return am - bm || an - bn
+  }).at(-1)
+  return latestKey ? RELEASE_CODENAMES[latestKey] : null
+})
+
 const locales = [
   { value: 'de', label: 'Deutsch', flagIcon: 'flag:de-4x3' },
   { value: 'en', label: 'English', flagIcon: 'flag:gb-4x3' },
@@ -97,7 +123,27 @@ if (import.meta.client && window.electronAPI?.isElectron) {
 }
 </script>
 
+<style>
+/* Release-codename display font (bundled locally — works offline). */
+@font-face {
+  font-family: 'Pirata One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/pirata-one.woff2') format('woff2');
+}
+</style>
+
 <style scoped>
+/* The per-release codename next to the title. */
+.release-codename {
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+  vertical-align: middle;
+}
+
 /* Make app bar draggable in Electron (allows window dragging) */
 .app-bar-draggable {
   -webkit-app-region: drag;
