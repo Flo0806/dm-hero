@@ -199,6 +199,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-vue": "^10.9.1",
     "happy-dom": "^20.9.0",
+    "nuxt-spyglass": "1.0.0-alpha.1",
     "png2icons": "^2.0.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.14",
