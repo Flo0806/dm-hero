@@ -996,7 +996,11 @@ export const useEntitiesStore = defineStore('entities', {
       if (this.loreLoaded) countTasks.push(this.loadAllLoreCounts(campaignId))
       if (this.factionsLoaded) countTasks.push(useFactionCounts().loadAllCountsForCampaign(campaignId))
       if (this.playersLoaded) countTasks.push(usePlayerCounts().loadAllCountsForCampaign(campaignId))
-      await Promise.all(countTasks)
+      // allSettled: a single failed count must not abort the whole refresh.
+      const results = await Promise.allSettled(countTasks)
+      for (const r of results) {
+        if (r.status === 'rejected') console.error('[refetchLoaded] count refresh failed:', r.reason)
+      }
     },
 
     // Clear all data (e.g., when switching campaigns)

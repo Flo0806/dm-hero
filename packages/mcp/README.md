@@ -2,11 +2,13 @@
 
 A tiny **stdio MCP server** that lets an AI agent (Claude Desktop, Claude Code, Cursor, …) put content into a running **DM Hero** instance — NPCs, locations, items, factions and lore, with relations, tags and folders.
 
-The AI never needs DM Hero's source. It talks only to the app's local HTTP API:
+The AI never needs DM Hero's source. It talks only to the app's local HTTP API. Tools:
 
-1. `get_contract` — learns the schema (entity types, all relation keys, races/classes/item types, metadata shapes, an example).
-2. `preview_import` — dry-runs a payload (validates, shows what would be created, writes nothing).
-3. `import_entities` — commits.
+- `list_campaigns` / `create_campaign` — pick the target campaign, or make a new one.
+- `get_contract` — learn the schema (entity types, all relation keys, races/classes/item types, metadata shapes, an example).
+- `search_entities` — find entities that already exist and get their ids.
+- `preview_import` / `import_entities` — dry-run, then commit: create entities (with tags, folders, relations) and link to existing entities via `existing:<id>`.
+- `preview_update` / `update_entities` — dry-run, then commit edits to existing entities (merge metadata, replace tags, move folder, rename).
 
 ## Build
 
@@ -45,4 +47,4 @@ claude mcp add --transport stdio dm-hero -- \
 
 Then start a new agent session. Keep DM Hero running (it serves the API).
 
-> The packaged app will offer a one-click "Connect your AI" that writes this config for you (see issue #321).
+> The packaged app has a **"Connect your AI"** dialog on the dashboard that shows these exact commands (with the right path and URL filled in) to copy-paste.

@@ -38,7 +38,7 @@
                 {{ $t('app.subtitle') }}
               </p>
             </div>
-            <div class="d-flex align-center ga-2">
+            <div class="d-flex align-center flex-wrap justify-end ga-2 header-actions">
               <v-btn
                 variant="tonal"
                 color="primary"
@@ -651,12 +651,13 @@ watch(activeCampaignId, (newId) => {
   pointer-events: auto;
 }
 
-/* Campaign chip - absolute position on smaller screens */
+/* Header actions (Connect-AI button + campaign chip) wrap instead of overlapping
+   on smaller screens — the chip stays in flow rather than being absolutely
+   positioned over the button. */
 @media (max-width: 1465px) {
-  .campaign-chip {
-    position: absolute;
-    top: -15px;
-    right: 0;
+  .header-actions {
+    width: 100%;
+    margin-top: 8px;
   }
 }
 

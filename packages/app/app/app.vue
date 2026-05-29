@@ -216,10 +216,13 @@ if (import.meta.client) {
     }
   }
 
+  let timer: ReturnType<typeof setInterval> | undefined
   onMounted(() => {
     pollImportSignal()
-    const timer = setInterval(pollImportSignal, 5000)
-    onUnmounted(() => clearInterval(timer))
+    timer = setInterval(pollImportSignal, 5000)
+  })
+  onUnmounted(() => {
+    if (timer) clearInterval(timer)
   })
 }
 

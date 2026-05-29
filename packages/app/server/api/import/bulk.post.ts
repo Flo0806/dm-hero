@@ -213,8 +213,9 @@ export default defineEventHandler(async (event) => {
       const fromId = parseExistingId(r.from) ?? refToId.get(r.from!)
       const toId = parseExistingId(r.to) ?? refToId.get(r.to!)
       if (fromId && toId) {
-        insertRelation.run(fromId, toId, String(r.type))
-        relationsCreated++
+        // INSERT OR IGNORE skips duplicates — only count rows actually inserted.
+        const result = insertRelation.run(fromId, toId, String(r.type))
+        if (result.changes > 0) relationsCreated++
       }
     }
 

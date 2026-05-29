@@ -30,8 +30,10 @@ export default defineEventHandler((event) => {
     params.push(type)
   }
   if (search) {
-    where.push('e.name LIKE ?')
-    params.push(`%${search}%`)
+    // Escape LIKE wildcards so a literal % or _ in the query isn't a wildcard.
+    const escaped = search.replace(/[\\%_]/g, c => `\\${c}`)
+    where.push('e.name LIKE ? ESCAPE \'\\\'')
+    params.push(`%${escaped}%`)
   }
 
   const rows = db

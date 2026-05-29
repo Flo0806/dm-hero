@@ -79,6 +79,7 @@ export default defineEventHandler(async (event) => {
     for (const r of rows) rowById.set(r.id, r)
   }
 
+  const seenIds = new Set<number>()
   for (const [i, u] of updates.entries()) {
     const at = `updates[${i}]`
     const id = Number(u.id)
@@ -86,6 +87,9 @@ export default defineEventHandler(async (event) => {
       errors.push(`${at}: id is required`)
       continue
     }
+    // Reject duplicate ids: order-dependent patches + inflated counts otherwise.
+    if (seenIds.has(id)) errors.push(`${at}: duplicate id ${id} (each entity may appear once)`)
+    seenIds.add(id)
     if (!rowById.has(id)) errors.push(`${at}: entity ${id} not found in this campaign`)
     if (u.name !== undefined && !String(u.name).trim()) errors.push(`${at}: name cannot be empty`)
     if (u.tags) {

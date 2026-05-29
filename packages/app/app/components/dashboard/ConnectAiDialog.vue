@@ -12,58 +12,73 @@
         </p>
 
         <v-alert
-          v-if="info && !info.mcpAvailable"
-          type="warning"
+          v-if="fetchFailed"
+          type="error"
           variant="tonal"
           density="comfortable"
-          class="mb-4"
         >
-          {{ $t('connectAi.notBuilt') }}
-          <pre class="connect-cmd mt-2">pnpm --filter @dm-hero/mcp build</pre>
+          {{ $t('connectAi.loadFailed') }}
         </v-alert>
 
-        <v-tabs v-model="tab" density="comfortable" class="mb-3">
-          <v-tab value="claude-code">Claude Code</v-tab>
-          <v-tab value="claude-desktop">Claude Desktop</v-tab>
-          <v-tab value="cursor">Cursor</v-tab>
-        </v-tabs>
+        <template v-else-if="info">
+          <v-alert
+            v-if="!info.mcpAvailable"
+            type="warning"
+            variant="tonal"
+            density="comfortable"
+            class="mb-4"
+          >
+            {{ $t('connectAi.notBuilt') }}
+            <pre class="connect-cmd mt-2">pnpm --filter @dm-hero/mcp build</pre>
+          </v-alert>
 
-        <v-window v-model="tab">
-          <v-window-item value="claude-code">
-            <p class="text-body-small mb-2">{{ $t('connectAi.claudeCode') }}</p>
-            <DashboardConnectCopyBlock :text="claudeCodeCmd" />
-          </v-window-item>
+          <v-tabs v-model="tab" density="comfortable" class="mb-3">
+            <v-tab value="claude-code">Claude Code</v-tab>
+            <v-tab value="claude-desktop">Claude Desktop</v-tab>
+            <v-tab value="cursor">Cursor</v-tab>
+          </v-tabs>
 
-          <v-window-item value="claude-desktop">
-            <p class="text-body-small mb-2">
-              {{ $t('connectAi.claudeDesktop') }}
-              <code>claude_desktop_config.json</code>
-            </p>
-            <DashboardConnectCopyBlock :text="jsonConfig" />
-          </v-window-item>
+          <v-window v-model="tab">
+            <v-window-item value="claude-code">
+              <p class="text-body-small mb-2">{{ $t('connectAi.claudeCode') }}</p>
+              <DashboardConnectCopyBlock :text="claudeCodeCmd" />
+            </v-window-item>
 
-          <v-window-item value="cursor">
-            <p class="text-body-small mb-2">
-              {{ $t('connectAi.cursor') }} <code>.cursor/mcp.json</code>
-            </p>
-            <DashboardConnectCopyBlock :text="jsonConfig" />
-          </v-window-item>
-        </v-window>
+            <v-window-item value="claude-desktop">
+              <p class="text-body-small mb-2">
+                {{ $t('connectAi.claudeDesktop') }}
+                <code>claude_desktop_config.json</code>
+              </p>
+              <DashboardConnectCopyBlock :text="jsonConfig" />
+            </v-window-item>
 
-        <div class="text-body-small text-medium-emphasis mt-3">
-          <strong>{{ $t('connectAi.appUrl') }}:</strong> <code>{{ appUrl }}</code>
+            <v-window-item value="cursor">
+              <p class="text-body-small mb-2">
+                {{ $t('connectAi.cursor') }} <code>.cursor/mcp.json</code>
+              </p>
+              <DashboardConnectCopyBlock :text="jsonConfig" />
+            </v-window-item>
+          </v-window>
+
+          <div class="text-body-small text-medium-emphasis mt-3">
+            <strong>{{ $t('connectAi.appUrl') }}:</strong> <code>{{ appUrl }}</code>
+          </div>
+
+          <v-alert
+            type="info"
+            variant="tonal"
+            prominent
+            icon="mdi-restart"
+            class="mt-4"
+          >
+            <div class="font-weight-medium">{{ $t('connectAi.afterConnectTitle') }}</div>
+            <div class="text-body-small mt-1">{{ $t('connectAi.afterConnect') }}</div>
+          </v-alert>
+        </template>
+
+        <div v-else class="text-center py-8">
+          <v-progress-circular indeterminate color="primary" />
         </div>
-
-        <v-alert
-          type="info"
-          variant="tonal"
-          prominent
-          icon="mdi-restart"
-          class="mt-4"
-        >
-          <div class="font-weight-medium">{{ $t('connectAi.afterConnectTitle') }}</div>
-          <div class="text-body-small mt-1">{{ $t('connectAi.afterConnect') }}</div>
-        </v-alert>
       </v-card-text>
 
       <v-card-actions>
@@ -87,6 +102,7 @@ const dialog = computed({
 
 const tab = ref('claude-code')
 const info = ref<McpInfo | null>(null)
+const fetchFailed = ref(false)
 
 const appUrl = computed(() => info.value?.appUrl ?? 'http://127.0.0.1:3456')
 const mcpPath = computed(() => info.value?.mcpPath ?? '/path/to/dm-hero/packages/mcp/dist/mcp.mjs')
@@ -104,9 +120,12 @@ watch(() => props.show, async (open) => {
   if (open && !info.value) {
     try {
       info.value = await $fetch<McpInfo>('/api/import/mcp-info')
+      fetchFailed.value = false
     }
     catch {
-      // leave nulls → fall back to placeholders
+      // Don't fall back to placeholder commands (they'd be copyable but wrong) —
+      // show an explicit error state instead.
+      fetchFailed.value = true
     }
   }
 })

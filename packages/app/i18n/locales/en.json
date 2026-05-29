@@ -57,7 +57,8 @@
     "cursor": "Add to Cursor:",
     "appUrl": "App address",
     "afterConnectTitle": "Important: start a new AI session",
-    "afterConnect": "MCP servers load only at session start. After connecting, start a fresh session - then say e.g. \"Read this PDF and create the NPCs in DM Hero.\""
+    "afterConnect": "MCP servers load only at session start. After connecting, start a fresh session - then say e.g. \"Read this PDF and create the NPCs in DM Hero.\"",
+    "loadFailed": "Couldn't load the connection details. Is DM Hero reachable? Close the dialog and try again."
   },
   "aiImport": {
     "imported": "AI imported {count} entries into this campaign",
@@ -2232,6 +2233,7 @@
       "modeUpdate": "Update",
       "modeDuplicate": "Duplicate",
       "copy": "Copy",
+      "copied": "Copied",
       "copyWithMode": "Copy",
       "success": "Successfully copied",
       "successDetails": "{copied} copied, {skipped} skipped, {updated} updated",

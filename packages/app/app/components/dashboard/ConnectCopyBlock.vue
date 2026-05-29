@@ -6,7 +6,8 @@
       size="x-small"
       variant="tonal"
       class="connect-copy-btn"
-      :title="copied ? 'Copied' : 'Copy'"
+      :title="copied ? $t('common.copied') : $t('common.copy')"
+      :aria-label="copied ? $t('common.copied') : $t('common.copy')"
       @click="copy"
     />
     <pre class="connect-cmd"><code>{{ text }}</code></pre>

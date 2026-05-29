@@ -55,10 +55,14 @@ export const useFoldersStore = defineStore('folders', () => {
     const key = cacheKey(campaignId, entityType)
     if (!force && byKey.value.has(key)) return byKey.value.get(key)!
 
-    // Coalesce concurrent loads — the second caller gets the SAME promise
-    // and resolves with the same authoritative data as the first.
-    const existing = inFlight.get(key)
-    if (existing) return existing
+    // Coalesce concurrent loads — the second caller gets the SAME promise and
+    // resolves with the same authoritative data as the first. A forced load
+    // (e.g. refresh after an AI import) must NOT join a stale in-flight request;
+    // it starts a fresh fetch and supersedes the pending entry.
+    if (!force) {
+      const existing = inFlight.get(key)
+      if (existing) return existing
+    }
 
     const promise = (async () => {
       try {

@@ -15,7 +15,10 @@ import { resolve } from 'path'
 export default defineEventHandler((event) => {
   const envUrl = process.env.DM_HERO_APP_URL
   const envMcp = process.env.DM_HERO_MCP_PATH
-  const isElectron = !!process.env.DM_HERO_MCP_PATH || process.env.NODE_ENV === 'production'
+  // Electron sets DM_HERO_MCP_PATH; a plain production web deploy does not — so
+  // don't treat NODE_ENV=production as Electron (that would show Electron-only
+  // hints in the hosted/Docker app).
+  const isElectron = !!process.env.DM_HERO_MCP_PATH
 
   // App URL: env (Electron) → request origin → dev default.
   let appUrl = envUrl

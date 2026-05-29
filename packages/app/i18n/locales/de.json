@@ -57,7 +57,8 @@
     "cursor": "In Cursor eintragen:",
     "appUrl": "App-Adresse",
     "afterConnectTitle": "Wichtig: neue KI-Sitzung starten",
-    "afterConnect": "MCP-Server werden nur beim Sitzungsstart geladen. Starte nach dem Verbinden eine neue Sitzung - dann z.B. sagen: „Lies dieses PDF und lege die NPCs in DM Hero an.\""
+    "afterConnect": "MCP-Server werden nur beim Sitzungsstart geladen. Starte nach dem Verbinden eine neue Sitzung - dann z.B. sagen: „Lies dieses PDF und lege die NPCs in DM Hero an.\"",
+    "loadFailed": "Verbindungsdaten konnten nicht geladen werden. Ist DM Hero erreichbar? Schließe den Dialog und versuche es erneut."
   },
   "aiImport": {
     "imported": "KI hat {count} Einträge in diese Kampagne importiert",
@@ -2208,6 +2209,7 @@
       "modeUpdate": "Aktualisieren",
       "modeDuplicate": "Duplizieren",
       "copy": "Kopieren",
+      "copied": "Kopiert",
       "copyWithMode": "Kopieren",
       "success": "Erfolgreich kopiert",
       "successDetails": "{copied} kopiert, {skipped} übersprungen, {updated} aktualisiert",

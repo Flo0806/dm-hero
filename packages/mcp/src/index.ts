@@ -120,13 +120,10 @@ server.registerTool('create_campaign', {
 })
 
 server.registerTool('get_contract', {
-  description: 'ALWAYS CALL THIS FIRST. Returns DM Hero\'s import contract: valid entity types, all relation-type keys (grouped by what they connect), available races/classes/item-types/rarities, the metadata shape per entity type, and a full example payload. Use it to build a valid import.',
-  inputSchema: {
-    campaignId: z.number().int().positive().optional().describe('Reflect this campaign\'s custom races/classes/item types too.'),
-  },
-}, async ({ campaignId }) => {
-  const q = campaignId ? `?campaignId=${campaignId}` : ''
-  const r = await callApi(`/api/import/contract${q}`)
+  description: 'ALWAYS CALL THIS FIRST. Returns DM Hero\'s import contract: valid entity types, all relation-type keys (grouped by what they connect), available races/classes/item-types/rarities (global, including custom ones), the metadata shape per entity type, and a full example payload. Use it to build a valid import.',
+  inputSchema: {},
+}, async () => {
+  const r = await callApi('/api/import/contract')
   return asText(r.body)
 })
 

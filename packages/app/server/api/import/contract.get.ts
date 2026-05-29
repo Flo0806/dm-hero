@@ -12,11 +12,11 @@ import { FACTION_TYPES, FACTION_RELATION_TYPES } from '~~/types/faction'
  * races/classes/item-types (so metadata is stored as keys not free text),
  * the per-type metadata shape, and a full worked example.
  *
- * GET /api/import/contract            → contract using built-in reference data
- * GET /api/import/contract?campaignId → also reflects that campaign's custom
- *                                       races/classes/item types
+ * GET /api/import/contract → the contract. Reference data (races/classes/item
+ * types) is global — including user-created custom ones — so it is NOT scoped
+ * to a campaign.
  */
-export default defineEventHandler((event) => {
+export default defineEventHandler(() => {
   const db = getDb()
 
   const races = db.prepare('SELECT key, name_de, name_en FROM races WHERE deleted_at IS NULL ORDER BY name').all() as Array<{ key: string, name_de: string | null, name_en: string | null }>
@@ -123,6 +123,5 @@ export default defineEventHandler((event) => {
     },
 
     note: 'Relations are bidirectional. `type` is stored verbatim — pick from relationTypes for proper labels. Relation ends accept "existing:<id>" to link to entities that already exist (find ids via GET /api/import/entities).',
-    campaignId: getQuery(event).campaignId ?? null,
   }
 })
