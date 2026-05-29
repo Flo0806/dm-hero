@@ -1,0 +1,23 @@
+{
+  "name": "@dm-hero/mcp",
+  "version": "1.0.0",
+  "description": "stdio MCP server that lets an AI agent create NPCs, locations, items, factions and lore in a running DM Hero instance",
+  "type": "module",
+  "bin": {
+    "dm-hero-mcp": "./dist/mcp.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "unbuild": "^3.0.0"
+  }
+}
