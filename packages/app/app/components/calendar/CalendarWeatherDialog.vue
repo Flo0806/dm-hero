@@ -98,6 +98,8 @@ const { t } = useI18n()
 const props = defineProps<{
   show: boolean
   campaignId: number | string
+  /** Currently-viewed climate zone; null = global weather. */
+  zoneId?: number | null
   year: number
   month: number
   day: number
@@ -192,6 +194,7 @@ async function save() {
       method: 'POST',
       body: {
         campaignId: props.campaignId,
+        zoneId: props.zoneId ?? null,
         year: props.year,
         month: props.month,
         day: props.day,

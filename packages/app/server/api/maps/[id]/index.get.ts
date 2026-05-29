@@ -1,5 +1,5 @@
 import { getDb } from '~~/server/utils/db'
-import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
+import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
 
 interface MarkerRow {
   id: number
@@ -99,6 +99,23 @@ export default defineEventHandler(async (event) => {
     )
     .all(Number(id)) as AreaRow[]
 
+  // Get climate-zone circles with zone color/name/icon joined.
+  const climateAreas = db
+    .prepare(
+      `
+      SELECT
+        mca.*,
+        cz.name as zone_name,
+        cz.color as zone_color,
+        cz.icon as zone_icon
+      FROM map_climate_areas mca
+      JOIN climate_zones cz ON mca.zone_id = cz.id
+      WHERE mca.map_id = ? AND cz.deleted_at IS NULL
+      ORDER BY mca.created_at ASC
+    `,
+    )
+    .all(Number(id)) as MapClimateArea[]
+
   // Get versions (other maps with same parent or this as parent)
   const versions = db
     .prepare(
@@ -118,6 +135,7 @@ export default defineEventHandler(async (event) => {
     ...map,
     markers: markers as MapMarker[],
     areas: areas as MapArea[],
+    climateAreas,
     _versions: versions,
     _markerCount: markers.length,
     _areaCount: areas.length,

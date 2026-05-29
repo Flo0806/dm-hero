@@ -178,6 +178,7 @@ export interface CampaignExportManifest {
   maps?: ExportMap[]
   mapMarkers?: ExportMapMarker[]
   mapAreas?: ExportMapArea[]
+  mapClimateAreas?: ExportMapClimateArea[]
 
   // Campaign features - only in full export
   currencies?: ExportCurrency[]
@@ -375,6 +376,25 @@ export interface ExportCalendar {
   events?: ExportCalendarEvent[]
   eventEntities?: ExportCalendarEventEntity[]
   weather?: ExportCalendarWeather[]
+  // Climate zones + their per-season profiles. All optional → older exports
+  // (and older apps reading newer exports) simply ignore them.
+  climateZones?: ExportClimateZone[]
+  climateZoneSeasons?: ExportClimateZoneSeason[]
+}
+
+export interface ExportClimateZone {
+  ref: string // stable reference within the export, e.g. "zone:1"
+  name: string
+  color?: string | null
+  icon?: string | null
+}
+
+export interface ExportClimateZoneSeason {
+  zone_ref: string // → ExportClimateZone.ref
+  season_sort_order: number // seasons are remapped by sort_order on import
+  temp_min: number
+  temp_max: number
+  weather_distribution: Record<string, number>
 }
 
 export interface ExportCalendarConfig {
@@ -444,6 +464,8 @@ export interface ExportCalendarWeather {
   weather_type: string
   temperature?: number
   notes?: string
+  // → ExportClimateZone.ref. Absent = global weather (zone_id NULL), as before.
+  zone_ref?: string
 }
 
 // =============================================================================
@@ -484,6 +506,14 @@ export interface ExportMapArea {
   center_y: number // 0-100%
   radius: number // percentage
   color?: string
+}
+
+export interface ExportMapClimateArea {
+  map: string // → ExportMap._exportId
+  zone_ref: string // → ExportClimateZone.ref
+  center_x: number // 0-100%
+  center_y: number // 0-100%
+  radius: number // percentage
 }
 
 // =============================================================================

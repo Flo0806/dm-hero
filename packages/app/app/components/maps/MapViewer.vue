@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CampaignMap, MapMarker, MapArea } from '~~/types/map'
+import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
 import type {
   Map as LeafletMap,
   ImageOverlay,
@@ -22,6 +22,9 @@ const props = defineProps<{
   map: CampaignMap
   markers?: MapMarker[]
   areas?: MapArea[]
+  climateAreas?: MapClimateArea[]
+  // Current in-game weather per zone id — shown in the circle's hover tooltip.
+  climateWeather?: Record<number, { weather_type: string, temperature: number | null }>
   editMode?: boolean // Enable area drawing/editing
   measurePoints?: { x: number, y: number }[] // Points for measurement tool
 }>()
@@ -36,16 +39,33 @@ const emit = defineEmits<{
   areaClick: [area: MapArea]
   areaRightClick: [area: MapArea]
   areaDrag: [data: { area: MapArea, x: number, y: number }]
+  climateAreaRightClick: [area: MapClimateArea]
+  climateAreaDrag: [data: { area: MapClimateArea, x: number, y: number }]
 }>()
+
+const { t } = useI18n()
 
 const mapContainer = ref<HTMLElement | null>(null)
 let leafletMap: LeafletMap | null = null
 let imageOverlay: ImageOverlay | null = null
 const markerLayer = shallowRef<LayerGroup | null>(null)
 const areaLayer = shallowRef<LayerGroup | null>(null)
+// Climate zones paint the background — kept on their own layer below location
+// areas and markers.
+const climateLayer = shallowRef<LayerGroup | null>(null)
 
 // Store circle references for drag handling
 const circleRefs = new Map<number, Circle>()
+const climateCircleRefs = new Map<number, Circle>()
+// Per-circle unlock state — a climate circle is locked (not draggable) until
+// the user clicks its lock badge. Reset whenever the area list changes.
+const unlockedClimateAreas = ref<Set<number>>(new Set())
+
+// Drag state for climate circles (separate from location-area drag).
+const draggingClimateArea = ref<MapClimateArea | null>(null)
+const climateDragStartPos = ref<{ lat: number, lng: number } | null>(null)
+const climateStartCenter = ref<{ lat: number, lng: number } | null>(null)
+const climateDidDrag = ref(false)
 
 // Drag state for areas
 const draggingArea = ref<MapArea | null>(null)
@@ -111,6 +131,15 @@ watch(
   { deep: true },
 )
 
+// Update climate areas when they change
+watch(
+  () => props.climateAreas,
+  () => {
+    updateClimateAreas()
+  },
+  { deep: true },
+)
+
 // Update measurement line when points change
 watch(
   () => props.measurePoints,
@@ -154,6 +183,9 @@ function initMap() {
     imageOverlay = L.imageOverlay(`/uploads/${props.map.image_url}`, bounds)
     imageOverlay.addTo(leafletMap)
 
+    // Create climate layer (background — below location areas)
+    climateLayer.value = L.layerGroup().addTo(leafletMap)
+
     // Create area layer (below markers)
     areaLayer.value = L.layerGroup().addTo(leafletMap)
 
@@ -164,6 +196,7 @@ function initMap() {
     measureLineLayer = L.layerGroup().addTo(leafletMap)
 
     // Add areas and markers
+    updateClimateAreas()
     updateAreas()
     updateMarkers()
     updateMeasureLine()
@@ -171,8 +204,8 @@ function initMap() {
     // Handle map clicks
     leafletMap.on('click', (e: LeafletMouseEvent) => {
       if (!imageOverlay) return
-      // Don't emit click if we just finished dragging an area
-      if (justFinishedDragging.value) return
+      // Don't emit click if we just finished dragging an area or climate circle
+      if (justFinishedDragging.value || climateDidDrag.value) return
 
       // Convert lat/lng to percentage of image
       const b = imageOverlay.getBounds()
@@ -299,6 +332,112 @@ function updateAreas() {
   }
 }
 
+// Render climate-zone circles in the zone's color. Distinct look from location
+// areas: dashed border + softer fill so they read as background regions, not
+// pins. Click → emit (weather popup); right-click → emit (delete).
+function updateClimateAreas() {
+  if (!climateLayer.value || !imageOverlay || !L || !leafletMap) return
+
+  climateLayer.value.clearLayers()
+  climateCircleRefs.clear()
+  if (!props.climateAreas) return
+
+  const bounds = imageOverlay.getBounds()
+  const width = bounds.getEast() - bounds.getWest()
+  const height = bounds.getNorth() - bounds.getSouth()
+
+  // Locked climate circles are background-only and never intercept clicks, so
+  // markers/measuring/other zones underneath stay fully usable even when zones
+  // overlap or cover the whole map. The lock badge is the only interactive bit.
+  const LOCKED_FILL = 0.08
+  const HOVER_FILL = 0.22
+  const UNLOCKED_FILL = 0.2
+
+  for (const area of props.climateAreas) {
+    const lng = bounds.getWest() + (area.center_x / 100) * width
+    const lat = bounds.getNorth() - (area.center_y / 100) * height
+    const radiusInMapUnits = (area.radius / 100) * width
+    const color = area.zone_color || '#4DD0E1'
+    const unlocked = unlockedClimateAreas.value.has(area.id)
+
+    const circle = L.circle([lat, lng], {
+      radius: radiusInMapUnits,
+      color,
+      fillColor: color,
+      fillOpacity: unlocked ? UNLOCKED_FILL : LOCKED_FILL,
+      weight: 2,
+      // Solid border + interactive only when unlocked (= the user is editing it).
+      dashArray: unlocked ? undefined : '6 6',
+      interactive: unlocked,
+    })
+
+    climateCircleRefs.set(area.id, circle)
+
+    if (unlocked) {
+      // Editing this zone: drag to move, right-click to resize/delete.
+      circle.on('contextmenu', (e: LeafletMouseEvent) => {
+        e.originalEvent.preventDefault()
+        L?.DomEvent.stopPropagation(e)
+        emit('climateAreaRightClick', area)
+      })
+      circle.on('mousedown', (e: LeafletMouseEvent) => {
+        if (e.originalEvent.button !== 0) return // left button only
+        L?.DomEvent.stopPropagation(e)
+        startClimateDrag(area, e)
+      })
+    }
+
+    circle.addTo(climateLayer.value!)
+
+    // Lock badge at the circle center — the only always-interactive element.
+    // Hover reveals the zone (name tooltip + brighter fill); click toggles edit.
+    const lockIcon = unlocked ? 'mdi-lock-open-variant' : 'mdi-lock'
+    const lockMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: 'climate-lock-badge',
+        html: `<span class="mdi ${lockIcon}" style="color:${color}"></span>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      }),
+      interactive: true,
+      keyboard: false,
+    })
+    // Tooltip: zone name + current weather (temp + type) when available, plus
+    // a small lock hint. No separate popup — everything lives in the tooltip.
+    // Build the DOM with textContent so user-controlled values (zone name) are
+    // never interpreted as HTML (XSS-safe).
+    const w = props.climateWeather?.[area.id]
+    const parts = [area.zone_name || 'Zone']
+    if (w) {
+      const temp = w.temperature != null ? `${w.temperature}° ` : ''
+      parts.push(`${temp}${t(`calendar.weather.types.${w.weather_type}`, w.weather_type)}`)
+    }
+    const lockHint = unlocked ? t('maps.climateUnlocked') : t('maps.climateLocked')
+    const tooltipEl = document.createElement('div')
+    const titleEl = document.createElement('strong')
+    titleEl.textContent = parts.join(' · ')
+    const hintEl = document.createElement('span')
+    hintEl.style.opacity = '0.7'
+    hintEl.style.fontSize = '0.85em'
+    hintEl.textContent = lockHint
+    tooltipEl.appendChild(titleEl)
+    tooltipEl.appendChild(document.createElement('br'))
+    tooltipEl.appendChild(hintEl)
+    lockMarker.bindTooltip(tooltipEl, { direction: 'top' })
+    lockMarker.on('mouseover', () => circle.setStyle({ fillOpacity: HOVER_FILL }))
+    lockMarker.on('mouseout', () => circle.setStyle({ fillOpacity: unlocked ? UNLOCKED_FILL : LOCKED_FILL }))
+    lockMarker.on('click', (e: LeafletMouseEvent) => {
+      L?.DomEvent.stopPropagation(e)
+      const next = new Set(unlockedClimateAreas.value)
+      if (next.has(area.id)) next.delete(area.id)
+      else next.add(area.id)
+      unlockedClimateAreas.value = next
+      updateClimateAreas() // re-render to refresh badge + circle style/interactivity
+    })
+    lockMarker.addTo(climateLayer.value!)
+  }
+}
+
 // Area drag handlers
 function startAreaDrag(area: MapArea, e: LeafletMouseEvent) {
   if (!leafletMap || !L) return
@@ -387,6 +526,69 @@ function cleanupAreaDrag() {
   dragStartPos.value = null
   areaStartCenter.value = null
   didActuallyDrag.value = false
+}
+
+// --- Climate-circle dragging (mirrors the location-area drag above) ---
+function startClimateDrag(area: MapClimateArea, e: LeafletMouseEvent) {
+  if (!leafletMap || !L) return
+  draggingClimateArea.value = area
+  climateDragStartPos.value = { lat: e.latlng.lat, lng: e.latlng.lng }
+  const circle = climateCircleRefs.get(area.id)
+  if (circle) {
+    const center = circle.getLatLng()
+    climateStartCenter.value = { lat: center.lat, lng: center.lng }
+  }
+  climateDidDrag.value = false
+  leafletMap.dragging.disable()
+  leafletMap.on('mousemove', onClimateDragMove)
+  leafletMap.on('mouseup', onClimateDragEnd)
+}
+
+function onClimateDragMove(e: LeafletMouseEvent) {
+  if (!draggingClimateArea.value || !climateDragStartPos.value || !climateStartCenter.value) return
+  const circle = climateCircleRefs.get(draggingClimateArea.value.id)
+  if (!circle) return
+  const deltaLat = e.latlng.lat - climateDragStartPos.value.lat
+  const deltaLng = e.latlng.lng - climateDragStartPos.value.lng
+  climateDidDrag.value = true
+  circle.setLatLng([climateStartCenter.value.lat + deltaLat, climateStartCenter.value.lng + deltaLng])
+}
+
+function onClimateDragEnd() {
+  if (!draggingClimateArea.value || !imageOverlay || !leafletMap) {
+    cleanupClimateDrag()
+    return
+  }
+  const circle = climateCircleRefs.get(draggingClimateArea.value.id)
+  if (circle) {
+    const bounds = imageOverlay.getBounds()
+    const width = bounds.getEast() - bounds.getWest()
+    const height = bounds.getNorth() - bounds.getSouth()
+    const c = circle.getLatLng()
+    emit('climateAreaDrag', {
+      area: draggingClimateArea.value,
+      x: ((c.lng - bounds.getWest()) / width) * 100,
+      y: ((bounds.getNorth() - c.lat) / height) * 100,
+    })
+  }
+  cleanupClimateDrag()
+}
+
+function cleanupClimateDrag() {
+  if (leafletMap) {
+    leafletMap.dragging.enable()
+    leafletMap.off('mousemove', onClimateDragMove)
+    leafletMap.off('mouseup', onClimateDragEnd)
+  }
+  // Keep the drag flag briefly so the trailing click doesn't open the popup.
+  if (climateDidDrag.value) {
+    setTimeout(() => {
+      climateDidDrag.value = false
+    }, 100)
+  }
+  draggingClimateArea.value = null
+  climateDragStartPos.value = null
+  climateStartCenter.value = null
 }
 
 function updateMarkers() {
@@ -624,6 +826,29 @@ defineExpose({
   width: 100%;
   height: 100%;
   background: #1a1d29;
+}
+
+/* Climate-zone lock badge at the circle center */
+.climate-lock-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.climate-lock-badge .mdi {
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.climate-lock-badge .mdi::before {
+  /* @mdi/font ligature glyphs render via ::before; ensure size matches */
+  font-size: 16px;
 }
 
 .map-marker-icon {

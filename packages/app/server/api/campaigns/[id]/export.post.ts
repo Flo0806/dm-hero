@@ -27,6 +27,7 @@ import type {
   ExportMap,
   ExportMapMarker,
   ExportMapArea,
+  ExportMapClimateArea,
   ExportCurrency,
   ExportNote,
   ExportPinboardItem,
@@ -413,6 +414,7 @@ export default defineEventHandler(async (event) => {
   let exportMaps: ExportMap[] = []
   let exportMapMarkers: ExportMapMarker[] = []
   let exportMapAreas: ExportMapArea[] = []
+  let exportMapClimateAreas: ExportMapClimateArea[] = []
   let exportCurrencies: ExportCurrency[] = []
   let exportNotes: ExportNote[] = []
   let exportPinboard: ExportPinboardItem[] = []
@@ -704,7 +706,7 @@ export default defineEventHandler(async (event) => {
     }>
 
     const calendarWeather = db
-      .prepare('SELECT year, month, day, weather_type, temperature, notes FROM calendar_weather WHERE campaign_id = ?')
+      .prepare('SELECT year, month, day, weather_type, temperature, notes, zone_id FROM calendar_weather WHERE campaign_id = ?')
       .all(campaignId) as Array<{
       year: number
       month: number
@@ -712,7 +714,31 @@ export default defineEventHandler(async (event) => {
       weather_type: string
       temperature: number | null
       notes: string | null
+      zone_id: number | null
     }>
+
+    // Climate zones + per-season profiles. Build a stable ref per zone so the
+    // weather rows + map circles can point at them across the export.
+    const climateZoneRows = db
+      .prepare('SELECT id, name, color, icon FROM climate_zones WHERE campaign_id = ? AND deleted_at IS NULL ORDER BY id')
+      .all(campaignId) as Array<{ id: number, name: string, color: string | null, icon: string | null }>
+    const zoneIdToRef = new Map<number, string>()
+    climateZoneRows.forEach((z, i) => zoneIdToRef.set(z.id, `zone:${i + 1}`))
+
+    const climateProfileRows = climateZoneRows.length > 0
+      ? db.prepare(`
+          SELECT czs.zone_id, czs.temp_min, czs.temp_max, czs.weather_distribution, cs.sort_order AS season_sort_order
+          FROM climate_zone_seasons czs
+          JOIN calendar_seasons cs ON cs.id = czs.season_id
+          WHERE czs.zone_id IN (${climateZoneRows.map(() => '?').join(',')})
+        `).all(...climateZoneRows.map(z => z.id)) as Array<{
+        zone_id: number
+        temp_min: number
+        temp_max: number
+        weather_distribution: string
+        season_sort_order: number
+      }>
+      : []
 
     if (calendarConfig || calendarMonths.length > 0) {
       exportCalendar = {
@@ -773,7 +799,25 @@ export default defineEventHandler(async (event) => {
           weather_type: w.weather_type,
           temperature: w.temperature || undefined,
           notes: w.notes || undefined,
+          zone_ref: w.zone_id != null ? zoneIdToRef.get(w.zone_id) : undefined,
         })),
+        climateZones: climateZoneRows.length > 0
+          ? climateZoneRows.map(z => ({
+              ref: zoneIdToRef.get(z.id)!,
+              name: z.name,
+              color: z.color || undefined,
+              icon: z.icon || undefined,
+            }))
+          : undefined,
+        climateZoneSeasons: climateProfileRows.length > 0
+          ? climateProfileRows.map(p => ({
+              zone_ref: zoneIdToRef.get(p.zone_id)!,
+              season_sort_order: p.season_sort_order,
+              temp_min: p.temp_min,
+              temp_max: p.temp_max,
+              weather_distribution: JSON.parse(p.weather_distribution) as Record<string, number>,
+            }))
+          : undefined,
       }
     }
 
@@ -888,6 +932,34 @@ export default defineEventHandler(async (event) => {
         center_y: a.center_y,
         radius: a.radius,
         color: a.color || undefined,
+      }))
+
+    // Climate-zone circles on maps → reference map + zone by export ref.
+    const mapClimateAreaRows = db
+      .prepare(
+        `
+      SELECT mca.map_id, mca.zone_id, mca.center_x, mca.center_y, mca.radius
+      FROM map_climate_areas mca
+      JOIN campaign_maps cm ON mca.map_id = cm.id
+      WHERE cm.campaign_id = ? AND cm.deleted_at IS NULL
+    `,
+      )
+      .all(campaignId) as Array<{
+      map_id: number
+      zone_id: number
+      center_x: number
+      center_y: number
+      radius: number
+    }>
+
+    exportMapClimateAreas = mapClimateAreaRows
+      .filter(a => mapExportIdMap.has(a.map_id) && zoneIdToRef.has(a.zone_id))
+      .map(a => ({
+        map: mapExportIdMap.get(a.map_id)!,
+        zone_ref: zoneIdToRef.get(a.zone_id)!,
+        center_x: a.center_x,
+        center_y: a.center_y,
+        radius: a.radius,
       }))
 
     // Currencies
@@ -1086,6 +1158,7 @@ export default defineEventHandler(async (event) => {
     maps: exportMaps.length > 0 ? exportMaps : undefined,
     mapMarkers: exportMapMarkers.length > 0 ? exportMapMarkers : undefined,
     mapAreas: exportMapAreas.length > 0 ? exportMapAreas : undefined,
+    mapClimateAreas: exportMapClimateAreas.length > 0 ? exportMapClimateAreas : undefined,
     currencies: exportCurrencies.length > 0 ? exportCurrencies : undefined,
     notes: exportNotes.length > 0 ? exportNotes : undefined,
     pinboard: exportPinboard.length > 0 ? exportPinboard : undefined,

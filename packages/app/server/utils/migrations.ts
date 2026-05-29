@@ -2509,6 +2509,148 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 50: Created entity_folders (deep-ready) and entities.folder_id')
     },
   },
+  {
+    version: 51,
+    name: 'climate_zones',
+    up: (db) => {
+      // Climate zones — per-campaign profiles that the weather generator can
+      // consult instead of the hardcoded season tables. One profile per
+      // (zone, season) tuple stores temperature range + weather distribution.
+      // active_climate_zone_id on campaigns lets the user quick-switch zones.
+      //
+      // Backwards compatible: when no zone is active the generator falls back
+      // to the legacy season-based behaviour. Existing campaigns get NULL.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS climate_zones (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          color TEXT,
+          icon TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          deleted_at TEXT
+        )
+      `)
+      // One profile per (zone, season): temperature range + JSON weather mix.
+      // weather_distribution holds e.g. {"sunny":35,"cloudy":15,"rain":20,…}
+      // — weights are percentage-like and normalised on read by the generator.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS climate_zone_seasons (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          zone_id INTEGER NOT NULL REFERENCES climate_zones(id) ON DELETE CASCADE,
+          season_id INTEGER NOT NULL REFERENCES calendar_seasons(id) ON DELETE CASCADE,
+          temp_min INTEGER NOT NULL,
+          temp_max INTEGER NOT NULL,
+          weather_distribution TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(zone_id, season_id)
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zones_campaign ON climate_zones(campaign_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zones_deleted_at ON climate_zones(deleted_at)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zone_seasons_zone ON climate_zone_seasons(zone_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_climate_zone_seasons_season ON climate_zone_seasons(season_id)')
+
+      // Active zone pointer on campaigns — nullable, falls back to no-zone
+      // (legacy generator) when unset.
+      db.exec(
+        'ALTER TABLE campaigns ADD COLUMN active_climate_zone_id INTEGER REFERENCES climate_zones(id) ON DELETE SET NULL',
+      )
+
+      console.log('✅ Migration 51: Created climate_zones, climate_zone_seasons, and active_climate_zone_id')
+    },
+  },
+  {
+    version: 52,
+    name: 'weather_per_zone',
+    up: (db) => {
+      // Make weather per (day, zone) instead of one weather per day. The wish
+      // behind climate zones is multiple coexisting weathers — zone A sunny,
+      // zone B rainy on the same day — later drawn on the map.
+      //
+      // SQLite can't drop the old table-level UNIQUE(campaign,y,m,d), so we
+      // rebuild. zone_id NULL = the legacy "global" weather used when a campaign
+      // has no zones; a non-null zone_id ties the row to one climate zone.
+      // Two partial unique indexes enforce: at most one global row per day, and
+      // at most one row per (day, zone). The active_climate_zone_id on campaigns
+      // becomes "which zone's weather the calendar currently shows".
+      db.exec('ALTER TABLE calendar_weather RENAME TO calendar_weather_old')
+      db.exec(`
+        CREATE TABLE calendar_weather (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL,
+          zone_id INTEGER,
+          year INTEGER NOT NULL,
+          month INTEGER NOT NULL,
+          day INTEGER NOT NULL,
+          weather_type TEXT NOT NULL,
+          temperature INTEGER,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE,
+          FOREIGN KEY (zone_id) REFERENCES climate_zones(id) ON DELETE CASCADE
+        )
+      `)
+      // Carry existing weather over as global (zone_id NULL) — nothing lost.
+      db.exec(`
+        INSERT INTO calendar_weather (id, campaign_id, zone_id, year, month, day, weather_type, temperature, notes, created_at, updated_at)
+        SELECT id, campaign_id, NULL, year, month, day, weather_type, temperature, notes, created_at, updated_at
+        FROM calendar_weather_old
+      `)
+      db.exec('DROP TABLE calendar_weather_old')
+
+      // One global weather per day (zone_id NULL — SQLite treats NULLs as
+      // distinct in a plain unique index, so this partial index is required to
+      // actually enforce singularity).
+      db.exec(`
+        CREATE UNIQUE INDEX idx_calendar_weather_global
+          ON calendar_weather(campaign_id, year, month, day)
+          WHERE zone_id IS NULL
+      `)
+      // One weather per (day, zone).
+      db.exec(`
+        CREATE UNIQUE INDEX idx_calendar_weather_zone
+          ON calendar_weather(campaign_id, year, month, day, zone_id)
+          WHERE zone_id IS NOT NULL
+      `)
+      db.exec('CREATE INDEX idx_calendar_weather_lookup ON calendar_weather(campaign_id, year, month)')
+      db.exec('CREATE INDEX idx_calendar_weather_zone_id ON calendar_weather(zone_id)')
+
+      console.log('✅ Migration 52: Rebuilt calendar_weather with per-zone weather support')
+    },
+  },
+  {
+    version: 53,
+    name: 'map_climate_areas',
+    up: (db) => {
+      // Circles that paint a climate zone onto a campaign map. Mirrors
+      // map_areas (location circles) — position + radius as percentages so they
+      // scale with the image. A zone may have MANY circles on a map (a climate
+      // region can span several blobs), so there is NO unique(map,zone).
+      // Color is taken from the zone itself at render time.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS map_climate_areas (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          map_id INTEGER NOT NULL,
+          zone_id INTEGER NOT NULL,
+          center_x REAL NOT NULL,
+          center_y REAL NOT NULL,
+          radius REAL NOT NULL DEFAULT 8.0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (map_id) REFERENCES campaign_maps(id) ON DELETE CASCADE,
+          FOREIGN KEY (zone_id) REFERENCES climate_zones(id) ON DELETE CASCADE
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_map_climate_areas_map_id ON map_climate_areas(map_id)')
+      db.exec('CREATE INDEX IF NOT EXISTS idx_map_climate_areas_zone_id ON map_climate_areas(zone_id)')
+
+      console.log('✅ Migration 53: Created map_climate_areas')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
@@ -2526,10 +2668,18 @@ export async function runMigrations(db: Database.Database) {
   createBackup()
 
   for (const migration of pendingMigrations) {
-    console.log(`  📦 Applying migration ${migration.version}: ${migration.name}`)
+    // BEGIN IMMEDIATE grabs the write lock up front. If a second connection
+    // (the dev server opens two) is mid-migration, this one blocks here until
+    // the first commits — then the re-check below sees the bumped version and
+    // skips, instead of both racing to INSERT the same schema_version row.
+    db.exec('BEGIN IMMEDIATE')
+    if (getCurrentVersion(db) >= migration.version) {
+      db.exec('ROLLBACK')
+      continue
+    }
 
+    console.log(`  📦 Applying migration ${migration.version}: ${migration.name}`)
     try {
-      db.exec('BEGIN TRANSACTION')
       migration.up(db)
       setVersion(db, migration.version)
       db.exec('COMMIT')
