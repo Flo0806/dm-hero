@@ -16,6 +16,38 @@
             </v-chip>
           </v-btn>
         </v-btn-toggle>
+        <!-- Active climate zone quick-switch — sits next to the generate
+             button. Null means "no zone" → legacy generator. -->
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-btn
+              v-bind="menuProps"
+              variant="tonal"
+              :prepend-icon="activeClimateZone?.icon || 'mdi-earth'"
+              :color="activeClimateZone?.color || undefined"
+            >
+              {{ activeClimateZone?.name || $t('calendar.noClimateZone') }}
+              <v-icon end>mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list density="compact" min-width="220">
+            <v-list-item
+              :title="$t('calendar.noClimateZone')"
+              prepend-icon="mdi-cancel"
+              :active="!activeClimateZoneId"
+              @click="setActiveClimateZone(null)"
+            />
+            <v-divider v-if="climateZonesList.length > 0" />
+            <v-list-item
+              v-for="zone in climateZonesList"
+              :key="zone.id"
+              :title="zone.name"
+              :prepend-icon="zone.icon || 'mdi-earth'"
+              :active="activeClimateZoneId === zone.id"
+              @click="setActiveClimateZone(zone.id)"
+            />
+          </v-list>
+        </v-menu>
         <v-tooltip :text="weatherDisabledReason" :disabled="canGenerateWeather" location="bottom">
           <template #activator="{ props: tooltipProps }">
             <span v-bind="tooltipProps">
@@ -609,6 +641,7 @@
     <CalendarWeatherDialog
       v-model:show="showWeatherDialog"
       :campaign-id="campaignStore.activeCampaignId || 0"
+      :zone-id="activeClimateZoneId"
       :year="viewYear"
       :month="viewMonth"
       :day="weatherDialogDay || 1"
@@ -760,6 +793,63 @@ interface CalendarWeather {
 }
 const weather = ref<Map<number, CalendarWeather>>(new Map()) // day -> weather
 const generatingWeather = ref(false)
+
+// ----------------------------------------------------------------------------
+// Climate zones quick-switch (slice 5)
+// ----------------------------------------------------------------------------
+interface ClimateZoneSummary {
+  id: number
+  name: string
+  color: string | null
+  icon: string | null
+}
+const climateZonesList = ref<ClimateZoneSummary[]>([])
+const activeClimateZoneId = ref<number | null>(null)
+const activeClimateZone = computed<ClimateZoneSummary | null>(() =>
+  activeClimateZoneId.value
+    ? (climateZonesList.value.find(z => z.id === activeClimateZoneId.value) ?? null)
+    : null,
+)
+
+async function loadClimateZonesForSwitch() {
+  if (!campaignStore.activeCampaignIdNumber) return
+  try {
+    const [zones, campaign] = await Promise.all([
+      $fetch<ClimateZoneSummary[]>(`/api/campaigns/${campaignStore.activeCampaignIdNumber}/climate-zones`),
+      $fetch<{ active_climate_zone_id: number | null }>(`/api/campaigns/${campaignStore.activeCampaignIdNumber}`),
+    ])
+    climateZonesList.value = zones
+    activeClimateZoneId.value = campaign.active_climate_zone_id
+  }
+  catch (e) {
+    console.error('[climate-zones] switcher load failed', e)
+  }
+}
+
+async function setActiveClimateZone(zoneId: number | null) {
+  if (!campaignStore.activeCampaignIdNumber) return
+  try {
+    await $fetch(`/api/campaigns/${campaignStore.activeCampaignIdNumber}/active-climate-zone`, {
+      method: 'PATCH',
+      body: { zone_id: zoneId },
+    })
+    activeClimateZoneId.value = zoneId
+    // Switching the viewed zone changes which weather the grid shows.
+    await loadWeather()
+    snackbarStore.success(
+      zoneId === null
+        ? t('calendar.climateZoneCleared')
+        : t('calendar.climateZoneSwitched', {
+            name: climateZonesList.value.find(z => z.id === zoneId)?.name ?? '',
+          }),
+    )
+  }
+  catch (e) {
+    console.error('[climate-zones] switch failed', e)
+    snackbarStore.error(t('calendar.climateZoneError'))
+  }
+}
+
 const showWeatherOverwriteDialog = ref(false)
 const showWeatherDialog = ref(false)
 const weatherDialogDay = ref<number | null>(null)
@@ -1790,9 +1880,11 @@ async function loadWeather() {
         campaignId: campaignStore.activeCampaignId,
         year: viewYear.value,
         month: viewMonth.value,
+        // Show the currently-viewed zone's weather (null → global rows).
+        zoneId: activeClimateZoneId.value ?? '',
       },
     })
-    // Convert to map for efficient lookup
+    // Convert to map for efficient lookup (one row per day for this zone)
     weather.value = new Map(data.map(w => [w.day, w]))
   }
   catch (error) {
@@ -1876,10 +1968,9 @@ async function doGenerateWeather(overwrite: boolean) {
         overwrite,
       },
     })
-    // Update weather map
-    for (const w of result.weather) {
-      weather.value.set(w.day, w)
-    }
+    // The generator writes weather for ALL zones; the day-keyed map only holds
+    // the viewed zone, so reload that slice instead of dumping every zone in.
+    await loadWeather()
     if (result.generated > 0) {
       snackbarStore.success(t('calendar.weather.generated', { count: result.generated }))
     }
@@ -1895,7 +1986,16 @@ async function doGenerateWeather(overwrite: boolean) {
 
 onMounted(async () => {
   await loadConfig()
-  await Promise.all([loadEvents(), loadSessions(), loadEntities(), loadSeasons(), loadWeather()])
+  // Resolve the viewed zone first so the initial weather load fetches the
+  // right zone's rows (not the global slice).
+  await loadClimateZonesForSwitch()
+  await Promise.all([
+    loadEvents(),
+    loadSessions(),
+    loadEntities(),
+    loadSeasons(),
+    loadWeather(),
+  ])
 })
 </script>
 
