@@ -1,5 +1,0 @@
----
-"@dm-hero/app": minor
----
-
-feat: AI bulk-import via MCP (#321) — connect an external AI assistant (Claude, Cursor …) to DM Hero through a small stdio MCP server and let it fill a campaign for you. A self-describing contract endpoint tells the AI exactly what's possible (entity types, relation keys, per-type metadata, available races/classes/item types), so it can build valid payloads without the source. The AI can: list/create campaigns; search existing entities to get their ids; create NPCs/Locations/Items/Factions/Lore with tags, folders and relations; link new content to entities that already exist ("existing:<id>"); and edit existing entities (merge metadata, replace tags, move folder). Every write is strictly validated server-side and previewable as a dry-run before commit. The dashboard gains a "Connect your AI" dialog with copy-paste setup for common assistants, and the app shows a snackbar + refreshes its lists automatically after an AI import or edit (only for AI changes, never manual ones).
