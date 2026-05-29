@@ -10,14 +10,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub"
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --outfile=dist/mcp.mjs --banner:js='#!/usr/bin/env node' --legal-comments=none && chmod +x dist/mcp.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "unbuild": "^3.0.0"
+    "esbuild": "^0.25.0"
   }
 }
