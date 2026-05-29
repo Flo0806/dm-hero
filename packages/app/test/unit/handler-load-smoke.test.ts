@@ -64,7 +64,7 @@ afterAll(() => {
   const g = globalThis as Record<string, unknown>
   for (const [key, snapshot] of originalGlobals) {
     if (snapshot.had) g[key] = snapshot.value
-    else delete g[key]
+    else Reflect.deleteProperty(g, key)
   }
   originalGlobals.clear()
 })
@@ -90,5 +90,19 @@ describe('handler module load smoke', () => {
     await expect(import('../../server/api/folders/[id].patch.ts')).resolves.toBeDefined()
     await expect(import('../../server/api/folders/[id].delete.ts')).resolves.toBeDefined()
     await expect(import('../../server/api/entities/[id]/folder.patch.ts')).resolves.toBeDefined()
+  })
+
+  it('climate-zone + weather + climate-area handlers load', async () => {
+    await expect(import('../../server/api/campaigns/[id]/climate-zones/index.get.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/campaigns/[id]/climate-zones/index.post.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/climate-zones/[id]/index.patch.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/climate-zones/[id]/index.delete.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/climate-zones/[id]/profile.patch.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/campaigns/[id]/active-climate-zone.patch.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/calendar/weather/generate.post.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/calendar/weather/index.get.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/maps/[id]/climate-areas/index.post.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/maps/[id]/climate-areas/[areaId].patch.ts')).resolves.toBeDefined()
+    await expect(import('../../server/api/maps/[id]/climate-areas/[areaId].delete.ts')).resolves.toBeDefined()
   })
 })

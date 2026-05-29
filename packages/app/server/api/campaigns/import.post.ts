@@ -20,6 +20,8 @@ import {
   type EntityFolderType,
 } from '~~/types/folder'
 import { resolveUniqueFolderName, entityTypeToFolderType } from '~~/server/utils/folders'
+// Reuse the folder rename convention ("Name (1)") for climate-zone collisions.
+import { uniqueFolderName as uniqueName } from '~~/types/folder'
 import type {
   RaceClassConflict,
   CampaignExportManifest,
@@ -318,6 +320,9 @@ export default defineEventHandler(async (event) => {
     audio: new Map(),
     statTemplates: new Map(),
   }
+  // Climate zone export-ref → new zone id (built during calendar import, used
+  // again when importing map climate circles). Empty for exports without zones.
+  const zoneRefToId = new Map<string, number>()
 
   let campaignId: number = 0
   let manifest: CampaignExportManifest
@@ -1241,14 +1246,16 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Seasons
+      // Seasons. Remember sort_order → new season id so climate-zone profiles
+      // (which reference seasons by sort_order) can be remapped.
+      const seasonSortOrderToId = new Map<number, number>()
       if (cal.seasons && cal.seasons.length > 0) {
         const insertSeason = db.prepare(`
           INSERT INTO calendar_seasons (campaign_id, name, start_month, start_day, background_image, color, icon, weather_type, sort_order)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `)
         for (const season of cal.seasons) {
-          insertSeason.run(
+          const result = insertSeason.run(
             campaignId,
             season.name,
             season.start_month,
@@ -1259,6 +1266,37 @@ export default defineEventHandler(async (event) => {
             season.weather_type || null,
             season.sort_order,
           )
+          seasonSortOrderToId.set(season.sort_order, result.lastInsertRowid as number)
+        }
+      }
+
+      // Climate zones + profiles. Optional → old exports skip this entirely.
+      // Name collision in the target campaign → silent rename "Name (1)" (same
+      // convention as folders). zoneRefToId is reused for weather + map circles.
+      if (cal.climateZones && cal.climateZones.length > 0) {
+        const insertZone = db.prepare('INSERT INTO climate_zones (campaign_id, name, color, icon) VALUES (?, ?, ?, ?)')
+        const existing = db
+          .prepare('SELECT name FROM climate_zones WHERE campaign_id = ? AND deleted_at IS NULL')
+          .all(campaignId) as Array<{ name: string }>
+        const takenNames = existing.map(r => r.name)
+        for (const zone of cal.climateZones) {
+          const finalName = uniqueName(takenNames, zone.name)
+          takenNames.push(finalName)
+          const result = insertZone.run(campaignId, finalName, zone.color ?? null, zone.icon ?? null)
+          zoneRefToId.set(zone.ref, result.lastInsertRowid as number)
+        }
+
+        if (cal.climateZoneSeasons && cal.climateZoneSeasons.length > 0) {
+          const insertProfile = db.prepare(`
+            INSERT INTO climate_zone_seasons (zone_id, season_id, temp_min, temp_max, weather_distribution)
+            VALUES (?, ?, ?, ?, ?)
+          `)
+          for (const p of cal.climateZoneSeasons) {
+            const zoneId = zoneRefToId.get(p.zone_ref)
+            const seasonId = seasonSortOrderToId.get(p.season_sort_order)
+            if (!zoneId || !seasonId) continue // season/zone not present → skip
+            insertProfile.run(zoneId, seasonId, p.temp_min, p.temp_max, JSON.stringify(p.weather_distribution ?? {}))
+          }
         }
       }
 
@@ -1301,14 +1339,16 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Weather
+      // Weather. zone_ref → new zone id (null = global). Old exports have no
+      // zone_ref → all weather imports as global, exactly as before.
       if (cal.weather && cal.weather.length > 0) {
         const insertWeather = db.prepare(`
-          INSERT INTO calendar_weather (campaign_id, year, month, day, weather_type, temperature, notes)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO calendar_weather (campaign_id, zone_id, year, month, day, weather_type, temperature, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `)
         for (const w of cal.weather) {
-          insertWeather.run(campaignId, w.year, w.month, w.day, w.weather_type, w.temperature || null, w.notes || null)
+          const zoneId = w.zone_ref ? (zoneRefToId.get(w.zone_ref) ?? null) : null
+          insertWeather.run(campaignId, zoneId, w.year, w.month, w.day, w.weather_type, w.temperature || null, w.notes || null)
         }
       }
 
@@ -1428,6 +1468,28 @@ export default defineEventHandler(async (event) => {
 
         if (mapId && locationId) {
           insertArea.run(mapId, locationId, area.center_x, area.center_y, area.radius, area.color || null)
+        }
+        else {
+          stats.skipped++
+        }
+      }
+    }
+
+    // ==========================================================================
+    // IMPORT MAP CLIMATE AREAS
+    // ==========================================================================
+    // Climate circles reference a map + a zone (both remapped). Optional →
+    // old exports skip. Needs zoneRefToId, populated during calendar import.
+    if (manifest.mapClimateAreas && manifest.mapClimateAreas.length > 0) {
+      const insertClimateArea = db.prepare(`
+        INSERT INTO map_climate_areas (map_id, zone_id, center_x, center_y, radius)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      for (const area of manifest.mapClimateAreas) {
+        const mapId = idMapping.maps.get(area.map)
+        const zoneId = zoneRefToId.get(area.zone_ref)
+        if (mapId && zoneId) {
+          insertClimateArea.run(mapId, zoneId, area.center_x, area.center_y, area.radius)
         }
         else {
           stats.skipped++
