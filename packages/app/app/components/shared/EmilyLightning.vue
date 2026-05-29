@@ -73,11 +73,11 @@
 import { useThemePreference } from '~/composables/useThemePreference'
 import { useFolderAnimationSettings } from '~/composables/useFolderAnimations'
 
-// Dashboard-only deployment: shorter cadence (4–15 s) because the user is
+// Dashboard-only deployment: lively cadence (2.5–8 s) because the user is
 // idling there and the strikes are part of the ambience. On work pages this
 // component is simply not mounted, so list/edit screens stay focused.
-const MIN_INTERVAL_MS = 4_000
-const MAX_INTERVAL_MS = 15_000
+const MIN_INTERVAL_MS = 2_500
+const MAX_INTERVAL_MS = 8_000
 const STRIKE_DURATION_MS = 900 // matches CSS keyframe length
 
 const { current } = useThemePreference()

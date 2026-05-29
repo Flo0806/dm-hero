@@ -1,13 +1,13 @@
 <template>
   <v-container>
-    <!-- Emily theme distant lightning — dashboard ambience only, self-gates
-         on theme + settings. -->
+    <!-- Per-theme dashboard ambience (#322) — picks the right animation for the
+         active theme; self-gates on theme + the "Spielereien" setting. -->
     <ClientOnly>
-      <SharedEmilyLightning />
+      <SharedDashboardAmbient />
     </ClientOnly>
 
     <!-- Redirect to campaigns if no campaign selected -->
-    <div v-if="!activeCampaignId" class="text-center py-16">
+    <div v-if="!activeCampaignId" class="text-center py-16 position-relative content-above">
       <v-icon icon="mdi-sword-cross" size="64" class="mb-4" color="primary" />
       <h2 class="text-headline-large mb-4">
         {{ $t('dashboard.noCampaign.title') }}
@@ -20,7 +20,7 @@
       </v-btn>
     </div>
 
-    <div v-else>
+    <div v-else class="position-relative content-above">
       <!-- Header -->
       <v-row>
         <v-col cols="12">
@@ -639,6 +639,14 @@ watch(activeCampaignId, (newId) => {
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Lift the dashboard content above the fixed ambient particle layer (z-index 0)
+   so the per-theme ambience stays behind the cards, showing only in the gaps.
+   position MUST be set here — z-index has no effect on static elements. */
+.content-above {
+  position: relative;
+  z-index: 1;
 }
 
 /* Dice overlay - positioned absolute so it doesn't take layout space */
