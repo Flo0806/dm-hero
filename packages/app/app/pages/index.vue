@@ -38,19 +38,33 @@
                 {{ $t('app.subtitle') }}
               </p>
             </div>
-            <v-chip
-              v-if="activeCampaignName"
-              color="primary"
-              size="large"
-              prepend-icon="mdi-sword-cross"
-              class="cursor-pointer campaign-chip"
-              @click="router.push('/campaigns')"
-            >
-              {{ activeCampaignName }}
-            </v-chip>
+            <div class="d-flex align-center ga-2">
+              <v-btn
+                variant="tonal"
+                color="primary"
+                prepend-icon="mdi-robot-happy-outline"
+                @click="showConnectAi = true"
+              >
+                {{ $t('connectAi.button') }}
+              </v-btn>
+              <v-chip
+                v-if="activeCampaignName"
+                color="primary"
+                size="large"
+                prepend-icon="mdi-sword-cross"
+                class="cursor-pointer campaign-chip"
+                @click="router.push('/campaigns')"
+              >
+                {{ activeCampaignName }}
+              </v-chip>
+            </div>
           </div>
         </v-col>
       </v-row>
+
+      <ClientOnly>
+        <DashboardConnectAiDialog v-model:show="showConnectAi" />
+      </ClientOnly>
 
       <!-- Stats & Widgets Row (with optional Map) -->
       <v-row class="mb-4 widgets-row">
@@ -309,6 +323,7 @@ const currentWeather = ref<{ weatherType: string, temperature?: number } | null>
 // Entity preview dialog
 const showEntityPreview = ref(false)
 const previewEntityId = ref<number | null>(null)
+const showConnectAi = ref(false)
 const previewEntityType = ref<EntityPreviewType>('npc')
 
 // Group preview dialog

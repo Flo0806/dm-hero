@@ -50,8 +50,8 @@
     "electron:rebuild": "node scripts/electron-rebuild.js",
     "electron:rebuild:linux": "node scripts/electron-rebuild.js",
     "electron:start": "cross-env NODE_ENV=production electron . --ozone-platform=x11 --no-sandbox",
-    "electron:build": "nuxt build && pnpm electron:rebuild && electron-builder --linux",
-    "electron:build:win": "nuxt build && pnpm electron:rebuild && electron-builder --win",
+    "electron:build": "pnpm --filter @dm-hero/mcp build && nuxt build && pnpm electron:rebuild && electron-builder --linux",
+    "electron:build:win": "pnpm --filter @dm-hero/mcp build && nuxt build && pnpm electron:rebuild && electron-builder --win",
     "mode:web": "pnpm rebuild better-sqlite3 && echo '✅ Switched to Web Mode (pnpm dev)'",
     "mode:electron": "pnpm electron:rebuild:linux && echo '✅ Switched to Electron Mode (pnpm electron:start)'"
   },
@@ -99,6 +99,13 @@
       {
         "from": "node_modules/file-uri-to-path",
         "to": ".output/server/node_modules/file-uri-to-path",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../mcp/dist",
+        "to": "mcp",
         "filter": [
           "**/*"
         ]
