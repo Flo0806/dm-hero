@@ -128,18 +128,23 @@ export default defineEventHandler(async (event) => {
         const classKey = await getClassKey(term, enableFuzzy, locale)
         const typeKey = getNpcTypeKey(term, locale)
 
-        // If we found a race/class/type key, use ALL search variants (key + localized names)
+        // If we found a race/class/type key, search its variants (key + localized
+        // names) — but ALWAYS keep the literal term as a prefix too. A fuzzy
+        // race/class hit must ADD matches, never REPLACE the name search: e.g.
+        // "Baldu" fuzzily matches the class "barde" (LD 2), but the user is
+        // looking for the NPC "Balduwan" — keeping "baldu*" finds them. (#313)
+        const literal = normalizeText(term)
         if (raceKey) {
           const variants = await getRaceSearchVariants(term, locale)
-          return { variants, isRaceClassKey: true }
+          return { variants: [...variants, literal], isRaceClassKey: true }
         }
         if (classKey) {
           const variants = await getClassSearchVariants(term, locale)
-          return { variants, isRaceClassKey: true }
+          return { variants: [...variants, literal], isRaceClassKey: true }
         }
         if (typeKey) {
           const variants = getNpcTypeSearchVariants(typeKey)
-          return { variants, isRaceClassKey: true }
+          return { variants: [...variants, literal], isRaceClassKey: true }
         }
 
         // No race/class/type match - use original term
