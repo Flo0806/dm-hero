@@ -145,6 +145,7 @@
             :markers="filteredMarkers"
             :areas="selectedMapAreas"
             :climate-areas="selectedMapClimateAreas"
+            :climate-weather="climateWeatherByZone"
             :measure-points="measurePoints"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
@@ -586,6 +587,46 @@ async function loadClimateZoneOptions() {
   }
 }
 
+// Current in-game day's weather per zone — fed into the map tooltips so a zone
+// circle shows "name · 38° Sunny" on hover. zoneId → { weather_type, temperature }.
+const climateWeatherByZone = ref<Record<number, { weather_type: string, temperature: number | null }>>({})
+
+async function loadClimateWeather() {
+  if (!activeCampaignId.value) {
+    climateWeatherByZone.value = {}
+    return
+  }
+  try {
+    // The config endpoint nests the row under `config`.
+    const configResp = await $fetch<{ config: { current_year: number, current_month: number, current_day: number } }>(
+      '/api/calendar/config',
+      { query: { campaignId: activeCampaignId.value } },
+    )
+    const cfg = configResp.config
+    const rows = await $fetch<Array<{ zone_id: number | null, day: number, weather_type: string, temperature: number | null }>>(
+      '/api/calendar/weather',
+      {
+        query: {
+          campaignId: activeCampaignId.value,
+          year: cfg.current_year,
+          month: cfg.current_month,
+          allZones: 'true',
+        },
+      },
+    )
+    const map: Record<number, { weather_type: string, temperature: number | null }> = {}
+    for (const r of rows) {
+      if (r.zone_id != null && r.day === cfg.current_day) {
+        map[r.zone_id] = { weather_type: r.weather_type, temperature: r.temperature }
+      }
+    }
+    climateWeatherByZone.value = map
+  }
+  catch (error) {
+    console.error('Failed to load climate weather:', error)
+  }
+}
+
 // Mode for what happens on map click
 type AddMode = 'marker' | 'area' | 'climate' | null
 const addMode = ref<AddMode>(null)
@@ -780,6 +821,7 @@ async function selectMap(map: CampaignMap) {
     selectedMapAreas.value = details.areas || []
     selectedMapClimateAreas.value = details.climateAreas || []
     await loadClimateZoneOptions()
+    await loadClimateWeather()
   }
   catch (error) {
     console.error('Failed to load map details:', error)

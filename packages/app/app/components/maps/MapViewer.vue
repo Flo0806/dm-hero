@@ -23,6 +23,8 @@ const props = defineProps<{
   markers?: MapMarker[]
   areas?: MapArea[]
   climateAreas?: MapClimateArea[]
+  // Current in-game weather per zone id — shown in the circle's hover tooltip.
+  climateWeather?: Record<number, { weather_type: string, temperature: number | null }>
   editMode?: boolean // Enable area drawing/editing
   measurePoints?: { x: number, y: number }[] // Points for measurement tool
 }>()
@@ -400,8 +402,17 @@ function updateClimateAreas() {
       interactive: true,
       keyboard: false,
     })
+    // Tooltip: zone name + current weather (temp + type) when available, plus
+    // a small lock hint. No separate popup — everything lives in the tooltip.
+    const w = props.climateWeather?.[area.id]
+    const parts = [area.zone_name || 'Zone']
+    if (w) {
+      const temp = w.temperature != null ? `${w.temperature}° ` : ''
+      parts.push(`${temp}${t(`calendar.weather.types.${w.weather_type}`, w.weather_type)}`)
+    }
+    const lockHint = unlocked ? t('maps.climateUnlocked') : t('maps.climateLocked')
     lockMarker.bindTooltip(
-      `${area.zone_name || 'Zone'} — ${unlocked ? t('maps.climateUnlocked') : t('maps.climateLocked')}`,
+      `<strong>${parts.join(' · ')}</strong><br><span style="opacity:0.7;font-size:0.85em">${lockHint}</span>`,
       { direction: 'top' },
     )
     lockMarker.on('mouseover', () => circle.setStyle({ fillOpacity: HOVER_FILL }))
