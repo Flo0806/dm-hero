@@ -11,7 +11,7 @@
         <div class="avatar-upload-container">
           <v-avatar size="100" color="primary" class="avatar-preview">
             <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
-            <span v-else class="text-h4">{{ initials }}</span>
+            <span v-else class="text-headline-large">{{ initials }}</span>
           </v-avatar>
           <v-btn
             icon="mdi-camera"
@@ -30,7 +30,7 @@
             @change="onFileSelected"
           />
         </div>
-        <p class="text-caption text-medium-emphasis mt-2">
+        <p class="text-body-small text-medium-emphasis mt-2">
           {{ $t('profile.info.avatarHint') }}
         </p>
       </div>
@@ -58,7 +58,7 @@
         disabled
         class="mb-2"
       />
-      <p class="text-caption text-medium-emphasis mb-4">
+      <p class="text-body-small text-medium-emphasis mb-4">
         <v-icon icon="mdi-information" size="x-small" />
         {{ $t('profile.info.emailReadonly') }}
       </p>

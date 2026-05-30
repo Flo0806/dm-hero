@@ -6,10 +6,10 @@
       <div class="d-flex align-center mb-8">
         <v-btn icon="mdi-arrow-left" variant="text" class="mr-4" @click="goBack" />
         <div>
-          <h1 class="text-h4 font-weight-light">
+          <h1 class="text-headline-large font-weight-light">
             {{ isEditMode ? $t('store.upload.titleEdit') : $t('store.upload.title') }}
           </h1>
-          <p class="text-body-2 text-medium-emphasis">
+          <p class="text-body-medium text-medium-emphasis">
             {{ isEditMode ? $t('store.upload.subtitleEdit') : $t('store.upload.subtitle') }}
           </p>
         </div>
@@ -29,13 +29,13 @@
           </div>
         </template>
         <div>
-          <div class="text-body-1 font-weight-medium mb-1">
+          <div class="text-body-large font-weight-medium mb-1">
             {{ $t('store.upload.beta.message') }}
           </div>
-          <div class="text-body-2 mb-2">
+          <div class="text-body-medium mb-2">
             {{ $t('store.upload.beta.feedback') }}
           </div>
-          <div class="text-body-2 text-medium-emphasis mb-3">
+          <div class="text-body-medium text-medium-emphasis mb-3">
             {{ $t('store.upload.beta.thanks') }}
           </div>
           <v-btn
@@ -114,8 +114,8 @@
           <div v-if="formDisabled" class="form-disabled-overlay">
             <div class="overlay-content">
               <v-icon icon="mdi-lock" size="48" class="mb-4" />
-              <div class="text-h6 mb-2">{{ $t('store.upload.formLocked') }}</div>
-              <div class="text-body-2 text-medium-emphasis">
+              <div class="text-headline-small mb-2">{{ $t('store.upload.formLocked') }}</div>
+              <div class="text-body-medium text-medium-emphasis">
                 {{ !isEmailVerified ? $t('store.upload.verifyFirst') : $t('store.upload.acceptTosFirst') }}
               </div>
             </div>
@@ -180,7 +180,7 @@
                       variant="outlined"
                       @update:model-value="onCoverSelected"
                     />
-                    <p class="text-caption text-medium-emphasis mt-1">
+                    <p class="text-body-small text-medium-emphasis mt-1">
                       {{ $t('store.upload.hints.coverImage') }}
                     </p>
                   </div>
@@ -276,13 +276,13 @@
 
                 <!-- Difficulty -->
                 <v-col cols="12">
-                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.difficulty') }}</div>
+                  <div class="mb-2 text-body-medium">{{ $t('store.upload.fields.difficulty') }}</div>
                   <StoreDifficultyRating v-model="form.difficulty" />
                 </v-col>
 
                 <!-- Players -->
                 <v-col cols="12" md="6">
-                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.players') }}</div>
+                  <div class="mb-2 text-body-medium">{{ $t('store.upload.fields.players') }}</div>
                   <div class="d-flex align-center ga-4">
                     <v-text-field
                       v-model.number="form.playersMin"
@@ -312,7 +312,7 @@
 
                 <!-- Character Level -->
                 <v-col cols="12" md="6">
-                  <div class="mb-2 text-body-2">{{ $t('store.upload.fields.characterLevel') }}</div>
+                  <div class="mb-2 text-body-medium">{{ $t('store.upload.fields.characterLevel') }}</div>
                   <div class="d-flex align-center ga-4">
                     <v-text-field
                       v-model.number="form.levelMin"
@@ -424,7 +424,7 @@
                   {{ existingFileName }}
                   <span v-if="existingVersion" class="ml-1 text-medium-emphasis">(v{{ existingVersion }})</span>
                 </v-chip>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small text-medium-emphasis">
                   {{ $t('store.upload.hints.fileExists') }}
                 </p>
               </div>
@@ -452,7 +452,7 @@
               <v-chip color="success" variant="flat" prepend-icon="mdi-check" class="mb-3">
                 {{ $t('store.upload.fields.freeAdventure') }}
               </v-chip>
-              <p class="text-body-2 text-medium-emphasis">
+              <p class="text-body-medium text-medium-emphasis">
                 {{ $t('store.upload.hints.freeOnly') }}
               </p>
             </v-card-text>

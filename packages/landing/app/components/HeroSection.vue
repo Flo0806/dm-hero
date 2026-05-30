@@ -1,16 +1,18 @@
 <script setup lang="ts">
 const { t } = useI18n()
 
-// Floating particles for background effect
-const particles = ref<{ id: number, left: string, size: number, delay: number }[]>([])
+// Floating particles for background effect — coloured from the app's theme
+// palette (teal, purple, coral, blue, gold) for a vivid, modern feel.
+const PARTICLE_PALETTE = ['#4DD0E1', '#B388FF', '#FF7B69', '#4FC3F7', '#D4A574']
+const particles = ref<{ id: number, left: string, size: number, delay: number, color: string }[]>([])
 
 onMounted(() => {
-  // Generate random particles
-  particles.value = Array.from({ length: 20 }, (_, i) => ({
+  particles.value = Array.from({ length: 26 }, (_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
     size: Math.random() * 4 + 2,
     delay: Math.random() * 8,
+    color: PARTICLE_PALETTE[Math.floor(Math.random() * PARTICLE_PALETTE.length)]!,
   }))
 })
 </script>
@@ -33,14 +35,23 @@ onMounted(() => {
             width: `${particle.size}px`,
             height: `${particle.size}px`,
             animationDelay: `${particle.delay}s`,
+            background: particle.color,
+            boxShadow: `0 0 8px ${particle.color}`,
           }"
         />
       </div>
 
-      <!-- Glowing orbs -->
+      <!-- Glowing colour orbs (animated aurora) -->
       <div class="orb orb-1" />
       <div class="orb orb-2" />
       <div class="orb orb-3" />
+      <div class="orb orb-4" />
+      <div class="orb orb-5" />
+
+      <!-- One-shot sword × axe clash on load (client-only) -->
+      <ClientOnly>
+        <HeroWeaponClash />
+      </ClientOnly>
     </div>
 
     <v-container class="hero-content">
@@ -49,9 +60,9 @@ onMounted(() => {
           <!-- Logo -->
           <div
             v-motion
-            :initial="{ opacity: 0, scale: 0.8 }"
-            :enter="{ opacity: 1, scale: 1, transition: { delay: 100, duration: 500 } }"
-            class="hero-logo mb-6"
+            :initial="{ opacity: 0, scale: 0.35 }"
+            :enter="{ opacity: 1, scale: 1, transition: { delay: 1750, duration: 650, type: 'spring', stiffness: 260, damping: 14 } }"
+            class="hero-logo hero-logo--forged mb-6"
           >
             <img src="/logo.png" alt="DM Hero" class="hero-logo-img" />
           </div>
@@ -60,10 +71,10 @@ onMounted(() => {
           <div
             v-motion
             :initial="{ opacity: 0, y: -20 }"
-            :enter="{ opacity: 1, y: 0, transition: { delay: 300 } }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 2050 } }"
             class="hero-badge mb-6"
           >
-            <v-chip color="primary" variant="tonal" size="large" class="px-6 py-2">
+            <v-chip color="primary" variant="tonal" size="large" class="px-6 py-2 hero-badge-chip">
               <v-icon start size="small">mdi-open-source-initiative</v-icon>
               {{ t('hero.badge') }}
             </v-chip>
@@ -74,7 +85,7 @@ onMounted(() => {
             <span
               v-motion
               :initial="{ opacity: 0, y: 30 }"
-              :enter="{ opacity: 1, y: 0, transition: { delay: 400 } }"
+              :enter="{ opacity: 1, y: 0, transition: { delay: 2150 } }"
               class="title-line d-block"
             >
               {{ t('hero.title.line1') }}
@@ -82,7 +93,7 @@ onMounted(() => {
             <span
               v-motion
               :initial="{ opacity: 0, y: 30 }"
-              :enter="{ opacity: 1, y: 0, transition: { delay: 600 } }"
+              :enter="{ opacity: 1, y: 0, transition: { delay: 2280 } }"
               class="title-line d-block"
             >
               {{ t('hero.title.line2') }}
@@ -90,7 +101,7 @@ onMounted(() => {
             <span
               v-motion
               :initial="{ opacity: 0, y: 30 }"
-              :enter="{ opacity: 1, y: 0, transition: { delay: 800 } }"
+              :enter="{ opacity: 1, y: 0, transition: { delay: 2410 } }"
               class="title-line gradient-text-animated d-block"
             >
               {{ t('hero.title.line3') }}
@@ -101,7 +112,7 @@ onMounted(() => {
           <p
             v-motion
             :initial="{ opacity: 0, y: 20 }"
-            :enter="{ opacity: 1, y: 0, transition: { delay: 1000 } }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 2600 } }"
             class="hero-subtitle mx-auto mb-10"
             style="max-width: 700px"
           >
@@ -112,7 +123,7 @@ onMounted(() => {
           <div
             v-motion
             :initial="{ opacity: 0, y: 20 }"
-            :enter="{ opacity: 1, y: 0, transition: { delay: 1200 } }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 2780 } }"
             class="hero-cta d-flex flex-wrap justify-center ga-4 mb-12"
           >
             <v-btn
@@ -141,7 +152,7 @@ onMounted(() => {
           <div
             v-motion
             :initial="{ opacity: 0, y: 20 }"
-            :enter="{ opacity: 1, y: 0, transition: { delay: 1400 } }"
+            :enter="{ opacity: 1, y: 0, transition: { delay: 2950 } }"
           >
             <v-row justify="center" class="hero-stats">
               <v-col cols="6" sm="3">
@@ -181,7 +192,7 @@ onMounted(() => {
       <div
         v-motion
         :initial="{ opacity: 0 }"
-        :enter="{ opacity: 1, transition: { delay: 2000 } }"
+        :enter="{ opacity: 1, transition: { delay: 3300 } }"
         class="scroll-indicator"
       >
         <v-icon class="animate-bounce-subtle" size="32" color="primary">
@@ -210,9 +221,9 @@ onMounted(() => {
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(212, 165, 116, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 50%, rgba(212, 165, 116, 0.08) 0%, transparent 40%),
-    radial-gradient(ellipse at 20% 80%, rgba(139, 115, 85, 0.1) 0%, transparent 40%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(77, 208, 225, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 45%, rgba(255, 123, 105, 0.1) 0%, transparent 45%),
+    radial-gradient(ellipse at 15% 80%, rgba(179, 136, 255, 0.12) 0%, transparent 45%);
 }
 
 .hero-grid {
@@ -233,45 +244,70 @@ onMounted(() => {
 .particle {
   position: absolute;
   bottom: -10px;
-  background: var(--dm-gold);
   border-radius: 50%;
   opacity: 0;
   animation: particleFloat 12s ease-in-out infinite;
 }
 
+/* Animated colour aurora — vivid theme-palette blobs that slowly drift and
+   morph behind the hero. */
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.3;
-  animation: float 8s ease-in-out infinite;
+  filter: blur(90px);
+  opacity: 0.45;
+  animation: orbMorph 18s ease-in-out infinite;
 }
 
 .orb-1 {
-  width: 400px;
-  height: 400px;
-  background: var(--dm-gold);
-  top: -100px;
-  right: -100px;
+  width: 460px;
+  height: 460px;
+  background: #4dd0e1; /* teal */
+  top: -130px;
+  right: -90px;
   animation-delay: 0s;
 }
 
 .orb-2 {
-  width: 300px;
-  height: 300px;
-  background: rgba(139, 115, 85, 0.5);
-  bottom: 10%;
-  left: -50px;
-  animation-delay: 2s;
+  width: 400px;
+  height: 400px;
+  background: #b388ff; /* purple */
+  bottom: -80px;
+  left: -70px;
+  animation-delay: -4s;
 }
 
 .orb-3 {
-  width: 200px;
-  height: 200px;
-  background: var(--dm-gold);
-  top: 50%;
-  right: 10%;
-  animation-delay: 4s;
+  width: 300px;
+  height: 300px;
+  background: #ff7b69; /* coral */
+  top: 42%;
+  right: 6%;
+  animation-delay: -8s;
+}
+
+.orb-4 {
+  width: 360px;
+  height: 360px;
+  background: #4fc3f7; /* blue */
+  top: 8%;
+  left: 10%;
+  animation-delay: -12s;
+}
+
+.orb-5 {
+  width: 320px;
+  height: 320px;
+  background: #d4a574; /* gold */
+  bottom: 14%;
+  right: 28%;
+  animation-delay: -16s;
+}
+
+@keyframes orbMorph {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -36px) scale(1.18); }
+  66% { transform: translate(-36px, 28px) scale(0.88); }
 }
 
 .hero-content {
@@ -311,6 +347,16 @@ onMounted(() => {
 .hero-badge :deep(.v-chip) {
   font-weight: 600;
   letter-spacing: 0.5px;
+}
+
+/* Gentle glow pulse to draw the eye to the 1.4 / AI hook. */
+.hero-badge-chip {
+  animation: badgePulse 2.6s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(212, 165, 116, 0); }
+  50% { box-shadow: 0 0 18px rgba(212, 165, 116, 0.5); }
 }
 
 .hero-title {

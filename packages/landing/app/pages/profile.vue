@@ -47,7 +47,7 @@
               {{ $t('profile.dangerZone.title') }}
             </v-card-title>
             <v-card-text>
-              <p class="text-body-2 text-medium-emphasis mb-4">
+              <p class="text-body-medium text-medium-emphasis mb-4">
                 {{ $t('profile.dangerZone.description') }}
               </p>
               <v-btn
@@ -74,14 +74,14 @@
         <v-card-text>
           <v-alert type="error" variant="tonal" class="mb-4">
             <div class="font-weight-medium mb-2">{{ $t('profile.deleteAccount.warning') }}</div>
-            <ul class="text-body-2 pl-4">
+            <ul class="text-body-medium pl-4">
               <li>{{ $t('profile.deleteAccount.consequence1') }}</li>
               <li>{{ $t('profile.deleteAccount.consequence2') }}</li>
               <li>{{ $t('profile.deleteAccount.consequence3') }}</li>
             </ul>
           </v-alert>
 
-          <p class="text-body-2 mb-4">
+          <p class="text-body-medium mb-4">
             {{ $t('profile.deleteAccount.confirmText') }}
           </p>
 

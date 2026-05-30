@@ -14,40 +14,40 @@
       />
       <template v-if="submitting">
         <v-progress-circular indeterminate size="16" width="2" color="amber" class="mr-1" />
-        <span class="text-body-2 text-medium-emphasis">...</span>
+        <span class="text-body-medium text-medium-emphasis">...</span>
       </template>
-      <span v-else class="text-body-2 text-medium-emphasis">
+      <span v-else class="text-body-medium text-medium-emphasis">
         {{ displayRating }} ({{ ratingCount }})
       </span>
     </div>
 
     <!-- Login hint -->
-    <p v-if="!isAuthenticated" class="text-caption text-medium-emphasis mt-1">
+    <p v-if="!isAuthenticated" class="text-body-small text-medium-emphasis mt-1">
       <NuxtLink to="/login" class="text-primary">
         {{ $t('store.rating.loginToRate') }}
       </NuxtLink>
     </p>
 
     <!-- Email not verified hint -->
-    <p v-else-if="!isEmailVerified" class="text-caption text-warning mt-1">
+    <p v-else-if="!isEmailVerified" class="text-body-small text-warning mt-1">
       <v-icon icon="mdi-email-alert" size="small" />
       {{ $t('store.rating.verifyToRate') }}
     </p>
 
     <!-- User's rating status -->
-    <p v-else-if="userRating" class="text-caption text-success mt-1">
+    <p v-else-if="userRating" class="text-body-small text-success mt-1">
       <v-icon icon="mdi-check" size="small" />
       {{ $t('store.rating.yourRating', { rating: userRating }) }}
     </p>
 
     <!-- Submitting state -->
-    <p v-else-if="submitting" class="text-caption text-medium-emphasis mt-1">
+    <p v-else-if="submitting" class="text-body-small text-medium-emphasis mt-1">
       <v-progress-circular indeterminate size="12" width="2" class="mr-1" />
       {{ $t('store.rating.submitting') }}
     </p>
 
     <!-- Error -->
-    <p v-if="error" class="text-caption text-error mt-1">
+    <p v-if="error" class="text-body-small text-error mt-1">
       {{ error }}
     </p>
   </div>

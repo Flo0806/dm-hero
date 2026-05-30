@@ -18,15 +18,15 @@ const { t } = useI18n()
               mdi-heart
             </v-icon>
 
-            <h2 class="text-h4 font-weight-bold mb-4 gradient-text">
+            <h2 class="text-headline-large font-weight-bold mb-4 gradient-text">
               {{ t('support.title') }}
             </h2>
 
-            <p class="text-body-1 text-medium-emphasis mb-4">
+            <p class="text-body-large text-medium-emphasis mb-4">
               {{ t('support.description') }}
             </p>
 
-            <p class="text-body-2 text-medium-emphasis mb-6">
+            <p class="text-body-medium text-medium-emphasis mb-6">
               {{ t('support.whatIs') }}
             </p>
 
@@ -43,7 +43,7 @@ const { t } = useI18n()
               />
             </a>
 
-            <p class="text-caption text-medium-emphasis mt-6">
+            <p class="text-body-small text-medium-emphasis mt-6">
               {{ t('support.note') }}
             </p>
           </v-card>

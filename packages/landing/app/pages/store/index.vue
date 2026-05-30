@@ -9,10 +9,10 @@
           alt="Hero Basar"
           class="store-logo mb-6"
         />
-        <h1 class="text-h2 font-weight-light mb-4">
+        <h1 class="text-display-medium font-weight-light mb-4">
           {{ $t('store.title') }}
         </h1>
-        <p class="text-h6 text-medium-emphasis mx-auto" style="max-width: 600px">
+        <p class="text-headline-small text-medium-emphasis mx-auto" style="max-width: 600px">
           {{ $t('store.subtitle') }}
         </p>
       </div>
@@ -31,8 +31,8 @@
               <v-img v-else :src="user.avatarUrl" />
             </v-avatar>
             <div class="d-flex flex-column">
-              <span class="text-body-1 font-weight-medium">{{ user?.displayName }}</span>
-              <span class="text-caption text-medium-emphasis">{{ user?.email }}</span>
+              <span class="text-body-large font-weight-medium">{{ user?.displayName }}</span>
+              <span class="text-body-small text-medium-emphasis">{{ user?.email }}</span>
             </div>
             <v-divider vertical class="mx-2" />
             <v-btn
@@ -122,8 +122,8 @@
       <!-- Empty State -->
       <v-card v-else class="text-center pa-12" elevation="0" color="surface-variant">
         <v-icon icon="mdi-treasure-chest-outline" size="96" color="primary" class="mb-6" />
-        <h2 class="text-h4 mb-4">{{ $t('store.empty.title') }}</h2>
-        <p class="text-body-1 text-medium-emphasis mb-6" style="max-width: 500px; margin: 0 auto">
+        <h2 class="text-headline-large mb-4">{{ $t('store.empty.title') }}</h2>
+        <p class="text-body-large text-medium-emphasis mb-6" style="max-width: 500px; margin: 0 auto">
           {{ $t('store.empty.description') }}
         </p>
         <v-btn

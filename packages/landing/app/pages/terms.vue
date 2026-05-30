@@ -3,17 +3,17 @@
     <StoreBackground />
     <v-container class="py-8 position-relative" style="max-width: 900px; z-index: 1">
       <v-card elevation="0" class="terms-card pa-6 pa-md-10">
-        <h1 class="text-h4 text-md-h3 font-weight-bold mb-2">
+        <h1 class="text-headline-large text-md-display-small font-weight-bold mb-2">
           {{ $t('tos.title') }}
         </h1>
-        <p class="text-caption text-medium-emphasis mb-8">
+        <p class="text-body-small text-medium-emphasis mb-8">
           {{ $t('tos.version') }}: {{ tosVersion }} | {{ $t('tos.lastUpdated') }}: {{ $t('tos.lastUpdatedDate') }}
         </p>
 
         <!-- German Version -->
         <div v-if="locale === 'de'" class="terms-content">
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">1. Geltungsbereich</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">1. Geltungsbereich</h2>
             <p>
               Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für die Nutzung der Plattform "DM Hero - Hero Basar"
               (nachfolgend "Plattform"), betrieben von Florian Heuberger (nachfolgend "Betreiber").
@@ -22,7 +22,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">2. Leistungsbeschreibung</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">2. Leistungsbeschreibung</h2>
             <p>
               Die Plattform ermöglicht es registrierten Nutzern, Abenteuer-Dateien (.dmhero) für das Programm "DM Hero"
               hochzuladen, zu teilen und herunterzuladen. Die Plattform dient ausschließlich als technische
@@ -31,7 +31,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">3. Verantwortlichkeit für Inhalte</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">3. Verantwortlichkeit für Inhalte</h2>
             <v-alert type="warning" variant="tonal" class="mb-4">
               <strong>WICHTIG:</strong> Der Betreiber übernimmt keinerlei Verantwortung für hochgeladene Inhalte.
             </v-alert>
@@ -62,7 +62,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">4. Urheberrecht und Lizenzen</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">4. Urheberrecht und Lizenzen</h2>
             <p class="mb-4">
               <strong>4.1</strong> Sie behalten alle Rechte an Ihren Inhalten. Mit dem Hochladen gewähren Sie
               dem Betreiber jedoch eine nicht-exklusive, weltweite, unentgeltliche Lizenz, Ihre Inhalte auf der
@@ -79,7 +79,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">5. Rechte des Betreibers</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">5. Rechte des Betreibers</h2>
             <p class="mb-4">
               <strong>5.1</strong> Der Betreiber behält sich das Recht vor, jederzeit und ohne Angabe von Gründen:
             </p>
@@ -96,7 +96,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">6. Haftungsausschluss</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">6. Haftungsausschluss</h2>
             <v-alert type="error" variant="tonal" class="mb-4">
               <strong>6.1</strong> Der Betreiber haftet nicht für:
             </v-alert>
@@ -114,7 +114,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">7. Freistellung</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">7. Freistellung</h2>
             <p>
               Sie stellen den Betreiber von sämtlichen Ansprüchen Dritter frei, die aufgrund Ihrer Inhalte oder
               Ihrer Nutzung der Plattform entstehen. Dies umfasst auch die Kosten der Rechtsverteidigung
@@ -123,7 +123,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">8. Datenschutz</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">8. Datenschutz</h2>
             <p>
               Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer Datenschutzerklärung und den
               geltenden Datenschutzgesetzen (DSGVO).
@@ -131,7 +131,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">9. Schlussbestimmungen</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">9. Schlussbestimmungen</h2>
             <p class="mb-4">
               <strong>9.1</strong> Es gilt deutsches Recht unter Ausschluss des UN-Kaufrechts.
             </p>
@@ -149,7 +149,7 @@
         <!-- English Version -->
         <div v-else class="terms-content">
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">1. Scope</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">1. Scope</h2>
             <p>
               These Terms of Service (ToS) apply to the use of the platform "DM Hero - Hero Basar"
               (hereinafter "Platform"), operated by Florian Heuberger (hereinafter "Operator").
@@ -158,7 +158,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">2. Service Description</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">2. Service Description</h2>
             <p>
               The Platform allows registered users to upload, share, and download adventure files (.dmhero)
               for the "DM Hero" application. The Platform serves exclusively as a technical intermediary
@@ -167,7 +167,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">3. Responsibility for Content</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">3. Responsibility for Content</h2>
             <v-alert type="warning" variant="tonal" class="mb-4">
               <strong>IMPORTANT:</strong> The Operator assumes no responsibility for uploaded content.
             </v-alert>
@@ -198,7 +198,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">4. Copyright and Licenses</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">4. Copyright and Licenses</h2>
             <p class="mb-4">
               <strong>4.1</strong> You retain all rights to your content. However, by uploading, you grant
               the Operator a non-exclusive, worldwide, royalty-free license to host, display, and make
@@ -215,7 +215,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">5. Rights of the Operator</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">5. Rights of the Operator</h2>
             <p class="mb-4">
               <strong>5.1</strong> The Operator reserves the right, at any time and without stating reasons, to:
             </p>
@@ -232,7 +232,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">6. Disclaimer of Liability</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">6. Disclaimer of Liability</h2>
             <v-alert type="error" variant="tonal" class="mb-4">
               <strong>6.1</strong> The Operator is not liable for:
             </v-alert>
@@ -250,7 +250,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">7. Indemnification</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">7. Indemnification</h2>
             <p>
               You indemnify and hold the Operator harmless from all third-party claims arising from
               your content or your use of the Platform. This includes the costs of legal defense,
@@ -259,7 +259,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">8. Privacy</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">8. Privacy</h2>
             <p>
               The processing of personal data is carried out in accordance with our Privacy Policy
               and applicable data protection laws (GDPR).
@@ -267,7 +267,7 @@
           </section>
 
           <section class="mb-8">
-            <h2 class="text-h5 font-weight-bold mb-4">9. Final Provisions</h2>
+            <h2 class="text-headline-medium font-weight-bold mb-4">9. Final Provisions</h2>
             <p class="mb-4">
               <strong>9.1</strong> German law applies, excluding the UN Convention on Contracts for
               the International Sale of Goods.

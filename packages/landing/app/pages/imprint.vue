@@ -5,31 +5,31 @@
       {{ $t('legal.backToHome') }}
     </NuxtLink>
 
-    <h1 class="text-h4 text-md-h3 font-weight-bold mb-8">
+    <h1 class="text-headline-large text-md-display-small font-weight-bold mb-8">
       {{ $t('legal.imprint.title') }}
     </h1>
 
-    <p class="text-body-1 mb-4">
+    <p class="text-body-large mb-4">
       {{ $t('legal.imprint.info') }}<br />
       {{ $t('legal.imprint.owner') }}<br />
       {{ $t('legal.imprint.address') }}
     </p>
 
-    <p class="text-body-1 mb-4">
+    <p class="text-body-large mb-4">
       {{ $t('legal.imprint.contact') }}:
       <a href="mailto:info@fh-softdev.de" class="text-primary">info@fh-softdev.de</a>
     </p>
 
-    <p class="text-body-1 mb-4">
+    <p class="text-body-large mb-4">
       {{ $t('legal.imprint.vat') }}: DE265013614
     </p>
 
-    <p class="text-body-1 mb-8">
+    <p class="text-body-large mb-8">
       {{ $t('legal.imprint.responsible') }}:<br />
       Florian Heuberger
     </p>
 
-    <p class="text-caption text-medium-emphasis">
+    <p class="text-body-small text-medium-emphasis">
       {{ $t('legal.imprint.note') }}
     </p>
   </v-container>

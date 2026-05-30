@@ -104,8 +104,8 @@ const currentImage = computed(() => {
             />
             <div v-else-if="currentScreenshot" class="screenshot-placeholder">
               <v-icon size="80" color="primary" class="mb-4">mdi-image-outline</v-icon>
-              <p class="text-h6 mb-2">{{ t(`screenshots.items.${currentScreenshot.key}`) }}</p>
-              <p class="text-body-2 text-medium-emphasis">{{ t('screenshots.comingSoon') }}</p>
+              <p class="text-headline-small mb-2">{{ t(`screenshots.items.${currentScreenshot.key}`) }}</p>
+              <p class="text-body-medium text-medium-emphasis">{{ t('screenshots.comingSoon') }}</p>
             </div>
           </div>
         </div>

@@ -18,10 +18,10 @@
           <template #prepend>
             <v-icon :icon="getErrorIcon(error.type)" size="small" color="error" class="mr-2" />
           </template>
-          <v-list-item-title class="text-body-2">
+          <v-list-item-title class="text-body-medium">
             {{ error.message }}
           </v-list-item-title>
-          <v-list-item-subtitle v-if="error.field" class="text-caption">
+          <v-list-item-subtitle v-if="error.field" class="text-body-small">
             {{ error.field }}
           </v-list-item-subtitle>
         </v-list-item>
@@ -57,7 +57,7 @@
           <template #prepend>
             <v-icon icon="mdi-alert-outline" size="small" color="warning" class="mr-2" />
           </template>
-          <v-list-item-title class="text-body-2">
+          <v-list-item-title class="text-body-medium">
             {{ warning.message }}
           </v-list-item-title>
         </v-list-item>

@@ -58,6 +58,18 @@ export default defineNuxtPlugin((app) => {
     components,
     directives,
     ssr: true,
+    // Pin the v3 breakpoint thresholds so layouts written against v3 still match
+    // after the v4 upgrade (v4 reduced the default breakpoint sizes).
+    display: {
+      thresholds: {
+        xs: 0,
+        sm: 600,
+        md: 960,
+        lg: 1280,
+        xl: 1920,
+        xxl: 2560,
+      },
+    },
     icons: {
       defaultSet: 'mdi',
       aliases,

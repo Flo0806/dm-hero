@@ -126,21 +126,19 @@ function dismiss() {
   opacity: 0;
 }
 
-/* Mobile */
+/* Mobile — compact: just the "Join Discord" button (+ close), no long message. */
 @media (max-width: 600px) {
-  .banner-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 8px;
+  .discord-banner {
+    padding: 6px 0;
   }
 
   .banner-text {
-    flex-direction: column;
-    gap: 4px;
+    display: none;
   }
 
-  .banner-message {
-    font-size: 0.85rem;
+  .banner-content {
+    flex-direction: row;
+    gap: 8px;
   }
 }
 </style>

@@ -8,6 +8,8 @@ interface Highlight {
   badge: string
   isNew?: boolean
   glow: string
+  /** When true, this slide cycles through the theme colours while shown. */
+  cycleColors?: boolean
 }
 
 const highlights: Highlight[] = [
@@ -42,6 +44,15 @@ const highlights: Highlight[] = [
     glow: 'rgba(255, 64, 129, 0.4)',
     badge: 'v1.4',
     isNew: true,
+  },
+  {
+    key: 'themes',
+    icon: 'mdi-palette',
+    gradient: 'linear-gradient(135deg, #4DD0E1 0%, #B388FF 50%, #FF7043 100%)',
+    glow: 'rgba(179, 136, 255, 0.45)',
+    badge: 'v1.4',
+    isNew: true,
+    cycleColors: true,
   },
   {
     key: 'archive',
@@ -114,11 +125,11 @@ function goTo(index: number) {
 
 function resetInterval() {
   if (interval) clearInterval(interval)
-  interval = setInterval(next, 5000)
+  interval = setInterval(next, 7000)
 }
 
 onMounted(() => {
-  interval = setInterval(next, 5000)
+  interval = setInterval(next, 7000)
 })
 
 onUnmounted(() => {
@@ -131,6 +142,7 @@ onUnmounted(() => {
     <div
       :key="currentIndex"
       class="highlight-slide"
+      :class="{ 'slide--cycle': currentHighlight?.cycleColors }"
       :style="{
         background: currentHighlight?.gradient,
         boxShadow: `inset 0 0 60px ${currentHighlight?.glow}, 0 4px 20px ${currentHighlight?.glow}`,
@@ -215,6 +227,22 @@ onUnmounted(() => {
 @keyframes gradientShift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* The "Themes" slide literally shows off the colour themes — it cycles through
+   each theme's palette a few times while it's on screen. */
+.slide--cycle {
+  animation: slideIn 0.5s ease, themeCycle 4.5s linear infinite;
+}
+
+@keyframes themeCycle {
+  0% { background: linear-gradient(135deg, #1a1d29 0%, #d4a574 100%); } /* dark / gold */
+  16% { background: linear-gradient(135deg, #0f1f1a 0%, #4caf7c 100%); } /* forest */
+  33% { background: linear-gradient(135deg, #0d1b2a 0%, #4fc3f7 100%); } /* ocean */
+  50% { background: linear-gradient(135deg, #1a0f2e 0%, #b388ff 100%); } /* arcane */
+  66% { background: linear-gradient(135deg, #1f1410 0%, #ff7043 100%); } /* forge */
+  83% { background: linear-gradient(135deg, #2c001e 0%, #e95420 100%); } /* ubuntu */
+  100% { background: linear-gradient(135deg, #0b2622 0%, #4dd0e1 100%); } /* emily lagoon */
 }
 
 @keyframes slideIn {
@@ -356,12 +384,19 @@ onUnmounted(() => {
 
 /* Mobile */
 @media (max-width: 599px) {
+  /* Keep the arrows at the edges and give the text room so it never slides
+     under them or gets clipped. */
   .nav-btn--left {
-    left: -12px;
+    left: 0;
   }
 
   .nav-btn--right {
-    right: -12px;
+    right: 0;
+  }
+
+  .highlight-container {
+    padding-left: 44px;
+    padding-right: 44px;
   }
 
   .highlight-icon {
@@ -370,6 +405,15 @@ onUnmounted(() => {
 
   .highlight-title {
     font-size: 1.1rem;
+  }
+
+  /* Let the subtitle wrap instead of being cut off with an ellipsis. */
+  .highlight-subtitle {
+    white-space: normal;
+    max-width: 100%;
+    overflow: visible;
+    text-overflow: clip;
+    text-align: center;
   }
 }
 </style>

@@ -64,7 +64,7 @@ async function handleLogout() {
       <!-- Logo -->
       <NuxtLink to="/" class="d-flex align-center text-decoration-none logo-link">
         <img src="/logo.png" alt="DM Hero" class="nav-logo" />
-        <span class="text-h6 font-weight-bold gradient-text d-none d-sm-inline">
+        <span class="text-headline-small font-weight-bold gradient-text d-none d-sm-inline">
           DM Hero
         </span>
       </NuxtLink>
@@ -132,7 +132,7 @@ async function handleLogout() {
               >
                 <v-avatar size="36" color="primary">
                   <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
-                  <span v-else class="text-body-2">{{ initials }}</span>
+                  <span v-else class="text-body-medium">{{ initials }}</span>
                 </v-avatar>
               </v-btn>
             </template>
@@ -141,7 +141,7 @@ async function handleLogout() {
                 <v-list-item-title class="font-weight-medium">
                   {{ user?.displayName }}
                 </v-list-item-title>
-                <v-list-item-subtitle class="text-caption">
+                <v-list-item-subtitle class="text-body-small">
                   {{ user?.email }}
                 </v-list-item-subtitle>
               </v-list-item>
@@ -203,7 +203,7 @@ async function handleLogout() {
           <template #prepend>
             <img src="/logo.png" alt="DM Hero" class="drawer-logo" />
           </template>
-          <v-list-item-title class="text-h6 font-weight-bold gradient-text">
+          <v-list-item-title class="text-headline-small font-weight-bold gradient-text">
             DM Hero
           </v-list-item-title>
         </v-list-item>
@@ -266,13 +266,13 @@ async function handleLogout() {
             <template #prepend>
               <v-avatar size="40" color="primary" class="mr-3">
                 <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
-                <span v-else class="text-body-2">{{ initials }}</span>
+                <span v-else class="text-body-medium">{{ initials }}</span>
               </v-avatar>
             </template>
             <v-list-item-title class="font-weight-medium">
               {{ user?.displayName }}
             </v-list-item-title>
-            <v-list-item-subtitle class="text-caption">
+            <v-list-item-subtitle class="text-body-small">
               {{ user?.email }}
             </v-list-item-subtitle>
           </v-list-item>

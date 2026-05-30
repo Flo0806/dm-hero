@@ -6,7 +6,7 @@
     scrollable
   >
     <v-card>
-      <v-card-title class="d-flex align-center text-h5 pa-6 pb-2">
+      <v-card-title class="d-flex align-center text-headline-medium pa-6 pb-2">
         <v-icon icon="mdi-file-document-check" color="primary" size="28" class="mr-3" />
         {{ $t('tos.acceptTitle') }}
       </v-card-title>
@@ -32,7 +32,7 @@
         </v-alert>
 
         <!-- Link to full terms -->
-        <p class="text-body-1 mb-4">
+        <p class="text-body-large mb-4">
           {{ $t('tos.readFullText') }}
           <NuxtLink to="/terms" target="_blank" class="text-primary font-weight-medium">
             {{ $t('tos.fullTermsLink') }}
@@ -48,7 +48,7 @@
           class="mt-4"
         >
           <template #label>
-            <span class="text-body-1">
+            <span class="text-body-large">
               {{ $t('tos.checkboxLabel') }}
               <strong>{{ $t('tos.version') }} {{ tosVersion }}</strong>
             </span>

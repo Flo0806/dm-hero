@@ -8,6 +8,20 @@ const features = [
     color: 'primary',
   },
   {
+    key: 'folders',
+    icon: 'mdi-folder-multiple',
+    color: 'secondary',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
+    key: 'tags',
+    icon: 'mdi-tag-multiple',
+    color: 'purple',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
     key: 'search',
     icon: 'mdi-magnify',
     color: 'info',
@@ -23,9 +37,23 @@ const features = [
     color: 'success',
   },
   {
+    key: 'climate',
+    icon: 'mdi-weather-partly-snowy-rainy',
+    color: 'teal',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
     key: 'ai',
     icon: 'mdi-robot-happy',
     color: 'warning',
+  },
+  {
+    key: 'aiImport',
+    icon: 'mdi-robot-happy-outline',
+    color: 'info',
+    badge: 'v1.4',
+    isNew: true,
   },
   {
     key: 'local',
@@ -59,7 +87,6 @@ const features = [
     icon: 'mdi-archive-arrow-down',
     color: 'warning',
     badge: 'v1.3',
-    isNew: true,
   },
   {
     key: 'maps',

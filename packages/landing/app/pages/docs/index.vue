@@ -27,7 +27,7 @@ const docs = computed(() => {
         <!-- Sidebar Navigation -->
         <v-col cols="12" md="3">
           <v-card class="docs-nav pa-4" color="surface">
-            <h3 class="text-h6 font-weight-bold mb-4 gradient-text">
+            <h3 class="text-headline-small font-weight-bold mb-4 gradient-text">
               {{ t('docs.title') }}
             </h3>
             <v-list nav density="compact" class="pa-0">
@@ -47,10 +47,10 @@ const docs = computed(() => {
         <!-- Main Content -->
         <v-col cols="12" md="9">
           <v-card class="docs-content pa-8" color="surface">
-            <h1 class="text-h3 font-weight-bold mb-6 gradient-text">
+            <h1 class="text-display-small font-weight-bold mb-6 gradient-text">
               {{ t('docs.welcome') }}
             </h1>
-            <p class="text-body-1 text-medium-emphasis mb-8">
+            <p class="text-body-large text-medium-emphasis mb-8">
               {{ t('docs.intro') }}
             </p>
 
@@ -67,10 +67,10 @@ const docs = computed(() => {
                   color="grey-darken-4"
                   hover
                 >
-                  <h3 class="text-h6 font-weight-bold mb-2">
+                  <h3 class="text-headline-small font-weight-bold mb-2">
                     {{ doc.title }}
                   </h3>
-                  <p class="text-body-2 text-medium-emphasis">
+                  <p class="text-body-medium text-medium-emphasis">
                     {{ doc.description || t('docs.readMore') }}
                   </p>
                 </v-card>
