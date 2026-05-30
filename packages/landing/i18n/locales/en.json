@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "DM Hero - Free D&D Campaign Manager for Dungeon Masters",
-    "description": "DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions — offline, private, no subscriptions."
+    "description": "DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions - offline, private, no subscriptions."
   },
   "highlights": {
     "aiImport": {
@@ -10,7 +10,7 @@
     },
     "climateZones": {
       "title": "Climate Zones",
-      "subtitle": "Different weather per region — desert sun while the forest gets snow"
+      "subtitle": "Different weather per region - desert sun while the forest gets snow"
     },
     "folders": {
       "title": "Folders",
@@ -20,13 +20,17 @@
       "title": "Tags",
       "subtitle": "Colored tags on everything, found instantly with #tag search"
     },
+    "themes": {
+      "title": "8 Themes & Living Dashboard",
+      "subtitle": "Eight color themes, each with its own animated dashboard ambience"
+    },
     "archive": {
       "title": "Archive Function",
-      "subtitle": "Hide entities instead of deleting — restore with one click"
+      "subtitle": "Hide entities instead of deleting - restore with one click"
     },
     "multiclass": {
       "title": "Multi-Class & Multi-Type",
-      "subtitle": "NPCs with multiple classes and types — searchable in all languages"
+      "subtitle": "NPCs with multiple classes and types - searchable in all languages"
     },
     "encounter": {
       "title": "Encounter Tracker",
@@ -46,7 +50,7 @@
     },
     "search": {
       "title": "Fuzzy Search",
-      "subtitle": "Find anything — even with typos and in any language"
+      "subtitle": "Find anything - even with typos and in any language"
     }
   },
   "nav": {
@@ -67,16 +71,16 @@
     "backToHome": "Back to Home"
   },
   "hero": {
-    "badge": "Free & Open Source",
+    "badge": "Free · Open Source · Local-first",
     "title": {
-      "line1": "Your Campaign.",
-      "line2": "Your Story.",
-      "line3": "Your Heroes."
+      "line1": "Every NPC, every secret,",
+      "line2": "every session -",
+      "line3": "finally in one place."
     },
-    "subtitle": "The ultimate campaign management tool for Dungeon Masters. Organize NPCs, locations, items, factions, and sessions with powerful fuzzy search and AI integration.",
+    "subtitle": "DM Hero is built for Dungeon Masters who'd rather tell stories than wrangle notes. Lightning-fast search, deeply linked NPCs, places & items, interactive maps and an in-game calendar - everything in one place. 100% local, yours forever. Optional AI helpers are there to take the busywork off your plate when you want them - never required.",
     "cta": {
-      "download": "Download Now",
-      "github": "View on GitHub"
+      "download": "Download - it's free",
+      "github": "Star on GitHub"
     },
     "stats": {
       "entities": "Entity Types",
@@ -92,6 +96,22 @@
       "entities": {
         "title": "Entity Management",
         "description": "Organize NPCs, Locations, Items, Factions, Lore, Players, and Sessions. Everything interconnected with bidirectional relationships."
+      },
+      "folders": {
+        "title": "Folders",
+        "description": "Group NPCs, items, factions and lore into folders. Drag entities in and out — and folders travel with your campaign on export/import."
+      },
+      "tags": {
+        "title": "Tags",
+        "description": "Add colored tags to anything and pull up everything related instantly with #tag search. Preserved on export and import."
+      },
+      "climate": {
+        "title": "Climate Zones",
+        "description": "Define multiple weather regions — desert sun while the boreal forest gets snow, on the same day. Draw zones as circles on your maps."
+      },
+      "aiImport": {
+        "title": "Connect Your AI",
+        "description": "Let an AI read your PDFs and create NPCs, places, items, factions and lore — with relations, tags and folders. You preview everything first. Optional, never required."
       },
       "search": {
         "title": "Powerful Fuzzy Search",
