@@ -25,7 +25,7 @@
       <!-- Empty State -->
       <div v-else-if="adventures.length === 0" class="text-center py-8">
         <v-icon icon="mdi-book-open-blank-variant" size="64" color="medium-emphasis" class="mb-4" />
-        <p class="text-body-1 text-medium-emphasis mb-4">
+        <p class="text-body-large text-medium-emphasis mb-4">
           {{ $t('profile.adventures.empty') }}
         </p>
         <v-btn color="primary" variant="tonal" to="/store/upload" prepend-icon="mdi-plus">
@@ -172,7 +172,7 @@
     <!-- Validation Details Dialog -->
     <v-dialog v-model="validationDialog" max-width="600">
       <v-card v-if="selectedAdventure">
-        <v-card-title class="d-flex align-center text-h5">
+        <v-card-title class="d-flex align-center text-headline-medium">
           <v-icon
             :icon="selectedAdventure.status === 'rejected' ? 'mdi-file-document-alert' : 'mdi-file-clock'"
             :color="selectedAdventure.status === 'rejected' ? 'error' : 'warning'"
@@ -188,7 +188,7 @@
             class="ml-3"
           />
         </v-card-title>
-        <v-card-subtitle class="pb-0 text-body-1">
+        <v-card-subtitle class="pb-0 text-body-large">
           {{ selectedAdventure.status === 'rejected' ? $t('store.validation.detailsTitle') : $t('store.validation.statusTitle') }}
         </v-card-subtitle>
         <v-card-text class="pt-4">

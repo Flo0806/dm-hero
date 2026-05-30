@@ -11,7 +11,7 @@
       :class="{ 'difficulty-inactive': level > modelValue }"
       @click="emit('update:modelValue', level)"
     />
-    <span v-if="showLabel" class="text-body-2 ml-2" :style="{ color: `rgb(var(--v-theme-${difficultyColor}))` }">
+    <span v-if="showLabel" class="text-body-medium ml-2" :style="{ color: `rgb(var(--v-theme-${difficultyColor}))` }">
       {{ difficultyLabel }}
     </span>
   </div>

@@ -18,11 +18,11 @@ const { t } = useI18n()
               mdi-message-text-outline
             </v-icon>
 
-            <h2 class="text-h5 font-weight-bold mb-4">
+            <h2 class="text-headline-medium font-weight-bold mb-4">
               {{ t('feedback.title') }}
             </h2>
 
-            <p class="text-body-1 text-medium-emphasis mb-6">
+            <p class="text-body-large text-medium-emphasis mb-6">
               {{ t('feedback.description') }}
             </p>
 

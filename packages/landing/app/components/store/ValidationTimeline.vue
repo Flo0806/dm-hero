@@ -43,7 +43,7 @@
         <div class="step-title" :class="{ 'text-medium-emphasis': !step.completed && !step.active && !step.error }">
           {{ step.title }}
         </div>
-        <div v-if="step.subtitle" class="step-subtitle text-caption text-medium-emphasis">
+        <div v-if="step.subtitle" class="step-subtitle text-body-small text-medium-emphasis">
           {{ step.subtitle }}
         </div>
       </div>

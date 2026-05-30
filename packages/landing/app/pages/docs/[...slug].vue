@@ -96,7 +96,7 @@ const { data: page } = await useAsyncData(
         <v-col cols="12" md="3">
           <v-card class="docs-nav pa-4" color="surface">
             <NuxtLink to="/docs" class="text-decoration-none">
-              <h3 class="text-h6 font-weight-bold mb-4 gradient-text">
+              <h3 class="text-headline-small font-weight-bold mb-4 gradient-text">
                 {{ t('docs.title') }}
               </h3>
             </NuxtLink>

@@ -5,8 +5,8 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <v-icon icon="mdi-lock-reset" size="64" color="primary" class="mb-4" />
-        <h1 class="text-h4 font-weight-light">{{ $t('auth.forgotPassword.title') }}</h1>
-        <p class="text-body-2 text-medium-emphasis mt-2">
+        <h1 class="text-headline-large font-weight-light">{{ $t('auth.forgotPassword.title') }}</h1>
+        <p class="text-body-medium text-medium-emphasis mt-2">
           {{ $t('auth.forgotPassword.subtitle') }}
         </p>
       </div>
@@ -15,8 +15,8 @@
       <v-card v-if="success" class="auth-card" elevation="0">
         <v-card-text class="pa-8 text-center">
           <v-icon icon="mdi-email-check" size="64" color="success" class="mb-4" />
-          <h2 class="text-h6 mb-2">{{ $t('auth.forgotPassword.successTitle') }}</h2>
-          <p class="text-body-2 text-medium-emphasis mb-6">
+          <h2 class="text-headline-small mb-2">{{ $t('auth.forgotPassword.successTitle') }}</h2>
+          <p class="text-body-medium text-medium-emphasis mb-6">
             {{ $t('auth.forgotPassword.successMessage') }}
           </p>
           <v-btn

@@ -5,10 +5,10 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <v-icon icon="mdi-dice-d20" size="64" color="primary" class="mb-4" />
-        <h1 class="text-h4 font-weight-light">
+        <h1 class="text-headline-large font-weight-light">
           {{ registrationComplete ? $t('auth.registrationComplete.title') : $t('auth.register.title') }}
         </h1>
-        <p v-if="!registrationComplete" class="text-body-2 text-medium-emphasis mt-2">
+        <p v-if="!registrationComplete" class="text-body-medium text-medium-emphasis mt-2">
           {{ $t('auth.register.subtitle') }}
         </p>
       </div>
@@ -17,10 +17,10 @@
       <v-card v-if="registrationComplete" class="auth-card" elevation="0">
         <v-card-text class="pa-8 text-center">
           <v-icon icon="mdi-email-check" size="64" color="success" class="mb-6" />
-          <p class="text-body-1 mb-4">
+          <p class="text-body-large mb-4">
             {{ $t('auth.registrationComplete.message', { email: registeredEmail }) }}
           </p>
-          <p class="text-body-2 text-medium-emphasis mb-6">
+          <p class="text-body-medium text-medium-emphasis mb-6">
             {{ $t('auth.registrationComplete.spamHint') }}
           </p>
           <v-btn color="primary" variant="outlined" to="/store">
@@ -105,7 +105,7 @@
               {{ $t('auth.register.button') }}
             </v-btn>
 
-            <p class="text-caption text-medium-emphasis text-center mb-0">
+            <p class="text-body-small text-medium-emphasis text-center mb-0">
               {{ $t('auth.register.terms') }}
               <NuxtLink to="/terms" class="text-primary">{{ $t('auth.register.termsLink') }}</NuxtLink>
               {{ $t('auth.register.and') }}
@@ -114,7 +114,7 @@
           </v-form>
 
           <v-divider class="my-6">
-            <span class="text-medium-emphasis text-body-2 px-4">{{ $t('auth.or') }}</span>
+            <span class="text-medium-emphasis text-body-medium px-4">{{ $t('auth.or') }}</span>
           </v-divider>
 
           <div class="text-center">

@@ -5,7 +5,7 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <v-icon icon="mdi-dice-d20" size="64" color="primary" class="mb-4" />
-        <h1 class="text-h4 font-weight-light">{{ $t('auth.verifyEmail.title') }}</h1>
+        <h1 class="text-headline-large font-weight-light">{{ $t('auth.verifyEmail.title') }}</h1>
       </div>
 
       <v-card class="auth-card" elevation="0">
@@ -13,14 +13,14 @@
           <!-- Loading state -->
           <template v-if="loading">
             <v-progress-circular indeterminate size="64" color="primary" class="mb-6" />
-            <p class="text-body-1">{{ $t('auth.verifyEmail.verifying') }}</p>
+            <p class="text-body-large">{{ $t('auth.verifyEmail.verifying') }}</p>
           </template>
 
           <!-- Success state -->
           <template v-else-if="success">
             <v-icon icon="mdi-check-circle" size="64" color="success" class="mb-6" />
-            <h2 class="text-h5 mb-4">{{ $t('auth.verifyEmail.success') }}</h2>
-            <p class="text-body-1 text-medium-emphasis mb-6">
+            <h2 class="text-headline-medium mb-4">{{ $t('auth.verifyEmail.success') }}</h2>
+            <p class="text-body-large text-medium-emphasis mb-6">
               {{ $t('auth.verifyEmail.successMessage') }}
             </p>
             <v-btn color="primary" size="large" to="/store" prepend-icon="mdi-storefront">
@@ -31,15 +31,15 @@
           <!-- Error state -->
           <template v-else-if="error">
             <v-icon icon="mdi-alert-circle" size="64" color="error" class="mb-6" />
-            <h2 class="text-h5 mb-4">{{ $t('auth.verifyEmail.error') }}</h2>
-            <p class="text-body-1 text-medium-emphasis mb-6">
+            <h2 class="text-headline-medium mb-4">{{ $t('auth.verifyEmail.error') }}</h2>
+            <p class="text-body-large text-medium-emphasis mb-6">
               {{ errorMessage }}
             </p>
 
             <!-- Resend form -->
             <div v-if="showResend" class="mt-6">
               <v-divider class="mb-6" />
-              <p class="text-body-2 text-medium-emphasis mb-4">
+              <p class="text-body-medium text-medium-emphasis mb-4">
                 {{ $t('auth.verifyEmail.resendPrompt') }}
               </p>
               <v-text-field
@@ -74,8 +74,8 @@
           <!-- No token state -->
           <template v-else>
             <v-icon icon="mdi-email-alert" size="64" color="warning" class="mb-6" />
-            <h2 class="text-h5 mb-4">{{ $t('auth.verifyEmail.noToken') }}</h2>
-            <p class="text-body-1 text-medium-emphasis mb-6">
+            <h2 class="text-headline-medium mb-4">{{ $t('auth.verifyEmail.noToken') }}</h2>
+            <p class="text-body-large text-medium-emphasis mb-6">
               {{ $t('auth.verifyEmail.noTokenMessage') }}
             </p>
             <v-btn color="primary" variant="outlined" to="/login">

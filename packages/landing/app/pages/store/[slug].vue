@@ -62,7 +62,7 @@
           <v-col cols="12" lg="8">
             <!-- Title & Meta -->
             <div class="mb-6">
-              <h1 class="text-h3 font-weight-bold mb-2">
+              <h1 class="text-display-small font-weight-bold mb-2">
                 {{ adventure.title }}
               </h1>
               <div class="d-flex align-center flex-wrap ga-3 text-medium-emphasis mb-3">
@@ -84,7 +84,7 @@
             </div>
 
             <!-- Short Description -->
-            <p v-if="adventure.shortDescription" class="text-h6 text-medium-emphasis mb-6">
+            <p v-if="adventure.shortDescription" class="text-headline-small text-medium-emphasis mb-6">
               {{ adventure.shortDescription }}
             </p>
 
@@ -155,13 +155,13 @@
                 >
                   {{ $t('store.detail.download') }}
                 </v-btn>
-                <p class="text-caption text-medium-emphasis mt-3">
+                <p class="text-body-small text-medium-emphasis mt-3">
                   {{ formatFileSize(latestFile?.fileSize || 0) }}
                 </p>
-                <p class="text-caption text-medium-emphasis">
+                <p class="text-body-small text-medium-emphasis">
                   {{ adventure.downloadCount }} {{ $t('store.detail.downloads') }}
                 </p>
-                <p v-if="adventure.publishedAt" class="text-caption text-medium-emphasis mt-1">
+                <p v-if="adventure.publishedAt" class="text-body-small text-medium-emphasis mt-1">
                   {{ $t('store.detail.publishedAt') }}: {{ formatDate(adventure.publishedAt) }}
                 </p>
               </v-card-text>

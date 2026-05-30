@@ -5,8 +5,8 @@
       <!-- Logo -->
       <div class="text-center mb-8">
         <v-icon icon="mdi-dice-d20" size="64" color="primary" class="mb-4" />
-        <h1 class="text-h4 font-weight-light">{{ $t('auth.login.title') }}</h1>
-        <p class="text-body-2 text-medium-emphasis mt-2">
+        <h1 class="text-headline-large font-weight-light">{{ $t('auth.login.title') }}</h1>
+        <p class="text-body-medium text-medium-emphasis mt-2">
           {{ $t('auth.login.subtitle') }}
         </p>
       </div>
@@ -42,7 +42,7 @@
             />
 
             <div class="d-flex justify-end mb-6">
-              <NuxtLink to="/forgot-password" class="text-primary text-decoration-none text-body-2">
+              <NuxtLink to="/forgot-password" class="text-primary text-decoration-none text-body-medium">
                 {{ $t('auth.forgotPassword.link') }}
               </NuxtLink>
             </div>
@@ -101,7 +101,7 @@
           </v-form>
 
           <v-divider class="my-6">
-            <span class="text-medium-emphasis text-body-2 px-4">{{ $t('auth.or') }}</span>
+            <span class="text-medium-emphasis text-body-medium px-4">{{ $t('auth.or') }}</span>
           </v-divider>
 
           <div class="text-center">

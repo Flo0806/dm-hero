@@ -246,18 +246,18 @@ onMounted(() => {
               {{ platform.icon }}
             </v-icon>
 
-            <h3 class="text-h5 font-weight-bold mb-2">
+            <h3 class="text-headline-medium font-weight-bold mb-2">
               {{ t(`download.platforms.${platform.key}.title`) }}
             </h3>
 
-            <p class="text-body-2 text-medium-emphasis mb-4">
+            <p class="text-body-medium text-medium-emphasis mb-4">
               {{ t(`download.platforms.${platform.key}.description`) }}
               <template v-if="platform.available && latestRelease">
                 <br />
                 <v-chip size="x-small" color="primary" variant="outlined" class="mt-1">
                   {{ latestRelease.tag_name }}
                 </v-chip>
-                <span v-if="!platform.split && getFileSize(platform.key as 'windows' | 'linux' | 'mac-arm64' | 'mac-x64')" class="text-caption ml-2">
+                <span v-if="!platform.split && getFileSize(platform.key as 'windows' | 'linux' | 'mac-arm64' | 'mac-x64')" class="text-body-small ml-2">
                   {{ getFileSize(platform.key as 'windows' | 'linux' | 'mac-arm64' | 'mac-x64') }}
                 </span>
               </template>
@@ -265,7 +265,7 @@ onMounted(() => {
 
             <!-- Split button for Mac (arm64 / x64) -->
             <div v-if="platform.available && platform.split" class="mac-split-btn">
-              <v-row dense>
+              <v-row density="comfortable">
                 <v-col cols="6">
                   <v-tooltip location="bottom">
                     <template #activator="{ props: tooltipProps }">
@@ -285,7 +285,7 @@ onMounted(() => {
                     </template>
                     <span>{{ t('download.platforms.mac.tooltipArm64') }}</span>
                   </v-tooltip>
-                  <div v-if="getFileSize('mac-arm64')" class="text-caption text-center mt-1 text-medium-emphasis">
+                  <div v-if="getFileSize('mac-arm64')" class="text-body-small text-center mt-1 text-medium-emphasis">
                     {{ getFileSize('mac-arm64') }}
                   </div>
                 </v-col>
@@ -308,7 +308,7 @@ onMounted(() => {
                     </template>
                     <span>{{ t('download.platforms.mac.tooltipX64') }}</span>
                   </v-tooltip>
-                  <div v-if="getFileSize('mac-x64')" class="text-caption text-center mt-1 text-medium-emphasis">
+                  <div v-if="getFileSize('mac-x64')" class="text-body-small text-center mt-1 text-medium-emphasis">
                     {{ getFileSize('mac-x64') }}
                   </div>
                 </v-col>
@@ -353,10 +353,10 @@ onMounted(() => {
         <v-card color="surface" class="pa-6 mx-auto" style="max-width: 600px">
           <div class="d-flex align-center justify-center mb-4">
             <v-icon size="32" color="info" class="mr-3">mdi-docker</v-icon>
-            <h3 class="text-h6 font-weight-bold">{{ t('download.docker.title') }}</h3>
+            <h3 class="text-headline-small font-weight-bold">{{ t('download.docker.title') }}</h3>
           </div>
 
-          <p class="text-body-2 text-medium-emphasis mb-4">
+          <p class="text-body-medium text-medium-emphasis mb-4">
             {{ t('download.docker.description') }}
           </p>
 
@@ -373,7 +373,7 @@ onMounted(() => {
         :visible-once="{ opacity: 1, y: 0, transition: { delay: 700 } }"
         class="text-center mt-10"
       >
-        <p class="text-body-1 text-medium-emphasis mb-3">
+        <p class="text-body-large text-medium-emphasis mb-3">
           {{ t('download.starHint') }}
         </p>
         <v-btn

@@ -4,13 +4,13 @@
       <!-- Avatar -->
       <v-avatar size="120" color="primary" class="profile-avatar">
         <v-img v-if="user?.avatarUrl" :src="user.avatarUrl" />
-        <span v-else class="text-h3">{{ initials }}</span>
+        <span v-else class="text-display-small">{{ initials }}</span>
       </v-avatar>
 
       <!-- Info -->
       <div class="flex-grow-1">
-        <h1 class="text-h4 font-weight-light mb-1">{{ user?.displayName }}</h1>
-        <p class="text-body-2 text-medium-emphasis mb-2">
+        <h1 class="text-headline-large font-weight-light mb-1">{{ user?.displayName }}</h1>
+        <p class="text-body-medium text-medium-emphasis mb-2">
           <v-icon icon="mdi-email-outline" size="small" class="mr-1" />
           {{ user?.email }}
           <v-chip
@@ -26,7 +26,7 @@
         </p>
 
         <!-- Member Since -->
-        <p class="text-body-2 text-medium-emphasis">
+        <p class="text-body-medium text-medium-emphasis">
           <v-icon icon="mdi-calendar-account" size="small" class="mr-1" />
           {{ $t('profile.memberSince') }} {{ memberSince }}
         </p>

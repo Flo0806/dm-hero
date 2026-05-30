@@ -61,14 +61,14 @@
 
     <v-card-text class="card-content pa-3 d-flex flex-column flex-grow-1">
       <!-- Title - Fixed height -->
-      <h3 class="text-subtitle-1 font-weight-medium mb-1 title-text">
+      <h3 class="text-title-medium font-weight-medium mb-1 title-text">
         {{ adventure.title }}
       </h3>
 
       <!-- Author -->
       <div class="d-flex align-center mb-2">
         <v-icon icon="mdi-account" size="x-small" class="mr-1 text-medium-emphasis" />
-        <span class="text-caption text-medium-emphasis">{{ adventure.authorName }}</span>
+        <span class="text-body-small text-medium-emphasis">{{ adventure.authorName }}</span>
       </div>
 
       <!-- Players & Difficulty Row -->
@@ -76,13 +76,13 @@
         <!-- Players -->
         <div class="d-flex align-center text-medium-emphasis">
           <v-icon icon="mdi-account-group" size="small" class="mr-1" />
-          <span class="text-caption">{{ formatPlayers(adventure.playersMin, adventure.playersMax) }}</span>
+          <span class="text-body-small">{{ formatPlayers(adventure.playersMin, adventure.playersMax) }}</span>
         </div>
 
         <!-- Difficulty -->
         <div class="d-flex align-center">
           <v-icon :icon="getDifficultyIcon(adventure.difficulty)" :color="getDifficultyColor(adventure.difficulty)" size="small" class="mr-1" />
-          <span class="text-caption" :class="`text-${getDifficultyColor(adventure.difficulty)}`">
+          <span class="text-body-small" :class="`text-${getDifficultyColor(adventure.difficulty)}`">
             {{ $t(`store.difficulty.${getDifficultyKey(adventure.difficulty)}`) }}
           </span>
         </div>
@@ -103,7 +103,7 @@
             half-increments
             readonly
           />
-          <span class="text-caption text-medium-emphasis ml-1">
+          <span class="text-body-small text-medium-emphasis ml-1">
             ({{ adventure.ratingCount || 0 }})
           </span>
         </div>
@@ -111,7 +111,7 @@
         <!-- Downloads -->
         <div class="d-flex align-center text-medium-emphasis">
           <v-icon icon="mdi-download" size="small" class="mr-1" />
-          <span class="text-caption">{{ formatDownloads(adventure.downloadCount) }}</span>
+          <span class="text-body-small">{{ formatDownloads(adventure.downloadCount) }}</span>
         </div>
       </div>
 
@@ -136,11 +136,11 @@
             +{{ adventure.tags.length - 2 }}
           </v-chip>
         </template>
-        <span v-else class="text-caption">&nbsp;</span>
+        <span v-else class="text-body-small">&nbsp;</span>
       </div>
 
       <!-- Version & Date Row -->
-      <div class="d-flex align-center justify-space-between mt-2 text-caption text-medium-emphasis">
+      <div class="d-flex align-center justify-space-between mt-2 text-body-small text-medium-emphasis">
         <span class="d-flex align-center">
           <v-icon icon="mdi-tag-outline" size="x-small" class="mr-1" />
           v{{ adventure.versionNumber || 1 }}
