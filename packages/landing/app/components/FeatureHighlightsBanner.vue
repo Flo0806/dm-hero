@@ -12,12 +12,43 @@ interface Highlight {
 
 const highlights: Highlight[] = [
   {
+    key: 'aiImport',
+    icon: 'mdi-robot-happy-outline',
+    gradient: 'linear-gradient(135deg, #0B2622 0%, #4DD0E1 50%, #D4A574 100%)',
+    glow: 'rgba(77, 208, 225, 0.45)',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
+    key: 'climateZones',
+    icon: 'mdi-weather-partly-snowy-rainy',
+    gradient: 'linear-gradient(135deg, #1565C0 0%, #4FC3F7 50%, #B0BEC5 100%)',
+    glow: 'rgba(79, 195, 247, 0.4)',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
+    key: 'folders',
+    icon: 'mdi-folder-multiple',
+    gradient: 'linear-gradient(135deg, #5D4037 0%, #D4A574 50%, #8D6E63 100%)',
+    glow: 'rgba(212, 165, 116, 0.4)',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
+    key: 'tags',
+    icon: 'mdi-tag-multiple',
+    gradient: 'linear-gradient(135deg, #AD1457 0%, #FF4081 50%, #F50057 100%)',
+    glow: 'rgba(255, 64, 129, 0.4)',
+    badge: 'v1.4',
+    isNew: true,
+  },
+  {
     key: 'archive',
     icon: 'mdi-archive-arrow-down',
     gradient: 'linear-gradient(135deg, #D4A574 0%, #8B4513 50%, #D4A574 100%)',
     glow: 'rgba(212, 165, 116, 0.4)',
     badge: 'v1.3',
-    isNew: true,
   },
   {
     key: 'multiclass',
@@ -25,7 +56,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #7B1FA2 0%, #E040FB 50%, #AA00FF 100%)',
     glow: 'rgba(224, 64, 251, 0.4)',
     badge: 'v1.3',
-    isNew: true,
   },
   {
     key: 'encounter',

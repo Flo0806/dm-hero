@@ -4,6 +4,22 @@
     "description": "DM Hero ist das kostenlose, Open-Source Kampagnen-Management-Tool das jeder Spielleiter braucht. Organisiere NPCs, Orte, Gegenstände, Fraktionen und Sessions — offline, privat, ohne Abos."
   },
   "highlights": {
+    "aiImport": {
+      "title": "Mit KI verbinden",
+      "subtitle": "Lass eine KI ein PDF lesen und NPCs, Orte & Items direkt in DM Hero anlegen"
+    },
+    "climateZones": {
+      "title": "Klimazonen",
+      "subtitle": "Unterschiedliches Wetter pro Region — Wüstensonne, während der Wald Schnee bekommt"
+    },
+    "folders": {
+      "title": "Ordner",
+      "subtitle": "NPCs, Items, Fraktionen & Wissen in Ordner organisieren"
+    },
+    "tags": {
+      "title": "Tags",
+      "subtitle": "Farbige Tags an allem, sofort per #tag-Suche gefunden"
+    },
     "archive": {
       "title": "Archiv-Funktion",
       "subtitle": "Entities ausblenden statt löschen — mit einem Klick wiederherstellen"
