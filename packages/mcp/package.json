@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --outfile=dist/mcp.mjs --banner:js='#!/usr/bin/env node' --legal-comments=none && node -e \"try{require('fs').chmodSync('dist/mcp.mjs',0o755)}catch{}\""
+    "build": "node build.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
