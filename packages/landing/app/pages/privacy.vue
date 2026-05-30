@@ -5,7 +5,7 @@
       {{ $t('legal.backToHome') }}
     </NuxtLink>
 
-    <h1 class="text-headline-large text-md-h3 font-weight-bold mb-8">
+    <h1 class="text-headline-large text-md-display-small font-weight-bold mb-8">
       {{ $t('legal.privacy.title') }}
     </h1>
 

@@ -3,7 +3,7 @@
     <StoreBackground />
     <v-container class="py-8 position-relative" style="max-width: 900px; z-index: 1">
       <v-card elevation="0" class="terms-card pa-6 pa-md-10">
-        <h1 class="text-headline-large text-md-h3 font-weight-bold mb-2">
+        <h1 class="text-headline-large text-md-display-small font-weight-bold mb-2">
           {{ $t('tos.title') }}
         </h1>
         <p class="text-body-small text-medium-emphasis mb-8">
