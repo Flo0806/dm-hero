@@ -140,6 +140,30 @@ async function startServer() {
   console.log('[Electron]   UPLOAD_PATH:', paths.uploadPath)
   console.log('[Electron]   LOG_PATH:', paths.logsPath)
 
+  // Make the bundled MCP reachable at a STABLE path. In an AppImage,
+  // process.resourcesPath lives under a per-launch /tmp/.mount_* directory that
+  // changes on every start — so the path a user registers in their MCP client
+  // (`claude mcp add … <path>`) would break after the next restart. Copy the
+  // bin into userData (stable across restarts/updates) on each launch and hand
+  // THAT path to the "Connect your AI" dialog instead.
+  let mcpPath = path.join(process.resourcesPath, 'mcp', 'mcp.mjs')
+  try {
+    if (existsSync(mcpPath)) {
+      const stableDir = path.join(app.getPath('userData'), 'mcp')
+      mkdirSync(stableDir, { recursive: true })
+      const stableMcp = path.join(stableDir, 'mcp.mjs')
+      copyFileSync(mcpPath, stableMcp)
+      mcpPath = stableMcp
+      console.log('[Electron] MCP staged at stable path:', stableMcp)
+    }
+    else {
+      console.warn('[Electron] Bundled MCP not found at', mcpPath)
+    }
+  }
+  catch (err) {
+    console.error('[Electron] Failed to stage MCP bin:', err)
+  }
+
   // Start server as utility process with environment variables
   serverProcess = utilityProcess.fork(serverPath, [], {
     env: {
@@ -152,9 +176,9 @@ async function startServer() {
       LOG_PATH: paths.logsPath,
       NITRO_OUTPUT_DIR: outputDir,
       // For the dashboard "Connect your AI" dialog: the app's API URL + the
-      // bundled MCP bin path (extraResources → resources/mcp/mcp.mjs).
+      // stable MCP bin path (copied from resources/mcp/mcp.mjs to userData).
       DM_HERO_APP_URL: `http://127.0.0.1:${PROD_SERVER_PORT}`,
-      DM_HERO_MCP_PATH: path.join(process.resourcesPath, 'mcp', 'mcp.mjs'),
+      DM_HERO_MCP_PATH: mcpPath,
     },
     cwd: outputDir,
     stdio: 'pipe',

@@ -167,6 +167,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build MCP server
+        run: pnpm --filter @dm-hero/mcp build
+
       - name: Build Nuxt
         run: pnpm --filter @dm-hero/app build
 
@@ -210,6 +213,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Build MCP server
+        run: pnpm --filter @dm-hero/mcp build
 
       - name: Build Nuxt
         run: pnpm --filter @dm-hero/app build
@@ -260,6 +266,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Build MCP server
+        run: pnpm --filter @dm-hero/mcp build
 
       - name: Build Nuxt
         run: pnpm --filter @dm-hero/app build
