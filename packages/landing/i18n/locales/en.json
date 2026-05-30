@@ -4,6 +4,22 @@
     "description": "DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions — offline, private, no subscriptions."
   },
   "highlights": {
+    "aiImport": {
+      "title": "Connect Your AI",
+      "subtitle": "Let an AI read a PDF and create NPCs, places & items right in DM Hero"
+    },
+    "climateZones": {
+      "title": "Climate Zones",
+      "subtitle": "Different weather per region — desert sun while the forest gets snow"
+    },
+    "folders": {
+      "title": "Folders",
+      "subtitle": "Organize NPCs, items, factions & lore into folders"
+    },
+    "tags": {
+      "title": "Tags",
+      "subtitle": "Colored tags on everything, found instantly with #tag search"
+    },
     "archive": {
       "title": "Archive Function",
       "subtitle": "Hide entities instead of deleting — restore with one click"
