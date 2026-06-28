@@ -108,8 +108,8 @@ const EGG_EMOJI: Record<FolderEasterEgg, string> = {
    overlay and the keyframes themselves. v-card[hover] provides elevation. */
 .folder-icon-wrap {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
 }
 .folder-egg {
   position: absolute;
