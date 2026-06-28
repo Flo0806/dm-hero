@@ -71,7 +71,7 @@
 
     <!-- Actions -->
     <v-divider />
-    <v-card-actions class="px-4">
+    <v-card-actions class="px-4 entity-actions">
       <v-btn icon="mdi-eye" size="small" variant="text" @click.stop="$emit('view', group)">
         <v-icon>mdi-eye</v-icon>
         <v-tooltip activator="parent" location="bottom">{{ $t('common.view') }}</v-tooltip>
@@ -169,6 +169,12 @@ function getEntityTypeIcon(type: string): string {
 </script>
 
 <style scoped>
+/* Action buttons pack tighter + wrap on narrow cards (keeps delete visible). */
+.entity-actions {
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
 .group-card {
   transition: all 0.3s ease;
   position: relative;

@@ -301,7 +301,7 @@
 
     <!-- Actions -->
     <v-divider />
-    <v-card-actions class="px-4">
+    <v-card-actions class="px-4 entity-actions">
       <v-btn icon="mdi-eye" size="small" variant="text" @click.stop="$emit('view', player)">
         <v-icon>mdi-eye</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -446,6 +446,12 @@ const previewSubtitle = computed(() => {
 </script>
 
 <style scoped>
+/* Action buttons pack tighter + wrap on narrow cards (keeps delete visible). */
+.entity-actions {
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
 .player-card {
   transition: all 0.3s ease;
   position: relative;

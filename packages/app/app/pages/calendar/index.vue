@@ -980,7 +980,9 @@ const calendarGridStyle = computed(() => {
   // At least 1 weekday is guaranteed by isConfigured check
   const weekdaysCount = calendarConfig.value.weekdays.length || 1
   return {
-    gridTemplateColumns: `repeat(${weekdaysCount}, 1fr)`,
+    // minmax(0, 1fr) (not plain 1fr = minmax(auto, 1fr)) so a day with a long
+    // event/session title can't grow its column wider than the others.
+    gridTemplateColumns: `repeat(${weekdaysCount}, minmax(0, 1fr))`,
   }
 })
 
@@ -2041,6 +2043,10 @@ onMounted(async () => {
 
 .calendar-day {
   min-height: 100px;
+  /* min-width:0 lets the grid item shrink below its content's min-content,
+     overflow clips anything that still doesn't fit — keeps all cells equal width */
+  min-width: 0;
+  overflow: hidden;
   padding: 6px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   border-radius: 4px;

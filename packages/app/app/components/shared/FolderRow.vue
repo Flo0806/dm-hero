@@ -39,10 +39,8 @@
           v-for="folder in folders"
           :key="folder.id"
           cols="12"
-          sm="6"
-          md="4"
-          lg="3"
-          xl="2"
+          md="6"
+          lg="4"
         >
           <FoldersFolderCard
             :folder="folder"
