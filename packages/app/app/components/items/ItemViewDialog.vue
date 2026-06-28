@@ -98,6 +98,19 @@
                 </p>
               </div>
 
+              <!-- Notes -->
+              <div v-if="item.metadata?.notes" class="mb-4">
+                <h3 class="text-headline-small mb-2">
+                  {{ $t('items.notes') }}
+                </h3>
+                <p
+                  class="text-body-large"
+                  style="white-space: pre-wrap; max-height: 200px; overflow-y: auto"
+                >
+                  {{ item.metadata.notes }}
+                </p>
+              </div>
+
               <!-- Metadata Grid -->
               <v-row dense>
                 <v-col v-if="item.metadata?.value" cols="12" sm="6">

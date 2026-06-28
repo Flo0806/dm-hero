@@ -18,7 +18,7 @@
         <v-icon
           :icon="folder.icon || 'mdi-folder'"
           :color="folder.color || 'primary'"
-          size="56"
+          size="48"
         />
         <!-- easter-egg overlay -->
         <span
@@ -32,7 +32,7 @@
 
       <div class="flex-grow-1" style="min-width: 0">
         <h3
-          class="text-headline-small mb-1 text-truncate"
+          class="text-title-medium mb-1 text-truncate"
           style="line-height: 1.2"
           :title="folder.name"
         >
@@ -108,10 +108,9 @@ const EGG_EMOJI: Record<FolderEasterEgg, string> = {
    overlay and the keyframes themselves. v-card[hover] provides elevation. */
 .folder-icon-wrap {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
 }
-
 .folder-egg {
   position: absolute;
   font-size: 24px;

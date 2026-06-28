@@ -398,7 +398,7 @@
 
     <!-- Actions -->
     <v-divider />
-    <v-card-actions class="px-4">
+    <v-card-actions class="px-4 npc-actions">
       <v-btn icon="mdi-eye" size="small" variant="text" @click.stop="$emit('view', npc)">
         <v-icon>mdi-eye</v-icon>
         <v-tooltip activator="parent" location="bottom">
@@ -652,6 +652,13 @@ function onMoveError(error: unknown) {
 .npc-card {
   transition: all 0.3s ease;
   position: relative;
+}
+
+/* Let the action buttons pack tighter and wrap to a second row on narrow cards
+   instead of overflowing (which used to clip the delete button on the right). */
+.npc-actions {
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 .pin-button {

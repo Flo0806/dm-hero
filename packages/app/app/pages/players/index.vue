@@ -33,7 +33,7 @@
 
     <!-- Loading Skeleton -->
     <v-row v-if="loading">
-      <v-col v-for="i in 6" :key="i" cols="12" sm="6" md="4" lg="3">
+      <v-col v-for="i in 6" :key="i" cols="12" md="6" lg="4">
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -59,7 +59,7 @@
 
       <!-- Player Cards -->
       <v-row>
-        <v-col v-for="player in filteredPlayers" :key="player.id" cols="12" sm="6" md="4" lg="3">
+        <v-col v-for="player in filteredPlayers" :key="player.id" cols="12" md="6" lg="4">
           <PlayerCard
             :player="player"
             :is-highlighted="highlightedId === player.id"
