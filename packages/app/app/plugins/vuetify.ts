@@ -1,7 +1,7 @@
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { de, en } from 'vuetify/locale'
+import { de, en, zhHans } from 'vuetify/locale'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 import { themes, DEFAULT_THEME, THEME_NAMES, type ThemeName } from '~/composables/themes'
@@ -25,7 +25,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     locale: {
       locale: 'de',
       fallback: 'en',
-      messages: { de, en },
+      messages: { de, en, zhHans },
     },
     theme: {
       defaultTheme: initialTheme,
