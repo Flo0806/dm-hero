@@ -191,18 +191,23 @@ async function generateImageDallE(apiKey: string, prompt: string, options?: Imag
 async function generateImageImagen(apiKey: string, prompt: string, options?: ImageGenerationOptions): Promise<Buffer> {
   const aspectRatio = options?.aspectRatio === '16:9' ? '16:9' : '1:1'
 
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict', {
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent', {
     method: 'POST',
     headers: {
       'x-goog-api-key': apiKey,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      instances: [{ prompt }],
-      parameters: {
-        sampleCount: 1,
-        aspectRatio,
-      },
+      contents: [{
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
+        candidateCount: 1, 
+        imageConfig:{
+          aspectRatio: aspectRatio,
+        }
+      }
     }),
   })
 
