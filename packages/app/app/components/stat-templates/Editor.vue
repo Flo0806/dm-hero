@@ -190,6 +190,7 @@
         <template #item="{ element, index }">
           <StatTemplatesGroupEditor
             :group="element"
+            :used-names="allFieldNames"
             @update="(updated: Omit<GroupData, '_key'>) => updateGroup(index, updated)"
             @delete="deleteGroup(index)"
           />
@@ -248,6 +249,8 @@ const isDirty = ref(false)
 const localName = ref('')
 const localDescription = ref('')
 const localGroups = ref<GroupData[]>([])
+// Stat values are keyed by field name across the whole template, so names must be unique template-wide
+const allFieldNames = computed(() => localGroups.value.flatMap(g => g.fields.map(f => f.name)))
 
 // Usage tracking
 const usageMenuOpen = ref(false)
