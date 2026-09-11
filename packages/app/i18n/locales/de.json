@@ -996,7 +996,7 @@
       "barracks": "Kaserne",
       "stable": "Stall",
       "garden": "Garten",
-      "cemetery": "Friedhof",
+      "cemetery": "Gräberfeld",
       "dock": "Dock",
       "alley": "Gasse",
       "plaza": "Platz",
@@ -1009,7 +1009,7 @@
       "region": "Region",
       "continent": "Kontinent",
       "world": "Welt",
-      "plane": "Ebene",
+      "plane": "Existenzebene",
       "realm": "Reich",
       "province": "Provinz",
       "territory": "Territorium"
@@ -1371,6 +1371,16 @@
     "coverImageDescription": "Bildbeschreibung",
     "coverImageDescriptionPlaceholder": "Beschreibe die Szene, z.B.: Eine Gruppe Abenteurer steht vor einem riesigen Drachen in einer Höhle voller Gold...",
     "coverImageSafetyError": "Die Beschreibung wurde vom KI-Sicherheitsfilter abgelehnt. Bitte formuliere die Szene anders - vermeide direkte Gewaltbeschreibungen und verwende stattdessen allgemeinere Begriffe wie 'epischer Kampf' oder 'dramatische Konfrontation'.",
+    "music": {
+      "title": "Musik",
+      "hint": "Playlists für diese Session (YouTube, Spotify, Tabletop Audio, …). Links öffnen sich im Browser, damit die Musik weiterläuft, während du DM Hero nutzt.",
+      "empty": "Noch keine Playlists",
+      "label": "Bezeichnung",
+      "labelPlaceholder": "z.B. Taverne",
+      "url": "URL",
+      "invalidUrl": "Bitte eine gültige http(s)-URL eingeben",
+      "open": "Öffnen"
+    },
     "pinboard": {
       "title": "Pinnwand",
       "empty": "Keine angepinnten Entitäten",
