@@ -8,6 +8,7 @@ const scrolled = ref(false)
 
 const navItems = [
   { key: 'features', href: '/#features' },
+  { key: 'music', href: '/#music' },
   { key: 'screenshots', href: '/#screenshots' },
   { key: 'download', href: '/#download' },
   { key: 'store', href: '/store' },

@@ -31,7 +31,7 @@
   ],
   "main": "electron/main.js",
   "scripts": {
-    "build": "nuxt build",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 nuxt build",
     "dev": "nuxt dev",
     "dev:electron": "concurrently \"nuxt dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron . --ozone-platform=x11 --no-sandbox\"",
     "generate": "nuxt generate",

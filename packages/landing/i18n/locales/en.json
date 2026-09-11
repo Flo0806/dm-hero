@@ -4,6 +4,22 @@
     "description": "DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions - offline, private, no subscriptions."
   },
   "highlights": {
+    "music": {
+      "title": "All About Music",
+      "subtitle": "Play your own music library at the table – scenes, crossfade and a mini player that follows you"
+    },
+    "languages": {
+      "title": "Six Languages",
+      "subtitle": "Now also in Italian, French, Spanish and Simplified Chinese"
+    },
+    "aiFull": {
+      "title": "AI Builds the Whole Campaign",
+      "subtitle": "From a module PDF to NPCs, maps, encounters, groups, sessions and portraits – previewed, then confirmed"
+    },
+    "musicTheme": {
+      "title": "Theme \"Music\"",
+      "subtitle": "Sunset Beat: retro sunset over stage blue, with notes floating across the dashboard"
+    },
     "aiImport": {
       "title": "Connect Your AI",
       "subtitle": "Let an AI read a PDF and create NPCs, places & items right in DM Hero"
@@ -21,8 +37,8 @@
       "subtitle": "Colored tags on everything, found instantly with #tag search"
     },
     "themes": {
-      "title": "8 Themes & Living Dashboard",
-      "subtitle": "Eight color themes, each with its own animated dashboard ambience"
+      "title": "9 Themes & Living Dashboard",
+      "subtitle": "Nine color themes, each with its own animated dashboard ambience"
     },
     "archive": {
       "title": "Archive Function",
@@ -55,6 +71,7 @@
   },
   "nav": {
     "features": "Features",
+    "music": "Music",
     "screenshots": "Screenshots",
     "download": "Download",
     "store": "Hero Basar",
@@ -97,6 +114,14 @@
         "title": "Entity Management",
         "description": "Organize NPCs, Locations, Items, Factions, Lore, Players, and Sessions. Everything interconnected with bidirectional relationships."
       },
+      "music": {
+        "title": "Music Player",
+        "description": "Play your own music library during the session: folders become playlists, star them as scenes, crossfade between tracks. A floating mini player keeps playing wherever you navigate."
+      },
+      "languages": {
+        "title": "Six Languages",
+        "description": "German, English, Italian, French, Spanish and Simplified Chinese – switch anytime from the top bar."
+      },
       "folders": {
         "title": "Folders",
         "description": "Group NPCs, items, factions and lore into folders. Drag entities in and out — and folders travel with your campaign on export/import."
@@ -111,7 +136,7 @@
       },
       "aiImport": {
         "title": "Connect Your AI",
-        "description": "Let an AI read your PDFs and create NPCs, places, items, factions and lore — with relations, tags and folders. You preview everything first. Optional, never required."
+        "description": "Let an AI build your whole campaign from a module: NPCs, places, items, factions and lore with cross-links, portraits, documents, groups, maps with markers, encounters and sessions. Every change is previewed first. Optional, never required."
       },
       "search": {
         "title": "Powerful Fuzzy Search",
@@ -158,6 +183,51 @@
         "description": "Upload world maps, place markers for NPCs and locations, mark areas and measure distances."
       }
     }
+  },
+  "music": {
+    "kicker": "All about music",
+    "title": "Your Soundtrack, at the Table",
+    "subtitle": "Play your own music library straight from DM Hero – tavern ambience, battle drums, eerie dungeon drones. Pick a folder, star your scenes, hit play. The music keeps running while you flip through NPCs, maps and notes.",
+    "mock": {
+      "scene": "Scene · Tavern",
+      "track": "The Prancing Pony – Evening Set",
+      "folder": "Ambience / Tavern",
+      "crossfade": "Crossfade between tracks",
+      "shortcuts": "Space, arrows, R, L – full keyboard control"
+    },
+    "pillars": {
+      "library": {
+        "title": "Your Music, Your Folders",
+        "text": "Point DM Hero at a folder. Every sub-folder becomes a collapsible playlist – no upload, no cloud, files play straight from disk."
+      },
+      "scenes": {
+        "title": "Scenes, One Click Away",
+        "text": "Star a folder and it becomes a scene chip: Tavern, Forest, Boss Fight. Switch scenes mid-song and it crossfades instead of cutting."
+      },
+      "mini": {
+        "title": "A Player That Follows You",
+        "text": "A floating mini player keeps playing on every page – draggable, with a queue popup, compact and minimised modes, and controls right in the sidebar."
+      },
+      "playlists": {
+        "title": "Playlists per Session",
+        "text": "Attach YouTube, Spotify or Tabletop Audio links to a session. They open in your browser, so the music never stops when you switch back."
+      }
+    },
+    "steps": {
+      "pick": {
+        "title": "Pick a folder",
+        "text": "Desktop app: native folder dialog. Docker: mount your music as a volume."
+      },
+      "star": {
+        "title": "Star your scenes",
+        "text": "Mark the folders you'll need tonight – they show up as chips on the music page."
+      },
+      "play": {
+        "title": "Play and forget",
+        "text": "Loop the folder (no spoilers from the next one), shuffle, crossfade – then run your session."
+      }
+    },
+    "footnote": "Nothing is uploaded. Your files stay where they are – DM Hero just plays them."
   },
   "screenshots": {
     "title": "See DM Hero in Action",
