@@ -244,7 +244,7 @@ jobs:
   build-electron-macos:
     needs: check
     if: needs.check.outputs.should_release == 'true'
-    runs-on: macos-latest
+    runs-on: macos-15
     permissions:
       contents: write
     strategy:
