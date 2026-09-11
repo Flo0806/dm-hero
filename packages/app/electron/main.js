@@ -342,6 +342,21 @@ function createWindow() {
   // Load the appropriate URL
   const serverUrl = isDev ? 'http://localhost:3000' : `http://127.0.0.1:${PROD_SERVER_PORT}`
   console.log('[Electron] Loading URL:', serverUrl)
+
+  // Everything that is not our own server (YouTube, Tabletop Audio, docs, …)
+  // opens in the system browser instead of taking over the app window.
+  const isAppUrl = url => url.startsWith(serverUrl)
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAppUrl(url)) return { action: 'allow' }
+    shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (isAppUrl(url)) return
+    event.preventDefault()
+    shell.openExternal(url)
+  })
+
   mainWindow.loadURL(serverUrl)
 
   if (isDev) {
