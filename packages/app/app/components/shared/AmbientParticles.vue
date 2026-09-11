@@ -6,7 +6,10 @@
       class="ambient-particle"
       :class="`mode-${config.mode}`"
       :style="p.style"
-    />
+    >
+      <!-- notes mode renders a glyph instead of a dot -->
+      <span v-if="p.glyph" class="ambient-glyph">{{ p.glyph }}</span>
+    </div>
   </div>
 </template>
 
@@ -24,7 +27,9 @@ import type { AmbientConfig } from '~/composables/themeAmbient'
  */
 const props = defineProps<{ config: AmbientConfig }>()
 
-interface Particle { style: Record<string, string> }
+interface Particle { style: Record<string, string>, glyph?: string }
+
+const NOTE_GLYPHS = ['♪', '♫', '♩', '♬', '𝄞']
 
 const particles = ref<Particle[]>([])
 
@@ -59,6 +64,17 @@ function build() {
       'animationDelay': `${-rand(0, dur)}s`, // negative → mid-cycle start
       '--drift': `${(Math.random() - 0.5) * 140}px`,
       '--o': `${opacity}`,
+    }
+    if (c.mode === 'notes') {
+      // Glyph instead of a dot: colour via text, size via font-size, glow via text-shadow
+      style.background = 'transparent'
+      style.color = color
+      style.fontSize = `${size}px`
+      style.width = 'auto'
+      style.height = 'auto'
+      style['--spin'] = `${(Math.random() - 0.5) * 50}deg`
+      if (c.glow) style.textShadow = `0 0 ${(size * 0.6).toFixed(0)}px ${color}`
+      return { style, glyph: NOTE_GLYPHS[Math.floor(Math.random() * NOTE_GLYPHS.length)] }
     }
     if (c.glow) style.boxShadow = `0 0 ${(size * 2.5).toFixed(0)}px ${color}`
     return { style }
@@ -131,6 +147,25 @@ onMounted(build)
   0% { transform: translate(0, 0) scale(1); opacity: 0; }
   10% { opacity: var(--o); }
   100% { transform: translate(calc(var(--drift) + 42vw), 78vh) scale(0.6); opacity: 0; }
+}
+
+/* Notes — music notes floating up, swaying sideways and slowly turning. */
+.mode-notes {
+  animation-name: ambient-notes;
+  border-radius: 0;
+  line-height: 1;
+}
+.ambient-glyph {
+  display: block;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', sans-serif;
+}
+@keyframes ambient-notes {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: var(--o); }
+  30% { transform: translate(calc(var(--drift) * 0.4), -30vh) rotate(calc(var(--spin) * 0.5)); }
+  60% { transform: translate(calc(var(--drift) * -0.2), -60vh) rotate(calc(var(--spin) * -0.3)); }
+  90% { opacity: var(--o); }
+  100% { transform: translate(var(--drift), -110vh) rotate(var(--spin)); opacity: 0; }
 }
 
 /* Twinkle — sparkles pulsing and gently scaling in place. */

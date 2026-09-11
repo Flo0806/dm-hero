@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     '@/assets/css/animations.css',
     '@/assets/css/dashboard.css',
     '@/assets/css/emily-theme.css',
+    '@/assets/css/music-theme.css',
   ],
 
   runtimeConfig: {

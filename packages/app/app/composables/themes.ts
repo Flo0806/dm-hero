@@ -1,7 +1,7 @@
 import type { ThemeDefinition } from 'vuetify'
 
 /**
- * DM Hero themes — 8 total: dark (default), hell, 5 colored, and emily.
+ * DM Hero themes — 9 total: dark (default), hell, 5 colored, emily and music.
  * Each defines vuetify palette + md-editor-v3 css vars.
  */
 
@@ -289,6 +289,44 @@ const emily: ThemeDefinition = {
   },
 }
 
+// "Music" — Sunset Beat. Built from a retro sunset gradient (magenta → red →
+// orange → peach) laid over deep stage blue (0,50,120 / 0,140,200). Orange is
+// the primary so it pops against the blue night; the electric blue is the
+// secondary, magenta the accent. Companion CSS: music-theme.css.
+const music: ThemeDefinition = {
+  dark: true,
+  colors: {
+    'background': '#0F1233',
+    'surface': '#181B48',
+    'surface-variant': '#23275E',
+    'on-surface-variant': '#C9CBF0',
+    'primary': '#FF8A3D',
+    'primary-darken-1': '#E8452C',
+    'secondary': '#008CC8',
+    'secondary-darken-1': '#003278',
+    'accent': '#E0248F',
+    'error': '#FF5C6C',
+    'info': '#00A6E0',
+    'success': '#3DDC97',
+    'warning': '#FFC145',
+    'on-background': '#F5F0FF',
+    'on-surface': '#F5F0FF',
+    'on-primary': '#1A0B2E',
+    'on-secondary': '#F5F0FF',
+  },
+  variables: {
+    'md-bg': '#0F1233',
+    'md-surface': '#181B48',
+    'md-text': '#F5F0FF',
+    'md-muted': '#C9CBF0',
+    'md-border': '#23275E',
+    'md-primary': '#FF8A3D',
+    'md-code-bg': '#0A0C24',
+    'md-quote-bg': '#1C1F52',
+    'md-table-stripe': '#161A46',
+  },
+}
+
 export const themes = {
   dark,
   hell,
@@ -298,11 +336,12 @@ export const themes = {
   purple,
   orange,
   emily,
+  music,
 } as const
 
 export type ThemeName = keyof typeof themes
 
-export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange', 'emily']
+export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange', 'emily', 'music']
 
 export const DEFAULT_THEME: ThemeName = 'dark'
 

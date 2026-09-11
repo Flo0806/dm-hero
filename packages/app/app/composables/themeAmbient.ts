@@ -9,7 +9,7 @@ import type { ThemeName } from './themes'
  * All ambience is purely decorative, behind the content, and gated on the
  * "Spielereien" toggle + prefers-reduced-motion.
  */
-export type AmbientMode = 'rise' | 'drift' | 'fall' | 'twinkle' | 'firefly' | 'streak'
+export type AmbientMode = 'rise' | 'drift' | 'fall' | 'twinkle' | 'firefly' | 'streak' | 'notes'
 
 export interface AmbientConfig {
   /** How the particles move. */
@@ -45,4 +45,6 @@ export const THEME_AMBIENT: Partial<Record<ThemeName, AmbientConfig>> = {
   purple: { mode: 'twinkle', colors: ['#B388FF', '#D1C4E9', '#FFD740'], count: 26, sizeMin: 2, sizeMax: 4, durationMin: 4, durationMax: 9, glow: true },
   // Forge fire — embers rising.
   orange: { mode: 'rise', colors: ['#FF7043', '#FFCA28', '#FF8A65'], count: 24, sizeMin: 2, sizeMax: 4, durationMin: 6, durationMax: 13, glow: true },
+  // Sunset Beat — music notes floating up in sunset orange, magenta and electric blue.
+  music: { mode: 'notes', colors: ['#FF8A3D', '#E0248F', '#00A6E0', '#FFC145'], count: 18, sizeMin: 14, sizeMax: 28, durationMin: 9, durationMax: 18, glow: true },
 }

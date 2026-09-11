@@ -1,0 +1,57 @@
+/*
+ * Music theme — Sunset Beat ambient layer.
+ *
+ * Active only when Vuetify applies `.v-theme--music` on the root. The flat
+ * palette `background` gets the retro sunset the theme is built from: diagonal
+ * light rays of magenta and orange sweeping across a deep stage-blue night,
+ * with an electric-blue pool at the bottom. Kept translucent so cards and text
+ * stay perfectly readable; the streak particles (themeAmbient) add the motion.
+ */
+
+@layer overrides {
+  .v-theme--music .v-application__wrap,
+  .v-theme--music.v-application {
+    position: relative;
+    background-image:
+      /* Magenta ray, top-left */
+      linear-gradient(
+        118deg,
+        rgba(224, 36, 143, 0.16) 0%,
+        rgba(224, 36, 143, 0.05) 28%,
+        rgba(224, 36, 143, 0) 45%
+      ),
+      /* Sunset orange ray, sweeping from the top-right */
+      linear-gradient(
+        296deg,
+        rgba(255, 138, 61, 0.14) 0%,
+        rgba(232, 69, 44, 0.06) 30%,
+        rgba(232, 69, 44, 0) 50%
+      ),
+      /* Peach highlight, mid-right */
+      radial-gradient(
+        ellipse 35% 45% at 85% 45%,
+        rgba(255, 193, 69, 0.07) 0%,
+        rgba(255, 193, 69, 0) 70%
+      ),
+      /* Electric blue pool at the bottom — the stage floor */
+      radial-gradient(
+        ellipse 90% 45% at 50% 105%,
+        rgba(0, 140, 200, 0.22) 0%,
+        rgba(0, 50, 120, 0.10) 45%,
+        rgba(0, 50, 120, 0) 75%
+      );
+    background-attachment: fixed;
+  }
+
+  /* Primary buttons carry a hint of the sunset gradient instead of flat orange */
+  .v-theme--music .v-btn--variant-flat.bg-primary,
+  .v-theme--music .v-btn--variant-elevated.bg-primary {
+    background-image: linear-gradient(120deg, #FF8A3D 0%, #F0562E 100%);
+  }
+
+  /* Active navigation item glows in the theme's blue */
+  .v-theme--music .v-list-item--active > .v-list-item__overlay {
+    background: linear-gradient(90deg, rgba(0, 140, 200, 0.35), rgba(224, 36, 143, 0.25));
+    opacity: 1;
+  }
+}
