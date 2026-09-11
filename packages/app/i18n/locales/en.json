@@ -28,6 +28,7 @@
     "sessions": "Sessions",
     "encounters": "Encounters",
     "maps": "Maps",
+    "music": "Music",
     "groups": "Groups",
     "calendar": "Calendar",
     "notes": "Notes",
@@ -2334,6 +2335,74 @@
       "fileTooLarge": "File too large. Maximum size: 50MB",
       "uploadFailed": "Failed to upload map",
       "updateFailed": "Failed to update map"
+    }
+  },
+  "music": {
+    "title": "Music",
+    "subtitle": "Play your own music library during the session",
+    "chooseFolder": "Choose folder",
+    "changeFolder": "Change folder",
+    "rescan": "Rescan",
+    "scanning": "Reading your music …",
+    "search": "Search …",
+    "shuffle": "Shuffle",
+    "inOrder": "In order",
+    "crossfade": "Crossfade",
+    "crossfadeHint": "Smoothly blend from one track into the next",
+    "collapseAll": "Collapse all",
+    "expandAll": "Expand all",
+    "playFolder": "Play folder",
+    "shuffleFolder": "Shuffle folder",
+    "play": "Play",
+    "pause": "Pause",
+    "stop": "Stop",
+    "next": "Next",
+    "previous": "Previous",
+    "back10": "10s back",
+    "forward10": "10s forward",
+    "mute": "Mute",
+    "playPause": "Play / Pause",
+    "volumeUp": "Volume up",
+    "volumeDown": "Volume down",
+    "loopMode": "Loop mode",
+    "emptyFolder": "No audio files found in this folder.",
+    "noResults": "Nothing found for \"{query}\".",
+    "loop": {
+      "folder": "Repeat folder",
+      "one": "Repeat track",
+      "all": "Play everything"
+    },
+    "loopHint": {
+      "folder": "Stays in the current folder and repeats it – never drifts into the next folder",
+      "one": "Repeats only the current track",
+      "all": "Plays through the whole library across folders"
+    },
+    "scenes": {
+      "add": "Save as scene",
+      "remove": "Remove scene",
+      "play": "Play scene: {name}",
+      "hint": "Star a folder to pin it here as a scene.",
+      "title": "Scenes"
+    },
+    "empty": {
+      "title": "Your music library",
+      "text": "Pick a folder with your music. Sub-folders become collapsible lists – click a track or a folder to play. Nothing is uploaded, files play straight from disk."
+    },
+    "folderDialog": {
+      "title": "Music folder",
+      "path": "Folder path",
+      "browse": "Browse …",
+      "hintElectron": "Pick the folder that holds your music. Sub-folders become scenes and playlists.",
+      "hintWeb": "Enter a folder path on the server that runs DM Hero (for Docker: mount it as a volume).",
+      "saved": "Music folder saved",
+      "notFound": "Folder not found",
+      "remove": "Remove folder"
+    },
+    "errors": {
+      "fileUnavailable": "file can't be played (deleted or moved?)",
+      "libraryUnavailable": "Several tracks failed to play – the music folder may be gone. Rescan or choose another folder.",
+      "folderMissing": "The music folder was not found. Rescan or choose another folder.",
+      "scanFailed": "The music folder could not be read."
     }
   },
   "update": {

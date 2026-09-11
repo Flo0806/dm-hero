@@ -51,6 +51,11 @@
     <ClientOnly>
       <SharedAnnouncementDialog />
     </ClientOnly>
+
+    <!-- Global music player – lives here so playback survives navigation -->
+    <ClientOnly>
+      <MusicPlayerBar />
+    </ClientOnly>
   </v-app>
 </template>
 
@@ -95,6 +100,7 @@ const notesStore = useNotesStore()
 
 // Active campaign from store (not cookie - store is the source of truth)
 const activeCampaignName = computed(() => campaignStore.currentCampaign?.name || null)
+const musicPlayer = useMusicPlayer()
 const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
 // Language
@@ -115,6 +121,8 @@ watch(
 // Initialize campaign and locale from cookie on mount
 onMounted(() => {
   campaignStore.initFromCookie()
+  // Restore the music library so the player is ready on every page (dashboard scenes, sessions)
+  musicPlayer.init()
 
   // Initialize locale from cookie
   if (isAppLocale(localeCookie.value)) {
@@ -308,7 +316,8 @@ html {
 /* v-main should not scroll itself */
 .main-no-scroll {
   overflow: hidden !important;
-  height: calc(100vh - 64px); /* 64px = AppBar height */
+  /* 64px = AppBar height; --v-layout-bottom = music player bar when visible */
+  height: calc(100vh - 64px - var(--v-layout-bottom, 0px));
 }
 
 /* Inner container scrolls - scrollbar starts below AppBar */

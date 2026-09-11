@@ -28,6 +28,7 @@
     "sessions": "Sessioni",
     "encounters": "Incontri",
     "maps": "Mappe",
+    "music": "Musica",
     "groups": "Gruppi",
     "calendar": "Calendario",
     "notes": "Note",
@@ -2334,6 +2335,74 @@
       "fileTooLarge": "File troppo grande. Dimensione massima: 50MB",
       "uploadFailed": "Caricamento della mappa non riuscito",
       "updateFailed": "Aggiornamento della mappa non riuscito"
+    }
+  },
+  "music": {
+    "title": "Musica",
+    "subtitle": "Riproduci la tua libreria musicale durante la sessione",
+    "chooseFolder": "Scegli cartella",
+    "changeFolder": "Cambia cartella",
+    "rescan": "Riscansiona",
+    "scanning": "Lettura della musica …",
+    "search": "Cerca …",
+    "shuffle": "Casuale",
+    "inOrder": "In ordine",
+    "crossfade": "Dissolvenza",
+    "crossfadeHint": "Passa dolcemente da un brano al successivo",
+    "collapseAll": "Comprimi tutto",
+    "expandAll": "Espandi tutto",
+    "playFolder": "Riproduci cartella",
+    "shuffleFolder": "Riproduci cartella in ordine casuale",
+    "play": "Riproduci",
+    "pause": "Pausa",
+    "stop": "Stop",
+    "next": "Successivo",
+    "previous": "Precedente",
+    "back10": "10s indietro",
+    "forward10": "10s avanti",
+    "mute": "Muto",
+    "playPause": "Riproduci / Pausa",
+    "volumeUp": "Volume su",
+    "volumeDown": "Volume giù",
+    "loopMode": "Modalità ripetizione",
+    "emptyFolder": "Nessun file audio trovato in questa cartella.",
+    "noResults": "Nessun risultato per \"{query}\".",
+    "loop": {
+      "folder": "Ripeti cartella",
+      "one": "Ripeti brano",
+      "all": "Riproduci tutto"
+    },
+    "loopHint": {
+      "folder": "Resta nella cartella corrente e la ripete – non passa mai alla cartella successiva",
+      "one": "Ripete solo il brano corrente",
+      "all": "Riproduce l'intera libreria attraversando le cartelle"
+    },
+    "scenes": {
+      "add": "Salva come scena",
+      "remove": "Rimuovi scena",
+      "play": "Riproduci scena: {name}",
+      "hint": "Metti una stella a una cartella per fissarla qui come scena.",
+      "title": "Scene"
+    },
+    "empty": {
+      "title": "La tua libreria musicale",
+      "text": "Scegli una cartella con la tua musica. Le sottocartelle diventano elenchi espandibili – clicca un brano o una cartella per riprodurli. Nulla viene caricato, i file vengono letti direttamente dal disco."
+    },
+    "folderDialog": {
+      "title": "Cartella musicale",
+      "path": "Percorso cartella",
+      "browse": "Sfoglia …",
+      "hintElectron": "Scegli la cartella che contiene la tua musica. Le sottocartelle diventano scene e playlist.",
+      "hintWeb": "Inserisci un percorso sul server che esegue DM Hero (con Docker: montalo come volume).",
+      "saved": "Cartella musicale salvata",
+      "notFound": "Cartella non trovata",
+      "remove": "Rimuovi cartella"
+    },
+    "errors": {
+      "fileUnavailable": "impossibile riprodurre il file (eliminato o spostato?)",
+      "libraryUnavailable": "Diversi brani non sono riproducibili – la cartella musicale probabilmente non esiste più. Riscansiona o scegli un'altra cartella.",
+      "folderMissing": "Cartella musicale non trovata. Riscansiona o scegli un'altra cartella.",
+      "scanFailed": "Impossibile leggere la cartella musicale."
     }
   },
   "update": {

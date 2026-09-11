@@ -43,6 +43,7 @@ export interface ElectronAPI {
   getDataPaths: () => Promise<{ databasePath: string, uploadPath: string, logsPath: string }>
   saveFileDialog: (options: SaveFileOptions) => Promise<SaveFileResult>
   openExternalUrl: (url: string) => Promise<{ success: boolean, error?: string }>
+  selectFolderDialog: (options?: { title?: string, defaultPath?: string }) => Promise<{ success: boolean, canceled?: boolean, folderPath?: string }>
 
   // Auto-updater APIs
   checkForUpdates: () => Promise<UpdateCheckResult>
@@ -169,6 +170,15 @@ export function useElectron() {
     async getDataPaths(): Promise<{ databasePath: string, uploadPath: string, logsPath: string } | null> {
       if (!electronAPI) return null
       return electronAPI.getDataPaths()
+    },
+
+    /**
+     * Native folder picker (Electron only, returns null in the browser)
+     */
+    async selectFolder(options?: { title?: string, defaultPath?: string }): Promise<string | null> {
+      if (!electronAPI?.selectFolderDialog) return null
+      const result = await electronAPI.selectFolderDialog(options)
+      return result.success && result.folderPath ? result.folderPath : null
     },
 
     /**

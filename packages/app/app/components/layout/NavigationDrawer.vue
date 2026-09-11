@@ -109,6 +109,12 @@
         to="/maps"
       />
       <v-list-item
+        prepend-icon="mdi-music"
+        :title="$t('nav.music')"
+        value="music"
+        to="/music"
+      />
+      <v-list-item
         prepend-icon="mdi-folder-multiple"
         :title="$t('nav.groups')"
         value="groups"
