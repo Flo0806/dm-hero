@@ -83,7 +83,7 @@ const version = packageJson.version
 // font — every release looks different. Add an entry per minor as it ships.
 const RELEASE_CODENAMES: Record<string, { name: string, font: string }> = {
   1.4: { name: 'The Summoning', font: 'Pirata One' },
-  1.5: { name: 'Crescendo', font: 'Monoton' },
+  1.5: { name: 'Bardic Inspiration', font: 'Monoton' },
 }
 const codename = computed(() => {
   const [major, minor] = version.split('.')

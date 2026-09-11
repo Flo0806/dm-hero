@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="showDialog" max-width="500" persistent>
+  <v-dialog v-model="showDialog" max-width="680" persistent>
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon icon="mdi-party-popper" color="primary" class="mr-2" />
