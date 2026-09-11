@@ -36,7 +36,9 @@
     "settings": "Settings",
     "theme": "Theme",
     "themePickerTitle": "Pick a theme",
-    "activeCampaign": "Active Campaign"
+    "activeCampaign": "Active Campaign",
+    "chooseCampaign": "Choose a campaign",
+    "chooseCampaignHint": "Everything else unlocks once a campaign is active"
   },
   "themes": {
     "dark": "Dark (Midnight Tavern)",

@@ -36,7 +36,9 @@
     "settings": "Ajustes",
     "theme": "Tema",
     "themePickerTitle": "Elige un tema",
-    "activeCampaign": "Campaña activa"
+    "activeCampaign": "Campaña activa",
+    "chooseCampaign": "Elegir una campaña",
+    "chooseCampaignHint": "Lo demás se desbloquea cuando hay una campaña activa"
   },
   "themes": {
     "dark": "Oscuro (Taberna de medianoche)",

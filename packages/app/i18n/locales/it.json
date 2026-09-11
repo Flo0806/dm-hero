@@ -36,7 +36,9 @@
     "settings": "Impostazioni",
     "theme": "Tema",
     "themePickerTitle": "Scegli un tema",
-    "activeCampaign": "Campagna attiva"
+    "activeCampaign": "Campagna attiva",
+    "chooseCampaign": "Scegli una campagna",
+    "chooseCampaignHint": "Il resto si sblocca quando una campagna è attiva"
   },
   "themes": {
     "dark": "Scuro (Taverna di mezzanotte)",

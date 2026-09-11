@@ -36,7 +36,9 @@
     "settings": "设置",
     "theme": "主题",
     "themePickerTitle": "选择一个主题",
-    "activeCampaign": "当前战役"
+    "activeCampaign": "当前战役",
+    "chooseCampaign": "选择战役",
+    "chooseCampaignHint": "激活战役后即可使用其他功能"
   },
   "themes": {
     "dark": "黑暗（午夜酒馆）",

@@ -36,7 +36,9 @@
     "settings": "Paramètres",
     "theme": "Thème",
     "themePickerTitle": "Choisir un thème",
-    "activeCampaign": "Campagne active"
+    "activeCampaign": "Campagne active",
+    "chooseCampaign": "Choisir une campagne",
+    "chooseCampaignHint": "Le reste se débloque dès qu'une campagne est active"
   },
   "themes": {
     "dark": "Sombre (Taverne de minuit)",

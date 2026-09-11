@@ -36,7 +36,9 @@
     "settings": "Einstellungen",
     "theme": "Theme",
     "themePickerTitle": "Theme auswählen",
-    "activeCampaign": "Aktive Kampagne"
+    "activeCampaign": "Aktive Kampagne",
+    "chooseCampaign": "Kampagne wählen",
+    "chooseCampaignHint": "Alles Weitere geht, sobald eine Kampagne aktiv ist"
   },
   "themes": {
     "dark": "Dunkel (Mitternachts-Taverne)",

@@ -34,7 +34,19 @@
         @click="router.push('/campaigns')"
       />
 
-      <v-divider v-if="activeCampaignName && !rail" />
+      <!-- No campaign yet: the only thing that makes sense is picking one -->
+      <v-list-item
+        v-if="!hasActiveCampaign"
+        prepend-icon="mdi-sword-cross"
+        :title="rail ? '' : $t('nav.chooseCampaign')"
+        :subtitle="rail ? undefined : $t('nav.chooseCampaignHint')"
+        class="mb-2"
+        color="primary"
+        active
+        @click="router.push('/campaigns')"
+      />
+
+      <v-divider v-if="(activeCampaignName || !hasActiveCampaign) && !rail" />
     </template>
 
     <!-- Scrollable middle: nav items -->
@@ -49,6 +61,7 @@
         prepend-icon="mdi-magnify"
         :title="$t('nav.search')"
         value="search"
+        :disabled="!hasActiveCampaign"
         :active="isSearchActive"
         @click="$emit('search-click')"
       />
@@ -56,43 +69,50 @@
         prepend-icon="mdi-account-group"
         :title="$t('nav.npcs')"
         value="npcs"
+        :disabled="!hasActiveCampaign"
         to="/npcs"
       />
       <v-list-item
         prepend-icon="mdi-map-marker"
         :title="$t('nav.locations')"
         value="locations"
+        :disabled="!hasActiveCampaign"
         to="/locations"
       />
-      <v-list-item prepend-icon="mdi-sword" :title="$t('nav.items')" value="items" to="/items" />
+      <v-list-item prepend-icon="mdi-sword" :title="$t('nav.items')" value="items" :disabled="!hasActiveCampaign" to="/items" />
       <v-list-item
         prepend-icon="mdi-shield"
         :title="$t('nav.factions')"
         value="factions"
+        :disabled="!hasActiveCampaign"
         to="/factions"
       />
       <v-list-item
         prepend-icon="mdi-book-open-variant"
         :title="$t('nav.lore')"
         value="lore"
+        :disabled="!hasActiveCampaign"
         to="/lore"
       />
       <v-list-item
         prepend-icon="mdi-account-star"
         :title="$t('nav.players')"
         value="players"
+        :disabled="!hasActiveCampaign"
         to="/players"
       />
       <v-list-item
         prepend-icon="mdi-book-open-page-variant"
         :title="$t('nav.sessions')"
         value="sessions"
+        :disabled="!hasActiveCampaign"
         to="/sessions"
       />
       <v-list-item
         prepend-icon="mdi-sword-cross"
         :title="$t('nav.encounters')"
         value="encounters"
+        :disabled="!hasActiveCampaign"
         to="/encounters"
         :class="{ 'encounter-active': hasCombatActive }"
       />
@@ -100,12 +120,14 @@
         prepend-icon="mdi-calendar"
         :title="$t('calendar.title')"
         value="calendar"
+        :disabled="!hasActiveCampaign"
         to="/calendar"
       />
       <v-list-item
         prepend-icon="mdi-map"
         :title="$t('nav.maps')"
         value="maps"
+        :disabled="!hasActiveCampaign"
         to="/maps"
       />
       <v-list-item
@@ -134,12 +156,14 @@
         prepend-icon="mdi-folder-multiple"
         :title="$t('nav.groups')"
         value="groups"
+        :disabled="!hasActiveCampaign"
         to="/groups"
       />
       <v-list-item
         prepend-icon="mdi-notebook-outline"
         :title="$t('nav.notes')"
         value="notes"
+        :disabled="!hasActiveCampaign"
         to="/notes"
       >
         <template v-if="notesStore.pendingCount > 0" #append>
