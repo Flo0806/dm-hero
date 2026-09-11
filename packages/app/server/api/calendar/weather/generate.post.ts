@@ -6,6 +6,8 @@ interface GenerateWeatherInput {
   year: number
   month: number
   overwrite?: boolean
+  /** Climate zone to generate for; null/undefined = global weather (no zone) */
+  zoneId?: number | null
 }
 
 interface Season {
@@ -161,6 +163,7 @@ export default defineEventHandler(async (event) => {
   const body = (await readBody(event)) as GenerateWeatherInput
 
   const { campaignId, year, month, overwrite = false } = body
+  const zoneId = body.zoneId ?? null
 
   if (!campaignId || !year || !month) {
     throw createError({
@@ -187,24 +190,26 @@ export default defineEventHandler(async (event) => {
     .prepare('SELECT * FROM calendar_seasons WHERE campaign_id = ? ORDER BY start_month, start_day')
     .all(campaignId) as Season[]
 
-  // Load every climate zone of this campaign plus its per-season profiles.
-  // Weather is generated PER ZONE — zone A can be sunny while zone B rains on
-  // the same day. If the campaign has no zones, we generate a single "global"
-  // weather (zone_id NULL) exactly like before.
-  const zones = db
-    .prepare('SELECT id FROM climate_zones WHERE campaign_id = ? AND deleted_at IS NULL ORDER BY id')
-    .all(campaignId) as Array<{ id: number }>
+  // Weather is generated PER ZONE — only for the requested zone, so generating
+  // for zone A never touches zone B's (possibly hand-edited) weather.
+  // zoneId null = global weather (legacy generator, no zone profile).
+  if (zoneId !== null) {
+    const zone = db
+      .prepare('SELECT id FROM climate_zones WHERE id = ? AND campaign_id = ? AND deleted_at IS NULL')
+      .get(zoneId, campaignId)
+    if (!zone) {
+      throw createError({ statusCode: 404, message: 'Climate zone not found' })
+    }
+  }
 
-  // zoneId -> (seasonId -> profile). Built once up-front.
-  const profilesByZone = new Map<number, Map<number, ZoneProfile>>()
-  if (zones.length > 0) {
-    const zoneIds = zones.map(z => z.id)
-    const placeholders = zoneIds.map(() => '?').join(',')
+  // seasonId -> profile of the requested zone
+  const zoneProfiles = new Map<number, ZoneProfile>()
+  if (zoneId !== null) {
     const rows = db.prepare(`
-      SELECT zone_id, season_id, temp_min, temp_max, weather_distribution
+      SELECT season_id, temp_min, temp_max, weather_distribution
       FROM climate_zone_seasons
-      WHERE zone_id IN (${placeholders})
-    `).all(...zoneIds) as Array<{ zone_id: number, season_id: number, temp_min: number, temp_max: number, weather_distribution: string }>
+      WHERE zone_id = ?
+    `).all(zoneId) as Array<{ season_id: number, temp_min: number, temp_max: number, weather_distribution: string }>
     for (const row of rows) {
       let dist: WeatherDistribution = {}
       try {
@@ -213,33 +218,29 @@ export default defineEventHandler(async (event) => {
       catch {
         // ignore — falls back to legacy for this season
       }
-      const map = profilesByZone.get(row.zone_id) ?? new Map<number, ZoneProfile>()
-      map.set(row.season_id, {
+      zoneProfiles.set(row.season_id, {
         season_id: row.season_id,
         temp_min: row.temp_min,
         temp_max: row.temp_max,
         weather_distribution: dist,
       })
-      profilesByZone.set(row.zone_id, map)
     }
   }
 
-  // The "targets" we generate for: each zone id, or a single null (global)
-  // when there are no zones.
-  const targets: Array<number | null> = zones.length > 0 ? zones.map(z => z.id) : [null]
-
-  // Overwrite wipes the whole month (all zones); otherwise we skip the
-  // (day, zone) combos that already have weather.
-  const existing = new Set<string>() // key: `${day}:${zoneId ?? 'null'}`
+  // Overwrite wipes this zone's month; otherwise we skip days that already
+  // have weather in this zone.
+  const zoneClause = zoneId !== null ? 'AND zone_id = ?' : 'AND zone_id IS NULL'
+  const zoneParams = zoneId !== null ? [zoneId] : []
+  const existing = new Set<number>()
   if (overwrite) {
-    db.prepare('DELETE FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
-      .run(campaignId, year, month)
+    db.prepare(`DELETE FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ${zoneClause}`)
+      .run(campaignId, year, month, ...zoneParams)
   }
   else {
     const rows = db
-      .prepare('SELECT day, zone_id FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ?')
-      .all(campaignId, year, month) as Array<{ day: number, zone_id: number | null }>
-    for (const r of rows) existing.add(`${r.day}:${r.zone_id ?? 'null'}`)
+      .prepare(`SELECT day FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ${zoneClause}`)
+      .all(campaignId, year, month, ...zoneParams) as Array<{ day: number }>
+    for (const r of rows) existing.add(r.day)
   }
 
   const insertStmt = db.prepare(`
@@ -252,23 +253,20 @@ export default defineEventHandler(async (event) => {
     const seasonObj = getSeasonObjectForDay(seasons, month, day)
     const seasonName = seasonObj?.weather_type ?? getSeasonForDay(seasons, month, day)
 
-    for (const zoneId of targets) {
-      if (!overwrite && existing.has(`${day}:${zoneId ?? 'null'}`)) continue
+    if (!overwrite && existing.has(day)) continue
 
-      const zoneProfiles = zoneId !== null ? profilesByZone.get(zoneId) : undefined
-      const { type, temp } = zoneId !== null && seasonObj && zoneProfiles
-        ? getZoneWeather(seasonObj.id, seasonName, zoneProfiles)
-        : getRandomWeather(seasonName)
+    const { type, temp } = zoneId !== null && seasonObj && zoneProfiles.size > 0
+      ? getZoneWeather(seasonObj.id, seasonName, zoneProfiles)
+      : getRandomWeather(seasonName)
 
-      insertStmt.run(campaignId, zoneId, year, month, day, type, temp)
-      generated++
-    }
+    insertStmt.run(campaignId, zoneId, year, month, day, type, temp)
+    generated++
   }
 
-  // Return the full month across all zones.
+  // Return this zone's month.
   const weather = db
-    .prepare('SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ORDER BY day, zone_id')
-    .all(campaignId, year, month)
+    .prepare(`SELECT * FROM calendar_weather WHERE campaign_id = ? AND year = ? AND month = ? ${zoneClause} ORDER BY day`)
+    .all(campaignId, year, month, ...zoneParams)
 
   return {
     generated,

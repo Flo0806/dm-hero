@@ -456,7 +456,7 @@
                     size="x-small"
                     :color="getEntityColor(le.entity_type)"
                     :class="{ 'text-decoration-line-through': le.entity_deleted }"
-                    @click.stop="navigateToEntity(le.entity_type, le.entity_id)"
+                    @click.stop="navigateToEntity(le.entity_type, le.entity_id, le.entity_name)"
                   >
                     <v-icon start size="x-small">{{ getEntityIcon(le.entity_type) }}</v-icon>
                     {{ le.entity_name }}
@@ -1249,7 +1249,7 @@ function getEntityIcon(type: string | null): string {
   return icons[type || ''] || 'mdi-help-circle'
 }
 
-function navigateToEntity(type: string | null, entityId: number) {
+function navigateToEntity(type: string | null, entityId: number, entityName: string) {
   if (!type) return
   const routes: Record<string, string> = {
     NPC: '/npcs',
@@ -1261,7 +1261,8 @@ function navigateToEntity(type: string | null, entityId: number) {
   }
   const basePath = routes[type]
   if (basePath) {
-    router.push(`${basePath}/${entityId}`)
+    // No detail routes exist – list pages open the entity via search + highlight
+    router.push(`${basePath}?search=${encodeURIComponent(entityName)}&highlight=${entityId}`)
   }
 }
 
@@ -1968,10 +1969,10 @@ async function doGenerateWeather(overwrite: boolean) {
         year: viewYear.value,
         month: viewMonth.value,
         overwrite,
+        // Only generate for the viewed zone (null → global) so other zones stay untouched
+        zoneId: activeClimateZoneId.value,
       },
     })
-    // The generator writes weather for ALL zones; the day-keyed map only holds
-    // the viewed zone, so reload that slice instead of dumping every zone in.
     await loadWeather()
     if (result.generated > 0) {
       snackbarStore.success(t('calendar.weather.generated', { count: result.generated }))

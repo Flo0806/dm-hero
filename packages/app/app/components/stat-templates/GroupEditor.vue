@@ -117,6 +117,8 @@ interface GroupData {
 
 const props = defineProps<{
   group: GroupData
+  /** Field names of all groups in the template (values are keyed by name template-wide) */
+  usedNames?: string[]
 }>()
 
 const emit = defineEmits<{
@@ -177,7 +179,10 @@ function deleteField(index: number) {
 }
 
 function addField() {
-  const fieldNum = localFields.value.length + 1
+  // Field names must be unique across the template (values are keyed by name) – pick the first free number
+  const used = new Set([...(props.usedNames ?? []), ...localFields.value.map(f => f.name)])
+  let fieldNum = 1
+  while (used.has(`field_${fieldNum}`)) fieldNum++
   localFields.value.push({
     name: `field_${fieldNum}`,
     label: `Field ${fieldNum}`,
