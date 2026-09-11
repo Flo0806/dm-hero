@@ -177,7 +177,10 @@ function deleteField(index: number) {
 }
 
 function addField() {
-  const fieldNum = localFields.value.length + 1
+  // Field names must be unique (values are keyed by name) – pick the first free number
+  const used = new Set(localFields.value.map(f => f.name))
+  let fieldNum = 1
+  while (used.has(`field_${fieldNum}`)) fieldNum++
   localFields.value.push({
     name: `field_${fieldNum}`,
     label: `Field ${fieldNum}`,
