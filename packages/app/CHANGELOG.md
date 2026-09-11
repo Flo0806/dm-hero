@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.5.3
+
+### Patch Changes
+
+- 1fc1ce2: Pin the macOS release builds to the macOS 15 runner – code signing fails on the macOS 26 image.
+
 ## 1.5.2
 
 ### Patch Changes
