@@ -82,7 +82,6 @@ const version = packageJson.version
 // Each minor release gets its own codename, shown in the header in its OWN
 // font — every release looks different. Add an entry per minor as it ships.
 const RELEASE_CODENAMES: Record<string, { name: string, font: string }> = {
-  1.4: { name: 'The Summoning', font: 'Pirata One' },
   1.5: { name: 'Bardic Inspiration', font: 'Monoton' },
 }
 const codename = computed(() => {
@@ -123,14 +122,7 @@ if (import.meta.client && window.electronAPI?.isElectron) {
 </script>
 
 <style>
-/* Release-codename display fonts (bundled locally — work offline). */
-@font-face {
-  font-family: 'Pirata One';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/pirata-one.woff2') format('woff2');
-}
+/* Release-codename display font (bundled locally — works offline). */
 @font-face {
   font-family: 'Monoton';
   font-style: normal;
