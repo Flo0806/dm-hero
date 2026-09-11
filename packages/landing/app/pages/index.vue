@@ -18,6 +18,7 @@ useSeoMeta({
     <DiscordBanner />
     <HeroSection />
     <TestimonialsSection />
+    <MusicSection />
     <FeaturesSection />
     <ScreenshotsSection />
     <DownloadSection />

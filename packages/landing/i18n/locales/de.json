@@ -4,6 +4,22 @@
     "description": "DM Hero ist das kostenlose, Open-Source Kampagnen-Management-Tool das jeder Spielleiter braucht. Organisiere NPCs, Orte, Gegenstände, Fraktionen und Sessions - offline, privat, ohne Abos."
   },
   "highlights": {
+    "music": {
+      "title": "All About Music",
+      "subtitle": "Spiel deine eigene Musikbibliothek am Tisch – Szenen, Überblenden und ein Mini-Player, der dir folgt"
+    },
+    "languages": {
+      "title": "Sechs Sprachen",
+      "subtitle": "Jetzt auch auf Italienisch, Französisch, Spanisch und vereinfachtem Chinesisch"
+    },
+    "aiFull": {
+      "title": "KI baut die ganze Kampagne",
+      "subtitle": "Vom Abenteuer-PDF zu NPCs, Karten, Encountern, Gruppen, Sessions und Portraits – erst Vorschau, dann Bestätigung"
+    },
+    "musicTheme": {
+      "title": "Theme „Music“",
+      "subtitle": "Sunset Beat: Retro-Sonnenuntergang über Bühnenblau, mit Noten, die übers Dashboard schweben"
+    },
     "aiImport": {
       "title": "Mit KI verbinden",
       "subtitle": "Lass eine KI ein PDF lesen und NPCs, Orte & Items direkt in DM Hero anlegen"
@@ -21,8 +37,8 @@
       "subtitle": "Farbige Tags an allem, sofort per #tag-Suche gefunden"
     },
     "themes": {
-      "title": "8 Themes & lebendiges Dashboard",
-      "subtitle": "Acht Farb-Themes, jedes mit eigener animierter Dashboard-Stimmung"
+      "title": "9 Themes & lebendiges Dashboard",
+      "subtitle": "Neun Farb-Themes, jedes mit eigener animierter Dashboard-Stimmung"
     },
     "archive": {
       "title": "Archiv-Funktion",
@@ -55,6 +71,7 @@
   },
   "nav": {
     "features": "Features",
+    "music": "Musik",
     "screenshots": "Screenshots",
     "download": "Download",
     "store": "Hero Basar",
@@ -97,6 +114,14 @@
         "title": "Entity-Verwaltung",
         "description": "Organisiere NPCs, Orte, Gegenstände, Fraktionen, Wissen, Spieler und Sessions. Alles miteinander verbunden durch bidirektionale Beziehungen."
       },
+      "music": {
+        "title": "Musik-Player",
+        "description": "Spiel deine eigene Musikbibliothek während der Session: Ordner werden Playlists, mit Stern als Szene gemerkt, Überblenden zwischen Titeln. Ein schwebender Mini-Player spielt weiter, egal wohin du navigierst."
+      },
+      "languages": {
+        "title": "Sechs Sprachen",
+        "description": "Deutsch, Englisch, Italienisch, Französisch, Spanisch und vereinfachtes Chinesisch – jederzeit in der Kopfzeile umschaltbar."
+      },
       "folders": {
         "title": "Ordner",
         "description": "Gruppiere NPCs, Items, Fraktionen und Wissen in Ordner. Zieh Einträge rein und raus — und die Ordner wandern beim Export/Import mit."
@@ -111,7 +136,7 @@
       },
       "aiImport": {
         "title": "Mit KI verbinden",
-        "description": "Lass eine KI deine PDFs lesen und NPCs, Orte, Items, Fraktionen und Wissen anlegen — mit Verknüpfungen, Tags und Ordnern. Du siehst alles vorher. Optional, nie Pflicht."
+        "description": "Lass eine KI deine ganze Kampagne aus einem Abenteuer bauen: NPCs, Orte, Items, Fraktionen und Lore mit Querverweisen, Portraits, Dokumente, Gruppen, Karten mit Markern, Encounter und Sessions. Jede Änderung erst als Vorschau. Optional, nie Pflicht."
       },
       "search": {
         "title": "Leistungsstarke Fuzzy-Suche",
@@ -158,6 +183,51 @@
         "description": "Lade Weltkarten hoch, setze Marker für NPCs und Orte, markiere Gebiete und miss Entfernungen."
       }
     }
+  },
+  "music": {
+    "kicker": "All about music",
+    "title": "Dein Soundtrack, am Spieltisch",
+    "subtitle": "Spiel deine eigene Musikbibliothek direkt aus DM Hero – Tavernen-Ambiente, Kampftrommeln, unheimliche Dungeon-Drones. Ordner wählen, Szenen markieren, Play drücken. Die Musik läuft weiter, während du durch NPCs, Karten und Notizen blätterst.",
+    "mock": {
+      "scene": "Szene · Taverne",
+      "track": "Zum Tänzelnden Pony – Abendset",
+      "folder": "Ambiente / Taverne",
+      "crossfade": "Überblenden zwischen Titeln",
+      "shortcuts": "Leertaste, Pfeile, R, L – komplett per Tastatur"
+    },
+    "pillars": {
+      "library": {
+        "title": "Deine Musik, deine Ordner",
+        "text": "Zeig DM Hero einen Ordner. Jeder Unterordner wird zur aufklappbaren Playlist – kein Upload, keine Cloud, die Dateien laufen direkt von der Platte."
+      },
+      "scenes": {
+        "title": "Szenen, einen Klick entfernt",
+        "text": "Markiere einen Ordner mit dem Stern und er wird zur Szene: Taverne, Wald, Bosskampf. Szenenwechsel mitten im Song? Wird überblendet statt abgeschnitten."
+      },
+      "mini": {
+        "title": "Ein Player, der dir folgt",
+        "text": "Ein schwebender Mini-Player spielt auf jeder Seite weiter – verschiebbar, mit Warteschlangen-Popup, Kompakt- und Minimiert-Modus und Steuerung direkt in der Sidebar."
+      },
+      "playlists": {
+        "title": "Playlists pro Session",
+        "text": "Häng YouTube-, Spotify- oder Tabletop-Audio-Links an eine Session. Sie öffnen sich im Browser – die Musik stoppt nie, wenn du zurückwechselst."
+      }
+    },
+    "steps": {
+      "pick": {
+        "title": "Ordner wählen",
+        "text": "Desktop-App: nativer Ordner-Dialog. Docker: Musik als Volume einbinden."
+      },
+      "star": {
+        "title": "Szenen markieren",
+        "text": "Markiere die Ordner, die du heute Abend brauchst – sie erscheinen als Chips auf der Musikseite."
+      },
+      "play": {
+        "title": "Play und vergessen",
+        "text": "Ordner wiederholen (keine Spoiler aus dem nächsten), Zufall, Überblenden – dann leite deine Session."
+      }
+    },
+    "footnote": "Nichts wird hochgeladen. Deine Dateien bleiben, wo sie sind – DM Hero spielt sie nur ab."
   },
   "screenshots": {
     "title": "DM Hero in Aktion",

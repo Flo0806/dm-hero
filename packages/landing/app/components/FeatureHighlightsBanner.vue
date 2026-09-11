@@ -14,12 +14,43 @@ interface Highlight {
 
 const highlights: Highlight[] = [
   {
+    key: 'music',
+    icon: 'mdi-music',
+    gradient: 'linear-gradient(135deg, #0F1233 0%, #E0248F 45%, #FF8A3D 100%)',
+    glow: 'rgba(255, 138, 61, 0.5)',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
+    key: 'aiFull',
+    icon: 'mdi-robot-excited-outline',
+    gradient: 'linear-gradient(135deg, #0B2622 0%, #4DD0E1 50%, #FFC145 100%)',
+    glow: 'rgba(77, 208, 225, 0.45)',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
+    key: 'languages',
+    icon: 'mdi-translate',
+    gradient: 'linear-gradient(135deg, #003278 0%, #008CC8 50%, #3DDC97 100%)',
+    glow: 'rgba(0, 140, 200, 0.45)',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
+    key: 'musicTheme',
+    icon: 'mdi-palette-swatch',
+    gradient: 'linear-gradient(135deg, #003278 0%, #E0248F 50%, #FF8A3D 100%)',
+    glow: 'rgba(224, 36, 143, 0.45)',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
     key: 'aiImport',
     icon: 'mdi-robot-happy-outline',
     gradient: 'linear-gradient(135deg, #0B2622 0%, #4DD0E1 50%, #D4A574 100%)',
     glow: 'rgba(77, 208, 225, 0.45)',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'climateZones',
@@ -27,7 +58,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #1565C0 0%, #4FC3F7 50%, #B0BEC5 100%)',
     glow: 'rgba(79, 195, 247, 0.4)',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'folders',
@@ -35,7 +65,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #5D4037 0%, #D4A574 50%, #8D6E63 100%)',
     glow: 'rgba(212, 165, 116, 0.4)',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'tags',
@@ -43,7 +72,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #AD1457 0%, #FF4081 50%, #F50057 100%)',
     glow: 'rgba(255, 64, 129, 0.4)',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'themes',
@@ -51,7 +79,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #4DD0E1 0%, #B388FF 50%, #FF7043 100%)',
     glow: 'rgba(179, 136, 255, 0.45)',
     badge: 'v1.4',
-    isNew: true,
     cycleColors: true,
   },
   {

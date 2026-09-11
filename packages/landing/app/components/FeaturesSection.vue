@@ -8,18 +8,30 @@ const features = [
     color: 'primary',
   },
   {
+    key: 'music',
+    icon: 'mdi-music',
+    color: 'warning',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
+    key: 'languages',
+    icon: 'mdi-translate',
+    color: 'info',
+    badge: 'v1.5',
+    isNew: true,
+  },
+  {
     key: 'folders',
     icon: 'mdi-folder-multiple',
     color: 'secondary',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'tags',
     icon: 'mdi-tag-multiple',
     color: 'purple',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'search',
@@ -41,7 +53,6 @@ const features = [
     icon: 'mdi-weather-partly-snowy-rainy',
     color: 'teal',
     badge: 'v1.4',
-    isNew: true,
   },
   {
     key: 'ai',
@@ -52,7 +63,7 @@ const features = [
     key: 'aiImport',
     icon: 'mdi-robot-happy-outline',
     color: 'info',
-    badge: 'v1.4',
+    badge: 'v1.5',
     isNew: true,
   },
   {
