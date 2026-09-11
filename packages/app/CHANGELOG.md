@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.5.1
+
+### Patch Changes
+
+- dda9b90: Without an active campaign the sidebar now only offers "Choose a campaign" – campaign-bound entries are disabled instead of doing nothing. Release 1.5 "Bardic Inspiration" announcement dialog.
+
 ## 1.5.0
 
 ### Minor Changes
