@@ -313,7 +313,7 @@
     "race": "竞赛",
     "class": "班级",
     "location": "地点",
-    "faction": "阵营|阵营",
+    "faction": "阵营 | 阵营",
     "relationship": "与当事人的关系",
     "age": "年龄",
     "gender": "性别",
@@ -549,7 +549,8 @@
       "players": "关联玩家"
     },
     "noMemberships": "无派系成员资格",
-    "noMembershipsText": "该NPC尚未属于任何派系。"
+    "noMembershipsText": "该NPC尚未属于任何派系。",
+    "noLore": "暂无关联的传说"
   },
   "factions": {
     "title": "阵营",
@@ -723,7 +724,7 @@
       "monks": "僧团",
       "tribal": "部落",
       "undead": "亡灵",
-      "demon_cult": "邪教",
+      "demon_cult": "恶魔教团",
       "explorers": "探险家",
       "hunters": "猎人",
       "healers": "治疗师",
@@ -995,7 +996,7 @@
       "barracks": "军营",
       "stable": "稳定",
       "garden": "花园",
-      "cemetery": "墓地",
+      "cemetery": "公墓",
       "dock": "码头",
       "alley": "胡同",
       "plaza": "广场",
@@ -1524,7 +1525,7 @@
     "entityCount": "没有条目 | {n} 条目 | {n} 条目",
     "deleteTitle": "删除文件夹？",
     "deleteConfirm": "删除文件夹“{name}”？",
-    "deleteCascadeHint": "文件夹为空| {n} 条目保留并且将是无文件夹的 | {n} 条目保留并且将无文件夹"
+    "deleteCascadeHint": "文件夹为空 | {n} 个条目保留，将不再属于任何文件夹 | {n} 个条目保留，将不再属于任何文件夹"
   },
   "tags": {
     "manage": {
@@ -1693,7 +1694,7 @@
     "deletedAll": "组和所有实体已删除",
     "created": "群组已创建",
     "saved": "组已保存",
-    "entitiesAdded": "添加了 {count} 实体 |添加了 {count} 实体",
+    "entitiesAdded": "添加了 {count} 个实体 | 添加了 {count} 个实体",
     "entityAddedToNewGroup": "添加到新组“{groupName}”"
   },
   "quickLink": {

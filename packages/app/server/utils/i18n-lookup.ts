@@ -9,6 +9,7 @@
  * - "Magier" → "wizard"
  * - "Wizard" → "wizard"
  */
+import { LOCALE_CODES, type AppLocale } from '~~/types/locale'
 
 // =============================================================================
 // SINGLE SOURCE OF TRUTH: Standard Races & Classes
@@ -207,7 +208,7 @@ export const STANDARD_CLASS_KEYS = new Set(STANDARD_CLASSES_DEFINITION.map(c => 
 
 function buildLookup(
   definitions: Array<{ key: string, de: string | string[], en: string | string[] }>,
-  locale: 'de' | 'en' | 'zh-CN',
+  locale: AppLocale,
 ): Record<string, string> {
   const lookup: Record<string, string> = {}
   for (const def of definitions) {
@@ -242,20 +243,31 @@ export interface ItemLookup {
 }
 
 /**
+ * Match a raw locale string ('de', 'en-US', 'zh-cn', 'fr;q=0.9') to a supported app locale.
+ * Exact code first, then language prefix ('zh' → 'zh-CN', 'en-US' → 'en').
+ */
+function matchLocale(raw: string | undefined): AppLocale | null {
+  if (!raw) return null
+  const value = raw.split(';')[0]?.trim() ?? ''
+  const exact = LOCALE_CODES.find(c => c.toLowerCase() === value.toLowerCase())
+  if (exact) return exact
+  const lang = value.split('-')[0]?.toLowerCase()
+  return LOCALE_CODES.find(c => c.split('-')[0]?.toLowerCase() === lang) ?? null
+}
+
+/**
  * Extract locale from H3 event (from cookie or Accept-Language header).
  * Defaults to 'de'.
  */
 export function getLocaleFromEvent(event: {
   node: { req: { headers: { 'accept-language'?: string, 'cookie'?: string } } }
-}): 'de' | 'en' | 'zh-CN' {
+}): AppLocale {
   // Priority 1: Accept-Language header (set by frontend with current locale)
   const acceptLanguage = event.node.req.headers['accept-language']
   if (acceptLanguage) {
-    const rawLocale = acceptLanguage.toLowerCase().split(',')[0]
-    if (rawLocale?.startsWith('zh')) return 'zh-CN'
-    const locale = rawLocale?.split('-')[0] // Extract language code
-    if (locale === 'en') return 'en'
-    if (locale === 'de') return 'de'
+    const rawLocale = acceptLanguage.split(',')[0]?.trim()
+    const fromHeader = matchLocale(rawLocale)
+    if (fromHeader) return fromHeader
   }
 
   // Priority 2: Try to get from cookie (nuxt-i18n can use different cookie names)
@@ -264,19 +276,15 @@ export function getLocaleFromEvent(event: {
     // Check for i18n_redirected cookie
     const redirectMatch = cookieHeader.match(/i18n_redirected=([^;]+)/)
     if (redirectMatch) {
-      const locale = redirectMatch[1]
-      if (locale === 'en') return 'en'
-      if (locale === 'de') return 'de'
-      if (locale === 'zh-CN') return 'zh-CN'
+      const fromRedirect = matchLocale(redirectMatch[1])
+      if (fromRedirect) return fromRedirect
     }
 
     // Check for direct locale cookie
     const localeMatch = cookieHeader.match(/locale=([^;]+)/)
     if (localeMatch) {
-      const locale = localeMatch[1]
-      if (locale === 'en') return 'en'
-      if (locale === 'de') return 'de'
-      if (locale === 'zh-CN') return 'zh-CN'
+      const fromCookie = matchLocale(localeMatch[1])
+      if (fromCookie) return fromCookie
     }
   }
 
@@ -289,7 +297,7 @@ export function getLocaleFromEvent(event: {
  * Locale-specific to support language-aware fuzzy matching.
  * Uses pre-built lookups from STANDARD_RACES_DEFINITION and STANDARD_CLASSES_DEFINITION.
  */
-export function createI18nLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): RaceClassLookup {
+export function createI18nLookup(locale: AppLocale = 'de'): RaceClassLookup {
   return {
     races: locale !== 'de' ? RACES_EN : RACES_DE,
     classes: locale !== 'de' ? CLASSES_EN : CLASSES_DE,
@@ -309,7 +317,7 @@ export function createI18nLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): RaceClas
 export async function getRaceKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
@@ -391,7 +399,7 @@ export async function getRaceKey(
  */
 export async function getRaceSearchVariants(
   name: string | undefined | null,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string[]> {
   if (!name) return []
 
@@ -464,7 +472,7 @@ export async function getRaceSearchVariants(
 export async function getClassKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
@@ -541,7 +549,7 @@ export async function getClassKey(
  */
 export async function getClassSearchVariants(
   name: string | undefined | null,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string[]> {
   if (!name) return []
 
@@ -652,7 +660,7 @@ function simpleLevenshtein(a: string, b: string): number {
  * Create lookup tables for item types and rarities.
  * Locale-specific for multilingual search support.
  */
-export function createItemLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): ItemLookup {
+export function createItemLookup(locale: AppLocale = 'de'): ItemLookup {
   const typesDE: Record<string, string> = {
     'waffe': 'weapon',
     'rüstung': 'armor',
@@ -714,7 +722,7 @@ export function createItemLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): ItemLook
 export function getItemTypeKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
@@ -743,7 +751,7 @@ export function getItemTypeKey(
 export function getItemRarityKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
@@ -773,7 +781,7 @@ export function getItemRarityKey(
 export async function convertMetadataToKeys(
   metadata: Record<string, unknown> | null | undefined,
   entityType: 'npc' | 'item' = 'npc',
-  locale: 'de' | 'en' | 'zh-CN' = 'de',
+  locale: AppLocale = 'de',
 ): Promise<Record<string, unknown> | null | undefined> {
   if (!metadata) return metadata
 
@@ -877,7 +885,7 @@ export async function convertMetadataToKeys(
 // NPC Type lookup (same pattern as race/class)
 // =============================================================================
 
-export function getNpcTypeKey(name: string, locale: 'de' | 'en' | 'zh-CN' = 'de'): string | null {
+export function getNpcTypeKey(name: string, locale: AppLocale = 'de'): string | null {
   if (!name) return null
   const nameLower = name.toLowerCase()
   // Check preferred locale first, then fallback to other

@@ -549,7 +549,8 @@
       "players": "Linked Players"
     },
     "noMemberships": "No Faction Memberships",
-    "noMembershipsText": "This NPC is not a member of any faction yet."
+    "noMembershipsText": "This NPC is not a member of any faction yet.",
+    "noLore": "No linked lore yet"
   },
   "factions": {
     "title": "Factions",
