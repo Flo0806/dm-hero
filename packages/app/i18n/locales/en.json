@@ -36,7 +36,9 @@
     "settings": "Settings",
     "theme": "Theme",
     "themePickerTitle": "Pick a theme",
-    "activeCampaign": "Active Campaign"
+    "activeCampaign": "Active Campaign",
+    "chooseCampaign": "Choose a campaign",
+    "chooseCampaignHint": "Everything else unlocks once a campaign is active"
   },
   "themes": {
     "dark": "Dark (Midnight Tavern)",
@@ -2466,6 +2468,10 @@
     "v140": {
       "title": "Version 1.4 \"The Summoning\" is here!",
       "content": "<h3 style='margin-bottom: 12px'>New in version 1.4:</h3><ul><li><strong>Vuetify 4 & 7 themes</strong> - refreshed UI with theme switcher and the new \"Deep Lagoon\" theme</li><li><strong>Folders</strong> - organize NPCs, items, factions & lore into folders, with move menu and drag pool</li><li><strong>Tags</strong> - tag any entity, with #tag search and color picker</li><li><strong>AI bulk-import (MCP)</strong> - connect an external AI (Claude, Cursor …) and let it fill a campaign; \"Connect your AI\" dialog on the dashboard</li><li><strong>Climate zones</strong> - weather per zone (zone A sunny while zone B rains), zones on the map, switchable in the calendar</li><li><strong>Theme ambience</strong> - every theme has its own dashboard background animation</li><li><strong>Release codename</strong> - every minor release carries its name in the header</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Improvements & Fixes:</h3><ul><li>NPC search finds names again even when they resemble a class</li><li>Merge-import no longer wipes the calendar by accident</li><li>Docker: uploaded files survive container restarts</li><li>NPC relations tab shows correct names</li></ul>"
+    },
+    "v150": {
+      "title": "Version 1.5 \"Bardic Inspiration\" is here!",
+      "content": "<h3 style='margin-bottom: 12px'>New in version 1.5:</h3><ul><li><strong>Music player</strong> - play your own music library during the session: pick a folder, sub-folders become playlists, star them as scenes. Crossfade, loop modes, shuffle, keyboard shortcuts – and a floating mini player that keeps playing wherever you navigate</li><li><strong>Session playlists</strong> - attach YouTube, Spotify or Tabletop Audio links to a session; they open in your browser so the music keeps running (in the desktop app all external links now do)</li><li><strong>Four new languages</strong> - Italian, French, Spanish and Simplified Chinese (a community contribution). Six languages in total</li><li><strong>\"Music\" theme</strong> - Sunset Beat: retro sunset orange and magenta over deep stage blue, with music notes floating across the dashboard</li><li><strong>AI does the whole job (MCP)</strong> - an AI can now build a complete campaign from a module: entities with cross-links, portraits and documents, groups, maps with markers, encounters and sessions – every change previewed and confirmed. Ask it \"what can you do?\"</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Improvements & Fixes:</h3><ul><li>Dashboard shows the weather of your active climate zone instead of always \"sunny\"</li><li>Weather generation only touches the selected zone – other zones keep their weather</li><li>Clicking a linked entity in the calendar opens it instead of a 404 page</li><li>New stat template fields get unique names and no longer overwrite each other</li><li>Custom group colour: the hex field stays open, plus a native colour picker</li><li>German location types \"Ebene\"/\"Friedhof\" are no longer duplicated</li></ul>"
     },
     "installerPath": "Installation path ({os}):",
     "autoUpdateHint": "After installation via the installer, the app will automatically update whenever a new version is available.",

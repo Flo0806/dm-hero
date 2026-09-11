@@ -46,6 +46,12 @@ const ANNOUNCEMENTS: Announcement[] = [
     contentKey: 'announcements.v140.content',
     html: true,
   },
+  {
+    id: 6,
+    titleKey: 'announcements.v150.title',
+    contentKey: 'announcements.v150.content',
+    html: true,
+  },
 ]
 
 const STORAGE_KEY = 'dm-hero-last-seen-announcement'

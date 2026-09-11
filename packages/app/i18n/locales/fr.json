@@ -36,7 +36,9 @@
     "settings": "Paramètres",
     "theme": "Thème",
     "themePickerTitle": "Choisir un thème",
-    "activeCampaign": "Campagne active"
+    "activeCampaign": "Campagne active",
+    "chooseCampaign": "Choisir une campagne",
+    "chooseCampaignHint": "Le reste se débloque dès qu'une campagne est active"
   },
   "themes": {
     "dark": "Sombre (Taverne de minuit)",
@@ -2466,6 +2468,10 @@
     "v140": {
       "title": "La version 1.4 \"The Summoning\" est là !",
       "content": "<h3 style='margin-bottom: 12px'>Nouveautés de la version 1.4 :</h3><ul><li><strong>Vuetify 4 et 7 thèmes</strong> - interface rafraîchie avec sélecteur de thème et le nouveau thème \"Lagon profond\"</li><li><strong>Dossiers</strong> - organisez les PNJ, objets, factions et lore dans des dossiers, avec menu de déplacement et zone de glisser-déposer</li><li><strong>Tags</strong> - taguez n'importe quelle entité, avec recherche #tag et sélecteur de couleur</li><li><strong>Import en masse par IA (MCP)</strong> - connectez une IA externe (Claude, Cursor …) et laissez-la remplir une campagne ; dialogue \"Connecter votre IA\" sur le tableau de bord</li><li><strong>Zones climatiques</strong> - météo par zone (zone A ensoleillée pendant qu'il pleut en zone B), zones sur la carte, commutables dans le calendrier</li><li><strong>Ambiance de thème</strong> - chaque thème a sa propre animation d'arrière-plan sur le tableau de bord</li><li><strong>Nom de code de version</strong> - chaque version mineure porte son nom dans l'en-tête</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Améliorations et corrections :</h3><ul><li>La recherche de PNJ retrouve les noms même s'ils ressemblent à une classe</li><li>L'import par fusion n'efface plus le calendrier par accident</li><li>Docker : les fichiers téléversés survivent aux redémarrages du conteneur</li><li>L'onglet des relations de PNJ affiche les bons noms</li></ul>"
+    },
+    "v150": {
+      "title": "La version 1.5 « Bardic Inspiration » est là !",
+      "content": "<h3 style='margin-bottom: 12px'>Nouveautés de la version 1.5 :</h3><ul><li><strong>Lecteur de musique</strong> - jouez votre propre bibliothèque musicale pendant la session : choisissez un dossier, les sous-dossiers deviennent des playlists, étoilez-les comme scènes. Fondu enchaîné, modes de répétition, aléatoire, raccourcis – et un mini lecteur flottant qui continue partout où vous naviguez</li><li><strong>Playlists de session</strong> - attachez des liens YouTube, Spotify ou Tabletop Audio à une session ; ils s'ouvrent dans le navigateur pour que la musique continue (dans l'application de bureau, tous les liens externes le font désormais)</li><li><strong>Quatre nouvelles langues</strong> - italien, français, espagnol et chinois simplifié (contribution de la communauté). Six langues au total</li><li><strong>Thème « Music »</strong> - Sunset Beat : coucher de soleil rétro orange et magenta sur un bleu de scène profond, avec des notes de musique qui flottent sur le tableau de bord</li><li><strong>L'IA fait tout le travail (MCP)</strong> - une IA peut désormais construire une campagne complète à partir d'un module : entités avec liens croisés, portraits et documents, groupes, cartes avec marqueurs, rencontres et sessions – chaque changement prévisualisé et confirmé. Demandez-lui : « que sais-tu faire ? »</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Améliorations et corrections :</h3><ul><li>Le tableau de bord affiche la météo de la zone climatique active au lieu de toujours « ensoleillé »</li><li>La génération météo ne touche que la zone sélectionnée – les autres gardent leur météo</li><li>Cliquer sur une entité liée dans le calendrier l'ouvre au lieu d'une page 404</li><li>Les nouveaux champs de blocs de stats reçoivent des noms uniques et ne s'écrasent plus</li><li>Couleur de groupe personnalisée : le champ hex reste ouvert, avec un sélecteur de couleur natif</li><li>Les types de lieu allemands « Ebene »/« Friedhof » ne sont plus en double</li></ul>"
     },
     "installerPath": "Chemin d'installation ({os}) :",
     "autoUpdateHint": "Après une installation via l'installateur, l'application se mettra à jour automatiquement dès qu'une nouvelle version sera disponible.",
