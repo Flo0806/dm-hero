@@ -1371,6 +1371,16 @@
     "coverImageDescription": "图片描述",
     "coverImageDescriptionPlaceholder": "描述一下场景，例如：在一个装满黄金的洞穴里，一群冒险家站在一条巨龙面前......",
     "coverImageSafetyError": "该描述被 AI 安全过滤器拒绝。请重新表述场景 - 避免直接的暴力描述，并使用更笼统的术语，例如“史诗般的战斗”或“戏剧性对抗”。",
+    "music": {
+      "title": "音乐",
+      "hint": "本次跑团的播放列表（YouTube、Spotify、Tabletop Audio 等）。链接在浏览器中打开，使用 DM Hero 时音乐不会中断。",
+      "empty": "还没有播放列表",
+      "label": "名称",
+      "labelPlaceholder": "例如：酒馆氛围",
+      "url": "URL",
+      "invalidUrl": "请输入有效的 http(s) URL",
+      "open": "打开"
+    },
     "pinboard": {
       "title": "插板",
       "empty": "没有固定实体",
@@ -1748,12 +1758,12 @@
       "providerHint": "选择用于文本和图片生成的 AI 提供商",
       "openaiApiKey": "OpenAI API 密钥",
       "openaiApiKeyPlaceholder": "sk-proj-...",
-  "geminiApiKey": "Google Gemini API 密钥",
-  "geminiApiKeyPlaceholder": "AIza...",
+      "geminiApiKey": "Google Gemini API 密钥",
+      "geminiApiKeyPlaceholder": "AIza...",
       "apiKeyHint": "您的 API 密钥将被加密存储",
       "activeProvider": "当前提供商",
       "openaiModel": "OpenAI 模型",
-  "geminiModel": "Gemini 模型",
+      "geminiModel": "Gemini 模型",
       "modelHint": "从列表中选择，或输入自定义模型名称",
       "modelsAvailable": "个模型可用",
       "testConnection": "测试连接",
@@ -1761,7 +1771,7 @@
       "testFailed": "连接失败",
       "getApiKey": "获取API密钥",
       "openaiHowToGetKey": "在 platform.openai.com 创建帐户并生成 API 密钥",
-  "geminiHowToGetKey": "在 aistudio.google.com 创建 API 密钥"
+      "geminiHowToGetKey": "在 aistudio.google.com 创建 API 密钥"
     },
     "saved": "设置已保存",
     "saveFailed": "保存设置失败",

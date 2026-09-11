@@ -1371,6 +1371,16 @@
     "coverImageDescription": "Descrizione dell'immagine",
     "coverImageDescriptionPlaceholder": "Descrivi la scena, es.: Un gruppo di avventurieri davanti a un enorme drago in una caverna piena d'oro...",
     "coverImageSafetyError": "La descrizione è stata rifiutata dal filtro di sicurezza dell'IA. Riformula la scena: evita descrizioni dirette di violenza e usa termini più generici come 'battaglia epica' o 'scontro drammatico'.",
+    "music": {
+      "title": "Musica",
+      "hint": "Playlist per questa sessione (YouTube, Spotify, Tabletop Audio, …). I link si aprono nel browser, così la musica continua mentre usi DM Hero.",
+      "empty": "Nessuna playlist",
+      "label": "Etichetta",
+      "labelPlaceholder": "es. Atmosfera da taverna",
+      "url": "URL",
+      "invalidUrl": "Inserisci un URL http(s) valido",
+      "open": "Apri"
+    },
     "pinboard": {
       "title": "Bacheca",
       "empty": "Nessuna entità in evidenza",

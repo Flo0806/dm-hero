@@ -1371,6 +1371,16 @@
     "coverImageDescription": "Descripción de la imagen",
     "coverImageDescriptionPlaceholder": "Describe la escena, p. ej.: Un grupo de aventureros frente a un enorme dragón en una cueva llena de oro...",
     "coverImageSafetyError": "El filtro de seguridad de la IA rechazó la descripción. Reformula la escena: evita descripciones directas de violencia y usa términos más generales como 'batalla épica' o 'confrontación dramática'.",
+    "music": {
+      "title": "Música",
+      "hint": "Playlists para esta sesión (YouTube, Spotify, Tabletop Audio, …). Los enlaces se abren en el navegador para que la música siga sonando mientras usas DM Hero.",
+      "empty": "Aún no hay playlists",
+      "label": "Etiqueta",
+      "labelPlaceholder": "p. ej. Ambiente de taberna",
+      "url": "URL",
+      "invalidUrl": "Introduce una URL http(s) válida",
+      "open": "Abrir"
+    },
     "pinboard": {
       "title": "Tablón",
       "empty": "No hay entidades fijadas",

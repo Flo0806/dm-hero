@@ -2651,6 +2651,17 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 53: Created map_climate_areas')
     },
   },
+  {
+    version: 54,
+    name: 'session_music_links',
+    up: (db) => {
+      // Playlist links per session (YouTube, Spotify, Tabletop Audio, …) as a
+      // JSON array of { label, url }. Opened in the system browser, never played in-app.
+      db.exec('ALTER TABLE sessions ADD COLUMN music_links TEXT NOT NULL DEFAULT \'[]\'')
+
+      console.log('✅ Migration 54: Added sessions.music_links')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

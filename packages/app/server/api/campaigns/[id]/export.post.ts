@@ -41,6 +41,7 @@ import { EXPORT_FORMAT_VERSION } from '~~/types/export'
 
 // Get app version from package.json
 import pkg from '~~/package.json'
+import { parseMusicLinks } from '~~/server/utils/music-links'
 
 interface FileToInclude {
   sourcePath: string
@@ -431,7 +432,7 @@ export default defineEventHandler(async (event) => {
         `
       SELECT id, session_number, title, date, summary, notes,
              in_game_date_start, in_game_date_end, in_game_day_start, in_game_day_end,
-             duration_minutes, calendar_event_id, created_at, updated_at
+             duration_minutes, music_links, calendar_event_id, created_at, updated_at
       FROM sessions
       WHERE campaign_id = ? AND deleted_at IS NULL
       ORDER BY session_number ASC
@@ -449,6 +450,7 @@ export default defineEventHandler(async (event) => {
       in_game_day_start: number | null
       in_game_day_end: number | null
       duration_minutes: number | null
+      music_links: string | null
       calendar_event_id: number | null
       created_at: string
       updated_at: string
@@ -470,6 +472,7 @@ export default defineEventHandler(async (event) => {
       in_game_day_start: s.in_game_day_start || undefined,
       in_game_day_end: s.in_game_day_end || undefined,
       duration_minutes: s.duration_minutes || undefined,
+      music_links: parseMusicLinks(s.music_links).length ? parseMusicLinks(s.music_links) : undefined,
       calendar_event: s.calendar_event_id ? eventExportIdMap.get(s.calendar_event_id) : undefined,
       created_at: s.created_at,
       updated_at: s.updated_at,

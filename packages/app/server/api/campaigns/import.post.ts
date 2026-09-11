@@ -37,6 +37,7 @@ import { isExportCompatible, isExportFromNewerVersion } from '~~/types/export'
 
 // Get app version from package.json
 import pkg from '~~/package.json'
+import { sanitizeMusicLinks } from '~~/server/utils/music-links'
 
 // Dynamic import for unzipper (ESM)
 let unzipper: typeof import('unzipper')
@@ -1019,8 +1020,8 @@ export default defineEventHandler(async (event) => {
       const insertSession = db.prepare(`
         INSERT INTO sessions (campaign_id, session_number, title, date, summary, notes,
           in_game_date_start, in_game_date_end, in_game_day_start, in_game_day_end,
-          duration_minutes, calendar_event_id, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          duration_minutes, music_links, calendar_event_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
 
       for (const session of manifest.sessions) {
@@ -1037,6 +1038,7 @@ export default defineEventHandler(async (event) => {
           session.in_game_day_start || null,
           session.in_game_day_end || null,
           session.duration_minutes || null,
+          JSON.stringify(sanitizeMusicLinks(session.music_links)),
           null, // calendar_event_id - set later
           session.created_at || new Date().toISOString(),
           session.updated_at || new Date().toISOString(),
