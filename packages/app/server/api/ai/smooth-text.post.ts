@@ -36,8 +36,8 @@ Ausgabe: "Die Gruppe kam in der Taverne an und traf auf den Wirt {{npc:45}}. Er 
 
 示例：
 输入："- 队伍抵达酒馆\n- 店主是 {{npc:45}}\n- 给出任务：寻找儿子\n- 50 金币"
-输出："队伍抵达酒馆，见到了店主 {{npc:45}}。他请求他们寻找自己的儿子，并提出以 50 金币作为报酬。"`
-      : `You are an assistant that transforms bullet points and rough notes into flowing text.
+输出："队伍抵达酒馆，见到了店主 {{npc:45}}。店主给出了寻找儿子的任务，并提到 50 金币。"`
+        : `You are an assistant that transforms bullet points and rough notes into flowing text.
 
 RULES:
 1. Transform bullet points into complete sentences
