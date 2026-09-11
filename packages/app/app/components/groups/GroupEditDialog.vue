@@ -41,32 +41,16 @@
             >
               <v-icon v-if="form.color === color" icon="mdi-check" size="small" :color="getContrastColor(color)" />
             </v-avatar>
-            <!-- Custom color input -->
-            <v-menu>
-              <template #activator="{ props: menuProps }">
-                <v-avatar
-                  v-bind="menuProps"
-                  :color="isCustomColor ? (form.color ?? undefined) : 'grey-lighten-2'"
-                  size="32"
-                  class="color-option"
-                  :class="{ 'color-selected': isCustomColor }"
-                >
-                  <v-icon icon="mdi-palette" size="small" :color="isCustomColor ? getContrastColor(form.color) : 'grey'" />
-                </v-avatar>
-              </template>
-              <v-card min-width="200">
-                <v-card-text>
-                  <v-text-field
-                    v-model="form.color"
-                    label="Hex Color"
-                    placeholder="#D4A574"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                  />
-                </v-card-text>
-              </v-card>
-            </v-menu>
+            <!-- Custom color: toggles an inline hex field below (no popover – menus close on click in Electron) -->
+            <v-avatar
+              :color="isCustomColor ? (form.color ?? undefined) : 'grey-lighten-2'"
+              size="32"
+              class="color-option"
+              :class="{ 'color-selected': isCustomColor || showCustomColor }"
+              @click="showCustomColor = !showCustomColor"
+            >
+              <v-icon icon="mdi-palette" size="small" :color="isCustomColor ? getContrastColor(form.color) : 'grey'" />
+            </v-avatar>
             <!-- Clear color -->
             <v-avatar
               v-if="form.color"
@@ -77,6 +61,25 @@
             >
               <v-icon icon="mdi-close" size="small" color="grey" />
             </v-avatar>
+          </div>
+          <div v-if="showCustomColor || isCustomColor" class="d-flex align-center ga-2 mt-3">
+            <input
+              type="color"
+              :value="isValidHex(form.color) ? form.color : '#D4A574'"
+              class="native-color-input"
+              :title="$t('groups.color')"
+              @input="form.color = ($event.target as HTMLInputElement).value"
+            />
+            <v-text-field
+              v-model="form.color"
+              label="Hex"
+              placeholder="#D4A574"
+              variant="outlined"
+              density="compact"
+              hide-details="auto"
+              :rules="[(v: string | null) => !v || isValidHex(v) || '#RRGGBB']"
+              style="max-width: 180px"
+            />
           </div>
         </div>
 
@@ -177,12 +180,18 @@ const isCustomColor = computed(() => {
   if (!form.value.color) return false
   return !GROUP_COLORS.includes(form.value.color as (typeof GROUP_COLORS)[number])
 })
+const showCustomColor = ref(false)
+
+function isValidHex(value: string | null | undefined): boolean {
+  return !!value && /^#[0-9a-f]{6}$/i.test(value)
+}
 
 // Load group data when dialog opens
 watch(
   [() => props.show, () => props.groupId],
   async ([show, groupId]) => {
     if (!show) return
+    showCustomColor.value = false
 
     if (groupId) {
       const group = await $fetch<EntityGroup>(`/api/groups/${groupId}`)
@@ -269,5 +278,15 @@ async function save() {
 .color-selected {
   border-color: rgb(var(--v-theme-primary));
   box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.3);
+}
+
+.native-color-input {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid rgba(var(--v-theme-on-surface), 0.2);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
 }
 </style>
