@@ -28,6 +28,7 @@
     "sessions": "Sessions",
     "encounters": "Encounter",
     "maps": "Karten",
+    "music": "Musik",
     "groups": "Gruppen",
     "calendar": "Kalender",
     "notes": "Notizen",
@@ -2335,6 +2336,84 @@
       "fileTooLarge": "Datei zu groß. Maximale Größe: 50MB",
       "uploadFailed": "Karte konnte nicht hochgeladen werden",
       "updateFailed": "Karte konnte nicht aktualisiert werden"
+    }
+  },
+  "music": {
+    "title": "Musik",
+    "subtitle": "Deine eigene Musikbibliothek während der Session abspielen",
+    "chooseFolder": "Ordner wählen",
+    "changeFolder": "Ordner wechseln",
+    "rescan": "Neu scannen",
+    "scanning": "Lese deine Musik …",
+    "search": "Suchen …",
+    "shuffle": "Zufall",
+    "inOrder": "Der Reihe nach",
+    "crossfade": "Überblenden",
+    "crossfadeHint": "Sanft von einem Titel in den nächsten überblenden",
+    "collapseAll": "Alle einklappen",
+    "expandAll": "Alle ausklappen",
+    "playFolder": "Ordner abspielen",
+    "shuffleFolder": "Ordner zufällig abspielen",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "stop": "Stopp",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "back10": "10s zurück",
+    "forward10": "10s vor",
+    "mute": "Stumm",
+    "playPause": "Play / Pause",
+    "volumeUp": "Lauter",
+    "volumeDown": "Leiser",
+    "loopMode": "Wiederhol-Modus",
+    "emptyFolder": "Keine Audiodateien in diesem Ordner gefunden.",
+    "noResults": "Nichts gefunden für „{query}“.",
+    "loop": {
+      "folder": "Ordner wiederholen",
+      "one": "Titel wiederholen",
+      "all": "Alles durchspielen"
+    },
+    "loopHint": {
+      "folder": "Bleibt im aktuellen Ordner und wiederholt ihn – wechselt nie in den nächsten Ordner",
+      "one": "Wiederholt nur den aktuellen Titel",
+      "all": "Spielt über Ordnergrenzen hinweg die ganze Bibliothek"
+    },
+    "scenes": {
+      "add": "Als Szene merken",
+      "remove": "Szene entfernen",
+      "play": "Szene abspielen: {name}",
+      "hint": "Markiere einen Ordner mit dem Stern, um ihn hier als Szene anzupinnen.",
+      "title": "Szenen"
+    },
+    "empty": {
+      "title": "Deine Musikbibliothek",
+      "text": "Wähle einen Ordner mit deiner Musik. Unterordner werden zu aufklappbaren Listen – Titel oder Ordner anklicken und es spielt. Nichts wird hochgeladen, die Dateien laufen direkt von der Platte."
+    },
+    "folderDialog": {
+      "title": "Musikordner",
+      "path": "Ordnerpfad",
+      "browse": "Durchsuchen …",
+      "hintElectron": "Wähle den Ordner mit deiner Musik. Unterordner werden zu Szenen und Playlists.",
+      "hintWeb": "Gib einen Ordnerpfad auf dem Server an, auf dem DM Hero läuft (bei Docker: als Volume einbinden).",
+      "saved": "Musikordner gespeichert",
+      "notFound": "Ordner nicht gefunden",
+      "remove": "Ordner entfernen"
+    },
+    "errors": {
+      "fileUnavailable": "Datei kann nicht abgespielt werden (gelöscht oder verschoben?)",
+      "libraryUnavailable": "Mehrere Titel konnten nicht abgespielt werden – der Musikordner fehlt vermutlich. Neu scannen oder anderen Ordner wählen.",
+      "folderMissing": "Der Musikordner wurde nicht gefunden. Neu scannen oder anderen Ordner wählen.",
+      "scanFailed": "Der Musikordner konnte nicht gelesen werden."
+    },
+    "volume": "Lautstärke",
+    "seek": "Wiedergabeposition",
+    "mini": {
+      "drag": "Ziehen zum Verschieben",
+      "open": "Musikseite öffnen",
+      "queue": "Warteschlange anzeigen",
+      "compact": "Kompakt",
+      "expand": "Erweitern",
+      "minimize": "Minimieren"
     }
   },
   "update": {

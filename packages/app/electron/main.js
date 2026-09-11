@@ -633,6 +633,19 @@ autoUpdater.on('error', (error) => {
 // ============================================================================
 
 // Save file with dialog (for campaign exports)
+// Pick a folder (music library)
+ipcMain.handle('select-folder-dialog', async (event, options = {}) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: options.title,
+    defaultPath: options.defaultPath,
+    properties: ['openDirectory'],
+  })
+  if (result.canceled || !result.filePaths.length) {
+    return { success: false, canceled: true }
+  }
+  return { success: true, folderPath: result.filePaths[0] }
+})
+
 ipcMain.handle('save-file-dialog', async (event, options) => {
   const { defaultFileName, fileData, filters } = options
 

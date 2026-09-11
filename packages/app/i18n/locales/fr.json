@@ -28,6 +28,7 @@
     "sessions": "Sessions",
     "encounters": "Rencontres",
     "maps": "Cartes",
+    "music": "Musique",
     "groups": "Groupes",
     "calendar": "Calendrier",
     "notes": "Notes",
@@ -2335,6 +2336,84 @@
       "fileTooLarge": "Fichier trop volumineux. Taille maximale : 50 Mo",
       "uploadFailed": "Échec du téléversement de la carte",
       "updateFailed": "Échec de la mise à jour de la carte"
+    }
+  },
+  "music": {
+    "title": "Musique",
+    "subtitle": "Jouez votre propre bibliothèque musicale pendant la session",
+    "chooseFolder": "Choisir un dossier",
+    "changeFolder": "Changer de dossier",
+    "rescan": "Rescanner",
+    "scanning": "Analyse de votre bibliothèque musicale …",
+    "search": "Rechercher …",
+    "shuffle": "Aléatoire",
+    "inOrder": "Dans l'ordre",
+    "crossfade": "Fondu enchaîné",
+    "crossfadeHint": "Passer en douceur d'un morceau au suivant",
+    "collapseAll": "Tout replier",
+    "expandAll": "Tout déplier",
+    "playFolder": "Lire le dossier",
+    "shuffleFolder": "Lire le dossier en aléatoire",
+    "play": "Lecture",
+    "pause": "Pause",
+    "stop": "Stop",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "back10": "10 s en arrière",
+    "forward10": "10 s en avant",
+    "mute": "Muet",
+    "playPause": "Lecture / Pause",
+    "volumeUp": "Volume +",
+    "volumeDown": "Volume −",
+    "loopMode": "Mode de répétition",
+    "emptyFolder": "Aucun fichier audio trouvé dans ce dossier.",
+    "noResults": "Aucun résultat pour « {query} ».",
+    "loop": {
+      "folder": "Répéter le dossier",
+      "one": "Répéter le morceau",
+      "all": "Tout lire"
+    },
+    "loopHint": {
+      "folder": "Reste dans le dossier courant et le répète – ne passe jamais au dossier suivant",
+      "one": "Répète uniquement le morceau courant",
+      "all": "Lit toute la bibliothèque en traversant les dossiers"
+    },
+    "scenes": {
+      "add": "Enregistrer comme scène",
+      "remove": "Retirer la scène",
+      "play": "Lire la scène : {name}",
+      "hint": "Étoilez un dossier pour l'épingler ici comme scène.",
+      "title": "Scènes"
+    },
+    "empty": {
+      "title": "Votre bibliothèque musicale",
+      "text": "Choisissez un dossier contenant votre musique. Les sous-dossiers deviennent des listes dépliables – cliquez sur un morceau ou un dossier pour lancer la lecture. Rien n'est téléversé, les fichiers sont lus directement depuis le disque."
+    },
+    "folderDialog": {
+      "title": "Dossier musical",
+      "path": "Chemin du dossier",
+      "browse": "Parcourir …",
+      "hintElectron": "Choisissez le dossier qui contient votre musique. Les sous-dossiers deviennent des scènes et des playlists.",
+      "hintWeb": "Indiquez un chemin sur le serveur qui exécute DM Hero (avec Docker : montez-le comme volume).",
+      "saved": "Dossier musical enregistré",
+      "notFound": "Dossier introuvable",
+      "remove": "Retirer le dossier"
+    },
+    "errors": {
+      "fileUnavailable": "lecture impossible (fichier supprimé ou déplacé ?)",
+      "libraryUnavailable": "Plusieurs morceaux n'ont pas pu être lus – le dossier musical a probablement disparu. Rescannez ou choisissez un autre dossier.",
+      "folderMissing": "Dossier musical introuvable. Rescannez ou choisissez un autre dossier.",
+      "scanFailed": "Impossible de lire le dossier musical."
+    },
+    "volume": "Volume",
+    "seek": "Position de lecture",
+    "mini": {
+      "drag": "Glisser pour déplacer",
+      "open": "Ouvrir la page musique",
+      "queue": "Afficher la file",
+      "compact": "Compact",
+      "expand": "Développer",
+      "minimize": "Réduire"
     }
   },
   "update": {

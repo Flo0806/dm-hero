@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Save file with dialog (for campaign exports)
   saveFileDialog: options => ipcRenderer.invoke('save-file-dialog', options),
 
+  // Pick a folder (music library)
+  selectFolderDialog: options => ipcRenderer.invoke('select-folder-dialog', options),
+
   // Open external URL in system browser
   openExternalUrl: url => ipcRenderer.invoke('open-external-url', url),
 

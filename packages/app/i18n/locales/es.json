@@ -28,6 +28,7 @@
     "sessions": "Sesiones",
     "encounters": "Encuentros",
     "maps": "Mapas",
+    "music": "Música",
     "groups": "Grupos",
     "calendar": "Calendario",
     "notes": "Notas",
@@ -2335,6 +2336,84 @@
       "fileTooLarge": "Archivo demasiado grande. Tamaño máximo: 50 MB",
       "uploadFailed": "Error al subir el mapa",
       "updateFailed": "Error al actualizar el mapa"
+    }
+  },
+  "music": {
+    "title": "Música",
+    "subtitle": "Reproduce tu propia biblioteca musical durante la sesión",
+    "chooseFolder": "Elegir carpeta",
+    "changeFolder": "Cambiar carpeta",
+    "rescan": "Volver a escanear",
+    "scanning": "Leyendo tu música …",
+    "search": "Buscar …",
+    "shuffle": "Aleatorio",
+    "inOrder": "En orden",
+    "crossfade": "Fundido",
+    "crossfadeHint": "Pasa suavemente de una pista a la siguiente",
+    "collapseAll": "Contraer todo",
+    "expandAll": "Expandir todo",
+    "playFolder": "Reproducir carpeta",
+    "shuffleFolder": "Reproducir carpeta en aleatorio",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "stop": "Detener",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "back10": "10 s atrás",
+    "forward10": "10 s adelante",
+    "mute": "Silenciar",
+    "playPause": "Reproducir / Pausa",
+    "volumeUp": "Subir volumen",
+    "volumeDown": "Bajar volumen",
+    "loopMode": "Modo de repetición",
+    "emptyFolder": "No se encontraron archivos de audio en esta carpeta.",
+    "noResults": "No hay resultados para «{query}».",
+    "loop": {
+      "folder": "Repetir carpeta",
+      "one": "Repetir pista",
+      "all": "Reproducir todo"
+    },
+    "loopHint": {
+      "folder": "Se queda en la carpeta actual y la repite – nunca salta a la siguiente carpeta",
+      "one": "Repite solo la pista actual",
+      "all": "Reproduce toda la biblioteca atravesando carpetas"
+    },
+    "scenes": {
+      "add": "Guardar como escena",
+      "remove": "Quitar escena",
+      "play": "Reproducir escena: {name}",
+      "hint": "Marca una carpeta con la estrella para fijarla aquí como escena.",
+      "title": "Escenas"
+    },
+    "empty": {
+      "title": "Tu biblioteca musical",
+      "text": "Elige una carpeta con tu música. Las subcarpetas se convierten en listas desplegables – haz clic en una pista o carpeta para reproducir. No se sube nada, los archivos se leen directamente del disco."
+    },
+    "folderDialog": {
+      "title": "Carpeta de música",
+      "path": "Ruta de la carpeta",
+      "browse": "Examinar …",
+      "hintElectron": "Elige la carpeta que contiene tu música. Las subcarpetas se convierten en escenas y playlists.",
+      "hintWeb": "Introduce una ruta en el servidor donde se ejecuta DM Hero (con Docker: móntala como volumen).",
+      "saved": "Carpeta de música guardada",
+      "notFound": "Carpeta no encontrada",
+      "remove": "Quitar carpeta"
+    },
+    "errors": {
+      "fileUnavailable": "no se puede reproducir el archivo (¿eliminado o movido?)",
+      "libraryUnavailable": "Varias pistas no se pudieron reproducir – probablemente la carpeta de música ya no existe. Vuelve a escanear o elige otra carpeta.",
+      "folderMissing": "No se encontró la carpeta de música. Vuelve a escanear o elige otra carpeta.",
+      "scanFailed": "No se pudo leer la carpeta de música."
+    },
+    "volume": "Volumen",
+    "seek": "Posición de reproducción",
+    "mini": {
+      "drag": "Arrastra para mover",
+      "open": "Abrir la página de música",
+      "queue": "Mostrar cola",
+      "compact": "Compacto",
+      "expand": "Expandir",
+      "minimize": "Minimizar"
     }
   },
   "update": {

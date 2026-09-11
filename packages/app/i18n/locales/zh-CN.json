@@ -28,6 +28,7 @@
     "sessions": "跑团记录",
     "encounters": "遭遇战",
     "maps": "地图",
+    "music": "音乐",
     "groups": "团体",
     "calendar": "日历",
     "notes": "笔记",
@@ -2335,6 +2336,84 @@
       "fileTooLarge": "文件太大。最大大小：50MB",
       "uploadFailed": "上传地图失败",
       "updateFailed": "更新地图失败"
+    }
+  },
+  "music": {
+    "title": "音乐",
+    "subtitle": "在跑团时播放你自己的音乐库",
+    "chooseFolder": "选择文件夹",
+    "changeFolder": "更换文件夹",
+    "rescan": "重新扫描",
+    "scanning": "正在读取音乐……",
+    "search": "搜索……",
+    "shuffle": "随机",
+    "inOrder": "顺序播放",
+    "crossfade": "淡入淡出",
+    "crossfadeHint": "从一首曲目平滑过渡到下一首",
+    "collapseAll": "全部折叠",
+    "expandAll": "全部展开",
+    "playFolder": "播放文件夹",
+    "shuffleFolder": "随机播放文件夹",
+    "play": "播放",
+    "pause": "暂停",
+    "stop": "停止",
+    "next": "下一首",
+    "previous": "上一首",
+    "back10": "后退 10 秒",
+    "forward10": "前进 10 秒",
+    "mute": "静音",
+    "playPause": "播放 / 暂停",
+    "volumeUp": "音量 +",
+    "volumeDown": "音量 −",
+    "loopMode": "循环模式",
+    "emptyFolder": "此文件夹中未找到音频文件。",
+    "noResults": "未找到“{query}”。",
+    "loop": {
+      "folder": "循环文件夹",
+      "one": "单曲循环",
+      "all": "播放全部"
+    },
+    "loopHint": {
+      "folder": "停留在当前文件夹并循环播放，不会进入下一个文件夹",
+      "one": "仅重复当前曲目",
+      "all": "跨文件夹播放整个音乐库"
+    },
+    "scenes": {
+      "add": "保存为场景",
+      "remove": "移除场景",
+      "play": "播放场景：{name}",
+      "hint": "给文件夹加星，即可固定为场景。",
+      "title": "场景"
+    },
+    "empty": {
+      "title": "你的音乐库",
+      "text": "选择一个存放音乐的文件夹。子文件夹会显示为可展开的列表，点击曲目或文件夹即可播放。不会上传任何内容，文件直接从磁盘播放。"
+    },
+    "folderDialog": {
+      "title": "音乐文件夹",
+      "path": "文件夹路径",
+      "browse": "浏览……",
+      "hintElectron": "选择存放音乐的文件夹。子文件夹将成为场景和播放列表。",
+      "hintWeb": "输入运行 DM Hero 的服务器上的文件夹路径（Docker：请挂载为卷）。",
+      "saved": "音乐文件夹已保存",
+      "notFound": "未找到文件夹",
+      "remove": "移除文件夹"
+    },
+    "errors": {
+      "fileUnavailable": "无法播放该文件（已删除或移动？）",
+      "libraryUnavailable": "多首曲目无法播放，音乐文件夹可能已不存在。请重新扫描或选择其他文件夹。",
+      "folderMissing": "未找到音乐文件夹。请重新扫描或选择其他文件夹。",
+      "scanFailed": "无法读取音乐文件夹。"
+    },
+    "volume": "音量",
+    "seek": "播放位置",
+    "mini": {
+      "drag": "拖动以移动",
+      "open": "打开音乐页面",
+      "queue": "显示队列",
+      "compact": "紧凑",
+      "expand": "展开",
+      "minimize": "最小化"
     }
   },
   "update": {
