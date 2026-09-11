@@ -5,7 +5,7 @@
       <v-avatar color="primary" size="40" class="mr-3 flex-shrink-0" :class="{ 'music-spin': isPlaying }">
         <v-icon icon="mdi-music" color="on-primary" />
       </v-avatar>
-      <div style="min-width: 0">
+      <div class="music-bar-title">
         <div class="text-body-medium font-weight-medium text-truncate">{{ currentTrack.name }}</div>
         <div class="text-body-small text-medium-emphasis text-truncate">{{ currentTrack.folderPath || library?.rootName }}</div>
       </div>
@@ -128,6 +128,11 @@ function fmt(s: number): string {
 .music-player-bar {
   border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   gap: 16px;
+}
+.music-bar-title {
+  min-width: 0;
+  max-width: 320px; /* hard cap – long file names get an ellipsis */
+  overflow: hidden;
 }
 .music-time {
   font-variant-numeric: tabular-nums;

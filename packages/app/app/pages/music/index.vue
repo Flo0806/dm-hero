@@ -1,26 +1,32 @@
 <template>
   <v-container class="music-page">
-    <UiPageHeader :title="$t('music.title')" :subtitle="hasLibrary ? config?.folder ?? '' : $t('music.subtitle')">
-      <template #actions>
-        <v-btn
-          v-if="hasLibrary"
-          variant="tonal"
-          prepend-icon="mdi-refresh"
-          :loading="scanning"
-          @click="loadLibrary"
-        >
-          {{ $t('music.rescan') }}
-        </v-btn>
-        <v-btn
-          variant="tonal"
-          prepend-icon="mdi-folder-open"
-          class="ml-2"
-          @click="showFolderDialog = true"
-        >
-          {{ hasLibrary ? $t('music.changeFolder') : $t('music.chooseFolder') }}
-        </v-btn>
-      </template>
-    </UiPageHeader>
+    <!-- Header area is the stage for the intro burst (absolute inside) -->
+    <div class="music-header-stage position-relative">
+      <ClientOnly>
+        <MusicIntroBurst />
+      </ClientOnly>
+      <UiPageHeader :title="$t('music.title')" :subtitle="hasLibrary ? config?.folder ?? '' : $t('music.subtitle')">
+        <template #actions>
+          <v-btn
+            v-if="hasLibrary"
+            variant="tonal"
+            prepend-icon="mdi-refresh"
+            :loading="scanning"
+            @click="loadLibrary"
+          >
+            {{ $t('music.rescan') }}
+          </v-btn>
+          <v-btn
+            variant="tonal"
+            prepend-icon="mdi-folder-open"
+            class="ml-2"
+            @click="showFolderDialog = true"
+          >
+            {{ hasLibrary ? $t('music.changeFolder') : $t('music.chooseFolder') }}
+          </v-btn>
+        </template>
+      </UiPageHeader>
+    </div>
 
     <v-alert v-if="error" type="warning" variant="tonal" closable class="mb-4" @click:close="error = null">
       {{ error }}
@@ -302,6 +308,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.music-header-stage {
+  /* room above the header for the particles to rise into */
+  padding-top: 8px;
+}
+/* Header content sits above the burst so buttons stay clickable and readable */
+.music-header-stage > :not(.music-burst) {
+  position: relative;
+  z-index: 1;
+}
+/* Tonal buttons are translucent – give them a solid base so particles don't shine through */
+.music-header-stage :deep(.v-btn--variant-tonal) {
+  background-color: rgb(var(--v-theme-surface));
+}
 .music-root-track {
   cursor: pointer;
   color: rgba(var(--v-theme-on-surface), 0.75);

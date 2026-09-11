@@ -2410,7 +2410,8 @@
       "open": "Open music page",
       "queue": "Show queue",
       "compact": "Compact",
-      "expand": "Expand"
+      "expand": "Expand",
+      "minimize": "Minimize"
     }
   },
   "update": {

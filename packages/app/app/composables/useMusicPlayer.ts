@@ -300,10 +300,26 @@ function cancelCrossfade() {
   crossfading = false
 }
 
+const SWITCH_FADE_MS = 600
+
 function loadActive(track: MusicTrack, autoplay: boolean) {
   ensurePlayers()
   if (!players.length) return
   cancelCrossfade()
+  // Manual jump while something is playing: short crossfade on the other channel
+  // instead of a hard cut (scene switches at the table should never "pop").
+  if (autoplay && isPlaying.value && crossfadeEnabled.value) {
+    const out = activeEl()
+    activeChannel = 1 - activeChannel
+    crossfading = true
+    loadInto(activeEl(), track, true, 0)
+    rampVolume(activeEl(), 0, volume.value, SWITCH_FADE_MS)
+    rampVolume(out, out.volume, 0, SWITCH_FADE_MS, () => {
+      out.pause()
+      crossfading = false
+    })
+    return
+  }
   loadInto(activeEl(), track, autoplay, volume.value)
 }
 
@@ -571,6 +587,8 @@ function stop() {
   currentTime.value = 0
   duration.value = 0
   currentIndex.value = -1
+  // Forget the last track so it doesn't come back after a reload
+  saveState({ trackId: undefined, time: undefined })
 }
 
 /** Jump to a queue position (mini player queue list) */

@@ -2410,7 +2410,8 @@
       "open": "打开音乐页面",
       "queue": "显示队列",
       "compact": "紧凑",
-      "expand": "展开"
+      "expand": "展开",
+      "minimize": "最小化"
     }
   },
   "update": {
