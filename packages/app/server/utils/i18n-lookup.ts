@@ -207,7 +207,7 @@ export const STANDARD_CLASS_KEYS = new Set(STANDARD_CLASSES_DEFINITION.map(c => 
 
 function buildLookup(
   definitions: Array<{ key: string, de: string | string[], en: string | string[] }>,
-  locale: 'de' | 'en',
+  locale: 'de' | 'en' | 'zh-CN',
 ): Record<string, string> {
   const lookup: Record<string, string> = {}
   for (const def of definitions) {
@@ -247,11 +247,13 @@ export interface ItemLookup {
  */
 export function getLocaleFromEvent(event: {
   node: { req: { headers: { 'accept-language'?: string, 'cookie'?: string } } }
-}): 'de' | 'en' {
+}): 'de' | 'en' | 'zh-CN' {
   // Priority 1: Accept-Language header (set by frontend with current locale)
   const acceptLanguage = event.node.req.headers['accept-language']
   if (acceptLanguage) {
-    const locale = acceptLanguage.toLowerCase().split(',')[0]?.split('-')[0] // Extract language code
+    const rawLocale = acceptLanguage.toLowerCase().split(',')[0]
+    if (rawLocale?.startsWith('zh')) return 'zh-CN'
+    const locale = rawLocale?.split('-')[0] // Extract language code
     if (locale === 'en') return 'en'
     if (locale === 'de') return 'de'
   }
@@ -265,6 +267,7 @@ export function getLocaleFromEvent(event: {
       const locale = redirectMatch[1]
       if (locale === 'en') return 'en'
       if (locale === 'de') return 'de'
+      if (locale === 'zh-CN') return 'zh-CN'
     }
 
     // Check for direct locale cookie
@@ -273,6 +276,7 @@ export function getLocaleFromEvent(event: {
       const locale = localeMatch[1]
       if (locale === 'en') return 'en'
       if (locale === 'de') return 'de'
+      if (locale === 'zh-CN') return 'zh-CN'
     }
   }
 
@@ -285,10 +289,10 @@ export function getLocaleFromEvent(event: {
  * Locale-specific to support language-aware fuzzy matching.
  * Uses pre-built lookups from STANDARD_RACES_DEFINITION and STANDARD_CLASSES_DEFINITION.
  */
-export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
+export function createI18nLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): RaceClassLookup {
   return {
-    races: locale === 'en' ? RACES_EN : RACES_DE,
-    classes: locale === 'en' ? CLASSES_EN : CLASSES_DE,
+    races: locale !== 'de' ? RACES_EN : RACES_DE,
+    classes: locale !== 'de' ? CLASSES_EN : CLASSES_DE,
   }
 }
 
@@ -305,7 +309,7 @@ export function createI18nLookup(locale: 'de' | 'en' = 'de'): RaceClassLookup {
 export async function getRaceKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
@@ -387,7 +391,7 @@ export async function getRaceKey(
  */
 export async function getRaceSearchVariants(
   name: string | undefined | null,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string[]> {
   if (!name) return []
 
@@ -460,7 +464,7 @@ export async function getRaceSearchVariants(
 export async function getClassKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string | null> {
   if (!name) return null
   const lookup = createI18nLookup(locale)
@@ -537,7 +541,7 @@ export async function getClassKey(
  */
 export async function getClassSearchVariants(
   name: string | undefined | null,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string[]> {
   if (!name) return []
 
@@ -648,7 +652,7 @@ function simpleLevenshtein(a: string, b: string): number {
  * Create lookup tables for item types and rarities.
  * Locale-specific for multilingual search support.
  */
-export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
+export function createItemLookup(locale: 'de' | 'en' | 'zh-CN' = 'de'): ItemLookup {
   const typesDE: Record<string, string> = {
     'waffe': 'weapon',
     'rüstung': 'armor',
@@ -699,8 +703,8 @@ export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
   }
 
   return {
-    types: locale === 'en' ? typesEN : typesDE,
-    rarities: locale === 'en' ? raritiesEN : raritiesDE,
+    types: locale !== 'de' ? typesEN : typesDE,
+    rarities: locale !== 'de' ? raritiesEN : raritiesDE,
   }
 }
 
@@ -710,7 +714,7 @@ export function createItemLookup(locale: 'de' | 'en' = 'de'): ItemLookup {
 export function getItemTypeKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
@@ -739,7 +743,7 @@ export function getItemTypeKey(
 export function getItemRarityKey(
   name: string | undefined | null,
   fuzzy = false,
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<string | null> {
   if (!name) return Promise.resolve(null)
   const lookup = createItemLookup(locale)
@@ -769,7 +773,7 @@ export function getItemRarityKey(
 export async function convertMetadataToKeys(
   metadata: Record<string, unknown> | null | undefined,
   entityType: 'npc' | 'item' = 'npc',
-  locale: 'de' | 'en' = 'de',
+  locale: 'de' | 'en' | 'zh-CN' = 'de',
 ): Promise<Record<string, unknown> | null | undefined> {
   if (!metadata) return metadata
 
@@ -873,12 +877,12 @@ export async function convertMetadataToKeys(
 // NPC Type lookup (same pattern as race/class)
 // =============================================================================
 
-export function getNpcTypeKey(name: string, locale: 'de' | 'en' = 'de'): string | null {
+export function getNpcTypeKey(name: string, locale: 'de' | 'en' | 'zh-CN' = 'de'): string | null {
   if (!name) return null
   const nameLower = name.toLowerCase()
   // Check preferred locale first, then fallback to other
-  const primary = locale === 'en' ? NPC_TYPES_EN : NPC_TYPES_DE
-  const secondary = locale === 'en' ? NPC_TYPES_DE : NPC_TYPES_EN
+  const primary = locale !== 'de' ? NPC_TYPES_EN : NPC_TYPES_DE
+  const secondary = locale !== 'de' ? NPC_TYPES_DE : NPC_TYPES_EN
   return primary[nameLower] || secondary[nameLower] || null
 }
 

@@ -23,7 +23,21 @@ REGELN:
 BEISPIEL:
 Eingabe: "- party kommt in taverne an\n- wirt heißt {{npc:45}}\n- gibt quest: finde sohn\n- 50 gold"
 Ausgabe: "Die Gruppe kam in der Taverne an und traf auf den Wirt {{npc:45}}. Er bat sie, seinen Sohn zu finden, und bot 50 Gold als Belohnung an."`
-      : `You are an assistant that transforms bullet points and rough notes into flowing text.
+      : language === 'zh-CN'
+        ? `你是将要点和零散笔记改写成流畅文字的助手。
+
+规则：
+1. 将要点改写成完整句子
+2. 保留所有事实和细节，不添加任何内容，不做推测
+3. 保持 {{npc:123}} 或 {{location:45}} 等实体链接完全不变
+4. 跑团记录摘要使用过去时
+5. 保持文字简洁，不做不必要修饰
+6. 保持输入内容的语言（中文）
+
+示例：
+输入："- 队伍抵达酒馆\n- 店主是 {{npc:45}}\n- 给出任务：寻找儿子\n- 50 金币"
+输出："队伍抵达酒馆，见到了店主 {{npc:45}}。店主给出了寻找儿子的任务，并提到 50 金币。"`
+        : `You are an assistant that transforms bullet points and rough notes into flowing text.
 
 RULES:
 1. Transform bullet points into complete sentences

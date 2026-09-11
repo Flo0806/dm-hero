@@ -100,6 +100,7 @@ const codename = computed(() => {
 const locales = [
   { value: 'de', label: 'Deutsch', flagIcon: 'flag:de-4x3' },
   { value: 'en', label: 'English', flagIcon: 'flag:gb-4x3' },
+  { value: 'zh-CN', label: '简体中文', flagIcon: 'flag:cn-4x3' },
 ]
 
 const currentLocaleData = computed(() => {
