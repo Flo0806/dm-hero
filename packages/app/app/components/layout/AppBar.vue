@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
+import { SUPPORTED_LOCALES } from '~~/types/locale'
 import packageJson from '../../../package.json'
 
 interface WindowControlsOverlay extends EventTarget {
@@ -90,18 +91,14 @@ const codename = computed(() => {
   // Fallback: highest codename by NUMERIC major.minor (not lexicographic, so
   // e.g. 1.10 beats 1.9) — shows the upcoming release's name during its dev cycle.
   const latestKey = Object.keys(RELEASE_CODENAMES).sort((a, b) => {
-    const [am, an] = a.split('.').map(Number)
-    const [bm, bn] = b.split('.').map(Number)
+    const [am = 0, an = 0] = a.split('.').map(Number)
+    const [bm = 0, bn = 0] = b.split('.').map(Number)
     return am - bm || an - bn
   }).at(-1)
   return latestKey ? RELEASE_CODENAMES[latestKey] : null
 })
 
-const locales = [
-  { value: 'de', label: 'Deutsch', flagIcon: 'flag:de-4x3' },
-  { value: 'en', label: 'English', flagIcon: 'flag:gb-4x3' },
-  { value: 'zh-CN', label: '简体中文', flagIcon: 'flag:cn-4x3' },
-]
+const locales = SUPPORTED_LOCALES.map(l => ({ value: l.code, label: l.name, flagIcon: l.flagIcon }))
 
 const currentLocaleData = computed(() => {
   return locales.find(l => l.value === props.currentLocale) ?? locales[0]

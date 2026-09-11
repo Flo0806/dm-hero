@@ -313,6 +313,7 @@
     "race": "Volk",
     "class": "Klasse",
     "location": "Aufenthaltsort",
+    "faction": "Fraktion | Fraktionen",
     "relationship": "Beziehung zu Gruppe",
     "age": "Alter",
     "gender": "Geschlecht",
@@ -327,7 +328,7 @@
     "addLocationLink": "Ort verknüpfen",
     "editRelation": "Beziehung bearbeiten",
     "editMembership": "Mitgliedschaft bearbeiten",
-    "faction": "Fraktion | Fraktionen",
+    "membershipType": "Mitgliedstyp",
     "relationTypes": {
       "livesIn": "lebt in",
       "worksAt": "arbeitet bei",
@@ -439,13 +440,12 @@
     },
     "memberships": "Mitgliedschaften",
     "factionMemberships": "Fraktionszugehörigkeiten",
+    "npcRelations": "NPC-Beziehungen",
     "selectFaction": "Fraktion auswählen",
     "addFactionMembership": "Fraktionszugehörigkeit hinzufügen",
-    "membershipType": "Mitgliedstyp",
     "membershipTypePlaceholder": "z.B. Mitglied, Anführer",
     "rank": "Rang",
     "rankPlaceholder": "z.B. Hauptmann, Lehrling",
-    "npcRelations": "NPC-Beziehungen",
     "selectNpc": "NPC auswählen",
     "addNpcRelation": "NPC-Beziehung hinzufügen",
     "npcRelationType": "Beziehungstyp",
@@ -548,9 +548,9 @@
       "memberships": "Fraktionsmitgliedschaften",
       "players": "Verknüpfte Spieler"
     },
-    "noLore": "Kein verknüpftes Wissen vorhanden",
     "noMemberships": "Keine Fraktionsmitgliedschaften",
-    "noMembershipsText": "Dieser NPC ist noch kein Mitglied einer Fraktion."
+    "noMembershipsText": "Dieser NPC ist noch kein Mitglied einer Fraktion.",
+    "noLore": "Kein verknüpftes Wissen vorhanden"
   },
   "factions": {
     "title": "Fraktionen",
@@ -746,6 +746,12 @@
       "medium": "Mittel (21-100)",
       "large": "Groß (101-500)",
       "huge": "Riesig (500+)"
+    },
+    "oldBadgeTooltips": {
+      "relations": "Verknüpfte NPCs",
+      "documents": "Dokumente & Notizen",
+      "images": "Bildergalerie",
+      "items": "Besitz"
     },
     "linkedLore": "Verknüpftes Wissen",
     "noLinkedLore": "Kein verknüpftes Wissen",
@@ -1029,7 +1035,6 @@
     "linkLore": "Verknüpfen",
     "noLinkedLore": "Kein verknüpftes Wissen",
     "noLinkedLoreText": "Dieser Ort ist noch mit keinem Wissen verknüpft.",
-    "incomingLoreTooltip": "Verknüpfung wurde vom Wissenseintrag erstellt",
     "addLoreRelationError": "Fehler beim Hinzufügen der Wissens-Verknüpfung",
     "removeLoreRelationError": "Fehler beim Entfernen der Wissens-Verknüpfung",
     "linkedItems": "Verknüpfte Items",
@@ -1044,7 +1049,8 @@
       "documents": "Dokumente & Notizen",
       "images": "Bildergalerie",
       "lore": "Verknüpftes Wissen"
-    }
+    },
+    "incomingLoreTooltip": "Verknüpfung wurde vom Wissenseintrag erstellt"
   },
   "items": {
     "title": "Items",
@@ -1364,17 +1370,19 @@
     "generateCoverImage": "Bild mit KI generieren",
     "coverImageDescription": "Bildbeschreibung",
     "coverImageDescriptionPlaceholder": "Beschreibe die Szene, z.B.: Eine Gruppe Abenteurer steht vor einem riesigen Drachen in einer Höhle voller Gold...",
-    "coverImageSafetyError": "Die Beschreibung wurde vom KI-Sicherheitsfilter abgelehnt. Bitte formuliere die Szene anders - vermeide direkte Gewaltbeschreibungen und verwende stattdessen allgemeinere Begriffe wie 'epischer Kampf' oder 'dramatische Konfrontation'."
-  },
-  "pinboard": {
-    "title": "Pinboard",
-    "empty": "Keine gepinnten Entities",
-    "emptyHint": "Pinne NPCs, Orte oder Items für schnellen Zugriff",
-    "pin": "Pinnen",
-    "unpin": "Pin entfernen",
-    "alreadyPinned": "Bereits gepinnt",
-    "pinnedSuccess": "Erfolgreich gepinnt",
-    "unpinnedSuccess": "Pin entfernt"
+    "coverImageSafetyError": "Die Beschreibung wurde vom KI-Sicherheitsfilter abgelehnt. Bitte formuliere die Szene anders - vermeide direkte Gewaltbeschreibungen und verwende stattdessen allgemeinere Begriffe wie 'epischer Kampf' oder 'dramatische Konfrontation'.",
+    "pinboard": {
+      "title": "Pinnwand",
+      "empty": "Keine angepinnten Entitäten",
+      "emptyHint": "Pinne NPCs, Orte oder Items für schnellen Zugriff während der Session an",
+      "pin": "Anpinnen",
+      "unpin": "Lösen",
+      "pinToSession": "An Session anpinnen",
+      "alreadyPinned": "Bereits angepinnt",
+      "pinned": "Angepinnt",
+      "pinnedSuccess": "Erfolgreich angepinnt",
+      "unpinnedSuccess": "Pin entfernt"
+    }
   },
   "encounters": {
     "title": "Encounter",
@@ -1587,7 +1595,6 @@
     "yes": "Ja",
     "no": "Nein",
     "confirm": "Bestätigen",
-    "saveChangesFirst": "Bitte erst speichern - Daten für Bildgenerierung wurden geändert",
     "uploading": "Wird hochgeladen...",
     "loading": "Wird geladen...",
     "error": "Ein Fehler ist aufgetreten",
@@ -1622,6 +1629,7 @@
     "editLocationLink": "Standort-Verknüpfung bearbeiten",
     "noLinkedItems": "Keine Items verknüpft",
     "noLinkedItemsText": "Füge relevante Items zu dieser Entität hinzu",
+    "saveChangesFirst": "Bitte erst speichern - Daten für Bildgenerierung wurden geändert",
     "relationType": "Beziehungstyp",
     "quantity": "Anzahl",
     "quantityPlaceholder": "1",
@@ -1933,7 +1941,14 @@
       "researched": "Erforscht",
       "forgotten": "Vergessen",
       "believesIn": "Glaubt an",
-      "worships": "Verehrt"
+      "worships": "Verehrt",
+      "witnessed": "Bezeugt",
+      "guards": "Bewacht",
+      "seeks": "Sucht",
+      "forgot": "Hat vergessen",
+      "misunderstands": "Missversteht",
+      "teaches": "Lehrt",
+      "studies": "Studiert"
     }
   },
   "calendar": {
@@ -2174,6 +2189,16 @@
       "success": "Kalender wurde zurückgesetzt",
       "error": "Fehler beim Zurücksetzen des Kalenders"
     }
+  },
+  "pinboard": {
+    "title": "Pinboard",
+    "empty": "Keine gepinnten Entities",
+    "emptyHint": "Pinne NPCs, Orte oder Items für schnellen Zugriff",
+    "pin": "Pinnen",
+    "unpin": "Pin entfernen",
+    "alreadyPinned": "Bereits gepinnt",
+    "pinnedSuccess": "Erfolgreich gepinnt",
+    "unpinnedSuccess": "Pin entfernt"
   },
   "chaos": {
     "title": "Chaos-Graph",

@@ -1,4 +1,5 @@
 import { chatCompletion } from '../../utils/ai'
+import { localeEnglishName } from '~~/types/locale'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -45,7 +46,7 @@ RULES:
 3. Keep entity links like {{npc:123}} or {{location:45}} UNCHANGED
 4. Write in past tense for session summaries
 5. Keep the text compact - no unnecessary embellishments
-6. Keep the language of the input (English)
+6. Keep the language of the input (${localeEnglishName(language)})
 
 EXAMPLE:
 Input: "- party arrives at tavern\n- innkeeper is {{npc:45}}\n- gives quest: find son\n- 50 gold"

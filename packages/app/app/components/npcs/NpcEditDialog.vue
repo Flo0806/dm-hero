@@ -1581,7 +1581,7 @@ async function generateName() {
       body: {
         entityType: 'NPC',
         context: context.length > 0 ? context.join(', ') : undefined,
-        language: locale.value as 'de' | 'en',
+        language: locale.value,
       },
     })
 

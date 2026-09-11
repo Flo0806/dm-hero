@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import { useLocale } from 'vuetify'
+import { isAppLocale, toVuetifyLocale, type AppLocale } from '~~/types/locale'
 import NavigationDrawer from '~/components/layout/NavigationDrawer.vue'
 import AppBar from '~/components/layout/AppBar.vue'
 import GlobalSearch from '~/components/layout/GlobalSearch.vue'
@@ -98,7 +99,7 @@ const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
 // Language
 const currentLocale = computed(() => locale.value)
-const localeCookie = useCookie<'en' | 'de' | 'zh-CN'>('locale', {
+const localeCookie = useCookie<AppLocale>('locale', {
   maxAge: 60 * 60 * 24 * 365, // 1 year
 })
 
@@ -106,7 +107,7 @@ const localeCookie = useCookie<'en' | 'de' | 'zh-CN'>('locale', {
 watch(
   locale,
   (newLocale) => {
-    vuetifyLocale.current.value = newLocale === 'zh-CN' ? 'zhHans' : newLocale
+    vuetifyLocale.current.value = toVuetifyLocale(newLocale as AppLocale)
   },
   { immediate: true },
 )
@@ -116,7 +117,7 @@ onMounted(() => {
   campaignStore.initFromCookie()
 
   // Initialize locale from cookie
-  if (localeCookie.value && (localeCookie.value === 'en' || localeCookie.value === 'de' || localeCookie.value === 'zh-CN')) {
+  if (isAppLocale(localeCookie.value)) {
     setLocale(localeCookie.value)
   }
 })
@@ -139,7 +140,7 @@ if (import.meta.client) {
 }
 
 function changeLocale(newLocale: string) {
-  if (newLocale === 'en' || newLocale === 'de' || newLocale === 'zh-CN') {
+  if (isAppLocale(newLocale)) {
     setLocale(newLocale)
     localeCookie.value = newLocale
   }
