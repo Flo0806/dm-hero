@@ -1968,10 +1968,10 @@ async function doGenerateWeather(overwrite: boolean) {
         year: viewYear.value,
         month: viewMonth.value,
         overwrite,
+        // Only generate for the viewed zone (null → global) so other zones stay untouched
+        zoneId: activeClimateZoneId.value,
       },
     })
-    // The generator writes weather for ALL zones; the day-keyed map only holds
-    // the viewed zone, so reload that slice instead of dumping every zone in.
     await loadWeather()
     if (result.generated > 0) {
       snackbarStore.success(t('calendar.weather.generated', { count: result.generated }))

@@ -299,6 +299,7 @@ interface Session {
 }
 
 interface Weather {
+  day: number
   weather_type: string
   temperature: number | null
 }
@@ -583,20 +584,21 @@ async function fetchCurrentWeather(config: { current_year: number, current_month
   if (!activeCampaignId.value) return
 
   try {
-    const weather = await $fetch<Weather | null>('/api/calendar/weather', {
+    // Weather rows are stored per climate zone; use the campaign's active zone (null → global rows)
+    const campaign = await $fetch<{ active_climate_zone_id: number | null }>(`/api/campaigns/${activeCampaignId.value}`)
+    // The endpoint returns the whole month, pick the current day
+    const weather = await $fetch<Weather[]>('/api/calendar/weather', {
       query: {
         campaignId: activeCampaignId.value,
         year: config.current_year,
         month: config.current_month,
-        day: config.current_day,
+        zoneId: campaign.active_climate_zone_id ?? '',
       },
     })
-    if (weather) {
-      currentWeather.value = {
-        weatherType: weather.weather_type,
-        temperature: weather.temperature ?? undefined,
-      }
-    }
+    const today = weather.find(w => w.day === config.current_day)
+    currentWeather.value = today
+      ? { weatherType: today.weather_type, temperature: today.temperature ?? undefined }
+      : null
   }
   catch {
     // Weather might not exist for this day
