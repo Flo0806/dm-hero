@@ -109,11 +109,27 @@
         to="/maps"
       />
       <v-list-item
-        prepend-icon="mdi-music"
+        :prepend-icon="music.isPlaying.value ? 'mdi-music-note' : 'mdi-music'"
         :title="$t('nav.music')"
         value="music"
         to="/music"
-      />
+        :class="{ 'music-active': music.isPlaying.value }"
+      >
+        <!-- Mini transport while a track is loaded (not in rail mode – no room) -->
+        <template v-if="music.currentTrack.value && !rail" #append>
+          <div class="d-flex align-center music-nav-controls">
+            <v-btn icon size="x-small" variant="text" :title="$t('music.previous')" @click.stop.prevent="music.prev()">
+              <v-icon icon="mdi-skip-previous" size="small" />
+            </v-btn>
+            <v-btn icon size="x-small" variant="text" :title="music.isPlaying.value ? $t('music.pause') : $t('music.play')" @click.stop.prevent="music.togglePlay()">
+              <v-icon :icon="music.isPlaying.value ? 'mdi-pause' : 'mdi-play'" size="small" />
+            </v-btn>
+            <v-btn icon size="x-small" variant="text" :title="$t('music.next')" @click.stop.prevent="music.next()">
+              <v-icon icon="mdi-skip-next" size="small" />
+            </v-btn>
+          </div>
+        </template>
+      </v-list-item>
       <v-list-item
         prepend-icon="mdi-folder-multiple"
         :title="$t('nav.groups')"
@@ -161,6 +177,7 @@
 <script setup lang="ts">
 const router = useRouter()
 const notesStore = useNotesStore()
+const music = useMusicPlayer()
 const encounterStore = useEncounterStore()
 
 const hasCombatActive = computed(() =>
@@ -190,5 +207,11 @@ defineEmits<{
 }
 .encounter-active :deep(.v-icon) {
   color: rgb(var(--v-theme-error)) !important;
+}
+.music-active :deep(.v-list-item__prepend .v-icon) {
+  color: rgb(var(--v-theme-primary));
+}
+.music-nav-controls {
+  margin-right: -8px;
 }
 </style>
