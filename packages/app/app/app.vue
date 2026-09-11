@@ -52,9 +52,11 @@
       <SharedAnnouncementDialog />
     </ClientOnly>
 
-    <!-- Global music player – lives here so playback survives navigation -->
+    <!-- Global music player – lives here so playback survives navigation.
+         Full bar on /music, floating mini player everywhere else. -->
     <ClientOnly>
       <MusicPlayerBar />
+      <MusicMiniPlayer v-if="route.path !== '/music'" />
     </ClientOnly>
   </v-app>
 </template>
@@ -101,6 +103,7 @@ const notesStore = useNotesStore()
 // Active campaign from store (not cookie - store is the source of truth)
 const activeCampaignName = computed(() => campaignStore.currentCampaign?.name || null)
 const musicPlayer = useMusicPlayer()
+const route = useRoute()
 const hasActiveCampaign = computed(() => campaignStore.hasActiveCampaign)
 
 // Language

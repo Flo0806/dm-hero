@@ -2403,6 +2403,14 @@
       "libraryUnavailable": "Plusieurs morceaux n'ont pas pu être lus – le dossier musical a probablement disparu. Rescannez ou choisissez un autre dossier.",
       "folderMissing": "Dossier musical introuvable. Rescannez ou choisissez un autre dossier.",
       "scanFailed": "Impossible de lire le dossier musical."
+    },
+    "volume": "Volume",
+    "mini": {
+      "drag": "Glisser pour déplacer",
+      "open": "Ouvrir la page musique",
+      "queue": "Afficher la file",
+      "compact": "Compact",
+      "expand": "Développer"
     }
   },
   "update": {

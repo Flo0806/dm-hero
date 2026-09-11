@@ -32,7 +32,8 @@ const duration = ref(0)
 const currentIndex = ref(-1)
 const missingTracks = reactive(new Set<string>()) // ids that failed to load (deleted files)
 
-let playOrder: MusicTrack[] = []
+// Current queue (reactive so the mini player can show what's next)
+const playOrder = shallowRef<MusicTrack[]>([])
 
 // Dual-channel audio engine
 const players: HTMLAudioElement[] = []
@@ -155,14 +156,14 @@ function shuffle<T>(arr: T[]): T[] {
 function buildOrder() {
   const root = scopeFolder.value ?? library.value?.root ?? null
   if (!root) {
-    playOrder = []
+    playOrder.value = []
     currentIndex.value = -1
     return
   }
   const flat = flatten(root).filter(t => !missingTracks.has(t.id))
-  playOrder = random.value ? shuffle(flat) : flat
+  playOrder.value = random.value ? shuffle(flat) : flat
   if (currentTrack.value) {
-    currentIndex.value = playOrder.findIndex(t => t.id === currentTrack.value!.id)
+    currentIndex.value = playOrder.value.findIndex(t => t.id === currentTrack.value!.id)
   }
 }
 
@@ -262,7 +263,7 @@ function onTrackError(track: MusicTrack) {
   error.value = `${track.fileName}: ${t('music.errors.fileUnavailable')}`
   buildOrder()
   // Stop after a few failures in a row – the whole folder is probably gone
-  if (consecutiveErrors >= 5 || !playOrder.length) {
+  if (consecutiveErrors >= 5 || !playOrder.value.length) {
     isPlaying.value = false
     error.value = t('music.errors.libraryUnavailable')
     return
@@ -309,9 +310,9 @@ function loadActive(track: MusicTrack, autoplay: boolean) {
 function peekNext(): { track: MusicTrack, index: number } | null {
   if (loopMode.value === 'one') return null
   const idx = currentIndex.value + 1
-  if (idx < playOrder.length) return { track: playOrder[idx]!, index: idx }
+  if (idx < playOrder.value.length) return { track: playOrder.value[idx]!, index: idx }
   if (random.value) return null // reshuffle seam handled by next()
-  return playOrder.length ? { track: playOrder[0]!, index: 0 } : null
+  return playOrder.value.length ? { track: playOrder.value[0]!, index: 0 } : null
 }
 
 function maybeCrossfade() {
@@ -414,7 +415,7 @@ async function loadLibrary() {
     if (saved?.trackId && !currentTrack.value) {
       const track = flatten(lib.root).find(t => t.id === saved.trackId)
       if (track) {
-        currentIndex.value = playOrder.findIndex(t => t.id === track.id)
+        currentIndex.value = playOrder.value.findIndex(t => t.id === track.id)
         pendingSeek = saved.time ?? 0
         loadActive(track, false)
       }
@@ -498,11 +499,11 @@ function playTrack(track: MusicTrack) {
   const root = library.value?.root ?? null
   scopeFolder.value = loopMode.value === 'all' || !root ? null : findMusicFolder(root, track.folderPath)
   buildOrder()
-  let idx = playOrder.findIndex(t => t.id === track.id)
+  let idx = playOrder.value.findIndex(t => t.id === track.id)
   if (idx < 0) {
     scopeFolder.value = null
     buildOrder()
-    idx = playOrder.findIndex(t => t.id === track.id)
+    idx = playOrder.value.findIndex(t => t.id === track.id)
   }
   currentIndex.value = idx
   loadActive(track, true)
@@ -513,9 +514,9 @@ function playFolder(folder: MusicFolder, shuffleIt = false) {
   random.value = shuffleIt
   saveSettings()
   buildOrder()
-  if (!playOrder.length) return
+  if (!playOrder.value.length) return
   currentIndex.value = 0
-  loadActive(playOrder[0]!, true)
+  loadActive(playOrder.value[0]!, true)
 }
 
 /** Play a scene by folder path (used by dashboard / sessions) */
@@ -533,9 +534,9 @@ function playAll() {
   }
   scopeFolder.value = null
   buildOrder()
-  if (!playOrder.length) return
+  if (!playOrder.value.length) return
   currentIndex.value = 0
-  loadActive(playOrder[0]!, true)
+  loadActive(playOrder.value[0]!, true)
 }
 
 function togglePlay() {
@@ -572,19 +573,27 @@ function stop() {
   currentIndex.value = -1
 }
 
+/** Jump to a queue position (mini player queue list) */
+function playAt(index: number) {
+  const track = playOrder.value[index]
+  if (!track) return
+  currentIndex.value = index
+  loadActive(track, true)
+}
+
 function next() {
-  if (!playOrder.length) return
+  if (!playOrder.value.length) return
   let idx = currentIndex.value + 1
-  if (idx >= playOrder.length) {
+  if (idx >= playOrder.value.length) {
     if (random.value) buildOrder()
     idx = 0
   }
   currentIndex.value = idx
-  loadActive(playOrder[idx]!, true)
+  loadActive(playOrder.value[idx]!, true)
 }
 
 function prev() {
-  if (!playOrder.length) return
+  if (!playOrder.value.length) return
   ensurePlayers()
   const el = activeEl()
   if (el.currentTime > 3) {
@@ -592,9 +601,9 @@ function prev() {
     return
   }
   let idx = currentIndex.value - 1
-  if (idx < 0) idx = playOrder.length - 1
+  if (idx < 0) idx = playOrder.value.length - 1
   currentIndex.value = idx
-  loadActive(playOrder[idx]!, true)
+  loadActive(playOrder.value[idx]!, true)
 }
 
 function seek(time: number) {
@@ -678,6 +687,8 @@ export function useMusicPlayer() {
     isPlaying,
     currentTime,
     duration,
+    currentIndex,
+    queue: playOrder,
     missingTracks,
     hasLibrary,
     scenes,
@@ -692,6 +703,7 @@ export function useMusicPlayer() {
     playFolder,
     playScene,
     playAll,
+    playAt,
     togglePlay,
     stop,
     next,

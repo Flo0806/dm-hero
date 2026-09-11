@@ -2403,6 +2403,14 @@
       "libraryUnavailable": "Diversi brani non sono riproducibili – la cartella musicale probabilmente non esiste più. Riscansiona o scegli un'altra cartella.",
       "folderMissing": "Cartella musicale non trovata. Riscansiona o scegli un'altra cartella.",
       "scanFailed": "Impossibile leggere la cartella musicale."
+    },
+    "volume": "Volume",
+    "mini": {
+      "drag": "Trascina per spostare",
+      "open": "Apri la pagina musica",
+      "queue": "Mostra coda",
+      "compact": "Compatto",
+      "expand": "Espandi"
     }
   },
   "update": {

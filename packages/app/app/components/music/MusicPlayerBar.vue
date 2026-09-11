@@ -1,5 +1,5 @@
 <template>
-  <v-footer v-if="currentTrack" app class="music-player-bar px-4 py-2" height="72">
+  <v-footer v-if="currentTrack && route.path === '/music'" app class="music-player-bar px-4 py-2" height="72">
     <!-- Now playing -->
     <div class="d-flex align-center music-now" style="min-width: 0; flex: 1 1 0">
       <v-avatar color="primary" size="40" class="mr-3 flex-shrink-0" :class="{ 'music-spin': isPlaying }">
@@ -68,9 +68,6 @@
         class="music-volume"
         @update:model-value="setVolume"
       />
-      <v-btn v-if="route.path !== '/music'" icon size="small" variant="text" to="/music" :title="$t('music.title')">
-        <v-icon icon="mdi-playlist-music" />
-      </v-btn>
       <v-btn icon size="small" variant="text" :title="$t('music.stop')" @click="stop">
         <v-icon icon="mdi-close" />
       </v-btn>

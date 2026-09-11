@@ -2403,6 +2403,14 @@
       "libraryUnavailable": "Several tracks failed to play – the music folder may be gone. Rescan or choose another folder.",
       "folderMissing": "The music folder was not found. Rescan or choose another folder.",
       "scanFailed": "The music folder could not be read."
+    },
+    "volume": "Volume",
+    "mini": {
+      "drag": "Drag to move",
+      "open": "Open music page",
+      "queue": "Show queue",
+      "compact": "Compact",
+      "expand": "Expand"
     }
   },
   "update": {
