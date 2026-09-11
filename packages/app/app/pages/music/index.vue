@@ -44,7 +44,7 @@
       <v-card variant="outlined" class="mb-4">
         <v-card-text class="d-flex flex-wrap align-center ga-3">
           <v-text-field
-            v-model="query"
+            :model-value="query"
             :placeholder="$t('music.search')"
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
@@ -52,6 +52,7 @@
             hide-details
             clearable
             style="max-width: 280px; min-width: 200px"
+            @update:model-value="query = $event ?? ''"
           />
 
           <div v-if="scenes.length" class="d-flex flex-wrap ga-2 flex-grow-1">
@@ -145,7 +146,8 @@
               role="button"
               tabindex="0"
               @click="playTrack(track)"
-              @keydown.enter="playTrack(track)"
+              @keydown.enter.prevent="playTrack(track)"
+              @keydown.space.prevent="playTrack(track)"
             >
               <v-icon icon="mdi-music-note" size="small" class="mr-2" />
               <span class="text-body-medium">{{ track.name }}</span>

@@ -1,4 +1,4 @@
-import { readdirSync, statSync, existsSync, type Dirent } from 'fs'
+import { readdirSync, statSync, existsSync, realpathSync, type Dirent } from 'fs'
 import { join, resolve, sep, basename, extname } from 'path'
 import { getDb } from './db'
 import { encrypt, decrypt } from './encryption'
@@ -108,5 +108,14 @@ export function resolveTrackPath(root: string, relPath: string): string | null {
   const abs = resolve(rootAbs, relPath)
   if (abs !== rootAbs && !abs.startsWith(rootAbs + sep)) return null
   if (!isAudioFile(abs)) return null
-  return abs
+  // Canonicalise both ends so a symlink inside the library can't point outside it
+  try {
+    const rootReal = realpathSync(rootAbs)
+    const real = realpathSync(abs)
+    if (real !== rootReal && !real.startsWith(rootReal + sep)) return null
+    return real
+  }
+  catch {
+    return null // file vanished (deleted/moved) → caller answers 404
+  }
 }

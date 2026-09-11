@@ -2343,7 +2343,7 @@
     "chooseFolder": "Choisir un dossier",
     "changeFolder": "Changer de dossier",
     "rescan": "Rescanner",
-    "scanning": "Lecture de votre musique …",
+    "scanning": "Analyse de votre bibliothèque musicale …",
     "search": "Rechercher …",
     "shuffle": "Aléatoire",
     "inOrder": "Dans l'ordre",
@@ -2405,6 +2405,7 @@
       "scanFailed": "Impossible de lire le dossier musical."
     },
     "volume": "Volume",
+    "seek": "Position de lecture",
     "mini": {
       "drag": "Glisser pour déplacer",
       "open": "Ouvrir la page musique",

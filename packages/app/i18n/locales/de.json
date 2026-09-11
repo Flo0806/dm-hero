@@ -2405,6 +2405,7 @@
       "scanFailed": "Der Musikordner konnte nicht gelesen werden."
     },
     "volume": "Lautstärke",
+    "seek": "Wiedergabeposition",
     "mini": {
       "drag": "Ziehen zum Verschieben",
       "open": "Musikseite öffnen",

@@ -2405,6 +2405,7 @@
       "scanFailed": "Impossibile leggere la cartella musicale."
     },
     "volume": "Volume",
+    "seek": "Posizione di riproduzione",
     "mini": {
       "drag": "Trascina per spostare",
       "open": "Apri la pagina musica",

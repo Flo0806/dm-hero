@@ -109,7 +109,7 @@
             </v-btn>
           </template>
           <v-card class="pa-3" min-width="180">
-            <v-slider :model-value="volume" :max="1" :step="0.01" color="primary" hide-details density="compact" @update:model-value="setVolume" />
+            <v-slider :model-value="volume" :aria-label="$t('music.volume')" :max="1" :step="0.01" color="primary" hide-details density="compact" @update:model-value="setVolume" />
           </v-card>
         </v-menu>
 

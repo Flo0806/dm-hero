@@ -2405,6 +2405,7 @@
       "scanFailed": "The music folder could not be read."
     },
     "volume": "Volume",
+    "seek": "Playback position",
     "mini": {
       "drag": "Drag to move",
       "open": "Open music page",

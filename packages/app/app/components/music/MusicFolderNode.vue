@@ -5,14 +5,18 @@
       class="music-folder-row d-flex align-center rounded"
       :class="{ 'music-folder-scope': isScope }"
       :style="{ paddingLeft: `${depth * 20 + 8}px` }"
-      role="button"
-      tabindex="0"
-      @click="toggleExpand(folder.path)"
-      @keydown.enter="toggleExpand(folder.path)"
     >
-      <v-icon :icon="isOpen ? 'mdi-chevron-down' : 'mdi-chevron-right'" size="small" class="mr-1 text-medium-emphasis" />
-      <v-icon :icon="isOpen ? 'mdi-folder-open' : 'mdi-folder'" size="small" color="primary" class="mr-2" />
-      <span class="text-body-medium font-weight-medium text-truncate flex-grow-1">{{ folder.name }}</span>
+      <!-- The toggle is a real button so the action buttons next to it aren't nested inside a role=button -->
+      <button
+        type="button"
+        class="music-folder-toggle d-flex align-center flex-grow-1"
+        :aria-expanded="isOpen"
+        @click="toggleExpand(folder.path)"
+      >
+        <v-icon :icon="isOpen ? 'mdi-chevron-down' : 'mdi-chevron-right'" size="small" class="mr-1 text-medium-emphasis" />
+        <v-icon :icon="isOpen ? 'mdi-folder-open' : 'mdi-folder'" size="small" color="primary" class="mr-2" />
+        <span class="text-body-medium font-weight-medium text-truncate">{{ folder.name }}</span>
+      </button>
 
       <div v-if="folder.trackCount" class="music-folder-actions d-flex align-center">
         <v-btn
@@ -52,7 +56,8 @@
         role="button"
         tabindex="0"
         @click="playTrack(track)"
-        @keydown.enter="playTrack(track)"
+        @keydown.enter.prevent="playTrack(track)"
+        @keydown.space.prevent="playTrack(track)"
       >
         <v-icon
           :icon="missingTracks.has(track.id) ? 'mdi-file-remove-outline' : currentTrack?.id === track.id && isPlaying ? 'mdi-volume-high' : 'mdi-music-note'"
@@ -97,6 +102,21 @@ const visibleTracks = computed(() =>
   cursor: pointer;
   user-select: none;
   min-width: 0;
+}
+.music-folder-toggle {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.music-folder-toggle:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 .music-folder-row:hover,
 .music-track-row:hover {

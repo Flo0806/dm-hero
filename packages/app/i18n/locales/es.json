@@ -2405,6 +2405,7 @@
       "scanFailed": "No se pudo leer la carpeta de música."
     },
     "volume": "Volumen",
+    "seek": "Posición de reproducción",
     "mini": {
       "drag": "Arrastra para mover",
       "open": "Abrir la página de música",

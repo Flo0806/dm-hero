@@ -40,6 +40,7 @@
         <span class="text-body-small text-medium-emphasis music-time">{{ fmt(currentTime) }}</span>
         <v-slider
           :model-value="currentTime"
+          :aria-label="$t('music.seek')"
           :max="duration || 0"
           :step="0.1"
           :disabled="!duration"
@@ -55,11 +56,12 @@
 
     <!-- Volume + link to page -->
     <div class="d-flex align-center ga-1 music-right" style="flex: 1 1 0; justify-content: flex-end">
-      <v-btn icon size="small" variant="text" :title="$t('music.mute')" @click="setVolume(volume > 0 ? 0 : 0.8)">
+      <v-btn icon size="small" variant="text" :title="$t('music.mute')" @click="toggleMute">
         <v-icon :icon="volume === 0 ? 'mdi-volume-off' : volume < 0.5 ? 'mdi-volume-medium' : 'mdi-volume-high'" />
       </v-btn>
       <v-slider
         :model-value="volume"
+        :aria-label="$t('music.volume')"
         :max="1"
         :step="0.01"
         color="primary"
@@ -81,7 +83,7 @@ import { useHotkey } from 'vuetify'
 const route = useRoute()
 const {
   library, hasLibrary, currentTrack, isPlaying, currentTime, duration, volume, random, loopMode,
-  togglePlay, next, prev, seek, skip, setVolume, toggleRandom, cycleLoop, stop,
+  togglePlay, next, prev, seek, skip, setVolume, toggleMute, toggleRandom, cycleLoop, stop,
 } = useMusicPlayer()
 
 // Global keyboard shortcuts via Vuetify's useHotkey – the bar lives in the layout,
@@ -149,6 +151,11 @@ function fmt(s: number): string {
 @keyframes music-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .music-spin {
+    animation: none;
   }
 }
 @media (max-width: 900px) {

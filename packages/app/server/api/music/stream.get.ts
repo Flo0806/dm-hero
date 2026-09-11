@@ -12,9 +12,10 @@ export default defineEventHandler((event) => {
     throw createError({ statusCode: 400, message: 'path is required' })
   }
 
+  // Rejects paths outside the library (incl. symlinks) and files that vanished
   const abs = resolveTrackPath(folder, relPath)
   if (!abs) {
-    throw createError({ statusCode: 403, message: 'Invalid path' })
+    throw createError({ statusCode: 404, message: 'File not found' })
   }
 
   let size: number
@@ -33,8 +34,18 @@ export default defineEventHandler((event) => {
   const range = getHeader(event, 'range')
   const match = range ? /^bytes=(\d*)-(\d*)$/.exec(range) : null
   if (match) {
-    const start = match[1] ? Number(match[1]) : 0
-    const end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
+    let start: number
+    let end: number
+    if (!match[1] && match[2]) {
+      // Suffix range: bytes=-500 → the last 500 bytes
+      const suffix = Number(match[2])
+      start = Math.max(size - suffix, 0)
+      end = size - 1
+    }
+    else {
+      start = match[1] ? Number(match[1]) : 0
+      end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
+    }
     if (start >= size || start > end) {
       setResponseStatus(event, 416)
       setHeader(event, 'Content-Range', `bytes */${size}`)

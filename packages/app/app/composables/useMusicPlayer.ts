@@ -385,6 +385,10 @@ function updateMediaSession(track: MusicTrack) {
 function setupMediaSession() {
   if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
   const ms = navigator.mediaSession
+  // Keep the OS media controls in sync with what the app shows
+  watch(isPlaying, (playing) => {
+    ms.playbackState = playing ? 'playing' : 'paused'
+  })
   const set = (action: MediaSessionAction, handler: MediaSessionActionHandler) => {
     try {
       ms.setActionHandler(action, handler)
@@ -393,8 +397,8 @@ function setupMediaSession() {
       // unsupported action
     }
   }
-  set('play', () => togglePlay())
-  set('pause', () => togglePlay())
+  set('play', () => play())
+  set('pause', () => pause())
   set('previoustrack', () => prev())
   set('nexttrack', () => next())
   set('seekbackward', () => skip(-10))
@@ -555,7 +559,7 @@ function playAll() {
   loadActive(playOrder.value[0]!, true)
 }
 
-function togglePlay() {
+function play() {
   ensurePlayers()
   if (!players.length) return
   if (!currentTrack.value) {
@@ -563,14 +567,26 @@ function togglePlay() {
     return
   }
   const el = activeEl()
-  if (el.paused) {
-    el.volume = 0
-    el.play().catch(() => {})
-    rampVolume(el, 0, volume.value, 300)
-  }
-  else {
-    rampVolume(el, el.volume, 0, 300, () => el.pause())
-  }
+  if (!el.paused) return
+  el.volume = 0
+  el.play().catch(() => {})
+  rampVolume(el, 0, volume.value, 300)
+}
+
+function pause() {
+  if (!players.length) return
+  // Stop an outgoing crossfade channel too, otherwise it keeps playing
+  cancelCrossfade()
+  const el = activeEl()
+  if (el.paused) return
+  rampVolume(el, el.volume, 0, 300, () => el.pause())
+}
+
+function togglePlay() {
+  ensurePlayers()
+  if (!players.length) return
+  if (!currentTrack.value || activeEl().paused) play()
+  else pause()
 }
 
 function stop() {
@@ -642,6 +658,18 @@ function setVolume(v: number) {
   volume.value = clamp(v)
   if (players.length && !crossfading) activeEl().volume = volume.value
   saveSettings()
+}
+
+// Mute remembers the level it replaced so unmuting restores it
+let volumeBeforeMute = 0.8
+function toggleMute() {
+  if (volume.value > 0) {
+    volumeBeforeMute = volume.value
+    setVolume(0)
+  }
+  else {
+    setVolume(volumeBeforeMute > 0 ? volumeBeforeMute : 0.8)
+  }
 }
 
 function toggleRandom() {
@@ -722,6 +750,8 @@ export function useMusicPlayer() {
     playScene,
     playAll,
     playAt,
+    play,
+    pause,
     togglePlay,
     stop,
     next,
@@ -729,6 +759,7 @@ export function useMusicPlayer() {
     seek,
     skip,
     setVolume,
+    toggleMute,
     toggleRandom,
     cycleLoop,
     setCrossfade,
