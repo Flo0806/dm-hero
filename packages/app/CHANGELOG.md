@@ -1,5 +1,28 @@
 # @dm-hero/app
 
+## 1.5.0
+
+### Minor Changes
+
+- a3613b6: MCP: an AI can now build a whole campaign from a module – images and documents for entities, sessions with summaries, groups, maps with markers and areas, encounters, reading entities back, archive/delete with preview, and a `what_can_i_do` overview. Bulk import resolves `{{ref:npc:1}}` cross-links in descriptions and warns about entities that already exist.
+- f2c04ba: Add Italian, French and Spanish translations. The list of supported languages now lives in `types/locale.ts`; missing German keys were added and broken plural strings in the Chinese locale were fixed.
+- b873740: Music player: play your own music library during the session. Pick a folder (native dialog in the desktop app), sub-folders become collapsible lists and can be starred as scenes. Two-channel crossfade, folder/track/all loop modes, shuffle, keyboard shortcuts, and a floating mini player that keeps playing while you navigate – draggable, with a queue popup, compact and minimized modes.
+- dede6ec: Session music: attach playlist links (YouTube, Spotify, Tabletop Audio, …) to a session. They show as chips on the session card and open in the system browser, so the music keeps playing while you use DM Hero. In the desktop app all external links now open in the system browser instead of the app window.
+- 4cad16e: New theme "Music (Sunset Beat)": retro sunset orange and magenta over deep stage blue, with music notes floating across the dashboard.
+- 935c7c5: Add Simplified Chinese (zh-CN) localization.
+
+### Patch Changes
+
+- 6878a9e: Bug fixes reported via Discord:
+
+  - Duplicate German location type labels ("Ebene", "Friedhof") in the type dropdown
+  - Dashboard calendar widget always showed "sunny" instead of the active climate zone's weather
+  - Weather generation now only generates for the selected climate zone (or global) instead of overwriting all zones
+  - Clicking a linked entity in the calendar led to a 404 page
+  - New stat template fields got duplicate default names and overwrote each other
+
+- dca479f: Custom group colour: the hex field no longer closes on click (Electron). Replaced the popover with an inline hex input plus native colour picker.
+
 ## 1.4.2
 
 ### Patch Changes
