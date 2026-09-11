@@ -1371,6 +1371,16 @@
     "coverImageDescription": "Description de l'image",
     "coverImageDescriptionPlaceholder": "Décrivez la scène, ex. : un groupe d'aventuriers face à un dragon immense dans une grotte remplie d'or...",
     "coverImageSafetyError": "La description a été rejetée par le filtre de sécurité de l'IA. Veuillez reformuler la scène : évitez les descriptions directes de violence et utilisez des termes plus généraux comme 'bataille épique' ou 'confrontation dramatique'.",
+    "music": {
+      "title": "Musique",
+      "hint": "Playlists pour cette session (YouTube, Spotify, Tabletop Audio, …). Les liens s'ouvrent dans le navigateur, la musique continue pendant que vous utilisez DM Hero.",
+      "empty": "Aucune playlist",
+      "label": "Libellé",
+      "labelPlaceholder": "ex. Ambiance de taverne",
+      "url": "URL",
+      "invalidUrl": "Veuillez saisir une URL http(s) valide",
+      "open": "Ouvrir"
+    },
     "pinboard": {
       "title": "Tableau d'épingles",
       "empty": "Aucune entité épinglée",

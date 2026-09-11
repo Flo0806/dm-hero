@@ -10,6 +10,8 @@
  * - audio/*.{mp3,wav,ogg}
  */
 
+import type { SessionMusicLink } from './session-music'
+
 // =============================================================================
 // EXPORT FORMAT VERSION & COMPATIBILITY
 // =============================================================================
@@ -317,6 +319,7 @@ export interface ExportSession {
   in_game_day_start?: number
   in_game_day_end?: number
   duration_minutes?: number
+  music_links?: SessionMusicLink[]
   calendar_event?: string // Reference: "event:1"
   created_at?: string
   updated_at?: string

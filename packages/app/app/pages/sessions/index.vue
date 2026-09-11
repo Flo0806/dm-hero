@@ -96,6 +96,20 @@
                 {{ session.duration_minutes }} min
               </v-chip>
 
+              <!-- Playlist links: open in the system browser -->
+              <v-chip
+                v-for="link in session.music_links"
+                :key="link.url"
+                size="small"
+                variant="tonal"
+                :prepend-icon="musicLinkIcon(link.url).icon"
+                :color="musicLinkIcon(link.url).color"
+                :title="link.url"
+                @click.stop="openExternalUrl(link.url)"
+              >
+                {{ link.label }}
+              </v-chip>
+
               <!-- Mentions Count (from notes) -->
               <v-chip
                 v-if="countMentionsInNotes(session.notes)"
@@ -154,6 +168,10 @@
           <v-tab value="audio">
             <v-icon start> mdi-microphone </v-icon>
             {{ $t('audio.audio') }}
+          </v-tab>
+          <v-tab value="music">
+            <v-icon start> mdi-music </v-icon>
+            {{ $t('sessions.music.title') }}
           </v-tab>
           <v-tab value="attendance">
             <v-icon start> mdi-account-check </v-icon>
@@ -338,6 +356,15 @@
                 :session-id="editingSession.id"
                 @audio-updated="reloadSessions"
                 @uploading="(v) => (uploadingAudio = v)"
+              />
+            </v-tabs-window-item>
+
+            <!-- Music Tab -->
+            <v-tabs-window-item value="music">
+              <SessionsSessionMusicLinks
+                v-if="editingSession"
+                :session-id="editingSession.id"
+                @updated="reloadSessions"
               />
             </v-tabs-window-item>
 
@@ -707,6 +734,7 @@
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { useTheme } from 'vuetify'
+import { musicLinkIcon, type SessionMusicLink } from '~~/types/session-music'
 
 interface Session {
   id: number
@@ -724,6 +752,7 @@ interface Session {
   in_game_month_end: number | null
   in_game_day_end: number | null // Day of month (1-31)
   duration_minutes: number | null
+  music_links: SessionMusicLink[]
   created_at: string
   updated_at: string
   cover_image_url: string | null
@@ -746,6 +775,7 @@ const router = useRouter()
 const campaignStore = useCampaignStore()
 const entitiesStore = useEntitiesStore()
 const theme = useTheme()
+const { openExternalUrl } = useElectron()
 const { locale } = useI18n()
 
 // Calendar integration

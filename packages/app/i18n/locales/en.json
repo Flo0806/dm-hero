@@ -1371,6 +1371,16 @@
     "coverImageDescription": "Image Description",
     "coverImageDescriptionPlaceholder": "Describe the scene, e.g.: A group of adventurers standing before a huge dragon in a cave full of gold...",
     "coverImageSafetyError": "The description was rejected by the AI safety filter. Please rephrase the scene - avoid direct violence descriptions and use more general terms like 'epic battle' or 'dramatic confrontation' instead.",
+    "music": {
+      "title": "Music",
+      "hint": "Playlists for this session (YouTube, Spotify, Tabletop Audio, …). Links open in your browser so the music keeps playing while you use DM Hero.",
+      "empty": "No playlists yet",
+      "label": "Label",
+      "labelPlaceholder": "e.g. Tavern ambience",
+      "url": "URL",
+      "invalidUrl": "Please enter a valid http(s) URL",
+      "open": "Open"
+    },
     "pinboard": {
       "title": "Pinboard",
       "empty": "No pinned entities",

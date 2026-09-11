@@ -1,4 +1,5 @@
 import { getDb } from '../../utils/db'
+import { parseMusicLinks } from '../../utils/music-links'
 
 interface SessionRow {
   id: number
@@ -16,6 +17,7 @@ interface SessionRow {
   in_game_month_end: number | null
   in_game_day_end: number | null // Day of month (1-31)
   duration_minutes: number | null
+  music_links: string
   created_at: string
   updated_at: string
   mentions_count: number
@@ -55,6 +57,7 @@ export default defineEventHandler((event) => {
       s.in_game_month_end,
       s.in_game_day_end,
       s.duration_minutes,
+      s.music_links,
       s.created_at,
       s.updated_at,
       (SELECT COUNT(*) FROM session_mentions WHERE session_id = s.id) as mentions_count,
@@ -68,5 +71,5 @@ export default defineEventHandler((event) => {
     )
     .all(campaignId) as SessionRow[]
 
-  return sessions
+  return sessions.map(s => ({ ...s, music_links: parseMusicLinks(s.music_links) }))
 })
