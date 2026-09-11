@@ -113,7 +113,7 @@ jobs:
   # ============================================================================
   build-electron-macos:
     if: inputs.platform == 'all' || inputs.platform == 'macos-x64' || inputs.platform == 'macos-arm64' || inputs.platform == 'macos-both'
-    runs-on: macos-latest
+    runs-on: macos-15
     permissions:
       contents: write
     strategy:
