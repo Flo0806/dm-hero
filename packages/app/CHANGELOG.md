@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.5.2
+
+### Patch Changes
+
+- c53df2c: Raise the Node heap limit for `nuxt build` so the release build no longer runs out of memory on the macOS runner.
+
 ## 1.5.1
 
 ### Patch Changes
