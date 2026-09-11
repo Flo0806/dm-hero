@@ -32,3 +32,23 @@ export function mergeMetadata(
   }
   return merged
 }
+
+/**
+ * Cross-links inside descriptions BEFORE ids exist: `{{ref:npc:1}}` (payload
+ * ref) or `{{ref:existing:12}}`. Resolved to real `{{npc:123}}` links on commit.
+ */
+export const REF_LINK_REGEX = /\{\{ref:([^}]+)\}\}/g
+
+/** All refs used in `{{ref:...}}` links of a text (trimmed, in order, may repeat). */
+export function extractRefLinks(text: string | undefined | null): string[] {
+  if (!text) return []
+  return [...text.matchAll(REF_LINK_REGEX)].map(m => m[1]!.trim())
+}
+
+/**
+ * Replace every `{{ref:X}}` with the value returned by `lookup(X)`; links the
+ * lookup can't resolve (null) are left untouched.
+ */
+export function resolveRefLinks(text: string, lookup: (ref: string) => string | null): string {
+  return text.replace(REF_LINK_REGEX, (whole, ref: string) => lookup(ref.trim()) ?? whole)
+}

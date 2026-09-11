@@ -3,7 +3,7 @@ import { convertMetadataToKeys, getLocaleFromEvent } from '~~/server/utils/i18n-
 import { normaliseTagName, isValidTagName, DEFAULT_TAG_COLOR } from '~~/types/tag'
 import { entityTypeToFolderType } from '~~/server/utils/folders'
 import { recordImport } from '~~/server/utils/importSignal'
-import { parseExistingId } from '~~/server/utils/importRefs'
+import { parseExistingId, extractRefLinks, resolveRefLinks } from '~~/server/utils/importRefs'
 
 /**
  * AI bulk-import: create entities + relations in one validated call.
@@ -26,6 +26,8 @@ import { parseExistingId } from '~~/server/utils/importRefs'
 const ENTITY_TYPES = ['NPC', 'Location', 'Item', 'Faction', 'Lore'] as const
 type ImportEntityType = typeof ENTITY_TYPES[number]
 const META_CONVERT: Partial<Record<ImportEntityType, 'npc' | 'item'>> = { NPC: 'npc', Item: 'item' }
+// Entity-link type keys as used in markdown ({{npc:123}})
+const LINK_KEY: Record<ImportEntityType, string> = { NPC: 'npc', Location: 'location', Item: 'item', Faction: 'faction', Lore: 'lore' }
 
 interface InEntity {
   ref?: string
@@ -108,8 +110,32 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // --- validate {{ref:...}} links inside descriptions ---
+  let textLinks = 0
+  entities.forEach((e, i) => {
+    for (const ref of extractRefLinks(e.description)) {
+      if (parseExistingId(ref) !== null || refs.has(ref)) textLinks++
+      else errors.push(`entities[${i}].description: {{ref:${ref}}} is not a known entity ref or "existing:<id>"`)
+    }
+  })
+
   if (errors.length > 0) {
     throw createError({ statusCode: 400, data: { errors }, message: `Validation failed: ${errors.length} error(s)` })
+  }
+
+  // --- duplicate warnings: same name + type already in this campaign. Not an
+  // error (sequels legitimately reuse names) but the AI should link to the
+  // existing entity instead of creating a twin. ---
+  const findDuplicate = db.prepare(`
+    SELECT e.id FROM entities e
+    JOIN entity_types t ON t.id = e.type_id
+    WHERE e.campaign_id = ? AND t.name = ? AND lower(e.name) = lower(?) AND e.deleted_at IS NULL
+    LIMIT 1
+  `)
+  const warnings: string[] = []
+  for (const e of entities) {
+    const dup = findDuplicate.get(campaignId, e.type, e.name!.trim()) as { id: number } | undefined
+    if (dup) warnings.push(`${e.ref} "${e.name}" already exists as ${e.type} id ${dup.id} – reference it as "existing:${dup.id}" instead of creating a duplicate`)
   }
 
   // --- resolve metadata to keys (per type) up-front so dry-run shows the real
@@ -133,7 +159,9 @@ export default defineEventHandler(async (event) => {
         relations: relations.length,
         tags: [...new Set(entities.flatMap(e => (e.tags ?? []).map(normaliseTagName)))],
         folders: [...new Set(entities.filter(e => e.folder).map(e => `${e.type}:${e.folder}`))],
+        textLinks,
       },
+      warnings,
       preview: resolved.map(e => ({ ref: e.ref, type: e.type, name: e.name, metadata: e._metadata })),
     }
   }
@@ -207,6 +235,26 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Resolve {{ref:...}} links in descriptions now that every id is known
+    const refTypeKey = new Map(resolved.map(e => [e.ref!, LINK_KEY[e.type as ImportEntityType]]))
+    const existingTypeKey = db.prepare('SELECT t.name FROM entities e JOIN entity_types t ON t.id = e.type_id WHERE e.id = ?')
+    const updateDescription = db.prepare('UPDATE entities SET description = ? WHERE id = ?')
+    for (const e of resolved) {
+      if (!e.description || extractRefLinks(e.description).length === 0) continue
+      const text = resolveRefLinks(e.description, (ref) => {
+        const exId = parseExistingId(ref)
+        if (exId !== null) {
+          const row = existingTypeKey.get(exId) as { name: string } | undefined
+          const key = row ? LINK_KEY[row.name as ImportEntityType] : undefined
+          return key ? `{{${key}:${exId}}}` : null
+        }
+        const id = refToId.get(ref)
+        const key = refTypeKey.get(ref)
+        return id && key ? `{{${key}:${id}}}` : null
+      })
+      updateDescription.run(text.trim(), refToId.get(e.ref!)!)
+    }
+
     // Relations (bidirectional store: one row, queried both directions elsewhere)
     let relationsCreated = 0
     for (const r of relations) {
@@ -227,7 +275,8 @@ export default defineEventHandler(async (event) => {
 
     return {
       dryRun: false,
-      created: { entities: refToId.size, byType: perType, relations: relationsCreated },
+      created: { entities: refToId.size, byType: perType, relations: relationsCreated, textLinks },
+      warnings,
       refToId: Object.fromEntries(refToId),
     }
   }

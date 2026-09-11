@@ -31,6 +31,16 @@ export default defineEventHandler(() => {
     // Entity types you can create. "maps" are intentionally NOT importable.
     entityTypes: ['NPC', 'Location', 'Item', 'Faction', 'Lore'],
 
+    // What else the MCP can do once entities exist (see the tool descriptions):
+    // images (set_entity_image / set_session_cover), documents (add_document),
+    // sessions (list/create/update_session), archive_entities, delete_entities.
+    alsoAvailable: ['images', 'documents', 'sessions', 'groups', 'maps', 'encounters', 'archive', 'delete', 'what_can_i_do'],
+
+    // Descriptions may cross-link entities of this payload before ids exist:
+    // "{{ref:npc:1}}" (payload ref) or "{{ref:existing:12}}" → resolved to
+    // real "{{npc:123}}" links on commit. Dry-run counts them as textLinks.
+    textLinks: 'Use {{ref:<payload ref>}} or {{ref:existing:<id>}} inside description to link entities; resolved on import.',
+
     // Relation types (i18n keys) for `relations[].type`, grouped by what they
     // connect. The column is free text so any key is accepted, but prefer
     // these recognized ones — they get proper labels + icons in the UI.
