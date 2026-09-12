@@ -1,5 +1,11 @@
 # @dm-hero/app
 
+## 1.5.4
+
+### Patch Changes
+
+- 25ae730: Reword the 1.5 announcement: the AI integration is "improved optional AI support", not "AI does the whole job".
+
 ## 1.5.3
 
 ### Patch Changes
