@@ -21,8 +21,11 @@ DM Hero helps Dungeon Masters organize their D&D campaigns by solving the proble
 - 📝 **Session Logs** - Track campaign timeline with entity mentions
 - 🖼️ **Image Galleries** - Multiple images per entity with primary image selection
 - 📄 **Markdown Documents** - Rich documentation with live preview
-- 🌐 **i18n Support** - German and English localization
-- 🎨 **Themed UI** - Dark (Midnight Tavern) and Light (Aged Parchment) themes
+- 🎵 **Music Player** - Play your own music library at the table: folders become playlists, star them as scenes, crossfade, and a floating mini player that keeps playing while you navigate. Plus YouTube/Spotify/Tabletop Audio playlist links per session
+- 🤖 **Optional AI Support (MCP)** - Optionally connect Claude, Cursor & co. to help fill a campaign from a module: entities with cross-links, portraits, documents, groups, maps, encounters and sessions — every change previewed first, never required
+- 🗓️ **In-Game Calendar & Climate Zones** - Custom calendars, weather per region, session timeline
+- 🌐 **Six Languages** - German, English, Italian, French, Spanish and Simplified Chinese
+- 🎨 **Nine Themes** - From Midnight Tavern to Sunset Beat, each with its own living dashboard
 
 ## Tech Stack
 

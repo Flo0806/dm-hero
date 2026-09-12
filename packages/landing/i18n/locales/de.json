@@ -13,8 +13,8 @@
       "subtitle": "Jetzt auch auf Italienisch, Französisch, Spanisch und vereinfachtem Chinesisch"
     },
     "aiFull": {
-      "title": "KI baut die ganze Kampagne",
-      "subtitle": "Vom Abenteuer-PDF zu NPCs, Karten, Encountern, Gruppen, Sessions und Portraits – erst Vorschau, dann Bestätigung"
+      "title": "Verbesserte optionale KI-Unterstützung",
+      "subtitle": "Auf Wunsch hilft eine KI beim Abenteuer-Import: NPCs, Karten, Encounter, Gruppen, Sessions und Portraits – erst Vorschau, dann Bestätigung"
     },
     "musicTheme": {
       "title": "Theme „Music“",
@@ -136,7 +136,7 @@
       },
       "aiImport": {
         "title": "Mit KI verbinden",
-        "description": "Lass eine KI deine ganze Kampagne aus einem Abenteuer bauen: NPCs, Orte, Items, Fraktionen und Lore mit Querverweisen, Portraits, Dokumente, Gruppen, Karten mit Markern, Encounter und Sessions. Jede Änderung erst als Vorschau. Optional, nie Pflicht."
+        "description": "Verbinde optional eine KI (Claude, Cursor, …) und lass sie beim Befüllen deiner Kampagne aus einem Abenteuer helfen: NPCs, Orte, Items, Fraktionen und Lore mit Querverweisen, Portraits, Dokumente, Gruppen, Karten mit Markern, Encounter und Sessions. Jede Änderung erst als Vorschau. Optional, nie Pflicht."
       },
       "search": {
         "title": "Leistungsstarke Fuzzy-Suche",
