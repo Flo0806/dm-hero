@@ -13,8 +13,8 @@
       "subtitle": "Now also in Italian, French, Spanish and Simplified Chinese"
     },
     "aiFull": {
-      "title": "AI Builds the Whole Campaign",
-      "subtitle": "From a module PDF to NPCs, maps, encounters, groups, sessions and portraits – previewed, then confirmed"
+      "title": "Improved Optional AI Support",
+      "subtitle": "Optionally let an AI assist with a module: NPCs, maps, encounters, groups, sessions and portraits – previewed, then confirmed"
     },
     "musicTheme": {
       "title": "Theme \"Music\"",
@@ -136,7 +136,7 @@
       },
       "aiImport": {
         "title": "Connect Your AI",
-        "description": "Let an AI build your whole campaign from a module: NPCs, places, items, factions and lore with cross-links, portraits, documents, groups, maps with markers, encounters and sessions. Every change is previewed first. Optional, never required."
+        "description": "Optionally connect an AI (Claude, Cursor, …) and let it help fill your campaign from a module: NPCs, places, items, factions and lore with cross-links, portraits, documents, groups, maps with markers, encounters and sessions. Every change is previewed first. Optional, never required."
       },
       "search": {
         "title": "Powerful Fuzzy Search",
