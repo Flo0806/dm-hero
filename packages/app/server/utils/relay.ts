@@ -88,6 +88,24 @@ export async function deleteRelayShare(auth: RelayAuth, shareKey: string) {
   })
 }
 
+/** Game-wide content on the relay: the shown map and its fog of war */
+export type RelayStateSlot = 'map' | 'fog'
+
+export async function putRelayState(auth: RelayAuth, slot: RelayStateSlot, envelope: unknown) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/state/${slot}`, {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+    body: envelope as Record<string, unknown>,
+  })
+}
+
+export async function deleteRelayState(auth: RelayAuth, slot: RelayStateSlot) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/state/${slot}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+  })
+}
+
 /** Encrypted file bytes for the relay's file storage */
 export async function putRelayFile(auth: RelayAuth, fileId: string, ciphertext: Uint8Array) {
   try {

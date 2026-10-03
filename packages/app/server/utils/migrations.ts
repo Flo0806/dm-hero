@@ -2832,6 +2832,19 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 62: Created map_fog, added shown_map_id to game_tables')
     },
   },
+  {
+    version: 63,
+    name: 'game_table_map_sync',
+    up: (db) => {
+      // What the players have of the shown map: uploaded image (JSON: map id,
+      // source, encrypted file ref, size) + hashes of the last sent map and fog.
+      db.exec('ALTER TABLE game_tables ADD COLUMN map_state TEXT')
+      db.exec('ALTER TABLE game_tables ADD COLUMN map_hash TEXT')
+      db.exec('ALTER TABLE game_tables ADD COLUMN fog_hash TEXT')
+
+      console.log('✅ Migration 63: Added map sync columns to game_tables')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

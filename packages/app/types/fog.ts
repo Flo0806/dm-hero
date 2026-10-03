@@ -1,3 +1,5 @@
+import type { SharedFileRef } from './share'
+
 // Fog of war on a map shown to the players.
 // Coordinates are percent of the map (x of width, y of height) like markers;
 // the brush radius is percent of the map width.
@@ -37,4 +39,23 @@ export function isMapFog(value: unknown): value is MapFog {
     && isNum(s.radius) && s.radius > 0 && s.radius <= 50
     && Array.isArray(s.points) && s.points.length > 0 && s.points.length <= FOG_MAX_POINTS
     && s.points.every(p => Array.isArray(p) && p.length === 2 && isNum(p[0]) && isNum(p[1])))
+}
+
+// ---------------------------------------------------------------------------
+// Protocol to the player app (mirrored in packages/staging/app/utils/tableMap.ts)
+// ---------------------------------------------------------------------------
+
+/** The map shown to the players (slot "map") */
+export interface TableMapContent {
+  mapId: number
+  name: string
+  image: SharedFileRef
+  width: number
+  height: number
+}
+
+/** Its fog of war (slot "fog") - mapId ties it to the map, a mismatch means "all covered" */
+export interface TableFogContent {
+  mapId: number
+  fog: MapFog
 }

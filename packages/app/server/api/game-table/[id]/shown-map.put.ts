@@ -1,5 +1,6 @@
 import { getDb } from '../../../utils/db'
 import { requireNumericParam } from '../../../utils/game-table'
+import { syncTableMap } from '../../../utils/share/map'
 
 // The one map the players see (null = none). Only maps of the game's campaign.
 export default defineEventHandler(async (event) => {
@@ -17,5 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!sameCampaign) throw createError({ statusCode: 400, message: 'Map belongs to another campaign' })
   }
   db.prepare('UPDATE game_tables SET shown_map_id = ? WHERE id = ?').run(mapId, tableId)
+  // Players get it right away (image upload + fog); a failure is retried by the timer
+  await syncTableMap(db, tableId)
   return { shownMapId: mapId }
 })

@@ -1,7 +1,7 @@
 import { EMPTY_FOG, type FogStroke, type MapFog } from '~~/types/fog'
 
 // Fog of war of one map: load, paint, undo - saved shortly after each change.
-const SAVE_DELAY = 400
+const SAVE_DELAY = 150
 const UNDO_LIMIT = 50
 
 export function useMapFog() {

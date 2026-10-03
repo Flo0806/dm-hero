@@ -1,4 +1,5 @@
 import { getDb } from '~~/server/utils/db'
+import { syncMapFog } from '~~/server/utils/share/map'
 import { isMapFog } from '~~/types/fog'
 
 // Saves the whole fog of a map (the DM paints, the client sends the new state)
@@ -16,5 +17,7 @@ export default defineEventHandler(async (event) => {
     INSERT INTO map_fog (map_id, fog, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(map_id) DO UPDATE SET fog = excluded.fog, updated_at = CURRENT_TIMESTAMP
   `).run(mapId, JSON.stringify({ base: fog.base, strokes: fog.strokes }))
+  // Shown to players? They see the change right away
+  await syncMapFog(db, mapId)
   return { success: true }
 })

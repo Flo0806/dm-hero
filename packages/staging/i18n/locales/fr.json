@@ -45,6 +45,21 @@
     "revealName": "{previous} est {name} !",
     "revealNew": "Nouveau : {name}",
     "revealInfo": "Du nouveau sur {name} : {fields}",
-    "revealShow": "Voir"
+    "revealShow": "Voir",
+    "tabs": {
+      "label": "Vue",
+      "shares": "Partagé",
+      "map": "Carte"
+    },
+    "map": {
+      "label": "Carte : {name}",
+      "zoomIn": "Zoomer",
+      "zoomOut": "Dézoomer",
+      "fit": "Carte entière",
+      "fullscreen": "Plein écran",
+      "exitFullscreen": "Quitter le plein écran",
+      "loading": "Chargement de la carte …",
+      "hint": "Faites glisser pour déplacer, molette ou deux doigts pour zoomer. Clavier : flèches, + et −, 0 pour la carte entière."
+    }
   }
 }

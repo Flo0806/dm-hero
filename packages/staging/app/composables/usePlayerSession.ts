@@ -31,6 +31,11 @@ export function usePlayerSession() {
     const queued: Array<{ id: string, envelope: Envelope }> = []
     // Newest version per share (epoch, seq) - the relay must not replay an older one (e.g. undo a reveal)
     const versions = new Map<string, { epoch: number, seq: number }>()
+    /** The map the DM shows (null = none) + its fog of war */
+    const tableMap = ref<TableMapContent | null>(null)
+    const tableFog = ref<TableFogContent | null>(null)
+    const queuedState: Array<{ slot: string, envelope: Envelope }> = []
+    const stateVersions = new Map<string, { epoch: number, seq: number }>()
     /** Live reveals (not the initial load - that's just the current state) */
     const reveals = ref<Reveal[]>([])
     let live = false
@@ -68,6 +73,27 @@ export function usePlayerSession() {
         console.error('[E2E] Share rejected:', error)
       }
     }
+    // Same checks as shares: from the DM, for everyone, never an older version
+    async function setState(slot: string, envelope: Envelope) {
+      if (!gameKey || !dmVerifyKey || envelope.header.epoch > keyEpoch) {
+        queuedState.push({ slot, envelope })
+        return
+      }
+      const { header } = envelope
+      if (header.gameId !== gameId || header.from !== 'dm' || header.to !== 'all') return
+      const known = stateVersions.get(slot)
+      if (known && (header.epoch < known.epoch || (header.epoch === known.epoch && header.seq <= known.seq))) return
+      try {
+        const content = await open<TableMapContent | TableFogContent>(gameKey, envelope, dmVerifyKey)
+        stateVersions.set(slot, { epoch: header.epoch, seq: header.seq })
+        if (slot === 'map') tableMap.value = content as TableMapContent
+        else if (slot === 'fog') tableFog.value = content as TableFogContent
+      }
+      catch (error) {
+        console.error('[E2E] Map rejected:', error)
+      }
+    }
+
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
 
@@ -91,6 +117,7 @@ export function usePlayerSession() {
         keyEpoch = envelope.header.epoch
         encrypted.value = true
         for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
+        for (const state of queuedState.splice(0)) await setState(state.slot, state.envelope)
         // Everything up to here was the current state - from now on changes are live moments
         setTimeout(() => live = true, 1500)
       }
@@ -107,6 +134,15 @@ export function usePlayerSession() {
     source.addEventListener('unshare', (event) => {
       const { id } = JSON.parse((event as MessageEvent).data) as { id: string }
       shares.value = shares.value.filter(s => s.shareId !== id)
+    })
+
+    // Shown map / fog: null = the DM stopped showing it
+    source.addEventListener('state', (event) => {
+      const { slot, envelope } = JSON.parse((event as MessageEvent).data) as { slot: string, envelope: Envelope | null }
+      // Versions are kept: an old envelope replayed later stays rejected
+      if (envelope) return void setState(slot, envelope)
+      if (slot === 'map') tableMap.value = null
+      else if (slot === 'fog') tableFog.value = null
     })
 
     // DM ended the game
@@ -127,7 +163,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog }
   }
 
   return { join, connect }

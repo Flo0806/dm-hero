@@ -3,7 +3,8 @@ import { dirname } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
 // Built-in node:sqlite - no native module to rebuild or break.
-// Stores only what the relay needs: games, players (PIN hashes) and sessions.
+// Stores only what the relay needs: games, players (PIN hashes), sessions and
+// encrypted content (shares, the shown map + its fog of war).
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS games (
     id TEXT PRIMARY KEY,
@@ -26,6 +27,13 @@ const SCHEMA = `
     envelope TEXT NOT NULL,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (game_id, id)
+  );
+  CREATE TABLE IF NOT EXISTS game_state (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    slot TEXT NOT NULL,
+    envelope TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (game_id, slot)
   );
   CREATE TABLE IF NOT EXISTS files (
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,

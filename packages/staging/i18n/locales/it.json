@@ -45,6 +45,21 @@
     "revealName": "{previous} è {name}!",
     "revealNew": "Nuovo: {name}",
     "revealInfo": "Novità su {name}: {fields}",
-    "revealShow": "Mostra"
+    "revealShow": "Mostra",
+    "tabs": {
+      "label": "Vista",
+      "shares": "Condiviso",
+      "map": "Mappa"
+    },
+    "map": {
+      "label": "Mappa: {name}",
+      "zoomIn": "Ingrandisci",
+      "zoomOut": "Riduci",
+      "fit": "Mappa intera",
+      "fullscreen": "Schermo intero",
+      "exitFullscreen": "Esci da schermo intero",
+      "loading": "Caricamento mappa …",
+      "hint": "Trascina per spostare, rotellina o due dita per lo zoom. Tastiera: frecce, + e −, 0 per la mappa intera."
+    }
   }
 }

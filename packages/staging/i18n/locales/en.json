@@ -45,6 +45,21 @@
     "revealName": "{previous} is {name}!",
     "revealNew": "New: {name}",
     "revealInfo": "New about {name}: {fields}",
-    "revealShow": "Show"
+    "revealShow": "Show",
+    "tabs": {
+      "label": "View",
+      "shares": "Shared",
+      "map": "Map"
+    },
+    "map": {
+      "label": "Map: {name}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Whole map",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen",
+      "loading": "Loading map …",
+      "hint": "Drag to move, mouse wheel or two fingers to zoom. Keyboard: arrow keys, + and −, 0 for the whole map."
+    }
   }
 }

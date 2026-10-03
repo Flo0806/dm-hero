@@ -1,4 +1,5 @@
 import { getDb } from '~~/server/utils/db'
+import { syncTableMap } from '~~/server/utils/share/map'
 
 export default defineEventHandler(async (event) => {
   const db = getDb()
@@ -30,7 +31,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // Soft delete doesn't trigger ON DELETE SET NULL - players stop seeing it here
+  const tables = db.prepare('SELECT id FROM game_tables WHERE shown_map_id = ?').all(Number(id)) as Array<{ id: number }>
   db.prepare('UPDATE game_tables SET shown_map_id = NULL WHERE shown_map_id = ?').run(Number(id))
+  for (const table of tables) {
+    await syncTableMap(db, table.id).catch(error => console.error('[Relay] Map withdraw failed:', error))
+  }
 
   return { success: true }
 })

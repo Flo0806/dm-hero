@@ -26,5 +26,11 @@ export default defineEventHandler((event) => {
   for (const share of shares) {
     void stream.push({ event: 'share', data: JSON.stringify({ id: share.id, envelope: JSON.parse(share.envelope) }) })
   }
+  // The shown map + its fog
+  const states = useRelayDb().prepare('SELECT slot, envelope FROM game_state WHERE game_id = ?')
+    .all(gameId) as Array<{ slot: string, envelope: string }>
+  for (const state of states) {
+    void stream.push({ event: 'state', data: JSON.stringify({ slot: state.slot, envelope: JSON.parse(state.envelope) }) })
+  }
   return sending
 })

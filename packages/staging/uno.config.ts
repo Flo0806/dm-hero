@@ -32,6 +32,7 @@ export default defineConfig({
   shortcuts: {
     'focus-ring': 'outline-none focus-visible:ring-3 focus-visible:ring-primary/30',
     'field': 'flex-1 min-w-0 px-4.5 py-3.5 rounded-xl border border-line bg-surface/85 text-ink text-center text-lg font-bold tracking-[0.18em] transition placeholder:tracking-normal placeholder:font-normal placeholder:text-muted outline-none focus:border-primary focus:ring-3 focus:ring-primary/25',
+    'btn-map': 'min-w-10 h-10 px-2 inline-flex items-center justify-center rounded-lg border border-line bg-surface/85 text-ink font-bold cursor-pointer transition hover:border-primary focus-ring',
     'btn-primary': 'px-5.5 py-3.5 rounded-xl border-none bg-primary text-bg font-bold cursor-pointer transition hover:enabled:bg-primary-hover active:enabled:scale-97 disabled:opacity-45 disabled:cursor-not-allowed focus-ring',
   },
   preflights: [

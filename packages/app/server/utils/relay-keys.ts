@@ -1,6 +1,7 @@
 import { derivePairKey, importExchangePublicKey, loadGameKeys, rotateGameKey, wrapGameKey, type StoredGameKeys } from '@dm-hero/seal'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
+import { syncTableMap } from './share/map'
 import { syncTableShares, withTableLock } from './share/sync'
 
 // Game key delivery per player device. New devices need the DM's approval first -
@@ -78,6 +79,8 @@ export async function rotateTableKey(tableId: number) {
     }
     // Everything players have was sealed with the old key -> re-send all
     db.prepare('UPDATE game_table_shares SET content_hash = NULL WHERE game_table_id = ?').run(tableId)
+    db.prepare('UPDATE game_tables SET map_hash = NULL, fog_hash = NULL WHERE id = ?').run(tableId)
   })
   await syncTableShares(db, tableId)
+  await syncTableMap(db, tableId)
 }

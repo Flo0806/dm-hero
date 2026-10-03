@@ -18,6 +18,29 @@
       </div>
     </header>
 
+    <!-- Tabs only while the DM shows a map -->
+    <div v-if="encrypted && tableMap" role="tablist" class="w-full max-w-6xl mx-auto px-5 pb-5 flex gap-2" :aria-label="$t('play.tabs.label')">
+      <button
+        v-for="item in TABS"
+        :id="`tab-${item}`"
+        :key="item"
+        :ref="el => tabRefs[item] = el as HTMLElement"
+        type="button"
+        role="tab"
+        :aria-selected="tab === item"
+        :aria-controls="`panel-${item}`"
+        :tabindex="tab === item ? 0 : -1"
+        class="px-4 py-2.5 rounded-xl border cursor-pointer font-semibold transition focus-ring inline-flex items-center gap-2"
+        :class="tab === item ? 'border-primary bg-primary text-bg' : 'border-line bg-surface/85 text-ink hover:border-primary'"
+        @click="tab = item"
+        @keydown.left.prevent="switchTab(-1)"
+        @keydown.right.prevent="switchTab(1)"
+      >
+        {{ $t(`play.tabs.${item}`) }}
+        <span v-if="item === 'map' && mapUnseen" class="px-1.5 py-0.5 rounded-md bg-primary text-bg text-xs">{{ $t('play.new') }}</span>
+      </button>
+    </div>
+
     <!-- Waiting for the DM to approve this device: show the symbols to compare -->
     <main v-if="!encrypted" class="flex-1 flex justify-center px-5 py-6">
       <div role="status" class="h-fit px-5 py-4 rounded-xl border border-line bg-surface/85 max-w-105 text-center">
@@ -33,9 +56,16 @@
       </div>
     </main>
 
+    <main v-else-if="tab === 'map' && tableMap" id="panel-map" role="tabpanel" aria-labelledby="tab-map" class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12">
+      <TableMap :map="tableMap" :fog="tableFog" />
+    </main>
+
     <!-- Second column only while something is open - otherwise the cards get the full width -->
     <main
       v-else
+      id="panel-shares"
+      :role="tableMap ? 'tabpanel' : undefined"
+      :aria-labelledby="tableMap ? 'tab-shares' : undefined"
       class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12"
       :class="{ 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-8': isDesktop && openShares.length }"
     >
@@ -78,7 +108,7 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog } = connect(gameId)
 const { isNew, markSeen } = useSeenShares(gameId)
 
 const search = ref('')
@@ -133,6 +163,26 @@ function showRevealed(shareId: string) {
   const share = shares.value.find(s => s.shareId === shareId)
   if (share && !openIds.value.includes(shareId)) open(share)
 }
+
+// Shares | map - the map tab exists while the DM shows one
+const TABS = ['shares', 'map'] as const
+const tab = ref<typeof TABS[number]>('shares')
+const tabRefs: Partial<Record<typeof TABS[number], HTMLElement>> = {}
+const mapUnseen = ref(false)
+
+function switchTab(direction: number) {
+  const next = TABS[(TABS.indexOf(tab.value) + direction + TABS.length) % TABS.length]!
+  tab.value = next
+  tabRefs[next]?.focus()
+}
+
+watch(() => tableMap.value?.mapId, (mapId) => {
+  if (!mapId) tab.value = 'shares'
+  else if (tab.value !== 'map') mapUnseen.value = true
+})
+watch(tab, (value) => {
+  if (value === 'map') mapUnseen.value = false
+})
 
 // Game over or kicked: back to the start page, which explains what happened
 watch(status, (value) => {

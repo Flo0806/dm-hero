@@ -45,6 +45,21 @@
     "revealName": "¡{previous} es {name}!",
     "revealNew": "Nuevo: {name}",
     "revealInfo": "Novedades sobre {name}: {fields}",
-    "revealShow": "Ver"
+    "revealShow": "Ver",
+    "tabs": {
+      "label": "Vista",
+      "shares": "Compartido",
+      "map": "Mapa"
+    },
+    "map": {
+      "label": "Mapa: {name}",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "fit": "Mapa completo",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "loading": "Cargando mapa …",
+      "hint": "Arrastra para mover, rueda del ratón o dos dedos para hacer zoom. Teclado: flechas, + y −, 0 para el mapa completo."
+    }
   }
 }
