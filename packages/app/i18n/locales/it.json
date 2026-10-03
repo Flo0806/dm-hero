@@ -555,7 +555,8 @@
     },
     "noMemberships": "Nessuna appartenenza a fazioni",
     "noMembershipsText": "Questo PNG non è ancora membro di nessuna fazione.",
-    "noLore": "Nessuna lore collegata ancora"
+    "noLore": "Nessuna lore collegata ancora",
+    "image": "Immagine"
   },
   "factions": {
     "title": "Fazioni",
@@ -2788,7 +2789,8 @@
       "empty": "Ancora niente di condiviso. Condividi i PNG con il pulsante di condivisione sulla loro scheda.",
       "fieldCount": "{count} campo | {count} campi",
       "displayName": "Nome per i giocatori (facoltativo)",
-      "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione."
+      "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione.",
+      "storageFull": "Lo spazio di questa partita è pieno. Condividi meno immagini o smetti di condividere alcuni elementi."
     }
   }
 }

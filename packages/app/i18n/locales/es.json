@@ -555,7 +555,8 @@
     },
     "noMemberships": "Sin pertenencia a facciones",
     "noMembershipsText": "Este PNJ aún no es miembro de ninguna facción.",
-    "noLore": "Aún no hay lore vinculado"
+    "noLore": "Aún no hay lore vinculado",
+    "image": "Imagen"
   },
   "factions": {
     "title": "Facciones",
@@ -2788,7 +2789,8 @@
       "empty": "Aún no has compartido nada. Comparte PNJ con el botón de compartir de su tarjeta.",
       "fieldCount": "{count} campo | {count} campos",
       "displayName": "Nombre para los jugadores (opcional)",
-      "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación."
+      "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación.",
+      "storageFull": "El almacenamiento de esta partida está lleno. Comparte menos imágenes o deja de compartir algunos elementos."
     }
   }
 }

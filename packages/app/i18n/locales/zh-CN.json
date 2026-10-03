@@ -555,7 +555,8 @@
     },
     "noMemberships": "无派系成员资格",
     "noMembershipsText": "该NPC尚未属于任何派系。",
-    "noLore": "暂无关联的传说"
+    "noLore": "暂无关联的传说",
+    "image": "图片"
   },
   "factions": {
     "title": "阵营",
@@ -2788,7 +2789,8 @@
       "empty": "还没有分享任何内容。用卡片上的分享按钮分享 NPC。",
       "fieldCount": "{count} 个字段",
       "displayName": "给玩家看的名字（可选）",
-      "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。"
+      "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",
+      "storageFull": "本局游戏的存储空间已满。请少分享一些图片，或停止分享部分内容。"
     }
   }
 }

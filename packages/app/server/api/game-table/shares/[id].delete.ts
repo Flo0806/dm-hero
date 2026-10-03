@@ -1,6 +1,7 @@
 import { getDb } from '../../../utils/db'
 import { requireNumericParam } from '../../../utils/game-table'
 import { deleteRelayShare, getRelayAuth } from '../../../utils/relay'
+import { removeShareFiles } from '../../../utils/share/files'
 
 // Stop sharing - players lose it right away
 export default defineEventHandler(async (event) => {
@@ -11,7 +12,10 @@ export default defineEventHandler(async (event) => {
   if (!share) throw createError({ statusCode: 404, message: 'Share not found' })
 
   const auth = getRelayAuth(db, share.game_table_id)
-  if (auth) await deleteRelayShare(auth, share.share_key)
+  if (auth) {
+    await removeShareFiles(db, auth, id)
+    await deleteRelayShare(auth, share.share_key)
+  }
   db.prepare('DELETE FROM game_table_shares WHERE id = ?').run(id)
   return { success: true }
 })

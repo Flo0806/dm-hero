@@ -555,7 +555,8 @@
     },
     "noMemberships": "Aucune appartenance à une faction",
     "noMembershipsText": "Ce PNJ n'est encore membre d'aucune faction.",
-    "noLore": "Aucun lore lié pour l'instant"
+    "noLore": "Aucun lore lié pour l'instant",
+    "image": "Image"
   },
   "factions": {
     "title": "Factions",
@@ -2788,7 +2789,8 @@
       "empty": "Rien de partagé pour l'instant. Partage des PNJ avec le bouton de partage de leur carte.",
       "fieldCount": "{count} champ | {count} champs",
       "displayName": "Nom pour les joueurs (facultatif)",
-      "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation."
+      "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation.",
+      "storageFull": "Le stockage de cette partie est plein. Partage moins d’images ou retire certains partages."
     }
   }
 }

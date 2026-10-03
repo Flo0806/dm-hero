@@ -7,16 +7,23 @@ export type ShareType = (typeof SHARE_TYPES)[number]
 /** Text in every app language (players pick theirs), or plain text written by the DM */
 export type LocalizedText = Partial<Record<'de' | 'en' | 'es' | 'fr' | 'it' | 'zh-CN', string>> | string
 
-/** How the player app renders a field - it knows formats, not share types */
-export type SharedFieldFormat = 'text' | 'markdown'
-
-/** One shared field as players see it - label and value in all languages, ready to read */
-export interface SharedField {
+/** An encrypted file on the relay - key + iv only travel inside the signed envelope */
+export interface SharedFileRef {
+  fileId: string
   key: string
-  format: SharedFieldFormat
-  label: LocalizedText
-  value: LocalizedText
+  iv: string
+  mime: string
 }
+
+/** How the player app renders a field - it knows formats, not share types */
+export type SharedField
+  = | { key: string, format: 'text' | 'markdown', label: LocalizedText, value: LocalizedText }
+    | { key: string, format: 'image', label: LocalizedText, image: { thumb: SharedFileRef, full: SharedFileRef } }
+
+/** What a share kind builds: images are still a local source, uploaded by the sync */
+export type BuiltField
+  = | Extract<SharedField, { format: 'text' | 'markdown' }>
+    | { key: string, format: 'image', label: LocalizedText, source: string }
 
 /** Decrypted content of a share on the player side */
 export interface ShareContent {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  createGameKeys, loadGameKeys, generateDeviceKeyPair, fingerprint,
+  createGameKeys, loadGameKeys, generateDeviceKeyPair, fingerprint, encryptFile, decryptFile,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
   type EnvelopeHeader,
@@ -111,5 +111,20 @@ describe('device fingerprint', () => {
     expect(fa).toHaveLength(3)
     expect(await fingerprint(a)).toEqual(fa)
     expect(await fingerprint(b)).not.toEqual(fa)
+  })
+})
+
+describe('file encryption', () => {
+  it('round-trips bytes and rejects tampering or a wrong key', async () => {
+    const data = globalThis.crypto.getRandomValues(new Uint8Array(4096))
+    const { ciphertext, fileKey } = await encryptFile(data)
+    expect(await decryptFile(new Uint8Array(ciphertext), fileKey)).toEqual(data)
+
+    const tampered = new Uint8Array(ciphertext)
+    tampered[100] = tampered[100]! ^ 1
+    await expect(decryptFile(tampered, fileKey)).rejects.toThrow()
+
+    const other = (await encryptFile(data)).fileKey
+    await expect(decryptFile(new Uint8Array(ciphertext), other)).rejects.toThrow()
   })
 })

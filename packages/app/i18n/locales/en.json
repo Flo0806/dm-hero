@@ -555,7 +555,8 @@
     },
     "noMemberships": "No Faction Memberships",
     "noMembershipsText": "This NPC is not a member of any faction yet.",
-    "noLore": "No linked lore yet"
+    "noLore": "No linked lore yet",
+    "image": "Image"
   },
   "factions": {
     "title": "Factions",
@@ -2788,7 +2789,8 @@
       "empty": "Nothing shared yet. Share NPCs with the share button on their card.",
       "fieldCount": "{count} field | {count} fields",
       "displayName": "Name for the players (optional)",
-      "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal."
+      "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",
+      "storageFull": "This game's storage is full. Share fewer images or stop sharing some items."
     }
   }
 }

@@ -3,15 +3,22 @@
 
 export type LocalizedText = Partial<Record<string, string>> | string
 
-/** The player app renders by format only - it knows nothing about NPCs, items ... */
-export type SharedFieldFormat = 'text' | 'markdown'
-
-export interface SharedField {
+/** An encrypted file on the relay - key + iv come inside the DM-signed envelope */
+export interface SharedFileRef {
+  fileId: string
   key: string
-  format: SharedFieldFormat
-  label: LocalizedText
-  value: LocalizedText
+  iv: string
+  mime: string
 }
+
+/** The player app renders by format only - it knows nothing about NPCs, items ... */
+export type SharedField
+  = | { key: string, format: 'text' | 'markdown', label: LocalizedText, value: LocalizedText }
+    | { key: string, format: 'image', label: LocalizedText, image: { thumb: SharedFileRef, full: SharedFileRef } }
+
+export type ImageField = Extract<SharedField, { format: 'image' }>
+
+export const imageOf = (share: ShareContent) => share.fields.find((f): f is ImageField => f.format === 'image')
 
 export interface ShareContent {
   shareId: string

@@ -17,6 +17,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Relay database (node:sqlite). Override with NUXT_DATABASE_PATH
     databasePath: '.data/staging.db',
+    // Encrypted files (images ...). Override with NUXT_FILES_DIR
+    filesDir: '.data/files',
   },
 
   // Live game pages need the browser (EventSource) - no server rendering

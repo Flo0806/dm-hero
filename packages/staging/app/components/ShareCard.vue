@@ -6,8 +6,9 @@
     :aria-pressed="active"
     @click="emit('open')"
   >
-    <!-- Preview image comes with image sharing; until then a monogram -->
-    <span aria-hidden="true" class="shrink-0 size-14 rounded-lg bg-primary/15 text-primary grid place-items-center text-2xl font-bold">
+    <!-- Preview image if one is shared, otherwise a monogram -->
+    <img v-if="thumb" :src="thumb" alt="" class="shrink-0 size-14 rounded-lg object-cover" />
+    <span v-else aria-hidden="true" class="shrink-0 size-14 rounded-lg bg-primary/15 text-primary grid place-items-center text-2xl font-bold">
       {{ share.title.charAt(0).toUpperCase() }}
     </span>
     <span class="flex-1 min-w-0">
@@ -22,7 +23,8 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ share: ShareContent, isNew: boolean, active: boolean, revealed?: boolean }>()
+const props = defineProps<{ share: ShareContent, isNew: boolean, active: boolean, revealed?: boolean }>()
 const emit = defineEmits<{ open: [] }>()
 const { locale } = useI18n()
+const thumb = useSharedImage(() => imageOf(props.share)?.image.thumb)
 </script>

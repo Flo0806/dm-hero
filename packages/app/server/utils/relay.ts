@@ -4,7 +4,7 @@ import type Database from 'better-sqlite3'
 // Talks to the player relay (packages/staging) - always server to server,
 // so the DM token never reaches a browser.
 
-interface RelayAuth {
+export interface RelayAuth {
   relay_game_id: string
   relay_dm_token: string
 }
@@ -82,6 +82,29 @@ export async function putRelayShare(auth: RelayAuth, shareKey: string, envelope:
 
 export async function deleteRelayShare(auth: RelayAuth, shareKey: string) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/shares/${shareKey}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+  })
+}
+
+/** Encrypted file bytes for the relay's file storage */
+export async function putRelayFile(auth: RelayAuth, fileId: string, ciphertext: Uint8Array) {
+  try {
+    await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/files/${fileId}`, {
+      method: 'PUT',
+      headers: { 'authorization': `Bearer ${auth.relay_dm_token}`, 'content-type': 'application/octet-stream' },
+      body: ciphertext,
+    })
+  }
+  catch (error) {
+    const status = (error as { statusCode?: number }).statusCode
+    if (status === 413) throw createError({ statusCode: 413, message: 'Storage limit of this game reached' })
+    throw error
+  }
+}
+
+export async function deleteRelayFile(auth: RelayAuth, fileId: string) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/files/${fileId}`, {
     method: 'DELETE',
     headers: { authorization: `Bearer ${auth.relay_dm_token}` },
   })

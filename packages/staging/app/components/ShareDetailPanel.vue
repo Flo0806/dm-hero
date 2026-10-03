@@ -8,8 +8,9 @@
         ×
       </button>
     </div>
+    <img v-if="image" :src="image" :alt="share.title" class="block w-full max-h-[60vh] mb-5 rounded-xl object-contain bg-black/20" />
     <dl class="m-0 flex flex-col gap-4">
-      <div v-for="field in share.fields" :key="field.key">
+      <div v-for="field in textFields" :key="field.key">
         <dt class="text-sm text-muted">
           {{ pickText(field.label, locale) }}
         </dt>
@@ -25,9 +26,13 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ share: ShareContent }>()
+const props = defineProps<{ share: ShareContent }>()
 const emit = defineEmits<{ close: [] }>()
 const { locale } = useI18n()
+
+// The picture sits on top, the text fields below it
+const image = useSharedImage(() => imageOf(props.share)?.image.full)
+const textFields = computed(() => props.share.fields.filter((f): f is Exclude<SharedField, ImageField> => f.format !== 'image'))
 </script>
 
 <style scoped>

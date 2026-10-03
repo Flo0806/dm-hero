@@ -555,7 +555,8 @@
     },
     "noMemberships": "Keine Fraktionsmitgliedschaften",
     "noMembershipsText": "Dieser NPC ist noch kein Mitglied einer Fraktion.",
-    "noLore": "Kein verknüpftes Wissen vorhanden"
+    "noLore": "Kein verknüpftes Wissen vorhanden",
+    "image": "Bild"
   },
   "factions": {
     "title": "Fraktionen",
@@ -2788,7 +2789,8 @@
       "empty": "Noch nichts geteilt. Teile NPCs über den Teilen-Knopf auf ihrer Karte.",
       "fieldCount": "{count} Feld | {count} Felder",
       "displayName": "Name für die Spieler (optional)",
-      "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung."
+      "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung.",
+      "storageFull": "Der Speicher dieses Spiels ist voll. Teile weniger Bilder oder nimm einzelne Freigaben zurück."
     }
   }
 }

@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
 import { loadGameKeys, seal, type StoredGameKeys } from '@dm-hero/seal'
-import type { ShareContent, ShareType } from '~~/types/share'
-import { deleteRelayShare, getRelayAuth, putRelayShare } from '../relay'
+import type { BuiltField, SharedField, ShareContent, ShareType } from '~~/types/share'
+import { deleteRelayShare, getRelayAuth, putRelayShare, type RelayAuth } from '../relay'
+import { ensureShareImage, removeShareFiles } from './files'
 import { translateAll } from './i18n'
 import { getShareKind } from './registry'
 
@@ -23,6 +24,29 @@ interface ShareRow {
 
 const hash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 
+/** Images become uploaded, encrypted file refs; a missing image file just drops the field */
+async function resolveFields(db: Database.Database, auth: RelayAuth, shareId: number, fields: BuiltField[]): Promise<SharedField[]> {
+  const resolved: SharedField[] = []
+  let imageSource: string | null = null
+  for (const field of fields) {
+    if (field.format !== 'image') {
+      resolved.push(field)
+      continue
+    }
+    try {
+      resolved.push({ key: field.key, format: 'image', label: field.label, image: await ensureShareImage(db, auth, shareId, field.source) })
+      imageSource = field.source
+    }
+    catch (error) {
+      if ((error as { statusCode?: number }).statusCode === 413) throw error
+      console.error('[Share] Image skipped:', error)
+    }
+  }
+  // Image unticked or removed -> its files go
+  if (!imageSource) await removeShareFiles(db, auth, shareId)
+  return resolved
+}
+
 export async function syncTableShares(db: Database.Database, tableId: number) {
   const auth = getRelayAuth(db, tableId)
   const table = db.prepare('SELECT relay_game_id, e2e_keys FROM game_tables WHERE id = ?')
@@ -38,6 +62,7 @@ export async function syncTableShares(db: Database.Database, tableId: number) {
 
     // Entity deleted -> withdraw the share
     if (!built) {
+      await removeShareFiles(db, auth, share.id)
       await deleteRelayShare(auth, share.share_key)
       db.prepare('DELETE FROM game_table_shares WHERE id = ?').run(share.id)
       continue
@@ -54,7 +79,7 @@ export async function syncTableShares(db: Database.Database, tableId: number) {
       type: share.entity_type,
       typeLabel: translateAll(kind.typeLabel) ?? share.entity_type,
       title: visible.title,
-      fields: visible.fields,
+      fields: await resolveFields(db, auth, share.id, visible.fields),
       sharedAt: share.created_at,
       updatedAt: now,
     }

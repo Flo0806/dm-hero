@@ -2787,6 +2787,31 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 60: Added display_name to game_table_shares')
     },
   },
+  {
+    version: 61,
+    name: 'game_table_share_files',
+    up: (db) => {
+      // Encrypted files uploaded for a share (image thumb + full). source = local
+      // image path: a new image means a new source -> new upload, old files removed.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_share_files (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          share_id INTEGER NOT NULL,
+          source TEXT NOT NULL,
+          variant TEXT NOT NULL,
+          file_id TEXT NOT NULL,
+          file_key TEXT NOT NULL,
+          iv TEXT NOT NULL,
+          mime TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          FOREIGN KEY (share_id) REFERENCES game_table_shares(id) ON DELETE CASCADE,
+          UNIQUE (share_id, source, variant)
+        )
+      `)
+
+      console.log('✅ Migration 61: Created game_table_share_files')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { NpcMetadata } from '~~/types/npc'
-import type { LocalizedText, SharedField } from '~~/types/share'
+import type { BuiltField, LocalizedText } from '~~/types/share'
 import { joinLocalized, translateAll } from '../i18n'
 import type { ShareKind } from '../registry'
 import { resolveEntityLinks } from '../text'
@@ -11,6 +11,7 @@ import { resolveEntityLinks } from '../text'
 type KnownKeys<T> = keyof { [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K] }
 
 const NPC_FIELD_POLICY = {
+  image: 'share',
   description: 'share',
   race: 'share',
   class: 'share',
@@ -21,7 +22,7 @@ const NPC_FIELD_POLICY = {
   location: 'share',
   faction: 'share',
   relationship: 'private',
-} as const satisfies Record<KnownKeys<NpcMetadata> | 'description', 'share' | 'private'>
+} as const satisfies Record<KnownKeys<NpcMetadata> | 'description' | 'image', 'share' | 'private'>
 
 type NpcShareField = { [K in keyof typeof NPC_FIELD_POLICY]: (typeof NPC_FIELD_POLICY)[K] extends 'share' ? K : never }[keyof typeof NPC_FIELD_POLICY]
 
@@ -34,7 +35,7 @@ const list = (value: unknown) => (Array.isArray(value) ? value : value ? [value]
 const localize = (path: string, values: string[]): LocalizedText | null =>
   values.length ? joinLocalized(values.map(v => translateAll(`${path}.${v}`) ?? v)) : null
 
-function fieldValue(db: Database.Database, field: NpcShareField, npc: NpcRow, meta: NpcMetadata): LocalizedText | null {
+function fieldValue(db: Database.Database, field: Exclude<NpcShareField, 'image'>, npc: NpcRow, meta: NpcMetadata): LocalizedText | null {
   switch (field) {
     case 'description': return npc.description?.trim() ? resolveEntityLinks(db, npc.description) || null : null
     case 'race': return localize('referenceData.raceNames', list(meta.race))
@@ -68,6 +69,7 @@ interface NpcRow {
   description: string | null
   metadata: string | null
   location_id: number | null
+  image_url: string | null
 }
 
 export const npcShareKind: ShareKind = {
@@ -75,16 +77,21 @@ export const npcShareKind: ShareKind = {
   fields: NPC_SHARE_FIELDS,
   build(db, entityId, fields) {
     const npc = db.prepare(`
-      SELECT e.id, e.name, e.description, e.metadata, e.location_id FROM entities e
+      SELECT e.id, e.name, e.description, e.metadata, e.location_id, e.image_url FROM entities e
       JOIN entity_types t ON t.id = e.type_id AND t.name = 'NPC'
       WHERE e.id = ? AND e.deleted_at IS NULL
     `).get(entityId) as NpcRow | undefined
     if (!npc) return null
 
     const meta = JSON.parse(npc.metadata || '{}') as NpcMetadata
-    const shared: SharedField[] = []
+    const shared: BuiltField[] = []
     for (const field of NPC_SHARE_FIELDS) {
       if (!fields.includes(field)) continue
+      // Image: the sync resizes, encrypts and uploads it
+      if (field === 'image') {
+        if (npc.image_url) shared.push({ key: field, format: 'image', label: translateAll('npcs.image') ?? 'Image', source: npc.image_url })
+        continue
+      }
       const value = fieldValue(db, field, npc, meta)
       if (value) {
         shared.push({ key: field, format: field === 'description' ? 'markdown' : 'text', label: translateAll(`npcs.${field}`) ?? field, value })

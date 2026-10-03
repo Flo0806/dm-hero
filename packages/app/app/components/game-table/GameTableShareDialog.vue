@@ -113,8 +113,9 @@ async function run(action: () => Promise<unknown>, message: string) {
     snackbarStore.success(message)
     close()
   }
-  catch {
-    snackbarStore.error(t('gameTable.error'))
+  catch (e) {
+    // 413 = this game's storage on the player server is full (images)
+    snackbarStore.error((e as { statusCode?: number }).statusCode === 413 ? t('gameTable.share.storageFull') : t('gameTable.error'))
   }
   finally {
     busy.value = false

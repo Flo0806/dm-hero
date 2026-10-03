@@ -27,6 +27,13 @@ const SCHEMA = `
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (game_id, id)
   );
+  CREATE TABLE IF NOT EXISTS files (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (game_id, id)
+  );
   CREATE TABLE IF NOT EXISTS player_sessions (
     token_hash TEXT PRIMARY KEY,
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
