@@ -16,6 +16,8 @@
     "electron:build:win": "pnpm --filter @dm-hero/app electron:build:win",
     "electron:rebuild": "pnpm --filter @dm-hero/app electron:rebuild",
     "electron:start": "pnpm --filter @dm-hero/app electron:start",
+    "mode:web": "pnpm --filter @dm-hero/app mode:web",
+    "mode:electron": "pnpm --filter @dm-hero/app mode:electron",
     "version:bump": "node scripts/version-bump.js",
     "changeset": "changeset",
     "changeset:version": "changeset version",
@@ -26,11 +28,11 @@
   },
   "packageManager": "pnpm@10.34.0",
   "dependencies": {
-    "nuxt": "^4.4.6",
-    "zod": "^4.4.3"
+    "nuxt": "^4.5.2",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.0"
+    "@changesets/cli": "^2.31.1"
   }
 }

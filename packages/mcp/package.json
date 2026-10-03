@@ -13,10 +13,10 @@
     "build": "node build.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^3.24.0"
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.12"
   }
 }
