@@ -2790,7 +2790,8 @@
       "fieldCount": "{count} field | {count} fields",
       "displayName": "Name for the players (optional)",
       "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",
-      "storageFull": "This game's storage is full. Share fewer images or stop sharing some items."
+      "storageFull": "This game's storage is full. Share fewer images or stop sharing some items.",
+      "rememberDefaults": "Remember this selection as default for {type}"
     }
   }
 }

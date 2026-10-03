@@ -2790,7 +2790,8 @@
       "fieldCount": "{count} campo | {count} campos",
       "displayName": "Nombre para los jugadores (opcional)",
       "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación.",
-      "storageFull": "El almacenamiento de esta partida está lleno. Comparte menos imágenes o deja de compartir algunos elementos."
+      "storageFull": "El almacenamiento de esta partida está lleno. Comparte menos imágenes o deja de compartir algunos elementos.",
+      "rememberDefaults": "Recordar esta selección como predeterminada para {type}"
     }
   }
 }

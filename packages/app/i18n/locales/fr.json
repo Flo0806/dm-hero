@@ -2790,7 +2790,8 @@
       "fieldCount": "{count} champ | {count} champs",
       "displayName": "Nom pour les joueurs (facultatif)",
       "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation.",
-      "storageFull": "Le stockage de cette partie est plein. Partage moins d’images ou retire certains partages."
+      "storageFull": "Le stockage de cette partie est plein. Partage moins d’images ou retire certains partages.",
+      "rememberDefaults": "Retenir cette sélection par défaut pour {type}"
     }
   }
 }

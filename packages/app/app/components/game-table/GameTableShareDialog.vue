@@ -29,6 +29,15 @@
           density="compact"
           hide-details
         />
+        <v-checkbox
+          v-if="differsFromDefaults"
+          v-model="rememberDefaults"
+          :label="$t('gameTable.share.rememberDefaults', { type: typeLabel })"
+          color="primary"
+          density="compact"
+          hide-details
+          class="mt-3"
+        />
         <v-alert type="info" variant="tonal" density="compact" class="mt-4">
           {{ $t('gameTable.share.liveHint') }}
         </v-alert>
@@ -83,6 +92,14 @@ const selected = ref<string[]>([])
 /** Alias instead of the real name - clearing it later is the reveal */
 const displayName = ref<string | null>(null)
 const step = ref<'choose' | 'confirm'>('choose')
+const rememberDefaults = ref(false)
+
+// Remembered ticks of this type (or everything if nothing remembered yet)
+const defaults = computed(() => (target.value ? store.shareDefaults[target.value.type] : undefined) ?? availableFields.value)
+const differsFromDefaults = computed(() =>
+  selected.value.length !== defaults.value.length || selected.value.some(f => !defaults.value.includes(f)),
+)
+const typeLabel = computed(() => target.value ? t(`${FIELD_LABEL_NAMESPACE[target.value.type]}.title`) : '')
 const busy = ref(false)
 
 // Already shared: its fields. New: everything ticked (defaults per type come later).
@@ -96,7 +113,8 @@ watch(target, async (value) => {
   catch {
     snackbarStore.error(t('gameTable.error'))
   }
-  selected.value = existing.value ? [...existing.value.fields] : [...availableFields.value]
+  rememberDefaults.value = false
+  selected.value = existing.value ? [...existing.value.fields] : [...defaults.value]
   displayName.value = existing.value?.display_name ?? null
 })
 
@@ -122,6 +140,9 @@ async function run(action: () => Promise<unknown>, message: string) {
   }
 }
 
-const save = () => run(() => store.share(target.value!.type, target.value!.entityId, selected.value, displayName.value), t('gameTable.share.done'))
+const save = () => run(async () => {
+  await store.share(target.value!.type, target.value!.entityId, selected.value, displayName.value)
+  if (rememberDefaults.value && differsFromDefaults.value) await store.saveShareDefaults(target.value!.type, selected.value)
+}, t('gameTable.share.done'))
 const stopSharing = () => run(() => store.unshare(existing.value!.id), t('gameTable.share.stopped'))
 </script>

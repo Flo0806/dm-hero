@@ -9,6 +9,8 @@ interface GameTableState {
   shares: GameTableShare[]
   /** Fields each share type offers (from the server) */
   shareKinds: Partial<Record<ShareType, string[]>>
+  /** The DM's remembered ticks per share type */
+  shareDefaults: Partial<Record<ShareType, string[]>>
   /** What the global share dialog is open for */
   shareTarget: { type: ShareType, entityId: number, name: string } | null
 }
@@ -21,6 +23,7 @@ export const useGameTableStore = defineStore('gameTable', {
     loadedCampaignId: null,
     shares: [],
     shareKinds: {},
+    shareDefaults: {},
     shareTarget: null,
   }),
 
@@ -90,7 +93,17 @@ export const useGameTableStore = defineStore('gameTable', {
     /** Fields per share type - fetched once, independent of whether a game exists yet */
     async ensureShareKinds() {
       if (Object.keys(this.shareKinds).length) return
-      this.shareKinds = await $fetch<Partial<Record<ShareType, string[]>>>('/api/game-table/share-kinds')
+      const [kinds, defaults] = await Promise.all([
+        $fetch<Partial<Record<ShareType, string[]>>>('/api/game-table/share-kinds'),
+        $fetch<Partial<Record<ShareType, string[]>>>('/api/game-table/share-defaults'),
+      ])
+      this.shareKinds = kinds
+      this.shareDefaults = defaults
+    },
+
+    async saveShareDefaults(type: ShareType, fields: string[]) {
+      await $fetch('/api/game-table/share-defaults', { method: 'PUT', body: { type, fields } })
+      this.shareDefaults = { ...this.shareDefaults, [type]: [...fields] }
     },
 
     /** Share (or change the fields of) an entity - players see it right away */

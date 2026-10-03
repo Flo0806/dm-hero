@@ -2790,7 +2790,8 @@
       "fieldCount": "{count} 个字段",
       "displayName": "给玩家看的名字（可选）",
       "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",
-      "storageFull": "本局游戏的存储空间已满。请少分享一些图片，或停止分享部分内容。"
+      "storageFull": "本局游戏的存储空间已满。请少分享一些图片，或停止分享部分内容。",
+      "rememberDefaults": "将此选择记为{type}的默认设置"
     }
   }
 }

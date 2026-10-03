@@ -2790,7 +2790,8 @@
       "fieldCount": "{count} Feld | {count} Felder",
       "displayName": "Name für die Spieler (optional)",
       "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung.",
-      "storageFull": "Der Speicher dieses Spiels ist voll. Teile weniger Bilder oder nimm einzelne Freigaben zurück."
+      "storageFull": "Der Speicher dieses Spiels ist voll. Teile weniger Bilder oder nimm einzelne Freigaben zurück.",
+      "rememberDefaults": "Diese Auswahl als Vorgabe für {type} merken"
     }
   }
 }
