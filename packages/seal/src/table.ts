@@ -1,0 +1,135 @@
+// Protocol of the shown map between DM Hero and the player app: what goes into
+// the encrypted envelopes, and how both sides check and draw it. One source for both.
+// Coordinates are percent of the map (x of width, y of height), radius percent of width.
+
+export type FogMode = 'reveal' | 'cover'
+
+/** One brush stroke - a single point is a dab */
+export interface FogStroke {
+  mode: FogMode
+  radius: number
+  points: Array<[number, number]>
+}
+
+export interface MapFog {
+  /** Starting state before any stroke: everything covered or everything visible */
+  base: 'covered' | 'clear'
+  strokes: FogStroke[]
+}
+
+export const EMPTY_FOG: MapFog = { base: 'covered', strokes: [] }
+
+/** An encrypted file on the relay - key + iv travel inside the signed envelope */
+export interface TableFileRef {
+  fileId: string
+  key: string
+  iv: string
+  mime: string
+}
+
+/** Slot "map": the map the players see. kind ties the content to its slot. */
+export interface TableMapContent {
+  kind: 'map'
+  mapId: number
+  name: string
+  image: TableFileRef
+  width: number
+  height: number
+}
+
+/** Slot "fog": its fog of war - a fog of another mapId means "all covered" */
+export interface TableFogContent {
+  kind: 'fog'
+  mapId: number
+  fog: MapFog
+}
+
+/** A ping on the shown map. text: a short DM note, shown a few seconds. */
+export interface TablePingContent {
+  mapId: number
+  x: number
+  y: number
+  text?: string
+}
+
+export const PING_TEXT_MAX = 80
+/** On screen: a ping pulses three times, a note stays long enough to read */
+export const PING_MS = 2600
+export const NOTE_MS = 8000
+export const DM_PING_COLOR = '#d4a574'
+const PLAYER_PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
+
+/** Same color for a player in DM Hero and on every player's device */
+export const pingColor = (from: string | number) =>
+  from === 'dm' ? DM_PING_COLOR : PLAYER_PING_COLORS[Math.abs(Number(from) || 0) % PLAYER_PING_COLORS.length]!
+
+const inMap = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100
+
+export function isPingContent(value: unknown): value is TablePingContent {
+  const p = value as TablePingContent
+  if (!p || !Number.isInteger(p.mapId) || !inMap(p.x) || !inMap(p.y)) return false
+  return p.text === undefined || (typeof p.text === 'string' && p.text.length <= PING_TEXT_MAX)
+}
+
+// Fog limits: a fog must stay small enough for the relay (1 MB per envelope;
+// encrypted + base64 makes ~1.35x of the JSON size)
+export const FOG_MAX_STROKES = 1500
+/** Points per stroke - longer strokes are split while painting */
+export const FOG_MAX_POINTS = 500
+/** JSON size where DM Hero warns that the fog gets big */
+export const FOG_SOFT_LIMIT_BYTES = 500 * 1024
+/** JSON size DM Hero refuses to go beyond - "reveal/cover all" starts fresh */
+export const FOG_MAX_BYTES = 700 * 1024
+
+export function isMapFog(value: unknown): value is MapFog {
+  const fog = value as MapFog
+  if (!fog || (fog.base !== 'covered' && fog.base !== 'clear') || !Array.isArray(fog.strokes)) return false
+  if (fog.strokes.length > FOG_MAX_STROKES) return false
+  const isNum = (n: unknown) => typeof n === 'number' && Number.isFinite(n)
+  return fog.strokes.every(s =>
+    (s.mode === 'reveal' || s.mode === 'cover')
+    && isNum(s.radius) && s.radius > 0 && s.radius <= 50
+    && Array.isArray(s.points) && s.points.length > 0 && s.points.length <= FOG_MAX_POINTS
+    && s.points.every(p => Array.isArray(p) && p.length === 2 && isNum(p[0]) && isNum(p[1])))
+}
+
+export function isTableMapContent(value: unknown): value is TableMapContent {
+  const m = value as TableMapContent
+  return !!m && m.kind === 'map' && Number.isInteger(m.mapId) && typeof m.name === 'string'
+    && Number.isFinite(m.width) && m.width > 0 && Number.isFinite(m.height) && m.height > 0
+    && typeof m.image?.fileId === 'string' && typeof m.image.key === 'string' && typeof m.image.iv === 'string'
+}
+
+export function isTableFogContent(value: unknown): value is TableFogContent {
+  const f = value as TableFogContent
+  return !!f && f.kind === 'fog' && Number.isInteger(f.mapId) && isMapFog(f.fog)
+}
+
+/** Fewer points, same look: drops points closer than `tolerance` to the line (Ramer-Douglas-Peucker) */
+export function simplifyStroke(points: Array<[number, number]>, tolerance: number): Array<[number, number]> {
+  if (points.length < 3) return points
+  const [ax, ay] = points[0]!
+  const [bx, by] = points.at(-1)!
+  const length = Math.hypot(bx - ax, by - ay)
+  let farthest = 0
+  let index = 0
+  for (let i = 1; i < points.length - 1; i++) {
+    const [px, py] = points[i]!
+    const distance = length === 0
+      ? Math.hypot(px - ax, py - ay)
+      : Math.abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / length
+    if (distance > farthest) {
+      farthest = distance
+      index = i
+    }
+  }
+  if (farthest <= tolerance) return [points[0]!, points.at(-1)!]
+  return [...simplifyStroke(points.slice(0, index + 1), tolerance).slice(0, -1), ...simplifyStroke(points.slice(index), tolerance)]
+}
+
+/** SVG path of a stroke in the map's own pixel space (a single point = a round dot) */
+export function fogStrokePath(stroke: FogStroke, width: number, height: number) {
+  return stroke.points
+    .map(([x, y], i) => `${i ? 'L' : 'M'}${(x * width / 100).toFixed(1)} ${(y * height / 100).toFixed(1)}`)
+    .join(' ') + (stroke.points.length === 1 ? ' l0 0' : '')
+}

@@ -1,4 +1,4 @@
-import type { FogStroke, MapFog } from '~~/types/fog'
+import { fogStrokePath, type FogStroke, type MapFog } from '~~/types/fog'
 
 // Renders a fog of war as SVG: a dark layer with a mask - white = covered,
 // black = visible. Strokes are drawn in order, so cover/reveal overlap correctly.
@@ -13,17 +13,9 @@ export interface FogCanvas {
   render: (fog: MapFog) => void
 }
 
-export function strokePath(stroke: FogStroke, width: number, height: number) {
-  return stroke.points
-    .map(([x, y], i) => `${i ? 'L' : 'M'}${(x * width / 100).toFixed(1)} ${(y * height / 100).toFixed(1)}`)
-    .join(' ')
-    // A single point needs a (zero-length) line to show its round cap
-    + (stroke.points.length === 1 ? ' l0 0' : '')
-}
-
 function strokeElement(stroke: FogStroke, width: number, height: number) {
   const path = document.createElementNS(SVG_NS, 'path')
-  path.setAttribute('d', strokePath(stroke, width, height))
+  path.setAttribute('d', fogStrokePath(stroke, width, height))
   path.setAttribute('fill', 'none')
   path.setAttribute('stroke', stroke.mode === 'cover' ? 'white' : 'black')
   path.setAttribute('stroke-width', String(stroke.radius * 2 * width / 100))
@@ -69,7 +61,7 @@ export function createFogCanvas(width: number, height: number, color: string): F
         live = strokeElement(stroke, width, height)
         mask.append(live)
       }
-      live.setAttribute('d', strokePath(stroke, width, height))
+      live.setAttribute('d', fogStrokePath(stroke, width, height))
     },
   }
 }

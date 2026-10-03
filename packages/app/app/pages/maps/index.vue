@@ -163,8 +163,9 @@
             :climate-areas="selectedMapClimateAreas"
             :climate-weather="climateWeatherByZone"
             :measure-points="measurePoints"
-            :fog="showFog ? mapFog.fog.value : null"
-            :fog-tool="fogMode ? { mode: fogToolMode, radius: FOG_BRUSH_SIZES[fogBrush] } : null"
+            :fog="showFog && mapFog.ready.value ? mapFog.fog.value : null"
+            :fog-tool="fogMode && mapFog.ready.value ? { mode: fogToolMode, radius: FOG_BRUSH_SIZES[fogBrush] } : null"
+            :ping-enabled="shownToPlayers"
             @fog-stroke="mapFog.addStroke"
             @long-press="onLongPress"
             @map-right-click="onMapRightClick"
@@ -187,6 +188,7 @@
           v-model:mode="fogToolMode"
           v-model:size="fogBrush"
           :can-undo="mapFog.canUndo.value"
+          :disabled="!mapFog.ready.value"
           @undo="mapFog.undo"
           @reveal-all="mapFog.revealAll"
           @cover-all="mapFog.coverAll"
@@ -590,7 +592,7 @@ import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/m
 import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
 import type { EntityPreviewType } from '~/components/shared/EntityPreviewDialog.vue'
 import { useSnackbarStore } from '~/stores/snackbar'
-import { FOG_BRUSH_SIZES, type FogBrushSize, type FogMode } from '~~/types/fog'
+import { FOG_BRUSH_SIZES, NOTE_MS, PING_MS, pingColor, type FogBrushSize, type FogMode } from '~~/types/fog'
 
 const { t } = useI18n()
 const snackbarStore = useSnackbarStore()
@@ -793,18 +795,15 @@ const showFog = computed(() => fogMode.value || shownToPlayers.value)
 
 // Pings: long press on a shown map - everyone at the table sees it pulse
 const viewerRef = ref<{ ping: (x: number, y: number, label: string, color: string, durationMs?: number) => void } | null>(null)
-const PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
-const DM_PING_COLOR = '#D4A574'
 
 function onLongPress(position: { x: number, y: number }) {
   if (!selectedMap.value || !shownToPlayers.value) return
-  viewerRef.value?.ping(position.x, position.y, t('gameTable.map.you'), DM_PING_COLOR)
+  viewerRef.value?.ping(position.x, position.y, t('gameTable.map.you'), pingColor('dm'), PING_MS)
   gameTableStore.ping(selectedMap.value.id, position.x, position.y)
     .catch(error => console.error('[GameTable] Ping failed:', error))
 }
 
 // Notes: right-click on the shown map - a short text that pulses for a few seconds
-const NOTE_MS = 8000
 const showNoteDialog = ref(false)
 const notePosition = ref<{ x: number, y: number } | null>(null)
 
@@ -817,14 +816,24 @@ function onMapRightClick(position: { x: number, y: number }) {
 function sendNote(text: string) {
   if (!selectedMap.value || !notePosition.value) return
   const { x, y } = notePosition.value
-  viewerRef.value?.ping(x, y, text, DM_PING_COLOR, NOTE_MS)
+  viewerRef.value?.ping(x, y, text, pingColor('dm'), NOTE_MS)
   gameTableStore.ping(selectedMap.value.id, x, y, text)
     .catch(error => console.error('[GameTable] Note failed:', error))
 }
 
 useTablePings(() => gameTableStore.table?.id, (ping) => {
   if (ping.mapId !== selectedMap.value?.id) return
-  viewerRef.value?.ping(ping.x, ping.y, ping.name, PING_COLORS[Number(ping.from) % PING_COLORS.length]!)
+  viewerRef.value?.ping(ping.x, ping.y, ping.name, pingColor(ping.from), PING_MS)
+})
+
+// Fog never fails silently: big / full / not saved -> tell the DM
+watch(() => mapFog.size.value, (size, previous) => {
+  if (size === previous) return
+  if (size === 'big') snackbarStore.warning(t('maps.fog.big'))
+  else if (size === 'full') snackbarStore.error(t('maps.fog.full'))
+})
+watch(() => mapFog.saveFailed.value, (failed) => {
+  if (failed) snackbarStore.error(t('maps.fog.saveFailed'))
 })
 
 function toggleFogMode() {
@@ -939,7 +948,7 @@ function closeMap() {
   measureMode.value = false
   measurePoints.value = []
   fogMode.value = false
-  mapFog.flush()
+  mapFog.close()
 }
 
 // Reload just the climate areas for the current map.

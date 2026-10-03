@@ -29,6 +29,26 @@ interface FileRow {
 
 const toRef = (row: FileRow): SharedFileRef => ({ fileId: row.file_id, key: row.file_key, iv: row.iv, mime: row.mime })
 
+// Below the relay's 2 MB per file
+const MAX_FILE_BYTES = 2 * 1024 * 1024 - 1024
+
+/**
+ * Image -> webp -> encrypted with its own key -> uploaded to the relay.
+ * Tries the steps in order until one fits the relay's file limit.
+ */
+export async function encryptAndUploadImage(auth: RelayAuth, original: Buffer, steps: ReadonlyArray<{ width: number, quality: number }>) {
+  for (const { width, quality } of steps) {
+    const { data, info } = await sharp(original).rotate().resize({ width, withoutEnlargement: true })
+      .webp({ quality }).toBuffer({ resolveWithObject: true })
+    if (data.length > MAX_FILE_BYTES) continue
+    const { ciphertext, fileKey } = await encryptFile(new Uint8Array(data))
+    const ref: SharedFileRef = { fileId: randomBytes(16).toString('hex'), key: fileKey.key, iv: fileKey.iv, mime: 'image/webp' }
+    await putRelayFile(auth, ref.fileId, ciphertext)
+    return { ref, width: info.width, height: info.height, size: ciphertext.length }
+  }
+  throw createError({ statusCode: 413, message: 'Image too large' })
+}
+
 /** Thumb + full refs for an image (uploads it if this share hasn't got it yet) */
 export async function ensureShareImage(db: Database.Database, auth: RelayAuth, shareId: number, source: string) {
   const existing = db.prepare('SELECT variant, file_id, file_key, iv, mime FROM game_table_share_files WHERE share_id = ? AND source = ?')
@@ -38,14 +58,10 @@ export async function ensureShareImage(db: Database.Database, auth: RelayAuth, s
   const original = await readFile(join(getUploadPath(), source))
   for (const variant of Object.keys(VARIANTS) as Variant[]) {
     if (byVariant.has(variant)) continue
-    const { width, quality } = VARIANTS[variant]
-    const webp = await sharp(original).rotate().resize({ width, withoutEnlargement: true }).webp({ quality }).toBuffer()
-    const { ciphertext, fileKey } = await encryptFile(new Uint8Array(webp))
-    const row: FileRow = { variant, file_id: randomBytes(16).toString('hex'), file_key: fileKey.key, iv: fileKey.iv, mime: 'image/webp' }
-
-    await putRelayFile(auth, row.file_id, ciphertext)
+    const { ref, size } = await encryptAndUploadImage(auth, original, [VARIANTS[variant]])
+    const row: FileRow = { variant, file_id: ref.fileId, file_key: ref.key, iv: ref.iv, mime: ref.mime }
     db.prepare('INSERT INTO game_table_share_files (share_id, source, variant, file_id, file_key, iv, mime, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(shareId, source, variant, row.file_id, row.file_key, row.iv, row.mime, ciphertext.length)
+      .run(shareId, source, variant, row.file_id, row.file_key, row.iv, row.mime, size)
     byVariant.set(variant, row)
   }
 

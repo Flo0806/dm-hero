@@ -2363,7 +2363,10 @@
       "undo": "Rückgängig",
       "revealAll": "Alles aufdecken",
       "coverAll": "Alles zudecken",
-      "hint": "Mit gedrückter Maustaste malen – deine Spieler sehen nur, was aufgedeckt ist"
+      "hint": "Mit gedrückter Maustaste malen – deine Spieler sehen nur, was aufgedeckt ist",
+      "big": "Der Nebel wird sehr detailliert. „Alles aufdecken“ oder „Alles zudecken“ setzt ihn zurück.",
+      "full": "Der Nebel ist voll – weitere Striche gehen nicht. „Alles aufdecken“ oder „Alles zudecken“ setzt ihn zurück.",
+      "saveFailed": "Nebel konnte nicht gespeichert werden"
     },
     "helpPing": "Lange gedrückt halten: Ping für alle Spieler",
     "helpNote": "Rechtsklick: kurze Notiz für alle Spieler"
@@ -2825,7 +2828,11 @@
       "noteTitle": "Notiz für die Spieler",
       "noteLabel": "Text",
       "noteHint": "Erscheint mit einem Ping an dieser Stelle und verschwindet nach ein paar Sekunden.",
-      "noteSend": "Zeigen"
+      "noteSend": "Zeigen",
+      "pending": {
+        "offline": "Gespeichert – deine Spieler bekommen die Karte, sobald der Spieltisch erreichbar ist.",
+        "tooLarge": "Das Kartenbild ist zu groß für den Spieltisch. Lade eine kleinere Version hoch."
+      }
     }
   }
 }

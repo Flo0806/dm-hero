@@ -12,6 +12,7 @@ import type { MapFog, TableFogContent, TableMapContent } from '../../types/fog'
 const uploadDir = mkdtempSync(join(tmpdir(), 'dm-hero-table-map-'))
 const files = new Map<string, Uint8Array>()
 const calls: string[] = []
+let failUploads = false
 const state = new Map<string, Envelope>()
 
 vi.mock('../../server/utils/paths', async (importOriginal) => {
@@ -37,6 +38,7 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
     },
     putRelayFile: async (_a: unknown, fileId: string, data: Uint8Array) => {
       calls.push('file')
+      if (failUploads) throw new Error('relay down')
       files.set(fileId, data)
     },
     deleteRelayFile: async (_a: unknown, fileId: string) => {
@@ -59,6 +61,7 @@ const setFog = (fog: MapFog) => db.prepare('INSERT INTO map_fog (map_id, fog) VA
 beforeEach(async () => {
   files.clear()
   calls.length = 0
+  failUploads = false
   state.clear()
   db = getTestDb()
   ;(globalThis as Record<string, unknown>).createError = (o: { message: string }) => new Error(o.message)
@@ -78,11 +81,11 @@ describe('shown map on the relay', () => {
     expect(calls).toEqual(['file', 'put:fog', 'put:map'])
 
     const map = await open<TableMapContent>(await gameKey(), state.get('map')!)
-    expect(map).toMatchObject({ mapId, name: 'Welt', width: 3072, height: 1536 })
+    expect(map).toMatchObject({ kind: 'map', mapId, name: 'Welt', width: 3072, height: 1536 })
     const image = await sharp(Buffer.from(await decryptFile(files.get(map.image.fileId)! as Uint8Array<ArrayBuffer>, map.image))).metadata()
     expect([image.format, image.width]).toEqual(['webp', 3072])
     // No fog painted yet: everything covered
-    expect(await open<TableFogContent>(await gameKey(), state.get('fog')!)).toEqual({ mapId, fog: { base: 'covered', strokes: [] } })
+    expect(await open<TableFogContent>(await gameKey(), state.get('fog')!)).toEqual({ kind: 'fog', mapId, fog: { base: 'covered', strokes: [] } })
 
     calls.length = 0
     await syncTableMap(db, tableId)
@@ -129,5 +132,20 @@ describe('shown map on the relay', () => {
     expect((await open<TableMapContent>(await gameKey(), map)).mapId).toBe(mapId)
     await expect(open(oldKey, map)).rejects.toThrow()
     await expect(open(oldKey, state.get('fog')!)).rejects.toThrow()
+  })
+
+  it('a failed upload pauses instead of re-encoding the map every 5 seconds (review #5)', async () => {
+    show(mapId)
+    failUploads = true
+    await expect(syncTableMap(db, tableId)).rejects.toThrow('relay down')
+    await syncTableMap(db, tableId)
+    await syncTableMap(db, tableId)
+    expect(calls.filter(c => c === 'file')).toHaveLength(1)
+
+    // "Show" from the DM tries right away
+    failUploads = false
+    await syncTableMap(db, tableId, { force: true })
+    expect(calls.filter(c => c === 'file')).toHaveLength(2)
+    expect(state.has('map')).toBe(true)
   })
 })

@@ -28,7 +28,8 @@ const busy = ref(false)
 async function toggle() {
   busy.value = true
   try {
-    await store.setShownMap(shown.value ? null : props.mapId)
+    const pending = await store.setShownMap(shown.value ? null : props.mapId)
+    if (pending) snackbar.warning(t(`gameTable.map.pending.${pending}`))
   }
   catch (error) {
     console.error('[GameTable] Show map failed:', error)

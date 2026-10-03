@@ -2363,7 +2363,10 @@
       "undo": "Deshacer",
       "revealAll": "Revelar todo",
       "coverAll": "Cubrir todo",
-      "hint": "Mantén pulsado el botón del ratón para pintar: tus jugadores solo ven lo revelado"
+      "hint": "Mantén pulsado el botón del ratón para pintar: tus jugadores solo ven lo revelado",
+      "big": "La niebla se está volviendo muy detallada. «Revelar todo» o «Cubrir todo» la reinicia.",
+      "full": "La niebla está llena: no caben más trazos. «Revelar todo» o «Cubrir todo» la reinicia.",
+      "saveFailed": "No se pudo guardar la niebla"
     },
     "helpPing": "Mantén pulsado: ping para todos los jugadores",
     "helpNote": "Clic derecho: nota breve para todos los jugadores"
@@ -2825,7 +2828,11 @@
       "noteTitle": "Nota para los jugadores",
       "noteLabel": "Texto",
       "noteHint": "Aparece con un ping en este lugar y desaparece tras unos segundos.",
-      "noteSend": "Mostrar"
+      "noteSend": "Mostrar",
+      "pending": {
+        "offline": "Guardado: tus jugadores recibirán el mapa en cuanto la mesa de juego esté disponible.",
+        "tooLarge": "La imagen del mapa es demasiado grande para la mesa de juego. Sube una versión más pequeña."
+      }
     }
   }
 }

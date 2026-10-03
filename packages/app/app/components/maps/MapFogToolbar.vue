@@ -1,6 +1,6 @@
 <template>
   <!-- Fog of war: reveal or cover with a brush, all at once, undo -->
-  <v-card class="fog-toolbar d-flex align-center flex-wrap ga-2 pa-2" role="toolbar" :aria-label="$t('maps.fog.title')">
+  <v-card class="fog-toolbar d-flex align-center flex-wrap ga-2 pa-2" role="toolbar" :aria-label="$t('maps.fog.title')" :disabled="disabled">
     <v-btn-toggle v-model="mode" mandatory density="compact" variant="outlined" divided>
       <v-btn value="reveal" prepend-icon="mdi-eye-outline">{{ $t('maps.fog.reveal') }}</v-btn>
       <v-btn value="cover" prepend-icon="mdi-weather-fog">{{ $t('maps.fog.cover') }}</v-btn>
@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { FOG_BRUSH_SIZES, type FogBrushSize, type FogMode } from '~~/types/fog'
 
-defineProps<{ canUndo: boolean }>()
+defineProps<{ canUndo: boolean, disabled?: boolean }>()
 const emit = defineEmits<{ undo: [], revealAll: [], coverAll: [] }>()
 const mode = defineModel<FogMode>('mode', { required: true })
 const size = defineModel<FogBrushSize>('size', { required: true })

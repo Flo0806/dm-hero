@@ -1,4 +1,7 @@
-import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, type Envelope } from '@dm-hero/seal'
+import {
+  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isPingContent, isTableFogContent, isTableMapContent,
+  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type TableFogContent, type TableMapContent,
+} from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
 export function usePlayerSession() {
@@ -79,18 +82,26 @@ export function usePlayerSession() {
     // Same checks as shares: from the DM, for everyone, never an older version
     async function setState(slot: string, envelope: Envelope) {
       if (!gameKey || !dmVerifyKey || envelope.header.epoch > keyEpoch) {
+        // Only the newest per slot is worth keeping
+        const index = queuedState.findIndex(q => q.slot === slot)
+        if (index !== -1) queuedState.splice(index, 1)
         queuedState.push({ slot, envelope })
         return
       }
       const { header } = envelope
       if (header.gameId !== gameId || header.from !== 'dm' || header.to !== 'all') return
-      const known = stateVersions.get(slot)
-      if (known && (header.epoch < known.epoch || (header.epoch === known.epoch && header.seq <= known.seq))) return
+      const isOlder = (known?: { epoch: number, seq: number }) =>
+        !!known && (header.epoch < known.epoch || (header.epoch === known.epoch && header.seq <= known.seq))
+      if (isOlder(stateVersions.get(slot))) return
       try {
-        const content = await open<TableMapContent | TableFogContent>(gameKey, envelope, dmVerifyKey)
+        const content = await open<unknown>(gameKey, envelope, dmVerifyKey)
+        // A newer version may have been applied while we decrypted
+        if (isOlder(stateVersions.get(slot))) return
+        // Content must match its slot - the relay can't pass the fog off as the map
+        if (slot === 'map' && isTableMapContent(content)) tableMap.value = content
+        else if (slot === 'fog' && isTableFogContent(content)) tableFog.value = content
+        else return
         stateVersions.set(slot, { epoch: header.epoch, seq: header.seq })
-        if (slot === 'map') tableMap.value = content as TableMapContent
-        else if (slot === 'fog') tableFog.value = content as TableFogContent
       }
       catch (error) {
         console.error('[E2E] Map rejected:', error)
@@ -172,6 +183,10 @@ export function usePlayerSession() {
       const { slot, envelope } = JSON.parse((event as MessageEvent).data) as { slot: string, envelope: Envelope | null }
       // Versions are kept: an old envelope replayed later stays rejected
       if (envelope) return void setState(slot, envelope)
+      // Withdrawn while we were waiting for the key - it must not come back
+      for (let i = queuedState.length - 1; i >= 0; i--) {
+        if (queuedState[i]!.slot === slot) queuedState.splice(i, 1)
+      }
       if (slot === 'map') tableMap.value = null
       else if (slot === 'fog') tableFog.value = null
     })

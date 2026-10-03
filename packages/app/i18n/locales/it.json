@@ -2363,7 +2363,10 @@
       "undo": "Annulla",
       "revealAll": "Rivela tutto",
       "coverAll": "Copri tutto",
-      "hint": "Tieni premuto il tasto del mouse per dipingere – i tuoi giocatori vedono solo ciò che è rivelato"
+      "hint": "Tieni premuto il tasto del mouse per dipingere – i tuoi giocatori vedono solo ciò che è rivelato",
+      "big": "La nebbia sta diventando molto dettagliata. «Rivela tutto» o «Copri tutto» la azzera.",
+      "full": "La nebbia è piena – niente più tratti. «Rivela tutto» o «Copri tutto» la azzera.",
+      "saveFailed": "Impossibile salvare la nebbia"
     },
     "helpPing": "Tieni premuto: ping per tutti i giocatori",
     "helpNote": "Clic destro: breve nota per tutti i giocatori"
@@ -2825,7 +2828,11 @@
       "noteTitle": "Nota per i giocatori",
       "noteLabel": "Testo",
       "noteHint": "Appare con un ping in questo punto e scompare dopo qualche secondo.",
-      "noteSend": "Mostra"
+      "noteSend": "Mostra",
+      "pending": {
+        "offline": "Salvato – i tuoi giocatori riceveranno la mappa appena il tavolo di gioco sarà raggiungibile.",
+        "tooLarge": "L’immagine della mappa è troppo grande per il tavolo di gioco. Carica una versione più piccola."
+      }
     }
   }
 }

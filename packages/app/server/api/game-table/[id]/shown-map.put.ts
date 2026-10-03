@@ -18,7 +18,15 @@ export default defineEventHandler(async (event) => {
     if (!sameCampaign) throw createError({ statusCode: 400, message: 'Map belongs to another campaign' })
   }
   db.prepare('UPDATE game_tables SET shown_map_id = ? WHERE id = ?').run(mapId, tableId)
-  // Players get it right away (image upload + fog); a failure is retried by the timer
-  await syncTableMap(db, tableId)
-  return { shownMapId: mapId }
+  // Saved = shown. Players get it right away; if the relay can't take it now, the
+  // timer keeps trying - the DM only hears about it (no error, the choice stands).
+  try {
+    await syncTableMap(db, tableId, { force: true })
+    return { shownMapId: mapId, pending: null }
+  }
+  catch (error) {
+    console.error('[Relay] Showing map failed, retrying in the background:', error)
+    const tooLarge = (error as { statusCode?: number }).statusCode === 413
+    return { shownMapId: mapId, pending: tooLarge ? 'tooLarge' as const : 'offline' as const }
+  }
 })

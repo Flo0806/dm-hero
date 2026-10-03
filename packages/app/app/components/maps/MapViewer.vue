@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
-import type { FogMode, FogStroke, MapFog } from '~~/types/fog'
+import { FOG_MAX_POINTS, simplifyStroke, type FogMode, type FogStroke, type MapFog } from '~~/types/fog'
 import type {
   Map as LeafletMap,
   ImageOverlay,
@@ -30,6 +30,7 @@ const props = defineProps<{
   measurePoints?: { x: number, y: number }[] // Points for measurement tool
   fog?: MapFog | null // Fog of war (shown when set)
   fogTool?: { mode: FogMode, radius: number } | null // Painting fog (map can't be dragged meanwhile)
+  pingEnabled?: boolean // Long press = ping, right-click = note (only while players see this map)
 }>()
 
 const emit = defineEmits<{
@@ -225,11 +226,6 @@ function initMap() {
     // Handle map clicks
     leafletMap.on('click', (e: LeafletMouseEvent) => {
       if (!imageOverlay) return
-      // The click that ends a long press (ping) is not a click
-      if (suppressClick) {
-        suppressClick = false
-        return
-      }
       // Don't emit click if we just finished dragging an area or climate circle
       if (justFinishedDragging.value || climateDidDrag.value) return
 
@@ -302,7 +298,8 @@ function finishStroke() {
   if (!paintingStroke) return
   const stroke = paintingStroke
   paintingStroke = null
-  emit('fogStroke', stroke)
+  // Same look with far fewer points - keeps the fog small enough to send live
+  emit('fogStroke', { ...stroke, points: simplifyStroke(stroke.points, stroke.radius * 0.1) })
 }
 
 function setupFogPainting() {
@@ -320,6 +317,13 @@ function setupFogPainting() {
     if (Math.hypot(point[0] - last[0], point[1] - last[1]) < paintingStroke.radius * 0.25) return
     paintingStroke.points.push(point)
     fogCanvas.livePath(paintingStroke)
+    // Very long stroke: send this part, go on with a new one
+    if (paintingStroke.points.length >= FOG_MAX_POINTS) {
+      const { mode, radius } = paintingStroke
+      finishStroke()
+      paintingStroke = { mode, radius, points: [point] }
+      fogCanvas.livePath(paintingStroke)
+    }
   })
   leafletMap.on('mouseup', finishStroke)
   // Released outside the map
@@ -344,37 +348,63 @@ function cancelPress() {
   pressStart = null
 }
 
+// On the DOM (capture phase), not Leaflet events: areas and markers stop
+// Leaflet's mousedown, but pings must work on them too (cities!)
+function onPressStart(event: PointerEvent) {
+  cancelPress()
+  if (!props.pingEnabled || props.fogTool || event.button !== 0 || !leafletMap) return
+  pressStart = { x: event.clientX, y: event.clientY }
+  const [x, y] = toPercent(leafletMap.mouseEventToLatLng(event))
+  pressTimer = setTimeout(() => {
+    pressTimer = null
+    pressStart = null
+    suppressClick = true
+    emit('longPress', { x, y })
+  }, LONG_PRESS_MS)
+}
+
+function onPressMove(event: PointerEvent) {
+  // Dragging the map (or a marker) is not a long press
+  if (pressStart && Math.hypot(event.clientX - pressStart.x, event.clientY - pressStart.y) > LONG_PRESS_MOVE_PX) cancelPress()
+}
+
+// The click that ends a long press is not a click - not on the map, area or marker
+function onClickCapture(event: MouseEvent) {
+  if (!suppressClick) return
+  suppressClick = false
+  event.stopPropagation()
+  event.preventDefault()
+}
+
 function setupLongPress() {
-  if (!leafletMap) return
-  leafletMap.on('mousedown', (e: LeafletMouseEvent) => {
-    // Painting fog: holding the mouse paints, no ping
-    if (props.fogTool || e.originalEvent.button !== 0) return
-    cancelPress()
-    suppressClick = false
-    pressStart = { x: e.originalEvent.clientX, y: e.originalEvent.clientY }
-    const [x, y] = toPercent(e.latlng)
-    pressTimer = setTimeout(() => {
-      pressTimer = null
-      suppressClick = true
-      emit('longPress', { x, y })
-    }, LONG_PRESS_MS)
-  })
-  leafletMap.on('mousemove', (e: LeafletMouseEvent) => {
-    if (!pressStart) return
-    // Dragging the map is not a long press
-    if (Math.hypot(e.originalEvent.clientX - pressStart.x, e.originalEvent.clientY - pressStart.y) > LONG_PRESS_MOVE_PX) cancelPress()
-  })
-  leafletMap.on('mouseup dragstart zoomstart', cancelPress)
-  // Right-click on the map itself (markers/areas handle their own)
+  const el = mapContainer.value
+  if (!el || !leafletMap) return
+  el.addEventListener('pointerdown', onPressStart, true)
+  el.addEventListener('pointermove', onPressMove, true)
+  el.addEventListener('pointerup', cancelPress, true)
+  el.addEventListener('click', onClickCapture, true)
+  leafletMap.on('zoomstart', cancelPress)
+  // Right-click on the map itself (markers/areas handle their own) - only when a note can follow
   leafletMap.on('contextmenu', (e: LeafletMouseEvent) => {
+    if (!props.pingEnabled) return
     e.originalEvent.preventDefault()
     const [x, y] = toPercent(e.latlng)
     emit('mapRightClick', { x, y })
   })
 }
 
+onUnmounted(() => {
+  cancelPress()
+  const el = mapContainer.value
+  if (!el) return
+  el.removeEventListener('pointerdown', onPressStart, true)
+  el.removeEventListener('pointermove', onPressMove, true)
+  el.removeEventListener('pointerup', cancelPress, true)
+  el.removeEventListener('click', onClickCapture, true)
+})
+
 /** Show a ping at a spot (percent): a ring pulsing three times + who pinged (or a note, shown longer) */
-function ping(x: number, y: number, label: string, color: string, durationMs = 2600) {
+function ping(x: number, y: number, label: string, color: string, durationMs: number) {
   if (!leafletMap || !L) return
   const icon = L.divIcon({
     className: 'map-ping',
@@ -1060,10 +1090,15 @@ defineExpose({
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Painting fog of war */
+/* Painting fog of war: markers and areas let the brush through */
 .map-viewer.fog-painting,
 .map-viewer.fog-painting .leaflet-interactive {
   cursor: crosshair !important;
+}
+
+.map-viewer.fog-painting .leaflet-marker-pane,
+.map-viewer.fog-painting .leaflet-overlay-pane .leaflet-interactive {
+  pointer-events: none !important;
 }
 
 /* Ping: ring pulsing three times */

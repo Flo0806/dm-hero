@@ -2363,7 +2363,10 @@
       "undo": "Annuler",
       "revealAll": "Tout révéler",
       "coverAll": "Tout recouvrir",
-      "hint": "Maintenez le bouton de la souris pour peindre – vos joueurs ne voient que ce qui est révélé"
+      "hint": "Maintenez le bouton de la souris pour peindre – vos joueurs ne voient que ce qui est révélé",
+      "big": "Le brouillard devient très détaillé. « Tout révéler » ou « Tout recouvrir » repart de zéro.",
+      "full": "Le brouillard est plein – plus de traits possibles. « Tout révéler » ou « Tout recouvrir » repart de zéro.",
+      "saveFailed": "Impossible d’enregistrer le brouillard"
     },
     "helpPing": "Appui long : ping pour tous les joueurs",
     "helpNote": "Clic droit : courte note pour tous les joueurs"
@@ -2825,7 +2828,11 @@
       "noteTitle": "Note pour les joueurs",
       "noteLabel": "Texte",
       "noteHint": "Apparaît avec un ping à cet endroit et disparaît après quelques secondes.",
-      "noteSend": "Montrer"
+      "noteSend": "Montrer",
+      "pending": {
+        "offline": "Enregistré – vos joueurs recevront la carte dès que la table de jeu sera joignable.",
+        "tooLarge": "L’image de la carte est trop grande pour la table de jeu. Importez une version plus petite."
+      }
     }
   }
 }

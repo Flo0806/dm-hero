@@ -60,10 +60,15 @@ export const useGameTableStore = defineStore('gameTable', {
     },
 
     /** Show one map to the players (null = none) */
+    /** pending: shown, but the players don't have it yet (relay offline / image too large) */
     async setShownMap(mapId: number | null) {
-      if (!this.table) return
-      const { shownMapId } = await $fetch<{ shownMapId: number | null }>(`/api/game-table/${this.table.id}/shown-map`, { method: 'PUT', body: { mapId } })
+      if (!this.table) return null
+      const { shownMapId, pending } = await $fetch<{ shownMapId: number | null, pending: 'offline' | 'tooLarge' | null }>(
+        `/api/game-table/${this.table.id}/shown-map`,
+        { method: 'PUT', body: { mapId } },
+      )
       this.table.shown_map_id = shownMapId
+      return pending
     },
 
     async start(campaignId: number) {

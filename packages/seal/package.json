@@ -1,7 +1,7 @@
 {
   "name": "@dm-hero/seal",
   "version": "0.0.0",
-  "description": "End-to-end encryption for the DM Hero player relay (WebCrypto only, no dependencies)",
+  "description": "End-to-end encryption and protocol for the DM Hero player relay (WebCrypto only, no dependencies)",
   "license": "MIT",
   "type": "module",
   "private": true,

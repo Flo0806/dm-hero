@@ -69,7 +69,7 @@
         v-for="item in visiblePings"
         :key="item.id"
         class="absolute pointer-events-none"
-        :style="{ 'left': `${view.x + item.x / 100 * map.width * view.scale}px`, 'top': `${view.y + item.y / 100 * map.height * view.scale}px`, '--ping-color': pingColor(item) }"
+        :style="{ 'left': `${view.x + item.x / 100 * map.width * view.scale}px`, 'top': `${view.y + item.y / 100 * map.height * view.scale}px`, '--ping-color': pingColor(item.from) }"
         aria-hidden="true"
       >
         <span class="ping-ring" />
@@ -89,6 +89,8 @@
 </template>
 
 <script setup lang="ts">
+import { EMPTY_FOG, fogStrokePath, pingColor, type MapFog, type TableFogContent, type TableMapContent } from '@dm-hero/seal'
+
 const props = defineProps<{ map: TableMapContent, fog: TableFogContent | null, pings: TablePing[] }>()
 const emit = defineEmits<{ ping: [position: { x: number, y: number }] }>()
 const { t } = useI18n()
@@ -99,14 +101,12 @@ const src = useSharedImage(() => props.map.image)
 
 // Fog of another (previous) map must never uncover this one
 const fog = computed<MapFog>(() =>
-  props.fog?.mapId === props.map.mapId ? props.fog.fog : { base: 'covered', strokes: [] })
+  props.fog?.mapId === props.map.mapId ? props.fog.fog : EMPTY_FOG)
 
 // ---------------------------------------------------------------------------
 // Pings: long press anywhere on the map, everyone sees it pulse three times
 // ---------------------------------------------------------------------------
 
-const PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
-const pingColor = (ping: TablePing) => ping.from === 'dm' ? '#d4a574' : PING_COLORS[Number(ping.from) % PING_COLORS.length]
 const pingName = (ping: TablePing) => ping.from === 'dm' ? t('play.map.dm') : ping.name
 const visiblePings = computed(() => props.pings.filter(p => p.mapId === props.map.mapId))
 const lastPing = computed(() => visiblePings.value.at(-1) ?? null)

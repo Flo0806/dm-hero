@@ -2363,7 +2363,10 @@
       "undo": "Undo",
       "revealAll": "Reveal all",
       "coverAll": "Cover all",
-      "hint": "Hold the mouse button to paint – your players only see what is revealed"
+      "hint": "Hold the mouse button to paint – your players only see what is revealed",
+      "big": "The fog is getting very detailed. \"Reveal all\" or \"Cover all\" starts fresh.",
+      "full": "The fog is full – no more strokes. \"Reveal all\" or \"Cover all\" starts fresh.",
+      "saveFailed": "Could not save the fog"
     },
     "helpPing": "Press and hold: ping for all players",
     "helpNote": "Right-click: short note for all players"
@@ -2825,7 +2828,11 @@
       "noteTitle": "Note for the players",
       "noteLabel": "Text",
       "noteHint": "Appears with a ping at this spot and disappears after a few seconds.",
-      "noteSend": "Show"
+      "noteSend": "Show",
+      "pending": {
+        "offline": "Saved – your players get the map as soon as the game table is reachable.",
+        "tooLarge": "The map image is too large for the game table. Upload a smaller version."
+      }
     }
   }
 }
