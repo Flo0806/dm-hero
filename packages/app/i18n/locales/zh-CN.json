@@ -1262,7 +1262,8 @@
       "players": "关联玩家",
       "documents": "文件和笔记",
       "images": "图片库"
-    }
+    },
+    "image": "图片"
   },
   "referenceData": {
     "title": "参考数据",
@@ -2788,7 +2789,7 @@
       "stop": "停止分享",
       "done": "已分享",
       "stopped": "已停止分享",
-      "empty": "还没有分享任何内容。用分享按钮分享 NPC 和地点。",
+      "empty": "还没有分享任何内容。用分享按钮分享 NPC、地点和物品。",
       "fieldCount": "{count} 个字段",
       "displayName": "给玩家看的名字（可选）",
       "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",

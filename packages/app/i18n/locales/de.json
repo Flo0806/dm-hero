@@ -1262,7 +1262,8 @@
       "players": "Verknüpfte Spieler",
       "documents": "Dokumente & Notizen",
       "images": "Bildergalerie"
-    }
+    },
+    "image": "Bild"
   },
   "referenceData": {
     "title": "Referenzdaten",
@@ -2788,7 +2789,7 @@
       "stop": "Nicht mehr teilen",
       "done": "Geteilt",
       "stopped": "Nicht mehr geteilt",
-      "empty": "Noch nichts geteilt. Teile NPCs und Orte über den Teilen-Knopf.",
+      "empty": "Noch nichts geteilt. Teile NPCs, Orte und Gegenstände über den Teilen-Knopf.",
       "fieldCount": "{count} Feld | {count} Felder",
       "displayName": "Name für die Spieler (optional)",
       "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung.",

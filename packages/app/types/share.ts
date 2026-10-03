@@ -1,7 +1,7 @@
 // Sharing with players: what kinds exist and what travels (encrypted) to them
 
 /** Kinds of things the DM can share. Grows step by step (npc first). */
-export const SHARE_TYPES = ['npc', 'location'] as const
+export const SHARE_TYPES = ['npc', 'location', 'item'] as const
 export type ShareType = (typeof SHARE_TYPES)[number]
 
 /** Text in every app language (players pick theirs), or plain text written by the DM */

@@ -1262,7 +1262,8 @@
       "players": "Linked Players",
       "documents": "Documents & Notes",
       "images": "Image Gallery"
-    }
+    },
+    "image": "Image"
   },
   "referenceData": {
     "title": "Reference Data",
@@ -2788,7 +2789,7 @@
       "stop": "Stop sharing",
       "done": "Shared",
       "stopped": "No longer shared",
-      "empty": "Nothing shared yet. Share NPCs and locations with the share button.",
+      "empty": "Nothing shared yet. Share NPCs, locations and items with the share button.",
       "fieldCount": "{count} field | {count} fields",
       "displayName": "Name for the players (optional)",
       "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",

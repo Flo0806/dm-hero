@@ -79,7 +79,7 @@
 import type { ShareType } from '~~/types/share'
 
 // i18n namespace that labels each share type's fields
-const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs', location: 'locations' }
+const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs', location: 'locations', item: 'items' }
 
 const { t } = useI18n()
 const store = useGameTableStore()
@@ -118,7 +118,9 @@ watch(target, async (value) => {
   displayName.value = existing.value?.display_name ?? null
 })
 
-const fieldLabel = (field: string) => t(`${FIELD_LABEL_NAMESPACE[target.value!.type]}.${field}`, 1)
+// i18n keys are camelCase (armor_class -> armorClass)
+const fieldLabel = (field: string) =>
+  t(`${FIELD_LABEL_NAMESPACE[target.value!.type]}.${field.replace(/_(\w)/g, (_, c: string) => c.toUpperCase())}`, 1)
 
 function close() {
   store.shareTarget = null

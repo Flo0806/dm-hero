@@ -324,6 +324,7 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <GameTableShareButton type="item" :entity-id="item.id" :name="item.name" />
       <v-btn icon="mdi-graph" size="small" variant="text" color="primary" @click.stop="$emit('chaos', item)">
         <v-icon>mdi-graph</v-icon>
         <v-tooltip activator="parent" location="bottom">

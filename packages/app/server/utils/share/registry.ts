@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { BuiltField, ShareType } from '~~/types/share'
+import { itemShareKind } from './kinds/item'
 import { locationShareKind } from './kinds/location'
 import { npcShareKind } from './kinds/npc'
 
@@ -18,6 +19,7 @@ export interface ShareKind {
 export const SHARE_KINDS: Partial<Record<ShareType, ShareKind>> = {
   npc: npcShareKind,
   location: locationShareKind,
+  item: itemShareKind,
 }
 
 export function getShareKind(type: string): ShareKind {
