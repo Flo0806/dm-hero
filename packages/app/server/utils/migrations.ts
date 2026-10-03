@@ -2662,6 +2662,45 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 54: Added sessions.music_links')
     },
   },
+  {
+    version: 55,
+    name: 'game_tables',
+    up: (db) => {
+      // Game table = the live game players join via the player app (one per campaign).
+      // Closing a game removes it for real (hard delete) - it is a round of play,
+      // not campaign content, and "close" must clean up everything.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_tables (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          campaign_id INTEGER NOT NULL UNIQUE,
+          code TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        )
+      `)
+
+      // Players at the table: free name + 6-digit PIN, optionally linked to a
+      // Player entity (many DMs don't maintain those)
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_players (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          game_table_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          pin TEXT NOT NULL,
+          player_entity_id INTEGER,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (game_table_id) REFERENCES game_tables(id) ON DELETE CASCADE,
+          FOREIGN KEY (player_entity_id) REFERENCES entities(id) ON DELETE SET NULL,
+          UNIQUE (game_table_id, pin)
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_game_table_players_table ON game_table_players(game_table_id)')
+
+      console.log('✅ Migration 55: Created game_tables + game_table_players')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
