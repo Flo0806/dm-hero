@@ -32,6 +32,7 @@
       @wheel.prevent="onWheel"
       @dblclick="onDoubleClick"
       @keydown="onKey"
+      @contextmenu.prevent
     >
       <div
         class="absolute left-0 top-0 origin-top-left"
@@ -63,10 +64,24 @@
           <rect x="0" y="0" :width="map.width" :height="map.height" fill="#0b0d14" :mask="`url(#${uid}-mask)`" />
         </svg>
       </div>
+      <!-- Pings: fixed size on screen, so they sit outside the zoomed layer -->
+      <div
+        v-for="item in visiblePings"
+        :key="item.id"
+        class="absolute pointer-events-none"
+        :style="{ 'left': `${view.x + item.x / 100 * map.width * view.scale}px`, 'top': `${view.y + item.y / 100 * map.height * view.scale}px`, '--ping-color': pingColor(item) }"
+        aria-hidden="true"
+      >
+        <span class="ping-ring" />
+        <span class="ping-label">{{ pingName(item) }}</span>
+      </div>
       <p v-if="!src" role="status" class="absolute inset-x-0 bottom-4 m-0 text-center text-sm text-muted">
         {{ $t('play.map.loading') }}
       </p>
     </div>
+    <p class="sr-only" aria-live="polite">
+      {{ lastPing ? $t('play.map.pinged', { name: pingName(lastPing) }) : '' }}
+    </p>
     <p :id="hintId" class="m-0 text-xs text-muted">
       {{ $t('play.map.hint') }}
     </p>
@@ -74,7 +89,9 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ map: TableMapContent, fog: TableFogContent | null }>()
+const props = defineProps<{ map: TableMapContent, fog: TableFogContent | null, pings: TablePing[] }>()
+const emit = defineEmits<{ ping: [position: { x: number, y: number }] }>()
+const { t } = useI18n()
 
 const uid = useId()
 const hintId = `${uid}-hint`
@@ -83,6 +100,41 @@ const src = useSharedImage(() => props.map.image)
 // Fog of another (previous) map must never uncover this one
 const fog = computed<MapFog>(() =>
   props.fog?.mapId === props.map.mapId ? props.fog.fog : { base: 'covered', strokes: [] })
+
+// ---------------------------------------------------------------------------
+// Pings: long press anywhere on the map, everyone sees it pulse three times
+// ---------------------------------------------------------------------------
+
+const PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
+const pingColor = (ping: TablePing) => ping.from === 'dm' ? '#d4a574' : PING_COLORS[Number(ping.from) % PING_COLORS.length]
+const pingName = (ping: TablePing) => ping.from === 'dm' ? t('play.map.dm') : ping.name
+const visiblePings = computed(() => props.pings.filter(p => p.mapId === props.map.mapId))
+const lastPing = computed(() => visiblePings.value.at(-1) ?? null)
+
+const LONG_PRESS_MS = 500
+const LONG_PRESS_MOVE_PX = 8
+let pressTimer: ReturnType<typeof setTimeout> | null = null
+let pressStart: { x: number, y: number } | null = null
+
+function cancelPress() {
+  if (pressTimer) clearTimeout(pressTimer)
+  pressTimer = null
+  pressStart = null
+}
+
+function startPress(point: { x: number, y: number }) {
+  cancelPress()
+  pressStart = point
+  pressTimer = setTimeout(() => {
+    pressTimer = null
+    const x = (point.x - view.x) / view.scale / props.map.width * 100
+    const y = (point.y - view.y) / view.scale / props.map.height * 100
+    pressStart = null
+    if (x < 0 || x > 100 || y < 0 || y > 100) return
+    navigator.vibrate?.(30)
+    emit('ping', { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 })
+  }, LONG_PRESS_MS)
+}
 
 // ---------------------------------------------------------------------------
 // Pan + zoom (CSS transform, no library)
@@ -127,12 +179,16 @@ const pointers = new Map<number, { x: number, y: number }>()
 function onPointerDown(event: PointerEvent) {
   viewportRef.value?.setPointerCapture(event.pointerId)
   pointers.set(event.pointerId, local(event))
+  // One finger / mouse held still = ping, a second finger means pinch
+  if (pointers.size === 1 && event.button === 0) startPress(local(event))
+  else cancelPress()
 }
 
 function onPointerMove(event: PointerEvent) {
   const previous = pointers.get(event.pointerId)
   if (!previous) return
   const current = local(event)
+  if (pressStart && Math.hypot(current.x - pressStart.x, current.y - pressStart.y) > LONG_PRESS_MOVE_PX) cancelPress()
 
   if (pointers.size === 1) {
     view.x += current.x - previous.x
@@ -154,6 +210,7 @@ function onPointerMove(event: PointerEvent) {
 
 function onPointerUp(event: PointerEvent) {
   pointers.delete(event.pointerId)
+  cancelPress()
 }
 
 function onWheel(event: WheelEvent) {
@@ -214,6 +271,7 @@ onMounted(() => {
   fit()
 })
 onBeforeUnmount(() => {
+  cancelPress()
   document.removeEventListener('fullscreenchange', onFullscreenChange)
   observer?.disconnect()
 })
@@ -221,3 +279,47 @@ onBeforeUnmount(() => {
 // Another map: start with the whole map in view
 watch(() => props.map.mapId, () => nextTick(fit))
 </script>
+
+<style scoped>
+/* Long press must not open the phone's image/text menu */
+[tabindex] {
+  -webkit-touch-callout: none;
+}
+
+.ping-ring {
+  position: absolute;
+  left: -30px;
+  top: -30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 4px solid var(--ping-color);
+  box-shadow: 0 0 12px var(--ping-color);
+  animation: ping-pulse 0.8s ease-out 3 forwards;
+}
+
+.ping-label {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.75);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@keyframes ping-pulse {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(1.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ping-ring {
+    animation: none;
+  }
+}
+</style>

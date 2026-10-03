@@ -59,7 +59,9 @@
       "fullscreen": "Vollbild",
       "exitFullscreen": "Vollbild beenden",
       "loading": "Karte wird geladen …",
-      "hint": "Ziehen zum Verschieben, Mausrad oder zwei Finger zum Zoomen. Tastatur: Pfeiltasten, + und −, 0 für die ganze Karte."
+      "hint": "Ziehen zum Verschieben, Mausrad oder zwei Finger zum Zoomen, lange drücken für einen Ping an alle. Tastatur: Pfeiltasten, + und −, 0 für die ganze Karte.",
+      "dm": "Spielleiter",
+      "pinged": "{name} hat auf die Karte gezeigt"
     }
   }
 }

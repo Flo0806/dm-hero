@@ -156,6 +156,7 @@
       <div class="map-content">
         <ClientOnly>
           <MapsMapViewer
+            ref="viewerRef"
             :map="selectedMap"
             :markers="filteredMarkers"
             :areas="selectedMapAreas"
@@ -165,6 +166,7 @@
             :fog="showFog ? mapFog.fog.value : null"
             :fog-tool="fogMode ? { mode: fogToolMode, radius: FOG_BRUSH_SIZES[fogBrush] } : null"
             @fog-stroke="mapFog.addStroke"
+            @long-press="onLongPress"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
             @map-click="onMapClick"
@@ -240,6 +242,9 @@
             </v-chip>
             <v-chip size="small" variant="tonal" prepend-icon="mdi-gesture-tap-hold">
               {{ $t('maps.helpDragArea') }}
+            </v-chip>
+            <v-chip v-if="shownToPlayers" size="small" variant="tonal" prepend-icon="mdi-target">
+              {{ $t('maps.helpPing') }}
             </v-chip>
           </template>
         </div>
@@ -776,7 +781,25 @@ const mapFog = useMapFog()
 const fogMode = ref(false)
 const fogToolMode = ref<FogMode>('reveal')
 const fogBrush = ref<FogBrushSize>('medium')
-const showFog = computed(() => fogMode.value || (!!selectedMap.value && gameTableStore.table?.shown_map_id === selectedMap.value.id))
+const shownToPlayers = computed(() => !!selectedMap.value && gameTableStore.table?.shown_map_id === selectedMap.value.id)
+const showFog = computed(() => fogMode.value || shownToPlayers.value)
+
+// Pings: long press on a shown map - everyone at the table sees it pulse
+const viewerRef = ref<{ ping: (x: number, y: number, label: string, color: string) => void } | null>(null)
+const PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
+const DM_PING_COLOR = '#D4A574'
+
+function onLongPress(position: { x: number, y: number }) {
+  if (!selectedMap.value || !shownToPlayers.value) return
+  viewerRef.value?.ping(position.x, position.y, t('gameTable.map.you'), DM_PING_COLOR)
+  gameTableStore.ping(selectedMap.value.id, position.x, position.y)
+    .catch(error => console.error('[GameTable] Ping failed:', error))
+}
+
+useTablePings(() => gameTableStore.table?.id, (ping) => {
+  if (ping.mapId !== selectedMap.value?.id) return
+  viewerRef.value?.ping(ping.x, ping.y, ping.name, PING_COLORS[Number(ping.from) % PING_COLORS.length]!)
+})
 
 function toggleFogMode() {
   fogMode.value = !fogMode.value

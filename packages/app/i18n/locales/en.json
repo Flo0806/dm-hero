@@ -2364,7 +2364,8 @@
       "revealAll": "Reveal all",
       "coverAll": "Cover all",
       "hint": "Hold the mouse button to paint – your players only see what is revealed"
-    }
+    },
+    "helpPing": "Press and hold: ping for all players"
   },
   "music": {
     "title": "Music",
@@ -2818,7 +2819,8 @@
       "shown": "Shown",
       "showHint": "Your players see this map with its fog of war – replaces any other shown map",
       "stopHint": "Stop showing",
-      "failed": "Could not show the map"
+      "failed": "Could not show the map",
+      "you": "You"
     }
   }
 }

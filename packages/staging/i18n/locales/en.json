@@ -59,7 +59,9 @@
       "fullscreen": "Fullscreen",
       "exitFullscreen": "Exit fullscreen",
       "loading": "Loading map …",
-      "hint": "Drag to move, mouse wheel or two fingers to zoom. Keyboard: arrow keys, + and −, 0 for the whole map."
+      "hint": "Drag to move, mouse wheel or two fingers to zoom, press and hold to ping everyone. Keyboard: arrow keys, + and −, 0 for the whole map.",
+      "dm": "Game master",
+      "pinged": "{name} pointed at the map"
     }
   }
 }

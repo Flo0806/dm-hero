@@ -2364,7 +2364,8 @@
       "revealAll": "Revelar todo",
       "coverAll": "Cubrir todo",
       "hint": "Mantén pulsado el botón del ratón para pintar: tus jugadores solo ven lo revelado"
-    }
+    },
+    "helpPing": "Mantén pulsado: ping para todos los jugadores"
   },
   "music": {
     "title": "Música",
@@ -2818,7 +2819,8 @@
       "shown": "Se muestra",
       "showHint": "Tus jugadores ven este mapa con su niebla de guerra; sustituye a cualquier otro mapa mostrado",
       "stopHint": "Dejar de mostrar",
-      "failed": "No se pudo mostrar el mapa"
+      "failed": "No se pudo mostrar el mapa",
+      "you": "Tú"
     }
   }
 }

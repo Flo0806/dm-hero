@@ -59,7 +59,9 @@
       "fullscreen": "Schermo intero",
       "exitFullscreen": "Esci da schermo intero",
       "loading": "Caricamento mappa …",
-      "hint": "Trascina per spostare, rotellina o due dita per lo zoom. Tastiera: frecce, + e −, 0 per la mappa intera."
+      "hint": "Trascina per spostare, rotellina o due dita per lo zoom, tieni premuto per un ping a tutti. Tastiera: frecce, + e −, 0 per la mappa intera.",
+      "dm": "Master",
+      "pinged": "{name} ha indicato la mappa"
     }
   }
 }

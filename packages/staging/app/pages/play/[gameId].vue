@@ -57,7 +57,7 @@
     </main>
 
     <main v-else-if="tab === 'map' && tableMap" id="panel-map" role="tabpanel" aria-labelledby="tab-map" class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12">
-      <TableMap :map="tableMap" :fog="tableFog" />
+      <TableMap :map="tableMap" :fog="tableFog" :pings="pings" @ping="p => ping(tableMap!.mapId, p.x, p.y)" />
     </main>
 
     <!-- Second column only while something is open - otherwise the cards get the full width -->
@@ -108,7 +108,7 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping } = connect(gameId)
 const { isNew, markSeen } = useSeenShares(gameId)
 
 const search = ref('')

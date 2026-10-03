@@ -45,6 +45,7 @@ const emit = defineEmits<{
   climateAreaRightClick: [area: MapClimateArea]
   climateAreaDrag: [data: { area: MapClimateArea, x: number, y: number }]
   fogStroke: [stroke: FogStroke]
+  longPress: [position: { x: number, y: number }]
 }>()
 
 const { t } = useI18n()
@@ -218,9 +219,16 @@ function initMap() {
     updateMarkers()
     updateMeasureLine()
 
+    setupLongPress()
+
     // Handle map clicks
     leafletMap.on('click', (e: LeafletMouseEvent) => {
       if (!imageOverlay) return
+      // The click that ends a long press (ping) is not a click
+      if (suppressClick) {
+        suppressClick = false
+        return
+      }
       // Don't emit click if we just finished dragging an area or climate circle
       if (justFinishedDragging.value || climateDidDrag.value) return
 
@@ -318,6 +326,61 @@ function setupFogPainting() {
 }
 
 onUnmounted(() => document.removeEventListener('mouseup', finishStroke))
+
+// ---------------------------------------------------------------------------
+// Long press = ping (pulses three times, like Roll20)
+// ---------------------------------------------------------------------------
+
+const LONG_PRESS_MS = 500
+const LONG_PRESS_MOVE_PX = 6
+let pressTimer: ReturnType<typeof setTimeout> | null = null
+let pressStart: { x: number, y: number } | null = null
+let suppressClick = false
+
+function cancelPress() {
+  if (pressTimer) clearTimeout(pressTimer)
+  pressTimer = null
+  pressStart = null
+}
+
+function setupLongPress() {
+  if (!leafletMap) return
+  leafletMap.on('mousedown', (e: LeafletMouseEvent) => {
+    // Painting fog: holding the mouse paints, no ping
+    if (props.fogTool || e.originalEvent.button !== 0) return
+    cancelPress()
+    suppressClick = false
+    pressStart = { x: e.originalEvent.clientX, y: e.originalEvent.clientY }
+    const [x, y] = toPercent(e.latlng)
+    pressTimer = setTimeout(() => {
+      pressTimer = null
+      suppressClick = true
+      emit('longPress', { x, y })
+    }, LONG_PRESS_MS)
+  })
+  leafletMap.on('mousemove', (e: LeafletMouseEvent) => {
+    if (!pressStart) return
+    // Dragging the map is not a long press
+    if (Math.hypot(e.originalEvent.clientX - pressStart.x, e.originalEvent.clientY - pressStart.y) > LONG_PRESS_MOVE_PX) cancelPress()
+  })
+  leafletMap.on('mouseup dragstart zoomstart', cancelPress)
+}
+
+/** Show a ping at a spot (percent): a ring pulsing three times + who pinged */
+function ping(x: number, y: number, label: string, color: string) {
+  if (!leafletMap || !L) return
+  const icon = L.divIcon({
+    className: 'map-ping',
+    html: `<span class="map-ping-ring" style="--ping-color:${color}"></span><span class="map-ping-label"></span>`,
+    iconSize: [0, 0],
+  })
+  const marker = L.marker([mapSize.height - y / 100 * mapSize.height, x / 100 * mapSize.width], { icon, interactive: false, keyboard: false, zIndexOffset: 2000 })
+    .addTo(leafletMap)
+  // Text via textContent - player names never become HTML
+  const labelEl = marker.getElement()?.querySelector('.map-ping-label')
+  if (labelEl) labelEl.textContent = label
+  setTimeout(() => marker.remove(), 2600)
+}
 
 // Threshold: show labels only when zoomed in enough
 const LABEL_ZOOM_THRESHOLD = 0
@@ -904,6 +967,7 @@ function updateMeasureLine() {
 // Expose method to programmatically add marker at position
 defineExpose({
   getMap: () => leafletMap,
+  ping,
 })
 </script>
 
@@ -993,6 +1057,48 @@ defineExpose({
 .map-viewer.fog-painting,
 .map-viewer.fog-painting .leaflet-interactive {
   cursor: crosshair !important;
+}
+
+/* Ping: ring pulsing three times */
+.map-ping {
+  pointer-events: none;
+}
+
+.map-ping-ring {
+  position: absolute;
+  left: -30px;
+  top: -30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 4px solid var(--ping-color);
+  box-shadow: 0 0 12px var(--ping-color);
+  animation: map-ping-pulse 0.8s ease-out 3 forwards;
+}
+
+.map-ping-label {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@keyframes map-ping-pulse {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(1.4); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-ping-ring {
+    animation: none;
+  }
 }
 
 /* Area resize handle */

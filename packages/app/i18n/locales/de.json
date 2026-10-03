@@ -2364,7 +2364,8 @@
       "revealAll": "Alles aufdecken",
       "coverAll": "Alles zudecken",
       "hint": "Mit gedrückter Maustaste malen – deine Spieler sehen nur, was aufgedeckt ist"
-    }
+    },
+    "helpPing": "Lange gedrückt halten: Ping für alle Spieler"
   },
   "music": {
     "title": "Musik",
@@ -2818,7 +2819,8 @@
       "shown": "Wird gezeigt",
       "showHint": "Deine Spieler sehen diese Karte mit dem Nebel des Krieges – eine andere gezeigte Karte wird ersetzt",
       "stopHint": "Nicht mehr zeigen",
-      "failed": "Karte konnte nicht gezeigt werden"
+      "failed": "Karte konnte nicht gezeigt werden",
+      "you": "Du"
     }
   }
 }

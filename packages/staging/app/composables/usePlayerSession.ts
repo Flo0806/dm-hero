@@ -1,4 +1,4 @@
-import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, open, unwrapGameKey, type Envelope } from '@dm-hero/seal'
+import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, type Envelope } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
 export function usePlayerSession() {
@@ -35,6 +35,9 @@ export function usePlayerSession() {
     const tableMap = ref<TableMapContent | null>(null)
     const tableFog = ref<TableFogContent | null>(null)
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
+    /** Pings on the map right now (each disappears after its pulse) */
+    const pings = ref<TablePing[]>([])
+    let pingCounter = 0
     const stateVersions = new Map<string, { epoch: number, seq: number }>()
     /** Live reveals (not the initial load - that's just the current state) */
     const reveals = ref<Reveal[]>([])
@@ -94,6 +97,32 @@ export function usePlayerSession() {
       }
     }
 
+    // DM pings are signed; player pings are labelled by the relay (sender can't fake a name)
+    async function receivePing(ping: { from: string, name?: string, envelope: Envelope }) {
+      if (!gameKey || !dmVerifyKey) return
+      const { header } = ping.envelope
+      if (header.gameId !== gameId || header.to !== 'all' || header.epoch !== keyEpoch) return
+      if ((ping.from === 'dm') !== (header.from === 'dm')) return
+      try {
+        const content = await open<unknown>(gameKey, ping.envelope, ping.from === 'dm' ? dmVerifyKey : undefined)
+        if (!isPingContent(content)) return
+        const entry: TablePing = { ...content, id: ++pingCounter, from: ping.from, name: ping.name ?? '' }
+        pings.value = [...pings.value, entry]
+        setTimeout(() => pings.value = pings.value.filter(p => p.id !== entry.id), PING_MS)
+      }
+      catch (error) {
+        console.error('[E2E] Ping rejected:', error)
+      }
+    }
+
+    /** Ping a spot on the shown map - everyone sees it (including us, via the relay) */
+    async function ping(mapId: number, x: number, y: number) {
+      if (!gameKey) return
+      const envelope = await seal(gameKey, { v: 1, gameId, from: 'player', to: 'all', epoch: keyEpoch, seq: Date.now() }, { mapId, x, y })
+      await $fetch(`/api/v1/games/${gameId}/pings`, { method: 'POST', body: envelope })
+        .catch(error => console.error('[Ping] Failed:', error))
+    }
+
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
 
@@ -145,6 +174,10 @@ export function usePlayerSession() {
       else if (slot === 'fog') tableFog.value = null
     })
 
+    source.addEventListener('ping', (event) => {
+      void receivePing(JSON.parse((event as MessageEvent).data) as { from: string, name?: string, envelope: Envelope })
+    })
+
     // DM ended the game
     source.addEventListener('closed', () => {
       source.close()
@@ -163,7 +196,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping }
   }
 
   return { join, connect }

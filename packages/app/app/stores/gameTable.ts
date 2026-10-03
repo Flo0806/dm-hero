@@ -53,6 +53,12 @@ export const useGameTableStore = defineStore('gameTable', {
       }
     },
 
+    /** Ping a spot on the shown map - everyone at the table sees it pulse */
+    async ping(mapId: number, x: number, y: number) {
+      if (!this.table) return
+      await $fetch(`/api/game-table/${this.table.id}/ping`, { method: 'POST', body: { mapId, x, y } })
+    },
+
     /** Show one map to the players (null = none) */
     async setShownMap(mapId: number | null) {
       if (!this.table) return

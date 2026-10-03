@@ -59,3 +59,22 @@ export interface TableFogContent {
   mapId: number
   fog: MapFog
 }
+
+/** A ping on the shown map (encrypted content, percent coordinates) */
+export interface TablePingContent {
+  mapId: number
+  x: number
+  y: number
+}
+
+/** A ping as the DM sees it: who (player id, or 'dm') + where */
+export interface TablePing extends TablePingContent {
+  from: number | 'dm'
+  name: string
+}
+
+export const isPingContent = (value: unknown): value is TablePingContent => {
+  const p = value as TablePingContent
+  const inMap = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100
+  return !!p && Number.isInteger(p.mapId) && inMap(p.x) && inMap(p.y)
+}

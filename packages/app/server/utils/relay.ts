@@ -106,6 +106,15 @@ export async function deleteRelayState(auth: RelayAuth, slot: RelayStateSlot) {
   })
 }
 
+/** DM pings a spot on the shown map (signed envelope) */
+export async function postRelayDmPing(auth: RelayAuth, envelope: unknown) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/dm-ping`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+    body: envelope as Record<string, unknown>,
+  })
+}
+
 /** Encrypted file bytes for the relay's file storage */
 export async function putRelayFile(auth: RelayAuth, fileId: string, ciphertext: Uint8Array) {
   try {

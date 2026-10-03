@@ -1,4 +1,5 @@
-import { fingerprint } from '@dm-hero/seal'
+import { fingerprint, loadGameKeys, open, type Envelope, type StoredGameKeys } from '@dm-hero/seal'
+import { isPingContent, type TablePing } from '~~/types/fog'
 import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
@@ -85,6 +86,10 @@ async function run(tableId: number) {
         conn.state = { ...conn.state, connected: true, online: online.map(Number) }
         emit(tableId)
       }
+      else if (event === 'ping') {
+        handlePing(tableId, JSON.parse(data) as { from: string, name: string, envelope: Envelope })
+          .catch(error => console.error('[Relay] Ping rejected:', error))
+      }
       else if (event === 'key-request') {
         const { playerId, publicKey } = JSON.parse(data) as { playerId: string, publicKey: string }
         handleKeyRequest(tableId, Number(playerId), publicKey).catch(error => console.error('[Relay] Key request failed:', error))
@@ -113,6 +118,30 @@ async function handleKeyRequest(tableId: number, playerId: number, publicKey: st
   if (!conn || conn.state.pending.some(p => p.publicKey === publicKey)) return
   conn.state = { ...conn.state, pending: [...conn.state.pending, { playerId, publicKey, fingerprint: await fingerprint(publicKey) }] }
   emit(tableId)
+}
+
+// ---------------------------------------------------------------------------
+// Pings from players -> open map pages
+// ---------------------------------------------------------------------------
+
+const pingListeners = new Map<number, Set<(ping: TablePing) => void>>()
+
+/** Live pings of a game (the relay connection itself is kept by watchPresence) */
+export function watchPings(tableId: number, listener: (ping: TablePing) => void) {
+  if (!pingListeners.has(tableId)) pingListeners.set(tableId, new Set())
+  pingListeners.get(tableId)!.add(listener)
+  return () => pingListeners.get(tableId)?.delete(listener)
+}
+
+async function handlePing(tableId: number, ping: { from: string, name: string, envelope: Envelope }) {
+  const listeners = pingListeners.get(tableId)
+  if (!listeners?.size || !isKnownPlayer(tableId, Number(ping.from))) return
+  const row = getDb().prepare('SELECT e2e_keys FROM game_tables WHERE id = ?').get(tableId) as { e2e_keys: string | null } | undefined
+  if (!row?.e2e_keys) return
+  // Encrypted with the game key by a player - only the game can read it
+  const content = await open<unknown>((await loadGameKeys(JSON.parse(row.e2e_keys) as StoredGameKeys)).gameKey, ping.envelope)
+  if (!isPingContent(content)) return
+  for (const listener of listeners) listener({ ...content, from: Number(ping.from), name: ping.name })
 }
 
 /** DM decided on a device - remove it from the waiting list */
