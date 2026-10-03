@@ -2764,6 +2764,9 @@
     "restart": "Nouvelle partie",
     "restartTitle": "Lancer une nouvelle partie ?",
     "restartWarning": "La partie en cours est terminée et supprimée : tous les joueurs sont retirés. La nouvelle partie aura un nouveau code, tu ajoutes de nouveau les joueurs.",
-    "restartConfirm": "Recommencer"
+    "restartConfirm": "Recommencer",
+    "onlineCount": "{count} en ligne",
+    "noPlayersShort": "Pas encore de joueurs.",
+    "openTable": "Ouvrir la table de jeu"
   }
 }

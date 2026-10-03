@@ -17,6 +17,11 @@
 
     <v-spacer />
 
+    <!-- Game table status of the active campaign (hidden if there is no game) -->
+    <ClientOnly>
+      <GameTableHeaderChip />
+    </ClientOnly>
+
     <!-- Language Switcher with Flags -->
     <v-menu>
       <template #activator="{ props: menuProps }">

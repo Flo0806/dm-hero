@@ -2764,6 +2764,9 @@
     "restart": "Neues Spiel starten",
     "restartTitle": "Neues Spiel starten?",
     "restartWarning": "Das aktuelle Spiel wird beendet und gelöscht – alle Spieler fliegen raus. Das neue Spiel bekommt einen neuen Code, Spieler musst du neu anlegen.",
-    "restartConfirm": "Neu starten"
+    "restartConfirm": "Neu starten",
+    "onlineCount": "{count} online",
+    "noPlayersShort": "Noch keine Spieler.",
+    "openTable": "Zum Spieltisch"
   }
 }

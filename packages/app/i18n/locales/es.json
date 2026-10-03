@@ -2764,6 +2764,9 @@
     "restart": "Nueva partida",
     "restartTitle": "¿Empezar una partida nueva?",
     "restartWarning": "La partida actual se termina y se borra: todos los jugadores salen. La nueva partida tendrá un código nuevo y tendrás que añadir a los jugadores de nuevo.",
-    "restartConfirm": "Empezar de nuevo"
+    "restartConfirm": "Empezar de nuevo",
+    "onlineCount": "{count} en línea",
+    "noPlayersShort": "Todavía no hay jugadores.",
+    "openTable": "Ir a la mesa de juego"
   }
 }

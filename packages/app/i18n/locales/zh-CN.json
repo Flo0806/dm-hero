@@ -2764,6 +2764,9 @@
     "restart": "开始新游戏",
     "restartTitle": "开始新游戏？",
     "restartWarning": "当前游戏将被结束并删除——所有玩家都会退出。新游戏会使用新的代码，你需要重新添加玩家。",
-    "restartConfirm": "重新开始"
+    "restartConfirm": "重新开始",
+    "onlineCount": "{count} 人在线",
+    "noPlayersShort": "还没有玩家。",
+    "openTable": "打开游戏桌"
   }
 }

@@ -2764,6 +2764,9 @@
     "restart": "Start new game",
     "restartTitle": "Start a new game?",
     "restartWarning": "The current game is ended and deleted – all players are removed. The new game gets a new code, you add the players again.",
-    "restartConfirm": "Start new"
+    "restartConfirm": "Start new",
+    "onlineCount": "{count} online",
+    "noPlayersShort": "No players yet.",
+    "openTable": "Open game table"
   }
 }
