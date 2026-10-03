@@ -56,7 +56,9 @@
 </template>
 
 <script setup lang="ts">
-const code = ref('')
+// QR codes / links from DM Hero carry the game code (?code=XXXXXX)
+const route = useRoute()
+const code = ref(typeof route.query.code === 'string' ? route.query.code : '')
 const normalizedCode = computed(() => code.value.trim().toUpperCase())
 
 function join() {

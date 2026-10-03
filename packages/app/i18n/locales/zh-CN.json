@@ -38,7 +38,8 @@
     "themePickerTitle": "选择一个主题",
     "activeCampaign": "当前战役",
     "chooseCampaign": "选择战役",
-    "chooseCampaignHint": "激活战役后即可使用其他功能"
+    "chooseCampaignHint": "激活战役后即可使用其他功能",
+    "gameTable": "游戏桌"
   },
   "themes": {
     "dark": "黑暗（午夜酒馆）",
@@ -2723,5 +2724,39 @@
       "name": "空白模板",
       "description": "空模板 - 自己定义一切"
     }
+  },
+  "gameTable": {
+    "title": "游戏桌",
+    "intro": "把你的队伍请上桌：开始一局游戏，给每位玩家一个 PIN，并分享游戏代码或二维码。玩家用手机或电脑即可加入，无需账号。",
+    "startHint": "这个战役还没有进行中的游戏。",
+    "start": "开始游戏",
+    "code": "游戏代码",
+    "copyCode": "复制游戏代码",
+    "link": "给玩家的链接",
+    "copyLink": "复制链接",
+    "qrAlt": "包含游戏链接的二维码",
+    "copied": "已复制",
+    "close": "结束游戏",
+    "closeTitle": "结束游戏？",
+    "closeWarning": "游戏将被彻底删除，包括所有玩家和 PIN。新游戏会使用新的代码。",
+    "closeConfirm": "确认结束",
+    "players": "玩家",
+    "addPlayer": "添加玩家",
+    "editPlayer": "编辑玩家",
+    "removePlayer": "移除",
+    "playerActions": "玩家操作",
+    "noPlayers": "桌边还没有人。添加你的玩家——每人都会得到自己的 PIN。",
+    "name": "玩家名称",
+    "linkEntity": "关联战役中的玩家（可选）",
+    "linkEntityHint": "使用该玩家的图片和名称",
+    "pin": "PIN",
+    "copyPin": "复制 PIN",
+    "rollPin": "重新生成 PIN",
+    "pinRolled": "已生成新 PIN",
+    "online": "在线",
+    "offline": "离线",
+    "sharing": "分享",
+    "sharingSoon": "很快你就能在这里与玩家分享地图、图片和知识。",
+    "error": "操作失败，请重试。"
   }
 }

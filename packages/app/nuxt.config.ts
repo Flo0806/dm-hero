@@ -26,6 +26,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       appVersion: pkg.version,
+      // Player app (packages/staging) players join on. Override with NUXT_PUBLIC_STAGING_URL
+      stagingUrl: 'http://localhost:3002',
     },
   },
 

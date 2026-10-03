@@ -38,7 +38,8 @@
     "themePickerTitle": "Choisir un thème",
     "activeCampaign": "Campagne active",
     "chooseCampaign": "Choisir une campagne",
-    "chooseCampaignHint": "Le reste se débloque dès qu'une campagne est active"
+    "chooseCampaignHint": "Le reste se débloque dès qu'une campagne est active",
+    "gameTable": "Table de jeu"
   },
   "themes": {
     "dark": "Sombre (Taverne de minuit)",
@@ -2723,5 +2724,39 @@
       "name": "Modèle vierge",
       "description": "Modèle vide : définissez tout vous-même"
     }
+  },
+  "gameTable": {
+    "title": "Table de jeu",
+    "intro": "Réunis ton groupe autour de la table : lance une partie, donne à chaque joueur son code PIN et partage le code ou le QR code. Tes joueurs rejoignent depuis leur téléphone ou leur ordinateur, sans compte.",
+    "startHint": "Aucune partie n'est encore en cours pour cette campagne.",
+    "start": "Lancer la partie",
+    "code": "Code de partie",
+    "copyCode": "Copier le code de partie",
+    "link": "Lien pour tes joueurs",
+    "copyLink": "Copier le lien",
+    "qrAlt": "QR code avec le lien vers la partie",
+    "copied": "Copié",
+    "close": "Terminer la partie",
+    "closeTitle": "Terminer la partie ?",
+    "closeWarning": "La partie est entièrement supprimée, avec tous les joueurs et leurs codes PIN. Une nouvelle partie aura un nouveau code.",
+    "closeConfirm": "Terminer définitivement",
+    "players": "Joueurs",
+    "addPlayer": "Ajouter un joueur",
+    "editPlayer": "Modifier le joueur",
+    "removePlayer": "Retirer",
+    "playerActions": "Actions du joueur",
+    "noPlayers": "Personne n'est encore à la table. Ajoute tes joueurs : chacun reçoit son propre code PIN.",
+    "name": "Nom du joueur",
+    "linkEntity": "Lier à un joueur de la campagne (facultatif)",
+    "linkEntityHint": "Reprend l'image et le nom de ton joueur",
+    "pin": "PIN",
+    "copyPin": "Copier le PIN",
+    "rollPin": "Tirer un nouveau PIN",
+    "pinRolled": "Nouveau PIN tiré",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "sharing": "Partage",
+    "sharingSoon": "Bientôt, tu partageras ici cartes, images et savoir avec tes joueurs.",
+    "error": "Ça n'a pas marché. Réessaie."
   }
 }

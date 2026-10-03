@@ -38,7 +38,8 @@
     "themePickerTitle": "Pick a theme",
     "activeCampaign": "Active Campaign",
     "chooseCampaign": "Choose a campaign",
-    "chooseCampaignHint": "Everything else unlocks once a campaign is active"
+    "chooseCampaignHint": "Everything else unlocks once a campaign is active",
+    "gameTable": "Game table"
   },
   "themes": {
     "dark": "Dark (Midnight Tavern)",
@@ -2723,5 +2724,39 @@
       "name": "Blank Template",
       "description": "Empty template - define everything yourself"
     }
+  },
+  "gameTable": {
+    "title": "Game table",
+    "intro": "Bring your group to the table: start a game, give every player their PIN and share the code or QR code. Your players join from their phone or laptop – no account needed.",
+    "startHint": "No game is running for this campaign yet.",
+    "start": "Start game",
+    "code": "Game code",
+    "copyCode": "Copy game code",
+    "link": "Link for your players",
+    "copyLink": "Copy link",
+    "qrAlt": "QR code with the link to the game",
+    "copied": "Copied",
+    "close": "End game",
+    "closeTitle": "End the game?",
+    "closeWarning": "The game is deleted completely – including all players and PINs. A new game gets a new code.",
+    "closeConfirm": "End for good",
+    "players": "Players",
+    "addPlayer": "Add player",
+    "editPlayer": "Edit player",
+    "removePlayer": "Remove",
+    "playerActions": "Player actions",
+    "noPlayers": "Nobody at the table yet. Add your players – everyone gets their own PIN.",
+    "name": "Player name",
+    "linkEntity": "Link to a player from the campaign (optional)",
+    "linkEntityHint": "Uses the picture and name of your player",
+    "pin": "PIN",
+    "copyPin": "Copy PIN",
+    "rollPin": "Roll a new PIN",
+    "pinRolled": "New PIN rolled",
+    "online": "Online",
+    "offline": "Offline",
+    "sharing": "Sharing",
+    "sharingSoon": "Soon you will share maps, pictures and lore with your players here.",
+    "error": "That didn't work. Please try again."
   }
 }

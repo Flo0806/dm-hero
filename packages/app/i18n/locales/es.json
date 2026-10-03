@@ -38,7 +38,8 @@
     "themePickerTitle": "Elige un tema",
     "activeCampaign": "Campaña activa",
     "chooseCampaign": "Elegir una campaña",
-    "chooseCampaignHint": "Lo demás se desbloquea cuando hay una campaña activa"
+    "chooseCampaignHint": "Lo demás se desbloquea cuando hay una campaña activa",
+    "gameTable": "Mesa de juego"
   },
   "themes": {
     "dark": "Oscuro (Taberna de medianoche)",
@@ -2723,5 +2724,39 @@
       "name": "Plantilla en blanco",
       "description": "Plantilla vacía: define todo tú mismo"
     }
+  },
+  "gameTable": {
+    "title": "Mesa de juego",
+    "intro": "Reúne a tu grupo en la mesa: inicia una partida, dale a cada jugador su PIN y comparte el código o el código QR. Tus jugadores se unen desde el móvil o el portátil, sin cuenta.",
+    "startHint": "Todavía no hay ninguna partida en esta campaña.",
+    "start": "Iniciar partida",
+    "code": "Código de partida",
+    "copyCode": "Copiar código de partida",
+    "link": "Enlace para tus jugadores",
+    "copyLink": "Copiar enlace",
+    "qrAlt": "Código QR con el enlace a la partida",
+    "copied": "Copiado",
+    "close": "Terminar partida",
+    "closeTitle": "¿Terminar la partida?",
+    "closeWarning": "La partida se borra por completo, con todos los jugadores y PIN. Una partida nueva tendrá un código nuevo.",
+    "closeConfirm": "Terminar definitivamente",
+    "players": "Jugadores",
+    "addPlayer": "Añadir jugador",
+    "editPlayer": "Editar jugador",
+    "removePlayer": "Quitar",
+    "playerActions": "Acciones del jugador",
+    "noPlayers": "Aún no hay nadie en la mesa. Añade a tus jugadores: cada uno recibe su propio PIN.",
+    "name": "Nombre del jugador",
+    "linkEntity": "Vincular con un jugador de la campaña (opcional)",
+    "linkEntityHint": "Usa la imagen y el nombre de tu jugador",
+    "pin": "PIN",
+    "copyPin": "Copiar PIN",
+    "rollPin": "Tirar un PIN nuevo",
+    "pinRolled": "Nuevo PIN generado",
+    "online": "En línea",
+    "offline": "Desconectado",
+    "sharing": "Compartir",
+    "sharingSoon": "Pronto podrás compartir aquí mapas, imágenes y saber con tus jugadores.",
+    "error": "Algo salió mal. Inténtalo de nuevo."
   }
 }

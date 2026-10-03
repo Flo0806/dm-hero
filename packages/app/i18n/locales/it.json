@@ -38,7 +38,8 @@
     "themePickerTitle": "Scegli un tema",
     "activeCampaign": "Campagna attiva",
     "chooseCampaign": "Scegli una campagna",
-    "chooseCampaignHint": "Il resto si sblocca quando una campagna è attiva"
+    "chooseCampaignHint": "Il resto si sblocca quando una campagna è attiva",
+    "gameTable": "Tavolo di gioco"
   },
   "themes": {
     "dark": "Scuro (Taverna di mezzanotte)",
@@ -2723,5 +2724,39 @@
       "name": "Modello vuoto",
       "description": "Modello vuoto: definisci tutto da solo"
     }
+  },
+  "gameTable": {
+    "title": "Tavolo di gioco",
+    "intro": "Porta il tuo gruppo al tavolo: avvia una partita, dai a ogni giocatore il suo PIN e condividi il codice o il QR code. I tuoi giocatori entrano dal telefono o dal portatile, senza account.",
+    "startHint": "Per questa campagna non è ancora in corso nessuna partita.",
+    "start": "Avvia partita",
+    "code": "Codice partita",
+    "copyCode": "Copia codice partita",
+    "link": "Link per i tuoi giocatori",
+    "copyLink": "Copia link",
+    "qrAlt": "QR code con il link alla partita",
+    "copied": "Copiato",
+    "close": "Termina partita",
+    "closeTitle": "Terminare la partita?",
+    "closeWarning": "La partita viene eliminata del tutto, con tutti i giocatori e i PIN. Una nuova partita avrà un nuovo codice.",
+    "closeConfirm": "Termina definitivamente",
+    "players": "Giocatori",
+    "addPlayer": "Aggiungi giocatore",
+    "editPlayer": "Modifica giocatore",
+    "removePlayer": "Rimuovi",
+    "playerActions": "Azioni giocatore",
+    "noPlayers": "Ancora nessuno al tavolo. Aggiungi i tuoi giocatori: ognuno riceve il proprio PIN.",
+    "name": "Nome del giocatore",
+    "linkEntity": "Collega a un giocatore della campagna (facoltativo)",
+    "linkEntityHint": "Usa l'immagine e il nome del tuo giocatore",
+    "pin": "PIN",
+    "copyPin": "Copia PIN",
+    "rollPin": "Tira un nuovo PIN",
+    "pinRolled": "Nuovo PIN generato",
+    "online": "Online",
+    "offline": "Offline",
+    "sharing": "Condivisione",
+    "sharingSoon": "Presto qui potrai condividere mappe, immagini e conoscenze con i tuoi giocatori.",
+    "error": "Qualcosa è andato storto. Riprova."
   }
 }

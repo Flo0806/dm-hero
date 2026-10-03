@@ -109,6 +109,13 @@
         to="/sessions"
       />
       <v-list-item
+        prepend-icon="mdi-table-furniture"
+        :title="$t('nav.gameTable')"
+        value="game-table"
+        :disabled="!hasActiveCampaign"
+        to="/game-table"
+      />
+      <v-list-item
         prepend-icon="mdi-sword-cross"
         :title="$t('nav.encounters')"
         value="encounters"

@@ -38,7 +38,8 @@
     "themePickerTitle": "Theme auswählen",
     "activeCampaign": "Aktive Kampagne",
     "chooseCampaign": "Kampagne wählen",
-    "chooseCampaignHint": "Alles Weitere geht, sobald eine Kampagne aktiv ist"
+    "chooseCampaignHint": "Alles Weitere geht, sobald eine Kampagne aktiv ist",
+    "gameTable": "Spieltisch"
   },
   "themes": {
     "dark": "Dunkel (Mitternachts-Taverne)",
@@ -2723,5 +2724,39 @@
       "name": "Leere Vorlage",
       "description": "Leere Vorlage - alles selbst definieren"
     }
+  },
+  "gameTable": {
+    "title": "Spieltisch",
+    "intro": "Hol deine Gruppe an den Tisch: Starte ein Spiel, gib jedem Spieler seine PIN und teile Code oder QR-Code. Deine Spieler treten mit Handy oder Laptop bei – ganz ohne Account.",
+    "startHint": "Für diese Kampagne läuft noch kein Spiel.",
+    "start": "Spiel starten",
+    "code": "Spielcode",
+    "copyCode": "Spielcode kopieren",
+    "link": "Link für deine Spieler",
+    "copyLink": "Link kopieren",
+    "qrAlt": "QR-Code mit dem Link zum Spiel",
+    "copied": "Kopiert",
+    "close": "Spiel beenden",
+    "closeTitle": "Spiel beenden?",
+    "closeWarning": "Das Spiel wird komplett gelöscht – mit allen Spielern und PINs. Ein neues Spiel bekommt einen neuen Code.",
+    "closeConfirm": "Endgültig beenden",
+    "players": "Spieler",
+    "addPlayer": "Spieler hinzufügen",
+    "editPlayer": "Spieler bearbeiten",
+    "removePlayer": "Entfernen",
+    "playerActions": "Aktionen für Spieler",
+    "noPlayers": "Noch niemand am Tisch. Füge deine Spieler hinzu – jeder bekommt seine eigene PIN.",
+    "name": "Spielername",
+    "linkEntity": "Mit Spieler aus der Kampagne verknüpfen (optional)",
+    "linkEntityHint": "Übernimmt Bild und Namen aus deinen Spielern",
+    "pin": "PIN",
+    "copyPin": "PIN kopieren",
+    "rollPin": "Neue PIN würfeln",
+    "pinRolled": "Neue PIN gewürfelt",
+    "online": "Online",
+    "offline": "Offline",
+    "sharing": "Teilen",
+    "sharingSoon": "Hier teilst du bald Karten, Bilder und Wissen mit deinen Spielern.",
+    "error": "Das hat nicht geklappt. Bitte versuch es noch einmal."
   }
 }
