@@ -29,8 +29,8 @@ interface EntityShareKindConfig<P extends Policy, M, H extends SharedKeys<P> = n
   hidden?: readonly H[]
   /** Field -> label key if they differ (labels live under <i18n>.<label>) */
   labels?: Partial<Record<string, string>>
-  /** Values of the kind's own fields (image + description are handled here) */
-  value: (field: Exclude<SharedKeys<P>, 'image' | 'description' | H>, ctx: { db: Database.Database, row: EntityRow, meta: M }) => LocalizedText | null
+  /** Values of the kind's own fields (image + description are handled here). Names of other entities via sharedEntityName (aliases!) */
+  value: (field: Exclude<SharedKeys<P>, 'image' | 'description' | H>, ctx: { db: Database.Database, tableId: number, row: EntityRow, meta: M }) => LocalizedText | null
 }
 
 export function defineEntityShareKind<P extends Policy, M, H extends SharedKeys<P> = never>(config: EntityShareKindConfig<P, M, H>): ShareKind {
@@ -41,7 +41,7 @@ export function defineEntityShareKind<P extends Policy, M, H extends SharedKeys<
   return {
     typeLabel: `${i18n}.title`,
     fields,
-    build(db, entityId, ticked) {
+    build(db, entityId, ticked, { tableId }) {
       const row = db.prepare(`
         SELECT e.id, e.name, e.description, e.metadata, e.image_url, e.location_id, e.parent_entity_id FROM entities e
         JOIN entity_types t ON t.id = e.type_id AND t.name = ?
@@ -59,11 +59,11 @@ export function defineEntityShareKind<P extends Policy, M, H extends SharedKeys<
           continue
         }
         if (field === 'description') {
-          const text = row.description?.trim() ? resolveEntityLinks(db, row.description) : ''
+          const text = row.description?.trim() ? resolveEntityLinks(db, tableId, row.description) : ''
           if (text) shared.push({ key: field, format: 'markdown', label: label(field), value: text })
           continue
         }
-        const value = config.value(field as Parameters<typeof config.value>[0], { db, row, meta })
+        const value = config.value(field as Parameters<typeof config.value>[0], { db, tableId, row, meta })
         if (value) shared.push({ key: field, format: 'text', label: label(field), value })
       }
       return { title: row.name, fields: shared }

@@ -23,10 +23,14 @@ export function usePlayerSession() {
     void getDeviceKey().then(async device => symbols.value = await fingerprint(device.publicKey))
     let gameKey: CryptoKey | null = null
     let dmVerifyKey: CryptoKey | null = null
+    /** Generation of the game key we hold - after a rotation newer shares wait for the new key */
+    let keyEpoch = 0
     /** Everything the DM shares, newest first */
     const shares = ref<ShareContent[]>([])
     // Shares can arrive before the game key - they wait here
     const queued: Array<{ id: string, envelope: Envelope }> = []
+    // Newest version per share (epoch, seq) - the relay must not replay an older one (e.g. undo a reveal)
+    const versions = new Map<string, { epoch: number, seq: number }>()
     /** Live reveals (not the initial load - that's just the current state) */
     const reveals = ref<Reveal[]>([])
     let live = false
@@ -43,14 +47,19 @@ export function usePlayerSession() {
     }
 
     async function addShare(id: string, envelope: Envelope) {
-      if (!gameKey || !dmVerifyKey) {
+      if (!gameKey || !dmVerifyKey || envelope.header.epoch > keyEpoch) {
         queued.push({ id, envelope })
         return
       }
+      const { header } = envelope
+      if (header.gameId !== gameId || header.from !== 'dm' || header.to !== 'all') return
+      const known = versions.get(id)
+      if (known && (header.epoch < known.epoch || (header.epoch === known.epoch && header.seq <= known.seq))) return
       try {
         const content = await open<ShareContent>(gameKey, envelope, dmVerifyKey)
         // The relay must not be able to swap shares
         if (content.shareId !== id) return
+        versions.set(id, { epoch: header.epoch, seq: header.seq })
         detectReveal(shares.value.find(s => s.shareId === id), content)
         shares.value = [content, ...shares.value.filter(s => s.shareId !== id)]
           .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
@@ -75,8 +84,11 @@ export function usePlayerSession() {
       if (!dm || device.publicKey !== publicKey) return
       try {
         const pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(dm.exchange), gameId)
+        // Never go back to an older key (replayed key package)
+        if (envelope.header.epoch < keyEpoch) return
         dmVerifyKey = await importVerifyKey(dm.signing)
         gameKey = await unwrapGameKey(envelope, pairKey, dmVerifyKey)
+        keyEpoch = envelope.header.epoch
         encrypted.value = true
         for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
         // Everything up to here was the current state - from now on changes are live moments

@@ -19,6 +19,8 @@ export default defineNuxtConfig({
     databasePath: '.data/staging.db',
     // Encrypted files (images ...). Override with NUXT_FILES_DIR
     filesDir: '.data/files',
+    // Behind a reverse proxy (FRP, nginx): trust X-Forwarded-For for rate limits. NUXT_TRUST_PROXY
+    trustProxy: false,
   },
 
   // Live game pages need the browser (EventSource) - no server rendering

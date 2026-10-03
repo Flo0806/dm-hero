@@ -21,19 +21,19 @@ beforeEach(() => {
 
 describe('item share content', () => {
   it('shares rarity in all languages and value with currency', () => {
-    const built = itemShareKind.build(db, itemId, ['rarity', 'value'])!
+    const built = itemShareKind.build(db, itemId, ['rarity', 'value'], { tableId: 0 })!
     expect(field(built.fields, 'rarity')!.value).toMatchObject({ de: 'Selten', en: 'Rare' })
     expect(field(built.fields, 'value')!.value).toBe('250 GP')
   })
 
   it('only offers fields DM Hero can edit (legacy fields are never shared)', () => {
     expect(itemShareKind.fields).toEqual(['image', 'description', 'type', 'rarity', 'value', 'weight'])
-    const built = itemShareKind.build(db, itemId, ['attunement', 'armor_class', 'rarity'])!
+    const built = itemShareKind.build(db, itemId, ['attunement', 'armor_class', 'rarity'], { tableId: 0 })!
     expect(built.fields.map(f => f.key)).toEqual(['rarity'])
   })
 
   it('holds the value back if not ticked, and never shares notes', () => {
-    const built = itemShareKind.build(db, itemId, ['rarity', 'notes', 'currency_id'])!
+    const built = itemShareKind.build(db, itemId, ['rarity', 'notes', 'currency_id'], { tableId: 0 })!
     expect(built.fields.map(f => f.key)).toEqual(['rarity'])
     expect(JSON.stringify(built)).not.toContain('Verflucht')
     expect(JSON.stringify(built)).not.toContain('250')

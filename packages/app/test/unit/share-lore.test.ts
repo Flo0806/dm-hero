@@ -11,7 +11,7 @@ describe('lore share content', () => {
     const loreId = Number(db.prepare('INSERT INTO entities (type_id, name, description, metadata, campaign_id) VALUES (?, ?, ?, ?, ?)')
       .run(typeId, 'Brief des Königs', 'Kommt **sofort**.', JSON.stringify({ type: 'letter', date: '12. Frostmond 1247' }), campaignId).lastInsertRowid)
 
-    const built = loreShareKind.build(db, loreId, ['type', 'date', 'description'])!
+    const built = loreShareKind.build(db, loreId, ['type', 'date', 'description'], { tableId: 0 })!
     const byKey = Object.fromEntries(built.fields.map(f => [f.key, f]))
     expect((byKey.type as { value: unknown }).value).toMatchObject({ de: 'Brief', en: 'Letter' })
     expect((byKey.date as { value: unknown }).value).toBe('12. Frostmond 1247')

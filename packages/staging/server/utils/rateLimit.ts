@@ -4,8 +4,15 @@ type H3Event = Parameters<typeof getHeader>[0]
 // Simple in-memory fixed window per key - enough for a single relay instance
 const windows = new Map<string, { count: number, resetAt: number }>()
 
-export function rateLimit(event: H3Event, scope: string, limit: number, windowMs: number) {
-  const key = `${scope}:${getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'}`
+/**
+ * Limit per client IP - or per given key (e.g. a game code, across all IPs).
+ * X-Forwarded-For is only trusted behind a known proxy (NUXT_TRUST_PROXY=true),
+ * otherwise anyone could fake a new IP per request.
+ */
+export function rateLimit(event: H3Event, scope: string, limit: number, windowMs: number, subject?: string) {
+  // Nuxt turns NUXT_TRUST_PROXY=true into a real boolean
+  const ip = getRequestIP(event, { xForwardedFor: useRuntimeConfig().trustProxy === true })
+  const key = `${scope}:${subject ?? ip ?? 'unknown'}`
   const now = Date.now()
   const entry = windows.get(key)
   if (!entry || entry.resetAt <= now) {

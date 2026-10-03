@@ -20,7 +20,7 @@ beforeEach(() => {
 
 describe('location share content', () => {
   it('shares type (all languages), region and where it lies', () => {
-    const built = locationShareKind.build(db, tavernId, ['type', 'region', 'parent', 'description'])!
+    const built = locationShareKind.build(db, tavernId, ['type', 'region', 'parent', 'description'], { tableId: 0 })!
     expect(built.title).toBe('Zum tänzelnden Pony')
     expect(field(built.fields, 'type')!.value).toMatchObject({ de: 'Taverne', en: 'Tavern' })
     expect(field(built.fields, 'region')!.value).toBe('Breeland')
@@ -29,7 +29,7 @@ describe('location share content', () => {
   })
 
   it('never shares notes', () => {
-    const built = locationShareKind.build(db, tavernId, ['notes', 'region'])!
+    const built = locationShareKind.build(db, tavernId, ['notes', 'region'], { tableId: 0 })!
     expect(built.fields.map(f => f.key)).toEqual(['region'])
     expect(JSON.stringify(built)).not.toContain('Spion')
   })

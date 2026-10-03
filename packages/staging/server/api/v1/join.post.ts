@@ -7,6 +7,8 @@ export default defineEventHandler(async (event) => {
   if (!code || !/^\d{6}$/.test(pin)) throw createError({ statusCode: 400, message: 'Code and 6-digit PIN required' })
   // The device's public key - DM Hero wraps the game key for it
   if (!isPublicKey(body?.publicKey)) throw createError({ statusCode: 400, message: 'Public key required' })
+  // Per game code across all IPs: guessing a 6-digit PIN stays impractical even from many addresses
+  rateLimit(event, 'join-code', 30, 60 * 1000, code)
 
   const db = useRelayDb()
   const game = db.prepare('SELECT id, dm_signing_public, dm_exchange_public FROM games WHERE code = ?').get(code) as

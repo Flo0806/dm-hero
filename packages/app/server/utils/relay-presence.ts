@@ -3,7 +3,7 @@ import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
 import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
-import { syncTableShares } from './share/sync'
+import { isTableBusy, syncTableShares } from './share/sync'
 
 // Keeps one outgoing SSE connection per game to the relay (works behind any router)
 // and fans the "who is online" state (+ devices waiting for approval) out to open pages.
@@ -28,6 +28,8 @@ const IDLE_MS = 30_000
 const SHARE_SYNC_MS = 5000
 
 function runShareSync(tableId: number) {
+  // Previous round still running (big images, slow relay) -> skip this tick
+  if (isTableBusy(tableId)) return
   syncTableShares(getDb(), tableId).catch(error => console.error('[Relay] Share sync failed:', error))
 }
 const connections = new Map<number, Connection>()

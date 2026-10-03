@@ -1,6 +1,7 @@
-import { derivePairKey, importExchangePublicKey, loadGameKeys, wrapGameKey, type StoredGameKeys } from '@dm-hero/seal'
+import { derivePairKey, importExchangePublicKey, loadGameKeys, rotateGameKey, wrapGameKey, type StoredGameKeys } from '@dm-hero/seal'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
+import { syncTableShares, withTableLock } from './share/sync'
 
 // Game key delivery per player device. New devices need the DM's approval first -
 // only then the relay can't sneak in a device of its own.
@@ -26,7 +27,7 @@ export async function deliverGameKey(tableId: number, playerId: number, publicKe
   const envelope = await wrapGameKey(
     keys.gameKey,
     pairKey,
-    { v: 1, gameId: table.relay_game_id, from: 'dm', to: String(playerId), epoch: 1, seq: Date.now() },
+    { v: 1, gameId: table.relay_game_id, from: 'dm', to: String(playerId), epoch: keys.epoch, seq: Date.now() },
     keys.signingKey,
   )
 
@@ -53,4 +54,30 @@ export async function rejectDevice(tableId: number, playerId: number, publicKey:
     headers: { authorization: `Bearer ${auth.relay_dm_token}` },
     body: { playerId: String(playerId), publicKey },
   })
+}
+
+/**
+ * Key rotation after a player was removed or got a new PIN: a new game key
+ * goes to every remaining approved device, then all shares are re-encrypted
+ * with it. The removed device keeps only the old key - nothing new to read.
+ */
+export async function rotateTableKey(tableId: number) {
+  const db = getDb()
+  await withTableLock(tableId, async () => {
+    const row = db.prepare('SELECT e2e_keys FROM game_tables WHERE id = ?').get(tableId) as { e2e_keys: string | null } | undefined
+    if (!row?.e2e_keys) return
+    const rotated = await rotateGameKey(JSON.parse(row.e2e_keys) as StoredGameKeys)
+    db.prepare('UPDATE game_tables SET e2e_keys = ? WHERE id = ?').run(JSON.stringify(rotated), tableId)
+
+    const devices = db.prepare('SELECT player_id, public_key FROM game_table_devices WHERE game_table_id = ?')
+      .all(tableId) as Array<{ player_id: number, public_key: string }>
+    for (const device of devices) {
+      // A device without a live session gets the new key when it asks again
+      await deliverGameKey(tableId, device.player_id, device.public_key)
+        .catch(error => console.error('[Relay] Key rotation delivery failed:', error))
+    }
+    // Everything players have was sealed with the old key -> re-send all
+    db.prepare('UPDATE game_table_shares SET content_hash = NULL WHERE game_table_id = ?').run(tableId)
+  })
+  await syncTableShares(db, tableId)
 }

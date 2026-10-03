@@ -1,6 +1,7 @@
 import { getDb } from '../../../../utils/db'
 import { generateUniquePin, getTablePlayers, requireNumericParam } from '../../../../utils/game-table'
 import { syncRelayPlayers } from '../../../../utils/relay'
+import { rotateTableKey } from '../../../../utils/relay-keys'
 
 // Roll a new PIN for a player (e.g. if the old one got out)
 export default defineEventHandler(async (event) => {
@@ -15,5 +16,7 @@ export default defineEventHandler(async (event) => {
   db.prepare('DELETE FROM game_table_devices WHERE player_id = ?').run(id)
   // New PIN on the relay kicks the player's old session
   await syncRelayPlayers(db, player.game_table_id)
+  // Old access is void - including the game key the old devices hold
+  await rotateTableKey(player.game_table_id)
   return getTablePlayers(db, player.game_table_id).find(p => p.id === id)
 })

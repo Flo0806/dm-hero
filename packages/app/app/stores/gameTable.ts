@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import type { GameTable, GameTablePlayer } from '~~/types/game-table'
 import type { GameTableShare, ShareType } from '~~/types/share'
 
+// Increases with every load - an older (slower) response must not overwrite a newer one
+let loadSeq = 0
+
 interface GameTableState {
   table: GameTable | null
   loading: boolean
@@ -34,11 +37,16 @@ export const useGameTableStore = defineStore('gameTable', {
 
   actions: {
     async load(campaignId: number) {
+      const seq = ++loadSeq
       this.loading = true
       try {
-        this.table = await $fetch<GameTable | null>('/api/game-table', { query: { campaignId } })
+        const table = await $fetch<GameTable | null>('/api/game-table', { query: { campaignId } })
+        // Campaign switched meanwhile -> this answer is outdated
+        if (seq !== loadSeq) return
+        this.table = table
         this.loadedCampaignId = campaignId
-        await this.loadShares()
+        const shares = table ? await $fetch<GameTableShare[]>(`/api/game-table/${table.id}/shares`) : []
+        if (seq === loadSeq) this.shares = shares
       }
       finally {
         this.loading = false

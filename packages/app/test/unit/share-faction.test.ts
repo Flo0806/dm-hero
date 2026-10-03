@@ -13,7 +13,7 @@ describe('faction share content', () => {
     const id = Number(db.prepare('INSERT INTO entities (type_id, name, metadata, location_id, campaign_id) VALUES (?, ?, ?, ?, ?)')
       .run(typeId('Faction'), 'Schattengilde', JSON.stringify(meta), hqId, campaignId).lastInsertRowid)
 
-    const without = factionShareKind.build(db, id, ['type', 'alignment', 'location', 'notes'])!
+    const without = factionShareKind.build(db, id, ['type', 'alignment', 'location', 'notes'], { tableId: 0 })!
     const byKey = Object.fromEntries(without.fields.map(f => [f.key, f])) as Record<string, { value: unknown, label: unknown }>
     expect(byKey.type!.value).toMatchObject({ de: 'Gilde', en: 'Guild' })
     expect(byKey.alignment!.value).toMatchObject({ en: 'Lawful Good' })
@@ -22,7 +22,7 @@ describe('faction share content', () => {
     expect(JSON.stringify(without)).not.toContain('König')
     expect(JSON.stringify(without)).not.toContain('Spitzel')
 
-    const withGoals = factionShareKind.build(db, id, ['goals'])!
+    const withGoals = factionShareKind.build(db, id, ['goals'], { tableId: 0 })!
     expect(withGoals.fields[0]).toMatchObject({ key: 'goals', value: 'Den König stürzen' })
   })
 })

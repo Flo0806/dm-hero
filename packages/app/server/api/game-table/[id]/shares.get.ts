@@ -12,6 +12,6 @@ export default defineEventHandler((event) => {
 
   return rows.map((row): GameTableShare => {
     const fields = JSON.parse(row.fields) as string[]
-    return { ...row, fields, title: SHARE_KINDS[row.entity_type]?.build(db, row.entity_id, fields)?.title ?? null }
+    return { ...row, fields, title: SHARE_KINDS[row.entity_type]?.build(db, row.entity_id, fields, { tableId })?.title ?? null }
   })
 })

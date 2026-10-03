@@ -1,5 +1,6 @@
 import type { FactionMetadata } from '~~/types/faction'
 import { defineEntityShareKind } from './define'
+import { sharedEntityName } from '../text'
 import { list, localize, type KnownKeys } from './helpers'
 
 // Every faction field MUST be listed as 'share' or 'private' (see npc.ts).
@@ -22,18 +23,13 @@ export const factionShareKind = defineEntityShareKind<typeof FACTION_FIELD_POLIC
   type: 'faction',
   policy: FACTION_FIELD_POLICY,
   labels: { location: 'currentLocation' },
-  value(field, { db, row, meta }) {
+  value(field, { db, tableId, row, meta }) {
     switch (field) {
       case 'type': return localize('factions.types', list(meta.type))
       case 'alignment': return localize('factions.alignments', list(meta.alignment))
       case 'headquarters': return trimmed(meta.headquarters)
       case 'goals': return trimmed(meta.goals)
-      case 'location': {
-        const location = row.location_id
-          ? db.prepare('SELECT name FROM entities WHERE id = ? AND deleted_at IS NULL').get(row.location_id) as { name: string } | undefined
-          : undefined
-        return location?.name ?? null
-      }
+      case 'location': return sharedEntityName(db, tableId, row.location_id)
     }
   },
 })

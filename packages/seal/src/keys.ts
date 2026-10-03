@@ -58,15 +58,24 @@ export async function derivePairKey(ownPrivate: CryptoKey, otherPublic: CryptoKe
   )
 }
 
+/** A fresh game key for the same game (rotation) - signing and exchange keys stay, the epoch goes up */
+export async function rotateGameKey(stored: StoredGameKeys): Promise<StoredGameKeys> {
+  const gameKey = await generateGameKey()
+  return { ...stored, epoch: (stored.epoch ?? 1) + 1, gameKey: toBase64Url(new Uint8Array(await subtle.exportKey('raw', gameKey))) }
+}
+
 // Storage on the DM's machine (DM Hero database). Private keys never go to the relay.
 
 export interface StoredGameKeys {
+  /** Generation of the game key - increases on every rotation (player removed, PIN rolled) */
+  epoch?: number
   gameKey: string
   signing: { privateKey: JsonWebKey, publicKey: string }
   exchange: { privateKey: JsonWebKey, publicKey: string }
 }
 
 export interface LoadedGameKeys {
+  epoch: number
   gameKey: CryptoKey
   signingKey: CryptoKey
   exchangeKey: CryptoKey
@@ -78,6 +87,7 @@ export interface LoadedGameKeys {
 export async function createGameKeys(): Promise<StoredGameKeys> {
   const [gameKey, signing, exchange] = await Promise.all([generateGameKey(), generateSigningKeyPair(), generateExchangeKeyPair()])
   return {
+    epoch: 1,
     gameKey: toBase64Url(new Uint8Array(await subtle.exportKey('raw', gameKey))),
     signing: { privateKey: await subtle.exportKey('jwk', signing.privateKey), publicKey: await exportPublicKey(signing.publicKey) },
     exchange: { privateKey: await subtle.exportKey('jwk', exchange.privateKey), publicKey: await exportPublicKey(exchange.publicKey) },
@@ -86,6 +96,7 @@ export async function createGameKeys(): Promise<StoredGameKeys> {
 
 export async function loadGameKeys(stored: StoredGameKeys): Promise<LoadedGameKeys> {
   return {
+    epoch: stored.epoch ?? 1,
     gameKey: await subtle.importKey('raw', fromBase64Url(stored.gameKey), { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']),
     signingKey: await subtle.importKey('jwk', stored.signing.privateKey, { name: 'ECDSA', ...CURVE }, false, ['sign']),
     exchangeKey: await subtle.importKey('jwk', stored.exchange.privateKey, { name: 'ECDH', ...CURVE }, false, ['deriveKey']),

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  createGameKeys, loadGameKeys, generateDeviceKeyPair, fingerprint, encryptFile, decryptFile,
+  createGameKeys, loadGameKeys, rotateGameKey, generateDeviceKeyPair, fingerprint, encryptFile, decryptFile,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
   type EnvelopeHeader,
@@ -126,5 +126,17 @@ describe('file encryption', () => {
 
     const other = (await encryptFile(data)).fileKey
     await expect(decryptFile(new Uint8Array(ciphertext), other)).rejects.toThrow()
+  })
+})
+
+describe('game key rotation', () => {
+  it('new key + higher epoch, signing and exchange keys stay', async () => {
+    const stored = await createGameKeys()
+    const rotated = await rotateGameKey(stored)
+    expect(rotated.epoch).toBe(2)
+    expect(rotated.gameKey).not.toBe(stored.gameKey)
+    expect(rotated.signing).toEqual(stored.signing)
+    expect(rotated.exchange).toEqual(stored.exchange)
+    expect((await loadGameKeys(rotated)).epoch).toBe(2)
   })
 })

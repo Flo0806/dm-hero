@@ -1,5 +1,6 @@
 import type { NpcMetadata } from '~~/types/npc'
 import { defineEntityShareKind } from './define'
+import { sharedEntityName, sharedName } from '../text'
 import { list, localize, type KnownKeys } from './helpers'
 
 // Every NPC field MUST be listed here as 'share' or 'private'. A new field in
@@ -22,7 +23,7 @@ const NPC_FIELD_POLICY = {
 export const npcShareKind = defineEntityShareKind<typeof NPC_FIELD_POLICY, NpcMetadata>({
   type: 'npc',
   policy: NPC_FIELD_POLICY,
-  value(field, { db, row, meta }) {
+  value(field, { db, tableId, row, meta }) {
     switch (field) {
       case 'race': return localize('referenceData.raceNames', list(meta.race))
       case 'class': return localize('referenceData.classNames', list(meta.class))
@@ -30,20 +31,16 @@ export const npcShareKind = defineEntityShareKind<typeof NPC_FIELD_POLICY, NpcMe
       case 'status': return localize('npcs.statuses', list(meta.status))
       case 'gender': return localize('npcs.genders', list(meta.gender))
       case 'age': return meta.age != null ? String(meta.age) : null
-      case 'location': {
-        const location = row.location_id
-          ? db.prepare('SELECT name FROM entities WHERE id = ? AND deleted_at IS NULL').get(row.location_id) as { name: string } | undefined
-          : undefined
-        return location?.name ?? (typeof meta.location === 'string' && meta.location.trim() ? meta.location : null)
-      }
+      case 'location':
+        return sharedEntityName(db, tableId, row.location_id) ?? (typeof meta.location === 'string' && meta.location.trim() ? meta.location : null)
       case 'faction': {
         // Faction relations in both directions (see CLAUDE.md: bidirectional relations)
         const names = (db.prepare(`
-          SELECT DISTINCT f.name FROM entity_relations r
+          SELECT DISTINCT f.id, f.name FROM entity_relations r
           JOIN entities f ON f.id = CASE WHEN r.from_entity_id = ? THEN r.to_entity_id ELSE r.from_entity_id END
           JOIN entity_types t ON t.id = f.type_id AND t.name = 'Faction'
           WHERE (r.from_entity_id = ? OR r.to_entity_id = ?) AND f.deleted_at IS NULL
-        `).all(row.id, row.id, row.id) as Array<{ name: string }>).map(f => f.name)
+        `).all(row.id, row.id, row.id) as Array<{ id: number, name: string }>).map(f => sharedName(db, tableId, f.id, f.name))
         return names.length ? names.join(', ') : null
       }
     }
