@@ -1,5 +1,5 @@
 <template>
-  <!-- Online status of a player. Not wired up yet - the player app connection comes later. -->
+  <!-- Online status of a player (live from the player relay) -->
   <span class="online-badge" :class="{ 'online-badge--on': online }">
     <span class="online-badge__dot" aria-hidden="true" />
     {{ online ? $t('gameTable.online') : $t('gameTable.offline') }}

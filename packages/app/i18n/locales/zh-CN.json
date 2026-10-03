@@ -2757,6 +2757,9 @@
     "offline": "离线",
     "sharing": "分享",
     "sharingSoon": "很快你就能在这里与玩家分享地图、图片和知识。",
-    "error": "操作失败，请重试。"
+    "error": "操作失败，请重试。",
+    "relayUnreachable": "暂时无法连接玩家服务器。请检查网络连接后重试。",
+    "relayConnected": "玩家服务器已连接",
+    "relayOffline": "无法连接玩家服务器"
   }
 }

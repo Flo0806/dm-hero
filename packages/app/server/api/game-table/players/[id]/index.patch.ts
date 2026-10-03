@@ -1,5 +1,6 @@
 import { getDb } from '../../../../utils/db'
 import { assertPlayerEntity, getTablePlayers, requireNumericParam } from '../../../../utils/game-table'
+import { syncRelayPlayers } from '../../../../utils/relay'
 
 // Rename a player or change the linked Player entity
 export default defineEventHandler(async (event) => {
@@ -19,5 +20,6 @@ export default defineEventHandler(async (event) => {
     assertPlayerEntity(db, player.game_table_id, body.playerEntityId)
     db.prepare('UPDATE game_table_players SET player_entity_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(body.playerEntityId, id)
   }
+  await syncRelayPlayers(db, player.game_table_id)
   return getTablePlayers(db, player.game_table_id).find(p => p.id === id)
 })

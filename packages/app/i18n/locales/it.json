@@ -2757,6 +2757,9 @@
     "offline": "Offline",
     "sharing": "Condivisione",
     "sharingSoon": "Presto qui potrai condividere mappe, immagini e conoscenze con i tuoi giocatori.",
-    "error": "Qualcosa è andato storto. Riprova."
+    "error": "Qualcosa è andato storto. Riprova.",
+    "relayUnreachable": "Il server dei giocatori non è raggiungibile al momento. Controlla la connessione a internet e riprova.",
+    "relayConnected": "Server dei giocatori connesso",
+    "relayOffline": "Server dei giocatori non raggiungibile"
   }
 }

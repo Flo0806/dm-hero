@@ -1,5 +1,6 @@
 import { getDb } from '../../../utils/db'
 import { assertPlayerEntity, generateUniquePin, getTablePlayers, requireNumericParam } from '../../../utils/game-table'
+import { syncRelayPlayers } from '../../../utils/relay'
 
 // Add a player to the table; the PIN is generated here
 export default defineEventHandler(async (event) => {
@@ -16,5 +17,6 @@ export default defineEventHandler(async (event) => {
 
   const result = db.prepare('INSERT INTO game_table_players (game_table_id, name, pin, player_entity_id) VALUES (?, ?, ?, ?)')
     .run(tableId, name, generateUniquePin(db, tableId), body?.playerEntityId ?? null)
+  await syncRelayPlayers(db, tableId)
   return getTablePlayers(db, tableId).find(p => p.id === Number(result.lastInsertRowid))
 })

@@ -8,7 +8,13 @@
     "welcome": "Glad you made it.",
     "instruction": "Scan your DM's QR code or enter their game code below – your adventure starts right here.",
     "codeLabel": "Game code",
-    "join": "Let's roll"
+    "join": "Let's roll",
+    "next": "Next",
+    "pinLabel": "Your PIN",
+    "pinHint": "Game {code} – your DM gives you the 6-digit PIN.",
+    "changeCode": "Change code",
+    "joinFailed": "Code or PIN is wrong. Best ask your DM.",
+    "tooManyAttempts": "Too many attempts. Wait a moment and try again."
   },
   "footer": {
     "tagline": "The player view of DM Hero – the free campaign manager for Dungeon Masters.",
@@ -18,5 +24,14 @@
     "language": "Language",
     "legalNav": "Legal",
     "newTab": "opens in a new tab"
+  },
+  "play": {
+    "connecting": "Connecting to the table …",
+    "welcome": "Welcome to the table, {name}!",
+    "waiting": "Sit back – as soon as your DM shares something, it shows up here.",
+    "connected": "Connected",
+    "reconnecting": "Reconnecting …",
+    "denied": "You're not (or no longer) in this game.",
+    "backToStart": "Join again"
   }
 }

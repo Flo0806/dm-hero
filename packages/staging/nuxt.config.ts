@@ -14,6 +14,16 @@ export default defineNuxtConfig({
     },
   },
 
+  runtimeConfig: {
+    // Relay database (node:sqlite). Override with NUXT_DATABASE_PATH
+    databasePath: '.data/staging.db',
+  },
+
+  // Live game pages need the browser (EventSource) - no server rendering
+  routeRules: {
+    '/play/**': { ssr: false },
+  },
+
   compatibilityDate: '2025-07-15',
 
   // Same languages as the DM Hero app. Default = browser language, fallback English.

@@ -8,7 +8,13 @@
     "welcome": "Content de te voir parmi nous.",
     "instruction": "Scanne le QR code de ton MJ ou saisis son code de partie ci-dessous : l'aventure commence ici.",
     "codeLabel": "Code de partie",
-    "join": "À l'aventure !"
+    "join": "À l'aventure !",
+    "next": "Suivant",
+    "pinLabel": "Ton PIN",
+    "pinHint": "Partie {code} : ton MJ te donne le PIN à 6 chiffres.",
+    "changeCode": "Changer de code",
+    "joinFailed": "Le code ou le PIN est incorrect. Demande à ton MJ.",
+    "tooManyAttempts": "Trop de tentatives. Attends un instant et réessaie."
   },
   "footer": {
     "tagline": "La vue joueurs de DM Hero – le gestionnaire de campagnes gratuit pour Maîtres du Jeu.",
@@ -18,5 +24,14 @@
     "language": "Langue",
     "legalNav": "Mentions légales",
     "newTab": "s'ouvre dans un nouvel onglet"
+  },
+  "play": {
+    "connecting": "Connexion à la table…",
+    "welcome": "Bienvenue à la table, {name} !",
+    "waiting": "Installe-toi : dès que ton MJ partage quelque chose, ça apparaît ici.",
+    "connected": "Connecté",
+    "reconnecting": "Reconnexion…",
+    "denied": "Tu n'es pas (ou plus) dans cette partie.",
+    "backToStart": "Rejoindre à nouveau"
   }
 }

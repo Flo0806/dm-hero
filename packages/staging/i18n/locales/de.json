@@ -8,7 +8,13 @@
     "welcome": "Schön, dass du am Tisch sitzt.",
     "instruction": "Scanne den QR-Code deines DMs oder gib unten den Spielcode ein – dein Abenteuer beginnt genau hier.",
     "codeLabel": "Spielcode",
-    "join": "Würfel raus!"
+    "join": "Würfel raus!",
+    "next": "Weiter",
+    "pinLabel": "Deine PIN",
+    "pinHint": "Spiel {code} – die 6-stellige PIN bekommst du von deinem DM.",
+    "changeCode": "Code ändern",
+    "joinFailed": "Code oder PIN stimmt nicht. Frag am besten deinen DM.",
+    "tooManyAttempts": "Zu viele Versuche. Warte kurz und probier es dann noch einmal."
   },
   "footer": {
     "tagline": "Die Spieleransicht von DM Hero – dem kostenlosen Kampagnen-Manager für Dungeon Master.",
@@ -18,5 +24,14 @@
     "language": "Sprache",
     "legalNav": "Rechtliches",
     "newTab": "öffnet in neuem Tab"
+  },
+  "play": {
+    "connecting": "Verbinde mit dem Tisch …",
+    "welcome": "Willkommen am Tisch, {name}!",
+    "waiting": "Lehn dich zurück – sobald dein DM etwas teilt, taucht es hier auf.",
+    "connected": "Verbunden",
+    "reconnecting": "Verbindung wird wiederhergestellt …",
+    "denied": "Du bist (nicht mehr) in diesem Spiel.",
+    "backToStart": "Neu beitreten"
   }
 }

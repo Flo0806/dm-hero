@@ -11,6 +11,25 @@ vi.mock('../../server/utils/db', async (importOriginal) => {
   return { ...original, getDb: () => db }
 })
 
+// The player relay is a separate server - simulate it
+const relayCalls: string[] = []
+vi.mock('../../server/utils/relay', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../../server/utils/relay')>()
+  return {
+    ...original,
+    createRelayGame: async () => {
+      relayCalls.push('create')
+      return { gameId: `relay-${relayCalls.length}`, code: `K7RX${String(relayCalls.length).padStart(2, '0')}`, dmToken: 'secret' }
+    },
+    deleteRelayGame: async () => {
+      relayCalls.push('delete')
+    },
+    syncRelayPlayers: async () => {
+      relayCalls.push('sync')
+    },
+  }
+})
+
 const STUBBED_KEYS = ['defineEventHandler', 'getQuery', 'getRouterParam', 'readBody', 'createError'] as const
 const originalGlobals = new Map<string, { had: boolean, value: unknown }>()
 let request: { query?: Record<string, string>, params?: Record<string, string>, body?: unknown } = {}
@@ -49,6 +68,7 @@ afterAll(() => {
 })
 
 beforeEach(() => {
+  relayCalls.length = 0
   db = getTestDb()
   campaignId = Number(db.prepare('INSERT INTO campaigns (name) VALUES (?)').run('Game Table').lastInsertRowid)
 })
@@ -58,10 +78,13 @@ async function startGame() {
 }
 
 describe('game table API', () => {
-  it('starts a game with a readable 6-char code and no players', async () => {
+  it('starts a game with the code from the relay and no players', async () => {
     const table = await startGame()
-    expect(table.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/)
+    expect(relayCalls).toEqual(['create'])
+    expect(table.code).toBe('K7RX01')
     expect(table.players).toEqual([])
+    // The DM token stays on the server - never in API responses
+    expect(JSON.stringify(table)).not.toContain('secret')
     expect(await call<GameTable | null>('index.get.ts', { query: { campaignId: String(campaignId) } })).toMatchObject({ id: table.id })
   })
 
@@ -80,6 +103,8 @@ describe('game table API', () => {
 
     const rolled = await call<GameTablePlayer>('players/[id]/pin.post.ts', { params: { id: String(anna.id) } })
     expect(rolled.pin).toMatch(/^\d{6}$/)
+    // Every player change is pushed to the relay
+    expect(relayCalls).toEqual(['create', 'sync', 'sync', 'sync'])
   })
 
   it('links only Player entities of the same campaign', async () => {
@@ -109,6 +134,7 @@ describe('game table API', () => {
     const table = await startGame()
     await call('[id]/players.post.ts', { params: { id: String(table.id) }, body: { name: 'Anna' } })
     await call('[id]/index.delete.ts', { params: { id: String(table.id) } })
+    expect(relayCalls).toContain('delete')
     expect(await call('index.get.ts', { query: { campaignId: String(campaignId) } })).toBeNull()
     expect(db.prepare('SELECT COUNT(*) AS n FROM game_table_players').get()).toEqual({ n: 0 })
   })

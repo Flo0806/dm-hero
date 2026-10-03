@@ -1,15 +1,6 @@
 import { randomInt } from 'node:crypto'
 import type Database from 'better-sqlite3'
-import { GAME_CODE_LENGTH, GAME_PIN_LENGTH, type GameTable, type GameTablePlayer } from '~~/types/game-table'
-
-// No look-alike characters (0/O, 1/I/L) - codes are read aloud at the table
-const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-
-export function generateGameCode(): string {
-  let code = ''
-  for (let i = 0; i < GAME_CODE_LENGTH; i++) code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]
-  return code
-}
+import { GAME_PIN_LENGTH, type GameTable, type GameTablePlayer } from '~~/types/game-table'
 
 /** 6-digit PIN that is not yet used at this table */
 export function generateUniquePin(db: Database.Database, tableId: number): string {

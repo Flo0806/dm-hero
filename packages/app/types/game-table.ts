@@ -20,8 +20,13 @@ export interface GameTable {
   players: GameTablePlayer[]
 }
 
-/** Length of the game code players type in */
-export const GAME_CODE_LENGTH = 6
-
 /** Length of a player's PIN */
 export const GAME_PIN_LENGTH = 6
+
+/** Live status from the player relay */
+export interface GameTablePresence {
+  /** Player server reachable */
+  connected: boolean
+  /** Ids of players that are online */
+  online: number[]
+}

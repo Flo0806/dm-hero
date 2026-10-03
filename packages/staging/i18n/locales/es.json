@@ -8,7 +8,13 @@
     "welcome": "¡Qué bien que hayas llegado!",
     "instruction": "Escanea el código QR de tu DM o escribe abajo su código de partida: tu aventura empieza aquí.",
     "codeLabel": "Código de partida",
-    "join": "¡A jugar!"
+    "join": "¡A jugar!",
+    "next": "Siguiente",
+    "pinLabel": "Tu PIN",
+    "pinHint": "Partida {code}: tu DM te da el PIN de 6 cifras.",
+    "changeCode": "Cambiar código",
+    "joinFailed": "El código o el PIN no es correcto. Pregúntale a tu DM.",
+    "tooManyAttempts": "Demasiados intentos. Espera un momento y vuelve a probar."
   },
   "footer": {
     "tagline": "La vista de jugadores de DM Hero – el gestor de campañas gratuito para Dungeon Masters.",
@@ -18,5 +24,14 @@
     "language": "Idioma",
     "legalNav": "Información legal",
     "newTab": "se abre en una pestaña nueva"
+  },
+  "play": {
+    "connecting": "Conectando con la mesa…",
+    "welcome": "¡Bienvenido a la mesa, {name}!",
+    "waiting": "Ponte cómodo: en cuanto tu DM comparta algo, aparecerá aquí.",
+    "connected": "Conectado",
+    "reconnecting": "Reconectando…",
+    "denied": "No estás (o ya no estás) en esta partida.",
+    "backToStart": "Volver a unirse"
   }
 }

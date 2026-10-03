@@ -1,7 +1,12 @@
 <template>
   <v-card class="pa-6 h-100">
-    <div class="text-overline text-medium-emphasis">
-      {{ $t('gameTable.code') }}
+    <div class="d-flex align-center">
+      <span class="text-overline text-medium-emphasis">{{ $t('gameTable.code') }}</span>
+      <v-spacer />
+      <span role="status" class="d-flex align-center ga-1 text-body-small" :class="connected ? 'text-success' : 'text-warning'">
+        <v-icon :icon="connected ? 'mdi-cloud-check-outline' : 'mdi-cloud-off-outline'" size="small" />
+        {{ connected ? $t('gameTable.relayConnected') : $t('gameTable.relayOffline') }}
+      </span>
     </div>
     <div class="d-flex align-center ga-2 mb-4">
       <span class="game-code">{{ code }}</span>
@@ -52,7 +57,7 @@
 <script setup lang="ts">
 import { renderSVG } from 'uqr'
 
-const props = defineProps<{ code: string }>()
+const props = defineProps<{ code: string, connected: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()

@@ -19,6 +19,7 @@
         v-for="player in players"
         :key="player.id"
         :player="player"
+        :online="online.includes(player.id)"
         @edit="openDialog(player)"
         @remove="emit('remove', player)"
         @roll-pin="emit('rollPin', player)"
@@ -33,7 +34,7 @@
 <script setup lang="ts">
 import type { GameTablePlayer } from '~~/types/game-table'
 
-defineProps<{ players: GameTablePlayer[] }>()
+defineProps<{ players: GameTablePlayer[], online: number[] }>()
 const emit = defineEmits<{
   add: [{ name: string, playerEntityId: number | null }]
   update: [GameTablePlayer, { name: string, playerEntityId: number | null }]

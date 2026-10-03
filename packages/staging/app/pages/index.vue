@@ -29,39 +29,9 @@
         {{ $t('home.instruction') }}
       </p>
 
-      <form class="flex flex-col sm:flex-row gap-2.5 w-full max-w-105" @submit.prevent="join">
-        <label for="game-code" class="sr-only">{{ $t('home.codeLabel') }}</label>
-        <input
-          id="game-code"
-          v-model="code"
-          :placeholder="$t('home.codeLabel')"
-          autocomplete="off"
-          autocapitalize="characters"
-          spellcheck="false"
-          maxlength="12"
-          class="flex-1 min-w-0 px-4.5 py-3.5 rounded-xl border border-line bg-surface/85 text-ink text-center text-lg font-bold uppercase tracking-[0.18em] transition placeholder:normal-case placeholder:tracking-normal placeholder:font-normal placeholder:text-muted outline-none focus:border-primary focus:ring-3 focus:ring-primary/25"
-        />
-        <button
-          type="submit"
-          :disabled="!normalizedCode"
-          class="px-5.5 py-3.5 rounded-xl border-none bg-primary text-bg font-bold cursor-pointer transition hover:enabled:bg-primary-hover active:enabled:scale-97 disabled:opacity-45 disabled:cursor-not-allowed focus-ring"
-        >
-          {{ $t('home.join') }}
-        </button>
-      </form>
+      <JoinForm @joined="gameId => navigateTo(`/play/${gameId}`)" />
     </main>
 
     <AppFooter />
   </div>
 </template>
-
-<script setup lang="ts">
-// QR codes / links from DM Hero carry the game code (?code=XXXXXX)
-const route = useRoute()
-const code = ref(typeof route.query.code === 'string' ? route.query.code : '')
-const normalizedCode = computed(() => code.value.trim().toUpperCase())
-
-function join() {
-  // Next step: look up the game by code and enter it
-}
-</script>

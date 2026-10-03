@@ -2757,6 +2757,9 @@
     "offline": "Hors ligne",
     "sharing": "Partage",
     "sharingSoon": "Bientôt, tu partageras ici cartes, images et savoir avec tes joueurs.",
-    "error": "Ça n'a pas marché. Réessaie."
+    "error": "Ça n'a pas marché. Réessaie.",
+    "relayUnreachable": "Le serveur des joueurs est injoignable pour le moment. Vérifie ta connexion internet et réessaie.",
+    "relayConnected": "Serveur des joueurs connecté",
+    "relayOffline": "Serveur des joueurs injoignable"
   }
 }

@@ -2757,6 +2757,9 @@
     "offline": "Desconectado",
     "sharing": "Compartir",
     "sharingSoon": "Pronto podrás compartir aquí mapas, imágenes y saber con tus jugadores.",
-    "error": "Algo salió mal. Inténtalo de nuevo."
+    "error": "Algo salió mal. Inténtalo de nuevo.",
+    "relayUnreachable": "El servidor de jugadores no está disponible ahora mismo. Comprueba tu conexión a internet e inténtalo de nuevo.",
+    "relayConnected": "Servidor de jugadores conectado",
+    "relayOffline": "Servidor de jugadores no disponible"
   }
 }

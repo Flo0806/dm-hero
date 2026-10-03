@@ -3,16 +3,17 @@
     <GameTableIntro />
 
     <template v-if="loaded">
-      <GameTableStart v-if="!store.table" :loading="busy" @start="run(() => store.start(campaignId!))" />
+      <GameTableStart v-if="!store.table" :loading="busy" @start="startGame" />
 
       <template v-else>
         <v-row>
           <v-col cols="12" md="5">
-            <GameTableJoinCard :code="store.table.code" @close="closeDialog = true" />
+            <GameTableJoinCard :code="store.table.code" :connected="presence.connected" @close="closeDialog = true" />
           </v-col>
           <v-col cols="12" md="7">
             <GameTablePlayers
               :players="store.table.players"
+              :online="presence.online"
               @add="data => run(() => store.addPlayer(data.name, data.playerEntityId))"
               @update="(player, data) => run(() => store.updatePlayer(player.id, data))"
               @remove="player => run(() => store.removePlayer(player.id))"
@@ -42,6 +43,11 @@ const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
 
+// Live online status, only while the page runs in the browser
+const presence = import.meta.client
+  ? useGameTablePresence(() => store.table?.id ?? null)
+  : ref({ connected: false, online: [] as number[] })
+
 // Every action: busy flag + snackbar on success/failure (no alert())
 async function run(action: () => Promise<unknown>, successMessage?: string) {
   busy.value = true
@@ -60,6 +66,20 @@ async function run(action: () => Promise<unknown>, successMessage?: string) {
 async function copy(value: string) {
   await navigator.clipboard.writeText(value)
   snackbarStore.success(t('gameTable.copied'))
+}
+
+async function startGame() {
+  busy.value = true
+  try {
+    await store.start(campaignId.value!)
+  }
+  catch (e) {
+    // 502 = player server (relay) not reachable
+    snackbarStore.error((e as { statusCode?: number }).statusCode === 502 ? t('gameTable.relayUnreachable') : t('gameTable.error'))
+  }
+  finally {
+    busy.value = false
+  }
 }
 
 async function closeGame() {

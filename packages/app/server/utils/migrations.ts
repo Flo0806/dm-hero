@@ -2701,6 +2701,20 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 55: Created game_tables + game_table_players')
     },
   },
+  {
+    version: 56,
+    name: 'game_tables_relay',
+    up: (db) => {
+      // Games are now registered on the player relay (packages/staging), which also
+      // hands out the globally unique code. Local-only games from before can't be
+      // joined, so they are removed (feature was unreleased).
+      db.exec('DELETE FROM game_tables')
+      db.exec('ALTER TABLE game_tables ADD COLUMN relay_game_id TEXT')
+      db.exec('ALTER TABLE game_tables ADD COLUMN relay_dm_token TEXT')
+
+      console.log('✅ Migration 56: Added relay columns to game_tables')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

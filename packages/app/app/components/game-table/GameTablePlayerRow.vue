@@ -11,7 +11,7 @@
       {{ player.name }}
     </v-list-item-title>
     <v-list-item-subtitle class="d-flex align-center flex-wrap ga-3">
-      <GameTableOnlineBadge />
+      <GameTableOnlineBadge :online="online" />
       <span v-if="player.player_entity_name">
         <v-icon icon="mdi-link-variant" size="small" /> {{ player.player_entity_name }}
       </span>
@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import type { GameTablePlayer } from '~~/types/game-table'
 
-defineProps<{ player: GameTablePlayer }>()
+defineProps<{ player: GameTablePlayer, online?: boolean }>()
 const emit = defineEmits<{ edit: [], remove: [], rollPin: [], copyPin: [] }>()
 </script>
 
