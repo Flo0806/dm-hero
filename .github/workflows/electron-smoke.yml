@@ -1,0 +1,97 @@
+name: Electron Smoke Test
+
+# Builds the unpacked Electron app on every platform and actually LAUNCHES it:
+# server must start, DB write + read must work, app must stay alive.
+# Runs on branch pushes and PRs that touch dependencies or Electron code.
+# Never publishes anything.
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'packages/app/package.json'
+      - 'packages/app/electron/**'
+      - 'packages/app/scripts/electron-rebuild.js'
+      - 'packages/app/scripts/electron-smoke.mjs'
+      - 'packages/mcp/package.json'
+      - '.github/workflows/electron-smoke.yml'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'packages/app/package.json'
+      - 'packages/app/electron/**'
+      - 'packages/app/scripts/electron-rebuild.js'
+      - 'packages/app/scripts/electron-smoke.mjs'
+      - 'packages/mcp/package.json'
+      - '.github/workflows/electron-smoke.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: electron-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-15]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build MCP
+        run: pnpm --filter @dm-hero/mcp build
+
+      - name: Build Nuxt
+        run: pnpm --filter @dm-hero/app build
+
+      - name: Rebuild better-sqlite3 for Electron
+        run: pnpm --filter @dm-hero/app electron:rebuild
+
+      - name: Package Electron app (unpacked)
+        working-directory: packages/app
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pnpm exec electron-builder --win --dir --publish never
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            pnpm exec electron-builder --mac --dir --publish never --config.mac.identity=null
+          else
+            pnpm exec electron-builder --linux --dir --publish never
+          fi
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Install virtual display (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Launch packaged app (Linux)
+        if: runner.os == 'Linux'
+        working-directory: packages/app
+        run: xvfb-run --auto-servernum node scripts/electron-smoke.mjs
+
+      - name: Launch packaged app
+        if: runner.os != 'Linux'
+        working-directory: packages/app
+        run: node scripts/electron-smoke.mjs
