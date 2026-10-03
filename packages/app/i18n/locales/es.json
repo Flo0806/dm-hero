@@ -2760,6 +2760,10 @@
     "error": "Algo salió mal. Inténtalo de nuevo.",
     "relayUnreachable": "El servidor de jugadores no está disponible ahora mismo. Comprueba tu conexión a internet e inténtalo de nuevo.",
     "relayConnected": "Servidor de jugadores conectado",
-    "relayOffline": "Servidor de jugadores no disponible"
+    "relayOffline": "Servidor de jugadores no disponible",
+    "restart": "Nueva partida",
+    "restartTitle": "¿Empezar una partida nueva?",
+    "restartWarning": "La partida actual se termina y se borra: todos los jugadores salen. La nueva partida tendrá un código nuevo y tendrás que añadir a los jugadores de nuevo.",
+    "restartConfirm": "Empezar de nuevo"
   }
 }

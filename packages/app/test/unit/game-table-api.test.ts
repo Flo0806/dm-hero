@@ -26,6 +26,10 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
     deleteRelayGame: async () => {
       relayCalls.push('delete')
     },
+    endGameTable: async (database: Database.Database, tableId: number) => {
+      relayCalls.push('delete')
+      return database.prepare('DELETE FROM game_tables WHERE id = ?').run(tableId).changes > 0
+    },
     syncRelayPlayers: async () => {
       relayCalls.push('sync')
     },
@@ -96,9 +100,15 @@ describe('game table API', () => {
     expect(await call<GameTable | null>('index.get.ts', { query: { campaignId: String(campaignId) } })).toMatchObject({ id: table.id })
   })
 
-  it('refuses a second game for the same campaign', async () => {
-    await startGame()
-    await expect(startGame()).rejects.toMatchObject({ statusCode: 409 })
+  it('a new game replaces the old one (ended on the relay too)', async () => {
+    const first = await startGame()
+    await call('[id]/players.post.ts', { params: { id: String(first.id) }, body: { name: 'Anna' } })
+    const second = await startGame()
+
+    expect(second.id).not.toBe(first.id)
+    expect(second.players).toEqual([])
+    expect(relayCalls).toEqual(['create', 'sync', 'create', 'delete'])
+    expect(db.prepare('SELECT COUNT(*) AS n FROM game_tables').get()).toEqual({ n: 1 })
   })
 
   it('adds players with unique 6-digit PINs and rolls new ones', async () => {

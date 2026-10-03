@@ -2760,6 +2760,10 @@
     "error": "Ça n'a pas marché. Réessaie.",
     "relayUnreachable": "Le serveur des joueurs est injoignable pour le moment. Vérifie ta connexion internet et réessaie.",
     "relayConnected": "Serveur des joueurs connecté",
-    "relayOffline": "Serveur des joueurs injoignable"
+    "relayOffline": "Serveur des joueurs injoignable",
+    "restart": "Nouvelle partie",
+    "restartTitle": "Lancer une nouvelle partie ?",
+    "restartWarning": "La partie en cours est terminée et supprimée : tous les joueurs sont retirés. La nouvelle partie aura un nouveau code, tu ajoutes de nouveau les joueurs.",
+    "restartConfirm": "Recommencer"
   }
 }

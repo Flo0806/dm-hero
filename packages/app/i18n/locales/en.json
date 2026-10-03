@@ -2760,6 +2760,10 @@
     "error": "That didn't work. Please try again.",
     "relayUnreachable": "The player server can't be reached right now. Check your internet connection and try again.",
     "relayConnected": "Player server connected",
-    "relayOffline": "Player server unreachable"
+    "relayOffline": "Player server unreachable",
+    "restart": "Start new game",
+    "restartTitle": "Start a new game?",
+    "restartWarning": "The current game is ended and deleted – all players are removed. The new game gets a new code, you add the players again.",
+    "restartConfirm": "Start new"
   }
 }

@@ -60,3 +60,13 @@ export async function syncRelayPlayers(db: Database.Database, tableId: number) {
     console.error('[Relay] Player sync failed:', error)
   }
 }
+
+/**
+ * Ends a game for good: relay first (players get "game ended" and are kicked),
+ * then locally. A relay that is down must not block this - its games expire there.
+ */
+export async function endGameTable(db: Database.Database, tableId: number) {
+  const auth = getRelayAuth(db, tableId)
+  if (auth) await deleteRelayGame(auth).catch(error => console.error('[Relay] Delete failed:', error))
+  return db.prepare('DELETE FROM game_tables WHERE id = ?').run(tableId).changes > 0
+}

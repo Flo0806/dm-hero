@@ -2760,6 +2760,10 @@
     "error": "操作失败，请重试。",
     "relayUnreachable": "暂时无法连接玩家服务器。请检查网络连接后重试。",
     "relayConnected": "玩家服务器已连接",
-    "relayOffline": "无法连接玩家服务器"
+    "relayOffline": "无法连接玩家服务器",
+    "restart": "开始新游戏",
+    "restartTitle": "开始新游戏？",
+    "restartWarning": "当前游戏将被结束并删除——所有玩家都会退出。新游戏会使用新的代码，你需要重新添加玩家。",
+    "restartConfirm": "重新开始"
   }
 }

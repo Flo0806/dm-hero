@@ -19,9 +19,12 @@ interface Connection {
   listeners: Set<Listener>
   abort: AbortController
   retry: ReturnType<typeof setTimeout> | null
+  idle: ReturnType<typeof setTimeout> | null
 }
 
 const RETRY_MS = 3000
+// Nobody watching (campaign switched, app closed) -> disconnect. Long enough to survive a page reload.
+const IDLE_MS = 30_000
 const connections = new Map<number, Connection>()
 
 function emit(tableId: number) {
@@ -90,13 +93,19 @@ async function run(tableId: number) {
 export function watchPresence(tableId: number, listener: Listener) {
   let conn = connections.get(tableId)
   if (!conn) {
-    conn = { state: { connected: false, online: [] }, listeners: new Set(), abort: new AbortController(), retry: null }
+    conn = { state: { connected: false, online: [] }, listeners: new Set(), abort: new AbortController(), retry: null, idle: null }
     connections.set(tableId, conn)
     void run(tableId)
   }
+  if (conn.idle) clearTimeout(conn.idle)
+  conn.idle = null
   conn.listeners.add(listener)
   listener(conn.state)
-  return () => conn!.listeners.delete(listener)
+
+  return () => {
+    conn!.listeners.delete(listener)
+    if (conn!.listeners.size === 0) conn!.idle = setTimeout(() => stopPresence(tableId), IDLE_MS)
+  }
 }
 
 /** Game ended: drop the relay connection */
@@ -105,5 +114,6 @@ export function stopPresence(tableId: number) {
   if (!conn) return
   conn.abort.abort()
   if (conn.retry) clearTimeout(conn.retry)
+  if (conn.idle) clearTimeout(conn.idle)
   connections.delete(tableId)
 }

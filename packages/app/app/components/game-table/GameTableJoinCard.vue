@@ -42,15 +42,14 @@
     <!-- White background: QR codes need contrast + quiet zone to scan reliably -->
     <img :src="qrSrc" :alt="$t('gameTable.qrAlt')" width="180" height="180" class="qr" />
 
-    <v-btn
-      variant="text"
-      color="error"
-      prepend-icon="mdi-stop-circle-outline"
-      class="mt-4"
-      @click="emit('close')"
-    >
-      {{ $t('gameTable.close') }}
-    </v-btn>
+    <div class="d-flex flex-wrap ga-2 mt-4">
+      <v-btn variant="text" prepend-icon="mdi-restart" @click="emit('restart')">
+        {{ $t('gameTable.restart') }}
+      </v-btn>
+      <v-btn variant="text" color="error" prepend-icon="mdi-stop-circle-outline" @click="emit('close')">
+        {{ $t('gameTable.close') }}
+      </v-btn>
+    </div>
   </v-card>
 </template>
 
@@ -58,7 +57,7 @@
 import { renderSVG } from 'uqr'
 
 const props = defineProps<{ code: string, connected: boolean }>()
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: [], restart: [] }>()
 
 const { t } = useI18n()
 const snackbarStore = useSnackbarStore()

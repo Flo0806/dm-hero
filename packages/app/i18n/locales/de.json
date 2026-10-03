@@ -2760,6 +2760,10 @@
     "error": "Das hat nicht geklappt. Bitte versuch es noch einmal.",
     "relayUnreachable": "Der Spieler-Server ist gerade nicht erreichbar. Prüf deine Internetverbindung und versuch es noch einmal.",
     "relayConnected": "Spieler-Server verbunden",
-    "relayOffline": "Spieler-Server nicht erreichbar"
+    "relayOffline": "Spieler-Server nicht erreichbar",
+    "restart": "Neues Spiel starten",
+    "restartTitle": "Neues Spiel starten?",
+    "restartWarning": "Das aktuelle Spiel wird beendet und gelöscht – alle Spieler fliegen raus. Das neue Spiel bekommt einen neuen Code, Spieler musst du neu anlegen.",
+    "restartConfirm": "Neu starten"
   }
 }

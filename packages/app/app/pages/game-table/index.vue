@@ -8,7 +8,12 @@
       <template v-else>
         <v-row>
           <v-col cols="12" md="5">
-            <GameTableJoinCard :code="store.table.code" :connected="presence.connected" @close="closeDialog = true" />
+            <GameTableJoinCard
+              :code="store.table.code"
+              :connected="presence.connected"
+              @close="openDialog(false)"
+              @restart="openDialog(true)"
+            />
           </v-col>
           <v-col cols="12" md="7">
             <GameTablePlayers
@@ -27,7 +32,7 @@
       </template>
     </template>
 
-    <GameTableCloseDialog v-model:show="closeDialog" :loading="busy" @confirm="closeGame" />
+    <GameTableCloseDialog v-model:show="closeDialog" :restart="restartMode" :loading="busy" @confirm="confirmDialog" />
   </div>
 </template>
 
@@ -42,6 +47,7 @@ const campaignId = computed(() => campaignStore.activeCampaignIdNumber)
 const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
+const restartMode = ref(false)
 
 // Live online status, only while the page runs in the browser
 const presence = import.meta.client
@@ -82,8 +88,15 @@ async function startGame() {
   }
 }
 
-async function closeGame() {
-  await run(() => store.close())
+function openDialog(restart: boolean) {
+  restartMode.value = restart
+  closeDialog.value = true
+}
+
+// End the game, or replace it with a new one (the server ends the old one first)
+async function confirmDialog() {
+  if (restartMode.value) await startGame()
+  else await run(() => store.close())
   closeDialog.value = false
 }
 
