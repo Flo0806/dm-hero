@@ -1,5 +1,14 @@
 # @dm-hero/app
 
+## 1.5.5
+
+### Patch Changes
+
+- 8711645: Search results on all entity list pages now respect the "show archived" toggle, and folder counts no longer include hidden archived entities.
+- 77cc286: Fix random Docker crashes (`RemoveEnvironmentCleanupHook` assertion) by pinning the image to Node 24.18.0 until Node fixes its 24.19+ regression.
+- ec24826: NPC search by location name now reliably finds all NPCs at that location (current location and links in both directions), and the chaos graph of a location shows entities that have it as their current location.
+- 03380bb: Update dependencies (Nuxt 4.5.2, Vuetify 4.2.3, Vue 3.5.43, Electron 41.10.7 and more).
+
 ## 1.5.4
 
 ### Patch Changes
