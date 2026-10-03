@@ -36,11 +36,14 @@
     "encrypted": "End-to-end encrypted",
     "waitingApproval": "Waiting for your DM to let you in …",
     "compareSymbols": "Your DM sees the same symbols – compare them quickly:",
-    "sharedTitle": "Shared by your DM",
-    "nothingShared": "Your DM hasn't shared anything yet – it shows up here as soon as they do.",
-    "close": "Close"
+    "close": "Close",
+    "new": "New",
+    "back": "Back",
+    "search": "Search shared content",
+    "noResults": "Nothing found.",
+    "opened": "Opened"
   },
-  "types": {
-    "npc": "NPC"
+  "typesPlural": {
+    "npc": "NPCs"
   }
 }

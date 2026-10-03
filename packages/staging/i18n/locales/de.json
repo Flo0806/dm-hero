@@ -36,11 +36,14 @@
     "encrypted": "Ende-zu-Ende verschlüsselt",
     "waitingApproval": "Warte auf die Bestätigung deines DMs …",
     "compareSymbols": "Dein DM sieht dieselben Symbole – vergleicht sie kurz:",
-    "sharedTitle": "Geteilt von deinem DM",
-    "nothingShared": "Dein DM hat noch nichts geteilt – sobald er es tut, taucht es hier auf.",
-    "close": "Schließen"
+    "close": "Schließen",
+    "new": "Neu",
+    "back": "Zurück",
+    "search": "Geteilte Inhalte durchsuchen",
+    "noResults": "Nichts gefunden.",
+    "opened": "Geöffnet"
   },
-  "types": {
-    "npc": "NPC"
+  "typesPlural": {
+    "npc": "NPCs"
   }
 }

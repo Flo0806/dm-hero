@@ -36,11 +36,14 @@
     "encrypted": "Crittografia end-to-end",
     "waitingApproval": "In attesa che il tuo DM ti faccia entrare…",
     "compareSymbols": "Il tuo DM vede gli stessi simboli: confrontateli un attimo:",
-    "sharedTitle": "Condiviso dal tuo DM",
-    "nothingShared": "Il tuo DM non ha ancora condiviso niente: apparirà qui appena lo farà.",
-    "close": "Chiudi"
+    "close": "Chiudi",
+    "new": "Nuovo",
+    "back": "Indietro",
+    "search": "Cerca nei contenuti condivisi",
+    "noResults": "Nessun risultato.",
+    "opened": "Aperti"
   },
-  "types": {
+  "typesPlural": {
     "npc": "PNG"
   }
 }
