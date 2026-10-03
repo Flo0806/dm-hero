@@ -437,6 +437,7 @@ const viewDialogCounts = ref<{
   items: number
   factions: number
   locations: number
+  players: number
   documents: number
   images: number
 } | null>(null)
@@ -987,6 +988,7 @@ function translateRelationType(relationType: string): string {
     `locations.relationTypes.${relationType}`,
     `lore.relationTypes.${relationType}`,
     `players.relationTypes.${relationType}`,
+    `chaos.relationTypes.${relationType}`,
   ]
 
   // Use te() to check if key exists before calling t() - avoids console warnings

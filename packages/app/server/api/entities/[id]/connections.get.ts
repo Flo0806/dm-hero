@@ -126,8 +126,57 @@ export default defineEventHandler((event) => {
     )
     .all(id)
 
+  // Get entities whose current location (location_id) is this entity
+  const residents = db
+    .prepare<unknown[], DbConnection>(
+      `
+      SELECT
+        -(e.id * 10 + 2) as relation_id,
+        e.id as entity_id,
+        e.name as entity_name,
+        et.name as entity_type,
+        et.id as entity_type_id,
+        et.icon as entity_icon,
+        et.color as entity_color,
+        e.image_url as entity_image_url,
+        'locatedHere' as relation_type,
+        NULL as relation_notes,
+        'incoming' as direction
+      FROM entities e
+      INNER JOIN entity_types et ON e.type_id = et.id
+      WHERE e.location_id = ?
+        AND e.deleted_at IS NULL
+      ORDER BY et.name, e.name
+    `,
+    )
+    .all(id)
+
+  // Get this entity's current location (if location_id is set)
+  const currentLocation = db
+    .prepare<unknown[], DbConnection>(
+      `
+      SELECT
+        -(e.id * 10 + 3) as relation_id,
+        e.id as entity_id,
+        e.name as entity_name,
+        et.name as entity_type,
+        et.id as entity_type_id,
+        et.icon as entity_icon,
+        et.color as entity_color,
+        e.image_url as entity_image_url,
+        'locatedAt' as relation_type,
+        NULL as relation_notes,
+        'outgoing' as direction
+      FROM entities e
+      INNER JOIN entity_types et ON e.type_id = et.id
+      WHERE e.id = (SELECT location_id FROM entities WHERE id = ? AND deleted_at IS NULL)
+        AND e.deleted_at IS NULL
+    `,
+    )
+    .all(id)
+
   // Combine and deduplicate (same entity might have multiple relation types)
-  const allConnections = [...outgoing, ...incoming, ...children, ...parent]
+  const allConnections = [...outgoing, ...incoming, ...children, ...parent, ...residents, ...currentLocation]
 
   // Get unique entity IDs from connections
   const connectedEntityIds = [...new Set(allConnections.map(c => c.entity_id))]

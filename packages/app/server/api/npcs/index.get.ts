@@ -12,6 +12,7 @@ import {
   getLocaleFromEvent,
 } from '../../utils/i18n-lookup'
 import { normalizeText } from '../../utils/normalize'
+import { LINKED_LOCATION_NAMES_SQL, locationNameMatchesSearch } from '../../utils/location-search'
 import type { NpcMetadata } from '../../types/metadata'
 
 // Initialize Levenshtein function once
@@ -231,15 +232,13 @@ export default defineEventHandler(async (event) => {
           e.archived_at,
           e.folder_id,
           GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-          GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+          ${LINKED_LOCATION_NAMES_SQL} as linked_location_names,
           GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
           GROUP_CONCAT(DISTINCT npc_out.name || '|' || npc_in.name) as linked_npc_names
         FROM entities_fts fts
         INNER JOIN entities e ON fts.rowid = e.id
         LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
         LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
-        LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
-        LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
         LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
         LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
         LEFT JOIN entity_relations npc_rel_out ON npc_rel_out.from_entity_id = e.id
@@ -276,15 +275,13 @@ export default defineEventHandler(async (event) => {
             e.archived_at,
             e.folder_id,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-            GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+            ${LINKED_LOCATION_NAMES_SQL} as linked_location_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
             GROUP_CONCAT(DISTINCT npc_out.name || '|' || npc_in.name) as linked_npc_names
           FROM entities_fts fts
           INNER JOIN entities e ON fts.rowid = e.id
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
-          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
-          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
           LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
           LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           LEFT JOIN entity_relations npc_rel_out ON npc_rel_out.from_entity_id = e.id
@@ -307,10 +304,14 @@ export default defineEventHandler(async (event) => {
       const hasOrOperator = parsedQuery.fts5Query.toUpperCase().includes(' OR ')
       const hasAndOperator = parsedQuery.fts5Query.toUpperCase().includes(' AND ')
 
+      // If the search term matches a Location name, FTS5 hits alone would hide NPCs
+      // that are only linked to that location (relation or current location)
+      const matchesLocationName = locationNameMatchesSearch(db, campaignId, searchTerm.replace(/"/g, ''))
+
       // For operator queries (AND/OR): ALWAYS use Levenshtein fallback
       // This ensures we catch typos in ALL terms
       // ALSO: If FTS5 found 0 results, use full table scan (catches cross-entity searches like Lore names)
-      if (parsedQuery.hasOperators || npcs.length === 0) {
+      if (parsedQuery.hasOperators || npcs.length === 0 || matchesLocationName) {
         npcs = db
           .prepare(
             `
@@ -325,14 +326,12 @@ export default defineEventHandler(async (event) => {
             e.archived_at,
             e.folder_id,
             GROUP_CONCAT(DISTINCT faction.name) as linked_faction_names,
-            GROUP_CONCAT(DISTINCT location.name) as linked_location_names,
+            ${LINKED_LOCATION_NAMES_SQL} as linked_location_names,
             GROUP_CONCAT(DISTINCT lore.name) as linked_lore_names,
             GROUP_CONCAT(DISTINCT npc_out.name || '|' || npc_in.name) as linked_npc_names
           FROM entities e
           LEFT JOIN entity_relations faction_rel ON faction_rel.from_entity_id = e.id
           LEFT JOIN entities faction ON faction.id = faction_rel.to_entity_id AND faction.deleted_at IS NULL AND faction.type_id = (SELECT id FROM entity_types WHERE name = 'Faction')
-          LEFT JOIN entity_relations location_rel ON location_rel.from_entity_id = e.id
-          LEFT JOIN entities location ON location.id = location_rel.to_entity_id AND location.deleted_at IS NULL AND location.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
           LEFT JOIN entity_relations lore_rel ON lore_rel.from_entity_id = e.id
           LEFT JOIN entities lore ON lore.id = lore_rel.to_entity_id AND lore.deleted_at IS NULL AND lore.type_id = (SELECT id FROM entity_types WHERE name = 'Lore')
           LEFT JOIN entity_relations npc_rel_out ON npc_rel_out.from_entity_id = e.id

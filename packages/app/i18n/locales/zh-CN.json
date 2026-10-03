@@ -2220,7 +2220,11 @@
     "connections": "连接",
     "total": "总计",
     "noConnections": "无连接",
-    "noConnectionsText": "该实体还没有链接"
+    "noConnectionsText": "该实体还没有链接",
+    "relationTypes": {
+      "locatedHere": "位于此处",
+      "locatedAt": "位于"
+    }
   },
   "entities": {
     "types": {

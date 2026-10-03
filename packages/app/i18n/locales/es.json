@@ -2220,7 +2220,11 @@
     "connections": "Conexiones",
     "total": "en total",
     "noConnections": "Sin conexiones",
-    "noConnectionsText": "Esta entidad aún no tiene vínculos"
+    "noConnectionsText": "Esta entidad aún no tiene vínculos",
+    "relationTypes": {
+      "locatedHere": "se encuentra aquí",
+      "locatedAt": "se encuentra en"
+    }
   },
   "entities": {
     "types": {

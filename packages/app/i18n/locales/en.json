@@ -2220,7 +2220,11 @@
     "connections": "Connections",
     "total": "total",
     "noConnections": "No connections",
-    "noConnectionsText": "This entity has no links yet"
+    "noConnectionsText": "This entity has no links yet",
+    "relationTypes": {
+      "locatedHere": "located here",
+      "locatedAt": "located at"
+    }
   },
   "entities": {
     "types": {
