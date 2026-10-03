@@ -1056,7 +1056,9 @@
       "images": "Galleria immagini",
       "lore": "Lore collegata"
     },
-    "incomingLoreTooltip": "Relazione creata dalla voce di lore"
+    "incomingLoreTooltip": "Relazione creata dalla voce di lore",
+    "image": "Immagine",
+    "parent": "Si trova in"
   },
   "items": {
     "title": "Oggetti",
@@ -2786,7 +2788,7 @@
       "stop": "Smetti di condividere",
       "done": "Condiviso",
       "stopped": "Non più condiviso",
-      "empty": "Ancora niente di condiviso. Condividi i PNG con il pulsante di condivisione sulla loro scheda.",
+      "empty": "Ancora niente di condiviso. Condividi PNG e luoghi con il pulsante di condivisione.",
       "fieldCount": "{count} campo | {count} campi",
       "displayName": "Nome per i giocatori (facoltativo)",
       "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione.",

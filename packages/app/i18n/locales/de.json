@@ -1056,7 +1056,9 @@
       "images": "Bildergalerie",
       "lore": "Verknüpftes Wissen"
     },
-    "incomingLoreTooltip": "Verknüpfung wurde vom Wissenseintrag erstellt"
+    "incomingLoreTooltip": "Verknüpfung wurde vom Wissenseintrag erstellt",
+    "image": "Bild",
+    "parent": "Liegt in"
   },
   "items": {
     "title": "Items",
@@ -2786,7 +2788,7 @@
       "stop": "Nicht mehr teilen",
       "done": "Geteilt",
       "stopped": "Nicht mehr geteilt",
-      "empty": "Noch nichts geteilt. Teile NPCs über den Teilen-Knopf auf ihrer Karte.",
+      "empty": "Noch nichts geteilt. Teile NPCs und Orte über den Teilen-Knopf.",
       "fieldCount": "{count} Feld | {count} Felder",
       "displayName": "Name für die Spieler (optional)",
       "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung.",

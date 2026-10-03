@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import type { ShareType } from '~~/types/share'
 
-const TYPE_ICONS: Record<ShareType, string> = { npc: 'mdi-account' }
+const TYPE_ICONS: Record<ShareType, string> = { npc: 'mdi-account', location: 'mdi-map-marker' }
 
 const { t, locale } = useI18n()
 const store = useGameTableStore()

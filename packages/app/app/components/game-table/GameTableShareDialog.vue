@@ -79,7 +79,7 @@
 import type { ShareType } from '~~/types/share'
 
 // i18n namespace that labels each share type's fields
-const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs' }
+const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs', location: 'locations' }
 
 const { t } = useI18n()
 const store = useGameTableStore()

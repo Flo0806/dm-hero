@@ -1056,7 +1056,9 @@
       "images": "Image Gallery",
       "lore": "Linked Lore"
     },
-    "incomingLoreTooltip": "Relation created by the lore entry"
+    "incomingLoreTooltip": "Relation created by the lore entry",
+    "image": "Image",
+    "parent": "Lies in"
   },
   "items": {
     "title": "Items",
@@ -2786,7 +2788,7 @@
       "stop": "Stop sharing",
       "done": "Shared",
       "stopped": "No longer shared",
-      "empty": "Nothing shared yet. Share NPCs with the share button on their card.",
+      "empty": "Nothing shared yet. Share NPCs and locations with the share button.",
       "fieldCount": "{count} field | {count} fields",
       "displayName": "Name for the players (optional)",
       "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",

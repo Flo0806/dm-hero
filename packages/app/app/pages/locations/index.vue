@@ -134,6 +134,7 @@
                 variant="text"
                 @click.stop="viewLocation(internalItem.raw)"
               />
+              <GameTableShareButton type="location" :entity-id="internalItem.raw.id" :name="internalItem.raw.name" size="x-small" />
               <v-btn
                 icon="mdi-pencil"
                 size="x-small"

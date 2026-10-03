@@ -1056,7 +1056,9 @@
       "images": "Galerie d'images",
       "lore": "Lore lié"
     },
-    "incomingLoreTooltip": "Relation créée par l'entrée de lore"
+    "incomingLoreTooltip": "Relation créée par l'entrée de lore",
+    "image": "Image",
+    "parent": "Se trouve dans"
   },
   "items": {
     "title": "Objets",
@@ -2786,7 +2788,7 @@
       "stop": "Ne plus partager",
       "done": "Partagé",
       "stopped": "N'est plus partagé",
-      "empty": "Rien de partagé pour l'instant. Partage des PNJ avec le bouton de partage de leur carte.",
+      "empty": "Rien de partagé pour l'instant. Partage des PNJ et des lieux avec le bouton de partage.",
       "fieldCount": "{count} champ | {count} champs",
       "displayName": "Nom pour les joueurs (facultatif)",
       "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation.",

@@ -1,15 +1,14 @@
 import type Database from 'better-sqlite3'
 import type { NpcMetadata } from '~~/types/npc'
 import type { BuiltField, LocalizedText } from '~~/types/share'
-import { joinLocalized, translateAll } from '../i18n'
+import { translateAll } from '../i18n'
 import type { ShareKind } from '../registry'
 import { resolveEntityLinks } from '../text'
+import { list, localize, sharedFieldsOf, type KnownKeys, type SharedKeys } from './helpers'
 
 // Every NPC field MUST be listed here as 'share' or 'private'. A new field in
 // NpcMetadata breaks the build until someone decides - nothing leaks by accident.
 // (Notes and documents live in other tables and are never shared.)
-type KnownKeys<T> = keyof { [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K] }
-
 const NPC_FIELD_POLICY = {
   image: 'share',
   description: 'share',
@@ -24,16 +23,8 @@ const NPC_FIELD_POLICY = {
   relationship: 'private',
 } as const satisfies Record<KnownKeys<NpcMetadata> | 'description' | 'image', 'share' | 'private'>
 
-type NpcShareField = { [K in keyof typeof NPC_FIELD_POLICY]: (typeof NPC_FIELD_POLICY)[K] extends 'share' ? K : never }[keyof typeof NPC_FIELD_POLICY]
-
-const NPC_SHARE_FIELDS = (Object.keys(NPC_FIELD_POLICY) as Array<keyof typeof NPC_FIELD_POLICY>)
-  .filter((f): f is NpcShareField => NPC_FIELD_POLICY[f] === 'share')
-
-const list = (value: unknown) => (Array.isArray(value) ? value : value ? [value] : []).map(String).filter(Boolean)
-
-/** Standard values (keys) in all languages, a DM's own values as written */
-const localize = (path: string, values: string[]): LocalizedText | null =>
-  values.length ? joinLocalized(values.map(v => translateAll(`${path}.${v}`) ?? v)) : null
+type NpcShareField = SharedKeys<typeof NPC_FIELD_POLICY>
+const NPC_SHARE_FIELDS = sharedFieldsOf(NPC_FIELD_POLICY)
 
 function fieldValue(db: Database.Database, field: Exclude<NpcShareField, 'image'>, npc: NpcRow, meta: NpcMetadata): LocalizedText | null {
   switch (field) {

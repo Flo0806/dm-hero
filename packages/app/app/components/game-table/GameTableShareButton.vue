@@ -4,7 +4,7 @@
   <v-btn
     v-if="store.table"
     icon
-    size="small"
+    :size="size"
     variant="text"
     :color="shared ? 'primary' : undefined"
     :aria-label="shared ? $t('gameTable.share.shared') : $t('gameTable.share.action')"
@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import type { ShareType } from '~~/types/share'
 
-const props = defineProps<{ type: ShareType, entityId: number, name: string }>()
+const props = withDefaults(defineProps<{ type: ShareType, entityId: number, name: string, size?: string }>(), { size: 'small' })
 const store = useGameTableStore()
 const shared = computed(() => !!store.shareOf(props.type, props.entityId))
 </script>

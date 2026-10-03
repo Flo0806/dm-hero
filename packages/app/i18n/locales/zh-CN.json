@@ -1056,7 +1056,9 @@
       "images": "图片库",
       "lore": "相关知识"
     },
-    "incomingLoreTooltip": "由传说条目创建的关系"
+    "incomingLoreTooltip": "由传说条目创建的关系",
+    "image": "图片",
+    "parent": "位于"
   },
   "items": {
     "title": "物品",
@@ -2786,7 +2788,7 @@
       "stop": "停止分享",
       "done": "已分享",
       "stopped": "已停止分享",
-      "empty": "还没有分享任何内容。用卡片上的分享按钮分享 NPC。",
+      "empty": "还没有分享任何内容。用分享按钮分享 NPC 和地点。",
       "fieldCount": "{count} 个字段",
       "displayName": "给玩家看的名字（可选）",
       "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",
