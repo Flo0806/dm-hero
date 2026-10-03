@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "DM Hero – Giocatori",
+    "description": "Unisciti alla partita del tuo Dungeon Master."
+  },
+  "home": {
+    "greeting": "Ciao, avventuriero!",
+    "welcome": "Che bello averti al tavolo.",
+    "instruction": "Scansiona il QR code del tuo DM o inserisci qui sotto il codice partita: l'avventura comincia adesso.",
+    "codeLabel": "Codice partita",
+    "join": "Si gioca!"
+  },
+  "footer": {
+    "tagline": "La vista giocatori di DM Hero – il gestore di campagne gratuito per Dungeon Master.",
+    "imprint": "Note legali",
+    "privacy": "Privacy",
+    "terms": "Condizioni d'uso",
+    "language": "Lingua",
+    "legalNav": "Note legali",
+    "newTab": "si apre in una nuova scheda"
+  }
+}

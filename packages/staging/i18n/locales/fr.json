@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "DM Hero – Joueurs",
+    "description": "Rejoins la partie de ton Maître du Jeu."
+  },
+  "home": {
+    "greeting": "Salut l'aventurier !",
+    "welcome": "Content de te voir parmi nous.",
+    "instruction": "Scanne le QR code de ton MJ ou saisis son code de partie ci-dessous : l'aventure commence ici.",
+    "codeLabel": "Code de partie",
+    "join": "À l'aventure !"
+  },
+  "footer": {
+    "tagline": "La vue joueurs de DM Hero – le gestionnaire de campagnes gratuit pour Maîtres du Jeu.",
+    "imprint": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions d'utilisation",
+    "language": "Langue",
+    "legalNav": "Mentions légales",
+    "newTab": "s'ouvre dans un nouvel onglet"
+  }
+}

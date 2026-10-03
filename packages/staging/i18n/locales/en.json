@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "DM Hero – Players",
+    "description": "Join your Dungeon Master's game."
+  },
+  "home": {
+    "greeting": "Hey, adventurer!",
+    "welcome": "Glad you made it.",
+    "instruction": "Scan your DM's QR code or enter their game code below – your adventure starts right here.",
+    "codeLabel": "Game code",
+    "join": "Let's roll"
+  },
+  "footer": {
+    "tagline": "The player view of DM Hero – the free campaign manager for Dungeon Masters.",
+    "imprint": "Imprint",
+    "privacy": "Privacy",
+    "terms": "Terms of use",
+    "language": "Language",
+    "legalNav": "Legal",
+    "newTab": "opens in a new tab"
+  }
+}

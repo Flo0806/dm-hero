@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "DM Hero – 玩家",
+    "description": "加入你的地下城主的游戏。"
+  },
+  "home": {
+    "greeting": "嘿，冒险者！",
+    "welcome": "很高兴你来了。",
+    "instruction": "扫描 DM 给你的二维码，或在下方输入游戏代码——冒险就此开始。",
+    "codeLabel": "游戏代码",
+    "join": "开始冒险"
+  },
+  "footer": {
+    "tagline": "DM Hero 的玩家视图——为地下城主打造的免费战役管理工具。",
+    "imprint": "法律声明",
+    "privacy": "隐私",
+    "terms": "使用条款",
+    "language": "语言",
+    "legalNav": "法律信息",
+    "newTab": "在新标签页中打开"
+  }
+}

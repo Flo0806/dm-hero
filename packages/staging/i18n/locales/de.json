@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "DM Hero – Spieler",
+    "description": "Tritt dem Spiel deines Dungeon Masters bei."
+  },
+  "home": {
+    "greeting": "Hey, Abenteurer!",
+    "welcome": "Schön, dass du am Tisch sitzt.",
+    "instruction": "Scanne den QR-Code deines DMs oder gib unten den Spielcode ein – dein Abenteuer beginnt genau hier.",
+    "codeLabel": "Spielcode",
+    "join": "Würfel raus!"
+  },
+  "footer": {
+    "tagline": "Die Spieleransicht von DM Hero – dem kostenlosen Kampagnen-Manager für Dungeon Master.",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "language": "Sprache",
+    "legalNav": "Rechtliches",
+    "newTab": "öffnet in neuem Tab"
+  }
+}
