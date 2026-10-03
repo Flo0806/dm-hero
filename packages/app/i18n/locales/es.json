@@ -2349,6 +2349,21 @@
       "fileTooLarge": "Archivo demasiado grande. Tamaño máximo: 50 MB",
       "uploadFailed": "Error al subir el mapa",
       "updateFailed": "Error al actualizar el mapa"
+    },
+    "fog": {
+      "title": "Niebla de guerra",
+      "reveal": "Revelar",
+      "cover": "Cubrir",
+      "brushSize": "Tamaño del pincel",
+      "size": {
+        "small": "Pequeño",
+        "medium": "Mediano",
+        "large": "Grande"
+      },
+      "undo": "Deshacer",
+      "revealAll": "Revelar todo",
+      "coverAll": "Cubrir todo",
+      "hint": "Mantén pulsado el botón del ratón para pintar: tus jugadores solo ven lo revelado"
     }
   },
   "music": {
@@ -2797,6 +2812,13 @@
       "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación.",
       "storageFull": "El almacenamiento de esta partida está lleno. Comparte menos imágenes o deja de compartir algunos elementos.",
       "rememberDefaults": "Recordar esta selección como predeterminada para {type}"
+    },
+    "map": {
+      "show": "Mostrar a los jugadores",
+      "shown": "Se muestra",
+      "showHint": "Tus jugadores ven este mapa con su niebla de guerra; sustituye a cualquier otro mapa mostrado",
+      "stopHint": "Dejar de mostrar",
+      "failed": "No se pudo mostrar el mapa"
     }
   }
 }

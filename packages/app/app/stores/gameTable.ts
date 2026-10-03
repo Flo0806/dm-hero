@@ -53,6 +53,13 @@ export const useGameTableStore = defineStore('gameTable', {
       }
     },
 
+    /** Show one map to the players (null = none) */
+    async setShownMap(mapId: number | null) {
+      if (!this.table) return
+      const { shownMapId } = await $fetch<{ shownMapId: number | null }>(`/api/game-table/${this.table.id}/shown-map`, { method: 'PUT', body: { mapId } })
+      this.table.shown_map_id = shownMapId
+    },
+
     async start(campaignId: number) {
       this.table = await $fetch<GameTable>('/api/game-table', { method: 'POST', body: { campaignId } })
       this.shares = []

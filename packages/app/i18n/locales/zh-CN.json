@@ -2349,6 +2349,21 @@
       "fileTooLarge": "文件太大。最大大小：50MB",
       "uploadFailed": "上传地图失败",
       "updateFailed": "更新地图失败"
+    },
+    "fog": {
+      "title": "战争迷雾",
+      "reveal": "揭示",
+      "cover": "遮盖",
+      "brushSize": "画笔大小",
+      "size": {
+        "small": "小",
+        "medium": "中",
+        "large": "大"
+      },
+      "undo": "撤销",
+      "revealAll": "全部揭示",
+      "coverAll": "全部遮盖",
+      "hint": "按住鼠标绘制——玩家只能看到已揭示的部分"
     }
   },
   "music": {
@@ -2797,6 +2812,13 @@
       "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",
       "storageFull": "本局游戏的存储空间已满。请少分享一些图片，或停止分享部分内容。",
       "rememberDefaults": "将此选择记为{type}的默认设置"
+    },
+    "map": {
+      "show": "展示给玩家",
+      "shown": "正在展示",
+      "showHint": "玩家将看到这张地图及其战争迷雾——会替换当前展示的其他地图",
+      "stopHint": "停止展示",
+      "failed": "无法展示地图"
     }
   }
 }

@@ -29,5 +29,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Soft delete doesn't trigger ON DELETE SET NULL - players stop seeing it here
+  db.prepare('UPDATE game_tables SET shown_map_id = NULL WHERE shown_map_id = ?').run(Number(id))
+
   return { success: true }
 })

@@ -2349,6 +2349,21 @@
       "fileTooLarge": "Fichier trop volumineux. Taille maximale : 50 Mo",
       "uploadFailed": "Échec du téléversement de la carte",
       "updateFailed": "Échec de la mise à jour de la carte"
+    },
+    "fog": {
+      "title": "Brouillard de guerre",
+      "reveal": "Révéler",
+      "cover": "Recouvrir",
+      "brushSize": "Taille du pinceau",
+      "size": {
+        "small": "Petit",
+        "medium": "Moyen",
+        "large": "Grand"
+      },
+      "undo": "Annuler",
+      "revealAll": "Tout révéler",
+      "coverAll": "Tout recouvrir",
+      "hint": "Maintenez le bouton de la souris pour peindre – vos joueurs ne voient que ce qui est révélé"
     }
   },
   "music": {
@@ -2797,6 +2812,13 @@
       "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation.",
       "storageFull": "Le stockage de cette partie est plein. Partage moins d’images ou retire certains partages.",
       "rememberDefaults": "Retenir cette sélection par défaut pour {type}"
+    },
+    "map": {
+      "show": "Montrer aux joueurs",
+      "shown": "Affichée",
+      "showHint": "Vos joueurs voient cette carte avec son brouillard de guerre – remplace toute autre carte affichée",
+      "stopHint": "Ne plus montrer",
+      "failed": "Impossible de montrer la carte"
     }
   }
 }

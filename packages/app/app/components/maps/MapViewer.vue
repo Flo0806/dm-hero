@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
+import type { FogMode, FogStroke, MapFog } from '~~/types/fog'
 import type {
   Map as LeafletMap,
   ImageOverlay,
@@ -27,6 +28,8 @@ const props = defineProps<{
   climateWeather?: Record<number, { weather_type: string, temperature: number | null }>
   editMode?: boolean // Enable area drawing/editing
   measurePoints?: { x: number, y: number }[] // Points for measurement tool
+  fog?: MapFog | null // Fog of war (shown when set)
+  fogTool?: { mode: FogMode, radius: number } | null // Painting fog (map can't be dragged meanwhile)
 }>()
 
 const emit = defineEmits<{
@@ -41,6 +44,7 @@ const emit = defineEmits<{
   areaDrag: [data: { area: MapArea, x: number, y: number }]
   climateAreaRightClick: [area: MapClimateArea]
   climateAreaDrag: [data: { area: MapClimateArea, x: number, y: number }]
+  fogStroke: [stroke: FogStroke]
 }>()
 
 const { t } = useI18n()
@@ -140,6 +144,10 @@ watch(
   { deep: true },
 )
 
+// Fog of war: redraw on change, painting mode locks map dragging
+watch(() => props.fog, () => updateFog())
+watch(() => props.fogTool, () => applyFogTool())
+
 // Update measurement line when points change
 watch(
   () => props.measurePoints,
@@ -195,6 +203,15 @@ function initMap() {
     // Create measurement line layer (top)
     measureLineLayer = L.layerGroup().addTo(leafletMap)
 
+    // Fog of war: above areas, below markers
+    mapSize = { width: boundsWidth, height: boundsHeight }
+    leafletMap.createPane('fog').style.zIndex = '450'
+    fogCanvas = createFogCanvas(boundsWidth, boundsHeight, FOG_COLOR)
+    fogLayer = L.svgOverlay(fogCanvas.svg, bounds, { pane: 'fog', interactive: false })
+    setupFogPainting()
+    updateFog()
+    applyFogTool()
+
     // Add areas and markers
     updateClimateAreas()
     updateAreas()
@@ -232,6 +249,75 @@ function initMap() {
   }
   img.src = `/uploads/${props.map.image_url}`
 }
+
+// ---------------------------------------------------------------------------
+// Fog of war
+// ---------------------------------------------------------------------------
+
+// The DM sees through the fog (half transparent) - players won't
+const FOG_COLOR = '#0b0d14'
+const FOG_OPACITY = 0.55
+
+let mapSize = { width: 1000, height: 1000 }
+let fogCanvas: ReturnType<typeof createFogCanvas> | null = null
+let fogLayer: L.SVGOverlay | null = null
+let paintingStroke: FogStroke | null = null
+
+function updateFog() {
+  if (!leafletMap || !fogLayer || !fogCanvas) return
+  if (!props.fog) {
+    fogLayer.remove()
+    return
+  }
+  fogCanvas.render(props.fog)
+  fogCanvas.svg.style.opacity = String(FOG_OPACITY)
+  if (!leafletMap.hasLayer(fogLayer)) fogLayer.addTo(leafletMap)
+}
+
+function applyFogTool() {
+  if (!leafletMap || !mapContainer.value) return
+  if (props.fogTool) leafletMap.dragging.disable()
+  else leafletMap.dragging.enable()
+  mapContainer.value.classList.toggle('fog-painting', !!props.fogTool)
+}
+
+/** Lat/lng of the map -> percent of the image */
+function toPercent(latlng: L.LatLng): [number, number] {
+  return [
+    Math.round(latlng.lng / mapSize.width * 10000) / 100,
+    Math.round((mapSize.height - latlng.lat) / mapSize.height * 10000) / 100,
+  ]
+}
+
+function finishStroke() {
+  if (!paintingStroke) return
+  const stroke = paintingStroke
+  paintingStroke = null
+  emit('fogStroke', stroke)
+}
+
+function setupFogPainting() {
+  if (!leafletMap) return
+  leafletMap.on('mousedown', (e: LeafletMouseEvent) => {
+    if (!props.fogTool || !fogCanvas || e.originalEvent.button !== 0) return
+    paintingStroke = { mode: props.fogTool.mode, radius: props.fogTool.radius, points: [toPercent(e.latlng)] }
+    fogCanvas.livePath(paintingStroke)
+  })
+  leafletMap.on('mousemove', (e: LeafletMouseEvent) => {
+    if (!paintingStroke || !fogCanvas) return
+    const point = toPercent(e.latlng)
+    const last = paintingStroke.points.at(-1)!
+    // Only every few pixels - keeps strokes small enough to send live
+    if (Math.hypot(point[0] - last[0], point[1] - last[1]) < paintingStroke.radius * 0.25) return
+    paintingStroke.points.push(point)
+    fogCanvas.livePath(paintingStroke)
+  })
+  leafletMap.on('mouseup', finishStroke)
+  // Released outside the map
+  document.addEventListener('mouseup', finishStroke)
+}
+
+onUnmounted(() => document.removeEventListener('mouseup', finishStroke))
 
 // Threshold: show labels only when zoomed in enough
 const LABEL_ZOOM_THRESHOLD = 0
@@ -901,6 +987,12 @@ defineExpose({
 
 .marker-pin {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Painting fog of war */
+.map-viewer.fog-painting,
+.map-viewer.fog-painting .leaflet-interactive {
+  cursor: crosshair !important;
 }
 
 /* Area resize handle */

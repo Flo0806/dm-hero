@@ -27,13 +27,13 @@ export function getTablePlayers(db: Database.Database, tableId: number): GameTab
 }
 
 export function getGameTableByCampaign(db: Database.Database, campaignId: number): GameTable | null {
-  const table = db.prepare('SELECT id, campaign_id, code, created_at FROM game_tables WHERE campaign_id = ?')
+  const table = db.prepare('SELECT id, campaign_id, code, shown_map_id, created_at FROM game_tables WHERE campaign_id = ?')
     .get(campaignId) as Omit<GameTable, 'players'> | undefined
   return table ? { ...table, players: getTablePlayers(db, table.id) } : null
 }
 
 export function getGameTableById(db: Database.Database, tableId: number): GameTable | null {
-  const table = db.prepare('SELECT id, campaign_id, code, created_at FROM game_tables WHERE id = ?')
+  const table = db.prepare('SELECT id, campaign_id, code, shown_map_id, created_at FROM game_tables WHERE id = ?')
     .get(tableId) as Omit<GameTable, 'players'> | undefined
   return table ? { ...table, players: getTablePlayers(db, table.id) } : null
 }

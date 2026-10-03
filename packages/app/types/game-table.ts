@@ -16,6 +16,8 @@ export interface GameTable {
   id: number
   campaign_id: number
   code: string
+  /** The one map the players see right now */
+  shown_map_id: number | null
   created_at: string
   players: GameTablePlayer[]
 }

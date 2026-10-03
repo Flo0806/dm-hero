@@ -2349,6 +2349,21 @@
       "fileTooLarge": "File too large. Maximum size: 50MB",
       "uploadFailed": "Failed to upload map",
       "updateFailed": "Failed to update map"
+    },
+    "fog": {
+      "title": "Fog of war",
+      "reveal": "Reveal",
+      "cover": "Cover",
+      "brushSize": "Brush size",
+      "size": {
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large"
+      },
+      "undo": "Undo",
+      "revealAll": "Reveal all",
+      "coverAll": "Cover all",
+      "hint": "Hold the mouse button to paint – your players only see what is revealed"
     }
   },
   "music": {
@@ -2797,6 +2812,13 @@
       "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",
       "storageFull": "This game's storage is full. Share fewer images or stop sharing some items.",
       "rememberDefaults": "Remember this selection as default for {type}"
+    },
+    "map": {
+      "show": "Show to players",
+      "shown": "Shown",
+      "showHint": "Your players see this map with its fog of war – replaces any other shown map",
+      "stopHint": "Stop showing",
+      "failed": "Could not show the map"
     }
   }
 }

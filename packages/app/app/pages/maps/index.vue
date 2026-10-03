@@ -105,6 +105,21 @@
           </v-chip>
         </div>
 
+        <!-- Show to players (only with a running game) -->
+        <GameTableShowMapButton :map-id="selectedMap.id" class="mr-1" />
+
+        <!-- Fog of war -->
+        <v-btn
+          icon="mdi-weather-fog"
+          :variant="fogMode ? 'flat' : 'text'"
+          :color="fogMode ? 'primary' : undefined"
+          :aria-label="$t('maps.fog.title')"
+          @click="toggleFogMode"
+        >
+          <v-icon>mdi-weather-fog</v-icon>
+          <v-tooltip activator="parent" location="bottom">{{ $t('maps.fog.title') }}</v-tooltip>
+        </v-btn>
+
         <!-- Measure button -->
         <v-btn
           icon="mdi-ruler"
@@ -147,6 +162,9 @@
             :climate-areas="selectedMapClimateAreas"
             :climate-weather="climateWeatherByZone"
             :measure-points="measurePoints"
+            :fog="showFog ? mapFog.fog.value : null"
+            :fog-tool="fogMode ? { mode: fogToolMode, radius: FOG_BRUSH_SIZES[fogBrush] } : null"
+            @fog-stroke="mapFog.addStroke"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
             @map-click="onMapClick"
@@ -160,6 +178,15 @@
             @climate-area-drag="onClimateAreaDrag"
           />
         </ClientOnly>
+        <MapsMapFogToolbar
+          v-if="fogMode"
+          v-model:mode="fogToolMode"
+          v-model:size="fogBrush"
+          :can-undo="mapFog.canUndo.value"
+          @undo="mapFog.undo"
+          @reveal-all="mapFog.revealAll"
+          @cover-all="mapFog.coverAll"
+        />
         <!-- Help badges -->
         <div class="map-help-badges">
           <!-- Measure mode hints -->
@@ -187,6 +214,10 @@
               {{ $t('maps.measureFinish') }}
             </v-chip>
           </template>
+          <!-- Fog mode hint -->
+          <v-chip v-else-if="fogMode" size="small" variant="tonal" prepend-icon="mdi-brush">
+            {{ $t('maps.fog.hint') }}
+          </v-chip>
           <!-- Area mode hint -->
           <v-chip
             v-else-if="addMode === 'area'"
@@ -547,6 +578,7 @@ import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/m
 import { ENTITY_TYPE_ICONS, ENTITY_TYPE_COLORS } from '~~/types/map'
 import type { EntityPreviewType } from '~/components/shared/EntityPreviewDialog.vue'
 import { useSnackbarStore } from '~/stores/snackbar'
+import { FOG_BRUSH_SIZES, type FogBrushSize, type FogMode } from '~~/types/fog'
 
 const { t } = useI18n()
 const snackbarStore = useSnackbarStore()
@@ -734,6 +766,24 @@ function toggleMeasureMode() {
   else {
     // Disable other modes
     addMode.value = null
+    fogMode.value = false
+  }
+}
+
+// Fog of war: painted per map, visible while painting or while players see the map
+const gameTableStore = useGameTableStore()
+const mapFog = useMapFog()
+const fogMode = ref(false)
+const fogToolMode = ref<FogMode>('reveal')
+const fogBrush = ref<FogBrushSize>('medium')
+const showFog = computed(() => fogMode.value || (!!selectedMap.value && gameTableStore.table?.shown_map_id === selectedMap.value.id))
+
+function toggleFogMode() {
+  fogMode.value = !fogMode.value
+  if (fogMode.value) {
+    addMode.value = null
+    measureMode.value = false
+    measurePoints.value = []
   }
 }
 
@@ -813,6 +863,8 @@ async function loadMaps() {
 async function selectMap(map: CampaignMap) {
   selectedMap.value = map
   addMode.value = 'marker' // Default mode when opening map
+  fogMode.value = false
+  mapFog.load(map.id).catch(error => console.error('Failed to load fog:', error))
 
   try {
     const details = await $fetch<CampaignMap & { markers: MapMarker[], areas: MapArea[], climateAreas: MapClimateArea[] }>(`/api/maps/${map.id}`)
@@ -837,6 +889,8 @@ function closeMap() {
   addMode.value = null
   measureMode.value = false
   measurePoints.value = []
+  fogMode.value = false
+  mapFog.flush()
 }
 
 // Reload just the climate areas for the current map.
@@ -925,6 +979,9 @@ function onMarkerRightClick(marker: MapMarker) {
 }
 
 function onMapClick(position: { x: number, y: number }) {
+  // Painting fog - clicks are brush dabs, nothing else
+  if (fogMode.value) return
+
   // Measure mode: add point
   if (measureMode.value) {
     addMeasurePoint(position.x, position.y)
@@ -958,16 +1015,19 @@ function onMapClick(position: { x: number, y: number }) {
 // Start add modes (from menu)
 function startAddMarker() {
   addMode.value = 'marker'
+  fogMode.value = false
   // User will click on map to set position
 }
 
 function startAddArea() {
   addMode.value = 'area'
+  fogMode.value = false
   // User will click on map to set position
 }
 
 function startAddClimate() {
   addMode.value = 'climate'
+  fogMode.value = false
   // User will click on the map, then pick a zone in the dialog
 }
 

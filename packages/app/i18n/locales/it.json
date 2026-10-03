@@ -2349,6 +2349,21 @@
       "fileTooLarge": "File troppo grande. Dimensione massima: 50MB",
       "uploadFailed": "Caricamento della mappa non riuscito",
       "updateFailed": "Aggiornamento della mappa non riuscito"
+    },
+    "fog": {
+      "title": "Nebbia di guerra",
+      "reveal": "Rivela",
+      "cover": "Copri",
+      "brushSize": "Dimensione pennello",
+      "size": {
+        "small": "Piccolo",
+        "medium": "Medio",
+        "large": "Grande"
+      },
+      "undo": "Annulla",
+      "revealAll": "Rivela tutto",
+      "coverAll": "Copri tutto",
+      "hint": "Tieni premuto il tasto del mouse per dipingere – i tuoi giocatori vedono solo ciò che è rivelato"
     }
   },
   "music": {
@@ -2797,6 +2812,13 @@
       "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione.",
       "storageFull": "Lo spazio di questa partita è pieno. Condividi meno immagini o smetti di condividere alcuni elementi.",
       "rememberDefaults": "Ricorda questa selezione come predefinita per {type}"
+    },
+    "map": {
+      "show": "Mostra ai giocatori",
+      "shown": "Mostrata",
+      "showHint": "I tuoi giocatori vedono questa mappa con la sua nebbia di guerra – sostituisce qualsiasi altra mappa mostrata",
+      "stopHint": "Smetti di mostrare",
+      "failed": "Impossibile mostrare la mappa"
     }
   }
 }
