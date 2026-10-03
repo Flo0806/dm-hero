@@ -154,6 +154,7 @@
     }
   },
   "dependencies": {
+    "@dm-hero/seal": "workspace:*",
     "@3d-dice/dice-box": "^1.1.4",
     "@iconify/vue": "^5.0.3",
     "@mdi/font": "^7.4.47",

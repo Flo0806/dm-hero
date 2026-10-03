@@ -14,7 +14,9 @@
     "pinHint": "游戏 {code}——6 位 PIN 由你的 DM 提供。",
     "changeCode": "更改代码",
     "joinFailed": "代码或 PIN 不正确。最好问问你的 DM。",
-    "tooManyAttempts": "尝试次数过多，请稍后再试。"
+    "tooManyAttempts": "尝试次数过多，请稍后再试。",
+    "noticeEnded": "你的 DM 已结束游戏。感谢参与！",
+    "noticeRemoved": "你已不在这局游戏中。请向你的 DM 索取代码和 PIN。"
   },
   "footer": {
     "tagline": "DM Hero 的玩家视图——为地下城主打造的免费战役管理工具。",
@@ -30,8 +32,6 @@
     "welcome": "欢迎上桌，{name}！",
     "waiting": "放松一下——DM 一分享内容，就会显示在这里。",
     "connected": "已连接",
-    "reconnecting": "正在重新连接……",
-    "denied": "你不在（或已不在）这局游戏中。",
-    "backToStart": "重新加入"
+    "reconnecting": "正在重新连接……"
   }
 }

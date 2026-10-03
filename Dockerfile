@@ -15,8 +15,9 @@ WORKDIR /app
 # Copy workspace config and lockfile
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 
-# Copy app package.json
+# Copy app package.json + workspace packages the app depends on (E2E crypto)
 COPY packages/app/package.json ./packages/app/
+COPY packages/seal ./packages/seal
 
 # Install dependencies (including devDependencies for build)
 RUN pnpm install --frozen-lockfile

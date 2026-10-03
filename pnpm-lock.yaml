@@ -27,6 +27,9 @@ importers:
       '@3d-dice/dice-box':
         specifier: ^1.1.4
         version: 1.1.4(babylonjs-gltf2interface@5.57.1)
+      '@dm-hero/seal':
+        specifier: workspace:*
+        version: link:../seal
       '@iconify/vue':
         specifier: ^5.0.3
         version: 5.0.3(vue@3.5.43(typescript@6.0.3))

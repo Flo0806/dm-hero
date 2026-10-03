@@ -14,7 +14,9 @@
     "pinHint": "Partita {code}: il PIN di 6 cifre te lo dà il tuo DM.",
     "changeCode": "Cambia codice",
     "joinFailed": "Codice o PIN errato. Chiedi al tuo DM.",
-    "tooManyAttempts": "Troppi tentativi. Aspetta un attimo e riprova."
+    "tooManyAttempts": "Troppi tentativi. Aspetta un attimo e riprova.",
+    "noticeEnded": "Il tuo DM ha terminato la partita. Grazie per aver giocato!",
+    "noticeRemoved": "Non sei più in questa partita. Chiedi codice e PIN al tuo DM."
   },
   "footer": {
     "tagline": "La vista giocatori di DM Hero – il gestore di campagne gratuito per Dungeon Master.",
@@ -30,8 +32,6 @@
     "welcome": "Benvenuto al tavolo, {name}!",
     "waiting": "Mettiti comodo: appena il tuo DM condivide qualcosa, comparirà qui.",
     "connected": "Connesso",
-    "reconnecting": "Riconnessione…",
-    "denied": "Non sei (o non sei più) in questa partita.",
-    "backToStart": "Rientra"
+    "reconnecting": "Riconnessione…"
   }
 }

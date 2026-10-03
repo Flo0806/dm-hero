@@ -14,7 +14,9 @@
     "pinHint": "Partie {code} : ton MJ te donne le PIN à 6 chiffres.",
     "changeCode": "Changer de code",
     "joinFailed": "Le code ou le PIN est incorrect. Demande à ton MJ.",
-    "tooManyAttempts": "Trop de tentatives. Attends un instant et réessaie."
+    "tooManyAttempts": "Trop de tentatives. Attends un instant et réessaie.",
+    "noticeEnded": "Ton MJ a terminé la partie. Merci d'avoir joué !",
+    "noticeRemoved": "Tu n'es plus dans cette partie. Demande le code et le PIN à ton MJ."
   },
   "footer": {
     "tagline": "La vue joueurs de DM Hero – le gestionnaire de campagnes gratuit pour Maîtres du Jeu.",
@@ -30,8 +32,6 @@
     "welcome": "Bienvenue à la table, {name} !",
     "waiting": "Installe-toi : dès que ton MJ partage quelque chose, ça apparaît ici.",
     "connected": "Connecté",
-    "reconnecting": "Reconnexion…",
-    "denied": "Tu n'es pas (ou plus) dans cette partie.",
-    "backToStart": "Rejoindre à nouveau"
+    "reconnecting": "Reconnexion…"
   }
 }

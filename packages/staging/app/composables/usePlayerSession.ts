@@ -8,7 +8,7 @@ export function usePlayerSession() {
   }
 
   function connect(gameId: string) {
-    const status = ref<'connecting' | 'live' | 'reconnecting' | 'denied'>('connecting')
+    const status = ref<'connecting' | 'live' | 'reconnecting' | 'denied' | 'ended'>('connecting')
     const name = ref('')
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
@@ -18,9 +18,15 @@ export function usePlayerSession() {
       status.value = 'live'
       name.value = (JSON.parse((event as MessageEvent).data) as { name: string }).name
     })
+    // DM ended the game
+    source.addEventListener('closed', () => {
+      source.close()
+      status.value = 'ended'
+    })
     source.onerror = () => {
-      // Never got in (no/expired session) vs. lost an existing connection
-      if (!opened) {
+      // CLOSED = the server refused us (no session: kicked or never joined).
+      // Otherwise the connection just dropped and the browser retries on its own.
+      if (!opened || source.readyState === EventSource.CLOSED) {
         source.close()
         status.value = 'denied'
       }

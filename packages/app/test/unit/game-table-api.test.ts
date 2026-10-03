@@ -13,12 +13,14 @@ vi.mock('../../server/utils/db', async (importOriginal) => {
 
 // The player relay is a separate server - simulate it
 const relayCalls: string[] = []
+let lastRelayPublicKeys: { signing: string, exchange: string } | null = null
 vi.mock('../../server/utils/relay', async (importOriginal) => {
   const original = await importOriginal<typeof import('../../server/utils/relay')>()
   return {
     ...original,
-    createRelayGame: async () => {
+    createRelayGame: async (dmPublicKeys: { signing: string, exchange: string }) => {
       relayCalls.push('create')
+      lastRelayPublicKeys = dmPublicKeys
       return { gameId: `relay-${relayCalls.length}`, code: `K7RX${String(relayCalls.length).padStart(2, '0')}`, dmToken: 'secret' }
     },
     deleteRelayGame: async () => {
@@ -85,6 +87,12 @@ describe('game table API', () => {
     expect(table.players).toEqual([])
     // The DM token stays on the server - never in API responses
     expect(JSON.stringify(table)).not.toContain('secret')
+
+    // E2E keys: stored locally, only the public halves went to the relay
+    const stored = JSON.parse((db.prepare('SELECT e2e_keys FROM game_tables WHERE id = ?').get(table.id) as { e2e_keys: string }).e2e_keys)
+    expect(lastRelayPublicKeys).toEqual({ signing: stored.signing.publicKey, exchange: stored.exchange.publicKey })
+    expect(JSON.stringify(lastRelayPublicKeys)).not.toContain(stored.signing.privateKey.d)
+    expect(JSON.stringify(table)).not.toContain(stored.gameKey)
     expect(await call<GameTable | null>('index.get.ts', { query: { campaignId: String(campaignId) } })).toMatchObject({ id: table.id })
   })
 

@@ -14,7 +14,9 @@
     "pinHint": "Game {code} – your DM gives you the 6-digit PIN.",
     "changeCode": "Change code",
     "joinFailed": "Code or PIN is wrong. Best ask your DM.",
-    "tooManyAttempts": "Too many attempts. Wait a moment and try again."
+    "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
+    "noticeEnded": "Your DM ended the game. Thanks for playing!",
+    "noticeRemoved": "You're no longer in this game. Ask your DM for the code and PIN."
   },
   "footer": {
     "tagline": "The player view of DM Hero – the free campaign manager for Dungeon Masters.",
@@ -30,8 +32,6 @@
     "welcome": "Welcome to the table, {name}!",
     "waiting": "Sit back – as soon as your DM shares something, it shows up here.",
     "connected": "Connected",
-    "reconnecting": "Reconnecting …",
-    "denied": "You're not (or no longer) in this game.",
-    "backToStart": "Join again"
+    "reconnecting": "Reconnecting …"
   }
 }

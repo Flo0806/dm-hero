@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  createGameKeys, loadGameKeys,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
   type EnvelopeHeader,
@@ -72,5 +73,24 @@ describe('handing the game key to one player', () => {
     const inGame2 = await derivePairKey(anna.privateKey, dm.publicKey, 'game-2')
     const envelope = await seal(inGame1, header({ to: 'anna' }), { text: 'privat' })
     await expect(open(inGame2, envelope)).rejects.toThrow()
+  })
+})
+
+describe('stored game keys (DM Hero database)', () => {
+  it('survive JSON storage and still work end to end', async () => {
+    const stored = JSON.parse(JSON.stringify(await createGameKeys())) as Awaited<ReturnType<typeof createGameKeys>>
+    const keys = await loadGameKeys(stored)
+    const verify = await importVerifyKey(keys.publicKeys.signing)
+    const envelope = await seal(keys.gameKey, header(), { text: 'nach Neustart' }, keys.signingKey)
+    expect(await open(keys.gameKey, envelope, verify)).toEqual({ text: 'nach Neustart' })
+  })
+
+  it('public keys contain no private material', async () => {
+    const stored = await createGameKeys()
+    const keys = await loadGameKeys(stored)
+    const publicJson = JSON.stringify(keys.publicKeys)
+    expect(publicJson).not.toContain(stored.signing.privateKey.d!)
+    expect(publicJson).not.toContain(stored.exchange.privateKey.d!)
+    expect(publicJson).not.toContain(stored.gameKey)
   })
 })

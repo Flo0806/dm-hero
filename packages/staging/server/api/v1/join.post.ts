@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   if (!code || !/^\d{6}$/.test(pin)) throw createError({ statusCode: 400, message: 'Code and 6-digit PIN required' })
 
   const db = useRelayDb()
-  const game = db.prepare('SELECT id FROM games WHERE code = ?').get(code) as { id: string } | undefined
+  const game = db.prepare('SELECT id, dm_signing_public, dm_exchange_public FROM games WHERE code = ?').get(code) as
+    { id: string, dm_signing_public: string, dm_exchange_public: string } | undefined
   const player = game
     ? db.prepare('SELECT id, name FROM players WHERE game_id = ? AND pin_hash = ?').get(game.id, pinHash(game.id, pin)) as { id: string, name: string } | undefined
     : undefined
@@ -24,5 +25,11 @@ export default defineEventHandler(async (event) => {
     path: '/',
     maxAge: 60 * 60 * 24 * 30,
   })
-  return { gameId: game.id, playerId: player.id, name: player.name }
+  // DM public keys: the player needs them to verify the DM and receive the game key
+  return {
+    gameId: game.id,
+    playerId: player.id,
+    name: player.name,
+    dmPublicKeys: { signing: game.dm_signing_public, exchange: game.dm_exchange_public },
+  }
 })

@@ -29,9 +29,24 @@
         {{ $t('home.instruction') }}
       </p>
 
+      <p v-if="notice" role="status" class="mt-0 mb-6 px-4 py-3 rounded-xl border border-line bg-surface/85 text-ink">
+        {{ notice }}
+      </p>
+
       <JoinForm @joined="gameId => navigateTo(`/play/${gameId}`)" />
     </main>
 
     <AppFooter />
   </div>
 </template>
+
+<script setup lang="ts">
+// Set when a player is sent back here (game ended / removed from the game)
+const route = useRoute()
+const { t } = useI18n()
+const notice = computed(() => {
+  if (route.query.notice === 'ended') return t('home.noticeEnded')
+  if (route.query.notice === 'removed') return t('home.noticeRemoved')
+  return ''
+})
+</script>

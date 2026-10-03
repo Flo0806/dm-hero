@@ -18,9 +18,13 @@ export function relayPinHash(relayGameId: string, pin: string) {
   return createHash('sha256').update(`${relayGameId}:${pin}`).digest('hex')
 }
 
-export async function createRelayGame() {
+/** Registers the game; the relay gets the DM's PUBLIC keys to hand to joining players */
+export async function createRelayGame(dmPublicKeys: { signing: string, exchange: string }) {
   try {
-    return await $fetch<{ gameId: string, code: string, dmToken: string }>(`${relayUrl()}/games`, { method: 'POST' })
+    return await $fetch<{ gameId: string, code: string, dmToken: string }>(`${relayUrl()}/games`, {
+      method: 'POST',
+      body: { dmPublicKeys },
+    })
   }
   catch {
     throw createError({ statusCode: 502, message: 'Player server not reachable' })

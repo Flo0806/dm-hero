@@ -52,3 +52,38 @@ export async function derivePairKey(ownPrivate: CryptoKey, otherPublic: CryptoKe
     ['encrypt', 'decrypt'],
   )
 }
+
+// Storage on the DM's machine (DM Hero database). Private keys never go to the relay.
+
+export interface StoredGameKeys {
+  gameKey: string
+  signing: { privateKey: JsonWebKey, publicKey: string }
+  exchange: { privateKey: JsonWebKey, publicKey: string }
+}
+
+export interface LoadedGameKeys {
+  gameKey: CryptoKey
+  signingKey: CryptoKey
+  exchangeKey: CryptoKey
+  /** Public keys (spki, base64url) - safe to share with the relay and players */
+  publicKeys: { signing: string, exchange: string }
+}
+
+/** All keys the DM needs for a new game, in a storable (JSON) form */
+export async function createGameKeys(): Promise<StoredGameKeys> {
+  const [gameKey, signing, exchange] = await Promise.all([generateGameKey(), generateSigningKeyPair(), generateExchangeKeyPair()])
+  return {
+    gameKey: toBase64Url(new Uint8Array(await subtle.exportKey('raw', gameKey))),
+    signing: { privateKey: await subtle.exportKey('jwk', signing.privateKey), publicKey: await exportPublicKey(signing.publicKey) },
+    exchange: { privateKey: await subtle.exportKey('jwk', exchange.privateKey), publicKey: await exportPublicKey(exchange.publicKey) },
+  }
+}
+
+export async function loadGameKeys(stored: StoredGameKeys): Promise<LoadedGameKeys> {
+  return {
+    gameKey: await subtle.importKey('raw', fromBase64Url(stored.gameKey), { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']),
+    signingKey: await subtle.importKey('jwk', stored.signing.privateKey, { name: 'ECDSA', ...CURVE }, false, ['sign']),
+    exchangeKey: await subtle.importKey('jwk', stored.exchange.privateKey, { name: 'ECDH', ...CURVE }, false, ['deriveKey']),
+    publicKeys: { signing: stored.signing.publicKey, exchange: stored.exchange.publicKey },
+  }
+}

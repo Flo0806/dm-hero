@@ -61,7 +61,13 @@ export async function disconnectPlayers(gameId: string, playerIds: string[]) {
 export async function closeGame(gameId: string) {
   const entry = games.get(gameId)
   if (!entry) return
-  for (const set of entry.players.values()) for (const stream of set) await stream.close()
+  // Tell players first, so their page can leave with a message instead of retrying
+  for (const set of entry.players.values()) {
+    for (const stream of set) {
+      await stream.push({ event: 'closed', data: '' })
+      await stream.close()
+    }
+  }
   for (const stream of entry.dm) await stream.close()
   games.delete(gameId)
 }

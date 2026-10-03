@@ -17,6 +17,7 @@ on:
       - 'packages/app/scripts/electron-rebuild.js'
       - 'packages/app/scripts/electron-smoke.mjs'
       - 'packages/mcp/package.json'
+      - 'packages/seal/**'
       - '.github/workflows/electron-smoke.yml'
   pull_request:
     paths:
@@ -27,6 +28,7 @@ on:
       - 'packages/app/scripts/electron-rebuild.js'
       - 'packages/app/scripts/electron-smoke.mjs'
       - 'packages/mcp/package.json'
+      - 'packages/seal/**'
       - '.github/workflows/electron-smoke.yml'
   workflow_dispatch:
 

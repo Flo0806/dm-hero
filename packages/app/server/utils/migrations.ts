@@ -2715,6 +2715,19 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 56: Added relay columns to game_tables')
     },
   },
+  {
+    version: 57,
+    name: 'game_tables_e2e_keys',
+    up: (db) => {
+      // End-to-end keys of a game (JSON, see @dm-hero/seal StoredGameKeys).
+      // Private keys stay on this machine. Games without keys can't do E2E,
+      // so they are removed (feature unreleased).
+      db.exec('DELETE FROM game_tables')
+      db.exec('ALTER TABLE game_tables ADD COLUMN e2e_keys TEXT')
+
+      console.log('✅ Migration 57: Added e2e_keys to game_tables')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {
