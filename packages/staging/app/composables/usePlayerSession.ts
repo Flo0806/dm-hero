@@ -27,6 +27,20 @@ export function usePlayerSession() {
     const shares = ref<ShareContent[]>([])
     // Shares can arrive before the game key - they wait here
     const queued: Array<{ id: string, envelope: Envelope }> = []
+    /** Live reveals (not the initial load - that's just the current state) */
+    const reveals = ref<Reveal[]>([])
+    let live = false
+
+    function detectReveal(before: ShareContent | undefined, after: ShareContent) {
+      if (!live) return
+      if (!before) return reveals.value.push({ shareId: after.shareId, kind: 'new', title: after.title })
+      if (before.title !== after.title) {
+        return reveals.value.push({ shareId: after.shareId, kind: 'name', title: after.title, previousTitle: before.title })
+      }
+      const known = new Set(before.fields.map(f => f.key))
+      const added = after.fields.filter(f => !known.has(f.key))
+      if (added.length) reveals.value.push({ shareId: after.shareId, kind: 'info', title: after.title, newFields: added.map(f => f.label) })
+    }
 
     async function addShare(id: string, envelope: Envelope) {
       if (!gameKey || !dmVerifyKey) {
@@ -37,6 +51,7 @@ export function usePlayerSession() {
         const content = await open<ShareContent>(gameKey, envelope, dmVerifyKey)
         // The relay must not be able to swap shares
         if (content.shareId !== id) return
+        detectReveal(shares.value.find(s => s.shareId === id), content)
         shares.value = [content, ...shares.value.filter(s => s.shareId !== id)]
           .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       }
@@ -64,6 +79,8 @@ export function usePlayerSession() {
         gameKey = await unwrapGameKey(envelope, pairKey, dmVerifyKey)
         encrypted.value = true
         for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
+        // Everything up to here was the current state - from now on changes are live moments
+        setTimeout(() => live = true, 1500)
       }
       catch (error) {
         // Wrong key or not signed by the DM - never trust it
@@ -98,7 +115,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares }
+    return { status, name, encrypted, symbols, shares, reveals }
   }
 
   return { join, connect }

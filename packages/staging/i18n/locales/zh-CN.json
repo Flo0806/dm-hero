@@ -41,6 +41,10 @@
     "back": "返回",
     "search": "搜索分享内容",
     "noResults": "没有找到。",
-    "opened": "已打开"
+    "opened": "已打开",
+    "revealName": "{previous} 就是 {name}！",
+    "revealNew": "新内容：{name}",
+    "revealInfo": "关于 {name} 的新信息：{fields}",
+    "revealShow": "查看"
   }
 }

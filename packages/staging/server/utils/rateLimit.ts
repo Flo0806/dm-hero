@@ -1,4 +1,5 @@
-import type { H3Event } from 'h3'
+// Derived from Nitro's own h3 functions - always the h3 version that actually runs
+type H3Event = Parameters<typeof getHeader>[0]
 
 // Simple in-memory fixed window per key - enough for a single relay instance
 const windows = new Map<string, { count: number, resetAt: number }>()

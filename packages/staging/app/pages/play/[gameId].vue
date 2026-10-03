@@ -49,7 +49,7 @@
             :placeholder="$t('play.search')"
             class="w-full mb-6 px-4 py-3 rounded-xl border border-line bg-surface/85 text-ink outline-none focus:border-primary focus:ring-3 focus:ring-primary/25"
           />
-          <ShareSections :shares="filtered" :open-ids="openIds" :is-new="isNew" @open="open" />
+          <ShareSections :shares="filtered" :open-ids="openIds" :revealed-ids="revealedIds" :is-new="isNew" @open="open" />
           <p v-if="!filtered.length" class="m-0 text-muted">
             {{ $t('play.noResults') }}
           </p>
@@ -65,6 +65,8 @@
       </aside>
     </main>
 
+    <RevealBanner :reveal="currentReveal" @show="showRevealed" />
+
     <!-- Phones: one share at a time, full screen -->
     <ShareDetail v-if="!isDesktop" :share="openShares[0] ?? null" @close="openIds = []" />
 
@@ -76,7 +78,7 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals } = connect(gameId)
 const { isNew, markSeen } = useSeenShares(gameId)
 
 const search = ref('')
@@ -108,6 +110,29 @@ const close = (id: string) => openIds.value = openIds.value.filter(openId => ope
 
 // Opened shares that get updated count as seen
 watch(openShares, list => list.forEach(markSeen))
+
+// Reveal moments: banner one after another, the card glows meanwhile
+const REVEAL_MS = 6000
+const currentReveal = ref<Reveal | null>(null)
+const revealedIds = ref<string[]>([])
+
+function nextReveal() {
+  if (currentReveal.value || !reveals.value.length) return
+  const reveal = reveals.value.shift()!
+  currentReveal.value = reveal
+  revealedIds.value = [...revealedIds.value, reveal.shareId]
+  setTimeout(() => {
+    revealedIds.value = revealedIds.value.filter(id => id !== reveal.shareId)
+    currentReveal.value = null
+    nextReveal()
+  }, REVEAL_MS)
+}
+watch(() => reveals.value.length, nextReveal)
+
+function showRevealed(shareId: string) {
+  const share = shares.value.find(s => s.shareId === shareId)
+  if (share && !openIds.value.includes(shareId)) open(share)
+}
 
 // Game over or kicked: back to the start page, which explains what happened
 watch(status, (value) => {

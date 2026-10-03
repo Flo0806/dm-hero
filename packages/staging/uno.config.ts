@@ -40,6 +40,8 @@ export default defineConfig({
       getCSS: () => `
         html, body { background: #1a1d29; color: #ece6da; -webkit-font-smoothing: antialiased; }
         @keyframes drift { from { transform: translate(0, 0) scale(1) } to { transform: translate(40px, 30px) scale(1.12) } }
+        @keyframes reveal-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(212, 165, 116, 0) } 40% { box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.55), 0 0 32px 6px rgba(212, 165, 116, 0.45) } }
+        @keyframes reveal-in { from { opacity: 0; transform: translate(-50%, -12px) } to { opacity: 1; transform: translate(-50%, 0) } }
       `,
     },
   ],

@@ -41,6 +41,10 @@
     "back": "Back",
     "search": "Search shared content",
     "noResults": "Nothing found.",
-    "opened": "Opened"
+    "opened": "Opened",
+    "revealName": "{previous} is {name}!",
+    "revealNew": "New: {name}",
+    "revealInfo": "New about {name}: {fields}",
+    "revealShow": "Show"
   }
 }

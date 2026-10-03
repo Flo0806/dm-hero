@@ -41,6 +41,10 @@
     "back": "Zurück",
     "search": "Geteilte Inhalte durchsuchen",
     "noResults": "Nichts gefunden.",
-    "opened": "Geöffnet"
+    "opened": "Geöffnet",
+    "revealName": "{previous} ist {name}!",
+    "revealNew": "Neu: {name}",
+    "revealInfo": "Neues über {name}: {fields}",
+    "revealShow": "Ansehen"
   }
 }

@@ -41,6 +41,10 @@
     "back": "Retour",
     "search": "Rechercher dans les partages",
     "noResults": "Rien trouvé.",
-    "opened": "Ouverts"
+    "opened": "Ouverts",
+    "revealName": "{previous} est {name} !",
+    "revealNew": "Nouveau : {name}",
+    "revealInfo": "Du nouveau sur {name} : {fields}",
+    "revealShow": "Voir"
   }
 }

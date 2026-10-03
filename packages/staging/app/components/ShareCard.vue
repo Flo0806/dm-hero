@@ -2,7 +2,7 @@
   <button
     type="button"
     class="relative w-full flex items-center gap-3 p-3 rounded-xl border bg-surface/85 text-ink text-left cursor-pointer transition hover:border-primary focus-ring"
-    :class="active ? 'border-primary' : 'border-line'"
+    :class="[active ? 'border-primary' : 'border-line', { 'animate-[reveal-glow_1.6s_ease-out_2] motion-reduce:animate-none': revealed }]"
     :aria-pressed="active"
     @click="emit('open')"
   >
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ share: ShareContent, isNew: boolean, active: boolean }>()
+defineProps<{ share: ShareContent, isNew: boolean, active: boolean, revealed?: boolean }>()
 const emit = defineEmits<{ open: [] }>()
 const { locale } = useI18n()
 </script>

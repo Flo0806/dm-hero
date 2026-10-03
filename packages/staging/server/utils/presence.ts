@@ -1,4 +1,5 @@
-import type { EventStream } from 'h3'
+// Derived from Nitro's own h3 - always the h3 version that actually runs
+type EventStream = ReturnType<typeof createEventStream>
 
 // Live connections per game (in memory). Players: who is online. DM: gets presence updates.
 interface GameStreams {

@@ -24,6 +24,17 @@ export interface ShareContent {
   updatedAt: string
 }
 
+/** A live moment worth celebrating: an alias got its real name, new info, or something new shared */
+export interface Reveal {
+  shareId: string
+  kind: 'name' | 'info' | 'new'
+  title: string
+  /** Previous name (kind 'name') */
+  previousTitle?: string
+  /** Labels of fields that just appeared (kind 'info') */
+  newFields?: LocalizedText[]
+}
+
 /** Text in the player's language - English, then anything, as fallback */
 export function pickText(text: LocalizedText, locale: string): string {
   if (typeof text === 'string') return text

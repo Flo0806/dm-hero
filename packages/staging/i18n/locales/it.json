@@ -41,6 +41,10 @@
     "back": "Indietro",
     "search": "Cerca nei contenuti condivisi",
     "noResults": "Nessun risultato.",
-    "opened": "Aperti"
+    "opened": "Aperti",
+    "revealName": "{previous} è {name}!",
+    "revealNew": "Nuovo: {name}",
+    "revealInfo": "Novità su {name}: {fields}",
+    "revealShow": "Mostra"
   }
 }

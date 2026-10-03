@@ -1,4 +1,5 @@
-import type { H3Event } from 'h3'
+// Derived from Nitro's own h3 functions - always the h3 version that actually runs
+type H3Event = Parameters<typeof getHeader>[0]
 
 export const PLAYER_COOKIE = 'dmh_player'
 

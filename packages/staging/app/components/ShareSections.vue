@@ -8,7 +8,7 @@
       </h2>
       <ul class="m-0 p-0 list-none grid gap-2.5 sm:grid-cols-2">
         <li v-for="share in group.shares" :key="share.shareId">
-          <ShareCard :share="share" :is-new="isNew(share)" :active="openIds.includes(share.shareId)" @open="emit('open', share)" />
+          <ShareCard :share="share" :is-new="isNew(share)" :active="openIds.includes(share.shareId)" :revealed="revealedIds.includes(share.shareId)" @open="emit('open', share)" />
         </li>
       </ul>
     </section>
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ shares: ShareContent[], openIds: string[], isNew: (share: ShareContent) => boolean }>()
+const props = defineProps<{ shares: ShareContent[], openIds: string[], revealedIds: string[], isNew: (share: ShareContent) => boolean }>()
 const emit = defineEmits<{ open: [ShareContent] }>()
 
 const { locale } = useI18n()
