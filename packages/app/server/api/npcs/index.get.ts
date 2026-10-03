@@ -768,6 +768,24 @@ export default defineEventHandler(async (event) => {
                   }
                 }
 
+                // Levenshtein match for linked Location names (split by comma, then by words)
+                if (!shouldInclude && linkedLocationNamesNormalized.length > 0) {
+                  const locationNames = linkedLocationNamesNormalized.split(',').map(n => n.trim())
+                  for (const locationName of locationNames) {
+                    if (locationName.length === 0) continue
+                    const locationWords = locationName.split(/\s+/)
+                    for (const word of locationWords) {
+                      if (word.length === 0) continue
+                      const locationLevDist = levenshtein(variant, word)
+                      if (locationLevDist <= maxDist) {
+                        shouldInclude = true
+                        break
+                      }
+                    }
+                    if (shouldInclude) break
+                  }
+                }
+
                 // Levenshtein match for linked Lore names (split by comma, then by words)
                 if (!shouldInclude && linkedLoreNamesNormalized.length > 0) {
                   const loreNames = linkedLoreNamesNormalized.split(',').map(n => n.trim())

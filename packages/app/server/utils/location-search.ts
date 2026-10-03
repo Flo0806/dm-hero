@@ -9,6 +9,7 @@ const levenshtein = createLevenshtein()
 export const LINKED_LOCATION_NAMES_SQL = `(
   SELECT GROUP_CONCAT(DISTINCT loc.name) FROM entities loc
   WHERE loc.deleted_at IS NULL
+    AND loc.campaign_id = e.campaign_id
     AND loc.type_id = (SELECT id FROM entity_types WHERE name = 'Location')
     AND (
       loc.id = e.location_id

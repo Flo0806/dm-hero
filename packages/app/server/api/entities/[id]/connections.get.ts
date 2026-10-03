@@ -145,11 +145,12 @@ export default defineEventHandler((event) => {
       FROM entities e
       INNER JOIN entity_types et ON e.type_id = et.id
       WHERE e.location_id = ?
+        AND e.campaign_id = (SELECT campaign_id FROM entities WHERE id = ?)
         AND e.deleted_at IS NULL
       ORDER BY et.name, e.name
     `,
     )
-    .all(id)
+    .all(id, id)
 
   // Get this entity's current location (if location_id is set)
   const currentLocation = db
