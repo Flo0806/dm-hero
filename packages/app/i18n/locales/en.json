@@ -2761,7 +2761,7 @@
     "pinRolled": "New PIN rolled",
     "online": "Online",
     "offline": "Offline",
-    "sharing": "Sharing",
+    "sharing": "Shared",
     "error": "That didn't work. Please try again.",
     "relayUnreachable": "The player server can't be reached right now. Check your internet connection and try again.",
     "relayConnected": "Player server connected",

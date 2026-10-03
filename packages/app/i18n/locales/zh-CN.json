@@ -2761,7 +2761,7 @@
     "pinRolled": "已生成新 PIN",
     "online": "在线",
     "offline": "离线",
-    "sharing": "分享",
+    "sharing": "已分享",
     "error": "操作失败，请重试。",
     "relayUnreachable": "暂时无法连接玩家服务器。请检查网络连接后重试。",
     "relayConnected": "玩家服务器已连接",
