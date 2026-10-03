@@ -54,6 +54,14 @@ export function sendToDm(gameId: string, event: string, data: unknown) {
   for (const stream of games.get(gameId)?.dm ?? []) void stream.push({ event, data: JSON.stringify(data) })
 }
 
+/** Send an event to every connected player of a game */
+export function sendToPlayers(gameId: string, event: string, data: unknown) {
+  const payload = JSON.stringify(data)
+  for (const streams of games.get(gameId)?.players.values() ?? []) {
+    for (const stream of streams) void stream.push({ event, data: payload })
+  }
+}
+
 /** Send an event to all devices of one player */
 export function sendToPlayer(gameId: string, playerId: string, event: string, data: unknown) {
   for (const stream of games.get(gameId)?.players.get(playerId) ?? []) void stream.push({ event, data: JSON.stringify(data) })

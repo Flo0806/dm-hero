@@ -3,6 +3,7 @@ import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
 import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
+import { syncTableShares } from './share/sync'
 
 // Keeps one outgoing SSE connection per game to the relay (works behind any router)
 // and fans the "who is online" state (+ devices waiting for approval) out to open pages.
@@ -17,11 +18,18 @@ interface Connection {
   abort: AbortController
   retry: ReturnType<typeof setTimeout> | null
   idle: ReturnType<typeof setTimeout> | null
+  sync: ReturnType<typeof setInterval> | null
 }
 
 const RETRY_MS = 3000
 // Nobody watching (campaign switched, app closed) -> disconnect. Long enough to survive a page reload.
 const IDLE_MS = 30_000
+// "Always live": while connected, changed shares are re-sent this often
+const SHARE_SYNC_MS = 5000
+
+function runShareSync(tableId: number) {
+  syncTableShares(getDb(), tableId).catch(error => console.error('[Relay] Share sync failed:', error))
+}
 const connections = new Map<number, Connection>()
 
 function emit(tableId: number) {
@@ -63,6 +71,8 @@ async function run(tableId: number) {
     if (!res.ok || !res.body) throw new Error(`Relay answered ${res.status}`)
     conn.state = { ...conn.state, connected: true }
     emit(tableId)
+    runShareSync(tableId)
+    conn.sync = setInterval(() => runShareSync(tableId), SHARE_SYNC_MS)
 
     await readEvents(res.body, (event, data) => {
       if (event === 'presence') {
@@ -80,6 +90,8 @@ async function run(tableId: number) {
     // Network error or relay down - handled below
   }
 
+  if (conn.sync) clearInterval(conn.sync)
+  conn.sync = null
   if (conn.abort.signal.aborted) return
   // Pending requests are sent again by the relay after reconnecting
   conn.state = { connected: false, online: [], pending: [] }
@@ -110,7 +122,7 @@ export function resolvePending(tableId: number, publicKey: string) {
 export function watchPresence(tableId: number, listener: Listener) {
   let conn = connections.get(tableId)
   if (!conn) {
-    conn = { state: { connected: false, online: [], pending: [] }, listeners: new Set(), abort: new AbortController(), retry: null, idle: null }
+    conn = { state: { connected: false, online: [], pending: [] }, listeners: new Set(), abort: new AbortController(), retry: null, idle: null, sync: null }
     connections.set(tableId, conn)
     void run(tableId)
   }
@@ -132,5 +144,6 @@ export function stopPresence(tableId: number) {
   conn.abort.abort()
   if (conn.retry) clearTimeout(conn.retry)
   if (conn.idle) clearTimeout(conn.idle)
+  if (conn.sync) clearInterval(conn.sync)
   connections.delete(tableId)
 }

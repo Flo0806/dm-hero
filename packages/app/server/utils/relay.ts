@@ -70,3 +70,19 @@ export async function endGameTable(db: Database.Database, tableId: number) {
   if (auth) await deleteRelayGame(auth).catch(error => console.error('[Relay] Delete failed:', error))
   return db.prepare('DELETE FROM game_tables WHERE id = ?').run(tableId).changes > 0
 }
+
+/** Shares are sent as sealed envelopes - the relay stores what it can't read */
+export async function putRelayShare(auth: RelayAuth, shareKey: string, envelope: unknown) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/shares/${shareKey}`, {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+    body: envelope as Record<string, unknown>,
+  })
+}
+
+export async function deleteRelayShare(auth: RelayAuth, shareKey: string) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/shares/${shareKey}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+  })
+}

@@ -2750,6 +2750,32 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 58: Created game_table_devices')
     },
   },
+  {
+    version: 59,
+    name: 'game_table_shares',
+    up: (db) => {
+      // What the DM shares with the players. Live: a sync re-sends a share whenever
+      // its content changed (content_hash = what the players currently have).
+      // share_key is random so the relay learns nothing about entity types or ids.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_shares (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          game_table_id INTEGER NOT NULL,
+          share_key TEXT NOT NULL UNIQUE,
+          entity_type TEXT NOT NULL,
+          entity_id INTEGER NOT NULL,
+          fields TEXT NOT NULL DEFAULT '[]',
+          content_hash TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (game_table_id) REFERENCES game_tables(id) ON DELETE CASCADE,
+          UNIQUE (game_table_id, entity_type, entity_id)
+        )
+      `)
+
+      console.log('✅ Migration 59: Created game_table_shares')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

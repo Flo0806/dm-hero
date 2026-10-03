@@ -19,5 +19,12 @@ export default defineEventHandler((event) => {
   else if (player.public_key) {
     sendToDm(gameId, 'key-request', { playerId: player.player_id, publicKey: player.public_key })
   }
+
+  // Everything currently shared (encrypted) - the player decrypts once it has the game key
+  const shares = useRelayDb().prepare('SELECT id, envelope FROM shares WHERE game_id = ? ORDER BY updated_at')
+    .all(gameId) as Array<{ id: string, envelope: string }>
+  for (const share of shares) {
+    void stream.push({ event: 'share', data: JSON.stringify({ id: share.id, envelope: JSON.parse(share.envelope) }) })
+  }
   return sending
 })
