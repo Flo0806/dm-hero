@@ -20,6 +20,11 @@ export function generateExchangeKeyPair(): Promise<CryptoKeyPair> {
   return subtle.generateKey({ name: 'ECDH', ...CURVE }, true, ['deriveKey'])
 }
 
+/** Player device key pair: the private key can't be exported - it never leaves the browser */
+export function generateDeviceKeyPair(): Promise<CryptoKeyPair> {
+  return subtle.generateKey({ name: 'ECDH', ...CURVE }, false, ['deriveKey'])
+}
+
 export async function exportPublicKey(key: CryptoKey): Promise<string> {
   return toBase64Url(new Uint8Array(await subtle.exportKey('spki', key)))
 }

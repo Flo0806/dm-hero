@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  createGameKeys, loadGameKeys,
+  createGameKeys, loadGameKeys, generateDeviceKeyPair,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
   type EnvelopeHeader,
@@ -92,5 +92,13 @@ describe('stored game keys (DM Hero database)', () => {
     expect(publicJson).not.toContain(stored.signing.privateKey.d!)
     expect(publicJson).not.toContain(stored.exchange.privateKey.d!)
     expect(publicJson).not.toContain(stored.gameKey)
+  })
+})
+
+describe('player device keys', () => {
+  it('private key cannot be exported, public key can', async () => {
+    const device = await generateDeviceKeyPair()
+    await expect(globalThis.crypto.subtle.exportKey('jwk', device.privateKey)).rejects.toThrow()
+    expect(await exportPublicKey(device.publicKey)).toMatch(/^[\w-]{100,}$/)
   })
 })

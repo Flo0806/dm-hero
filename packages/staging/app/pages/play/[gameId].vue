@@ -13,6 +13,10 @@
         <span class="size-2.5 rounded-full" :class="status === 'live' ? 'bg-success' : 'bg-primary animate-pulse motion-reduce:animate-none'" aria-hidden="true" />
         {{ status === 'live' ? $t('play.connected') : $t('play.reconnecting') }}
       </p>
+      <p role="status" class="mt-3 mb-0 inline-flex items-center gap-2 text-sm" :class="encrypted ? 'text-success' : 'text-muted'">
+        <span aria-hidden="true">{{ encrypted ? '🔒' : '🔑' }}</span>
+        {{ encrypted ? $t('play.encrypted') : $t('play.keyExchange') }}
+      </p>
     </main>
 
     <AppFooter />
@@ -22,7 +26,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { connect } = usePlayerSession()
-const { status, name } = connect(String(route.params.gameId))
+const { status, name, encrypted } = connect(String(route.params.gameId))
 
 // Game over or kicked: back to the start page, which explains what happened
 watch(status, (value) => {

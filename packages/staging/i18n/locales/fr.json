@@ -32,6 +32,8 @@
     "welcome": "Bienvenue à la table, {name} !",
     "waiting": "Installe-toi : dès que ton MJ partage quelque chose, ça apparaît ici.",
     "connected": "Connecté",
-    "reconnecting": "Reconnexion…"
+    "reconnecting": "Reconnexion…",
+    "encrypted": "Chiffré de bout en bout",
+    "keyExchange": "Échange des clés avec ton MJ…"
   }
 }

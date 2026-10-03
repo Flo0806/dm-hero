@@ -32,6 +32,8 @@
     "welcome": "Willkommen am Tisch, {name}!",
     "waiting": "Lehn dich zurück – sobald dein DM etwas teilt, taucht es hier auf.",
     "connected": "Verbunden",
-    "reconnecting": "Verbindung wird wiederhergestellt …"
+    "reconnecting": "Verbindung wird wiederhergestellt …",
+    "encrypted": "Ende-zu-Ende verschlüsselt",
+    "keyExchange": "Schlüssel wird mit deinem DM ausgetauscht …"
   }
 }

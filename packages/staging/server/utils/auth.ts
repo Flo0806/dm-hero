@@ -11,15 +11,24 @@ export function requireDm(event: H3Event, gameId: string) {
   return game
 }
 
+export interface PlayerSession {
+  player_id: string
+  name: string
+  /** Device's exchange public key (sent on join) */
+  public_key: string | null
+  /** Game key wrapped by DM Hero for this device (JSON envelope) */
+  wrapped_key: string | null
+}
+
 /** Players authenticate with the session cookie they got when joining */
 export function requirePlayer(event: H3Event, gameId: string) {
   const token = getCookie(event, PLAYER_COOKIE)
   const session = token
     ? useRelayDb().prepare(`
-        SELECT s.player_id, p.name FROM player_sessions s
+        SELECT s.player_id, s.public_key, s.wrapped_key, p.name FROM player_sessions s
         JOIN players p ON p.game_id = s.game_id AND p.id = s.player_id
         WHERE s.token_hash = ? AND s.game_id = ?
-      `).get(sha256(token), gameId) as { player_id: string, name: string } | undefined
+      `).get(sha256(token), gameId) as PlayerSession | undefined
     : undefined
   if (!session) throw createError({ statusCode: 401, message: 'Not joined to this game' })
   return session

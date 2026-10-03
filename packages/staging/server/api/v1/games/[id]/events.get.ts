@@ -11,5 +11,13 @@ export default defineEventHandler((event) => {
 
   const sending = stream.send()
   void stream.push({ event: 'ready', data: JSON.stringify({ name: player.name }) })
+
+  // Game key: deliver if DM Hero already wrapped it for this device, otherwise ask DM Hero
+  if (player.wrapped_key) {
+    void stream.push({ event: 'game-key', data: JSON.stringify({ publicKey: player.public_key, envelope: JSON.parse(player.wrapped_key) }) })
+  }
+  else if (player.public_key) {
+    sendToDm(gameId, 'key-request', { playerId: player.player_id, publicKey: player.public_key })
+  }
   return sending
 })

@@ -19,5 +19,8 @@ export function randomGameCode(length = 6) {
   return code
 }
 
+/** Public keys are base64url (spki) - nothing else is accepted */
+export const isPublicKey = (value: unknown): value is string => typeof value === 'string' && /^[\w-]{40,400}$/.test(value)
+
 /** Same formula DM Hero uses, so plain PINs never leave the DM's machine */
 export const pinHash = (gameId: string, pin: string) => sha256(`${gameId}:${pin}`)

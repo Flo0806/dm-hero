@@ -1,10 +1,12 @@
 // A player joins with game code + PIN and gets a session cookie
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'join', 10, 60 * 1000)
-  const body = await readBody<{ code?: string, pin?: string }>(event)
+  const body = await readBody<{ code?: string, pin?: string, publicKey?: string }>(event)
   const code = String(body?.code ?? '').trim().toUpperCase()
   const pin = String(body?.pin ?? '').trim()
   if (!code || !/^\d{6}$/.test(pin)) throw createError({ statusCode: 400, message: 'Code and 6-digit PIN required' })
+  // The device's public key - DM Hero wraps the game key for it
+  if (!isPublicKey(body?.publicKey)) throw createError({ statusCode: 400, message: 'Public key required' })
 
   const db = useRelayDb()
   const game = db.prepare('SELECT id, dm_signing_public, dm_exchange_public FROM games WHERE code = ?').get(code) as
@@ -16,8 +18,8 @@ export default defineEventHandler(async (event) => {
   if (!game || !player) throw createError({ statusCode: 401, message: 'Code or PIN is wrong' })
 
   const token = randomToken()
-  db.prepare('INSERT INTO player_sessions (token_hash, game_id, player_id, created_at) VALUES (?, ?, ?, ?)')
-    .run(sha256(token), game.id, player.id, Date.now())
+  db.prepare('INSERT INTO player_sessions (token_hash, game_id, player_id, created_at, public_key) VALUES (?, ?, ?, ?, ?)')
+    .run(sha256(token), game.id, player.id, Date.now(), body!.publicKey!)
   setCookie(event, PLAYER_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',

@@ -1,6 +1,3 @@
-// Public keys are base64url (spki) - nothing else is accepted
-const isPublicKey = (value: unknown) => typeof value === 'string' && /^[\w-]{40,400}$/.test(value)
-
 // DM Hero registers a game with the DM's PUBLIC keys. Returns id, a globally unique code and the secret DM token.
 export default defineEventHandler(async (event) => {
   rateLimit(event, 'create-game', 20, 60 * 60 * 1000)

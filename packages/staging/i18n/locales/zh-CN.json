@@ -32,6 +32,8 @@
     "welcome": "欢迎上桌，{name}！",
     "waiting": "放松一下——DM 一分享内容，就会显示在这里。",
     "connected": "已连接",
-    "reconnecting": "正在重新连接……"
+    "reconnecting": "正在重新连接……",
+    "encrypted": "端到端加密",
+    "keyExchange": "正在与你的 DM 交换密钥……"
   }
 }

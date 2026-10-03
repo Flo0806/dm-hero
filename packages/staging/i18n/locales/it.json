@@ -32,6 +32,8 @@
     "welcome": "Benvenuto al tavolo, {name}!",
     "waiting": "Mettiti comodo: appena il tuo DM condivide qualcosa, comparirà qui.",
     "connected": "Connesso",
-    "reconnecting": "Riconnessione…"
+    "reconnecting": "Riconnessione…",
+    "encrypted": "Crittografia end-to-end",
+    "keyExchange": "Scambio delle chiavi con il tuo DM…"
   }
 }

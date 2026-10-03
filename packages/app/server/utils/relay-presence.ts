@@ -1,5 +1,6 @@
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
+import { answerKeyRequest } from './relay-keys'
 
 // Keeps one outgoing SSE connection per game to the relay (works behind any router)
 // and fans the "who is online" state out to open game table pages.
@@ -64,10 +65,15 @@ async function run(tableId: number) {
     emit(tableId)
 
     await readEvents(res.body, (event, data) => {
-      if (event !== 'presence') return
-      const { online } = JSON.parse(data) as { online: string[] }
-      conn.state = { connected: true, online: online.map(Number) }
-      emit(tableId)
+      if (event === 'presence') {
+        const { online } = JSON.parse(data) as { online: string[] }
+        conn.state = { connected: true, online: online.map(Number) }
+        emit(tableId)
+      }
+      else if (event === 'key-request') {
+        const { playerId, publicKey } = JSON.parse(data) as { playerId: string, publicKey: string }
+        answerKeyRequest(tableId, playerId, publicKey).catch(error => console.error('[Relay] Key request failed:', error))
+      }
     })
   }
   catch {

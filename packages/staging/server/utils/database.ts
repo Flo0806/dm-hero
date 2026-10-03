@@ -24,7 +24,9 @@ const SCHEMA = `
     token_hash TEXT PRIMARY KEY,
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     player_id TEXT NOT NULL,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    public_key TEXT,
+    wrapped_key TEXT
   );
 `
 
@@ -38,6 +40,7 @@ export function useRelayDb(): DatabaseSync {
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
   db.exec(SCHEMA)
   addMissingColumns(db, 'games', ['dm_signing_public TEXT', 'dm_exchange_public TEXT'])
+  addMissingColumns(db, 'player_sessions', ['public_key TEXT', 'wrapped_key TEXT'])
   return db
 }
 

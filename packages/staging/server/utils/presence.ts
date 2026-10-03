@@ -46,6 +46,16 @@ export function removeDmStream(gameId: string, stream: EventStream) {
   games.get(gameId)?.dm.delete(stream)
 }
 
+/** Send an event to all DM Hero connections of a game */
+export function sendToDm(gameId: string, event: string, data: unknown) {
+  for (const stream of games.get(gameId)?.dm ?? []) void stream.push({ event, data: JSON.stringify(data) })
+}
+
+/** Send an event to all devices of one player */
+export function sendToPlayer(gameId: string, playerId: string, event: string, data: unknown) {
+  for (const stream of games.get(gameId)?.players.get(playerId) ?? []) void stream.push({ event, data: JSON.stringify(data) })
+}
+
 /** Kick players (removed or PIN changed): close their live connections */
 export async function disconnectPlayers(gameId: string, playerIds: string[]) {
   const players = games.get(gameId)?.players

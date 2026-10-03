@@ -32,6 +32,8 @@
     "welcome": "Welcome to the table, {name}!",
     "waiting": "Sit back – as soon as your DM shares something, it shows up here.",
     "connected": "Connected",
-    "reconnecting": "Reconnecting …"
+    "reconnecting": "Reconnecting …",
+    "encrypted": "End-to-end encrypted",
+    "keyExchange": "Exchanging keys with your DM …"
   }
 }
