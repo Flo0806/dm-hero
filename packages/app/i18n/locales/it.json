@@ -888,7 +888,8 @@
       "players": "Giocatori collegati",
       "documents": "Documenti e note",
       "images": "Galleria immagini"
-    }
+    },
+    "image": "Immagine"
   },
   "locations": {
     "title": "Luoghi",
@@ -2789,7 +2790,7 @@
       "stop": "Smetti di condividere",
       "done": "Condiviso",
       "stopped": "Non più condiviso",
-      "empty": "Ancora niente di condiviso. Condividi PNG, luoghi e oggetti con il pulsante di condivisione.",
+      "empty": "Ancora niente di condiviso. Condividi PNG, luoghi, oggetti e conoscenze con il pulsante di condivisione.",
       "fieldCount": "{count} campo | {count} campi",
       "displayName": "Nome per i giocatori (facoltativo)",
       "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione.",

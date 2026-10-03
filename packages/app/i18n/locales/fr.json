@@ -888,7 +888,8 @@
       "players": "Joueurs liés",
       "documents": "Documents et notes",
       "images": "Galerie d'images"
-    }
+    },
+    "image": "Image"
   },
   "locations": {
     "title": "Lieux",
@@ -2789,7 +2790,7 @@
       "stop": "Ne plus partager",
       "done": "Partagé",
       "stopped": "N'est plus partagé",
-      "empty": "Rien de partagé pour l'instant. Partage des PNJ, des lieux et des objets avec le bouton de partage.",
+      "empty": "Rien de partagé pour l'instant. Partage des PNJ, des lieux, des objets et du savoir avec le bouton de partage.",
       "fieldCount": "{count} champ | {count} champs",
       "displayName": "Nom pour les joueurs (facultatif)",
       "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation.",

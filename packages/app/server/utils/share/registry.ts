@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3'
 import type { BuiltField, ShareType } from '~~/types/share'
 import { itemShareKind } from './kinds/item'
 import { locationShareKind } from './kinds/location'
+import { loreShareKind } from './kinds/lore'
 import { npcShareKind } from './kinds/npc'
 
 // One entry per share type: which fields the DM can tick and how the content
@@ -20,6 +21,7 @@ export const SHARE_KINDS: Partial<Record<ShareType, ShareKind>> = {
   npc: npcShareKind,
   location: locationShareKind,
   item: itemShareKind,
+  lore: loreShareKind,
 }
 
 export function getShareKind(type: string): ShareKind {

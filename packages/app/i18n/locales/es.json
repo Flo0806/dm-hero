@@ -888,7 +888,8 @@
       "players": "Jugadores vinculados",
       "documents": "Documentos y notas",
       "images": "Galería de imágenes"
-    }
+    },
+    "image": "Imagen"
   },
   "locations": {
     "title": "Lugares",
@@ -2789,7 +2790,7 @@
       "stop": "Dejar de compartir",
       "done": "Compartido",
       "stopped": "Ya no se comparte",
-      "empty": "Aún no has compartido nada. Comparte PNJ, lugares y objetos con el botón de compartir.",
+      "empty": "Aún no has compartido nada. Comparte PNJ, lugares, objetos y saber con el botón de compartir.",
       "fieldCount": "{count} campo | {count} campos",
       "displayName": "Nombre para los jugadores (opcional)",
       "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación.",
