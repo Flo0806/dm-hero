@@ -776,7 +776,8 @@
     "selectItem": "Seleccionar objeto",
     "selectItemPlaceholder": "Elige un objeto",
     "linkItem": "Vincular objeto",
-    "incomingItemTooltip": "Relación creada por el objeto"
+    "incomingItemTooltip": "Relación creada por el objeto",
+    "image": "Imagen"
   },
   "lore": {
     "title": "Lore",
@@ -2790,7 +2791,7 @@
       "stop": "Dejar de compartir",
       "done": "Compartido",
       "stopped": "Ya no se comparte",
-      "empty": "Aún no has compartido nada. Comparte PNJ, lugares, objetos y saber con el botón de compartir.",
+      "empty": "Aún no has compartido nada. Comparte PNJ, lugares, objetos, saber y facciones con el botón de compartir.",
       "fieldCount": "{count} campo | {count} campos",
       "displayName": "Nombre para los jugadores (opcional)",
       "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación.",

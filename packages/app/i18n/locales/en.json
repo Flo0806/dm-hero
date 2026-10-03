@@ -776,7 +776,8 @@
     "selectItem": "Select Item",
     "selectItemPlaceholder": "Choose an item",
     "linkItem": "Link Item",
-    "incomingItemTooltip": "Relation created by the item"
+    "incomingItemTooltip": "Relation created by the item",
+    "image": "Image"
   },
   "lore": {
     "title": "Lore",
@@ -2790,7 +2791,7 @@
       "stop": "Stop sharing",
       "done": "Shared",
       "stopped": "No longer shared",
-      "empty": "Nothing shared yet. Share NPCs, locations, items and lore with the share button.",
+      "empty": "Nothing shared yet. Share NPCs, locations, items, lore and factions with the share button.",
       "fieldCount": "{count} field | {count} fields",
       "displayName": "Name for the players (optional)",
       "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal.",

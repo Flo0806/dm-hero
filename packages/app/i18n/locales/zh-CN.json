@@ -776,7 +776,8 @@
     "selectItem": "选择项目",
     "selectItemPlaceholder": "选择一个项目",
     "linkItem": "链接项目",
-    "incomingItemTooltip": "由项目创建的关系"
+    "incomingItemTooltip": "由项目创建的关系",
+    "image": "图片"
   },
   "lore": {
     "title": "背景知识",
@@ -2790,7 +2791,7 @@
       "stop": "停止分享",
       "done": "已分享",
       "stopped": "已停止分享",
-      "empty": "还没有分享任何内容。用分享按钮分享 NPC、地点、物品和知识。",
+      "empty": "还没有分享任何内容。用分享按钮分享 NPC、地点、物品、知识和阵营。",
       "fieldCount": "{count} 个字段",
       "displayName": "给玩家看的名字（可选）",
       "displayNameHint": "例如“神秘男子”。留空 = 真实名字（{name}）。之后清空 = 揭晓。",

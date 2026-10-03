@@ -10,6 +10,7 @@ export const SHARE_TYPE_CONFIG = {
   location: { entityType: 'Location', i18n: 'locations', icon: 'mdi-map-marker' },
   item: { entityType: 'Item', i18n: 'items', icon: 'mdi-sword' },
   lore: { entityType: 'Lore', i18n: 'lore', icon: 'mdi-book-open-variant' },
+  faction: { entityType: 'Faction', i18n: 'factions', icon: 'mdi-shield-account' },
 } as const
 
 export type ShareType = keyof typeof SHARE_TYPE_CONFIG
