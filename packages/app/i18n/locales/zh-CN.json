@@ -2767,6 +2767,12 @@
     "restartConfirm": "重新开始",
     "onlineCount": "{count} 人在线",
     "noPlayersShort": "还没有玩家。",
-    "openTable": "打开游戏桌"
+    "openTable": "打开游戏桌",
+    "pendingTitle": "请求加入",
+    "pendingHint": "新设备！请把这些符号与玩家屏幕上的符号对比——一致就同意。",
+    "pendingCount": "{count} 人请求加入",
+    "wantsToJoin": "{name} 请求加入",
+    "approve": "同意",
+    "reject": "拒绝"
   }
 }

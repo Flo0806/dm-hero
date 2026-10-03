@@ -11,6 +11,8 @@ export default defineEventHandler(async (event) => {
 
   db.prepare('UPDATE game_table_players SET pin = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
     .run(generateUniquePin(db, player.game_table_id), id)
+  // New PIN = old access is void: devices must be approved again
+  db.prepare('DELETE FROM game_table_devices WHERE player_id = ?').run(id)
   // New PIN on the relay kicks the player's old session
   await syncRelayPlayers(db, player.game_table_id)
   return getTablePlayers(db, player.game_table_id).find(p => p.id === id)

@@ -1,15 +1,15 @@
-import { derivePairKey, importExchangePublicKey, importVerifyKey, unwrapGameKey, type Envelope } from '@dm-hero/seal'
+import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, unwrapGameKey, type Envelope } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
 export function usePlayerSession() {
   async function join(code: string, pin: string) {
-    // Device key pair: the public half goes to DM Hero (via the relay), the private half stays here
-    const device = await createDeviceKeyPair()
+    // Device key: the public half goes to DM Hero (via the relay), the private half stays here
+    const device = await getDeviceKey()
     const result = await $fetch<{ gameId: string, playerId: string, name: string, dmPublicKeys: { signing: string, exchange: string } }>('/api/v1/join', {
       method: 'POST',
       body: { code, pin, publicKey: device.publicKey },
     })
-    await saveDeviceGameKeys(result.gameId, { ...device, dmPublicKeys: result.dmPublicKeys })
+    await saveDmPublicKeys(result.gameId, result.dmPublicKeys)
     return result
   }
 
@@ -18,6 +18,9 @@ export function usePlayerSession() {
     const name = ref('')
     /** Game key received and verified as coming from the DM */
     const encrypted = ref(false)
+    /** Same three symbols the DM sees when approving this device */
+    const symbols = ref<string[]>([])
+    void getDeviceKey().then(async device => symbols.value = await fingerprint(device.publicKey))
     let gameKey: CryptoKey | null = null
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
@@ -31,11 +34,11 @@ export function usePlayerSession() {
     // DM Hero wrapped the game key for a device - only ours can open it
     source.addEventListener('game-key', async (event) => {
       const { publicKey, envelope } = JSON.parse((event as MessageEvent).data) as { publicKey: string, envelope: Envelope }
-      const device = await loadDeviceGameKeys(gameId)
-      if (!device || device.publicKey !== publicKey) return
+      const [device, dm] = await Promise.all([getDeviceKey(), loadDmPublicKeys(gameId)])
+      if (!dm || device.publicKey !== publicKey) return
       try {
-        const pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(device.dmPublicKeys.exchange), gameId)
-        gameKey = await unwrapGameKey(envelope, pairKey, await importVerifyKey(device.dmPublicKeys.signing))
+        const pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(dm.exchange), gameId)
+        gameKey = await unwrapGameKey(envelope, pairKey, await importVerifyKey(dm.signing))
         encrypted.value = true
       }
       catch (error) {
@@ -62,7 +65,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, getGameKey: () => gameKey }
+    return { status, name, encrypted, symbols, getGameKey: () => gameKey }
   }
 
   return { join, connect }

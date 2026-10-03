@@ -3,7 +3,7 @@ export default defineEventHandler((event) => {
   const gameId = getRouterParam(event, 'id') ?? ''
   const player = requirePlayer(event, gameId)
   const stream = createEventStream(event)
-  addPlayerStream(gameId, player.player_id, stream)
+  addPlayerStream(gameId, player.player_id, stream, player.public_key)
   stream.onClosed(async () => {
     removePlayerStream(gameId, player.player_id, stream)
     await stream.close()

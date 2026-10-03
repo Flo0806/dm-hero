@@ -3,13 +3,26 @@
        and shows the essentials. Invisible if the campaign has no game. -->
   <v-menu v-if="store.table" location="bottom end" :close-on-content-click="false">
     <template #activator="{ props: menuProps }">
-      <v-chip v-bind="menuProps" variant="tonal" :color="presence.connected ? 'success' : 'warning'" class="mr-2">
-        <v-icon start :icon="presence.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline'" />
-        {{ presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
+      <v-chip v-bind="menuProps" :variant="presence.pending.length ? 'flat' : 'tonal'" :color="chipColor" class="mr-2">
+        <v-icon start :icon="chipIcon" />
+        <template v-if="presence.pending.length">
+          {{ $t('gameTable.pendingCount', { count: presence.pending.length }) }}
+        </template>
+        <template v-else>
+          {{ presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
+        </template>
       </v-chip>
     </template>
 
-    <v-card min-width="280" class="pa-4">
+    <v-card min-width="300" class="pa-4">
+      <template v-if="presence.pending.length">
+        <div class="text-overline text-primary">
+          {{ $t('gameTable.pendingTitle') }}
+        </div>
+        <GameTablePendingDevices :pending="presence.pending" class="mb-2" />
+        <v-divider class="mb-3" />
+      </template>
+
       <div class="text-overline text-medium-emphasis">
         {{ $t('gameTable.code') }}
       </div>
@@ -37,6 +50,8 @@
 </template>
 
 <script setup lang="ts">
+import type { GameTablePresence } from '~~/types/game-table'
+
 const { t } = useI18n()
 const store = useGameTableStore()
 const campaignStore = useCampaignStore()
@@ -52,7 +67,11 @@ if (import.meta.client) {
 
 const presence = import.meta.client
   ? useGameTablePresence(() => store.table?.id ?? null)
-  : ref({ connected: false, online: [] as number[] })
+  : ref<GameTablePresence>({ connected: false, online: [], pending: [] })
+
+// Waiting devices win: the DM should notice them from anywhere in the app
+const chipColor = computed(() => presence.value.pending.length ? 'primary' : presence.value.connected ? 'success' : 'warning')
+const chipIcon = computed(() => presence.value.pending.length ? 'mdi-account-question' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
 
 const onlinePlayers = computed(() => store.table?.players.filter(p => presence.value.online.includes(p.id)) ?? [])
 

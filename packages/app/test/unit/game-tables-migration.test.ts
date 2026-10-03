@@ -55,4 +55,14 @@ describe('game_tables migration', () => {
     db.prepare('DELETE FROM entities WHERE id = ?').run(entityId)
     expect(db.prepare('SELECT name, player_entity_id FROM game_table_players').get()).toEqual({ name: 'Anna', player_entity_id: null })
   })
+
+  it('approved devices go away with their player', () => {
+    const tableId = createTable()
+    const playerId = Number(addPlayer(tableId, 'Anna', '123456').lastInsertRowid)
+    db.prepare('INSERT INTO game_table_devices (game_table_id, player_id, public_key) VALUES (?, ?, ?)').run(tableId, playerId, 'pk-1')
+    expect(() => db.prepare('INSERT INTO game_table_devices (game_table_id, player_id, public_key) VALUES (?, ?, ?)').run(tableId, playerId, 'pk-1')).toThrow(/UNIQUE/)
+
+    db.prepare('DELETE FROM game_table_players WHERE id = ?').run(playerId)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM game_table_devices').get()).toEqual({ n: 0 })
+  })
 })

@@ -60,6 +60,12 @@ export const useGameTableStore = defineStore('gameTable', {
       if (this.table) this.table.players = this.table.players.filter(p => p.id !== id)
     },
 
+    /** Approve (gets the game key) or reject (kicked) a new player device */
+    async decideDevice(playerId: number, publicKey: string, approve: boolean) {
+      if (!this.table) return
+      await $fetch(`/api/game-table/${this.table.id}/devices`, { method: 'POST', body: { playerId, publicKey, approve } })
+    },
+
     replacePlayer(player: GameTablePlayer) {
       if (!this.table) return
       const index = this.table.players.findIndex(p => p.id === player.id)

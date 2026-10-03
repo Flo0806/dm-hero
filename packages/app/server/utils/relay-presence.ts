@@ -1,16 +1,13 @@
+import { fingerprint } from '@dm-hero/seal'
+import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
-import { answerKeyRequest } from './relay-keys'
+import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
 
 // Keeps one outgoing SSE connection per game to the relay (works behind any router)
-// and fans the "who is online" state out to open game table pages.
+// and fans the "who is online" state (+ devices waiting for approval) out to open pages.
 
-export interface PresenceState {
-  /** Relay reachable and stream open */
-  connected: boolean
-  /** Local game_table_players ids that are online */
-  online: number[]
-}
+export type PresenceState = GameTablePresence
 
 type Listener = (state: PresenceState) => void
 
@@ -70,12 +67,12 @@ async function run(tableId: number) {
     await readEvents(res.body, (event, data) => {
       if (event === 'presence') {
         const { online } = JSON.parse(data) as { online: string[] }
-        conn.state = { connected: true, online: online.map(Number) }
+        conn.state = { ...conn.state, connected: true, online: online.map(Number) }
         emit(tableId)
       }
       else if (event === 'key-request') {
         const { playerId, publicKey } = JSON.parse(data) as { playerId: string, publicKey: string }
-        answerKeyRequest(tableId, playerId, publicKey).catch(error => console.error('[Relay] Key request failed:', error))
+        handleKeyRequest(tableId, Number(playerId), publicKey).catch(error => console.error('[Relay] Key request failed:', error))
       }
     })
   }
@@ -84,16 +81,36 @@ async function run(tableId: number) {
   }
 
   if (conn.abort.signal.aborted) return
-  conn.state = { connected: false, online: [] }
+  // Pending requests are sent again by the relay after reconnecting
+  conn.state = { connected: false, online: [], pending: [] }
   emit(tableId)
   conn.retry = setTimeout(() => run(tableId), RETRY_MS)
+}
+
+/** Approved device -> game key right away. New device -> wait for the DM. */
+async function handleKeyRequest(tableId: number, playerId: number, publicKey: string) {
+  if (!isKnownPlayer(tableId, playerId)) return
+  if (isApprovedDevice(tableId, playerId, publicKey)) return deliverGameKey(tableId, playerId, publicKey)
+
+  const conn = connections.get(tableId)
+  if (!conn || conn.state.pending.some(p => p.publicKey === publicKey)) return
+  conn.state = { ...conn.state, pending: [...conn.state.pending, { playerId, publicKey, fingerprint: await fingerprint(publicKey) }] }
+  emit(tableId)
+}
+
+/** DM decided on a device - remove it from the waiting list */
+export function resolvePending(tableId: number, publicKey: string) {
+  const conn = connections.get(tableId)
+  if (!conn) return
+  conn.state = { ...conn.state, pending: conn.state.pending.filter(p => p.publicKey !== publicKey) }
+  emit(tableId)
 }
 
 /** Subscribe to presence of a game; starts the relay connection on first use */
 export function watchPresence(tableId: number, listener: Listener) {
   let conn = connections.get(tableId)
   if (!conn) {
-    conn = { state: { connected: false, online: [] }, listeners: new Set(), abort: new AbortController(), retry: null, idle: null }
+    conn = { state: { connected: false, online: [], pending: [] }, listeners: new Set(), abort: new AbortController(), retry: null, idle: null }
     connections.set(tableId, conn)
     void run(tableId)
   }

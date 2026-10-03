@@ -34,6 +34,7 @@
     "connected": "Verbunden",
     "reconnecting": "Verbindung wird wiederhergestellt …",
     "encrypted": "Ende-zu-Ende verschlüsselt",
-    "keyExchange": "Schlüssel wird mit deinem DM ausgetauscht …"
+    "waitingApproval": "Warte auf die Bestätigung deines DMs …",
+    "compareSymbols": "Dein DM sieht dieselben Symbole – vergleicht sie kurz:"
   }
 }

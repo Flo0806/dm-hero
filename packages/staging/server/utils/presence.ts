@@ -7,6 +7,8 @@ interface GameStreams {
 }
 
 const games = new Map<string, GameStreams>()
+// Which device (public key) a player stream belongs to - for kicking a single device
+const streamDevice = new WeakMap<EventStream, string | null>()
 
 function streamsOf(gameId: string) {
   let entry = games.get(gameId)
@@ -26,7 +28,8 @@ export function broadcastPresence(gameId: string) {
   for (const stream of games.get(gameId)?.dm ?? []) void stream.push({ event: 'presence', data })
 }
 
-export function addPlayerStream(gameId: string, playerId: string, stream: EventStream) {
+export function addPlayerStream(gameId: string, playerId: string, stream: EventStream, publicKey: string | null) {
+  streamDevice.set(stream, publicKey)
   const players = streamsOf(gameId).players
   if (!players.has(playerId)) players.set(playerId, new Set())
   players.get(playerId)!.add(stream)
@@ -63,6 +66,17 @@ export async function disconnectPlayers(gameId: string, playerIds: string[]) {
   for (const id of playerIds) {
     for (const stream of players.get(id) ?? []) await stream.close()
     players.delete(id)
+  }
+  broadcastPresence(gameId)
+}
+
+/** DM rejected a device: close only that device's connections */
+export async function disconnectDevice(gameId: string, playerId: string, publicKey: string) {
+  const streams = games.get(gameId)?.players.get(playerId)
+  for (const stream of [...(streams ?? [])]) {
+    if (streamDevice.get(stream) !== publicKey) continue
+    streams!.delete(stream)
+    await stream.close()
   }
   broadcastPresence(gameId)
 }

@@ -23,10 +23,20 @@ export interface GameTable {
 /** Length of a player's PIN */
 export const GAME_PIN_LENGTH = 6
 
+/** A player's new device waiting for the DM's approval */
+export interface PendingDevice {
+  playerId: number
+  publicKey: string
+  /** Three symbols the player sees too - compare them at the table */
+  fingerprint: string[]
+}
+
 /** Live status from the player relay */
 export interface GameTablePresence {
   /** Player server reachable */
   connected: boolean
   /** Ids of players that are online */
   online: number[]
+  /** New devices waiting for approval */
+  pending: PendingDevice[]
 }

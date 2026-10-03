@@ -2728,6 +2728,28 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 57: Added e2e_keys to game_tables')
     },
   },
+  {
+    version: 58,
+    name: 'game_table_devices',
+    up: (db) => {
+      // Player devices the DM approved (by public key). Approved devices get the
+      // game key automatically - reloads and returning players need no new approval.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_devices (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          game_table_id INTEGER NOT NULL,
+          player_id INTEGER NOT NULL,
+          public_key TEXT NOT NULL,
+          approved_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (game_table_id) REFERENCES game_tables(id) ON DELETE CASCADE,
+          FOREIGN KEY (player_id) REFERENCES game_table_players(id) ON DELETE CASCADE,
+          UNIQUE (game_table_id, public_key)
+        )
+      `)
+
+      console.log('✅ Migration 58: Created game_table_devices')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

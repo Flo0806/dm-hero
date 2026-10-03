@@ -13,10 +13,22 @@
         <span class="size-2.5 rounded-full" :class="status === 'live' ? 'bg-success' : 'bg-primary animate-pulse motion-reduce:animate-none'" aria-hidden="true" />
         {{ status === 'live' ? $t('play.connected') : $t('play.reconnecting') }}
       </p>
-      <p role="status" class="mt-3 mb-0 inline-flex items-center gap-2 text-sm" :class="encrypted ? 'text-success' : 'text-muted'">
-        <span aria-hidden="true">{{ encrypted ? '🔒' : '🔑' }}</span>
-        {{ encrypted ? $t('play.encrypted') : $t('play.keyExchange') }}
+      <p v-if="encrypted" role="status" class="mt-3 mb-0 inline-flex items-center gap-2 text-sm text-success">
+        <span aria-hidden="true">🔒</span>
+        {{ $t('play.encrypted') }}
       </p>
+      <!-- Waiting for the DM to approve this device: show the symbols to compare -->
+      <div v-else role="status" class="mt-6 px-5 py-4 rounded-xl border border-line bg-surface/85 max-w-105">
+        <p class="m-0 font-semibold">
+          {{ $t('play.waitingApproval') }}
+        </p>
+        <p class="mt-1 mb-2 text-sm text-muted">
+          {{ $t('play.compareSymbols') }}
+        </p>
+        <p class="m-0 text-4xl tracking-widest">
+          {{ symbols.join(' ') }}
+        </p>
+      </div>
     </main>
 
     <AppFooter />
@@ -26,7 +38,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { connect } = usePlayerSession()
-const { status, name, encrypted } = connect(String(route.params.gameId))
+const { status, name, encrypted, symbols } = connect(String(route.params.gameId))
 
 // Game over or kicked: back to the start page, which explains what happened
 watch(status, (value) => {

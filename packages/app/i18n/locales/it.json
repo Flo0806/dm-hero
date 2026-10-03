@@ -2767,6 +2767,12 @@
     "restartConfirm": "Ricomincia",
     "onlineCount": "{count} online",
     "noPlayersShort": "Ancora nessun giocatore.",
-    "openTable": "Apri il tavolo di gioco"
+    "openTable": "Apri il tavolo di gioco",
+    "pendingTitle": "Vuole unirsi",
+    "pendingHint": "Nuovo dispositivo! Confronta i simboli con quelli sullo schermo del giocatore: se coincidono, accetta.",
+    "pendingCount": "{count} vuole unirsi",
+    "wantsToJoin": "{name} vuole unirsi",
+    "approve": "Accetta",
+    "reject": "Rifiuta"
   }
 }

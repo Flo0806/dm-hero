@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  createGameKeys, loadGameKeys, generateDeviceKeyPair,
+  createGameKeys, loadGameKeys, generateDeviceKeyPair, fingerprint,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
   type EnvelopeHeader,
@@ -100,5 +100,16 @@ describe('player device keys', () => {
     const device = await generateDeviceKeyPair()
     await expect(globalThis.crypto.subtle.exportKey('jwk', device.privateKey)).rejects.toThrow()
     expect(await exportPublicKey(device.publicKey)).toMatch(/^[\w-]{100,}$/)
+  })
+})
+
+describe('device fingerprint', () => {
+  it('is three symbols, stable for a key and different for another', async () => {
+    const a = await exportPublicKey((await generateDeviceKeyPair()).publicKey)
+    const b = await exportPublicKey((await generateDeviceKeyPair()).publicKey)
+    const fa = await fingerprint(a)
+    expect(fa).toHaveLength(3)
+    expect(await fingerprint(a)).toEqual(fa)
+    expect(await fingerprint(b)).not.toEqual(fa)
   })
 })

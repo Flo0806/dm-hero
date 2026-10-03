@@ -2767,6 +2767,12 @@
     "restartConfirm": "Start new",
     "onlineCount": "{count} online",
     "noPlayersShort": "No players yet.",
-    "openTable": "Open game table"
+    "openTable": "Open game table",
+    "pendingTitle": "Wants to join",
+    "pendingHint": "New device! Compare the symbols with the ones on the player's screen – if they match, approve.",
+    "pendingCount": "{count} wants to join",
+    "wantsToJoin": "{name} wants to join",
+    "approve": "Approve",
+    "reject": "Reject"
   }
 }

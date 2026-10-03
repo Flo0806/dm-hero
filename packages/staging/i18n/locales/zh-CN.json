@@ -34,6 +34,7 @@
     "connected": "已连接",
     "reconnecting": "正在重新连接……",
     "encrypted": "端到端加密",
-    "keyExchange": "正在与你的 DM 交换密钥……"
+    "waitingApproval": "正在等待你的 DM 确认……",
+    "compareSymbols": "你的 DM 会看到相同的符号——快速核对一下："
   }
 }

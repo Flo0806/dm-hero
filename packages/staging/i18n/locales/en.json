@@ -34,6 +34,7 @@
     "connected": "Connected",
     "reconnecting": "Reconnecting …",
     "encrypted": "End-to-end encrypted",
-    "keyExchange": "Exchanging keys with your DM …"
+    "waitingApproval": "Waiting for your DM to let you in …",
+    "compareSymbols": "Your DM sees the same symbols – compare them quickly:"
   }
 }

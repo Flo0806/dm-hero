@@ -6,6 +6,16 @@
       <GameTableStart v-if="!store.table" :loading="busy" @start="startGame" />
 
       <template v-else>
+        <v-card v-if="presence.pending.length" class="pa-6 mb-6" color="primary" variant="tonal">
+          <h2 class="text-title-large mb-1">
+            {{ $t('gameTable.pendingTitle') }}
+          </h2>
+          <p class="text-body-medium mb-2">
+            {{ $t('gameTable.pendingHint') }}
+          </p>
+          <GameTablePendingDevices :pending="presence.pending" />
+        </v-card>
+
         <v-row>
           <v-col cols="12" md="5">
             <GameTableJoinCard
@@ -37,6 +47,8 @@
 </template>
 
 <script setup lang="ts">
+import type { GameTablePresence } from '~~/types/game-table'
+
 const { t } = useI18n()
 const store = useGameTableStore()
 const campaignStore = useCampaignStore()
@@ -52,7 +64,7 @@ const restartMode = ref(false)
 // Live online status, only while the page runs in the browser
 const presence = import.meta.client
   ? useGameTablePresence(() => store.table?.id ?? null)
-  : ref({ connected: false, online: [] as number[] })
+  : ref<GameTablePresence>({ connected: false, online: [], pending: [] })
 
 // Every action: busy flag + snackbar on success/failure (no alert())
 async function run(action: () => Promise<unknown>, successMessage?: string) {
