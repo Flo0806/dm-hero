@@ -34,15 +34,23 @@ console.log(`  userData: ${userDataDir}`)
 const child = spawn(executable, args, { env: { ...process.env, ELECTRON_ENABLE_LOGGING: '1' } })
 
 let output = ''
-child.stdout.on('data', (d) => { output += d })
-child.stderr.on('data', (d) => { output += d })
+child.stdout.on('data', (d) => {
+  output += d
+})
+child.stderr.on('data', (d) => {
+  output += d
+})
 let exitCode = null
-child.on('exit', (code) => { exitCode = code })
+child.on('exit', (code) => {
+  exitCode = code
+})
 
 function stop() {
   if (child.exitCode !== null) return
   if (process.platform === 'win32') {
-    try { execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: 'ignore' }) }
+    try {
+      execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: 'ignore' })
+    }
     catch { /* already gone */ }
   }
   else {
@@ -62,11 +70,14 @@ async function waitForServer() {
   const start = Date.now()
   while (Date.now() - start < TIMEOUT_MS) {
     if (exitCode !== null) fail(`App exited early with code ${exitCode}`)
+    let res
     try {
-      const res = await fetch(`${SERVER_URL}/api/campaigns`)
-      if (res.ok) return Date.now() - start
+      res = await fetch(`${SERVER_URL}/api/campaigns`)
     }
     catch { /* not up yet */ }
+    if (res?.ok) return Date.now() - start
+    // Server is up but broken (e.g. native module failed to load) - no point waiting
+    if (res && res.status >= 500) fail(`Server error HTTP ${res.status}: ${(await res.text()).slice(0, 500)}`)
     await new Promise(r => setTimeout(r, 1000))
   }
   fail(`Server did not respond within ${TIMEOUT_MS / 1000}s`)
