@@ -65,7 +65,11 @@ export interface TablePingContent {
   mapId: number
   x: number
   y: number
+  /** DM only: a short note shown with the ping for a few seconds ("look here") */
+  text?: string
 }
+
+export const PING_TEXT_MAX = 80
 
 /** A ping as the DM sees it: who (player id, or 'dm') + where */
 export interface TablePing extends TablePingContent {
@@ -76,5 +80,6 @@ export interface TablePing extends TablePingContent {
 export const isPingContent = (value: unknown): value is TablePingContent => {
   const p = value as TablePingContent
   const inMap = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100
-  return !!p && Number.isInteger(p.mapId) && inMap(p.x) && inMap(p.y)
+  const text = p?.text === undefined || (typeof p.text === 'string' && p.text.length <= PING_TEXT_MAX)
+  return !!p && Number.isInteger(p.mapId) && inMap(p.x) && inMap(p.y) && text
 }

@@ -8,7 +8,8 @@ import { getRelayAuth, postRelayDmPing } from '../../../utils/relay'
 export default defineEventHandler(async (event) => {
   const tableId = requireNumericParam(getRouterParam(event, 'id'), 'id')
   const body = await readBody(event)
-  if (!isPingContent(body)) throw createError({ statusCode: 400, message: 'mapId, x and y (0-100) required' })
+  if (!isPingContent(body)) throw createError({ statusCode: 400, message: 'mapId, x and y (0-100) required, text max 80 characters' })
+  const text = body.text?.trim() || undefined
 
   const db = getDb()
   const table = db.prepare('SELECT relay_game_id, e2e_keys, shown_map_id FROM game_tables WHERE id = ?')
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const envelope = await seal(
     keys.gameKey,
     { v: 1, gameId: table.relay_game_id, from: 'dm', to: 'all', epoch: keys.epoch, seq: Date.now() },
-    { mapId: body.mapId, x: body.x, y: body.y },
+    { mapId: body.mapId, x: body.x, y: body.y, ...(text && { text }) },
     keys.signingKey,
   )
   await postRelayDmPing(auth, envelope)

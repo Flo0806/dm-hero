@@ -39,6 +39,8 @@ export interface TablePingContent {
   mapId: number
   x: number
   y: number
+  /** DM only: a short note shown with the ping for a few seconds */
+  text?: string
 }
 
 /** A ping on screen: who + where, gone after the pulse */
@@ -52,8 +54,11 @@ export interface TablePing extends TablePingContent {
 export const isPingContent = (value: unknown): value is TablePingContent => {
   const p = value as TablePingContent
   const inMap = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 100
-  return !!p && Number.isInteger(p.mapId) && inMap(p.x) && inMap(p.y)
+  const text = p?.text === undefined || (typeof p.text === 'string' && p.text.length <= 80)
+  return !!p && Number.isInteger(p.mapId) && inMap(p.x) && inMap(p.y) && text
 }
 
 /** How long a ping stays on screen (3 pulses) */
 export const PING_MS = 2600
+/** A DM note stays longer - time to read it */
+export const NOTE_MS = 8000

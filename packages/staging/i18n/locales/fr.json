@@ -61,7 +61,8 @@
       "loading": "Chargement de la carte …",
       "hint": "Faites glisser pour déplacer, molette ou deux doigts pour zoomer, appui long pour pinger tout le monde. Clavier : flèches, + et −, 0 pour la carte entière.",
       "dm": "Meneur de jeu",
-      "pinged": "{name} a pointé la carte"
+      "pinged": "{name} a pointé la carte",
+      "note": "{name} : {text}"
     }
   }
 }

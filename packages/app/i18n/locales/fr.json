@@ -2365,7 +2365,8 @@
       "coverAll": "Tout recouvrir",
       "hint": "Maintenez le bouton de la souris pour peindre – vos joueurs ne voient que ce qui est révélé"
     },
-    "helpPing": "Appui long : ping pour tous les joueurs"
+    "helpPing": "Appui long : ping pour tous les joueurs",
+    "helpNote": "Clic droit : courte note pour tous les joueurs"
   },
   "music": {
     "title": "Musique",
@@ -2820,7 +2821,11 @@
       "showHint": "Vos joueurs voient cette carte avec son brouillard de guerre – remplace toute autre carte affichée",
       "stopHint": "Ne plus montrer",
       "failed": "Impossible de montrer la carte",
-      "you": "Vous"
+      "you": "Vous",
+      "noteTitle": "Note pour les joueurs",
+      "noteLabel": "Texte",
+      "noteHint": "Apparaît avec un ping à cet endroit et disparaît après quelques secondes.",
+      "noteSend": "Montrer"
     }
   }
 }

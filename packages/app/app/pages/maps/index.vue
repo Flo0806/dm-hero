@@ -167,6 +167,7 @@
             :fog-tool="fogMode ? { mode: fogToolMode, radius: FOG_BRUSH_SIZES[fogBrush] } : null"
             @fog-stroke="mapFog.addStroke"
             @long-press="onLongPress"
+            @map-right-click="onMapRightClick"
             @marker-click="onMarkerClick"
             @marker-right-click="onMarkerRightClick"
             @map-click="onMapClick"
@@ -180,6 +181,7 @@
             @climate-area-drag="onClimateAreaDrag"
           />
         </ClientOnly>
+        <MapsMapNoteDialog v-model:show="showNoteDialog" @send="sendNote" />
         <MapsMapFogToolbar
           v-if="fogMode"
           v-model:mode="fogToolMode"
@@ -243,9 +245,14 @@
             <v-chip size="small" variant="tonal" prepend-icon="mdi-gesture-tap-hold">
               {{ $t('maps.helpDragArea') }}
             </v-chip>
-            <v-chip v-if="shownToPlayers" size="small" variant="tonal" prepend-icon="mdi-target">
-              {{ $t('maps.helpPing') }}
-            </v-chip>
+            <template v-if="shownToPlayers">
+              <v-chip size="small" variant="tonal" prepend-icon="mdi-target">
+                {{ $t('maps.helpPing') }}
+              </v-chip>
+              <v-chip size="small" variant="tonal" prepend-icon="mdi-message-text-outline">
+                {{ $t('maps.helpNote') }}
+              </v-chip>
+            </template>
           </template>
         </div>
       </div>
@@ -785,7 +792,7 @@ const shownToPlayers = computed(() => !!selectedMap.value && gameTableStore.tabl
 const showFog = computed(() => fogMode.value || shownToPlayers.value)
 
 // Pings: long press on a shown map - everyone at the table sees it pulse
-const viewerRef = ref<{ ping: (x: number, y: number, label: string, color: string) => void } | null>(null)
+const viewerRef = ref<{ ping: (x: number, y: number, label: string, color: string, durationMs?: number) => void } | null>(null)
 const PING_COLORS = ['#4fc3f7', '#81c784', '#ff8a65', '#ba68c8', '#fff176', '#f06292']
 const DM_PING_COLOR = '#D4A574'
 
@@ -794,6 +801,25 @@ function onLongPress(position: { x: number, y: number }) {
   viewerRef.value?.ping(position.x, position.y, t('gameTable.map.you'), DM_PING_COLOR)
   gameTableStore.ping(selectedMap.value.id, position.x, position.y)
     .catch(error => console.error('[GameTable] Ping failed:', error))
+}
+
+// Notes: right-click on the shown map - a short text that pulses for a few seconds
+const NOTE_MS = 8000
+const showNoteDialog = ref(false)
+const notePosition = ref<{ x: number, y: number } | null>(null)
+
+function onMapRightClick(position: { x: number, y: number }) {
+  if (!shownToPlayers.value) return
+  notePosition.value = position
+  showNoteDialog.value = true
+}
+
+function sendNote(text: string) {
+  if (!selectedMap.value || !notePosition.value) return
+  const { x, y } = notePosition.value
+  viewerRef.value?.ping(x, y, text, DM_PING_COLOR, NOTE_MS)
+  gameTableStore.ping(selectedMap.value.id, x, y, text)
+    .catch(error => console.error('[GameTable] Note failed:', error))
 }
 
 useTablePings(() => gameTableStore.table?.id, (ping) => {

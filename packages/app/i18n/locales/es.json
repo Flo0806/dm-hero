@@ -2365,7 +2365,8 @@
       "coverAll": "Cubrir todo",
       "hint": "Mantén pulsado el botón del ratón para pintar: tus jugadores solo ven lo revelado"
     },
-    "helpPing": "Mantén pulsado: ping para todos los jugadores"
+    "helpPing": "Mantén pulsado: ping para todos los jugadores",
+    "helpNote": "Clic derecho: nota breve para todos los jugadores"
   },
   "music": {
     "title": "Música",
@@ -2820,7 +2821,11 @@
       "showHint": "Tus jugadores ven este mapa con su niebla de guerra; sustituye a cualquier otro mapa mostrado",
       "stopHint": "Dejar de mostrar",
       "failed": "No se pudo mostrar el mapa",
-      "you": "Tú"
+      "you": "Tú",
+      "noteTitle": "Nota para los jugadores",
+      "noteLabel": "Texto",
+      "noteHint": "Aparece con un ping en este lugar y desaparece tras unos segundos.",
+      "noteSend": "Mostrar"
     }
   }
 }

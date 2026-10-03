@@ -60,6 +60,14 @@ describe('pings', () => {
     expect(sent[0]!.header).toMatchObject({ from: 'dm', to: 'all', gameId: 'relay-game' })
   })
 
+  it('a DM note travels with the ping, trimmed and at most 80 characters', async () => {
+    await ping({ mapId, x: 50, y: 50, text: '  Hier liegt die Falle!  ' })
+    const content = await open((await loadGameKeys(keys)).gameKey, sent[0]!, await importVerifyKey(keys.signing.publicKey))
+    expect(content).toEqual({ mapId, x: 50, y: 50, text: 'Hier liegt die Falle!' })
+    await expect(ping({ mapId, x: 50, y: 50, text: 'x'.repeat(81) })).rejects.toMatchObject({ statusCode: 400 })
+    expect(sent).toHaveLength(1)
+  })
+
   it('only on the map the players see, only inside the map', async () => {
     await expect(ping({ mapId: mapId + 1, x: 10, y: 10 })).rejects.toMatchObject({ statusCode: 409 })
     await expect(ping({ mapId, x: 120, y: 10 })).rejects.toMatchObject({ statusCode: 400 })

@@ -61,7 +61,8 @@
       "loading": "Cargando mapa …",
       "hint": "Arrastra para mover, rueda del ratón o dos dedos para hacer zoom, mantén pulsado para hacer ping a todos. Teclado: flechas, + y −, 0 para el mapa completo.",
       "dm": "Máster",
-      "pinged": "{name} ha señalado el mapa"
+      "pinged": "{name} ha señalado el mapa",
+      "note": "{name}: {text}"
     }
   }
 }

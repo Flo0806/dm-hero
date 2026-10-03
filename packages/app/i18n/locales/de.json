@@ -2365,7 +2365,8 @@
       "coverAll": "Alles zudecken",
       "hint": "Mit gedrückter Maustaste malen – deine Spieler sehen nur, was aufgedeckt ist"
     },
-    "helpPing": "Lange gedrückt halten: Ping für alle Spieler"
+    "helpPing": "Lange gedrückt halten: Ping für alle Spieler",
+    "helpNote": "Rechtsklick: kurze Notiz für alle Spieler"
   },
   "music": {
     "title": "Musik",
@@ -2820,7 +2821,11 @@
       "showHint": "Deine Spieler sehen diese Karte mit dem Nebel des Krieges – eine andere gezeigte Karte wird ersetzt",
       "stopHint": "Nicht mehr zeigen",
       "failed": "Karte konnte nicht gezeigt werden",
-      "you": "Du"
+      "you": "Du",
+      "noteTitle": "Notiz für die Spieler",
+      "noteLabel": "Text",
+      "noteHint": "Erscheint mit einem Ping an dieser Stelle und verschwindet nach ein paar Sekunden.",
+      "noteSend": "Zeigen"
     }
   }
 }

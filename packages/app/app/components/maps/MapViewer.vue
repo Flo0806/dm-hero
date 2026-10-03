@@ -46,6 +46,7 @@ const emit = defineEmits<{
   climateAreaDrag: [data: { area: MapClimateArea, x: number, y: number }]
   fogStroke: [stroke: FogStroke]
   longPress: [position: { x: number, y: number }]
+  mapRightClick: [position: { x: number, y: number }]
 }>()
 
 const { t } = useI18n()
@@ -364,10 +365,16 @@ function setupLongPress() {
     if (Math.hypot(e.originalEvent.clientX - pressStart.x, e.originalEvent.clientY - pressStart.y) > LONG_PRESS_MOVE_PX) cancelPress()
   })
   leafletMap.on('mouseup dragstart zoomstart', cancelPress)
+  // Right-click on the map itself (markers/areas handle their own)
+  leafletMap.on('contextmenu', (e: LeafletMouseEvent) => {
+    e.originalEvent.preventDefault()
+    const [x, y] = toPercent(e.latlng)
+    emit('mapRightClick', { x, y })
+  })
 }
 
-/** Show a ping at a spot (percent): a ring pulsing three times + who pinged */
-function ping(x: number, y: number, label: string, color: string) {
+/** Show a ping at a spot (percent): a ring pulsing three times + who pinged (or a note, shown longer) */
+function ping(x: number, y: number, label: string, color: string, durationMs = 2600) {
   if (!leafletMap || !L) return
   const icon = L.divIcon({
     className: 'map-ping',
@@ -379,7 +386,7 @@ function ping(x: number, y: number, label: string, color: string) {
   // Text via textContent - player names never become HTML
   const labelEl = marker.getElement()?.querySelector('.map-ping-label')
   if (labelEl) labelEl.textContent = label
-  setTimeout(() => marker.remove(), 2600)
+  setTimeout(() => marker.remove(), durationMs)
 }
 
 // Threshold: show labels only when zoomed in enough
@@ -1088,6 +1095,9 @@ defineExpose({
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes map-ping-pulse {

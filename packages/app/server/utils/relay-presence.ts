@@ -141,7 +141,9 @@ async function handlePing(tableId: number, ping: { from: string, name: string, e
   // Encrypted with the game key by a player - only the game can read it
   const content = await open<unknown>((await loadGameKeys(JSON.parse(row.e2e_keys) as StoredGameKeys)).gameKey, ping.envelope)
   if (!isPingContent(content)) return
-  for (const listener of listeners) listener({ ...content, from: Number(ping.from), name: ping.name })
+  // Notes are the DM's - a player's ping is just a spot
+  const { text: _ignored, ...spot } = content
+  for (const listener of listeners) listener({ ...spot, from: Number(ping.from), name: ping.name })
 }
 
 /** DM decided on a device - remove it from the waiting list */

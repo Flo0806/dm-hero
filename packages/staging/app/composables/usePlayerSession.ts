@@ -106,9 +106,11 @@ export function usePlayerSession() {
       try {
         const content = await open<unknown>(gameKey, ping.envelope, ping.from === 'dm' ? dmVerifyKey : undefined)
         if (!isPingContent(content)) return
-        const entry: TablePing = { ...content, id: ++pingCounter, from: ping.from, name: ping.name ?? '' }
+        // Notes only from the DM (signed) - a player's ping is just a spot
+        const { text, ...spot } = content
+        const entry: TablePing = { ...spot, ...(ping.from === 'dm' && text && { text }), id: ++pingCounter, from: ping.from, name: ping.name ?? '' }
         pings.value = [...pings.value, entry]
-        setTimeout(() => pings.value = pings.value.filter(p => p.id !== entry.id), PING_MS)
+        setTimeout(() => pings.value = pings.value.filter(p => p.id !== entry.id), entry.text ? NOTE_MS : PING_MS)
       }
       catch (error) {
         console.error('[E2E] Ping rejected:', error)

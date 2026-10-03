@@ -73,14 +73,14 @@
         aria-hidden="true"
       >
         <span class="ping-ring" />
-        <span class="ping-label">{{ pingName(item) }}</span>
+        <span class="ping-label" :class="{ 'ping-note': item.text }">{{ item.text ?? pingName(item) }}</span>
       </div>
       <p v-if="!src" role="status" class="absolute inset-x-0 bottom-4 m-0 text-center text-sm text-muted">
         {{ $t('play.map.loading') }}
       </p>
     </div>
     <p class="sr-only" aria-live="polite">
-      {{ lastPing ? $t('play.map.pinged', { name: pingName(lastPing) }) : '' }}
+      {{ lastPing ? (lastPing.text ? $t('play.map.note', { name: pingName(lastPing), text: lastPing.text }) : $t('play.map.pinged', { name: pingName(lastPing) })) : '' }}
     </p>
     <p :id="hintId" class="m-0 text-xs text-muted">
       {{ $t('play.map.hint') }}
@@ -310,6 +310,16 @@ watch(() => props.map.mapId, () => nextTick(fit))
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.ping-note {
+  max-width: 16rem;
+  padding: 6px 12px;
+  white-space: normal;
+  text-align: center;
+  font-size: 14px;
+  background: rgb(26 29 41 / 0.92);
+  border: 1px solid var(--ping-color);
 }
 
 @keyframes ping-pulse {

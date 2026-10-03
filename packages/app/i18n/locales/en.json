@@ -2365,7 +2365,8 @@
       "coverAll": "Cover all",
       "hint": "Hold the mouse button to paint – your players only see what is revealed"
     },
-    "helpPing": "Press and hold: ping for all players"
+    "helpPing": "Press and hold: ping for all players",
+    "helpNote": "Right-click: short note for all players"
   },
   "music": {
     "title": "Music",
@@ -2820,7 +2821,11 @@
       "showHint": "Your players see this map with its fog of war – replaces any other shown map",
       "stopHint": "Stop showing",
       "failed": "Could not show the map",
-      "you": "You"
+      "you": "You",
+      "noteTitle": "Note for the players",
+      "noteLabel": "Text",
+      "noteHint": "Appears with a ping at this spot and disappears after a few seconds.",
+      "noteSend": "Show"
     }
   }
 }
