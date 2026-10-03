@@ -2756,7 +2756,6 @@
     "online": "Online",
     "offline": "Offline",
     "sharing": "Sharing",
-    "sharingSoon": "Soon you will share maps, pictures and lore with your players here.",
     "error": "That didn't work. Please try again.",
     "relayUnreachable": "The player server can't be reached right now. Check your internet connection and try again.",
     "relayConnected": "Player server connected",
@@ -2773,6 +2772,21 @@
     "pendingCount": "{count} wants to join",
     "wantsToJoin": "{name} wants to join",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "share": {
+      "action": "Share with players",
+      "shared": "Shared with players – edit",
+      "title": "Share “{name}”",
+      "chooseFields": "What should your players see?",
+      "liveHint": "Live: your players see changes to the ticked fields right away. Your notes always stay private.",
+      "confirm": "Sure? Your players see it right away.",
+      "confirmYes": "Yes, share",
+      "back": "Back",
+      "stop": "Stop sharing",
+      "done": "Shared",
+      "stopped": "No longer shared",
+      "empty": "Nothing shared yet. Share NPCs with the share button on their card.",
+      "fieldCount": "{count} field | {count} fields"
+    }
   }
 }

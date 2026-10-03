@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { SharedField, ShareType } from '~~/types/share'
+import { npcShareKind } from './kinds/npc'
 
 // One entry per share type: which fields the DM can tick and how the content
 // players see is built. Fields that aren't listed here can never be shared.
@@ -11,7 +12,9 @@ export interface ShareKind {
   build: (db: Database.Database, entityId: number, fields: string[]) => { title: string, fields: SharedField[] } | null
 }
 
-export const SHARE_KINDS: Partial<Record<ShareType, ShareKind>> = {}
+export const SHARE_KINDS: Partial<Record<ShareType, ShareKind>> = {
+  npc: npcShareKind,
+}
 
 export function getShareKind(type: string): ShareKind {
   const kind = SHARE_KINDS[type as ShareType]

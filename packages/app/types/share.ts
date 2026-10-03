@@ -4,10 +4,14 @@
 export const SHARE_TYPES = ['npc'] as const
 export type ShareType = (typeof SHARE_TYPES)[number]
 
-/** One shared field as players see it (value already rendered for reading) */
+/** Text in every app language (players pick theirs), or plain text written by the DM */
+export type LocalizedText = Partial<Record<'de' | 'en' | 'es' | 'fr' | 'it' | 'zh-CN', string>> | string
+
+/** One shared field as players see it - label and value in all languages, ready to read */
 export interface SharedField {
   key: string
-  value: string
+  label: LocalizedText
+  value: LocalizedText
 }
 
 /** Decrypted content of a share on the player side */

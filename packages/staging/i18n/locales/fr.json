@@ -35,6 +35,12 @@
     "reconnecting": "Reconnexion…",
     "encrypted": "Chiffré de bout en bout",
     "waitingApproval": "En attente de la validation de ton MJ…",
-    "compareSymbols": "Ton MJ voit les mêmes symboles – comparez-les rapidement :"
+    "compareSymbols": "Ton MJ voit les mêmes symboles – comparez-les rapidement :",
+    "sharedTitle": "Partagé par ton MJ",
+    "nothingShared": "Ton MJ n'a encore rien partagé – ça apparaîtra ici dès qu'il le fera.",
+    "close": "Fermer"
+  },
+  "types": {
+    "npc": "PNJ"
   }
 }

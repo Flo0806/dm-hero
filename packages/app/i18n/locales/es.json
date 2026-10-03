@@ -2756,7 +2756,6 @@
     "online": "En línea",
     "offline": "Desconectado",
     "sharing": "Compartir",
-    "sharingSoon": "Pronto podrás compartir aquí mapas, imágenes y saber con tus jugadores.",
     "error": "Algo salió mal. Inténtalo de nuevo.",
     "relayUnreachable": "El servidor de jugadores no está disponible ahora mismo. Comprueba tu conexión a internet e inténtalo de nuevo.",
     "relayConnected": "Servidor de jugadores conectado",
@@ -2773,6 +2772,21 @@
     "pendingCount": "{count} quiere unirse",
     "wantsToJoin": "{name} quiere unirse",
     "approve": "Aceptar",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+    "share": {
+      "action": "Compartir con jugadores",
+      "shared": "Compartido con jugadores: editar",
+      "title": "Compartir «{name}»",
+      "chooseFields": "¿Qué deben ver tus jugadores?",
+      "liveHint": "En directo: tus jugadores ven al instante los cambios en los campos marcados. Tus notas siempre son privadas.",
+      "confirm": "¿Seguro? Tus jugadores lo verán al instante.",
+      "confirmYes": "Sí, compartir",
+      "back": "Atrás",
+      "stop": "Dejar de compartir",
+      "done": "Compartido",
+      "stopped": "Ya no se comparte",
+      "empty": "Aún no has compartido nada. Comparte PNJ con el botón de compartir de su tarjeta.",
+      "fieldCount": "{count} campo | {count} campos"
+    }
   }
 }

@@ -2756,7 +2756,6 @@
     "online": "Online",
     "offline": "Offline",
     "sharing": "Teilen",
-    "sharingSoon": "Hier teilst du bald Karten, Bilder und Wissen mit deinen Spielern.",
     "error": "Das hat nicht geklappt. Bitte versuch es noch einmal.",
     "relayUnreachable": "Der Spieler-Server ist gerade nicht erreichbar. Prüf deine Internetverbindung und versuch es noch einmal.",
     "relayConnected": "Spieler-Server verbunden",
@@ -2773,6 +2772,21 @@
     "pendingCount": "{count} möchte beitreten",
     "wantsToJoin": "{name} möchte beitreten",
     "approve": "Annehmen",
-    "reject": "Ablehnen"
+    "reject": "Ablehnen",
+    "share": {
+      "action": "Mit Spielern teilen",
+      "shared": "Mit Spielern geteilt – bearbeiten",
+      "title": "„{name}“ teilen",
+      "chooseFields": "Was sollen deine Spieler sehen?",
+      "liveHint": "Live: Änderungen an den angehakten Feldern sehen deine Spieler sofort. Deine Notizen bleiben immer privat.",
+      "confirm": "Sicher? Deine Spieler sehen es sofort.",
+      "confirmYes": "Ja, teilen",
+      "back": "Zurück",
+      "stop": "Nicht mehr teilen",
+      "done": "Geteilt",
+      "stopped": "Nicht mehr geteilt",
+      "empty": "Noch nichts geteilt. Teile NPCs über den Teilen-Knopf auf ihrer Karte.",
+      "fieldCount": "{count} Feld | {count} Felder"
+    }
   }
 }

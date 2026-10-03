@@ -2756,7 +2756,6 @@
     "online": "En ligne",
     "offline": "Hors ligne",
     "sharing": "Partage",
-    "sharingSoon": "Bientôt, tu partageras ici cartes, images et savoir avec tes joueurs.",
     "error": "Ça n'a pas marché. Réessaie.",
     "relayUnreachable": "Le serveur des joueurs est injoignable pour le moment. Vérifie ta connexion internet et réessaie.",
     "relayConnected": "Serveur des joueurs connecté",
@@ -2773,6 +2772,21 @@
     "pendingCount": "{count} veut rejoindre",
     "wantsToJoin": "{name} veut rejoindre",
     "approve": "Accepter",
-    "reject": "Refuser"
+    "reject": "Refuser",
+    "share": {
+      "action": "Partager avec les joueurs",
+      "shared": "Partagé avec les joueurs – modifier",
+      "title": "Partager « {name} »",
+      "chooseFields": "Que doivent voir tes joueurs ?",
+      "liveHint": "En direct : tes joueurs voient aussitôt les modifications des champs cochés. Tes notes restent toujours privées.",
+      "confirm": "Sûr ? Tes joueurs le voient aussitôt.",
+      "confirmYes": "Oui, partager",
+      "back": "Retour",
+      "stop": "Ne plus partager",
+      "done": "Partagé",
+      "stopped": "N'est plus partagé",
+      "empty": "Rien de partagé pour l'instant. Partage des PNJ avec le bouton de partage de leur carte.",
+      "fieldCount": "{count} champ | {count} champs"
+    }
   }
 }

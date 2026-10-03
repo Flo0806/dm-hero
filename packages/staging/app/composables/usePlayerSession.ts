@@ -1,4 +1,4 @@
-import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, unwrapGameKey, type Envelope } from '@dm-hero/seal'
+import { derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, open, unwrapGameKey, type Envelope } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
 export function usePlayerSession() {
@@ -22,6 +22,28 @@ export function usePlayerSession() {
     const symbols = ref<string[]>([])
     void getDeviceKey().then(async device => symbols.value = await fingerprint(device.publicKey))
     let gameKey: CryptoKey | null = null
+    let dmVerifyKey: CryptoKey | null = null
+    /** Everything the DM shares, newest first */
+    const shares = ref<ShareContent[]>([])
+    // Shares can arrive before the game key - they wait here
+    const queued: Array<{ id: string, envelope: Envelope }> = []
+
+    async function addShare(id: string, envelope: Envelope) {
+      if (!gameKey || !dmVerifyKey) {
+        queued.push({ id, envelope })
+        return
+      }
+      try {
+        const content = await open<ShareContent>(gameKey, envelope, dmVerifyKey)
+        // The relay must not be able to swap shares
+        if (content.shareId !== id) return
+        shares.value = [content, ...shares.value.filter(s => s.shareId !== id)]
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      }
+      catch (error) {
+        console.error('[E2E] Share rejected:', error)
+      }
+    }
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
 
@@ -38,13 +60,24 @@ export function usePlayerSession() {
       if (!dm || device.publicKey !== publicKey) return
       try {
         const pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(dm.exchange), gameId)
-        gameKey = await unwrapGameKey(envelope, pairKey, await importVerifyKey(dm.signing))
+        dmVerifyKey = await importVerifyKey(dm.signing)
+        gameKey = await unwrapGameKey(envelope, pairKey, dmVerifyKey)
         encrypted.value = true
+        for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
       }
       catch (error) {
         // Wrong key or not signed by the DM - never trust it
         console.error('[E2E] Game key rejected:', error)
       }
+    })
+
+    source.addEventListener('share', (event) => {
+      const { id, envelope } = JSON.parse((event as MessageEvent).data) as { id: string, envelope: Envelope }
+      void addShare(id, envelope)
+    })
+    source.addEventListener('unshare', (event) => {
+      const { id } = JSON.parse((event as MessageEvent).data) as { id: string }
+      shares.value = shares.value.filter(s => s.shareId !== id)
     })
 
     // DM ended the game
@@ -65,7 +98,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, getGameKey: () => gameKey }
+    return { status, name, encrypted, symbols, shares }
   }
 
   return { join, connect }

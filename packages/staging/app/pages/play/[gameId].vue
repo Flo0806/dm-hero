@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-dvh flex flex-col font-sans">
-    <main class="flex-1 flex flex-col items-center justify-center px-5 py-12 text-center">
+    <main class="flex-1 flex flex-col items-center px-5 py-12 text-center">
       <img src="/logo.png" alt="DM Hero" width="72" height="72" class="size-18 mb-6 rounded-2xl" />
 
       <h1 class="m-0 text-[clamp(1.8rem,6vw,2.6rem)] font-extrabold text-primary">
@@ -29,6 +29,9 @@
           {{ symbols.join(' ') }}
         </p>
       </div>
+
+      <ShareList v-if="encrypted" :shares="shares" class="mt-10" @open="openShare = $event" />
+      <ShareDetail :share="openShare" @close="openShare = null" />
     </main>
 
     <AppFooter />
@@ -38,7 +41,14 @@
 <script setup lang="ts">
 const route = useRoute()
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols } = connect(String(route.params.gameId))
+const { status, name, encrypted, symbols, shares } = connect(String(route.params.gameId))
+const openShare = ref<ShareContent | null>(null)
+
+// Keep an open share up to date (live edits) - or close it if the DM stopped sharing
+watch(shares, (list) => {
+  if (!openShare.value) return
+  openShare.value = list.find(s => s.shareId === openShare.value!.shareId) ?? null
+})
 
 // Game over or kicked: back to the start page, which explains what happened
 watch(status, (value) => {

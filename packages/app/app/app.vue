@@ -25,6 +25,11 @@
       </div>
     </v-main>
 
+    <!-- Share dialog: can be opened from anywhere (share buttons on entity cards) -->
+    <ClientOnly>
+      <GameTableShareDialog />
+    </ClientOnly>
+
     <GlobalSearch
       v-model="showSearch"
       v-model:search-query="searchQuery"

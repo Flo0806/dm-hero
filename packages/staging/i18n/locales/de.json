@@ -35,6 +35,12 @@
     "reconnecting": "Verbindung wird wiederhergestellt …",
     "encrypted": "Ende-zu-Ende verschlüsselt",
     "waitingApproval": "Warte auf die Bestätigung deines DMs …",
-    "compareSymbols": "Dein DM sieht dieselben Symbole – vergleicht sie kurz:"
+    "compareSymbols": "Dein DM sieht dieselben Symbole – vergleicht sie kurz:",
+    "sharedTitle": "Geteilt von deinem DM",
+    "nothingShared": "Dein DM hat noch nichts geteilt – sobald er es tut, taucht es hier auf.",
+    "close": "Schließen"
+  },
+  "types": {
+    "npc": "NPC"
   }
 }

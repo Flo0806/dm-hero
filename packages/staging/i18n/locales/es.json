@@ -35,6 +35,12 @@
     "reconnecting": "Reconectando…",
     "encrypted": "Cifrado de extremo a extremo",
     "waitingApproval": "Esperando a que tu DM te deje entrar…",
-    "compareSymbols": "Tu DM ve los mismos símbolos: compáralos un momento:"
+    "compareSymbols": "Tu DM ve los mismos símbolos: compáralos un momento:",
+    "sharedTitle": "Compartido por tu DM",
+    "nothingShared": "Tu DM aún no ha compartido nada: aparecerá aquí en cuanto lo haga.",
+    "close": "Cerrar"
+  },
+  "types": {
+    "npc": "PNJ"
   }
 }

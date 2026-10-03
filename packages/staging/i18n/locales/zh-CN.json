@@ -35,6 +35,12 @@
     "reconnecting": "正在重新连接……",
     "encrypted": "端到端加密",
     "waitingApproval": "正在等待你的 DM 确认……",
-    "compareSymbols": "你的 DM 会看到相同的符号——快速核对一下："
+    "compareSymbols": "你的 DM 会看到相同的符号——快速核对一下：",
+    "sharedTitle": "DM 分享的内容",
+    "nothingShared": "你的 DM 还没有分享任何内容——一旦分享就会显示在这里。",
+    "close": "关闭"
+  },
+  "types": {
+    "npc": "NPC"
   }
 }

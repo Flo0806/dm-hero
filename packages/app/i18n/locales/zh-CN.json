@@ -2756,7 +2756,6 @@
     "online": "在线",
     "offline": "离线",
     "sharing": "分享",
-    "sharingSoon": "很快你就能在这里与玩家分享地图、图片和知识。",
     "error": "操作失败，请重试。",
     "relayUnreachable": "暂时无法连接玩家服务器。请检查网络连接后重试。",
     "relayConnected": "玩家服务器已连接",
@@ -2773,6 +2772,21 @@
     "pendingCount": "{count} 人请求加入",
     "wantsToJoin": "{name} 请求加入",
     "approve": "同意",
-    "reject": "拒绝"
+    "reject": "拒绝",
+    "share": {
+      "action": "与玩家分享",
+      "shared": "已与玩家分享——编辑",
+      "title": "分享“{name}”",
+      "chooseFields": "玩家应该看到什么？",
+      "liveHint": "实时：勾选字段的修改会立即显示给玩家。你的笔记始终保密。",
+      "confirm": "确定吗？玩家会立即看到。",
+      "confirmYes": "确定分享",
+      "back": "返回",
+      "stop": "停止分享",
+      "done": "已分享",
+      "stopped": "已停止分享",
+      "empty": "还没有分享任何内容。用卡片上的分享按钮分享 NPC。",
+      "fieldCount": "{count} 个字段"
+    }
   }
 }

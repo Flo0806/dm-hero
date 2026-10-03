@@ -1,10 +1,16 @@
 import { defineStore } from 'pinia'
 import type { GameTable, GameTablePlayer } from '~~/types/game-table'
+import type { GameTableShare, ShareType } from '~~/types/share'
 
 interface GameTableState {
   table: GameTable | null
   loading: boolean
   loadedCampaignId: number | null
+  shares: GameTableShare[]
+  /** Fields each share type offers (from the server) */
+  shareKinds: Partial<Record<ShareType, string[]>>
+  /** What the global share dialog is open for */
+  shareTarget: { type: ShareType, entityId: number, name: string } | null
 }
 
 // The live game of the active campaign (players join it via the player app)
@@ -13,7 +19,15 @@ export const useGameTableStore = defineStore('gameTable', {
     table: null,
     loading: false,
     loadedCampaignId: null,
+    shares: [],
+    shareKinds: {},
+    shareTarget: null,
   }),
+
+  getters: {
+    shareOf: state => (type: ShareType, entityId: number) =>
+      state.shares.find(s => s.entity_type === type && s.entity_id === entityId) ?? null,
+  },
 
   actions: {
     async load(campaignId: number) {
@@ -21,6 +35,7 @@ export const useGameTableStore = defineStore('gameTable', {
       try {
         this.table = await $fetch<GameTable | null>('/api/game-table', { query: { campaignId } })
         this.loadedCampaignId = campaignId
+        await this.loadShares()
       }
       finally {
         this.loading = false
@@ -29,12 +44,14 @@ export const useGameTableStore = defineStore('gameTable', {
 
     async start(campaignId: number) {
       this.table = await $fetch<GameTable>('/api/game-table', { method: 'POST', body: { campaignId } })
+      this.shares = []
     },
 
     async close() {
       if (!this.table) return
       await $fetch(`/api/game-table/${this.table.id}`, { method: 'DELETE' })
       this.table = null
+      this.shares = []
     },
 
     async addPlayer(name: string, playerEntityId: number | null) {
@@ -64,6 +81,32 @@ export const useGameTableStore = defineStore('gameTable', {
     async decideDevice(playerId: number, publicKey: string, approve: boolean) {
       if (!this.table) return
       await $fetch(`/api/game-table/${this.table.id}/devices`, { method: 'POST', body: { playerId, publicKey, approve } })
+    },
+
+    async loadShares() {
+      this.shares = this.table ? await $fetch<GameTableShare[]>(`/api/game-table/${this.table.id}/shares`) : []
+    },
+
+    /** Fields per share type - fetched once, independent of whether a game exists yet */
+    async ensureShareKinds() {
+      if (Object.keys(this.shareKinds).length) return
+      this.shareKinds = await $fetch<Partial<Record<ShareType, string[]>>>('/api/game-table/share-kinds')
+    },
+
+    /** Share (or change the fields of) an entity - players see it right away */
+    async share(type: ShareType, entityId: number, fields: string[]) {
+      if (!this.table) return
+      await $fetch(`/api/game-table/${this.table.id}/shares`, { method: 'PUT', body: { type, entityId, fields } })
+      await this.loadShares()
+    },
+
+    async unshare(shareId: number) {
+      await $fetch(`/api/game-table/shares/${shareId}`, { method: 'DELETE' })
+      this.shares = this.shares.filter(s => s.id !== shareId)
+    },
+
+    openShareDialog(type: ShareType, entityId: number, name: string) {
+      this.shareTarget = { type, entityId, name }
     },
 
     replacePlayer(player: GameTablePlayer) {

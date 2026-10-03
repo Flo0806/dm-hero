@@ -405,6 +405,7 @@
           {{ $t('common.view') }}
         </v-tooltip>
       </v-btn>
+      <GameTableShareButton type="npc" :entity-id="npc.id" :name="npc.name" />
       <v-btn icon size="small" variant="text" @click.stop="openChaosGraph">
         <v-icon>mdi-graph</v-icon>
         <v-tooltip activator="parent" location="bottom">

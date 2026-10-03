@@ -1,0 +1,114 @@
+<template>
+  <!-- One global dialog (see app.vue): tick fields -> share -> "sure?" -> shared -->
+  <v-dialog :model-value="!!target" max-width="480" @update:model-value="close">
+    <v-card v-if="target">
+      <v-card-title class="d-flex align-center ga-2">
+        <v-icon icon="mdi-share-variant" color="primary" />
+        {{ $t('gameTable.share.title', { name: target.name }) }}
+      </v-card-title>
+
+      <v-card-text v-if="step === 'choose'">
+        <p class="text-body-medium text-medium-emphasis mb-2">
+          {{ $t('gameTable.share.chooseFields') }}
+        </p>
+        <v-checkbox
+          v-for="field in availableFields"
+          :key="field"
+          v-model="selected"
+          :value="field"
+          :label="fieldLabel(field)"
+          density="compact"
+          hide-details
+        />
+        <v-alert type="info" variant="tonal" density="compact" class="mt-4">
+          {{ $t('gameTable.share.liveHint') }}
+        </v-alert>
+      </v-card-text>
+
+      <v-card-text v-else>
+        <p class="text-body-large mb-0">
+          {{ $t('gameTable.share.confirm') }}
+        </p>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-btn v-if="existing && step === 'choose'" variant="text" color="error" :loading="busy" @click="stopSharing">
+          {{ $t('gameTable.share.stop') }}
+        </v-btn>
+        <v-spacer />
+        <template v-if="step === 'choose'">
+          <v-btn variant="text" @click="close">
+            {{ $t('common.cancel') }}
+          </v-btn>
+          <v-btn color="primary" variant="flat" :disabled="!selected.length" :loading="busy" @click="existing ? save() : step = 'confirm'">
+            {{ existing ? $t('common.save') : $t('gameTable.share.action') }}
+          </v-btn>
+        </template>
+        <template v-else>
+          <v-btn variant="text" @click="step = 'choose'">
+            {{ $t('gameTable.share.back') }}
+          </v-btn>
+          <v-btn color="primary" variant="flat" :loading="busy" @click="save">
+            {{ $t('gameTable.share.confirmYes') }}
+          </v-btn>
+        </template>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script setup lang="ts">
+import type { ShareType } from '~~/types/share'
+
+// i18n namespace that labels each share type's fields
+const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs' }
+
+const { t } = useI18n()
+const store = useGameTableStore()
+const snackbarStore = useSnackbarStore()
+
+const target = computed(() => store.shareTarget)
+const existing = computed(() => target.value ? store.shareOf(target.value.type, target.value.entityId) : null)
+const availableFields = computed(() => (target.value ? store.shareKinds[target.value.type] : undefined) ?? [])
+const selected = ref<string[]>([])
+const step = ref<'choose' | 'confirm'>('choose')
+const busy = ref(false)
+
+// Already shared: its fields. New: everything ticked (defaults per type come later).
+// The field list is ensured first, so the ticks never start out empty.
+watch(target, async (value) => {
+  if (!value) return
+  step.value = 'choose'
+  try {
+    await store.ensureShareKinds()
+  }
+  catch {
+    snackbarStore.error(t('gameTable.error'))
+  }
+  selected.value = existing.value ? [...existing.value.fields] : [...availableFields.value]
+})
+
+const fieldLabel = (field: string) => t(`${FIELD_LABEL_NAMESPACE[target.value!.type]}.${field}`, 1)
+
+function close() {
+  store.shareTarget = null
+}
+
+async function run(action: () => Promise<unknown>, message: string) {
+  busy.value = true
+  try {
+    await action()
+    snackbarStore.success(message)
+    close()
+  }
+  catch {
+    snackbarStore.error(t('gameTable.error'))
+  }
+  finally {
+    busy.value = false
+  }
+}
+
+const save = () => run(() => store.share(target.value!.type, target.value!.entityId, selected.value), t('gameTable.share.done'))
+const stopSharing = () => run(() => store.unshare(existing.value!.id), t('gameTable.share.stopped'))
+</script>
