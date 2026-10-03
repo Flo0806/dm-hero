@@ -7,9 +7,13 @@ export type ShareType = (typeof SHARE_TYPES)[number]
 /** Text in every app language (players pick theirs), or plain text written by the DM */
 export type LocalizedText = Partial<Record<'de' | 'en' | 'es' | 'fr' | 'it' | 'zh-CN', string>> | string
 
+/** How the player app renders a field - it knows formats, not share types */
+export type SharedFieldFormat = 'text' | 'markdown'
+
 /** One shared field as players see it - label and value in all languages, ready to read */
 export interface SharedField {
   key: string
+  format: SharedFieldFormat
   label: LocalizedText
   value: LocalizedText
 }
@@ -19,6 +23,9 @@ export interface ShareContent {
   /** Must match the relay's share id - the relay can't swap shares */
   shareId: string
   type: ShareType
+  /** Category name ("NPCs") in all languages - new kinds need no player app update */
+  typeLabel: LocalizedText
+  /** What players see as name - the DM may use an alias ("The mysterious man") */
   title: string
   fields: SharedField[]
   sharedAt: string
@@ -31,7 +38,10 @@ export interface GameTableShare {
   entity_type: ShareType
   entity_id: number
   fields: string[]
+  /** Real name (from the entity) */
   title: string | null
+  /** Alias players see instead of the real name, null = real name */
+  display_name: string | null
   created_at: string
   updated_at: string
 }

@@ -13,9 +13,9 @@
         <dt class="text-sm text-muted">
           {{ pickText(field.label, locale) }}
         </dt>
-        <!-- Description is Markdown (rendered safely: no HTML, no script links) -->
+        <!-- Markdown rendered safely: no HTML, no script links -->
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <dd v-if="field.key === 'description'" class="markdown m-0 mt-0.5 leading-relaxed" v-html="renderMarkdown(pickText(field.value, locale))" />
+        <dd v-if="field.format === 'markdown'" class="markdown m-0 mt-0.5 leading-relaxed" v-html="renderMarkdown(pickText(field.value, locale))" />
         <dd v-else class="m-0 mt-0.5 leading-relaxed">
           {{ pickText(field.value, locale) }}
         </dd>

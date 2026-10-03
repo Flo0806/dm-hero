@@ -2786,7 +2786,9 @@
       "done": "Compartido",
       "stopped": "Ya no se comparte",
       "empty": "Aún no has compartido nada. Comparte PNJ con el botón de compartir de su tarjeta.",
-      "fieldCount": "{count} campo | {count} campos"
+      "fieldCount": "{count} campo | {count} campos",
+      "displayName": "Nombre para los jugadores (opcional)",
+      "displayNameHint": "P. ej. «El hombre misterioso». Vacío = nombre real ({name}). Vaciarlo después = la revelación."
     }
   }
 }

@@ -35,10 +35,11 @@ beforeEach(async () => {
 
   // Test kind: shares an entity's name + description
   SHARE_KINDS.npc = {
+    typeLabel: 'npcs.title',
     fields: ['description'],
     build: (database, id) => {
       const e = database.prepare('SELECT name, description FROM entities WHERE id = ? AND deleted_at IS NULL').get(id) as { name: string, description: string } | undefined
-      return e ? { title: e.name, fields: [{ key: 'description', value: e.description }] } : null
+      return e ? { title: e.name, fields: [{ key: 'description', format: 'markdown' as const, label: 'Description', value: e.description }] } : null
     },
   }
 
@@ -61,6 +62,7 @@ describe('share sync', () => {
     const loaded = await loadGameKeys(keys)
     const content = await open<ShareContent>(loaded.gameKey, sent[0]!.envelope!, await importVerifyKey(keys.signing.publicKey))
     expect(content).toMatchObject({ shareId: 'share-1', type: 'npc', title: 'Gandalf', fields: [{ key: 'description', value: 'Ein Zauberer' }] })
+    expect(content.typeLabel).toMatchObject({ de: 'NPCs', en: 'NPCs' })
   })
 
   it('does not resend unchanged content, but resends after an edit', async () => {
@@ -80,5 +82,19 @@ describe('share sync', () => {
 
     expect(sent.map(s => s.op)).toEqual(['put', 'delete'])
     expect(db.prepare('SELECT COUNT(*) AS n FROM game_table_shares').get()).toEqual({ n: 0 })
+  })
+
+  it('shows the alias instead of the real name - and sends again on the reveal', async () => {
+    db.prepare('UPDATE game_table_shares SET display_name = ?').run('Der mysteriöse Mann')
+    await syncTableShares(db, tableId)
+    const loaded = await loadGameKeys(keys)
+    const hidden = await open<ShareContent>(loaded.gameKey, sent[0]!.envelope!)
+    expect(hidden.title).toBe('Der mysteriöse Mann')
+    expect(JSON.stringify(hidden)).not.toContain('Gandalf')
+
+    // Reveal: alias removed -> real name goes out
+    db.prepare('UPDATE game_table_shares SET display_name = NULL').run()
+    await syncTableShares(db, tableId)
+    expect((await open<ShareContent>(loaded.gameKey, sent[1]!.envelope!)).title).toBe('Gandalf')
   })
 })

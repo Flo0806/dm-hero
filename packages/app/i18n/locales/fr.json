@@ -2786,7 +2786,9 @@
       "done": "Partagé",
       "stopped": "N'est plus partagé",
       "empty": "Rien de partagé pour l'instant. Partage des PNJ avec le bouton de partage de leur carte.",
-      "fieldCount": "{count} champ | {count} champs"
+      "fieldCount": "{count} champ | {count} champs",
+      "displayName": "Nom pour les joueurs (facultatif)",
+      "displayNameHint": "Par ex. « L'homme mystérieux ». Vide = vrai nom ({name}). Le vider plus tard = la révélation."
     }
   }
 }

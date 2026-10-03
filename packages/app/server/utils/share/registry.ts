@@ -6,6 +6,8 @@ import { npcShareKind } from './kinds/npc'
 // players see is built. Fields that aren't listed here can never be shared.
 
 export interface ShareKind {
+  /** i18n key of the category name players see ("npcs.title" -> "NPCs") */
+  typeLabel: string
   /** Fields the DM can share, in display order */
   fields: readonly string[]
   /** What players see right now - null if the entity is gone (share gets withdrawn) */

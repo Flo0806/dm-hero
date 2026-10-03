@@ -42,8 +42,5 @@
     "search": "Search shared content",
     "noResults": "Nothing found.",
     "opened": "Opened"
-  },
-  "typesPlural": {
-    "npc": "NPCs"
   }
 }

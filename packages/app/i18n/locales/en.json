@@ -2786,7 +2786,9 @@
       "done": "Shared",
       "stopped": "No longer shared",
       "empty": "Nothing shared yet. Share NPCs with the share button on their card.",
-      "fieldCount": "{count} field | {count} fields"
+      "fieldCount": "{count} field | {count} fields",
+      "displayName": "Name for the players (optional)",
+      "displayNameHint": "E.g. “The mysterious man”. Empty = real name ({name}). Clear it later = the reveal."
     }
   }
 }

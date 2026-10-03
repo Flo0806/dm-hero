@@ -71,6 +71,7 @@ interface NpcRow {
 }
 
 export const npcShareKind: ShareKind = {
+  typeLabel: 'npcs.title',
   fields: NPC_SHARE_FIELDS,
   build(db, entityId, fields) {
     const npc = db.prepare(`
@@ -85,7 +86,9 @@ export const npcShareKind: ShareKind = {
     for (const field of NPC_SHARE_FIELDS) {
       if (!fields.includes(field)) continue
       const value = fieldValue(db, field, npc, meta)
-      if (value) shared.push({ key: field, label: translateAll(`npcs.${field}`) ?? field, value })
+      if (value) {
+        shared.push({ key: field, format: field === 'description' ? 'markdown' : 'text', label: translateAll(`npcs.${field}`) ?? field, value })
+      }
     }
     return { title: npc.name, fields: shared }
   },

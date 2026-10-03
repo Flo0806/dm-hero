@@ -7,7 +7,7 @@ import { SHARE_KINDS } from '../../../utils/share/registry'
 export default defineEventHandler((event) => {
   const db = getDb()
   const tableId = requireNumericParam(getRouterParam(event, 'id'), 'game table id')
-  const rows = db.prepare('SELECT id, entity_type, entity_id, fields, created_at, updated_at FROM game_table_shares WHERE game_table_id = ? ORDER BY created_at DESC')
+  const rows = db.prepare('SELECT id, entity_type, entity_id, fields, display_name, created_at, updated_at FROM game_table_shares WHERE game_table_id = ? ORDER BY created_at DESC')
     .all(tableId) as Array<Omit<GameTableShare, 'fields' | 'title'> & { fields: string }>
 
   return rows.map((row): GameTableShare => {

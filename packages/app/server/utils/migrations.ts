@@ -2776,6 +2776,17 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 59: Created game_table_shares')
     },
   },
+  {
+    version: 60,
+    name: 'game_table_shares_display_name',
+    up: (db) => {
+      // Alias players see instead of the real name ("The mysterious man") - NULL = real name.
+      // Changing it to the real name later is the reveal.
+      db.exec('ALTER TABLE game_table_shares ADD COLUMN display_name TEXT')
+
+      console.log('✅ Migration 60: Added display_name to game_table_shares')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

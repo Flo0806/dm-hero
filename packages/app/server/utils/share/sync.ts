@@ -3,6 +3,7 @@ import type Database from 'better-sqlite3'
 import { loadGameKeys, seal, type StoredGameKeys } from '@dm-hero/seal'
 import type { ShareContent, ShareType } from '~~/types/share'
 import { deleteRelayShare, getRelayAuth, putRelayShare } from '../relay'
+import { translateAll } from './i18n'
 import { getShareKind } from './registry'
 
 // Keeps the players' copy of every share up to date ("always live").
@@ -15,6 +16,7 @@ interface ShareRow {
   entity_type: ShareType
   entity_id: number
   fields: string
+  display_name: string | null
   content_hash: string | null
   created_at: string
 }
@@ -31,7 +33,8 @@ export async function syncTableShares(db: Database.Database, tableId: number) {
   let keys: Awaited<ReturnType<typeof loadGameKeys>> | null = null
 
   for (const share of shares) {
-    const built = getShareKind(share.entity_type).build(db, share.entity_id, JSON.parse(share.fields) as string[])
+    const kind = getShareKind(share.entity_type)
+    const built = kind.build(db, share.entity_id, JSON.parse(share.fields) as string[])
 
     // Entity deleted -> withdraw the share
     if (!built) {
@@ -40,7 +43,8 @@ export async function syncTableShares(db: Database.Database, tableId: number) {
       continue
     }
 
-    const contentHash = hash(built)
+    const visible = { ...built, title: share.display_name ?? built.title }
+    const contentHash = hash(visible)
     if (contentHash === share.content_hash) continue
 
     keys ??= await loadGameKeys(JSON.parse(table.e2e_keys) as StoredGameKeys)
@@ -48,8 +52,9 @@ export async function syncTableShares(db: Database.Database, tableId: number) {
     const content: ShareContent = {
       shareId: share.share_key,
       type: share.entity_type,
-      title: built.title,
-      fields: built.fields,
+      typeLabel: translateAll(kind.typeLabel) ?? share.entity_type,
+      title: visible.title,
+      fields: visible.fields,
       sharedAt: share.created_at,
       updatedAt: now,
     }

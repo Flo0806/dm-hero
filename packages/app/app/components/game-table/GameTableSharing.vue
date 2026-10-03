@@ -12,7 +12,10 @@
         <template #prepend>
           <v-icon :icon="TYPE_ICONS[share.entity_type]" color="primary" class="me-3" />
         </template>
-        <v-list-item-title>{{ share.title ?? '?' }}</v-list-item-title>
+        <v-list-item-title>
+          {{ share.display_name ?? share.title ?? '?' }}
+          <span v-if="share.display_name" class="text-medium-emphasis">({{ share.title }})</span>
+        </v-list-item-title>
         <v-list-item-subtitle>
           {{ $t('gameTable.share.fieldCount', { count: share.fields.length }) }} · {{ formatDate(share.created_at) }}
         </v-list-item-subtitle>

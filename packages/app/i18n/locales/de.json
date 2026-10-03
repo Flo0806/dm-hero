@@ -2786,7 +2786,9 @@
       "done": "Geteilt",
       "stopped": "Nicht mehr geteilt",
       "empty": "Noch nichts geteilt. Teile NPCs über den Teilen-Knopf auf ihrer Karte.",
-      "fieldCount": "{count} Feld | {count} Felder"
+      "fieldCount": "{count} Feld | {count} Felder",
+      "displayName": "Name für die Spieler (optional)",
+      "displayNameHint": "Z. B. „Der mysteriöse Mann“. Leer = echter Name ({name}). Später leeren = Enthüllung."
     }
   }
 }

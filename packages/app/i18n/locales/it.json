@@ -2786,7 +2786,9 @@
       "done": "Condiviso",
       "stopped": "Non più condiviso",
       "empty": "Ancora niente di condiviso. Condividi i PNG con il pulsante di condivisione sulla loro scheda.",
-      "fieldCount": "{count} campo | {count} campi"
+      "fieldCount": "{count} campo | {count} campi",
+      "displayName": "Nome per i giocatori (facoltativo)",
+      "displayNameHint": "Es. «L'uomo misterioso». Vuoto = nome reale ({name}). Svuotarlo dopo = la rivelazione."
     }
   }
 }

@@ -8,6 +8,15 @@
       </v-card-title>
 
       <v-card-text v-if="step === 'choose'">
+        <v-text-field
+          v-model="displayName"
+          :label="$t('gameTable.share.displayName')"
+          :hint="$t('gameTable.share.displayNameHint', { name: target.name })"
+          persistent-hint
+          clearable
+          variant="outlined"
+          class="mb-4"
+        />
         <p class="text-body-medium text-medium-emphasis mb-2">
           {{ $t('gameTable.share.chooseFields') }}
         </p>
@@ -71,6 +80,8 @@ const target = computed(() => store.shareTarget)
 const existing = computed(() => target.value ? store.shareOf(target.value.type, target.value.entityId) : null)
 const availableFields = computed(() => (target.value ? store.shareKinds[target.value.type] : undefined) ?? [])
 const selected = ref<string[]>([])
+/** Alias instead of the real name - clearing it later is the reveal */
+const displayName = ref<string | null>(null)
 const step = ref<'choose' | 'confirm'>('choose')
 const busy = ref(false)
 
@@ -86,6 +97,7 @@ watch(target, async (value) => {
     snackbarStore.error(t('gameTable.error'))
   }
   selected.value = existing.value ? [...existing.value.fields] : [...availableFields.value]
+  displayName.value = existing.value?.display_name ?? null
 })
 
 const fieldLabel = (field: string) => t(`${FIELD_LABEL_NAMESPACE[target.value!.type]}.${field}`, 1)
@@ -109,6 +121,6 @@ async function run(action: () => Promise<unknown>, message: string) {
   }
 }
 
-const save = () => run(() => store.share(target.value!.type, target.value!.entityId, selected.value), t('gameTable.share.done'))
+const save = () => run(() => store.share(target.value!.type, target.value!.entityId, selected.value, displayName.value), t('gameTable.share.done'))
 const stopSharing = () => run(() => store.unshare(existing.value!.id), t('gameTable.share.stopped'))
 </script>

@@ -3,8 +3,12 @@
 
 export type LocalizedText = Partial<Record<string, string>> | string
 
+/** The player app renders by format only - it knows nothing about NPCs, items ... */
+export type SharedFieldFormat = 'text' | 'markdown'
+
 export interface SharedField {
   key: string
+  format: SharedFieldFormat
   label: LocalizedText
   value: LocalizedText
 }
@@ -12,6 +16,8 @@ export interface SharedField {
 export interface ShareContent {
   shareId: string
   type: string
+  /** Category name in all languages, sent by DM Hero */
+  typeLabel: LocalizedText
   title: string
   fields: SharedField[]
   sharedAt: string

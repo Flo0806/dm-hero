@@ -94,9 +94,9 @@ export const useGameTableStore = defineStore('gameTable', {
     },
 
     /** Share (or change the fields of) an entity - players see it right away */
-    async share(type: ShareType, entityId: number, fields: string[]) {
+    async share(type: ShareType, entityId: number, fields: string[], displayName: string | null) {
       if (!this.table) return
-      await $fetch(`/api/game-table/${this.table.id}/shares`, { method: 'PUT', body: { type, entityId, fields } })
+      await $fetch(`/api/game-table/${this.table.id}/shares`, { method: 'PUT', body: { type, entityId, fields, displayName } })
       await this.loadShares()
     },
 
