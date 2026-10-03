@@ -1,8 +1,19 @@
 // Sharing with players: what kinds exist and what travels (encrypted) to them
 
-/** Kinds of things the DM can share. Grows step by step (npc first). */
-export const SHARE_TYPES = ['npc', 'location', 'item', 'lore'] as const
-export type ShareType = (typeof SHARE_TYPES)[number]
+/**
+ * Every kind of thing the DM can share - the ONE place for a new kind besides its
+ * server file (server/utils/share/kinds). entityType = entity_types.name,
+ * i18n = namespace for labels (<i18n>.<field>) and the category name (<i18n>.title).
+ */
+export const SHARE_TYPE_CONFIG = {
+  npc: { entityType: 'NPC', i18n: 'npcs', icon: 'mdi-account' },
+  location: { entityType: 'Location', i18n: 'locations', icon: 'mdi-map-marker' },
+  item: { entityType: 'Item', i18n: 'items', icon: 'mdi-sword' },
+  lore: { entityType: 'Lore', i18n: 'lore', icon: 'mdi-book-open-variant' },
+} as const
+
+export type ShareType = keyof typeof SHARE_TYPE_CONFIG
+export const SHARE_TYPES = Object.keys(SHARE_TYPE_CONFIG) as ShareType[]
 
 /** Text in every app language (players pick theirs), or plain text written by the DM */
 export type LocalizedText = Partial<Record<'de' | 'en' | 'es' | 'fr' | 'it' | 'zh-CN', string>> | string

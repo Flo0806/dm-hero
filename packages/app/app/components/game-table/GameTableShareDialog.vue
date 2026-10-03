@@ -76,10 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareType } from '~~/types/share'
-
-// i18n namespace that labels each share type's fields
-const FIELD_LABEL_NAMESPACE: Record<ShareType, string> = { npc: 'npcs', location: 'locations', item: 'items', lore: 'lore' }
+import { SHARE_TYPE_CONFIG } from '~~/types/share'
 
 const { t } = useI18n()
 const store = useGameTableStore()
@@ -99,7 +96,7 @@ const defaults = computed(() => (target.value ? store.shareDefaults[target.value
 const differsFromDefaults = computed(() =>
   selected.value.length !== defaults.value.length || selected.value.some(f => !defaults.value.includes(f)),
 )
-const typeLabel = computed(() => target.value ? t(`${FIELD_LABEL_NAMESPACE[target.value.type]}.title`) : '')
+const typeLabel = computed(() => target.value ? t(`${SHARE_TYPE_CONFIG[target.value.type].i18n}.title`) : '')
 const busy = ref(false)
 
 // Already shared: its fields. New: everything ticked (defaults per type come later).
@@ -120,7 +117,7 @@ watch(target, async (value) => {
 
 // i18n keys are camelCase (armor_class -> armorClass)
 const fieldLabel = (field: string) =>
-  t(`${FIELD_LABEL_NAMESPACE[target.value!.type]}.${field.replace(/_(\w)/g, (_, c: string) => c.toUpperCase())}`, 1)
+  t(`${SHARE_TYPE_CONFIG[target.value!.type].i18n}.${field.replace(/_(\w)/g, (_, c: string) => c.toUpperCase())}`, 1)
 
 function close() {
   store.shareTarget = null

@@ -10,7 +10,7 @@
     <v-list v-else bg-color="transparent">
       <v-list-item v-for="share in store.shares" :key="share.id" class="px-0">
         <template #prepend>
-          <v-icon :icon="TYPE_ICONS[share.entity_type]" color="primary" class="me-3" />
+          <v-icon :icon="SHARE_TYPE_CONFIG[share.entity_type].icon" color="primary" class="me-3" />
         </template>
         <v-list-item-title>
           {{ share.display_name ?? share.title ?? '?' }}
@@ -29,9 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ShareType } from '~~/types/share'
-
-const TYPE_ICONS: Record<ShareType, string> = { npc: 'mdi-account', location: 'mdi-map-marker', item: 'mdi-sword', lore: 'mdi-book-open-variant' }
+import { SHARE_TYPE_CONFIG } from '~~/types/share'
 
 const { t, locale } = useI18n()
 const store = useGameTableStore()
