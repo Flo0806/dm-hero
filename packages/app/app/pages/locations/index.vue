@@ -45,7 +45,7 @@
     </v-row>
 
     <!-- Search Loading Indicator (shown immediately when typing starts) -->
-    <div v-else-if="searching && (!searchResults || searchResults.length === 0)" class="text-center py-16">
+    <div v-else-if="searching && filteredLocations.length === 0" class="text-center py-16">
       <v-progress-circular indeterminate size="64" color="primary" class="mb-4" />
       <div class="text-headline-small">
         {{ $t('common.searching') }}
@@ -530,7 +530,7 @@ watch(searchQuery, async (query) => {
 const filteredLocations = computed(() => {
   // If user is actively searching, show search results (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    return searchResults.value
+    return entitiesStore.withoutArchived(searchResults.value)
   }
 
   // Otherwise show all cached locations sorted alphabetically

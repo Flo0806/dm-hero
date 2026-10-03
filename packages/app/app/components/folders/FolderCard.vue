@@ -39,7 +39,7 @@
           {{ folder.name }}
         </h3>
         <div class="text-body-small text-medium-emphasis text-truncate">
-          {{ $t('folders.entityCount', folder.entity_count) }}
+          {{ $t('folders.entityCount', entitiesStore.visibleFolderCount(folder)) }}
         </div>
       </div>
 
@@ -75,8 +75,10 @@
 import type { EntityFolderWithCount, FolderEasterEgg } from '~~/types/folder'
 import { useFolderAnimation } from '~/composables/useFolderAnimations'
 import { useFoldersStore } from '~/stores/folders'
+import { useEntitiesStore } from '~/stores/entities'
 
 const props = defineProps<{ folder: EntityFolderWithCount }>()
+const entitiesStore = useEntitiesStore()
 defineEmits<{
   open: [folder: EntityFolderWithCount]
   edit: [folder: EntityFolderWithCount]

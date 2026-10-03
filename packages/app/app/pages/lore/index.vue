@@ -394,7 +394,7 @@ watch(searchQuery, async (query) => {
 const filteredLore = computed(() => {
   // Active search transcends folders.
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    return searchResults.value
+    return entitiesStore.withoutArchived(searchResults.value)
   }
   // Default view hides lore in folders.
   return [...(lore.value || [])]

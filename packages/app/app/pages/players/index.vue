@@ -188,7 +188,7 @@ const players = computed(() => entitiesStore.activePlayers)
 const filteredPlayers = computed(() => {
   // If searching, use search results from API (keep relevance order from FTS5)
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    return searchResults.value
+    return entitiesStore.withoutArchived(searchResults.value)
   }
   // Otherwise return cached players sorted alphabetically
   return [...(players.value || [])].sort((a, b) => a.name.localeCompare(b.name))

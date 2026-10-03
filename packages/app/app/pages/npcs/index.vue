@@ -528,7 +528,7 @@ watch(locale, () => {
 // can always find an NPC by name even if they don't remember where it lives.
 const filteredNpcs = computed(() => {
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    return searchResults.value
+    return entitiesStore.withoutArchived(searchResults.value)
   }
   return [...(npcs.value || [])]
     .filter(npc => !npc.folder_id)

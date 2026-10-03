@@ -13,7 +13,7 @@
           {{ folder.name }}
         </h2>
         <div class="text-body-small text-medium-emphasis">
-          {{ $t('folders.entityCount', folder.entity_count) }}
+          {{ $t('folders.entityCount', entitiesStore.visibleFolderCount(folder)) }}
         </div>
       </div>
       <v-btn
@@ -49,8 +49,10 @@
 
 <script setup lang="ts">
 import type { EntityFolderWithCount } from '~~/types/folder'
+import { useEntitiesStore } from '~/stores/entities'
 
 defineProps<{ folder: EntityFolderWithCount }>()
+const entitiesStore = useEntitiesStore()
 const emit = defineEmits<{ close: [] }>()
 
 // Close on ESC. Listener is global but only while this view is mounted.

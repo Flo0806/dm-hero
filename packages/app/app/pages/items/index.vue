@@ -330,7 +330,7 @@ watch(searchQuery, async (query) => {
 const filteredItems = computed(() => {
   // Active search transcends folders (find anything by name).
   if (searchQuery.value && searchQuery.value.trim().length > 0) {
-    return searchResults.value
+    return entitiesStore.withoutArchived(searchResults.value)
   }
   // Default view hides items that live in a folder — folder card surfaces them.
   return [...(items.value || [])]

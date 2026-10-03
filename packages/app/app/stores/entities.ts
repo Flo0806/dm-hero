@@ -5,6 +5,7 @@ import type { Lore } from '../../types/lore'
 import type { Player } from '../../types/player'
 import type { Faction } from '../../types/faction'
 import type { EntityGroup, GroupInfo } from '../../types/group'
+import type { EntityFolderWithCount } from '../../types/folder'
 import { useNpcCounts } from '../composables/useNpcCounts'
 import { useFactionCounts } from '../composables/useFactionCounts'
 import { useItemCounts } from '../composables/useItemCounts'
@@ -80,6 +81,18 @@ export const useEntitiesStore = defineStore('entities', {
     activeItems: state => state.showArchived ? state.items : state.items.filter(i => !i.archived_at),
     activeLore: state => state.showArchived ? state.lore : state.lore.filter(l => !l.archived_at),
     activePlayers: state => state.showArchived ? state.players : state.players.filter(p => !p.archived_at),
+
+    // Apply the archive toggle to any list (e.g. search results from the API)
+    withoutArchived: state => <T extends { archived_at?: string | null }>(list: T[]): T[] =>
+      state.showArchived ? list : list.filter(e => !e.archived_at),
+
+    // Folder count respecting the archive toggle. Falls back to the server count
+    // (which includes archived entities) while the entity list isn't loaded yet.
+    visibleFolderCount: state => (folder: EntityFolderWithCount): number => {
+      const collection = { npc: state.npcs, item: state.items, faction: state.factions, lore: state.lore }[folder.entity_type]
+      if (!collection?.length) return folder.entity_count
+      return collection.filter(e => e.folder_id === folder.id && (state.showArchived || !e.archived_at)).length
+    },
 
     // Archived only lists (for archive page)
     archivedNpcs: state => state.npcs.filter(n => n.archived_at),
