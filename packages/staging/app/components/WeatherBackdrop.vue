@@ -1,6 +1,6 @@
 <template>
   <!-- Today's in-game weather as a quiet background - decoration only, never in the way -->
-  <div v-if="effect" class="weather" :class="`weather--${effect}`" aria-hidden="true">
+  <div v-if="effect" class="weather" :class="[`weather--${effect}`, { 'weather--paused': hidden }]" aria-hidden="true">
     <template v-if="glow">
       <div class="weather__warmth" />
       <div class="weather__rays" />
@@ -15,14 +15,12 @@
 </template>
 
 <script setup lang="ts">
-import type { TableWeather } from '@dm-hero/seal'
+import { TABLE_WEATHER_TYPES, type TableWeather, type TableWeatherType } from '@dm-hero/seal'
 
 const props = defineProps<{ weather: TableWeather | null }>()
 
-// DM Hero's weather types; anything unknown simply shows nothing
-const EFFECTS = ['sunny', 'partlyCloudy', 'cloudy', 'rain', 'thunderstorm', 'snow', 'heavySnow', 'fog', 'windy'] as const
-type Effect = typeof EFFECTS[number]
-const effect = computed<Effect | null>(() => (EFFECTS as readonly string[]).includes(props.weather?.type ?? '') ? props.weather!.type as Effect : null)
+const effect = computed<TableWeatherType | null>(() =>
+  props.weather && TABLE_WEATHER_TYPES.includes(props.weather.type) ? props.weather.type : null)
 
 // Same "random" spread on every render (no flicker when the weather is re-sent)
 const spread = (i: number, salt: number) => {
@@ -30,29 +28,48 @@ const spread = (i: number, salt: number) => {
   return x - Math.floor(x)
 }
 
-const COUNTS: Partial<Record<Effect, number>> = { rain: 70, thunderstorm: 110, snow: 45, heavySnow: 110, windy: 24 }
-const particleClass = computed(() => effect.value === 'snow' || effect.value === 'heavySnow'
-  ? 'weather__flake'
-  : effect.value === 'windy' ? 'weather__gust' : 'weather__drop')
+// Phones get half the particles; a hidden tab pauses everything (battery)
+const small = ref(false)
+const hidden = ref(false)
+function onVisibility() {
+  hidden.value = document.hidden
+}
+onMounted(() => {
+  small.value = window.matchMedia('(max-width: 640px)').matches
+  onVisibility()
+  document.addEventListener('visibilitychange', onVisibility)
+})
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', onVisibility))
 
-const particles = computed(() => Array.from({ length: COUNTS[effect.value!] ?? 0 }, (_, i) => {
-  const fast = effect.value === 'thunderstorm' || effect.value === 'heavySnow'
-  const snow = effect.value === 'snow' || effect.value === 'heavySnow'
-  const duration = snow ? (fast ? 5 : 9) + spread(i, 3) * 6 : effect.value === 'windy' ? 2 + spread(i, 3) * 2 : (fast ? 0.5 : 0.8) + spread(i, 3) * 0.5
-  return {
-    i,
-    style: {
-      left: `${spread(i, 1) * 100}%`,
-      top: effect.value === 'windy' ? `${spread(i, 2) * 100}%` : undefined,
-      animationDelay: `${-spread(i, 4) * duration}s`,
-      animationDuration: `${duration}s`,
-      ...(snow && { width: `${(fast ? 3 : 2) + spread(i, 5) * 4}px`, height: `${(fast ? 3 : 2) + spread(i, 5) * 4}px` }),
-    },
-  }
-}))
+const COUNTS: Partial<Record<TableWeatherType, number>> = { rain: 70, heavyRain: 120, thunderstorm: 110, snow: 45, heavySnow: 110, windy: 24, hail: 60 }
+const isSnow = computed(() => effect.value === 'snow' || effect.value === 'heavySnow')
+const particleClass = computed(() => isSnow.value
+  ? 'weather__flake'
+  : effect.value === 'windy' ? 'weather__gust' : effect.value === 'hail' ? 'weather__hail' : 'weather__drop')
+
+const particles = computed(() => {
+  const count = Math.round((COUNTS[effect.value!] ?? 0) * (small.value ? 0.5 : 1))
+  const fast = effect.value === 'thunderstorm' || effect.value === 'heavySnow' || effect.value === 'heavyRain' || effect.value === 'hail'
+  return Array.from({ length: count }, (_, i) => {
+    const duration = isSnow.value
+      ? (fast ? 5 : 9) + spread(i, 3) * 6
+      : effect.value === 'windy' ? 2 + spread(i, 3) * 2 : (fast ? 0.5 : 0.8) + spread(i, 3) * 0.5
+    const flake = (fast ? 3 : 2) + spread(i, 5) * 4
+    return {
+      i,
+      style: {
+        left: `${spread(i, 1) * 100}%`,
+        top: effect.value === 'windy' ? `${spread(i, 2) * 100}%` : undefined,
+        animationDelay: `${-spread(i, 4) * duration}s`,
+        animationDuration: `${duration}s`,
+        ...(isSnow.value && { width: `${flake}px`, height: `${flake}px` }),
+      },
+    }
+  })
+})
 
 // Two depths: far clouds (every other one) are smaller, paler and slower - that gives the sky depth
-const CLOUDS: Partial<Record<Effect, number>> = { partlyCloudy: 3, cloudy: 7, thunderstorm: 6, rain: 4 }
+const CLOUDS: Partial<Record<TableWeatherType, number>> = { partlyCloudy: 3, cloudy: 7, thunderstorm: 6, rain: 4, heavyRain: 6, hail: 5 }
 const clouds = computed(() => Array.from({ length: CLOUDS[effect.value!] ?? 0 }, (_, i) => {
   const far = i % 2 === 1
   const duration = (far ? 140 : 80) + spread(i, 8) * 60
@@ -64,16 +81,22 @@ const clouds = computed(() => Array.from({ length: CLOUDS[effect.value!] ?? 0 },
       'animationDelay': `${-spread(i, 7) * duration}s`,
       'animationDuration': `${duration}s`,
       '--cloud-scale': String((far ? 0.55 : 0.9) + spread(i, 9) * 0.5),
+      // Where it rests when motion is reduced
+      '--still-left': `${spread(i, 10) * 80 - 10}vw`,
     },
   }
 }))
 
 const fogBands = computed(() => effect.value === 'fog'
-  ? Array.from({ length: 3 }, (_, i) => ({ i, style: { top: `${15 + i * 28}%`, animationDelay: `${-i * 14}s`, animationDuration: `${40 + i * 12}s` } }))
+  ? Array.from({ length: 3 }, (_, i) => ({
+      i,
+      style: { 'top': `${15 + i * 28}%`, 'animationDelay': `${-i * 14}s`, 'animationDuration': `${40 + i * 12}s`, '--still-left': `${-20 + i * 15}vw` },
+    }))
   : [])
 
 const glow = computed(() => effect.value === 'sunny' || effect.value === 'partlyCloudy')
-const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heavySnow: 0.1 } as Partial<Record<Effect, number>>)[effect.value!] ?? 0)
+const DIM: Partial<Record<TableWeatherType, number>> = { thunderstorm: 0.35, heavyRain: 0.25, hail: 0.2, rain: 0.15, cloudy: 0.12, heavySnow: 0.1 }
+const dim = computed(() => DIM[effect.value!] ?? 0)
 </script>
 
 <style scoped>
@@ -131,14 +154,12 @@ const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heav
     radial-gradient(closest-side at 48% 42%, rgb(222 226 238 / 0.2), rgb(222 226 238 / 0)),
     radial-gradient(closest-side at 70% 58%, rgb(216 221 233 / 0.15), rgb(216 221 233 / 0)),
     radial-gradient(closest-side at 50% 72%, rgb(200 206 220 / 0.12), rgb(200 206 220 / 0));
-  filter: blur(4px);
   scale: var(--cloud-scale, 1);
   animation: weather-drift linear infinite;
 }
 
 .weather__cloud--far {
   opacity: 0.55;
-  filter: blur(7px);
 }
 
 .weather__fog {
@@ -147,7 +168,6 @@ const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heav
   width: 120vw;
   height: 30vh;
   background: radial-gradient(ellipse, rgb(210 214 225 / 0.14), rgb(210 214 225 / 0) 70%);
-  filter: blur(8px);
   animation: weather-drift linear infinite;
 }
 
@@ -177,12 +197,28 @@ const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heav
   animation: weather-gust linear infinite;
 }
 
+.weather__hail {
+  position: absolute;
+  top: -5vh;
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: rgb(235 242 255 / 0.75);
+  animation: weather-fall linear infinite;
+}
+
 .weather__flash {
   position: absolute;
   inset: 0;
   background: rgb(220 230 255);
   opacity: 0;
   animation: weather-flash 9s infinite;
+}
+
+/* Tab hidden: everything stands still (no work for nobody watching) */
+.weather--paused,
+.weather--paused * {
+  animation-play-state: paused !important;
 }
 
 @keyframes weather-fall {
@@ -219,6 +255,7 @@ const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heav
 @media (prefers-reduced-motion: reduce) {
   .weather__drop,
   .weather__flake,
+  .weather__hail,
   .weather__gust,
   .weather__flash {
     display: none;
@@ -231,9 +268,10 @@ const dim = computed(() => ({ thunderstorm: 0.35, rain: 0.15, cloudy: 0.12, heav
     animation: none;
   }
 
+  /* Spread over the sky instead of drifting in */
   .weather__cloud,
   .weather__fog {
-    left: 10vw;
+    left: var(--still-left, 10vw);
   }
 }
 </style>

@@ -18,11 +18,11 @@
           <span v-if="encrypted" class="inline-flex items-center gap-1.5 text-success">
             <span aria-hidden="true">🔒</span> {{ $t('play.encrypted') }}
           </span>
-          <!-- Today's in-game weather -->
-          <span v-if="weather && WEATHER_ICONS[weather.type]" class="inline-flex items-center gap-1.5">
-            <span aria-hidden="true">{{ WEATHER_ICONS[weather.type] }}</span>
-            {{ $t(`play.weather.${weather.type}`) }}<template v-if="weather.temperature !== null"> · {{ weather.temperature }}°</template>
-          </span>
+        </p>
+        <!-- Today's in-game weather - outside the status region, so screen readers don't announce every change -->
+        <p v-if="weather" class="m-0 mt-1 inline-flex items-center gap-1.5 text-sm text-muted">
+          <span aria-hidden="true">{{ TABLE_WEATHER_ICONS[weather.type] }}</span>
+          {{ $t(`play.weather.${weather.type}`) }}<template v-if="weather.temperature !== null"> · {{ weather.temperature }}°</template>
         </p>
       </div>
     </header>
@@ -120,14 +120,12 @@
 </template>
 
 <script setup lang="ts">
+import { TABLE_WEATHER_ICONS } from '@dm-hero/seal'
+
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
 const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, weather } = connect(gameId)
-
-const WEATHER_ICONS: Record<string, string> = {
-  sunny: '☀️', partlyCloudy: '⛅', cloudy: '☁️', rain: '🌧️', thunderstorm: '⛈️', snow: '🌨️', heavySnow: '❄️', fog: '🌫️', windy: '💨',
-}
 
 // Tab title: the campaign, once known
 useHead(() => (campaignName.value ? { title: `${campaignName.value} – DM Hero` } : {}))

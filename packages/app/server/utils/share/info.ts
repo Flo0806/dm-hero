@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
-import { CAMPAIGN_NAME_MAX, loadGameKeys, seal, type StoredGameKeys, type TableInfoContent, type TableWeather } from '@dm-hero/seal'
+import { CAMPAIGN_NAME_MAX, loadGameKeys, parseTableWeather, seal, type StoredGameKeys, type TableInfoContent, type TableWeather } from '@dm-hero/seal'
 import { getRelayAuth, putRelayState } from '../relay'
 import { withTableLock } from './sync'
 
@@ -11,24 +11,29 @@ const sent = new Map<number, string>()
 /** Send again on the next sync (new keys, game registered anew) */
 export const forgetTableInfo = (tableId: number) => sent.delete(tableId)
 
+// One cached statement per database: runs every 5 s per connected game
+const weatherQueries = new WeakMap<Database.Database, Database.Statement>()
+
 /**
- * Today's weather as the players feel it: the active climate zone's, else the
- * general one of the day. No calendar or nothing rolled for today -> none.
+ * Today's weather - exactly what the DM's dashboard shows: with an active climate
+ * zone that zone's weather, without one the general weather. No calendar or
+ * nothing set for today -> none. Unknown types (imports, old data) are left out.
  */
 export function currentWeather(db: Database.Database, campaignId: number): TableWeather | undefined {
-  const today = db.prepare('SELECT current_year, current_month, current_day FROM calendar_config WHERE campaign_id = ?')
-    .get(campaignId) as { current_year: number, current_month: number, current_day: number } | undefined
-  if (!today) return undefined
-  const zone = (db.prepare('SELECT active_climate_zone_id FROM campaigns WHERE id = ?').get(campaignId) as { active_climate_zone_id: number | null } | undefined)
-    ?.active_climate_zone_id ?? null
-  type Row = { weather_type: string, temperature: number | null }
-  const day = 'campaign_id = ? AND year = ? AND month = ? AND day = ?'
-  const args = [campaignId, today.current_year, today.current_month, today.current_day]
-  const inZone = zone !== null
-    ? db.prepare(`SELECT weather_type, temperature FROM calendar_weather WHERE ${day} AND zone_id = ?`).get(...args, zone) as Row | undefined
-    : undefined
-  const weather = inZone ?? db.prepare(`SELECT weather_type, temperature FROM calendar_weather WHERE ${day} AND zone_id IS NULL`).get(...args) as Row | undefined
-  return weather ? { type: weather.weather_type, temperature: weather.temperature } : undefined
+  let query = weatherQueries.get(db)
+  if (!query) {
+    query = db.prepare(`
+      SELECT w.weather_type AS type, w.temperature
+      FROM calendar_config c
+      JOIN campaigns k ON k.id = c.campaign_id
+      JOIN calendar_weather w ON w.campaign_id = c.campaign_id
+        AND w.year = c.current_year AND w.month = c.current_month AND w.day = c.current_day
+        AND ((k.active_climate_zone_id IS NULL AND w.zone_id IS NULL) OR w.zone_id = k.active_climate_zone_id)
+      WHERE c.campaign_id = ?
+    `)
+    weatherQueries.set(db, query)
+  }
+  return parseTableWeather(query.get(campaignId))
 }
 
 async function runInfoSync(db: Database.Database, tableId: number) {

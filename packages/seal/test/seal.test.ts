@@ -3,7 +3,7 @@ import {
   createGameKeys, loadGameKeys, rotateGameKey, generateDeviceKeyPair, fingerprint, encryptFile, decryptFile,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
-  EMPTY_FOG, isMapFog, isPingContent, isTableFogContent, isTableMapContent, normalizeFog, pingColor, simplifyStroke,
+  EMPTY_FOG, isMapFog, parseTableWeather, isPingContent, isTableFogContent, isTableMapContent, normalizeFog, pingColor, simplifyStroke,
   type EnvelopeHeader,
 } from '../src'
 
@@ -176,5 +176,14 @@ describe('table protocol', () => {
     expect(isPingContent({ mapId: 1, x: 5, y: 5, text: 'x'.repeat(81) })).toBe(false)
     expect(pingColor(7)).toBe(pingColor('7'))
     expect(pingColor('dm')).toBe('#d4a574')
+  })
+})
+
+describe('table weather', () => {
+  it('only known weather passes, an odd temperature becomes "none"', () => {
+    expect(parseTableWeather({ type: 'hail', temperature: -3 })).toEqual({ type: 'hail', temperature: -3 })
+    expect(parseTableWeather({ type: 'rain', temperature: 'warm' })).toEqual({ type: 'rain', temperature: null })
+    expect(parseTableWeather({ type: 'acid-rain', temperature: 5 })).toBeUndefined()
+    expect(parseTableWeather(null)).toBeUndefined()
   })
 })

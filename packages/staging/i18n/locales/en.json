@@ -81,7 +81,9 @@
       "snow": "Snow",
       "heavySnow": "Heavy snow",
       "fog": "Fog",
-      "windy": "Windy"
+      "windy": "Windy",
+      "heavyRain": "Heavy rain",
+      "hail": "Hail"
     }
   },
   "cookieNotice": {

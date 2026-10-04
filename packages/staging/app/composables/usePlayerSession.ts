@@ -1,5 +1,5 @@
 import {
-  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isHandoutContent, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
+  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isHandoutContent, parseTableWeather, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
   NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type HandoutContent, type TableFogContent, type TableWeather, type TableMapContent,
 } from '@dm-hero/seal'
 
@@ -112,7 +112,8 @@ export function usePlayerSession() {
         else if (slot === 'fog' && isTableFogContent(content)) tableFog.value = content
         else if (slot === 'info' && isTableInfoContent(content)) {
           campaignName.value = content.campaignName
-          weather.value = content.weather ?? null
+          // An odd weather is ignored - the campaign name still counts
+          weather.value = parseTableWeather(content.weather) ?? null
         }
         else return
         stateVersions.set(slot, { epoch: header.epoch, seq: header.seq })

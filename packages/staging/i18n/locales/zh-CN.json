@@ -81,7 +81,9 @@
       "snow": "雪",
       "heavySnow": "大雪",
       "fog": "雾",
-      "windy": "大风"
+      "windy": "大风",
+      "heavyRain": "大雨",
+      "hail": "冰雹"
     }
   },
   "cookieNotice": {

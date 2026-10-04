@@ -81,7 +81,9 @@
       "snow": "Neige",
       "heavySnow": "Fortes chutes de neige",
       "fog": "Brouillard",
-      "windy": "Venteux"
+      "windy": "Venteux",
+      "heavyRain": "Forte pluie",
+      "hail": "Grêle"
     }
   },
   "cookieNotice": {

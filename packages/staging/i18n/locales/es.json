@@ -81,7 +81,9 @@
       "snow": "Nieve",
       "heavySnow": "Nevada intensa",
       "fog": "Niebla",
-      "windy": "Ventoso"
+      "windy": "Ventoso",
+      "heavyRain": "Lluvia intensa",
+      "hail": "Granizo"
     }
   },
   "cookieNotice": {

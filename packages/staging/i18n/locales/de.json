@@ -81,7 +81,9 @@
       "snow": "Schnee",
       "heavySnow": "Starker Schneefall",
       "fog": "Nebel",
-      "windy": "Windig"
+      "windy": "Windig",
+      "heavyRain": "Starker Regen",
+      "hail": "Hagel"
     }
   },
   "cookieNotice": {

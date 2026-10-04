@@ -52,7 +52,7 @@ describe('campaign name for players', () => {
     expect(puts).toHaveLength(2)
   })
 
-  it('weather: the active zone\'s, else the general one, nothing without a calendar', async () => {
+  it('weather is what the DM dashboard shows: active zone only, else general, nothing without a calendar', async () => {
     expect(currentWeather(db, campaignId)).toBeUndefined()
 
     db.prepare('INSERT INTO calendar_config (campaign_id, current_year, current_month, current_day) VALUES (?, ?, ?, ?)').run(campaignId, 1024, 3, 12)
@@ -62,13 +62,28 @@ describe('campaign name for players', () => {
     weather.run(campaignId, null, 1024, 3, 12, 'rain', 9)
     expect(currentWeather(db, campaignId)).toEqual({ type: 'rain', temperature: 9 })
 
+    // Active zone without weather today: none (like the dashboard), not the general one
     const zone = Number(db.prepare('INSERT INTO climate_zones (campaign_id, name) VALUES (?, ?)').run(campaignId, 'Wüste').lastInsertRowid)
-    weather.run(campaignId, zone, 1024, 3, 12, 'sunny', 38)
     db.prepare('UPDATE campaigns SET active_climate_zone_id = ? WHERE id = ?').run(zone, campaignId)
-    expect(currentWeather(db, campaignId)).toEqual({ type: 'sunny', temperature: 38 })
+    expect(currentWeather(db, campaignId)).toBeUndefined()
+
+    weather.run(campaignId, zone, 1024, 3, 12, 'hail', 38)
+    expect(currentWeather(db, campaignId)).toEqual({ type: 'hail', temperature: 38 })
 
     await syncTableInfo(db, tableId)
     const content = await open((await loadGameKeys(keys)).gameKey, puts.at(-1)!.envelope)
-    expect(content).toMatchObject({ weather: { type: 'sunny', temperature: 38 } })
+    expect(content).toMatchObject({ weather: { type: 'hail', temperature: 38 } })
+  })
+
+  it('an unknown weather is left out - the campaign name still goes out (review #1)', async () => {
+    db.prepare('INSERT INTO calendar_config (campaign_id, current_year, current_month, current_day) VALUES (?, ?, ?, ?)').run(campaignId, 1, 1, 1)
+    db.prepare('INSERT INTO calendar_weather (campaign_id, zone_id, year, month, day, weather_type, temperature) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(campaignId, null, 1, 1, 1, 'Säureregen/Hagel', 'warm')
+    expect(currentWeather(db, campaignId)).toBeUndefined()
+
+    await syncTableInfo(db, tableId)
+    const content = await open((await loadGameKeys(keys)).gameKey, puts.at(-1)!.envelope)
+    expect(content).toEqual({ kind: 'info', campaignName: 'Der Fluch von Strahd' })
+    expect(isTableInfoContent(content)).toBe(true)
   })
 })

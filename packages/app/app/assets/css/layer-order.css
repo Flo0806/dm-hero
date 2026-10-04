@@ -7,11 +7,12 @@
 
 /*
  * Vuetify 4 no longer resets heading margins (v3 did) - every h1-h6 got the
- * browser's top margin (almost a full line on h1). Lowest layer: classes like
- * mt-4 and unlayered styles (e.g. the markdown editor) still win.
+ * browser's margins (almost a full line on h1). Back to v3's zero, the app stays
+ * compact. Lowest layer: classes like mb-2 and unlayered styles (e.g. the
+ * markdown editor) still win.
  */
 @layer base {
   :where(h1, h2, h3, h4, h5, h6) {
-    margin-top: 0;
+    margin: 0;
   }
 }
