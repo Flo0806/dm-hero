@@ -10,6 +10,7 @@ import { getTestDb } from '../utils/test-db'
 let db: Database.Database
 const acked: string[] = []
 let relayDown = false
+let relayHook: (() => void) | null = null
 const threads = new Map<number, Record<string, Envelope>>()
 
 vi.mock('../../server/utils/db', async (importOriginal) => {
@@ -25,6 +26,7 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
     },
     putRelayThread: async (_a: unknown, playerId: number, envelopes: Record<string, Envelope>) => {
       if (relayDown) throw new Error('relay down')
+      relayHook?.()
       threads.set(playerId, envelopes)
     },
   }
@@ -58,6 +60,7 @@ const stored = () => db.prepare('SELECT player_id, sender, text FROM game_table_
 beforeEach(async () => {
   acked.length = 0
   relayDown = false
+  relayHook = null
   threads.clear()
   db = getTestDb()
   const campaignId = Number(db.prepare('INSERT INTO campaigns (name) VALUES (?)').run('Chat').lastInsertRowid)
@@ -165,5 +168,22 @@ describe('private messages', () => {
       sentAt: Date.UTC(2026, 9, 3, 18, 30),
     })
     expect(db.prepare('SELECT created_at FROM game_table_messages').get()).toEqual({ created_at: '2026-10-03 18:30:00' })
+  })
+
+  it('a change made while sending stays dirty and goes out next time (Rabbit)', async () => {
+    const anna = await addPlayer('Anna')
+    await post(anna, 'relay-10', 'm10', 'Hallo')
+    // Clear while the relay write is still running
+    relayHook = () => {
+      db.prepare('DELETE FROM game_table_messages').run()
+      markThreadDirty(db, anna.playerId)
+    }
+    await syncTableThreads(db, tableId, anna.playerId)
+    relayHook = null
+    expect((db.prepare('SELECT thread_dirty FROM game_table_players WHERE id = ?').get(anna.playerId) as { thread_dirty: number }).thread_dirty).toBeGreaterThan(0)
+
+    await syncTableThreads(db, tableId, anna.playerId)
+    const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
+    expect(thread.messages).toEqual([])
   })
 })

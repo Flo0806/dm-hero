@@ -9,8 +9,9 @@ import { withTableLock } from './sync'
 
 // Private messages: DM Hero keeps each conversation (a short talk, not a chat
 // archive: only the newest CHAT_THREAD_MAX) and sends it to the player's devices
-// (one envelope per device, pair key). A changed conversation is marked dirty
-// until the relay has it - so even an emptied one is retried, also after a restart.
+// (one envelope per device, pair key). A change raises the conversation's dirty
+// counter; it's only reset if nothing changed while sending - so even an emptied
+// one is retried, also after a restart, and no change made meanwhile is lost.
 // The hash in memory only avoids re-sending unchanged ones (e.g. every 5 s).
 const sent = new Map<string, string>()
 
@@ -19,7 +20,7 @@ const THREAD_MAX_BYTES = 200 * 1024
 
 /** The conversation changed - send it (again) until the relay has it */
 export function markThreadDirty(db: Database.Database, playerId: number) {
-  db.prepare('UPDATE game_table_players SET thread_dirty = 1 WHERE id = ?').run(playerId)
+  db.prepare('UPDATE game_table_players SET thread_dirty = thread_dirty + 1 WHERE id = ?').run(playerId)
 }
 
 /** A conversation keeps only its newest messages - older ones go */
@@ -40,7 +41,9 @@ async function syncThread(db: Database.Database, tableId: number, playerId: numb
   const auth = getRelayAuth(db, tableId)
   const player = db.prepare('SELECT thread_dirty FROM game_table_players WHERE id = ? AND game_table_id = ?').get(playerId, tableId) as { thread_dirty: number } | undefined
   if (!auth || !player) return
-  const dirty = player.thread_dirty === 1
+  // Generation of changes this snapshot covers
+  const generation = player.thread_dirty
+  const dirty = generation > 0
 
   const rows = db.prepare(`
     SELECT message_key, sender, text, created_at FROM game_table_messages
@@ -70,7 +73,8 @@ async function syncThread(db: Database.Database, tableId: number, playerId: numb
   }
   await putRelayThread(auth, playerId, envelopes)
   sent.set(key, hash)
-  db.prepare('UPDATE game_table_players SET thread_dirty = 0 WHERE id = ?').run(playerId)
+  // Changed while sending (e.g. cleared)? Then it stays dirty and goes out again
+  db.prepare('UPDATE game_table_players SET thread_dirty = 0 WHERE id = ? AND thread_dirty = ?').run(playerId, generation)
 }
 
 async function runThreadSync(db: Database.Database, tableId: number, onlyPlayer: number | undefined) {
@@ -84,7 +88,7 @@ async function runThreadSync(db: Database.Database, tableId: number, onlyPlayer:
     ? [onlyPlayer]
     : (db.prepare(`
         SELECT DISTINCT player_id FROM game_table_messages WHERE game_table_id = ?
-        UNION SELECT id FROM game_table_players WHERE game_table_id = ? AND thread_dirty = 1
+        UNION SELECT id FROM game_table_players WHERE game_table_id = ? AND thread_dirty > 0
       `).all(tableId, tableId) as Array<{ player_id: number }>).map(p => p.player_id)
   for (const playerId of players) {
     try {

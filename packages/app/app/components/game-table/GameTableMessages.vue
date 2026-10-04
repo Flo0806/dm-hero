@@ -120,9 +120,10 @@ watch(players, (list) => {
   selectedId.value = (unread ?? list[0])?.id ?? null
 }, { immediate: true })
 
-// Looking at a conversation reads it; new messages scroll into view
+// Looking at a conversation reads it; new messages scroll into view.
+// Watches the message ids, not the count - a full conversation (100) keeps its count.
 const scrollRef = ref<HTMLElement>()
-watch([selectedId, () => thread.value.length], async () => {
+watch([selectedId, () => thread.value.map(m => m.id).join()], async () => {
   if (selectedId.value) store.markRead(selectedId.value).catch(() => {})
   await nextTick()
   scrollRef.value?.scrollTo({ top: scrollRef.value.scrollHeight })

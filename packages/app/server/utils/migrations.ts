@@ -2900,8 +2900,8 @@ export const migrations: Migration[] = [
     version: 66,
     name: 'game_table_thread_dirty',
     up: (db) => {
-      // 1 = this player's conversation changed and the relay doesn't have it yet
-      // (also an emptied one) - retried until it went through, even after a restart
+      // > 0 = this player's conversation changed and the relay doesn't have it yet
+      // (also an emptied one) - a counter, retried until it went through, even after a restart
       db.exec('ALTER TABLE game_table_players ADD COLUMN thread_dirty INTEGER NOT NULL DEFAULT 0')
 
       console.log('✅ Migration 66: Added thread_dirty to game_table_players')
