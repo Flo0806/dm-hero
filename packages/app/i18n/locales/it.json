@@ -2874,7 +2874,6 @@
       "cleared": "Conversazione svuotata",
       "delete": "Elimina messaggio",
       "deleted": "Messaggio eliminato",
-      "pending": "Eliminato: sparirà per il giocatore appena il tavolo di gioco sarà raggiungibile.",
       "newCount": "{count} nuovo messaggio | {count} nuovi messaggi",
       "newTitle": "Nuovi messaggi"
     }

@@ -194,7 +194,10 @@ export const useGameTableStore = defineStore('gameTable', {
     },
 
     async loadMessages() {
-      this.messages = this.table ? await $fetch<GameTableMessage[]>(`/api/game-table/${this.table.id}/messages`) : []
+      const tableId = this.table?.id
+      const messages = tableId ? await $fetch<GameTableMessage[]>(`/api/game-table/${tableId}/messages`) : []
+      // Campaign switched meanwhile -> this answer belongs to another game
+      if (this.table?.id === tableId) this.messages = messages
     },
 
     /** Write to one player - kept here, sent encrypted to their devices */
@@ -205,27 +208,27 @@ export const useGameTableStore = defineStore('gameTable', {
       await this.loadMessages()
     },
 
-    /** Delete one message - for the player too. pending: the player server didn't answer */
+    /** Delete one message - for the player too */
     async deleteMessage(id: number) {
-      const { pending } = await $fetch<{ pending: boolean }>(`/api/game-table/messages/${id}`, { method: 'DELETE' })
+      await $fetch(`/api/game-table/messages/${id}`, { method: 'DELETE' })
       this.messages = this.messages.filter(m => m.id !== id)
-      return pending
     },
 
     /** Clear the conversation with one player - for the player too */
     async clearConversation(playerId: number) {
-      if (!this.table) return false
-      const { pending } = await $fetch<{ pending: boolean }>(`/api/game-table/${this.table.id}/messages`, { method: 'DELETE', query: { playerId } })
+      if (!this.table) return
+      await $fetch(`/api/game-table/${this.table.id}/messages`, { method: 'DELETE', query: { playerId } })
       this.messages = this.messages.filter(m => m.player_id !== playerId)
-      return pending
     },
 
     /** The DM looked at a conversation */
     async markRead(playerId: number) {
       if (!this.table || !this.unreadOf(playerId)) return
-      await $fetch(`/api/game-table/${this.table.id}/messages/read`, { method: 'POST', body: { playerId } })
+      // Only what the server marked - a message arriving meanwhile stays unread
+      const { ids } = await $fetch<{ ids: number[] }>(`/api/game-table/${this.table.id}/messages/read`, { method: 'POST', body: { playerId } })
+      const read = new Set(ids)
       const now = new Date().toISOString()
-      this.messages = this.messages.map(m => (m.player_id === playerId && !m.read_at ? { ...m, read_at: now } : m))
+      this.messages = this.messages.map(m => (read.has(m.id) ? { ...m, read_at: now } : m))
     },
 
     openShareDialog(type: ShareType, entityId: number, name: string) {

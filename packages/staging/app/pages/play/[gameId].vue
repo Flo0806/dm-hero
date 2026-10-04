@@ -209,8 +209,9 @@ watch(() => handouts.value.map(h => h.handoutId).join(), (now, before) => {
   const added = now.split(',').some(id => id && !(before ?? '').split(',').includes(id))
   if (added && tab.value !== 'documents') unseen.documents = true
 })
-watch(() => messages.value.filter(m => m.from === 'dm').length, (now, before) => {
-  if (now > (before ?? 0) && tab.value !== 'messages') unseen.messages = true
+// New = the newest DM message changed (a count stays the same once the conversation is full)
+watch(() => messages.value.findLast(m => m.from === 'dm')?.id, (now, before) => {
+  if (now && now !== before && tab.value !== 'messages') unseen.messages = true
 })
 watch(tab, (value) => {
   unseen[value] = false

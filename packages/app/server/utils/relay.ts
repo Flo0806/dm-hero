@@ -132,6 +132,7 @@ export async function deleteRelayHandout(auth: RelayAuth, handoutKey: string) {
 export async function putRelayThread(auth: RelayAuth, playerId: number, envelopes: Record<string, unknown>) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/threads/${playerId}`, {
     method: 'PUT',
+    timeout: 15_000,
     headers: { authorization: `Bearer ${auth.relay_dm_token}` },
     body: { envelopes },
   })
@@ -141,6 +142,7 @@ export async function putRelayThread(auth: RelayAuth, playerId: number, envelope
 export async function ackRelayMessage(auth: RelayAuth, messageId: string) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/inbox/${messageId}`, {
     method: 'DELETE',
+    timeout: 15_000,
     headers: { authorization: `Bearer ${auth.relay_dm_token}` },
   })
 }

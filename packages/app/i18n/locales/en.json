@@ -2874,7 +2874,6 @@
       "cleared": "Conversation cleared",
       "delete": "Delete message",
       "deleted": "Message deleted",
-      "pending": "Deleted – it disappears for the player as soon as the game table is reachable.",
       "newCount": "{count} new message | {count} new messages",
       "newTitle": "New messages"
     }

@@ -2874,7 +2874,6 @@
       "cleared": "对话已清空",
       "delete": "删除消息",
       "deleted": "消息已删除",
-      "pending": "已删除——游戏桌可连接后，玩家那边也会消失。",
       "newCount": "{count} 条新消息",
       "newTitle": "新消息"
     }

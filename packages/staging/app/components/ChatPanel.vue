@@ -24,7 +24,7 @@
           rows="2"
           :placeholder="$t('play.chat.write')"
           class="block w-full h-full resize-none px-3 py-2 rounded-xl border border-line bg-bg text-ink outline-none focus:border-primary focus:ring-3 focus:ring-primary/25"
-          @keydown.enter.exact.prevent="send"
+          @keydown.enter.exact="onEnter"
         />
       </label>
       <!-- Same height as the text field -->
@@ -54,6 +54,13 @@ watch(() => all.value.length, async () => {
 
 const draft = ref('')
 const sending = ref(false)
+
+// Enter sends - unless it confirms an IME candidate (Chinese, Japanese ...)
+function onEnter(event: KeyboardEvent) {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault()
+  send()
+}
 /** rate = too many in a minute (wait a moment), other = anything else */
 const failed = ref<false | 'rate' | 'other'>(false)
 async function send() {

@@ -64,7 +64,7 @@
             auto-grow
             max-rows="5"
             variant="outlined"
-            @keydown.enter.exact.prevent="send"
+            @keydown.enter.exact="onEnter"
           >
             <template #append-inner>
               <v-btn
@@ -97,8 +97,8 @@
 <script setup lang="ts">
 import { CHAT_TEXT_MAX } from '@dm-hero/seal'
 
-/** Open this player's conversation (e.g. coming from the header chip) */
-const props = defineProps<{ playerId?: number | null }>()
+/** Open this player's conversation (e.g. coming from the header chip) - a new object per jump */
+const props = defineProps<{ focus?: { playerId: number } | null }>()
 
 const { t, locale } = useI18n()
 const store = useGameTableStore()
@@ -109,8 +109,8 @@ const selectedId = ref<number | null>(null)
 const selected = computed(() => players.value.find(p => p.id === selectedId.value) ?? null)
 const thread = computed(() => store.messages.filter(m => m.player_id === selectedId.value))
 
-watch(() => props.playerId, (id) => {
-  if (id && players.value.some(p => p.id === id)) selectedId.value = id
+watch(() => props.focus, (focus) => {
+  if (focus && players.value.some(p => p.id === focus.playerId)) selectedId.value = focus.playerId
 }, { immediate: true })
 
 // Start with the player who wrote most recently (unread first), else the first one
@@ -128,18 +128,13 @@ watch([selectedId, () => thread.value.length], async () => {
   scrollRef.value?.scrollTo({ top: scrollRef.value.scrollHeight })
 }, { immediate: true })
 
-const formatTime = (value: string) => new Date(`${value.replace(' ', 'T')}${value.includes('Z') ? '' : 'Z'}`)
-  .toLocaleString(locale.value, { dateStyle: 'short', timeStyle: 'short' })
+const formatTime = (value: string) => parseSqliteDate(value).toLocaleString(locale.value, { dateStyle: 'short', timeStyle: 'short' })
 
-// Deleting is the DM's: gone here and on the player's devices
-function notify(pending: boolean | undefined, success: string) {
-  if (pending) snackbarStore.warning(t('gameTable.messages.pending'))
-  else snackbarStore.success(success)
-}
-
+// Deleting is the DM's: gone here and on the player's devices (retried until it arrives)
 async function remove(id: number) {
   try {
-    notify(await store.deleteMessage(id), t('gameTable.messages.deleted'))
+    await store.deleteMessage(id)
+    snackbarStore.success(t('gameTable.messages.deleted'))
   }
   catch {
     snackbarStore.error(t('gameTable.error'))
@@ -152,7 +147,8 @@ async function clear() {
   if (!selectedId.value) return
   clearing.value = true
   try {
-    notify(await store.clearConversation(selectedId.value), t('gameTable.messages.cleared'))
+    await store.clearConversation(selectedId.value)
+    snackbarStore.success(t('gameTable.messages.cleared'))
     showClear.value = false
   }
   catch {
@@ -165,6 +161,13 @@ async function clear() {
 
 const draft = ref('')
 const sending = ref(false)
+
+// Enter sends - unless it confirms an IME candidate (Chinese, Japanese ...)
+function onEnter(event: KeyboardEvent) {
+  if (event.isComposing || event.keyCode === 229) return
+  event.preventDefault()
+  send()
+}
 async function send() {
   const text = draft.value.trim()
   if (!text || !selectedId.value || sending.value) return

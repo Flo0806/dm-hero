@@ -67,7 +67,7 @@
           </v-col>
         </v-row>
 
-        <GameTableMessages v-else-if="tab === 'messages'" :player-id="focusPlayer" />
+        <GameTableMessages v-else-if="tab === 'messages'" :focus="focusPlayer" />
 
         <template v-else>
           <GameTableSharing class="mt-0" />
@@ -97,10 +97,11 @@ const tab = ref<'table' | 'messages' | 'shared'>('table')
 
 // Jump in from the header chip: /game-table?tab=messages&player=12
 const route = useRoute()
-const focusPlayer = ref<number | null>(null)
-watch(() => [route.query.tab, route.query.player], ([queryTab, player]) => {
+// A new object per jump - selects the player again even if it's the same one
+const focusPlayer = ref<{ playerId: number } | null>(null)
+watch(() => [route.query.tab, route.query.player, route.query.at], ([queryTab, player]) => {
   if (queryTab === 'messages') tab.value = 'messages'
-  if (player) focusPlayer.value = Number(player)
+  if (player) focusPlayer.value = { playerId: Number(player) }
 }, { immediate: true })
 const sharedCount = computed(() => store.shares.length + store.handouts.length)
 const restartMode = ref(false)

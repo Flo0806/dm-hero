@@ -25,7 +25,7 @@ const gameIds = () => (useRelayDb().prepare('SELECT id FROM games ORDER BY id').
 
 beforeEach(() => {
   const db = useRelayDb()
-  db.exec('DELETE FROM player_sessions; DELETE FROM players; DELETE FROM games;')
+  db.exec('DELETE FROM player_sessions; DELETE FROM threads; DELETE FROM handouts; DELETE FROM inbox; DELETE FROM players; DELETE FROM games;')
   testCookies.clear()
   runtimeConfig.trustProxy = false
 })
@@ -96,5 +96,29 @@ describe('rate limit', () => {
     for (let i = 0; i < 3; i++) rateLimit(event('127.0.0.1', '5.5.5.5'), 'test-proxy', 3, 60_000)
     expect(() => rateLimit(event('127.0.0.1', '6.6.6.6'), 'test-proxy', 3, 60_000)).not.toThrow()
     expect(() => rateLimit(event('127.0.0.1', '5.5.5.5'), 'test-proxy', 3, 60_000)).toThrow()
+  })
+})
+
+describe('removing a player on the relay', () => {
+  it('drops their conversation, handouts and unread messages', async () => {
+    addGame('game-1')
+    const db = useRelayDb()
+    db.prepare('INSERT INTO players (game_id, id, name, pin_hash) VALUES (?, ?, ?, ?)').run('game-1', '2', 'Ben', 'x')
+    for (const player of ['1', '2']) {
+      db.prepare('INSERT INTO threads (game_id, player_id, envelopes, updated_at) VALUES (?, ?, ?, ?)').run('game-1', player, '{}', NOW)
+      db.prepare('INSERT INTO handouts (game_id, id, player_id, envelopes, updated_at) VALUES (?, ?, ?, ?, ?)').run('game-1', 'h1', player, '{}', NOW)
+      db.prepare('INSERT INTO inbox (game_id, id, player_id, public_key, envelope, created_at) VALUES (?, ?, ?, ?, ?, ?)').run('game-1', `m${player}`, player, 'k', '{}', NOW)
+    }
+
+    const handler = (await import('../server/api/v1/games/[id]/players.put')).default as (event: unknown) => Promise<unknown>
+    await handler({
+      headers: { authorization: 'Bearer dm' },
+      params: { id: 'game-1' },
+      body: { players: [{ id: '1', name: 'Anna', pinHash: 'a'.repeat(64) }] },
+    })
+
+    for (const table of ['threads', 'handouts', 'inbox']) {
+      expect(db.prepare(`SELECT player_id FROM ${table} WHERE game_id = ?`).all('game-1')).toEqual([{ player_id: '1' }])
+    }
   })
 })

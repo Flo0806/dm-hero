@@ -9,6 +9,7 @@ import { getTestDb } from '../utils/test-db'
 // Private messages: player -> DM decrypted + stored once, DM -> player per device
 let db: Database.Database
 const acked: string[] = []
+let relayDown = false
 const threads = new Map<number, Record<string, Envelope>>()
 
 vi.mock('../../server/utils/db', async (importOriginal) => {
@@ -23,13 +24,14 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
       acked.push(id)
     },
     putRelayThread: async (_a: unknown, playerId: number, envelopes: Record<string, Envelope>) => {
+      if (relayDown) throw new Error('relay down')
       threads.set(playerId, envelopes)
     },
   }
 })
 
 const { handleMessage } = await import('../../server/utils/relay-presence')
-const { pruneConversation, syncTableThreads } = await import('../../server/utils/share/messages')
+const { markThreadDirty, pruneConversation, syncTableThreads } = await import('../../server/utils/share/messages')
 
 const GAME = 'relay-chat'
 let tableId: number
@@ -55,6 +57,7 @@ const stored = () => db.prepare('SELECT player_id, sender, text FROM game_table_
 
 beforeEach(async () => {
   acked.length = 0
+  relayDown = false
   threads.clear()
   db = getTestDb()
   const campaignId = Number(db.prepare('INSERT INTO campaigns (name) VALUES (?)').run('Chat').lastInsertRowid)
@@ -109,7 +112,8 @@ describe('private messages', () => {
     await post(anna, 'relay-5', 'm5', 'Hallo')
     await syncTableThreads(db, tableId, anna.playerId)
     db.prepare('DELETE FROM game_table_messages').run()
-    await syncTableThreads(db, tableId, anna.playerId, { force: true })
+    markThreadDirty(db, anna.playerId)
+    await syncTableThreads(db, tableId, anna.playerId)
 
     const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
     expect(thread.messages).toEqual([])
@@ -122,7 +126,8 @@ describe('private messages', () => {
     const anna = await addPlayer('Anna')
     await post(anna, 'relay-6', 'm6', 'Vorher')
     db.prepare('DELETE FROM game_table_messages').run()
-    await syncTableThreads(db, tableId, anna.playerId, { force: true })
+    markThreadDirty(db, anna.playerId)
+    await syncTableThreads(db, tableId, anna.playerId)
 
     await post(anna, 'relay-7', 'm7', 'Nachher')
     await new Promise(r => setTimeout(r, 50))
@@ -130,5 +135,35 @@ describe('private messages', () => {
     expect(heard).toEqual([anna.playerId, anna.playerId])
     const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
     expect(thread.messages.map(m => m.text)).toEqual(['Nachher'])
+  })
+
+  it('clearing while the relay is away is sent later - even if nothing is left (review #1)', async () => {
+    const anna = await addPlayer('Anna')
+    await post(anna, 'relay-8', 'm8', 'Geheim')
+    await syncTableThreads(db, tableId)
+
+    relayDown = true
+    db.prepare('DELETE FROM game_table_messages').run()
+    markThreadDirty(db, anna.playerId)
+    await syncTableThreads(db, tableId)
+
+    // Relay back: the timer's run over the whole game picks the empty conversation up
+    relayDown = false
+    await syncTableThreads(db, tableId)
+    const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
+    expect(thread.messages).toEqual([])
+    expect(db.prepare('SELECT thread_dirty FROM game_table_players WHERE id = ?').get(anna.playerId)).toEqual({ thread_dirty: 0 })
+  })
+
+  it('a message keeps the time it was sent, not when DM Hero picked it up (review #2)', async () => {
+    const anna = await addPlayer('Anna')
+    await handleMessage(tableId, {
+      id: 'relay-9',
+      playerId: String(anna.playerId),
+      publicKey: anna.publicKey,
+      envelope: await seal(anna.pairKey, { v: 1, gameId: GAME, from: 'player', to: 'dm', epoch: 1, seq: Date.now() }, { kind: 'chat', id: 'm9', text: 'Gestern' }),
+      sentAt: Date.UTC(2026, 9, 3, 18, 30),
+    })
+    expect(db.prepare('SELECT created_at FROM game_table_messages').get()).toEqual({ created_at: '2026-10-03 18:30:00' })
   })
 })

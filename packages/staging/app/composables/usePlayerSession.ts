@@ -48,6 +48,25 @@ export function usePlayerSession() {
     /** Private conversation with the DM (newest last) + own messages not yet confirmed by DM Hero */
     const messages = ref<ChatMessage[]>([])
     const pendingMessages = ref<ChatMessage[]>([])
+    // Own messages DM Hero hasn't confirmed yet survive a reload (DM Hero may be offline)
+    const pendingKey = `dm-hero-pending-messages-${gameId}`
+    function savePending() {
+      try {
+        localStorage.setItem(pendingKey, JSON.stringify(pendingMessages.value))
+      }
+      catch {
+        // Storage blocked - they're just not kept over a reload
+      }
+    }
+    onMounted(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(pendingKey) ?? '[]') as ChatMessage[]
+        if (Array.isArray(saved)) pendingMessages.value = saved.filter(m => typeof m?.id === 'string' && typeof m.text === 'string')
+      }
+      catch {
+        // Nothing saved or unreadable
+      }
+    })
     let queuedThread: Envelope | null = null
     let threadSeq = 0
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
@@ -188,6 +207,7 @@ export function usePlayerSession() {
         // Confirmed by DM Hero -> no longer "on its way"
         const known = new Set(content.messages.map(m => m.id))
         pendingMessages.value = pendingMessages.value.filter(m => !known.has(`p-${playerId}-${m.id}`))
+        savePending()
       }
       catch (error) {
         console.error('[E2E] Conversation rejected:', error)
@@ -201,6 +221,7 @@ export function usePlayerSession() {
       const envelope = await seal(pairKey, { v: 1, gameId, from: 'player', to: 'dm', epoch: keyEpoch, seq: Date.now() }, { kind: 'chat', id, text })
       await $fetch(`/api/v1/games/${gameId}/messages`, { method: 'POST', body: envelope })
       pendingMessages.value = [...pendingMessages.value, { id, from: 'player', text, sentAt: new Date().toISOString() }]
+      savePending()
       return true
     }
 

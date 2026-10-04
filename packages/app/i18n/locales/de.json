@@ -2874,7 +2874,6 @@
       "cleared": "Verlauf geleert",
       "delete": "Nachricht löschen",
       "deleted": "Nachricht gelöscht",
-      "pending": "Gelöscht – beim Spieler verschwindet es, sobald der Spieltisch erreichbar ist.",
       "newCount": "{count} neue Nachricht | {count} neue Nachrichten",
       "newTitle": "Neue Nachrichten"
     }

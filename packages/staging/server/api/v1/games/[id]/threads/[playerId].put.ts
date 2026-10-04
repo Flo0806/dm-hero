@@ -1,6 +1,8 @@
 // DM Hero sends the conversation with one player: one envelope per device of
 // that player (pair key). Replaces the previous one; only that player gets it.
-const MAX_BODY_BYTES = 1024 * 1024
+// Limits per device envelope (a player may have several devices) and in total.
+const MAX_ENVELOPE_BYTES = 512 * 1024
+const MAX_DEVICES = 10
 
 export default defineEventHandler(async (event) => {
   const game = requireDm(event, getRouterParam(event, 'id') ?? '')
@@ -12,7 +14,9 @@ export default defineEventHandler(async (event) => {
   const valid = !!envelopes && typeof envelopes === 'object'
     && Object.values(envelopes).every(e => typeof (e as { ciphertext?: unknown })?.ciphertext === 'string')
   if (!valid) throw createError({ statusCode: 400, message: 'Encrypted envelopes per device required' })
-  if (JSON.stringify(body).length > MAX_BODY_BYTES) throw createError({ statusCode: 413, message: 'Conversation too large' })
+  if (Object.keys(envelopes!).length > MAX_DEVICES || Object.values(envelopes!).some(e => JSON.stringify(e).length > MAX_ENVELOPE_BYTES)) {
+    throw createError({ statusCode: 413, message: 'Conversation too large' })
+  }
 
   useRelayDb().prepare(`
     INSERT INTO threads (game_id, player_id, envelopes, updated_at) VALUES (?, ?, ?, ?)

@@ -21,9 +21,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = randomUUID()
+  const sentAt = Date.now()
   const clean = { header: envelope.header, iv: envelope.iv, ciphertext: envelope.ciphertext }
   db.prepare('INSERT INTO inbox (game_id, id, player_id, public_key, envelope, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(gameId, id, player.player_id, player.public_key, JSON.stringify(clean), Date.now())
-  sendToDm(gameId, 'message', { id, playerId: player.player_id, publicKey: player.public_key, envelope: clean })
+    .run(gameId, id, player.player_id, player.public_key, JSON.stringify(clean), sentAt)
+  sendToDm(gameId, 'message', { id, playerId: player.player_id, publicKey: player.public_key, envelope: clean, sentAt })
   return { ok: true }
 })

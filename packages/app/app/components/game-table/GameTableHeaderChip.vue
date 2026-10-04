@@ -109,7 +109,8 @@ const unreadPlayers = computed(() => store.table?.players.filter(p => store.unre
 const menuOpen = ref(false)
 function openConversation(playerId: number) {
   menuOpen.value = false
-  navigateTo({ path: '/game-table', query: { tab: 'messages', player: String(playerId) } })
+  // at: a new URL every click - jumping works even if the same link was used before
+  navigateTo({ path: '/game-table', query: { tab: 'messages', player: String(playerId), at: String(Date.now()) } })
 }
 
 // A player wrote: refresh the messages (unread count here, conversation on the game table page)

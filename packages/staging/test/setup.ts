@@ -21,6 +21,9 @@ g.getCookie = (_event: unknown, name: string) => cookies.get(name)
 g.setCookie = vi.fn((_event: unknown, name: string, value: string) => cookies.set(name, value))
 g.getHeader = (event: { headers?: Record<string, string> }, name: string) => event.headers?.[name]
 g.setResponseHeader = () => {}
+g.defineEventHandler = (handler: unknown) => handler
+g.getRouterParam = (event: { params?: Record<string, string> }, name: string) => event.params?.[name]
+g.readBody = async (event: { body?: unknown }) => event.body
 g.getRequestIP = (event: { ip?: string, headers?: Record<string, string> }, options?: { xForwardedFor?: boolean }) =>
   (options?.xForwardedFor && event.headers?.['x-forwarded-for']) || event.ip
 

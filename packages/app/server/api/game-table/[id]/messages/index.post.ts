@@ -3,7 +3,7 @@ import { CHAT_TEXT_MAX } from '@dm-hero/seal'
 import type { GameTableMessage } from '~~/types/game-table'
 import { getDb } from '../../../../utils/db'
 import { requireNumericParam } from '../../../../utils/game-table'
-import { pruneConversation, syncTableThreads } from '../../../../utils/share/messages'
+import { markThreadDirty, pruneConversation, syncTableThreads } from '../../../../utils/share/messages'
 
 // The DM writes to one player - stored here, sent encrypted to that player's devices
 export default defineEventHandler(async (event) => {
@@ -21,7 +21,8 @@ export default defineEventHandler(async (event) => {
     .run(tableId, playerId, `d-${randomUUID()}`, 'dm', text).lastInsertRowid)
 
   pruneConversation(db, tableId, playerId)
-  // Not reachable right now -> the timer sends it later; the message is kept either way
-  await syncTableThreads(db, tableId, playerId)
+  markThreadDirty(db, playerId)
+  // Sent in the background - the DM never waits for the relay (the timer retries)
+  syncTableThreads(db, tableId, playerId).catch(error => console.error('[Messages] Send failed:', error))
   return db.prepare('SELECT id, player_id, sender, text, created_at, read_at FROM game_table_messages WHERE id = ?').get(id) as GameTableMessage
 })
