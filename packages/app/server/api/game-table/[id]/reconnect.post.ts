@@ -3,6 +3,7 @@ import { getDb } from '../../../utils/db'
 import { getGameTableById, requireNumericParam } from '../../../utils/game-table'
 import { createRelayGame, syncRelayPlayers } from '../../../utils/relay'
 import { restartPresence } from '../../../utils/relay-presence'
+import { forgetTableInfo } from '../../../utils/share/info'
 import { withTableLock } from '../../../utils/share/sync'
 
 // The player server no longer knows this game (expired, or another server):
@@ -28,6 +29,7 @@ export default defineEventHandler(async (event) => {
     db.prepare('UPDATE game_table_shares SET content_hash = NULL WHERE game_table_id = ?').run(tableId)
   })
 
+  forgetTableInfo(tableId)
   await syncRelayPlayers(db, tableId)
   // New connection to the new game - shares and map are sent once it's up
   restartPresence(tableId)

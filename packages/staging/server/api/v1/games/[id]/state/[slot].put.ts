@@ -1,6 +1,6 @@
-// Game-wide content, one per slot: the map shown to the players and its fog of war.
+// Game-wide content, one per slot: game info (campaign name), the map shown to the players and its fog of war.
 // Encrypted like shares - the relay can't read it.
-const STATE_SLOTS = ['map', 'fog'] as const
+const STATE_SLOTS = ['info', 'map', 'fog'] as const
 // A fog with many brush strokes gets bigger than a share
 const MAX_ENVELOPE_BYTES = 1024 * 1024
 

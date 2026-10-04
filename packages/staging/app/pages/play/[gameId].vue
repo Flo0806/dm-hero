@@ -3,6 +3,9 @@
     <header class="w-full max-w-6xl mx-auto px-5 pt-8 pb-6 flex items-center gap-4">
       <img src="/logo.png" alt="DM Hero" width="56" height="56" class="size-14 rounded-xl shrink-0" />
       <div class="min-w-0">
+        <p v-if="campaignName" class="m-0 mb-0.5 text-sm font-semibold uppercase tracking-wider text-muted truncate">
+          {{ campaignName }}
+        </p>
         <h1 class="m-0 text-[clamp(1.4rem,4vw,2rem)] font-extrabold text-primary truncate">
           {{ name ? $t('play.welcome', { name }) : $t('play.connecting') }}
         </h1>
@@ -108,7 +111,10 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName } = connect(gameId)
+
+// Tab title: the campaign, once known
+useHead(() => (campaignName.value ? { title: `${campaignName.value} – DM Hero` } : {}))
 const { isNew, markSeen } = useSeenShares(gameId)
 
 const search = ref('')

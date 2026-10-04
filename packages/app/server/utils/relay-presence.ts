@@ -4,6 +4,7 @@ import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
 import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
+import { syncTableInfo } from './share/info'
 import { syncTableMap } from './share/map'
 import { isTableBusy, syncTableShares } from './share/sync'
 
@@ -35,6 +36,8 @@ function runShareSync(tableId: number) {
   syncTableShares(getDb(), tableId).catch(error => console.error('[Relay] Share sync failed:', error))
   // Shown map: new image, renamed, fog not sent yet (relay was down) ...
   syncTableMap(getDb(), tableId).catch(error => console.error('[Relay] Map sync failed:', error))
+  // Campaign name (renamed meanwhile)
+  syncTableInfo(getDb(), tableId).catch(error => console.error('[Relay] Info sync failed:', error))
 }
 const connections = new Map<number, Connection>()
 

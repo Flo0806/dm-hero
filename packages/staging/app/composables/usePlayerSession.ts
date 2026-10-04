@@ -1,5 +1,5 @@
 import {
-  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isPingContent, isTableFogContent, isTableMapContent,
+  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
   NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type TableFogContent, type TableMapContent,
 } from '@dm-hero/seal'
 
@@ -37,6 +37,8 @@ export function usePlayerSession() {
     /** The map the DM shows (null = none) + its fog of war */
     const tableMap = ref<TableMapContent | null>(null)
     const tableFog = ref<TableFogContent | null>(null)
+    /** The DM's campaign (sent encrypted like everything else) */
+    const campaignName = ref('')
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
     /** Pings on the map right now (each disappears after its pulse) */
     const pings = ref<TablePing[]>([])
@@ -100,6 +102,7 @@ export function usePlayerSession() {
         // Content must match its slot - the relay can't pass the fog off as the map
         if (slot === 'map' && isTableMapContent(content)) tableMap.value = content
         else if (slot === 'fog' && isTableFogContent(content)) tableFog.value = content
+        else if (slot === 'info' && isTableInfoContent(content)) campaignName.value = content.campaignName
         else return
         stateVersions.set(slot, { epoch: header.epoch, seq: header.seq })
       }
@@ -213,7 +216,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName }
   }
 
   return { join, connect }

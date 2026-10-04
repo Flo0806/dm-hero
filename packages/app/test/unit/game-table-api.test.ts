@@ -33,6 +33,8 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
     syncRelayPlayers: async () => {
       relayCalls.push('sync')
     },
+    // Campaign name / map for players - not part of these tests
+    putRelayState: async () => {},
   }
 })
 

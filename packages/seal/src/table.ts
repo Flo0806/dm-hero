@@ -44,6 +44,19 @@ export interface TableFogContent {
   fog: MapFog
 }
 
+/** Slot "info": about the game itself - shown to joined players */
+export interface TableInfoContent {
+  kind: 'info'
+  campaignName: string
+}
+
+export const CAMPAIGN_NAME_MAX = 200
+
+export function isTableInfoContent(value: unknown): value is TableInfoContent {
+  const i = value as TableInfoContent
+  return !!i && i.kind === 'info' && typeof i.campaignName === 'string' && i.campaignName.length <= CAMPAIGN_NAME_MAX
+}
+
 /** A ping on the shown map. text: a short DM note, shown a few seconds. */
 export interface TablePingContent {
   mapId: number

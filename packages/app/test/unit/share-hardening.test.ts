@@ -31,6 +31,8 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
       puts.push({ key, envelope })
     },
     deleteRelayShare: async () => {},
+    // Campaign name / map for players - not part of these tests
+    putRelayState: async () => {},
     putRelayFile: async (_a: unknown, fileId: string, data: Uint8Array) => {
       // Slow upload: makes overlapping syncs likely if they weren't serialized
       await new Promise(r => setTimeout(r, 20))

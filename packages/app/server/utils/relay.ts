@@ -89,7 +89,7 @@ export async function deleteRelayShare(auth: RelayAuth, shareKey: string) {
 }
 
 /** Game-wide content on the relay: the shown map and its fog of war */
-export type RelayStateSlot = 'map' | 'fog'
+export type RelayStateSlot = 'info' | 'map' | 'fog'
 
 export async function putRelayState(auth: RelayAuth, slot: RelayStateSlot, envelope: unknown) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/state/${slot}`, {

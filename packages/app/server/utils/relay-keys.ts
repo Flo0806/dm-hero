@@ -1,6 +1,7 @@
 import { derivePairKey, importExchangePublicKey, loadGameKeys, rotateGameKey, wrapGameKey, type StoredGameKeys } from '@dm-hero/seal'
 import { getDb } from './db'
 import { getRelayAuth, relayUrl } from './relay'
+import { forgetTableInfo, syncTableInfo } from './share/info'
 import { syncTableMap } from './share/map'
 import { syncTableShares, withTableLock } from './share/sync'
 
@@ -81,6 +82,8 @@ export async function rotateTableKey(tableId: number) {
     db.prepare('UPDATE game_table_shares SET content_hash = NULL WHERE game_table_id = ?').run(tableId)
     db.prepare('UPDATE game_tables SET map_hash = NULL, fog_hash = NULL WHERE id = ?').run(tableId)
   })
+  forgetTableInfo(tableId)
   await syncTableShares(db, tableId)
   await syncTableMap(db, tableId)
+  await syncTableInfo(db, tableId)
 }
