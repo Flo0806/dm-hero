@@ -2508,7 +2508,7 @@
     },
     "v160": {
       "title": "1.6 版“Nocturne”来了！",
-      "content": "<h3 style='margin-bottom: 12px'>1.6 版新功能：</h3><ul><li><strong>游戏桌</strong> - 你的玩家现在也能坐到桌前：在手机或电脑上打开 table.dm-hero.com，用游戏代码和自己的 PIN 加入，无需账号。所有内容端到端加密，新设备由你亲自确认</li><li><strong>带揭晓时刻的分享</strong> - 与玩家实时分享 NPC、地点、物品、传说和派系，可附图片，也可以使用化名。之后揭晓真名时，所有人的屏幕都会亮起</li><li><strong>带战争迷雾的地图</strong> - 向玩家展示地图，用画笔一点点揭开。每个人都可以长按发出标记，你还能闪现简短提示</li><li><strong>交给玩家的文档</strong> - 把信件、笔记和 PDF 交给所有或选定的玩家——只有他们能打开</li><li><strong>私信</strong> - 私下给单个玩家写信；无论你在哪里，新消息都会显示在顶部</li><li><strong>桌上的天气</strong> - 当天的天气会显示给玩家——背景中有雨、雪或雷暴</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>改进与修复：</h3><ul><li>标题更紧凑（不再有过大的间距）</li><li>大量类型和稳定性小修复，每次修改都会自动检查</li></ul>"
+      "content": "<h3 style='margin-bottom: 12px'>1.6 版新功能：</h3><ul><li><strong>游戏桌</strong> - 你的玩家现在也能坐到桌前：在手机或电脑上打开 table.dm-hero.com，用游戏代码和自己的 PIN 加入，无需账号。所有内容端到端加密，新设备由你亲自确认</li><li><strong>带揭晓时刻的分享</strong> - 与玩家实时分享 NPC、地点、物品、传说和派系，可附图片，也可以使用化名。之后揭晓真名时，所有人的屏幕都会亮起</li><li><strong>带战争迷雾的地图</strong> - 向玩家展示地图，用画笔一点点揭开。每个人都可以长按发出标记，你还能闪现简短提示</li><li><strong>交给玩家的文档</strong> - 把信件、笔记和 PDF 交给所有或选定的玩家——只有他们能打开</li><li><strong>私信</strong> - 私下给单个玩家写信；无论你在哪里，新消息都会显示在顶部</li><li><strong>桌上的天气</strong> - 当天的天气会显示给玩家——背景中有雨、雪或雷暴</li><li><strong>“Nocturne”主题</strong> - 月夜：午夜蓝配月光银——仪表盘上还有生动的夜空：新月、极光、闪烁的星星和流星</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>改进与修复：</h3><ul><li>标题更紧凑（不再有过大的间距）</li><li>大量类型和稳定性小修复，每次修改都会自动检查</li></ul>"
     },
     "installerPath": "安装路径（{os}）：",
     "autoUpdateHint": "通过安装程序安装后，只要有新版本可用，该应用程序就会自动更新。",
