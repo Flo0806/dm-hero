@@ -2867,7 +2867,16 @@
       "write": "Messaggio a {name}",
       "send": "Invia",
       "unread": "{count} messaggi non letti",
-      "noPlayers": "Prima aggiungi dei giocatori, poi potrai scrivere loro in privato."
+      "noPlayers": "Prima aggiungi dei giocatori, poi potrai scrivere loro in privato.",
+      "clear": "Svuota conversazione",
+      "clearTitle": "Svuotare la conversazione con {name}?",
+      "clearConfirm": "Tutti i messaggi di questa conversazione verranno eliminati, anche per il giocatore.",
+      "cleared": "Conversazione svuotata",
+      "delete": "Elimina messaggio",
+      "deleted": "Messaggio eliminato",
+      "pending": "Eliminato: sparirà per il giocatore appena il tavolo di gioco sarà raggiungibile.",
+      "newCount": "{count} nuovo messaggio | {count} nuovi messaggi",
+      "newTitle": "Nuovi messaggi"
     }
   }
 }

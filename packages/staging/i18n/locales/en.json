@@ -80,7 +80,8 @@
       "send": "Send",
       "you": "You",
       "pending": "on its way …",
-      "failed": "The message could not be sent. Please try again in a moment."
+      "failed": "The message could not be sent. Please try again in a moment.",
+      "slowDown": "Take a breath – you just sent a lot of messages. You can write again within a minute."
     }
   },
   "cookieNotice": {

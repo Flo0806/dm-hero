@@ -2867,7 +2867,16 @@
       "write": "发给 {name} 的消息",
       "send": "发送",
       "unread": "{count} 条未读消息",
-      "noPlayers": "请先添加玩家，然后就可以私下给他们写信。"
+      "noPlayers": "请先添加玩家，然后就可以私下给他们写信。",
+      "clear": "清空对话",
+      "clearTitle": "清空与 {name} 的对话？",
+      "clearConfirm": "此对话中的所有消息都将被删除——玩家那边也会删除。",
+      "cleared": "对话已清空",
+      "delete": "删除消息",
+      "deleted": "消息已删除",
+      "pending": "已删除——游戏桌可连接后，玩家那边也会消失。",
+      "newCount": "{count} 条新消息",
+      "newTitle": "新消息"
     }
   }
 }

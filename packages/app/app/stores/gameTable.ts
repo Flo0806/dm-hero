@@ -200,8 +200,24 @@ export const useGameTableStore = defineStore('gameTable', {
     /** Write to one player - kept here, sent encrypted to their devices */
     async sendMessage(playerId: number, text: string) {
       if (!this.table) return
-      const message = await $fetch<GameTableMessage>(`/api/game-table/${this.table.id}/messages`, { method: 'POST', body: { playerId, text } })
-      this.messages = [...this.messages, message]
+      await $fetch<GameTableMessage>(`/api/game-table/${this.table.id}/messages`, { method: 'POST', body: { playerId, text } })
+      // Reload: the server keeps only the newest messages per conversation
+      await this.loadMessages()
+    },
+
+    /** Delete one message - for the player too. pending: the player server didn't answer */
+    async deleteMessage(id: number) {
+      const { pending } = await $fetch<{ pending: boolean }>(`/api/game-table/messages/${id}`, { method: 'DELETE' })
+      this.messages = this.messages.filter(m => m.id !== id)
+      return pending
+    },
+
+    /** Clear the conversation with one player - for the player too */
+    async clearConversation(playerId: number) {
+      if (!this.table) return false
+      const { pending } = await $fetch<{ pending: boolean }>(`/api/game-table/${this.table.id}/messages`, { method: 'DELETE', query: { playerId } })
+      this.messages = this.messages.filter(m => m.player_id !== playerId)
+      return pending
     },
 
     /** The DM looked at a conversation */

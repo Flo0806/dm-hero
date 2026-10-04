@@ -2867,7 +2867,16 @@
       "write": "Nachricht an {name}",
       "send": "Senden",
       "unread": "{count} ungelesene Nachrichten",
-      "noPlayers": "Lege zuerst Spieler an – dann kannst du ihnen privat schreiben."
+      "noPlayers": "Lege zuerst Spieler an – dann kannst du ihnen privat schreiben.",
+      "clear": "Verlauf leeren",
+      "clearTitle": "Gespräch mit {name} leeren?",
+      "clearConfirm": "Alle Nachrichten dieses Gesprächs werden gelöscht – auch beim Spieler.",
+      "cleared": "Verlauf geleert",
+      "delete": "Nachricht löschen",
+      "deleted": "Nachricht gelöscht",
+      "pending": "Gelöscht – beim Spieler verschwindet es, sobald der Spieltisch erreichbar ist.",
+      "newCount": "{count} neue Nachricht | {count} neue Nachrichten",
+      "newTitle": "Neue Nachrichten"
     }
   }
 }

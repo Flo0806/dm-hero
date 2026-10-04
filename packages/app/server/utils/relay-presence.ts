@@ -6,7 +6,7 @@ import { ackRelayMessage, getRelayAuth, relayUrl } from './relay'
 import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
 import { syncTableHandouts } from './share/handouts'
 import { syncTableInfo } from './share/info'
-import { syncTableThreads } from './share/messages'
+import { pruneConversation, syncTableThreads } from './share/messages'
 import { syncTableMap } from './share/map'
 import { isTableBusy, syncTableShares } from './share/sync'
 
@@ -198,6 +198,7 @@ export async function handleMessage(tableId: number, message: { id: string, play
       const inserted = db.prepare('INSERT OR IGNORE INTO game_table_messages (game_table_id, player_id, message_key, sender, text) VALUES (?, ?, ?, ?, ?)')
         .run(tableId, playerId, `p-${playerId}-${content.id}`, 'player', content.text.trim()).changes > 0
       if (inserted) {
+        pruneConversation(db, tableId, playerId)
         for (const listener of messageListeners.get(tableId) ?? []) listener(playerId)
         // The player's other devices (and this one) see it in the conversation
         syncTableThreads(db, tableId, playerId).catch(error => console.error('[Relay] Message sync failed:', error))

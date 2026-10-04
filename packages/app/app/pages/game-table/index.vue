@@ -67,7 +67,7 @@
           </v-col>
         </v-row>
 
-        <GameTableMessages v-else-if="tab === 'messages'" />
+        <GameTableMessages v-else-if="tab === 'messages'" :player-id="focusPlayer" />
 
         <template v-else>
           <GameTableSharing class="mt-0" />
@@ -94,6 +94,14 @@ const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
 const tab = ref<'table' | 'messages' | 'shared'>('table')
+
+// Jump in from the header chip: /game-table?tab=messages&player=12
+const route = useRoute()
+const focusPlayer = ref<number | null>(null)
+watch(() => [route.query.tab, route.query.player], ([queryTab, player]) => {
+  if (queryTab === 'messages') tab.value = 'messages'
+  if (player) focusPlayer.value = Number(player)
+}, { immediate: true })
 const sharedCount = computed(() => store.shares.length + store.handouts.length)
 const restartMode = ref(false)
 

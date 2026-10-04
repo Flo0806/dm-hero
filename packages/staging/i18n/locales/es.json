@@ -80,7 +80,8 @@
       "send": "Enviar",
       "you": "Tú",
       "pending": "enviando …",
-      "failed": "No se pudo enviar el mensaje. Inténtalo de nuevo en un momento."
+      "failed": "No se pudo enviar el mensaje. Inténtalo de nuevo en un momento.",
+      "slowDown": "Respira un momento: acabas de enviar muchos mensajes. Podrás volver a escribir en menos de un minuto."
     }
   },
   "cookieNotice": {

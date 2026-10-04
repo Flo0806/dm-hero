@@ -2867,7 +2867,16 @@
       "write": "Message to {name}",
       "send": "Send",
       "unread": "{count} unread messages",
-      "noPlayers": "Add players first – then you can write to them privately."
+      "noPlayers": "Add players first – then you can write to them privately.",
+      "clear": "Clear conversation",
+      "clearTitle": "Clear the conversation with {name}?",
+      "clearConfirm": "All messages of this conversation are deleted – for the player too.",
+      "cleared": "Conversation cleared",
+      "delete": "Delete message",
+      "deleted": "Message deleted",
+      "pending": "Deleted – it disappears for the player as soon as the game table is reachable.",
+      "newCount": "{count} new message | {count} new messages",
+      "newTitle": "New messages"
     }
   }
 }

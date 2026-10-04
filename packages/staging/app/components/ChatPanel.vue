@@ -15,7 +15,7 @@
         </div>
       </div>
     </div>
-    <form class="flex items-end gap-2 p-3 border-t border-line" @submit.prevent="send">
+    <form class="flex items-stretch gap-2 p-3 border-t border-line" @submit.prevent="send">
       <label class="flex-1">
         <span class="sr-only">{{ $t('play.chat.write') }}</span>
         <textarea
@@ -23,16 +23,17 @@
           :maxlength="CHAT_TEXT_MAX"
           rows="2"
           :placeholder="$t('play.chat.write')"
-          class="w-full resize-none px-3 py-2 rounded-xl border border-line bg-bg text-ink outline-none focus:border-primary focus:ring-3 focus:ring-primary/25"
+          class="block w-full h-full resize-none px-3 py-2 rounded-xl border border-line bg-bg text-ink outline-none focus:border-primary focus:ring-3 focus:ring-primary/25"
           @keydown.enter.exact.prevent="send"
         />
       </label>
-      <button type="submit" class="btn-primary px-4 py-2" :disabled="!draft.trim() || sending">
+      <!-- Same height as the text field -->
+      <button type="submit" class="btn-primary px-4 py-0" :disabled="!draft.trim() || sending">
         {{ $t('play.chat.send') }}
       </button>
     </form>
     <p v-if="failed" role="alert" class="m-0 px-3 pb-3 text-sm text-primary">
-      {{ $t('play.chat.failed') }}
+      {{ failed === 'rate' ? $t('play.chat.slowDown') : $t('play.chat.failed') }}
     </p>
   </section>
 </template>
@@ -53,7 +54,8 @@ watch(() => all.value.length, async () => {
 
 const draft = ref('')
 const sending = ref(false)
-const failed = ref(false)
+/** rate = too many in a minute (wait a moment), other = anything else */
+const failed = ref<false | 'rate' | 'other'>(false)
 async function send() {
   const text = draft.value.trim()
   if (!text || sending.value) return
@@ -61,10 +63,10 @@ async function send() {
   failed.value = false
   try {
     if (await props.onSend(text)) draft.value = ''
-    else failed.value = true
+    else failed.value = 'other'
   }
-  catch {
-    failed.value = true
+  catch (error) {
+    failed.value = (error as { statusCode?: number }).statusCode === 429 ? 'rate' : 'other'
   }
   finally {
     sending.value = false

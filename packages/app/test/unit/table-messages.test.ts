@@ -29,7 +29,7 @@ vi.mock('../../server/utils/relay', async (importOriginal) => {
 })
 
 const { handleMessage } = await import('../../server/utils/relay-presence')
-const { syncTableThreads } = await import('../../server/utils/share/messages')
+const { pruneConversation, syncTableThreads } = await import('../../server/utils/share/messages')
 
 const GAME = 'relay-chat'
 let tableId: number
@@ -92,5 +92,43 @@ describe('private messages', () => {
     // Ben's device can't read Anna's conversation, and he got none
     await expect(open(ben.pairKey, envelope)).rejects.toThrow()
     expect(threads.has(ben.playerId)).toBe(false)
+  })
+
+  it('a conversation keeps only its newest 100 messages', async () => {
+    const anna = await addPlayer('Anna')
+    const insert = db.prepare('INSERT INTO game_table_messages (game_table_id, player_id, message_key, sender, text) VALUES (?, ?, ?, ?, ?)')
+    for (let i = 1; i <= 130; i++) insert.run(tableId, anna.playerId, `d-${i}`, 'dm', `Nachricht ${i}`)
+    pruneConversation(db, tableId, anna.playerId)
+    const left = db.prepare('SELECT text FROM game_table_messages ORDER BY id').all() as Array<{ text: string }>
+    expect(left).toHaveLength(100)
+    expect(left[0]!.text).toBe('Nachricht 31')
+  })
+
+  it('clearing sends an empty conversation, so the player\'s copy empties too', async () => {
+    const anna = await addPlayer('Anna')
+    await post(anna, 'relay-5', 'm5', 'Hallo')
+    await syncTableThreads(db, tableId, anna.playerId)
+    db.prepare('DELETE FROM game_table_messages').run()
+    await syncTableThreads(db, tableId, anna.playerId, { force: true })
+
+    const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
+    expect(thread.messages).toEqual([])
+  })
+
+  it('after clearing, a new player message still reaches DM Hero and the player', async () => {
+    const { watchMessages } = await import('../../server/utils/relay-presence')
+    const heard: number[] = []
+    watchMessages(tableId, id => heard.push(id))
+    const anna = await addPlayer('Anna')
+    await post(anna, 'relay-6', 'm6', 'Vorher')
+    db.prepare('DELETE FROM game_table_messages').run()
+    await syncTableThreads(db, tableId, anna.playerId, { force: true })
+
+    await post(anna, 'relay-7', 'm7', 'Nachher')
+    await new Promise(r => setTimeout(r, 50))
+    expect(stored()).toEqual([{ player_id: anna.playerId, sender: 'player', text: 'Nachher' }])
+    expect(heard).toEqual([anna.playerId, anna.playerId])
+    const thread = await open<ChatThreadContent>(anna.pairKey, threads.get(anna.playerId)![anna.publicKey]!, await importVerifyKey(keys.signing.publicKey))
+    expect(thread.messages.map(m => m.text)).toEqual(['Nachher'])
   })
 })

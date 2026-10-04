@@ -2867,7 +2867,16 @@
       "write": "Message à {name}",
       "send": "Envoyer",
       "unread": "{count} messages non lus",
-      "noPlayers": "Ajoute d’abord des joueurs – ensuite tu pourras leur écrire en privé."
+      "noPlayers": "Ajoute d’abord des joueurs – ensuite tu pourras leur écrire en privé.",
+      "clear": "Vider la conversation",
+      "clearTitle": "Vider la conversation avec {name} ?",
+      "clearConfirm": "Tous les messages de cette conversation seront supprimés – aussi chez le joueur.",
+      "cleared": "Conversation vidée",
+      "delete": "Supprimer le message",
+      "deleted": "Message supprimé",
+      "pending": "Supprimé – disparaîtra chez le joueur dès que la table de jeu sera joignable.",
+      "newCount": "{count} nouveau message | {count} nouveaux messages",
+      "newTitle": "Nouveaux messages"
     }
   }
 }

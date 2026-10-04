@@ -80,7 +80,8 @@
       "send": "Envoyer",
       "you": "Toi",
       "pending": "en cours d’envoi …",
-      "failed": "Le message n’a pas pu être envoyé. Réessaie dans un instant."
+      "failed": "Le message n’a pas pu être envoyé. Réessaie dans un instant.",
+      "slowDown": "Respire un instant – tu viens d’envoyer beaucoup de messages. Tu pourras réécrire d’ici une minute."
     }
   },
   "cookieNotice": {

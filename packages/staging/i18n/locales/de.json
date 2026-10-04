@@ -80,7 +80,8 @@
       "send": "Senden",
       "you": "Du",
       "pending": "wird zugestellt …",
-      "failed": "Nachricht konnte nicht gesendet werden. Versuch es gleich noch einmal."
+      "failed": "Nachricht konnte nicht gesendet werden. Versuch es gleich noch einmal.",
+      "slowDown": "Kurz durchatmen – du hast gerade viele Nachrichten geschickt. In spätestens einer Minute geht es weiter."
     }
   },
   "cookieNotice": {
