@@ -26,6 +26,20 @@
           <GameTablePendingDevices :pending="presence.pending" />
         </v-card>
 
+        <!-- Where the players go - new in this release, so it stands out -->
+        <v-alert type="info" variant="tonal" density="compact" icon="mdi-cellphone-link" class="mb-4">
+          <div class="d-flex align-center flex-wrap ga-2">
+            <i18n-t keypath="gameTable.playerApp.hint" tag="span">
+              <template #link>
+                <a :href="stagingUrl" target="_blank" rel="noopener" class="font-weight-bold" @click="markSeen('playerApp')">{{ stagingHost }}</a>
+              </template>
+            </i18n-t>
+            <v-chip v-if="isNew('playerApp')" size="x-small" color="primary" variant="flat">
+              {{ $t('common.new') }}
+            </v-chip>
+          </div>
+        </v-alert>
+
         <!-- Table (join + players) | Shared (everything that went out, with "take back") -->
         <v-tabs v-model="tab" color="primary" class="mb-6">
           <v-tab value="table" prepend-icon="mdi-table-furniture">
@@ -94,6 +108,12 @@ const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
 const tab = ref<'table' | 'messages' | 'shared'>('table')
+
+// New in this release: the game table (nav badge goes once visited) and the player app link
+const { isNew, markSeen } = useNewBadges()
+onMounted(() => markSeen('gameTable'))
+const { stagingUrl } = useRuntimeConfig().public
+const stagingHost = computed(() => stagingUrl.replace(/^https?:\/\//, ''))
 
 // Jump in from the header chip: /game-table?tab=messages&player=12
 const route = useRoute()
