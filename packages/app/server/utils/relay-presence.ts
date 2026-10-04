@@ -179,6 +179,21 @@ export function watchPresence(tableId: number, listener: Listener) {
   }
 }
 
+/** Game registered anew on the relay: reconnect, open pages stay subscribed */
+export function restartPresence(tableId: number) {
+  const conn = connections.get(tableId)
+  if (!conn) return
+  conn.abort.abort()
+  if (conn.retry) clearTimeout(conn.retry)
+  if (conn.sync) clearInterval(conn.sync)
+  conn.retry = null
+  conn.sync = null
+  conn.abort = new AbortController()
+  conn.state = { connected: false, online: [], pending: [] }
+  emit(tableId)
+  void run(tableId)
+}
+
 /** Game ended: drop the relay connection */
 export function stopPresence(tableId: number) {
   const conn = connections.get(tableId)

@@ -2835,7 +2835,7 @@
       }
     },
     "expired": "Game expired",
-    "expiredHint": "This game was removed from the game table server after a long break. Start a new game – it gets a new code and your players join again. Your campaign stays unchanged.",
-    "expiredRestart": "Start new game"
+    "expiredHint": "The game table server no longer knows this game. Reconnect – players, PINs and everything shared stay. There is a new game code; your players join again with their PIN.",
+    "expiredRestart": "Reconnect"
   }
 }

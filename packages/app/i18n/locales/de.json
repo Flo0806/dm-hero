@@ -2835,7 +2835,7 @@
       }
     },
     "expired": "Spiel abgelaufen",
-    "expiredHint": "Dieses Spiel wurde nach langer Pause vom Spieltisch-Server entfernt. Starte ein neues Spiel – es bekommt einen neuen Code, und deine Spieler treten neu bei. Deine Kampagne bleibt unverändert.",
-    "expiredRestart": "Neues Spiel starten"
+    "expiredHint": "Der Spieltisch-Server kennt dieses Spiel nicht mehr. Verbinde neu – Spieler, PINs und alles Geteilte bleiben. Es gibt einen neuen Spielcode, deine Spieler treten mit ihrer PIN neu bei.",
+    "expiredRestart": "Neu verbinden"
   }
 }

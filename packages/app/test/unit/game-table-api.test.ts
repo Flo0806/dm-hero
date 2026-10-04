@@ -156,4 +156,24 @@ describe('game table API', () => {
     expect(await call('index.get.ts', { query: { campaignId: String(campaignId) } })).toBeNull()
     expect(db.prepare('SELECT COUNT(*) AS n FROM game_table_players').get()).toEqual({ n: 0 })
   })
+
+  it('reconnect after expiry keeps players and shares, gets a new code and keys', async () => {
+    const table = await startGame()
+    const player = await call<GameTablePlayer>('[id]/players.post.ts', { params: { id: String(table.id) }, body: { name: 'Anna' } })
+    const typeId = (db.prepare('SELECT id FROM entity_types WHERE name = ?').get('NPC') as { id: number }).id
+    const npc = Number(db.prepare('INSERT INTO entities (type_id, name, campaign_id) VALUES (?, ?, ?)').run(typeId, 'Gandalf', campaignId).lastInsertRowid)
+    db.prepare('INSERT INTO game_table_shares (game_table_id, share_key, entity_type, entity_id, fields, content_hash) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(table.id, 'share-1', 'npc', npc, '[]', 'sent')
+    db.prepare('INSERT INTO game_table_devices (game_table_id, player_id, public_key) VALUES (?, ?, ?)').run(table.id, player.id, 'device-key')
+    const oldKeys = (db.prepare('SELECT e2e_keys FROM game_tables WHERE id = ?').get(table.id) as { e2e_keys: string }).e2e_keys
+
+    const reconnected = await call<GameTable>('[id]/reconnect.post.ts', { params: { id: String(table.id) } })
+
+    expect(reconnected.id).toBe(table.id)
+    expect(reconnected.code).not.toBe(table.code)
+    expect(reconnected.players).toMatchObject([{ id: player.id, name: 'Anna', pin: player.pin }])
+    expect(db.prepare('SELECT content_hash FROM game_table_shares').get()).toEqual({ content_hash: null })
+    expect(db.prepare('SELECT COUNT(*) AS n FROM game_table_devices').get()).toEqual({ n: 0 })
+    expect((db.prepare('SELECT e2e_keys FROM game_tables WHERE id = ?').get(table.id) as { e2e_keys: string }).e2e_keys).not.toBe(oldKeys)
+  })
 })

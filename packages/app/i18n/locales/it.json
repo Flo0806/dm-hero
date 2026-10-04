@@ -2835,7 +2835,7 @@
       }
     },
     "expired": "Partita scaduta",
-    "expiredHint": "Questa partita è stata rimossa dal server del tavolo di gioco dopo una lunga pausa. Avvia una nuova partita: riceverà un nuovo codice e i tuoi giocatori si uniranno di nuovo. La tua campagna resta invariata.",
-    "expiredRestart": "Avvia nuova partita"
+    "expiredHint": "Il server del tavolo di gioco non conosce più questa partita. Riconnetti: giocatori, PIN e tutto ciò che è condiviso restano. C’è un nuovo codice; i tuoi giocatori rientrano con il loro PIN.",
+    "expiredRestart": "Riconnetti"
   }
 }

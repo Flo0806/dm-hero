@@ -6,12 +6,12 @@
       <GameTableStart v-if="!store.table" :loading="busy" @start="startGame" />
 
       <template v-else>
-        <!-- Cleaned up on the player server after a long pause: only a new game helps -->
+        <!-- Unknown on the player server (expired / other server): register again, nothing is deleted -->
         <v-alert v-if="presence.expired" type="warning" variant="tonal" class="mb-6" :title="$t('gameTable.expired')">
           <p class="mb-3">
             {{ $t('gameTable.expiredHint') }}
           </p>
-          <v-btn color="primary" prepend-icon="mdi-restart" :loading="busy" @click="openDialog(true)">
+          <v-btn color="primary" prepend-icon="mdi-restart" :loading="busy" @click="run(() => store.reconnect())">
             {{ $t('gameTable.expiredRestart') }}
           </v-btn>
         </v-alert>

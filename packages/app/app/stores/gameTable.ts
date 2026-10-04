@@ -71,6 +71,12 @@ export const useGameTableStore = defineStore('gameTable', {
       return pending
     },
 
+    /** Game expired on the player server: register it again, nothing is deleted */
+    async reconnect() {
+      if (!this.table) return
+      this.table = await $fetch<GameTable>(`/api/game-table/${this.table.id}/reconnect`, { method: 'POST' })
+    },
+
     async start(campaignId: number) {
       this.table = await $fetch<GameTable>('/api/game-table', { method: 'POST', body: { campaignId } })
       this.shares = []

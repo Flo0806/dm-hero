@@ -2835,7 +2835,7 @@
       }
     },
     "expired": "Partie expirée",
-    "expiredHint": "Cette partie a été supprimée du serveur de la table de jeu après une longue pause. Lancez une nouvelle partie – elle reçoit un nouveau code et vos joueurs la rejoignent à nouveau. Votre campagne reste inchangée.",
-    "expiredRestart": "Lancer une nouvelle partie"
+    "expiredHint": "Le serveur de la table de jeu ne connaît plus cette partie. Reconnectez-vous – joueurs, PIN et tout ce qui est partagé restent. Il y a un nouveau code ; vos joueurs rejoignent avec leur PIN.",
+    "expiredRestart": "Reconnecter"
   }
 }

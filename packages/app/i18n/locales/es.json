@@ -2835,7 +2835,7 @@
       }
     },
     "expired": "Partida caducada",
-    "expiredHint": "Esta partida se eliminó del servidor de la mesa de juego tras una larga pausa. Inicia una nueva: recibirá un código nuevo y tus jugadores volverán a unirse. Tu campaña no cambia.",
-    "expiredRestart": "Iniciar nueva partida"
+    "expiredHint": "El servidor de la mesa de juego ya no conoce esta partida. Vuelve a conectar: los jugadores, los PIN y todo lo compartido se mantienen. Hay un código nuevo; tus jugadores vuelven a unirse con su PIN.",
+    "expiredRestart": "Volver a conectar"
   }
 }
