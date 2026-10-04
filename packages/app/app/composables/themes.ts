@@ -1,7 +1,7 @@
 import type { ThemeDefinition } from 'vuetify'
 
 /**
- * DM Hero themes — 9 total: dark (default), hell, 5 colored, emily and music.
+ * DM Hero themes — 10 total: dark (default), hell, 5 colored, emily, music and nocturne.
  * Each defines vuetify palette + md-editor-v3 css vars.
  */
 
@@ -327,6 +327,43 @@ const music: ThemeDefinition = {
   },
 }
 
+// Nocturne "Moonlit Night" (1.6): midnight blue, moonlight silver as the primary,
+// aurora teal + a touch of violet as accents. Bespoke sky: NocturneSky.vue,
+// companion CSS: nocturne-theme.css.
+const nocturne: ThemeDefinition = {
+  dark: true,
+  colors: {
+    'background': '#070B1A',
+    'surface': '#0F1530',
+    'surface-variant': '#1A2246',
+    'on-surface-variant': '#B8C2E6',
+    'primary': '#C8D3F5',
+    'primary-darken-1': '#93A2D6',
+    'secondary': '#5EEAD4',
+    'secondary-darken-1': '#2BB5A0',
+    'accent': '#A78BFA',
+    'error': '#FF6B81',
+    'info': '#7DD3FC',
+    'success': '#5EEAD4',
+    'warning': '#FCD34D',
+    'on-background': '#E8ECFA',
+    'on-surface': '#E8ECFA',
+    'on-primary': '#0A0F24',
+    'on-secondary': '#062A26',
+  },
+  variables: {
+    'md-bg': '#070B1A',
+    'md-surface': '#0F1530',
+    'md-text': '#E8ECFA',
+    'md-muted': '#B8C2E6',
+    'md-border': '#1A2246',
+    'md-primary': '#C8D3F5',
+    'md-code-bg': '#050816',
+    'md-quote-bg': '#131A3A',
+    'md-table-stripe': '#0D1329',
+  },
+}
+
 export const themes = {
   dark,
   hell,
@@ -337,11 +374,12 @@ export const themes = {
   orange,
   emily,
   music,
+  nocturne,
 } as const
 
 export type ThemeName = keyof typeof themes
 
-export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange', 'emily', 'music']
+export const THEME_NAMES: ThemeName[] = ['dark', 'hell', 'linux', 'green', 'blue', 'purple', 'orange', 'emily', 'music', 'nocturne']
 
 export const DEFAULT_THEME: ThemeName = 'dark'
 

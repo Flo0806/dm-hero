@@ -1,8 +1,9 @@
 <template>
-  <!-- emily keeps its bespoke lightning; every other theme with a config gets
-       the generic particle field. Nothing renders when animations are off. -->
+  <!-- emily (lightning) and nocturne (moonlit sky) are bespoke; every other theme
+       with a config gets the generic particle field. Nothing renders when animations are off. -->
   <template v-if="animationsEnabled">
     <SharedEmilyLightning v-if="current === 'emily'" />
+    <SharedNocturneSky v-else-if="current === 'nocturne'" />
     <SharedAmbientParticles v-else-if="config" :config="config" />
   </template>
 </template>

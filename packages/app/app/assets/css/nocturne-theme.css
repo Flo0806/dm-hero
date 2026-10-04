@@ -1,0 +1,47 @@
+/*
+ * Nocturne theme — "Moonlit Night" (1.6).
+ *
+ * Active only when Vuetify applies `.v-theme--nocturne` on the root. The flat
+ * midnight background gets a night sky: a faint aurora glow along the top, an
+ * indigo horizon at the bottom, cool moonlight from the top right. Cards carry
+ * a thin moonlit top edge; primary buttons shimmer silver. The motion (moon,
+ * aurora, stars, shooting stars) lives in NocturneSky.vue on the dashboard.
+ */
+
+@layer overrides {
+  .v-theme--nocturne .v-application__wrap,
+  .v-theme--nocturne.v-application {
+    position: relative;
+    background-image:
+      /* Moonlight from the top right */
+      radial-gradient(ellipse 40% 45% at 92% 6%, rgba(200, 211, 245, 0.10) 0%, rgba(200, 211, 245, 0) 70%),
+      /* Aurora glow along the top */
+      radial-gradient(ellipse 70% 22% at 35% 0%, rgba(94, 234, 212, 0.08) 0%, rgba(94, 234, 212, 0) 75%),
+      radial-gradient(ellipse 50% 20% at 70% 0%, rgba(167, 139, 250, 0.07) 0%, rgba(167, 139, 250, 0) 75%),
+      /* Indigo horizon at the bottom */
+      linear-gradient(180deg, rgba(7, 11, 26, 0) 55%, rgba(30, 36, 92, 0.35) 100%);
+    background-attachment: fixed;
+  }
+
+  /* Cards: a thin moonlit edge on top, like light catching a rim */
+  .v-theme--nocturne .v-card {
+    box-shadow: inset 0 1px 0 rgba(200, 211, 245, 0.09);
+  }
+
+  /* Primary buttons shimmer in moonlight silver instead of a flat fill */
+  .v-theme--nocturne .v-btn--variant-flat.bg-primary,
+  .v-theme--nocturne .v-btn--variant-elevated.bg-primary {
+    background-image: linear-gradient(120deg, #E3E9FC 0%, #B4C1EC 55%, #C8D3F5 100%);
+  }
+
+  /* Active navigation item: silver fading into aurora teal */
+  .v-theme--nocturne .v-list-item--active > .v-list-item__overlay {
+    background: linear-gradient(90deg, rgba(200, 211, 245, 0.28), rgba(94, 234, 212, 0.18));
+    opacity: 1;
+  }
+
+  /* The release codename glows faintly, like moonlight on silver */
+  .v-theme--nocturne .release-codename {
+    text-shadow: 0 0 12px rgba(200, 211, 245, 0.45);
+  }
+}

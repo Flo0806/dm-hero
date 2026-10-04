@@ -30,6 +30,7 @@ export default defineNuxtConfig({
     '@/assets/css/dashboard.css',
     '@/assets/css/emily-theme.css',
     '@/assets/css/music-theme.css',
+    '@/assets/css/nocturne-theme.css',
   ],
 
   runtimeConfig: {
