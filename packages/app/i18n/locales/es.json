@@ -51,7 +51,8 @@
       "down": "Bajar {name}",
       "reset": "Predeterminado",
       "done": "Listo",
-      "saveFailed": "No se pudo guardar la navegación"
+      "saveFailed": "No se pudo guardar la navegación",
+      "loadFailed": "No se pudo cargar la navegación guardada; inténtalo de nuevo en un momento."
     }
   },
   "themes": {

@@ -51,7 +51,8 @@
       "down": "Descendre {name}",
       "reset": "Par défaut",
       "done": "Terminé",
-      "saveFailed": "Impossible d’enregistrer la navigation"
+      "saveFailed": "Impossible d’enregistrer la navigation",
+      "loadFailed": "Impossible de charger la navigation enregistrée – réessaie dans un instant."
     }
   },
   "themes": {

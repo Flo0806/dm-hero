@@ -51,7 +51,8 @@
       "down": "Move {name} down",
       "reset": "Default",
       "done": "Done",
-      "saveFailed": "Could not save the navigation"
+      "saveFailed": "Could not save the navigation",
+      "loadFailed": "Could not load the saved navigation – please try again in a moment."
     }
   },
   "themes": {

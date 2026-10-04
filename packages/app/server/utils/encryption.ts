@@ -5,14 +5,20 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:
  * Uses machine-specific data to generate a consistent encryption key
  * This is NOT maximum security, but good enough for local-only storage
  */
+// scrypt is deliberately slow and blocks the event loop - derive the key once per secret
+let cachedKey: { secret: string, key: Buffer } | null = null
+
 function getEncryptionKey(): Buffer {
   // Use a combination of environment-specific data
   // In production, you'd use a proper key management system
   const secret = process.env.ENCRYPTION_SECRET || 'dm-hero-local-encryption-key-2025'
   const salt = 'dm-hero-salt-v1' // Static salt for consistency
 
-  // Derive a 32-byte key using scrypt
-  return scryptSync(secret, salt, 32)
+  if (cachedKey?.secret !== secret) {
+    // Derive a 32-byte key using scrypt
+    cachedKey = { secret, key: scryptSync(secret, salt, 32) }
+  }
+  return cachedKey.key
 }
 
 /**

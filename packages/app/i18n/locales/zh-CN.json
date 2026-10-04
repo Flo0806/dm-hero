@@ -51,7 +51,8 @@
       "down": "下移 {name}",
       "reset": "恢复默认",
       "done": "完成",
-      "saveFailed": "无法保存导航"
+      "saveFailed": "无法保存导航",
+      "loadFailed": "无法加载已保存的导航，请稍后再试。"
     }
   },
   "themes": {

@@ -51,7 +51,7 @@
 
     <!-- Scrollable middle: nav items in the DM's own order (with dividers).
          "Arrange navigation" switches to the editor (sidebar only). -->
-    <LayoutNavigationEditor v-if="editing" @done="editing = false" />
+    <LayoutNavigationEditor v-if="editing && !rail" @done="editing = false" />
     <v-list v-else density="compact" nav>
       <v-list-item
         prepend-icon="mdi-view-dashboard"
@@ -108,7 +108,7 @@
           v-if="!rail && !editing"
           prepend-icon="mdi-format-list-bulleted-square"
           :title="$t('nav.arrange.button')"
-          @click.stop="editing = true"
+          @click.stop="startEditing"
         />
         <v-list-item
           prepend-icon="mdi-database"
@@ -131,9 +131,19 @@ import { isNavDivider } from '~~/types/navigation'
 
 const router = useRouter()
 const { isNew } = useNewBadges()
-const { layout, load: loadLayout } = useNavigationLayout()
-onMounted(loadLayout)
+const { layout, ready, load: loadLayout, retry: retryLayout } = useNavigationLayout()
+// During the page load (also server-side): the sidebar starts in the saved order
+await loadLayout()
+
+// The editor only starts from the saved order - never from defaults that would overwrite it
 const editing = ref(false)
+const snackbarStore = useSnackbarStore()
+const { t } = useI18n()
+async function startEditing() {
+  if (!ready.value) await retryLayout()
+  if (ready.value) editing.value = true
+  else snackbarStore.error(t('nav.arrange.loadFailed'))
+}
 const notesStore = useNotesStore()
 const music = useMusicPlayer()
 const encounterStore = useEncounterStore()
@@ -150,7 +160,12 @@ interface Props {
   isSearchActive: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+// Collapsed to the rail: no room for the editor
+watch(() => props.rail, (rail) => {
+  if (rail) editing.value = false
+})
 
 defineEmits<{
   'update:model-value': [value: boolean]

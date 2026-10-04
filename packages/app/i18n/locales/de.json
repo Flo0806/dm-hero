@@ -51,7 +51,8 @@
       "down": "{name} nach unten",
       "reset": "Standard",
       "done": "Fertig",
-      "saveFailed": "Navigation konnte nicht gespeichert werden"
+      "saveFailed": "Navigation konnte nicht gespeichert werden",
+      "loadFailed": "Die gespeicherte Navigation konnte nicht geladen werden – versuch es gleich noch einmal."
     }
   },
   "themes": {

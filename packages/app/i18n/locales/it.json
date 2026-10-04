@@ -51,7 +51,8 @@
       "down": "Sposta giù {name}",
       "reset": "Predefinito",
       "done": "Fatto",
-      "saveFailed": "Impossibile salvare la navigazione"
+      "saveFailed": "Impossibile salvare la navigazione",
+      "loadFailed": "Impossibile caricare la navigazione salvata: riprova tra poco."
     }
   },
   "themes": {

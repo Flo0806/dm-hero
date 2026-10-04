@@ -7,9 +7,21 @@
     </p>
 
     <TheFreeform v-model="items" class="nav-editor__list">
+      <!-- What hangs at the cursor while dragging: icon + translated name -->
+      <template #drag-ghost="{ items: dragged }">
+        <div class="nav-editor__ghost">
+          <template v-if="dragged[0] && isNavDivider(dragged[0].id)">
+            <v-icon icon="mdi-minus" size="small" class="me-2" />{{ $t('nav.arrange.divider') }}
+          </template>
+          <template v-else-if="dragged[0]">
+            <v-icon :icon="NAV_ITEMS[dragged[0].id as NavKey].icon(music)" size="small" class="me-2" />{{ $t(NAV_ITEMS[dragged[0].id as NavKey].title) }}
+          </template>
+        </div>
+      </template>
+
       <FreeformItem v-for="(item, index) in items" :key="item.id" :item="item">
-        <template #default="{ dragging }">
-          <div class="nav-editor__row" :class="{ 'nav-editor__row--dragging': dragging }">
+        <template #default>
+          <div class="nav-editor__row">
             <v-icon data-freeform-handle icon="mdi-drag-vertical" size="small" class="nav-editor__handle" :aria-hidden="true" />
             <template v-if="isNavDivider(item.id)">
               <v-divider class="flex-grow-1 mx-1" />
@@ -74,13 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import { isNavDivider, MAX_NAV_DIVIDERS, type NavKey, type NavLayoutEntry } from '~~/types/navigation'
+import { isNavDivider, MAX_NAV_DIVIDERS, normalizeNavLayout, type NavKey, type NavLayoutEntry } from '~~/types/navigation'
 
 const emit = defineEmits<{ done: [] }>()
 const { t } = useI18n()
 const music = useMusicPlayer()
 const snackbarStore = useSnackbarStore()
-const { layout, save, reset } = useNavigationLayout()
+const { layout, save } = useNavigationLayout()
 
 // Working copy - only "Done" saves it
 const items = ref(layout.value.map(id => ({ id: id as string })))
@@ -95,8 +107,9 @@ function move(index: number, direction: -1 | 1) {
   items.value = next
 }
 
+// No crypto.randomUUID: it only exists on HTTPS/localhost, the web app may run on plain HTTP
 function addDivider() {
-  items.value = [...items.value, { id: `divider:${crypto.randomUUID().slice(0, 8)}` }]
+  items.value = [...items.value, { id: `divider:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}` }]
 }
 
 function removeDivider(id: string) {
@@ -118,14 +131,9 @@ async function saveLayout() {
   }
 }
 
-async function resetLayout() {
-  try {
-    await reset()
-    items.value = layout.value.map(id => ({ id: id as string }))
-  }
-  catch {
-    snackbarStore.error(t('nav.arrange.saveFailed'))
-  }
+// Only a preview - like every change it's saved with "Done" (Cancel keeps the old order)
+function resetLayout() {
+  items.value = normalizeNavLayout([]).map(id => ({ id: id as string }))
 }
 </script>
 
@@ -148,8 +156,20 @@ async function resetLayout() {
   background: rgba(var(--v-theme-on-surface), 0.05);
 }
 
-.nav-editor__row--dragging {
-  opacity: 0.4;
+/* nuxt-freeform sizes items to their content - rows take the full width here */
+.nav-editor__list :deep(.freeform-item) {
+  align-self: stretch;
+}
+
+.nav-editor__ghost {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  font-size: 0.875rem;
 }
 
 .nav-editor__handle {

@@ -1,30 +1,15 @@
 import { readdirSync, statSync, existsSync, realpathSync, type Dirent } from 'fs'
 import { join, resolve, sep, basename, extname } from 'path'
 import { getDb } from './db'
-import { encrypt, decrypt } from './encryption'
+import { readSetting as readSettingFrom, writeSetting as writeSettingTo } from './settings'
 import { MUSIC_EXTENSIONS } from '~~/types/music'
 import type { MusicFolder, MusicTrack } from '~~/types/music'
 
 const SETTING_FOLDER = 'music_folder'
 const SETTING_SCENES = 'music_scenes'
 
-function readSetting(key: string): string | null {
-  const row = getDb().prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
-  if (!row) return null
-  try {
-    return decrypt(row.value)
-  }
-  catch {
-    return null
-  }
-}
-
-function writeSetting(key: string, value: string) {
-  getDb().prepare(`
-    INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
-  `).run(key, encrypt(value))
-}
+const readSetting = (key: string) => readSettingFrom(getDb(), key)
+const writeSetting = (key: string, value: string) => writeSettingTo(getDb(), key, value)
 
 export function getMusicFolder(): string | null {
   return readSetting(SETTING_FOLDER)

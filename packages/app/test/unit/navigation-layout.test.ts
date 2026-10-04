@@ -37,7 +37,7 @@ describe('navigation layout', () => {
     expect(normalizeNavLayout(Array.from({ length: 30 }, (_, i) => `divider:d${i}`)).filter(e => e.startsWith('divider:'))).toHaveLength(20)
   })
 
-  it('default order first, the saved order after saving, default again after reset', async () => {
+  it('default order first, then the saved order', async () => {
     expect(await call('index.get.ts')).toEqual([...NAV_KEYS])
 
     const saved = await call<string[]>('index.put.ts', { layout: ['music', 'divider:x', 'npcs'] })
@@ -46,7 +46,9 @@ describe('navigation layout', () => {
     // Stored encrypted like every setting
     expect((db.prepare('SELECT value FROM settings WHERE key = ?').get('navigation_layout') as { value: string }).value).not.toContain('music')
 
-    expect(await call('index.delete.ts')).toEqual([...NAV_KEYS])
+
+    // "Default" in the editor is just saving the default order
+    expect(await call('index.put.ts', { layout: [] })).toEqual([...NAV_KEYS])
     expect(await call('index.get.ts')).toEqual([...NAV_KEYS])
   })
 
