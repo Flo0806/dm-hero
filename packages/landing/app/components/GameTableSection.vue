@@ -59,7 +59,7 @@ const steps = ['start', 'invite', 'play']
         >
           <v-icon size="18" class="mr-2">mdi-table-furniture</v-icon>
           {{ t('gameTable.kicker') }}
-          <v-chip size="x-small" variant="elevated" color="success" class="ml-2">NEW · v1.6 Nocturne</v-chip>
+          <v-chip size="x-small" variant="elevated" color="success" class="ml-2">{{ t('common.new') }} · v1.6 Nocturne</v-chip>
         </div>
         <h2
           v-motion

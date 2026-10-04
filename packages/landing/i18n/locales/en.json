@@ -336,7 +336,8 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "new": "NEW"
   },
   "discordBanner": {
     "message": "Official Discord for DM Hero - Questions, support, feature requests, or showcase your own OneShots!",

@@ -55,7 +55,7 @@ const bars = Array.from({ length: 14 }, (_, i) => ({ delay: `${(i * 0.13) % 1.1}
         >
           <v-icon size="18" class="mr-2">mdi-music</v-icon>
           {{ t('music.kicker') }}
-          <v-chip size="x-small" variant="elevated" color="success" class="ml-2">NEW · v1.5</v-chip>
+          <v-chip size="x-small" variant="elevated" color="success" class="ml-2">{{ t('common.new') }} · v1.5</v-chip>
         </div>
         <h2
           v-motion

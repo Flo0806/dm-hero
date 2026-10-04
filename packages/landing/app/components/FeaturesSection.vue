@@ -170,7 +170,7 @@ const features = [
                 {{ feature.badge }}
               </v-chip>
               <v-chip v-if="feature.isNew" size="x-small" variant="elevated" color="success" class="ml-1">
-                NEW
+                {{ t('common.new') }}
               </v-chip>
             </h3>
 

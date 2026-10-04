@@ -237,7 +237,7 @@ onUnmounted(() => {
               color="success"
               class="new-badge"
             >
-              NEW
+              {{ t('common.new') }}
             </v-chip>
           </div>
         </div>
