@@ -1,5 +1,26 @@
 # @dm-hero/app
 
+## 1.6.0
+
+### Minor Changes
+
+- 1a88d4e: Show a map to your players with fog of war: reveal and cover with a brush, live on every player's device. Everyone can ping a spot on the map, and the DM can flash short notes.
+- 47a14af: Game table: invite your players to the new player app (table.dm-hero.com) with a game code, personal PINs and a QR code, see who is online, and share NPCs, locations, items, lore and factions with them - live, with images, aliases and reveal moments. Everything is end-to-end encrypted: the player server only ever sees ciphertext, and new player devices need the DM's approval.
+- e71b23a: Release 1.6 "Nocturne": new codename in the header, a "what's new" dialog, "New" badges for the game table and a clear pointer to the player app (table.dm-hero.com).
+- 9922c7d: New theme "Nocturne (Moonlit Night)": midnight blue with moonlight silver, and a living night sky on the dashboard - crescent moon, aurora, twinkling stars and shooting stars.
+- cc5d3a4: Arrange the sidebar: drag entries into your own order and add dividers ("Arrange navigation" at the bottom of the sidebar). Saved in DM Hero's database.
+- d429990: Handouts: give documents (text or PDF) to all or chosen players, end-to-end encrypted per device. The game table page has a new "Shared" tab with everything that went out, each with "take back".
+- 5d3bca7: Private messages between the DM and each player, end-to-end encrypted. Unread messages show up in the game table chip and on a new "Messages" tab.
+- 0874e12: Players see today's in-game weather (active climate zone, else the general one) with a calm background animation.
+
+### Patch Changes
+
+- 0874e12: Headings no longer have an oversized gap above them.
+- 87fc309: The "Show to players" button keeps its width when switching, so the map no longer jumps.
+- d429990: Joined players see the name of the campaign (end-to-end encrypted like everything else).
+- 123d376: An expired game can be reconnected without losing anything: players, PINs and everything shared stay, players join again with the new code.
+- e12b46d: Type fixes across counts, calendar, import and map endpoints, plus a CI that runs lint, typecheck and unit tests on every pull request.
+
 ## 1.5.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.7.2
+
+### Patch Changes
+
+- 9d7514e: Privacy policy and notice updated: accounts, login cookies and emails of the Hero Basar plus the game table (table.dm-hero.com) are now described.
+
 ## 1.7.1
 
 ### Patch Changes
