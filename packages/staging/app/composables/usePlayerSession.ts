@@ -232,6 +232,9 @@ export function usePlayerSession() {
     // Taken back - versions stay, a replayed old envelope stays rejected
     source.addEventListener('unhandout', (event) => {
       const { id } = JSON.parse((event as MessageEvent).data) as { id: string }
+      for (let i = queuedHandouts.length - 1; i >= 0; i--) {
+        if (queuedHandouts[i]!.id === id) queuedHandouts.splice(i, 1)
+      }
       handouts.value = handouts.value.filter(h => h.handoutId !== id)
     })
 

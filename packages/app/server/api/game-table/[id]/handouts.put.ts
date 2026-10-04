@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
     if (known.n !== recipients.length) throw createError({ statusCode: 400, message: 'Unknown player' })
   }
 
-  const existing = db.prepare('SELECT id FROM game_table_handouts WHERE game_table_id = ? AND document_id = ?').get(tableId, documentId) as { id: number } | undefined
+  const existing = db.prepare('SELECT id, recipients, content_hash FROM game_table_handouts WHERE game_table_id = ? AND document_id = ?')
+    .get(tableId, documentId) as { id: number, recipients: string, content_hash: string | null } | undefined
   if (!existing) {
     const count = (db.prepare('SELECT COUNT(*) AS n FROM game_table_handouts WHERE game_table_id = ?').get(tableId) as { n: number }).n
     if (count >= HANDOUTS_PER_GAME) throw createError({ statusCode: 413, message: `At most ${HANDOUTS_PER_GAME} handouts per game` })
@@ -46,7 +47,9 @@ export default defineEventHandler(async (event) => {
   // too large -> refused (a new one isn't kept); relay unreachable -> kept, the timer retries
   const error = (await syncTableHandouts(db, tableId)).get(handoutId)
   if (error && (error as { statusCode?: number }).statusCode === 413) {
+    // Refused: a new one isn't kept, an existing one keeps its previous recipients
     if (!existing) db.prepare('DELETE FROM game_table_handouts WHERE id = ?').run(handoutId)
+    else db.prepare('UPDATE game_table_handouts SET recipients = ?, content_hash = ? WHERE id = ?').run(existing.recipients, existing.content_hash, existing.id)
     throw error
   }
   return { id: handoutId, pending: !!error }

@@ -16,7 +16,16 @@
           </v-list-item-subtitle>
           <template #append>
             <v-btn icon="mdi-account-multiple-outline" variant="text" size="small" :aria-label="$t('gameTable.handout.recipients')" @click="edit(handout)" />
-            <v-btn icon="mdi-close" variant="text" size="small" color="error" :aria-label="$t('gameTable.handout.withdraw')" @click="withdraw(handout.id)" />
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              size="small"
+              color="error"
+              :loading="withdrawing.includes(handout.id)"
+              :disabled="withdrawing.includes(handout.id)"
+              :aria-label="$t('gameTable.handout.withdraw')"
+              @click="withdraw(handout.id)"
+            />
           </template>
         </v-list-item>
       </TransitionGroup>
@@ -53,13 +62,20 @@ function edit(handout: GameTableHandout) {
   showDialog.value = true
 }
 
+// One request per handout - a second click while it runs does nothing
+const withdrawing = ref<number[]>([])
 async function withdraw(id: number) {
+  if (withdrawing.value.includes(id)) return
+  withdrawing.value = [...withdrawing.value, id]
   try {
     await store.withdrawHandout(id)
     snackbarStore.success(t('gameTable.handout.withdrawn'))
   }
   catch {
     snackbarStore.error(t('gameTable.error'))
+  }
+  finally {
+    withdrawing.value = withdrawing.value.filter(busy => busy !== id)
   }
 }
 </script>

@@ -27,9 +27,18 @@ export default defineEventHandler(async (event) => {
   // Players no longer on the list lose it live
   const before = (db.prepare('SELECT player_id FROM handouts WHERE game_id = ? AND id = ?').all(game.id, handoutId) as Array<{ player_id: string }>)
     .map(row => row.player_id)
-  db.prepare('DELETE FROM handouts WHERE game_id = ? AND id = ?').run(game.id, handoutId)
+  // All or nothing: a failed insert keeps the previous recipients
   const insert = db.prepare('INSERT INTO handouts (game_id, id, player_id, envelopes, updated_at) VALUES (?, ?, ?, ?, ?)')
-  for (const [playerId, devices] of Object.entries(players!)) insert.run(game.id, handoutId, playerId, JSON.stringify(devices), Date.now())
+  db.exec('BEGIN')
+  try {
+    db.prepare('DELETE FROM handouts WHERE game_id = ? AND id = ?').run(game.id, handoutId)
+    for (const [playerId, devices] of Object.entries(players!)) insert.run(game.id, handoutId, playerId, JSON.stringify(devices), Date.now())
+    db.exec('COMMIT')
+  }
+  catch (error) {
+    db.exec('ROLLBACK')
+    throw error
+  }
 
   for (const playerId of before.filter(id => !(id in players!))) sendToPlayer(game.id, playerId, 'unhandout', { id: handoutId })
   for (const [playerId, devices] of Object.entries(players!)) {
