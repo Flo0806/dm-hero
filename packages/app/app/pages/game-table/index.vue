@@ -6,6 +6,16 @@
       <GameTableStart v-if="!store.table" :loading="busy" @start="startGame" />
 
       <template v-else>
+        <!-- Cleaned up on the player server after a long pause: only a new game helps -->
+        <v-alert v-if="presence.expired" type="warning" variant="tonal" class="mb-6" :title="$t('gameTable.expired')">
+          <p class="mb-3">
+            {{ $t('gameTable.expiredHint') }}
+          </p>
+          <v-btn color="primary" prepend-icon="mdi-restart" :loading="busy" @click="openDialog(true)">
+            {{ $t('gameTable.expiredRestart') }}
+          </v-btn>
+        </v-alert>
+
         <v-card v-if="presence.pending.length" class="pa-6 mb-6" color="primary" variant="tonal">
           <h2 class="text-title-large mb-1">
             {{ $t('gameTable.pendingTitle') }}

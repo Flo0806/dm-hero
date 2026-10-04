@@ -12,7 +12,8 @@ const SCHEMA = `
     dm_token_hash TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     dm_signing_public TEXT,
-    dm_exchange_public TEXT
+    dm_exchange_public TEXT,
+    last_seen_at INTEGER
   );
   CREATE TABLE IF NOT EXISTS players (
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
@@ -48,7 +49,8 @@ const SCHEMA = `
     player_id TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     public_key TEXT,
-    wrapped_key TEXT
+    wrapped_key TEXT,
+    last_used_at INTEGER
   );
 `
 
@@ -61,8 +63,8 @@ export function useRelayDb(): DatabaseSync {
   db = new DatabaseSync(path)
   db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;')
   db.exec(SCHEMA)
-  addMissingColumns(db, 'games', ['dm_signing_public TEXT', 'dm_exchange_public TEXT'])
-  addMissingColumns(db, 'player_sessions', ['public_key TEXT', 'wrapped_key TEXT'])
+  addMissingColumns(db, 'games', ['dm_signing_public TEXT', 'dm_exchange_public TEXT', 'last_seen_at INTEGER'])
+  addMissingColumns(db, 'player_sessions', ['public_key TEXT', 'wrapped_key TEXT', 'last_used_at INTEGER'])
   return db
 }
 
@@ -82,4 +84,19 @@ export interface GameRow {
 
 export function findGame(id: string): GameRow | undefined {
   return useRelayDb().prepare('SELECT id, code, dm_token_hash FROM games WHERE id = ?').get(id) as GameRow | undefined
+}
+
+// Activity stamps for the cleanup - written at most every few minutes per game/session
+const TOUCH_EVERY_MS = 10 * 60 * 1000
+
+/** DM Hero was in contact with this game */
+export function touchGame(id: string, now = Date.now()) {
+  useRelayDb().prepare('UPDATE games SET last_seen_at = ? WHERE id = ? AND (last_seen_at IS NULL OR last_seen_at < ?)')
+    .run(now, id, now - TOUCH_EVERY_MS)
+}
+
+/** A player used this session; true = stamp written (cookie worth renewing) */
+export function touchSession(tokenHash: string, now = Date.now()) {
+  return useRelayDb().prepare('UPDATE player_sessions SET last_used_at = ? WHERE token_hash = ? AND (last_used_at IS NULL OR last_used_at < ?)')
+    .run(now, tokenHash, now - TOUCH_EVERY_MS).changes > 0
 }

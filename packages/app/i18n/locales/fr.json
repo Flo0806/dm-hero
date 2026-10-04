@@ -2833,6 +2833,9 @@
         "offline": "Enregistré – vos joueurs recevront la carte dès que la table de jeu sera joignable.",
         "tooLarge": "L’image de la carte est trop grande pour la table de jeu. Importez une version plus petite."
       }
-    }
+    },
+    "expired": "Partie expirée",
+    "expiredHint": "Cette partie a été supprimée du serveur de la table de jeu après une longue pause. Lancez une nouvelle partie – elle reçoit un nouveau code et vos joueurs la rejoignent à nouveau. Votre campagne reste inchangée.",
+    "expiredRestart": "Lancer une nouvelle partie"
   }
 }

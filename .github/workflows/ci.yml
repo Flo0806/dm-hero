@@ -1,6 +1,7 @@
 name: CI
 
-# Lint, typecheck and unit tests of DM Hero (+ the shared seal package)
+# Lint, typecheck and unit tests of DM Hero, the game table (player app + relay)
+# and the shared seal package
 # on every PR and on main. Never builds or publishes anything.
 
 on:
@@ -45,3 +46,13 @@ jobs:
 
       - name: Unit tests (seal)
         run: pnpm --filter @dm-hero/seal test
+
+      - name: Lint (game table)
+        run: pnpm --filter @dm-hero/staging lint
+
+      - name: Typecheck (game table)
+        run: pnpm --filter @dm-hero/staging typecheck
+
+      - name: Unit tests (game table)
+        run: pnpm --filter @dm-hero/staging test
+

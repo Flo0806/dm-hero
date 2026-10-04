@@ -10,6 +10,8 @@ dist
 # Database and uploads (will be mounted as volumes)
 data
 public/uploads
+# Local game table data (relay database + encrypted files) - never into an image
+**/.data
 
 # Development files
 .env

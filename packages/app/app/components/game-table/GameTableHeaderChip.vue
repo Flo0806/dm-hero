@@ -9,7 +9,7 @@
           {{ $t('gameTable.pendingCount', { count: presence.pending.length }) }}
         </template>
         <template v-else>
-          {{ presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
+          {{ presence.expired ? $t('gameTable.expired') : presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
         </template>
       </v-chip>
     </template>
@@ -70,8 +70,8 @@ const presence = import.meta.client
   : ref<GameTablePresence>({ connected: false, online: [], pending: [] })
 
 // Waiting devices win: the DM should notice them from anywhere in the app
-const chipColor = computed(() => presence.value.pending.length ? 'primary' : presence.value.connected ? 'success' : 'warning')
-const chipIcon = computed(() => presence.value.pending.length ? 'mdi-account-question' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
+const chipColor = computed(() => presence.value.expired ? 'error' : presence.value.pending.length ? 'primary' : presence.value.connected ? 'success' : 'warning')
+const chipIcon = computed(() => presence.value.expired ? 'mdi-timer-sand-complete' : presence.value.pending.length ? 'mdi-account-question' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
 
 const onlinePlayers = computed(() => store.table?.players.filter(p => presence.value.online.includes(p.id)) ?? [])
 

@@ -46,6 +46,9 @@ export function addDmStream(gameId: string, stream: EventStream) {
   streamsOf(gameId).dm.add(stream)
 }
 
+/** DM Hero is connected right now (a game in use is never cleaned up) */
+export const hasDmStream = (gameId: string) => (games.get(gameId)?.dm.size ?? 0) > 0
+
 export function removeDmStream(gameId: string, stream: EventStream) {
   games.get(gameId)?.dm.delete(stream)
 }

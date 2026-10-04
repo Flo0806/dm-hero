@@ -9,6 +9,7 @@ export function requireDm(event: H3Event, gameId: string) {
   if (!game) throw createError({ statusCode: 404, message: 'Game not found' })
   const token = getHeader(event, 'authorization')?.replace(/^Bearer /, '') ?? ''
   if (!sameHash(sha256(token), game.dm_token_hash)) throw createError({ statusCode: 403, message: 'Not the DM of this game' })
+  touchGame(game.id)
   return game
 }
 
@@ -24,13 +25,27 @@ export interface PlayerSession {
 /** Players authenticate with the session cookie they got when joining */
 export function requirePlayer(event: H3Event, gameId: string) {
   const token = getCookie(event, PLAYER_COOKIE)
+  const tokenHash = token ? sha256(token) : ''
   const session = token
     ? useRelayDb().prepare(`
         SELECT s.player_id, s.public_key, s.wrapped_key, p.name FROM player_sessions s
         JOIN players p ON p.game_id = s.game_id AND p.id = s.player_id
         WHERE s.token_hash = ? AND s.game_id = ?
-      `).get(sha256(token), gameId) as PlayerSession | undefined
+      `).get(tokenHash, gameId) as PlayerSession | undefined
     : undefined
   if (!session) throw createError({ statusCode: 401, message: 'Not joined to this game' })
+  // Used -> stays valid another full period (cookie + session slide together)
+  if (touchSession(tokenHash)) setPlayerCookie(event, token!)
   return session
+}
+
+/** The player's login cookie - lives as long as an unused session does */
+export function setPlayerCookie(event: H3Event, token: string) {
+  setCookie(event, PLAYER_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: !import.meta.dev,
+    path: '/',
+    maxAge: 60 * 60 * 24 * Number(useRuntimeConfig().sessionTtlDays),
+  })
 }

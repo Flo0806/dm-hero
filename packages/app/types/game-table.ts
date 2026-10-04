@@ -41,4 +41,6 @@ export interface GameTablePresence {
   online: number[]
   /** New devices waiting for approval */
   pending: PendingDevice[]
+  /** The player server no longer knows this game (cleaned up after a long pause) */
+  expired?: boolean
 }

@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@unocss/nuxt', '@nuxtjs/i18n'],
+  modules: ['@nuxt/eslint', '@unocss/nuxt', '@nuxtjs/i18n'],
   devtools: { enabled: true },
 
   app: {
@@ -21,6 +21,10 @@ export default defineNuxtConfig({
     filesDir: '.data/files',
     // Behind a reverse proxy (FRP, nginx): trust X-Forwarded-For for rate limits. NUXT_TRUST_PROXY
     trustProxy: false,
+    // Cleanup: a game without contact from DM Hero is removed after this many days
+    // (NUXT_GAME_TTL_DAYS); a player session unused this long ends (NUXT_SESSION_TTL_DAYS)
+    gameTtlDays: 30,
+    sessionTtlDays: 90,
   },
 
   // Live game pages need the browser (EventSource) - no server rendering
@@ -29,6 +33,17 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2025-07-15',
+
+  // Same code style as the DM Hero app
+  eslint: {
+    config: {
+      stylistic: {
+        indent: 2,
+        quotes: 'single',
+        semi: false,
+      },
+    },
+  },
 
   // Same languages as the DM Hero app. Default = browser language, fallback English.
   i18n: {

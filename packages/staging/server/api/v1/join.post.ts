@@ -22,13 +22,7 @@ export default defineEventHandler(async (event) => {
   const token = randomToken()
   db.prepare('INSERT INTO player_sessions (token_hash, game_id, player_id, created_at, public_key) VALUES (?, ?, ?, ?, ?)')
     .run(sha256(token), game.id, player.id, Date.now(), body!.publicKey!)
-  setCookie(event, PLAYER_COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: !import.meta.dev,
-    path: '/',
-    maxAge: 60 * 60 * 24 * 30,
-  })
+  setPlayerCookie(event, token)
   // DM public keys: the player needs them to verify the DM and receive the game key
   return {
     gameId: game.id,

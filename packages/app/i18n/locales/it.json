@@ -2833,6 +2833,9 @@
         "offline": "Salvato – i tuoi giocatori riceveranno la mappa appena il tavolo di gioco sarà raggiungibile.",
         "tooLarge": "L’immagine della mappa è troppo grande per il tavolo di gioco. Carica una versione più piccola."
       }
-    }
+    },
+    "expired": "Partita scaduta",
+    "expiredHint": "Questa partita è stata rimossa dal server del tavolo di gioco dopo una lunga pausa. Avvia una nuova partita: riceverà un nuovo codice e i tuoi giocatori si uniranno di nuovo. La tua campagna resta invariata.",
+    "expiredRestart": "Avvia nuova partita"
   }
 }

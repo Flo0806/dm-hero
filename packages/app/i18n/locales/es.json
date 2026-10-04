@@ -2833,6 +2833,9 @@
         "offline": "Guardado: tus jugadores recibirán el mapa en cuanto la mesa de juego esté disponible.",
         "tooLarge": "La imagen del mapa es demasiado grande para la mesa de juego. Sube una versión más pequeña."
       }
-    }
+    },
+    "expired": "Partida caducada",
+    "expiredHint": "Esta partida se eliminó del servidor de la mesa de juego tras una larga pausa. Inicia una nueva: recibirá un código nuevo y tus jugadores volverán a unirse. Tu campaña no cambia.",
+    "expiredRestart": "Iniciar nueva partida"
   }
 }

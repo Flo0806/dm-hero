@@ -2833,6 +2833,9 @@
         "offline": "Saved – your players get the map as soon as the game table is reachable.",
         "tooLarge": "The map image is too large for the game table. Upload a smaller version."
       }
-    }
+    },
+    "expired": "Game expired",
+    "expiredHint": "This game was removed from the game table server after a long break. Start a new game – it gets a new code and your players join again. Your campaign stays unchanged.",
+    "expiredRestart": "Start new game"
   }
 }

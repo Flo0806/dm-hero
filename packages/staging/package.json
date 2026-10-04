@@ -1,5 +1,5 @@
 {
-  "name": "staging",
+  "name": "@dm-hero/staging",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -8,7 +8,11 @@
     "dev": "nuxt dev --port 3002 --host 0.0.0.0",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "nuxi typecheck",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dm-hero/seal": "workspace:*",
@@ -19,8 +23,13 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "@nuxt/eslint": "1.10.0",
     "@types/markdown-it": "^14.2.0",
     "@unocss/nuxt": "^66.10.5",
-    "unocss": "^66.10.5"
+    "eslint": "^9.39.5",
+    "typescript": "^6.0.3",
+    "unocss": "^66.10.5",
+    "vitest": "^4.1.11",
+    "vue-tsc": "^3.3.12"
   }
 }

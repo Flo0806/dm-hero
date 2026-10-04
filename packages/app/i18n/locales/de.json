@@ -2833,6 +2833,9 @@
         "offline": "Gespeichert – deine Spieler bekommen die Karte, sobald der Spieltisch erreichbar ist.",
         "tooLarge": "Das Kartenbild ist zu groß für den Spieltisch. Lade eine kleinere Version hoch."
       }
-    }
+    },
+    "expired": "Spiel abgelaufen",
+    "expiredHint": "Dieses Spiel wurde nach langer Pause vom Spieltisch-Server entfernt. Starte ein neues Spiel – es bekommt einen neuen Code, und deine Spieler treten neu bei. Deine Kampagne bleibt unverändert.",
+    "expiredRestart": "Neues Spiel starten"
   }
 }

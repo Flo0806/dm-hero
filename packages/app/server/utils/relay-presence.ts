@@ -74,6 +74,12 @@ async function run(tableId: number) {
       headers: { authorization: `Bearer ${auth.relay_dm_token}` },
       signal: conn.abort.signal,
     })
+    // Game cleaned up on the relay (long without contact) - retrying won't bring it back
+    if (res.status === 404) {
+      conn.state = { connected: false, online: [], pending: [], expired: true }
+      emit(tableId)
+      return
+    }
     if (!res.ok || !res.body) throw new Error(`Relay answered ${res.status}`)
     conn.state = { ...conn.state, connected: true }
     emit(tableId)
