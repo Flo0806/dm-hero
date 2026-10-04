@@ -46,7 +46,6 @@ describe('navigation layout', () => {
     // Stored encrypted like every setting
     expect((db.prepare('SELECT value FROM settings WHERE key = ?').get('navigation_layout') as { value: string }).value).not.toContain('music')
 
-
     // "Default" in the editor is just saving the default order
     expect(await call('index.put.ts', { layout: [] })).toEqual([...NAV_KEYS])
     expect(await call('index.get.ts')).toEqual([...NAV_KEYS])
