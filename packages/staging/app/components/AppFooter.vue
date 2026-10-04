@@ -37,7 +37,7 @@ const { t, locale, locales, setLocale } = useI18n()
 
 const links = computed(() => [
   { href: 'https://dm-hero.com/imprint', label: t('footer.imprint') },
-  { href: 'https://dm-hero.com/privacy', label: t('footer.privacy') },
+  { href: 'https://dm-hero.com/privacy#game-table', label: t('footer.privacy') },
   { href: 'https://dm-hero.com/terms', label: t('footer.terms') },
   { href: 'https://dm-hero.com', label: 'dm-hero.com' },
 ])

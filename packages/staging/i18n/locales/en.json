@@ -64,5 +64,11 @@
       "pinged": "{name} pointed at the map",
       "note": "{name}: {text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Cookie notice",
+    "message": "The game table only uses technically necessary cookies – for joining your game and your language. No tracking, no ads.",
+    "more": "Learn more",
+    "ok": "Got it"
   }
 }

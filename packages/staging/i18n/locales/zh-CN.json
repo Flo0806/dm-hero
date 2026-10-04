@@ -64,5 +64,11 @@
       "pinged": "{name} 在地图上做了标记",
       "note": "{name}：{text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Cookie 说明",
+    "message": "游戏桌只使用技术上必需的 Cookie——用于加入你的游戏和保存语言设置。没有跟踪，没有广告。",
+    "more": "了解更多",
+    "ok": "知道了"
   }
 }

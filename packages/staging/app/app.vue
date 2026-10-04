@@ -1,5 +1,6 @@
 <template>
   <NuxtPage />
+  <CookieNotice />
 </template>
 
 <script setup lang="ts">

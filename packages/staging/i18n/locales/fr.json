@@ -64,5 +64,11 @@
       "pinged": "{name} a pointé la carte",
       "note": "{name} : {text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Information sur les cookies",
+    "message": "La table de jeu n’utilise que des cookies techniquement nécessaires – pour rejoindre ta partie et pour ta langue. Pas de suivi, pas de publicité.",
+    "more": "En savoir plus",
+    "ok": "Compris"
   }
 }

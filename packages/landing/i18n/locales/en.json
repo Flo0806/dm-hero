@@ -635,7 +635,7 @@
     },
     "privacy": {
       "title": "Privacy Policy",
-      "intro": "We take the protection of your personal data seriously. Below we inform you about the collection and use of personal data on this website and in the Hero Basar.",
+      "intro": "We take the protection of your personal data seriously. Below we inform you about the collection and use of personal data on this website, in the Hero Basar and at the game table.",
       "controllerTitle": "Data Controller",
       "controller": "The responsible party within the meaning of the GDPR is:",
       "name": "Florian Heuberger",
@@ -660,7 +660,11 @@
       "cookiesTitle": "Cookies",
       "cookies": "Only when you log in do we set two technically necessary cookies that keep you logged in: \"access_token\" (valid for 15 minutes) and \"refresh_token\" (valid for 30 days). They serve login only, not analytics or advertising, and are deleted when you log out. Technically necessary cookies do not require consent (Section 25 (2) TDDDG).",
       "emailTitle": "Sending emails",
-      "emailSending": "We send you emails to confirm your email address and to reset your password. They are sent via the mail server of IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Germany."
+      "emailSending": "We send you emails to confirm your email address and to reset your password. They are sent via the mail server of IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Germany.",
+      "gameTableTitle": "Game table (table.dm-hero.com)",
+      "gameTable": "With the game table, a game master shares content from their DM Hero campaign with their group. Everything shared – texts, images, maps, fog and pings – is end-to-end encrypted: it is encrypted on the game master’s device and only decrypted on the players’ devices. Our server only stores and relays it in encrypted form and cannot read it.",
+      "gameTableStorage": "Stored on the server: the game code, the player names chosen by the game master, PINs only as a hash, public keys of the game master and devices, the encrypted content and times of last use. To prevent abuse, IP addresses are briefly used in memory to limit requests, but not stored. On your device, the game table sets two technically necessary cookies – \"dmh_player\" for joining the game and \"dm_hero_player_lang\" for your language – and keeps your device’s private key and which content and notices you have already seen in the browser. No consent is required for this (Section 25 (2) TDDDG).",
+      "gameTableDeletion": "When the game master ends the game, everything about it is deleted immediately. Games without contact to DM Hero are deleted automatically after 30 days, unused logins after 90 days. The legal basis is our legitimate interest in running the game table for you and your group (Art. 6(1)(f) GDPR)."
     },
     "terms": {
       "title": "Terms"

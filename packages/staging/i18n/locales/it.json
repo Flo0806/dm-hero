@@ -64,5 +64,11 @@
       "pinged": "{name} ha indicato la mappa",
       "note": "{name}: {text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Informativa sui cookie",
+    "message": "Il tavolo di gioco usa solo cookie tecnicamente necessari: per entrare nella tua partita e per la tua lingua. Nessun tracciamento, nessuna pubblicità.",
+    "more": "Scopri di più",
+    "ok": "Ho capito"
   }
 }

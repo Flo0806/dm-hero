@@ -64,5 +64,11 @@
       "pinged": "{name} hat auf die Karte gezeigt",
       "note": "{name}: {text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Hinweis zu Cookies",
+    "message": "Der Spieltisch nutzt nur technisch notwendige Cookies – für deine Anmeldung am Spiel und deine Sprache. Kein Tracking, keine Werbung.",
+    "more": "Mehr erfahren",
+    "ok": "Alles klar"
   }
 }

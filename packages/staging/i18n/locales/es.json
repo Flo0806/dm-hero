@@ -64,5 +64,11 @@
       "pinged": "{name} ha señalado el mapa",
       "note": "{name}: {text}"
     }
+  },
+  "cookieNotice": {
+    "label": "Aviso sobre cookies",
+    "message": "La mesa de juego solo usa cookies técnicamente necesarias: para unirte a tu partida y para tu idioma. Sin seguimiento ni publicidad.",
+    "more": "Más información",
+    "ok": "Entendido"
   }
 }

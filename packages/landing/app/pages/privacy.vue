@@ -46,6 +46,13 @@
     </h2>
     <p class="text-body-medium mb-6">{{ $t('legal.privacy.emailSending') }}</p>
 
+    <h2 id="game-table" class="text-headline-small font-weight-bold mb-2">
+      {{ $t('legal.privacy.gameTableTitle') }}
+    </h2>
+    <p class="text-body-medium mb-3">{{ $t('legal.privacy.gameTable') }}</p>
+    <p class="text-body-medium mb-3">{{ $t('legal.privacy.gameTableStorage') }}</p>
+    <p class="text-body-medium mb-6">{{ $t('legal.privacy.gameTableDeletion') }}</p>
+
     <h2 class="text-headline-small font-weight-bold mb-2">
       {{ $t('legal.privacy.legalBasisTitle') }}
     </h2>
