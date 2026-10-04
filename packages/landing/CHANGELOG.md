@@ -1,5 +1,11 @@
 # @dm-hero/landing
 
+## 1.8.0
+
+### Minor Changes
+
+- ca9d0b7: Promote the game table: new section with live reveal demo, 1.6 highlights, nav link and game table docs (EN/DE)
+
 ## 1.7.2
 
 ### Patch Changes
