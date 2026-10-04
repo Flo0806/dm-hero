@@ -1674,7 +1674,8 @@
     "editRelation": "Modifier la relation",
     "relationNotes": "Notes sur la relation",
     "betaWarning": "Ces fonctionnalités sont en bêta. Veuillez d'abord créer une sauvegarde de votre base de données.",
-    "backupSettings": "Aller aux paramètres de sauvegarde"
+    "backupSettings": "Aller aux paramètres de sauvegarde",
+    "new": "Nouveau"
   },
   "groups": {
     "title": "Groupes",
@@ -2504,6 +2505,10 @@
       "title": "La version 1.5 « Bardic Inspiration » est là !",
       "content": "<h3 style='margin-bottom: 12px'>Nouveautés de la version 1.5 :</h3><ul><li><strong>Lecteur de musique</strong> - jouez votre propre bibliothèque musicale pendant la session : choisissez un dossier, les sous-dossiers deviennent des playlists, étoilez-les comme scènes. Fondu enchaîné, modes de répétition, aléatoire, raccourcis – et un mini lecteur flottant qui continue partout où vous naviguez</li><li><strong>Playlists de session</strong> - attachez des liens YouTube, Spotify ou Tabletop Audio à une session ; ils s'ouvrent dans le navigateur pour que la musique continue (dans l'application de bureau, tous les liens externes le font désormais)</li><li><strong>Quatre nouvelles langues</strong> - italien, français, espagnol et chinois simplifié (contribution de la communauté). Six langues au total</li><li><strong>Thème « Music »</strong> - Sunset Beat : coucher de soleil rétro orange et magenta sur un bleu de scène profond, avec des notes de musique qui flottent sur le tableau de bord</li><li><strong>Assistance IA optionnelle améliorée (MCP)</strong> - si vous le souhaitez, une IA peut désormais vous aider à remplir une campagne à partir d'un module : entités avec liens croisés, portraits et documents, groupes, cartes avec marqueurs, rencontres et sessions – chaque changement prévisualisé et confirmé. Demandez-lui : « que sais-tu faire ? »</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Améliorations et corrections :</h3><ul><li>Le tableau de bord affiche la météo de la zone climatique active au lieu de toujours « ensoleillé »</li><li>La génération météo ne touche que la zone sélectionnée – les autres gardent leur météo</li><li>Cliquer sur une entité liée dans le calendrier l'ouvre au lieu d'une page 404</li><li>Les nouveaux champs de blocs de stats reçoivent des noms uniques et ne s'écrasent plus</li><li>Couleur de groupe personnalisée : le champ hex reste ouvert, avec un sélecteur de couleur natif</li><li>Les types de lieu allemands « Ebene »/« Friedhof » ne sont plus en double</li></ul>"
     },
+    "v160": {
+      "title": "La version 1.6 « Nocturne » est là !",
+      "content": "<h3 style='margin-bottom: 12px'>Nouveautés de la version 1.6 :</h3><ul><li><strong>La table de jeu</strong> - tes joueurs s’installent à la table : ils ouvrent table.dm-hero.com sur leur téléphone ou ordinateur et rejoignent avec le code de partie et leur propre PIN, sans compte. Tout est chiffré de bout en bout et tu valides toi-même les nouveaux appareils</li><li><strong>Partage avec moments de révélation</strong> - partage PNJ, lieux, objets, lore et factions avec tes joueurs, en direct, avec images et, si tu veux, sous un alias. Quand tu révèles le vrai nom, tout le monde le voit s’illuminer</li><li><strong>Carte avec brouillard de guerre</strong> - montre une carte à tes joueurs et révèle-la petit à petit au pinceau. Chacun peut pinger d’un appui long et tu peux faire apparaître de courtes notes</li><li><strong>Documents pour les joueurs</strong> - donne lettres, notes et PDF à tous ou à certains joueurs – eux seuls peuvent les ouvrir</li><li><strong>Messages privés</strong> - écris en privé à chaque joueur ; les nouveaux messages apparaissent dans l’en-tête où que tu sois</li><li><strong>La météo à la table</strong> - la météo du jour apparaît chez tes joueurs – avec pluie, neige ou orage en arrière-plan</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Améliorations et corrections :</h3><ul><li>Les titres sont plus compacts (plus d’espaces démesurés)</li><li>Beaucoup de petites corrections de types et de stabilité, nouvelles vérifications automatiques à chaque modification</li></ul>"
+    },
     "installerPath": "Chemin d'installation ({os}) :",
     "autoUpdateHint": "Après une installation via l'installateur, l'application se mettra à jour automatiquement dès qu'une nouvelle version sera disponible.",
     "dontShowAgain": "Ne plus afficher",
@@ -2876,6 +2881,9 @@
       "deleted": "Message supprimé",
       "newCount": "{count} nouveau message | {count} nouveaux messages",
       "newTitle": "Nouveaux messages"
+    },
+    "playerApp": {
+      "hint": "Vos joueurs ouvrent {link} sur leur téléphone ou ordinateur et rejoignent avec le code de partie et leur PIN."
     }
   }
 }

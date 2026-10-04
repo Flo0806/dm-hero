@@ -88,10 +88,12 @@ const version = packageJson.version
 // font — every release looks different. Add an entry per minor as it ships.
 const RELEASE_CODENAMES: Record<string, { name: string, font: string }> = {
   1.5: { name: 'Bardic Inspiration', font: 'Monoton' },
+  1.6: { name: 'Nocturne', font: 'UnifrakturMaguntia' },
 }
 const codename = computed(() => {
   const [major, minor] = version.split('.')
-  const exact = RELEASE_CODENAMES[`${major}.${minor}`]
+  // Development shows the upcoming release (the version only becomes x.y.0 when it ships)
+  const exact = import.meta.dev ? undefined : RELEASE_CODENAMES[`${major}.${minor}`]
   if (exact) return exact
   // Fallback: highest codename by NUMERIC major.minor (not lexicographic, so
   // e.g. 1.10 beats 1.9) — shows the upcoming release's name during its dev cycle.
@@ -134,6 +136,14 @@ if (import.meta.client && window.electronAPI?.isElectron) {
   font-weight: 400;
   font-display: swap;
   src: url('/fonts/monoton.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'UnifrakturMaguntia';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/unifraktur-maguntia.woff2') format('woff2');
 }
 </style>
 

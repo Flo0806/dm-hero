@@ -114,7 +114,13 @@
         value="game-table"
         :disabled="!hasActiveCampaign"
         to="/game-table"
-      />
+      >
+        <template v-if="isNew('gameTable')" #append>
+          <v-chip size="x-small" color="primary" variant="flat">
+            {{ $t('common.new') }}
+          </v-chip>
+        </template>
+      </v-list-item>
       <v-list-item
         prepend-icon="mdi-sword-cross"
         :title="$t('nav.encounters')"
@@ -207,6 +213,7 @@
 
 <script setup lang="ts">
 const router = useRouter()
+const { isNew } = useNewBadges()
 const notesStore = useNotesStore()
 const music = useMusicPlayer()
 const encounterStore = useEncounterStore()

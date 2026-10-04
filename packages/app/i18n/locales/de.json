@@ -1674,7 +1674,8 @@
     "editRelation": "Beziehung bearbeiten",
     "relationNotes": "Notizen zur Beziehung",
     "betaWarning": "Diese Funktionen sind in der Beta-Phase. Bitte erstelle vorher ein Backup deiner Datenbank.",
-    "backupSettings": "Zu Backup-Einstellungen"
+    "backupSettings": "Zu Backup-Einstellungen",
+    "new": "Neu"
   },
   "groups": {
     "title": "Gruppen",
@@ -2504,6 +2505,10 @@
       "title": "Version 1.5 „Bardic Inspiration“ ist da!",
       "content": "<h3 style='margin-bottom: 12px'>Neu in Version 1.5:</h3><ul><li><strong>Musik-Player</strong> - spiel deine eigene Musikbibliothek während der Session: Ordner wählen, Unterordner werden Playlists, mit Stern als Szene merken. Überblenden, Loop-Modi, Zufall, Tastenkürzel – und ein schwebender Mini-Player, der überall weiterspielt</li><li><strong>Session-Playlists</strong> - YouTube-, Spotify- oder Tabletop-Audio-Links an eine Session hängen; sie öffnen sich im Browser, damit die Musik weiterläuft (in der Desktop-App gilt das jetzt für alle externen Links)</li><li><strong>Vier neue Sprachen</strong> - Italienisch, Französisch, Spanisch und vereinfachtes Chinesisch (aus der Community). Sechs Sprachen insgesamt</li><li><strong>Theme „Music“</strong> - Sunset Beat: Retro-Sonnenuntergang in Orange und Magenta über tiefem Bühnenblau, mit Noten, die übers Dashboard schweben</li><li><strong>Verbesserte optionale KI-Unterstützung (MCP)</strong> - auf Wunsch hilft eine KI jetzt beim Befüllen einer Kampagne aus einem Abenteuer: Entitäten mit Querverweisen, Portraits und Dokumente, Gruppen, Karten mit Markern, Encounter und Sessions – jede Änderung mit Vorschau und Bestätigung. Frag sie: „Was kannst du?“</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Verbesserungen & Fixes:</h3><ul><li>Dashboard zeigt das Wetter der aktiven Klimazone statt immer „sonnig“</li><li>Wetter generieren betrifft nur die gewählte Zone – andere Zonen behalten ihr Wetter</li><li>Klick auf eine verknüpfte Entität im Kalender öffnet sie statt einer 404-Seite</li><li>Neue Werteblock-Felder bekommen eindeutige Namen und überschreiben sich nicht mehr</li><li>Eigene Gruppenfarbe: Hex-Feld bleibt offen, dazu ein nativer Farbwähler</li><li>Deutsche Ortstypen „Ebene“/„Friedhof“ sind nicht mehr doppelt</li></ul>"
     },
+    "v160": {
+      "title": "Version 1.6 „Nocturne“ ist da!",
+      "content": "<h3 style='margin-bottom: 12px'>Neu in Version 1.6:</h3><ul><li><strong>Der Spieltisch</strong> - deine Spieler sitzen jetzt mit am Tisch: Sie öffnen table.dm-hero.com auf Handy oder Laptop und treten mit Spielcode und eigener PIN bei – ganz ohne Account. Alles ist Ende-zu-Ende verschlüsselt, neue Geräte bestätigst du selbst</li><li><strong>Teilen mit Enthüllungsmomenten</strong> - NPCs, Orte, Gegenstände, Lore und Fraktionen mit deinen Spielern teilen – live, mit Bildern und auf Wunsch unter einem Alias. Lüftest du später den wahren Namen, leuchtet es bei allen auf</li><li><strong>Karte mit Nebel des Krieges</strong> - zeig deinen Spielern eine Karte und deck sie mit dem Pinsel Stück für Stück auf. Jeder kann mit langem Druck pingen, du kannst kurze Notizen aufblitzen lassen</li><li><strong>Handouts</strong> - Briefe, Notizen und PDFs an alle oder ausgewählte Spieler geben – nur sie können sie öffnen</li><li><strong>Private Nachrichten</strong> - schreib einzelnen Spielern privat; neue Nachrichten siehst du überall oben im Header</li><li><strong>Wetter am Tisch</strong> - das Wetter des Tages erscheint bei deinen Spielern – mit Regen, Schnee oder Gewitter im Hintergrund</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Verbesserungen &amp; Fixes:</h3><ul><li>Überschriften sind kompakter (kein übergroßer Abstand mehr)</li><li>Viele kleine Typ- und Stabilitätsfixes, neue automatische Prüfungen bei jeder Änderung</li></ul>"
+    },
     "installerPath": "Installationspfad ({os}):",
     "autoUpdateHint": "Nach der Installation über den Installer wird die App automatisch aktualisiert, sobald eine neue Version verfügbar ist.",
     "dontShowAgain": "Nicht mehr anzeigen",
@@ -2876,6 +2881,9 @@
       "deleted": "Nachricht gelöscht",
       "newCount": "{count} neue Nachricht | {count} neue Nachrichten",
       "newTitle": "Neue Nachrichten"
+    },
+    "playerApp": {
+      "hint": "Deine Spieler öffnen {link} auf Handy oder Laptop und treten mit Spielcode und ihrer PIN bei."
     }
   }
 }

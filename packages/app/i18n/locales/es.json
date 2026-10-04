@@ -1674,7 +1674,8 @@
     "editRelation": "Editar relación",
     "relationNotes": "Notas de la relación",
     "betaWarning": "Estas funciones están en beta. Haz primero una copia de seguridad de tu base de datos.",
-    "backupSettings": "Ir a los ajustes de copia de seguridad"
+    "backupSettings": "Ir a los ajustes de copia de seguridad",
+    "new": "Nuevo"
   },
   "groups": {
     "title": "Grupos",
@@ -2504,6 +2505,10 @@
       "title": "¡La versión 1.5 «Bardic Inspiration» ya está aquí!",
       "content": "<h3 style='margin-bottom: 12px'>Novedades de la versión 1.5:</h3><ul><li><strong>Reproductor de música</strong> - reproduce tu propia biblioteca musical durante la sesión: elige una carpeta, las subcarpetas se convierten en playlists, márcalas con estrella como escenas. Fundido, modos de repetición, aleatorio, atajos – y un mini reproductor flotante que sigue sonando vayas donde vayas</li><li><strong>Playlists de sesión</strong> - adjunta enlaces de YouTube, Spotify o Tabletop Audio a una sesión; se abren en el navegador para que la música siga (en la app de escritorio ahora lo hacen todos los enlaces externos)</li><li><strong>Cuatro idiomas nuevos</strong> - italiano, francés, español y chino simplificado (aportación de la comunidad). Seis idiomas en total</li><li><strong>Tema «Music»</strong> - Sunset Beat: atardecer retro en naranja y magenta sobre azul de escenario profundo, con notas musicales flotando por el panel</li><li><strong>Soporte de IA opcional mejorado (MCP)</strong> - si quieres, una IA ya puede ayudarte a rellenar una campaña a partir de un módulo: entidades con enlaces cruzados, retratos y documentos, grupos, mapas con marcadores, encuentros y sesiones – cada cambio con vista previa y confirmación. Pregúntale: «¿qué sabes hacer?»</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Mejoras y correcciones:</h3><ul><li>El panel muestra el clima de la zona climática activa en lugar de siempre «soleado»</li><li>Generar clima solo afecta a la zona seleccionada – las demás conservan su clima</li><li>Hacer clic en una entidad vinculada en el calendario la abre en lugar de una página 404</li><li>Los nuevos campos de bloques de estadísticas reciben nombres únicos y ya no se sobrescriben</li><li>Color de grupo personalizado: el campo hex permanece abierto, más un selector de color nativo</li><li>Los tipos de lugar alemanes «Ebene»/«Friedhof» ya no están duplicados</li></ul>"
     },
+    "v160": {
+      "title": "¡Ya está aquí la versión 1.6 «Nocturne»!",
+      "content": "<h3 style='margin-bottom: 12px'>Novedades de la versión 1.6:</h3><ul><li><strong>La mesa de juego</strong> - tus jugadores se sientan contigo: abren table.dm-hero.com en el móvil o el portátil y se unen con el código de partida y su propio PIN, sin cuenta. Todo está cifrado de extremo a extremo y tú apruebas los dispositivos nuevos</li><li><strong>Compartir con momentos de revelación</strong> - comparte PNJ, lugares, objetos, trasfondo y facciones con tus jugadores, en directo, con imágenes y, si quieres, bajo un alias. Cuando reveles el nombre real, se ilumina para todos</li><li><strong>Mapa con niebla de guerra</strong> - muestra un mapa a tus jugadores y revélalo poco a poco con un pincel. Todos pueden marcar un punto con una pulsación larga y tú puedes mostrar notas breves</li><li><strong>Documentos para los jugadores</strong> - entrega cartas, notas y PDF a todos o a jugadores elegidos; solo ellos pueden abrirlos</li><li><strong>Mensajes privados</strong> - escribe en privado a cada jugador; los mensajes nuevos aparecen en la cabecera estés donde estés</li><li><strong>El tiempo en la mesa</strong> - el tiempo del día aparece para tus jugadores, con lluvia, nieve o tormenta de fondo</li></ul><h3 style='margin-top: 16px; margin-bottom: 12px'>Mejoras y correcciones:</h3><ul><li>Los títulos son más compactos (sin espacios exagerados)</li><li>Muchas pequeñas correcciones de tipos y estabilidad, nuevas comprobaciones automáticas en cada cambio</li></ul>"
+    },
     "installerPath": "Ruta de instalación ({os}):",
     "autoUpdateHint": "Tras instalar con el instalador, la app se actualizará automáticamente cuando haya una nueva versión disponible.",
     "dontShowAgain": "No volver a mostrar",
@@ -2876,6 +2881,9 @@
       "deleted": "Mensaje borrado",
       "newCount": "{count} mensaje nuevo | {count} mensajes nuevos",
       "newTitle": "Mensajes nuevos"
+    },
+    "playerApp": {
+      "hint": "Tus jugadores abren {link} en el móvil o el portátil y se unen con el código de partida y su PIN."
     }
   }
 }
