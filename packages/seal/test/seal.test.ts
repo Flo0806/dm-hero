@@ -3,7 +3,7 @@ import {
   createGameKeys, loadGameKeys, rotateGameKey, generateDeviceKeyPair, fingerprint, encryptFile, decryptFile,
   derivePairKey, exportPublicKey, generateExchangeKeyPair, generateGameKey, generateSigningKeyPair,
   importExchangePublicKey, importVerifyKey, open, seal, unwrapGameKey, wrapGameKey,
-  EMPTY_FOG, isPingContent, isTableFogContent, isTableMapContent, pingColor, simplifyStroke,
+  EMPTY_FOG, isMapFog, isPingContent, isTableFogContent, isTableMapContent, normalizeFog, pingColor, simplifyStroke,
   type EnvelopeHeader,
 } from '../src'
 
@@ -151,6 +151,16 @@ describe('table protocol', () => {
     // The relay can't pass one off as the other
     expect(isTableMapContent(fog)).toBe(false)
     expect(isTableFogContent(map)).toBe(false)
+  })
+
+  it('fog points must lie in the map; painting past the edge is brought back to it', () => {
+    const outside = { base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [[-3, 50], [104, 1e9]] }] }
+    expect(isMapFog(outside)).toBe(false)
+    const normalized = normalizeFog(outside)
+    expect(normalized.strokes[0]!.points).toEqual([[0, 50], [100, 100]])
+    expect(isMapFog(normalized)).toBe(true)
+    // Malformed stays malformed - for isMapFog to reject
+    expect(isMapFog(normalizeFog({ base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [['x', 1]] }] }))).toBe(false)
   })
 
   it('simplifying a stroke keeps its shape with fewer points', () => {

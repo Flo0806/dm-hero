@@ -1,12 +1,12 @@
 import { getDb } from '~~/server/utils/db'
 import { syncMapFog } from '~~/server/utils/share/map'
-import { FOG_MAX_BYTES, isMapFog } from '~~/types/fog'
+import { FOG_MAX_BYTES, isMapFog, normalizeFog } from '~~/types/fog'
 
 // Saves the whole fog of a map (the DM paints, the client sends the new state)
 export default defineEventHandler(async (event) => {
   const mapId = Number(getRouterParam(event, 'id'))
   if (!Number.isInteger(mapId)) throw createError({ statusCode: 400, message: 'Invalid map id' })
-  const fog = await readBody(event)
+  const fog = normalizeFog(await readBody(event))
   if (!isMapFog(fog)) throw createError({ statusCode: 400, message: 'Invalid fog' })
   // Must still fit the relay once encrypted
   if (JSON.stringify(fog).length > FOG_MAX_BYTES) throw createError({ statusCode: 413, message: 'Fog too large' })

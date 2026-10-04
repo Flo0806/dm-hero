@@ -76,6 +76,13 @@ describe('map fog', () => {
     expect(await call('maps/[id]/fog.get.ts', { params: { id: String(mapId) } })).toEqual({ base: 'clear', strokes: [] })
   })
 
+  it('strokes painted past the map edge are saved at the edge', async () => {
+    const painted: MapFog = { base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [[-5, 20], [100.5, 120]] }] }
+    await call('maps/[id]/fog.put.ts', { params: { id: String(mapId) }, body: painted })
+    expect(await call('maps/[id]/fog.get.ts', { params: { id: String(mapId) } }))
+      .toEqual({ base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [[0, 20], [100, 100]] }] })
+  })
+
   it('rejects broken fog', async () => {
     for (const body of [null, { base: 'nope', strokes: [] }, { base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [] }] }, { base: 'covered', strokes: [{ mode: 'reveal', radius: 4, points: [['x', 1]] }] }]) {
       expect(isMapFog(body)).toBe(false)

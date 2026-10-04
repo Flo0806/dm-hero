@@ -85,12 +85,34 @@ export function isMapFog(value: unknown): value is MapFog {
   const fog = value as MapFog
   if (!fog || (fog.base !== 'covered' && fog.base !== 'clear') || !Array.isArray(fog.strokes)) return false
   if (fog.strokes.length > FOG_MAX_STROKES) return false
-  const isNum = (n: unknown) => typeof n === 'number' && Number.isFinite(n)
   return fog.strokes.every(s =>
     (s.mode === 'reveal' || s.mode === 'cover')
-    && isNum(s.radius) && s.radius > 0 && s.radius <= 50
+    && typeof s.radius === 'number' && Number.isFinite(s.radius) && s.radius > 0 && s.radius <= 50
     && Array.isArray(s.points) && s.points.length > 0 && s.points.length <= FOG_MAX_POINTS
-    && s.points.every(p => Array.isArray(p) && p.length === 2 && isNum(p[0]) && isNum(p[1])))
+    && s.points.every(p => Array.isArray(p) && p.length === 2 && inMap(p[0]) && inMap(p[1])))
+}
+
+/** Percent into the map (painting past the edge ends at the edge) */
+export const clampPercent = (n: number) => Math.min(100, Math.max(0, n))
+
+/**
+ * Brings points into 0-100 (strokes painted past the map edge). Applied wherever
+ * a fog is loaded, saved or sent - leaves anything malformed to isMapFog.
+ */
+export function normalizeFog<T>(value: T): T {
+  const fog = value as unknown as MapFog
+  if (!fog || !Array.isArray(fog.strokes)) return value
+  return {
+    ...fog,
+    strokes: fog.strokes.map(s => !s || !Array.isArray(s.points)
+      ? s
+      : {
+          ...s,
+          points: s.points.map(p => Array.isArray(p) && p.length === 2 && typeof p[0] === 'number' && typeof p[1] === 'number'
+            ? [clampPercent(p[0]), clampPercent(p[1])] as [number, number]
+            : p),
+        }),
+  } as unknown as T
 }
 
 export function isTableMapContent(value: unknown): value is TableMapContent {

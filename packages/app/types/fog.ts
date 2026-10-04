@@ -3,6 +3,7 @@
 import type { TablePingContent } from '@dm-hero/seal'
 
 export {
+  clampPercent,
   EMPTY_FOG,
   FOG_MAX_BYTES,
   FOG_MAX_POINTS,
@@ -14,6 +15,7 @@ export {
   fogStrokePath,
   isMapFog,
   isPingContent,
+  normalizeFog,
   pingColor,
   simplifyStroke,
   type FogMode,

@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import type { CampaignMap, MapMarker, MapArea, MapClimateArea } from '~~/types/map'
-import { FOG_MAX_POINTS, simplifyStroke, type FogMode, type FogStroke, type MapFog } from '~~/types/fog'
+import { clampPercent, FOG_MAX_POINTS, simplifyStroke, type FogMode, type FogStroke, type MapFog } from '~~/types/fog'
 import type {
   Map as LeafletMap,
   ImageOverlay,
@@ -287,10 +287,11 @@ function applyFogTool() {
 }
 
 /** Lat/lng of the map -> percent of the image */
+/** Lat/lng of the map -> percent of the image (past the edge = at the edge) */
 function toPercent(latlng: L.LatLng): [number, number] {
   return [
-    Math.round(latlng.lng / mapSize.width * 10000) / 100,
-    Math.round((mapSize.height - latlng.lat) / mapSize.height * 10000) / 100,
+    clampPercent(Math.round(latlng.lng / mapSize.width * 10000) / 100),
+    clampPercent(Math.round((mapSize.height - latlng.lat) / mapSize.height * 10000) / 100),
   ]
 }
 

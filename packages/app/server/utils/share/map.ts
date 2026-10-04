@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type Database from 'better-sqlite3'
 import { loadGameKeys, seal, type EnvelopeHeader, type LoadedGameKeys, type StoredGameKeys } from '@dm-hero/seal'
-import { EMPTY_FOG, type MapFog, type TableFogContent, type TableMapContent } from '~~/types/fog'
+import { EMPTY_FOG, normalizeFog, type MapFog, type TableFogContent, type TableMapContent } from '~~/types/fog'
 import type { SharedFileRef } from '~~/types/share'
 import { getUploadPath } from '../paths'
 import { deleteRelayFile, deleteRelayState, getRelayAuth, putRelayState, type RelayAuth } from '../relay'
@@ -117,7 +117,7 @@ async function runMapSync(db: Database.Database, tableId: number, force: boolean
   const fogText = (db.prepare('SELECT fog FROM map_fog WHERE map_id = ?').get(map.id) as { fog: string } | undefined)?.fog ?? null
   const fogHash = hash(`${map.id}:${fogText}`)
   if (fogHash !== table.fog_hash) {
-    const fog: TableFogContent = { kind: 'fog', mapId: map.id, fog: fogText ? JSON.parse(fogText) as MapFog : EMPTY_FOG }
+    const fog: TableFogContent = { kind: 'fog', mapId: map.id, fog: fogText ? normalizeFog(JSON.parse(fogText) as MapFog) : EMPTY_FOG }
     await putRelayState(auth, 'fog', await sealed(fog))
     db.prepare('UPDATE game_tables SET fog_hash = ? WHERE id = ?').run(fogHash, tableId)
   }
