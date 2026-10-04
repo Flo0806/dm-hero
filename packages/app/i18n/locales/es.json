@@ -2839,7 +2839,8 @@
     "expiredRestart": "Volver a conectar",
     "tabs": {
       "table": "Mesa",
-      "shared": "Compartido"
+      "shared": "Compartido",
+      "messages": "Mensajes"
     },
     "handout": {
       "action": "Dar a los jugadores",
@@ -2858,6 +2859,15 @@
       "recipients": "Cambiar destinatarios",
       "empty": "Aún no has dado documentos a los jugadores. Puedes hacerlo en los documentos de una entidad.",
       "pending": "Guardado: tus jugadores lo recibirán en cuanto la mesa de juego esté disponible."
+    },
+    "messages": {
+      "players": "Jugadores",
+      "conversation": "Conversación con {name}",
+      "empty": "Aún no hay mensajes; escribe el primero. Solo este jugador puede leerlos.",
+      "write": "Mensaje para {name}",
+      "send": "Enviar",
+      "unread": "{count} mensajes sin leer",
+      "noPlayers": "Primero añade jugadores; después podrás escribirles en privado."
     }
   }
 }

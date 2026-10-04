@@ -11,6 +11,10 @@
         <template v-else>
           {{ presence.expired ? $t('gameTable.expired') : presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
         </template>
+        <!-- Unread private messages - visible from anywhere in the app -->
+        <span v-if="store.unreadTotal" class="d-inline-flex align-center ms-2" :aria-label="$t('gameTable.messages.unread', { count: store.unreadTotal })">
+          <v-icon size="small" icon="mdi-email" class="me-1" />{{ store.unreadTotal }}
+        </span>
       </v-chip>
     </template>
 
@@ -72,6 +76,11 @@ const presence = import.meta.client
 // Waiting devices win: the DM should notice them from anywhere in the app
 const chipColor = computed(() => presence.value.expired ? 'error' : presence.value.pending.length ? 'primary' : presence.value.connected ? 'success' : 'warning')
 const chipIcon = computed(() => presence.value.expired ? 'mdi-timer-sand-complete' : presence.value.pending.length ? 'mdi-account-question' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
+
+// A player wrote: refresh the messages (unread count here, conversation on the game table page)
+useTableMessageEvents(() => store.table?.id, () => {
+  store.loadMessages().catch(() => {})
+})
 
 const onlinePlayers = computed(() => store.table?.players.filter(p => presence.value.online.includes(p.id)) ?? [])
 

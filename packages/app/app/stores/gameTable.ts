@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { GameTable, GameTablePlayer } from '~~/types/game-table'
+import type { GameTable, GameTableMessage, GameTablePlayer } from '~~/types/game-table'
 import type { GameTableHandout, GameTableShare, ShareType } from '~~/types/share'
 
 // Increases with every load - an older (slower) response must not overwrite a newer one
@@ -12,6 +12,8 @@ interface GameTableState {
   shares: GameTableShare[]
   /** Documents handed out to players */
   handouts: GameTableHandout[]
+  /** Private messages with all players of this game */
+  messages: GameTableMessage[]
   /** Fields each share type offers (from the server) */
   shareKinds: Partial<Record<ShareType, string[]>>
   /** The DM's remembered ticks per share type */
@@ -28,6 +30,7 @@ export const useGameTableStore = defineStore('gameTable', {
     loadedCampaignId: null,
     shares: [],
     handouts: [],
+    messages: [],
     shareKinds: {},
     shareDefaults: {},
     shareTarget: null,
@@ -36,6 +39,9 @@ export const useGameTableStore = defineStore('gameTable', {
   getters: {
     shareOf: state => (type: ShareType, entityId: number) =>
       state.shares.find(s => s.entity_type === type && s.entity_id === entityId) ?? null,
+    unreadOf: state => (playerId: number) =>
+      state.messages.filter(m => m.player_id === playerId && m.sender === 'player' && !m.read_at).length,
+    unreadTotal: state => state.messages.filter(m => m.sender === 'player' && !m.read_at).length,
   },
 
   actions: {
@@ -57,6 +63,8 @@ export const useGameTableStore = defineStore('gameTable', {
         if (seq !== loadSeq) return
         this.shares = shares
         this.handouts = handouts
+        if (table) await this.loadMessages()
+        else this.messages = []
       }
       finally {
         this.loading = false
@@ -91,6 +99,7 @@ export const useGameTableStore = defineStore('gameTable', {
       this.table = await $fetch<GameTable>('/api/game-table', { method: 'POST', body: { campaignId } })
       this.shares = []
       this.handouts = []
+      this.messages = []
     },
 
     async close() {
@@ -99,6 +108,7 @@ export const useGameTableStore = defineStore('gameTable', {
       this.table = null
       this.shares = []
       this.handouts = []
+      this.messages = []
     },
 
     async addPlayer(name: string, playerEntityId: number | null) {
@@ -181,6 +191,25 @@ export const useGameTableStore = defineStore('gameTable', {
     async withdrawHandout(id: number) {
       await $fetch(`/api/game-table/handouts/${id}`, { method: 'DELETE' })
       this.handouts = this.handouts.filter(h => h.id !== id)
+    },
+
+    async loadMessages() {
+      this.messages = this.table ? await $fetch<GameTableMessage[]>(`/api/game-table/${this.table.id}/messages`) : []
+    },
+
+    /** Write to one player - kept here, sent encrypted to their devices */
+    async sendMessage(playerId: number, text: string) {
+      if (!this.table) return
+      const message = await $fetch<GameTableMessage>(`/api/game-table/${this.table.id}/messages`, { method: 'POST', body: { playerId, text } })
+      this.messages = [...this.messages, message]
+    },
+
+    /** The DM looked at a conversation */
+    async markRead(playerId: number) {
+      if (!this.table || !this.unreadOf(playerId)) return
+      await $fetch(`/api/game-table/${this.table.id}/messages/read`, { method: 'POST', body: { playerId } })
+      const now = new Date().toISOString()
+      this.messages = this.messages.map(m => (m.player_id === playerId && !m.read_at ? { ...m, read_at: now } : m))
     },
 
     openShareDialog(type: ShareType, entityId: number, name: string) {

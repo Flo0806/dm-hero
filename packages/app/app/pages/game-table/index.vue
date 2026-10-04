@@ -31,6 +31,12 @@
           <v-tab value="table" prepend-icon="mdi-table-furniture">
             {{ $t('gameTable.tabs.table') }}
           </v-tab>
+          <v-tab value="messages" prepend-icon="mdi-email-outline">
+            {{ $t('gameTable.tabs.messages') }}
+            <v-chip v-if="store.unreadTotal" size="x-small" color="primary" class="ms-2">
+              {{ store.unreadTotal }}
+            </v-chip>
+          </v-tab>
           <v-tab value="shared" prepend-icon="mdi-share-variant">
             {{ $t('gameTable.tabs.shared') }}
             <v-chip v-if="sharedCount" size="x-small" class="ms-2">
@@ -61,6 +67,8 @@
           </v-col>
         </v-row>
 
+        <GameTableMessages v-else-if="tab === 'messages'" />
+
         <template v-else>
           <GameTableSharing class="mt-0" />
           <GameTableHandouts />
@@ -85,7 +93,7 @@ const campaignId = computed(() => campaignStore.activeCampaignIdNumber)
 const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
-const tab = ref<'table' | 'shared'>('table')
+const tab = ref<'table' | 'messages' | 'shared'>('table')
 const sharedCount = computed(() => store.shares.length + store.handouts.length)
 const restartMode = ref(false)
 

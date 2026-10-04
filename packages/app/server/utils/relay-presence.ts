@@ -1,11 +1,12 @@
-import { fingerprint, loadGameKeys, open, type Envelope, type StoredGameKeys } from '@dm-hero/seal'
+import { derivePairKey, fingerprint, importExchangePublicKey, isChatPostContent, loadGameKeys, open, type Envelope, type StoredGameKeys } from '@dm-hero/seal'
 import { isPingContent, type TablePing } from '~~/types/fog'
 import type { GameTablePresence } from '~~/types/game-table'
 import { getDb } from './db'
-import { getRelayAuth, relayUrl } from './relay'
+import { ackRelayMessage, getRelayAuth, relayUrl } from './relay'
 import { deliverGameKey, isApprovedDevice, isKnownPlayer } from './relay-keys'
 import { syncTableHandouts } from './share/handouts'
 import { syncTableInfo } from './share/info'
+import { syncTableThreads } from './share/messages'
 import { syncTableMap } from './share/map'
 import { isTableBusy, syncTableShares } from './share/sync'
 
@@ -39,6 +40,8 @@ function runShareSync(tableId: number) {
   syncTableMap(getDb(), tableId).catch(error => console.error('[Relay] Map sync failed:', error))
   // Handouts (document changed, newly approved device ...)
   syncTableHandouts(getDb(), tableId).catch(error => console.error('[Relay] Handout sync failed:', error))
+  // Conversations (a newly approved device gets them too)
+  syncTableThreads(getDb(), tableId).catch(error => console.error('[Relay] Message sync failed:', error))
   // Campaign name (renamed meanwhile)
   syncTableInfo(getDb(), tableId).catch(error => console.error('[Relay] Info sync failed:', error))
 }
@@ -98,6 +101,10 @@ async function run(tableId: number) {
         conn.state = { ...conn.state, connected: true, online: online.map(Number) }
         emit(tableId)
       }
+      else if (event === 'message') {
+        handleMessage(tableId, JSON.parse(data) as { id: string, playerId: string, publicKey: string, envelope: Envelope })
+          .catch(error => console.error('[Relay] Message rejected:', error))
+      }
       else if (event === 'ping') {
         handlePing(tableId, JSON.parse(data) as { from: string, name: string, envelope: Envelope })
           .catch(error => console.error('[Relay] Ping rejected:', error))
@@ -156,6 +163,48 @@ async function handlePing(tableId: number, ping: { from: string, name: string, e
   // Notes are the DM's - a player's ping is just a spot
   const { text: _ignored, ...spot } = content
   for (const listener of listeners) listener({ ...spot, from: Number(ping.from), name: ping.name })
+}
+
+// ---------------------------------------------------------------------------
+// Private messages from players -> stored, then open pages are told (exported for tests)
+// ---------------------------------------------------------------------------
+
+const messageListeners = new Map<number, Set<(playerId: number) => void>>()
+
+/** Live "a player wrote" for open pages (the relay connection is kept by watchPresence) */
+export function watchMessages(tableId: number, listener: (playerId: number) => void) {
+  if (!messageListeners.has(tableId)) messageListeners.set(tableId, new Set())
+  messageListeners.get(tableId)!.add(listener)
+  return () => messageListeners.get(tableId)?.delete(listener)
+}
+
+export async function handleMessage(tableId: number, message: { id: string, playerId: string, publicKey: string, envelope: Envelope }) {
+  const db = getDb()
+  const auth = getRelayAuth(db, tableId)
+  const playerId = Number(message.playerId)
+  const table = db.prepare('SELECT relay_game_id, e2e_keys FROM game_tables WHERE id = ?').get(tableId) as { relay_game_id: string, e2e_keys: string | null } | undefined
+  if (!auth || !table?.e2e_keys) return
+  // Only approved devices of known players - anything else is dropped from the relay
+  if (isKnownPlayer(tableId, playerId) && isApprovedDevice(tableId, playerId, message.publicKey)) {
+    const keys = await loadGameKeys(JSON.parse(table.e2e_keys) as StoredGameKeys)
+    const pairKey = await derivePairKey(keys.exchangeKey, await importExchangePublicKey(message.publicKey), table.relay_game_id)
+    const { header } = message.envelope
+    const content = header.gameId === table.relay_game_id && header.to === 'dm'
+      ? await open<unknown>(pairKey, message.envelope).catch(() => null)
+      : null
+    if (isChatPostContent(content)) {
+      // message_key from the player's own id: delivered twice -> stored once, and the
+      // player recognises it in the conversation ("delivered")
+      const inserted = db.prepare('INSERT OR IGNORE INTO game_table_messages (game_table_id, player_id, message_key, sender, text) VALUES (?, ?, ?, ?, ?)')
+        .run(tableId, playerId, `p-${playerId}-${content.id}`, 'player', content.text.trim()).changes > 0
+      if (inserted) {
+        for (const listener of messageListeners.get(tableId) ?? []) listener(playerId)
+        // The player's other devices (and this one) see it in the conversation
+        syncTableThreads(db, tableId, playerId).catch(error => console.error('[Relay] Message sync failed:', error))
+      }
+    }
+  }
+  await ackRelayMessage(auth, message.id)
 }
 
 /** DM decided on a device - remove it from the waiting list */

@@ -50,7 +50,8 @@
       "label": "Vista",
       "shares": "Condiviso",
       "map": "Mappa",
-      "documents": "Documenti"
+      "documents": "Documenti",
+      "messages": "Messaggi"
     },
     "map": {
       "label": "Mappa: {name}",
@@ -71,6 +72,15 @@
       "openPdf": "Apri PDF",
       "opening": "Apertura …",
       "failed": "Impossibile aprire il documento."
+    },
+    "chat": {
+      "title": "Messaggi con il master",
+      "empty": "Qui scrivi in privato con il tuo master: nessun altro può leggere.",
+      "write": "Messaggio al master",
+      "send": "Invia",
+      "you": "Tu",
+      "pending": "in consegna …",
+      "failed": "Impossibile inviare il messaggio. Riprova tra poco."
     }
   },
   "cookieNotice": {

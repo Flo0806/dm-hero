@@ -20,5 +20,11 @@ export default defineEventHandler((event) => {
   for (const p of pending) {
     void stream.push({ event: 'key-request', data: JSON.stringify({ playerId: p.player_id, publicKey: p.public_key }) })
   }
+  // Messages players wrote while DM Hero was away
+  const inbox = useRelayDb().prepare('SELECT id, player_id, public_key, envelope FROM inbox WHERE game_id = ? ORDER BY created_at')
+    .all(game.id) as Array<{ id: string, player_id: string, public_key: string, envelope: string }>
+  for (const m of inbox) {
+    void stream.push({ event: 'message', data: JSON.stringify({ id: m.id, playerId: m.player_id, publicKey: m.public_key, envelope: JSON.parse(m.envelope) }) })
+  }
   return sending
 })

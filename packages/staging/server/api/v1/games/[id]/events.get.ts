@@ -34,6 +34,12 @@ export default defineEventHandler((event) => {
     if (envelope) void stream.push({ event: 'handout', data: JSON.stringify({ id: handout.id, envelope }) })
   }
 
+  // The conversation with the DM - only the envelope of this device
+  const thread = useRelayDb().prepare('SELECT envelopes FROM threads WHERE game_id = ? AND player_id = ?')
+    .get(gameId, player.player_id) as { envelopes: string } | undefined
+  const threadEnvelope = thread && player.public_key ? (JSON.parse(thread.envelopes) as Record<string, unknown>)[player.public_key] : undefined
+  if (threadEnvelope) void stream.push({ event: 'thread', data: JSON.stringify({ envelope: threadEnvelope }) })
+
   // The shown map + its fog
   const states = useRelayDb().prepare('SELECT slot, envelope FROM game_state WHERE game_id = ?')
     .all(gameId) as Array<{ slot: string, envelope: string }>

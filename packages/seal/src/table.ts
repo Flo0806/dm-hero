@@ -86,6 +86,47 @@ export function isHandoutContent(value: unknown): value is HandoutContent {
     && typeof h.file.iv === 'string' && Number.isFinite(h.file.size) && h.file.size <= HANDOUT_FILE_MAX
 }
 
+/** One private message between the DM and a player */
+export interface ChatMessage {
+  id: string
+  from: 'dm' | 'player'
+  text: string
+  sentAt: string
+}
+
+/**
+ * The whole conversation with one player (newest last), sealed per device of
+ * that player by DM Hero - which keeps the conversation and sends it on change.
+ */
+export interface ChatThreadContent {
+  kind: 'thread'
+  messages: ChatMessage[]
+}
+
+/** What a player writes: sealed with the sending device's pair key, for DM Hero only */
+export interface ChatPostContent {
+  kind: 'chat'
+  id: string
+  text: string
+}
+
+export const CHAT_TEXT_MAX = 1000
+/** Only the newest messages travel to the players */
+export const CHAT_THREAD_MAX = 100
+
+const isChatText = (text: unknown) => typeof text === 'string' && text.trim().length > 0 && text.length <= CHAT_TEXT_MAX
+
+export function isChatPostContent(value: unknown): value is ChatPostContent {
+  const c = value as ChatPostContent
+  return !!c && c.kind === 'chat' && typeof c.id === 'string' && /^[\w-]{1,64}$/.test(c.id) && isChatText(c.text)
+}
+
+export function isChatThreadContent(value: unknown): value is ChatThreadContent {
+  const t = value as ChatThreadContent
+  return !!t && t.kind === 'thread' && Array.isArray(t.messages) && t.messages.length <= CHAT_THREAD_MAX
+    && t.messages.every(m => typeof m?.id === 'string' && (m.from === 'dm' || m.from === 'player') && isChatText(m.text) && typeof m.sentAt === 'string')
+}
+
 /** A ping on the shown map. text: a short DM note, shown a few seconds. */
 export interface TablePingContent {
   mapId: number

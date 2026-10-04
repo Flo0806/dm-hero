@@ -59,6 +59,10 @@
       </div>
     </main>
 
+    <main v-else-if="tab === 'messages'" id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" class="flex-1 w-full max-w-3xl mx-auto px-5 pb-12">
+      <ChatPanel :messages="messages" :pending="pendingMessages" :on-send="sendMessage" />
+    </main>
+
     <main v-else-if="tab === 'documents' && handouts.length" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12">
       <HandoutList :handouts="handouts" />
     </main>
@@ -115,7 +119,7 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, messages, pendingMessages, sendMessage } = connect(gameId)
 
 // Tab title: the campaign, once known
 useHead(() => (campaignName.value ? { title: `${campaignName.value} – DM Hero` } : {}))
@@ -174,10 +178,11 @@ function showRevealed(shareId: string) {
   if (share && !openIds.value.includes(shareId)) open(share)
 }
 
-// Shared | documents | map - documents and map only exist while there is something
-type Tab = 'shares' | 'documents' | 'map'
+// Shared | messages | documents | map - documents and map only exist while there is something
+type Tab = 'shares' | 'messages' | 'documents' | 'map'
 const tabs = computed<Tab[]>(() => [
   'shares',
+  'messages',
   ...(handouts.value.length ? ['documents' as const] : []),
   ...(tableMap.value ? ['map' as const] : []),
 ])
@@ -203,6 +208,9 @@ watch(() => tableMap.value?.mapId, (mapId) => {
 watch(() => handouts.value.map(h => h.handoutId).join(), (now, before) => {
   const added = now.split(',').some(id => id && !(before ?? '').split(',').includes(id))
   if (added && tab.value !== 'documents') unseen.documents = true
+})
+watch(() => messages.value.filter(m => m.from === 'dm').length, (now, before) => {
+  if (now > (before ?? 0) && tab.value !== 'messages') unseen.messages = true
 })
 watch(tab, (value) => {
   unseen[value] = false
