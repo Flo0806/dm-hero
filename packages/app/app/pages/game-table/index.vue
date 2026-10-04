@@ -31,6 +31,12 @@
           <v-tab value="table" prepend-icon="mdi-table-furniture">
             {{ $t('gameTable.tabs.table') }}
           </v-tab>
+          <v-tab value="messages" prepend-icon="mdi-email-outline">
+            {{ $t('gameTable.tabs.messages') }}
+            <v-chip v-if="store.unreadTotal" size="x-small" color="primary" class="ms-2">
+              {{ store.unreadTotal }}
+            </v-chip>
+          </v-tab>
           <v-tab value="shared" prepend-icon="mdi-share-variant">
             {{ $t('gameTable.tabs.shared') }}
             <v-chip v-if="sharedCount" size="x-small" class="ms-2">
@@ -61,6 +67,8 @@
           </v-col>
         </v-row>
 
+        <GameTableMessages v-else-if="tab === 'messages'" :focus="focusPlayer" />
+
         <template v-else>
           <GameTableSharing class="mt-0" />
           <GameTableHandouts />
@@ -85,7 +93,16 @@ const campaignId = computed(() => campaignStore.activeCampaignIdNumber)
 const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
-const tab = ref<'table' | 'shared'>('table')
+const tab = ref<'table' | 'messages' | 'shared'>('table')
+
+// Jump in from the header chip: /game-table?tab=messages&player=12
+const route = useRoute()
+// A new object per jump - selects the player again even if it's the same one
+const focusPlayer = ref<{ playerId: number } | null>(null)
+watch(() => [route.query.tab, route.query.player, route.query.at], ([queryTab, player]) => {
+  if (queryTab === 'messages') tab.value = 'messages'
+  if (player) focusPlayer.value = { playerId: Number(player) }
+}, { immediate: true })
 const sharedCount = computed(() => store.shares.length + store.handouts.length)
 const restartMode = ref(false)
 

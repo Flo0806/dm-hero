@@ -50,7 +50,8 @@
       "label": "View",
       "shares": "Shared",
       "map": "Map",
-      "documents": "Documents"
+      "documents": "Documents",
+      "messages": "Messages"
     },
     "map": {
       "label": "Map: {name}",
@@ -71,6 +72,16 @@
       "openPdf": "Open PDF",
       "opening": "Opening …",
       "failed": "The document could not be opened."
+    },
+    "chat": {
+      "title": "Messages with the game master",
+      "empty": "Write privately with your game master here – nobody else can read along.",
+      "write": "Message to the game master",
+      "send": "Send",
+      "you": "You",
+      "pending": "on its way …",
+      "failed": "The message could not be sent. Please try again in a moment.",
+      "slowDown": "Take a breath – you just sent a lot of messages. You can write again within a minute."
     },
     "weather": {
       "sunny": "Sunny",

@@ -2839,7 +2839,8 @@
     "expiredRestart": "Reconnecter",
     "tabs": {
       "table": "Table",
-      "shared": "Partagé"
+      "shared": "Partagé",
+      "messages": "Messages"
     },
     "handout": {
       "action": "Donner aux joueurs",
@@ -2858,6 +2859,23 @@
       "recipients": "Modifier les destinataires",
       "empty": "Aucun document donné aux joueurs pour l’instant. Vous pouvez le faire depuis les documents d’une entité.",
       "pending": "Enregistré – vos joueurs le recevront dès que la table de jeu sera joignable."
+    },
+    "messages": {
+      "players": "Joueurs",
+      "conversation": "Conversation avec {name}",
+      "empty": "Pas encore de messages – écris le premier. Seul ce joueur peut les lire.",
+      "write": "Message à {name}",
+      "send": "Envoyer",
+      "unread": "{count} messages non lus",
+      "noPlayers": "Ajoute d’abord des joueurs – ensuite tu pourras leur écrire en privé.",
+      "clear": "Vider la conversation",
+      "clearTitle": "Vider la conversation avec {name} ?",
+      "clearConfirm": "Tous les messages de cette conversation seront supprimés – aussi chez le joueur.",
+      "cleared": "Conversation vidée",
+      "delete": "Supprimer le message",
+      "deleted": "Message supprimé",
+      "newCount": "{count} nouveau message | {count} nouveaux messages",
+      "newTitle": "Nouveaux messages"
     }
   }
 }

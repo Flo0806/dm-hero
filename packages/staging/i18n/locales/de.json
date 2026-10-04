@@ -50,7 +50,8 @@
       "label": "Ansicht",
       "shares": "Geteilt",
       "map": "Karte",
-      "documents": "Dokumente"
+      "documents": "Dokumente",
+      "messages": "Nachrichten"
     },
     "map": {
       "label": "Karte: {name}",
@@ -71,6 +72,16 @@
       "openPdf": "PDF öffnen",
       "opening": "Wird geöffnet …",
       "failed": "Das Dokument konnte nicht geöffnet werden."
+    },
+    "chat": {
+      "title": "Nachrichten mit dem Spielleiter",
+      "empty": "Hier schreibst du privat mit deinem Spielleiter – niemand sonst kann mitlesen.",
+      "write": "Nachricht an den Spielleiter",
+      "send": "Senden",
+      "you": "Du",
+      "pending": "wird zugestellt …",
+      "failed": "Nachricht konnte nicht gesendet werden. Versuch es gleich noch einmal.",
+      "slowDown": "Kurz durchatmen – du hast gerade viele Nachrichten geschickt. In spätestens einer Minute geht es weiter."
     },
     "weather": {
       "sunny": "Sonnig",

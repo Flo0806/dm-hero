@@ -2839,7 +2839,8 @@
     "expiredRestart": "重新连接",
     "tabs": {
       "table": "游戏桌",
-      "shared": "已分享"
+      "shared": "已分享",
+      "messages": "消息"
     },
     "handout": {
       "action": "交给玩家",
@@ -2858,6 +2859,23 @@
       "recipients": "更改接收者",
       "empty": "尚未把任何文档交给玩家。可以直接在实体的文档中操作。",
       "pending": "已保存——游戏桌可连接后，玩家就会收到。"
+    },
+    "messages": {
+      "players": "玩家",
+      "conversation": "与 {name} 的对话",
+      "empty": "还没有消息——发送第一条吧。只有该玩家能阅读。",
+      "write": "发给 {name} 的消息",
+      "send": "发送",
+      "unread": "{count} 条未读消息",
+      "noPlayers": "请先添加玩家，然后就可以私下给他们写信。",
+      "clear": "清空对话",
+      "clearTitle": "清空与 {name} 的对话？",
+      "clearConfirm": "此对话中的所有消息都将被删除——玩家那边也会删除。",
+      "cleared": "对话已清空",
+      "delete": "删除消息",
+      "deleted": "消息已删除",
+      "newCount": "{count} 条新消息",
+      "newTitle": "新消息"
     }
   }
 }

@@ -2839,7 +2839,8 @@
     "expiredRestart": "Reconnect",
     "tabs": {
       "table": "Table",
-      "shared": "Shared"
+      "shared": "Shared",
+      "messages": "Messages"
     },
     "handout": {
       "action": "Give to players",
@@ -2858,6 +2859,23 @@
       "recipients": "Change recipients",
       "empty": "No documents given to players yet. You can do that right in an entity’s documents.",
       "pending": "Saved – your players get it as soon as the game table is reachable."
+    },
+    "messages": {
+      "players": "Players",
+      "conversation": "Conversation with {name}",
+      "empty": "No messages yet – write the first one. Only this player can read them.",
+      "write": "Message to {name}",
+      "send": "Send",
+      "unread": "{count} unread messages",
+      "noPlayers": "Add players first – then you can write to them privately.",
+      "clear": "Clear conversation",
+      "clearTitle": "Clear the conversation with {name}?",
+      "clearConfirm": "All messages of this conversation are deleted – for the player too.",
+      "cleared": "Conversation cleared",
+      "delete": "Delete message",
+      "deleted": "Message deleted",
+      "newCount": "{count} new message | {count} new messages",
+      "newTitle": "New messages"
     }
   }
 }

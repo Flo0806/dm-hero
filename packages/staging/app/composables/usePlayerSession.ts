@@ -1,6 +1,6 @@
 import {
-  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isHandoutContent, parseTableWeather, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
-  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type HandoutContent, type TableFogContent, type TableWeather, type TableMapContent,
+  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isChatThreadContent, isHandoutContent, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
+  NOTE_MS, open, parseTableWeather, PING_MS, seal, unwrapGameKey, type ChatMessage, type Envelope, type HandoutContent, type TableFogContent, type TableMapContent, type TableWeather,
 } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
@@ -47,6 +47,30 @@ export function usePlayerSession() {
     const campaignName = ref('')
     /** Today's in-game weather (null = no calendar / nothing for today) */
     const weather = ref<TableWeather | null>(null)
+    /** Private conversation with the DM (newest last) + own messages not yet confirmed by DM Hero */
+    const messages = ref<ChatMessage[]>([])
+    const pendingMessages = ref<ChatMessage[]>([])
+    // Own messages DM Hero hasn't confirmed yet survive a reload (DM Hero may be offline)
+    const pendingKey = `dm-hero-pending-messages-${gameId}`
+    function savePending() {
+      try {
+        localStorage.setItem(pendingKey, JSON.stringify(pendingMessages.value))
+      }
+      catch {
+        // Storage blocked - they're just not kept over a reload
+      }
+    }
+    onMounted(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(pendingKey) ?? '[]') as ChatMessage[]
+        if (Array.isArray(saved)) pendingMessages.value = saved.filter(m => typeof m?.id === 'string' && typeof m.text === 'string')
+      }
+      catch {
+        // Nothing saved or unreadable
+      }
+    })
+    let queuedThread: Envelope | null = null
+    let threadSeq = 0
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
     /** Pings on the map right now (each disappears after its pulse) */
     const pings = ref<TablePing[]>([])
@@ -173,6 +197,40 @@ export function usePlayerSession() {
       }
     }
 
+    // The conversation: DM-signed, sealed for this device, addressed to this player
+    async function setThread(envelope: Envelope) {
+      if (!pairKey || !dmVerifyKey || !playerId) {
+        queuedThread = envelope
+        return
+      }
+      const { header } = envelope
+      if (header.gameId !== gameId || header.from !== 'dm' || header.to !== playerId || header.seq <= threadSeq) return
+      try {
+        const content = await open<unknown>(pairKey, envelope, dmVerifyKey)
+        if (!isChatThreadContent(content) || header.seq <= threadSeq) return
+        threadSeq = header.seq
+        messages.value = content.messages
+        // Confirmed by DM Hero -> no longer "on its way"
+        const known = new Set(content.messages.map(m => m.id))
+        pendingMessages.value = pendingMessages.value.filter(m => !known.has(`p-${playerId}-${m.id}`))
+        savePending()
+      }
+      catch (error) {
+        console.error('[E2E] Conversation rejected:', error)
+      }
+    }
+
+    /** Write to the DM - only DM Hero can read it (sealed with this device's pair key) */
+    async function sendMessage(text: string) {
+      if (!pairKey || !gameKey) return false
+      const id = crypto.randomUUID()
+      const envelope = await seal(pairKey, { v: 1, gameId, from: 'player', to: 'dm', epoch: keyEpoch, seq: Date.now() }, { kind: 'chat', id, text })
+      await $fetch(`/api/v1/games/${gameId}/messages`, { method: 'POST', body: envelope })
+      pendingMessages.value = [...pendingMessages.value, { id, from: 'player', text, sentAt: new Date().toISOString() }]
+      savePending()
+      return true
+    }
+
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
 
@@ -200,6 +258,11 @@ export function usePlayerSession() {
         for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
         for (const state of queuedState.splice(0)) await setState(state.slot, state.envelope)
         for (const handout of queuedHandouts.splice(0)) await addHandout(handout.id, handout.envelope)
+        if (queuedThread) {
+          const thread = queuedThread
+          queuedThread = null
+          await setThread(thread)
+        }
         // Everything up to here was the current state - from now on changes are live moments
         setTimeout(() => live = true, 1500)
       }
@@ -229,6 +292,10 @@ export function usePlayerSession() {
       }
       if (slot === 'map') tableMap.value = null
       else if (slot === 'fog') tableFog.value = null
+    })
+
+    source.addEventListener('thread', (event) => {
+      void setThread((JSON.parse((event as MessageEvent).data) as { envelope: Envelope }).envelope)
     })
 
     source.addEventListener('handout', (event) => {
@@ -266,7 +333,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, weather }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, messages, pendingMessages, sendMessage, weather }
   }
 
   return { join, connect }

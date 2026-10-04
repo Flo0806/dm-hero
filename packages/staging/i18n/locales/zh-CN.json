@@ -50,7 +50,8 @@
       "label": "视图",
       "shares": "已分享",
       "map": "地图",
-      "documents": "文档"
+      "documents": "文档",
+      "messages": "消息"
     },
     "map": {
       "label": "地图：{name}",
@@ -71,6 +72,16 @@
       "openPdf": "打开 PDF",
       "opening": "正在打开……",
       "failed": "无法打开该文档。"
+    },
+    "chat": {
+      "title": "与主持人的消息",
+      "empty": "在这里与主持人私下交流——其他人无法查看。",
+      "write": "发给主持人的消息",
+      "send": "发送",
+      "you": "你",
+      "pending": "正在送达……",
+      "failed": "消息发送失败，请稍后再试。",
+      "slowDown": "先歇一下——你刚刚发送了很多消息。一分钟内即可继续发送。"
     },
     "weather": {
       "sunny": "晴",

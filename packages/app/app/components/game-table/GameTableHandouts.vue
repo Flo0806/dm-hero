@@ -47,7 +47,7 @@ const { t, locale } = useI18n()
 const store = useGameTableStore()
 const snackbarStore = useSnackbarStore()
 
-const formatDate = (value: string) => new Date(`${value.replace(' ', 'T')}Z`).toLocaleDateString(locale.value)
+const formatDate = (value: string) => parseSqliteDate(value).toLocaleDateString(locale.value)
 
 function recipientsLabel(recipients: GameTableHandout['recipients']) {
   if (recipients === 'all') return t('gameTable.handout.all')

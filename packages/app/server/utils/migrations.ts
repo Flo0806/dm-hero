@@ -2871,6 +2871,42 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 64: Created game_table_handouts')
     },
   },
+  {
+    version: 65,
+    name: 'game_table_messages',
+    up: (db) => {
+      // Private messages DM <-> player. DM Hero keeps the conversation; the
+      // relay only carries it (encrypted). message_key dedupes redelivered posts.
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_messages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          game_table_id INTEGER NOT NULL,
+          player_id INTEGER NOT NULL,
+          message_key TEXT NOT NULL UNIQUE,
+          sender TEXT NOT NULL CHECK (sender IN ('dm', 'player')),
+          text TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          read_at TEXT,
+          FOREIGN KEY (game_table_id) REFERENCES game_tables(id) ON DELETE CASCADE,
+          FOREIGN KEY (player_id) REFERENCES game_table_players(id) ON DELETE CASCADE
+        )
+      `)
+      db.exec('CREATE INDEX IF NOT EXISTS idx_game_table_messages_player ON game_table_messages(player_id, id)')
+
+      console.log('✅ Migration 65: Created game_table_messages')
+    },
+  },
+  {
+    version: 66,
+    name: 'game_table_thread_dirty',
+    up: (db) => {
+      // > 0 = this player's conversation changed and the relay doesn't have it yet
+      // (also an emptied one) - a counter, retried until it went through, even after a restart
+      db.exec('ALTER TABLE game_table_players ADD COLUMN thread_dirty INTEGER NOT NULL DEFAULT 0')
+
+      console.log('✅ Migration 66: Added thread_dirty to game_table_players')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

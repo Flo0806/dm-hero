@@ -2839,7 +2839,8 @@
     "expiredRestart": "Riconnetti",
     "tabs": {
       "table": "Tavolo",
-      "shared": "Condiviso"
+      "shared": "Condiviso",
+      "messages": "Messaggi"
     },
     "handout": {
       "action": "Dai ai giocatori",
@@ -2858,6 +2859,23 @@
       "recipients": "Cambia destinatari",
       "empty": "Nessun documento ancora dato ai giocatori. Puoi farlo dai documenti di un’entità.",
       "pending": "Salvato – i tuoi giocatori lo riceveranno appena il tavolo di gioco sarà raggiungibile."
+    },
+    "messages": {
+      "players": "Giocatori",
+      "conversation": "Conversazione con {name}",
+      "empty": "Ancora nessun messaggio: scrivi il primo. Solo questo giocatore può leggerli.",
+      "write": "Messaggio a {name}",
+      "send": "Invia",
+      "unread": "{count} messaggi non letti",
+      "noPlayers": "Prima aggiungi dei giocatori, poi potrai scrivere loro in privato.",
+      "clear": "Svuota conversazione",
+      "clearTitle": "Svuotare la conversazione con {name}?",
+      "clearConfirm": "Tutti i messaggi di questa conversazione verranno eliminati, anche per il giocatore.",
+      "cleared": "Conversazione svuotata",
+      "delete": "Elimina messaggio",
+      "deleted": "Messaggio eliminato",
+      "newCount": "{count} nuovo messaggio | {count} nuovi messaggi",
+      "newTitle": "Nuovi messaggi"
     }
   }
 }

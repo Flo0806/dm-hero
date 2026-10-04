@@ -44,3 +44,13 @@ export interface GameTablePresence {
   /** The player server no longer knows this game (cleaned up after a long pause) */
   expired?: boolean
 }
+
+/** A private message between the DM and a player (DM Hero keeps the conversation) */
+export interface GameTableMessage {
+  id: number
+  player_id: number
+  sender: 'dm' | 'player'
+  text: string
+  created_at: string
+  read_at: string | null
+}

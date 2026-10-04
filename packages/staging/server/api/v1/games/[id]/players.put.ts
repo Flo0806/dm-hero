@@ -33,6 +33,13 @@ export default defineEventHandler(async (event) => {
     for (const p of players!) insert.run(game.id, p.id, p.name.trim(), p.pinHash)
     const dropSessions = db.prepare('DELETE FROM player_sessions WHERE game_id = ? AND player_id = ?')
     for (const id of kicked) dropSessions.run(game.id, id)
+    // Removed players: their conversation, handouts and unread messages go too
+    const removed = [...before.keys()].filter(id => !players!.some(p => p.id === id))
+    for (const id of removed) {
+      db.prepare('DELETE FROM threads WHERE game_id = ? AND player_id = ?').run(game.id, id)
+      db.prepare('DELETE FROM handouts WHERE game_id = ? AND player_id = ?').run(game.id, id)
+      db.prepare('DELETE FROM inbox WHERE game_id = ? AND player_id = ?').run(game.id, id)
+    }
     db.exec('COMMIT')
   }
   catch (error) {

@@ -44,6 +44,22 @@ const SCHEMA = `
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (game_id, id, player_id)
   );
+  CREATE TABLE IF NOT EXISTS threads (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    player_id TEXT NOT NULL,
+    envelopes TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (game_id, player_id)
+  );
+  CREATE TABLE IF NOT EXISTS inbox (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    player_id TEXT NOT NULL,
+    public_key TEXT NOT NULL,
+    envelope TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (game_id, id)
+  );
   CREATE TABLE IF NOT EXISTS files (
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     id TEXT NOT NULL,

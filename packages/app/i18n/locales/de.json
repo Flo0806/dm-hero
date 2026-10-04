@@ -2839,7 +2839,8 @@
     "expiredRestart": "Neu verbinden",
     "tabs": {
       "table": "Tisch",
-      "shared": "Geteilt"
+      "shared": "Geteilt",
+      "messages": "Nachrichten"
     },
     "handout": {
       "action": "An Spieler geben",
@@ -2858,6 +2859,23 @@
       "recipients": "Empfänger ändern",
       "empty": "Noch keine Dokumente an Spieler gegeben. Das geht direkt bei den Dokumenten einer Entität.",
       "pending": "Gespeichert – deine Spieler bekommen es, sobald der Spieltisch erreichbar ist."
+    },
+    "messages": {
+      "players": "Spieler",
+      "conversation": "Gespräch mit {name}",
+      "empty": "Noch keine Nachrichten – schreib als Erster. Nur dieser Spieler kann sie lesen.",
+      "write": "Nachricht an {name}",
+      "send": "Senden",
+      "unread": "{count} ungelesene Nachrichten",
+      "noPlayers": "Lege zuerst Spieler an – dann kannst du ihnen privat schreiben.",
+      "clear": "Verlauf leeren",
+      "clearTitle": "Gespräch mit {name} leeren?",
+      "clearConfirm": "Alle Nachrichten dieses Gesprächs werden gelöscht – auch beim Spieler.",
+      "cleared": "Verlauf geleert",
+      "delete": "Nachricht löschen",
+      "deleted": "Nachricht gelöscht",
+      "newCount": "{count} neue Nachricht | {count} neue Nachrichten",
+      "newTitle": "Neue Nachrichten"
     }
   }
 }

@@ -50,7 +50,8 @@
       "label": "Vista",
       "shares": "Compartido",
       "map": "Mapa",
-      "documents": "Documentos"
+      "documents": "Documentos",
+      "messages": "Mensajes"
     },
     "map": {
       "label": "Mapa: {name}",
@@ -71,6 +72,16 @@
       "openPdf": "Abrir PDF",
       "opening": "Abriendo …",
       "failed": "No se pudo abrir el documento."
+    },
+    "chat": {
+      "title": "Mensajes con el máster",
+      "empty": "Aquí escribes en privado con tu máster: nadie más puede leerlo.",
+      "write": "Mensaje para el máster",
+      "send": "Enviar",
+      "you": "Tú",
+      "pending": "enviando …",
+      "failed": "No se pudo enviar el mensaje. Inténtalo de nuevo en un momento.",
+      "slowDown": "Respira un momento: acabas de enviar muchos mensajes. Podrás volver a escribir en menos de un minuto."
     },
     "weather": {
       "sunny": "Soleado",

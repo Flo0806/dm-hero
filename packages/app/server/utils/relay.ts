@@ -128,6 +128,25 @@ export async function deleteRelayHandout(auth: RelayAuth, handoutKey: string) {
   })
 }
 
+/** The conversation with one player: { devicePublicKey: envelope } */
+export async function putRelayThread(auth: RelayAuth, playerId: number, envelopes: Record<string, unknown>) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/threads/${playerId}`, {
+    method: 'PUT',
+    timeout: 15_000,
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+    body: { envelopes },
+  })
+}
+
+/** A player's message is stored in DM Hero - remove it from the relay's inbox */
+export async function ackRelayMessage(auth: RelayAuth, messageId: string) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/inbox/${messageId}`, {
+    method: 'DELETE',
+    timeout: 15_000,
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+  })
+}
+
 /** DM pings a spot on the shown map (signed envelope) */
 export async function postRelayDmPing(auth: RelayAuth, envelope: unknown) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/dm-ping`, {

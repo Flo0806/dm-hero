@@ -1,12 +1,16 @@
 <template>
   <!-- Always in the app bar: keeps the active campaign's game connected (anywhere in the app)
        and shows the essentials. Invisible if the campaign has no game. -->
-  <v-menu v-if="store.table" location="bottom end" :close-on-content-click="false">
+  <v-menu v-if="store.table" v-model="menuOpen" location="bottom end" :close-on-content-click="false">
     <template #activator="{ props: menuProps }">
-      <v-chip v-bind="menuProps" :variant="presence.pending.length ? 'flat' : 'tonal'" :color="chipColor" class="mr-2">
+      <v-chip v-bind="menuProps" :variant="highlight ? 'flat' : 'tonal'" :color="chipColor" class="mr-2">
         <v-icon start :icon="chipIcon" />
         <template v-if="presence.pending.length">
           {{ $t('gameTable.pendingCount', { count: presence.pending.length }) }}
+        </template>
+        <!-- Unread private messages: clearly visible from anywhere in the app -->
+        <template v-else-if="store.unreadTotal">
+          {{ $t('gameTable.messages.newCount', store.unreadTotal) }}
         </template>
         <template v-else>
           {{ presence.expired ? $t('gameTable.expired') : presence.connected ? $t('gameTable.onlineCount', { count: onlinePlayers.length }) : $t('gameTable.relayOffline') }}
@@ -15,6 +19,27 @@
     </template>
 
     <v-card min-width="300" class="pa-4">
+      <!-- Who wrote - one click opens that conversation -->
+      <template v-if="unreadPlayers.length">
+        <div class="text-overline text-primary">
+          {{ $t('gameTable.messages.newTitle') }}
+        </div>
+        <v-list density="compact" class="pa-0 mb-2" bg-color="transparent">
+          <v-list-item
+            v-for="player in unreadPlayers"
+            :key="player.id"
+            prepend-icon="mdi-email"
+            :title="player.name"
+            @click="openConversation(player.id)"
+          >
+            <template #append>
+              <v-badge :content="store.unreadOf(player.id)" color="primary" inline />
+            </template>
+          </v-list-item>
+        </v-list>
+        <v-divider class="mb-3" />
+      </template>
+
       <template v-if="presence.pending.length">
         <div class="text-overline text-primary">
           {{ $t('gameTable.pendingTitle') }}
@@ -69,9 +94,29 @@ const presence = import.meta.client
   ? useGameTablePresence(() => store.table?.id ?? null)
   : ref<GameTablePresence>({ connected: false, online: [], pending: [] })
 
-// Waiting devices win: the DM should notice them from anywhere in the app
-const chipColor = computed(() => presence.value.expired ? 'error' : presence.value.pending.length ? 'primary' : presence.value.connected ? 'success' : 'warning')
-const chipIcon = computed(() => presence.value.expired ? 'mdi-timer-sand-complete' : presence.value.pending.length ? 'mdi-account-question' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
+// Waiting devices win, then new messages: the DM should notice both from anywhere in the app
+const highlight = computed(() => presence.value.pending.length > 0 || store.unreadTotal > 0)
+const chipColor = computed(() => presence.value.expired
+  ? 'error'
+  : highlight.value ? 'primary' : presence.value.connected ? 'success' : 'warning')
+const chipIcon = computed(() => presence.value.expired
+  ? 'mdi-timer-sand-complete'
+  : presence.value.pending.length
+    ? 'mdi-account-question'
+    : store.unreadTotal ? 'mdi-email' : presence.value.connected ? 'mdi-table-furniture' : 'mdi-cloud-off-outline')
+
+const unreadPlayers = computed(() => store.table?.players.filter(p => store.unreadOf(p.id)) ?? [])
+const menuOpen = ref(false)
+function openConversation(playerId: number) {
+  menuOpen.value = false
+  // at: a new URL every click - jumping works even if the same link was used before
+  navigateTo({ path: '/game-table', query: { tab: 'messages', player: String(playerId), at: String(Date.now()) } })
+}
+
+// A player wrote: refresh the messages (unread count here, conversation on the game table page)
+useTableMessageEvents(() => store.table?.id, () => {
+  store.loadMessages().catch(() => {})
+})
 
 const onlinePlayers = computed(() => store.table?.players.filter(p => presence.value.online.includes(p.id)) ?? [])
 
