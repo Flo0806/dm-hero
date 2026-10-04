@@ -3,6 +3,20 @@ const { t } = useI18n()
 
 const features = [
   {
+    key: 'gameTable',
+    icon: 'mdi-table-furniture',
+    color: 'primary',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
+    key: 'fogMaps',
+    icon: 'mdi-map-search',
+    color: 'info',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
     key: 'entities',
     icon: 'mdi-account-group',
     color: 'primary',
@@ -12,14 +26,12 @@ const features = [
     icon: 'mdi-music',
     color: 'warning',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'languages',
     icon: 'mdi-translate',
     color: 'info',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'folders',
@@ -64,7 +76,6 @@ const features = [
     icon: 'mdi-robot-happy-outline',
     color: 'info',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'local',

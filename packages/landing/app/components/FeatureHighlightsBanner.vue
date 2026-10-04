@@ -14,12 +14,43 @@ interface Highlight {
 
 const highlights: Highlight[] = [
   {
+    key: 'gameTable',
+    icon: 'mdi-table-furniture',
+    gradient: 'linear-gradient(135deg, #070B1A 0%, #1A2246 45%, #5EEAD4 100%)',
+    glow: 'rgba(200, 211, 245, 0.5)',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
+    key: 'fogMaps',
+    icon: 'mdi-map-search',
+    gradient: 'linear-gradient(135deg, #0F1530 0%, #3B4A8C 50%, #C8D3F5 100%)',
+    glow: 'rgba(94, 234, 212, 0.45)',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
+    key: 'handoutsMessages',
+    icon: 'mdi-email-lock',
+    gradient: 'linear-gradient(135deg, #070B1A 0%, #4C3A8C 50%, #A78BFA 100%)',
+    glow: 'rgba(167, 139, 250, 0.45)',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
+    key: 'nocturneTheme',
+    icon: 'mdi-weather-night',
+    gradient: 'linear-gradient(135deg, #070B1A 0%, #1A2246 50%, #C8D3F5 100%)',
+    glow: 'rgba(200, 211, 245, 0.45)',
+    badge: 'v1.6',
+    isNew: true,
+  },
+  {
     key: 'music',
     icon: 'mdi-music',
     gradient: 'linear-gradient(135deg, #0F1233 0%, #E0248F 45%, #FF8A3D 100%)',
     glow: 'rgba(255, 138, 61, 0.5)',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'aiFull',
@@ -27,7 +58,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #0B2622 0%, #4DD0E1 50%, #FFC145 100%)',
     glow: 'rgba(77, 208, 225, 0.45)',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'languages',
@@ -35,7 +65,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #003278 0%, #008CC8 50%, #3DDC97 100%)',
     glow: 'rgba(0, 140, 200, 0.45)',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'musicTheme',
@@ -43,7 +72,6 @@ const highlights: Highlight[] = [
     gradient: 'linear-gradient(135deg, #003278 0%, #E0248F 50%, #FF8A3D 100%)',
     glow: 'rgba(224, 36, 143, 0.45)',
     badge: 'v1.5',
-    isNew: true,
   },
   {
     key: 'aiImport',

@@ -1,9 +1,25 @@
 {
   "meta": {
     "title": "DM Hero - Kostenloses D&D Kampagnen-Tool für Spielleiter",
-    "description": "DM Hero ist das kostenlose, Open-Source Kampagnen-Management-Tool das jeder Spielleiter braucht. Organisiere NPCs, Orte, Gegenstände, Fraktionen und Sessions - offline, privat, ohne Abos."
+    "description": "DM Hero ist der kostenlose Open-Source-Kampagnenmanager für Spielleiter. Verwalte NPCs, Orte, Gegenstände und Sessions – und teile sie live mit deinen Spielern am Spieltisch, Ende-zu-Ende verschlüsselt."
   },
   "highlights": {
+    "gameTable": {
+      "title": "Teile mit deinen Spielern",
+      "subtitle": "NEU: der Spieltisch – deine Spieler treten am Handy bei und sehen alles, was du teilst, live und Ende-zu-Ende verschlüsselt"
+    },
+    "fogMaps": {
+      "title": "Karten mit Nebel des Krieges",
+      "subtitle": "Deck die Karte mit dem Pinsel auf, während deine Spieler zusehen – jeder kann pingen, du lässt Notizen aufblitzen"
+    },
+    "handoutsMessages": {
+      "title": "Handouts & private Nachrichten",
+      "subtitle": "Briefe und PDFs für ausgewählte Spieler, geheime Nachrichten an einen Spieler – nur sie können sie lesen"
+    },
+    "nocturneTheme": {
+      "title": "Theme „Nocturne“",
+      "subtitle": "Mondnacht mit lebendigem Himmel: Mondsichel, Polarlicht und Sternschnuppen"
+    },
     "music": {
       "title": "All About Music",
       "subtitle": "Spiel deine eigene Musikbibliothek am Tisch – Szenen, Überblenden und ein Mini-Player, der dir folgt"
@@ -78,7 +94,8 @@
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support",
-    "profile": "Profil"
+    "profile": "Profil",
+    "gameTable": "Spieltisch"
   },
   "docs": {
     "title": "Dokumentation",
@@ -110,6 +127,14 @@
     "title": "Alles, was du für epische Kampagnen brauchst",
     "subtitle": "DM Hero gibt dir alle Werkzeuge, um deine Tischrollenspiel-Abenteuer zu organisieren, durchsuchen und zu verbessern",
     "items": {
+      "gameTable": {
+        "title": "Spieltisch",
+        "description": "Deine Spieler treten auf table.dm-hero.com mit Code + PIN bei – ohne Account. Teile NPCs, Orte, Gegenstände und Lore live, mit Alias und Enthüllungsmomenten. Ende-zu-Ende verschlüsselt."
+      },
+      "fogMaps": {
+        "title": "Nebel des Krieges & Pings",
+        "description": "Zeig eine Karte, deck sie Stück für Stück mit dem Pinsel auf, lass alle Stellen anpingen – dazu Handouts, private Nachrichten und das Wetter des Tages für deine Spieler."
+      },
       "entities": {
         "title": "Entity-Verwaltung",
         "description": "Organisiere NPCs, Orte, Gegenstände, Fraktionen, Wissen, Spieler und Sessions. Alles miteinander verbunden durch bidirektionale Beziehungen."
@@ -693,5 +718,54 @@
     "readAndAccept": "Jetzt lesen & akzeptieren",
     "acceptedSuccess": "Nutzungsbedingungen akzeptiert!",
     "acceptError": "Fehler beim Akzeptieren. Bitte versuche es erneut."
+  },
+  "gameTable": {
+    "kicker": "Teile mit deinen Spielern",
+    "title": "Deine Spieler am Tisch",
+    "subtitle": "Spiel starten, PINs verteilen – deine Spieler treten am Handy bei und sehen live, was du teilst. Der mysteriöse Fremde, die Karte hinter dem Nebel, der Brief, den nur einer lesen darf. Jede Enthüllung landet gleichzeitig auf jedem Bildschirm.",
+    "mock": {
+      "dm": "Du (DM Hero)",
+      "realName": "Strahd von Zarovich",
+      "sharedAs": "geteilt als „Der mysteriöse Fremde“",
+      "shareHint": "Namen mit einem Klick enthüllen",
+      "connected": "Verbunden",
+      "alias": "Der mysteriöse Fremde",
+      "reveal": "Der mysteriöse Fremde ist…",
+      "weather": "Regen · 9°"
+    },
+    "pillars": {
+      "share": {
+        "title": "Teilen mit Enthüllungsmomenten",
+        "text": "NPCs, Orte, Gegenstände, Lore und Fraktionen – live, mit Bildern. Teile jemanden unter einem Alias und lüfte später den wahren Namen: Es leuchtet bei allen auf."
+      },
+      "maps": {
+        "title": "Karten mit Nebel des Krieges",
+        "text": "Zeig eine Karte und male den Nebel weg, während deine Spieler zusehen. Jeder kann eine Stelle pingen, du kannst kurze Notizen aufblitzen lassen."
+      },
+      "handouts": {
+        "title": "Handouts & private Nachrichten",
+        "text": "Gib Briefe, Notizen und PDFs an alle oder ausgewählte Spieler und schreib einzelnen Spielern privat – niemand sonst bekommt es zu sehen."
+      },
+      "secure": {
+        "title": "Ohne Account, voll verschlüsselt",
+        "text": "Spieler treten mit Code und PIN bei. Alles ist Ende-zu-Ende verschlüsselt – unser Server sieht nur Kauderwelsch. Jedes neue Gerät bestätigst du selbst."
+      }
+    },
+    "steps": {
+      "start": {
+        "title": "Spiel starten",
+        "text": "Öffne in DM Hero den Spieltisch und leg deine Spieler an – jeder bekommt eine PIN."
+      },
+      "invite": {
+        "title": "Gruppe einladen",
+        "text": "Teile Code, Link oder QR-Code. Deine Spieler öffnen table.dm-hero.com auf jedem Handy oder Laptop."
+      },
+      "play": {
+        "title": "Teilen und enthüllen",
+        "text": "Teile, was du willst, zeig die Karte, gib Briefe aus – live, mitten in der Session."
+      }
+    },
+    "docs": "So funktioniert’s",
+    "footnote": "Ende-zu-Ende verschlüsselt · ohne Account · kostenlos. Deine Kampagnendaten bleiben in DM Hero."
   }
 }

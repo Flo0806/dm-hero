@@ -7,6 +7,7 @@ const drawer = ref(false)
 const scrolled = ref(false)
 
 const navItems = [
+  { key: 'gameTable', href: '/#game-table' },
   { key: 'features', href: '/#features' },
   { key: 'music', href: '/#music' },
   { key: 'screenshots', href: '/#screenshots' },

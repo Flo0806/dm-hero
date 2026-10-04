@@ -1,9 +1,25 @@
 {
   "meta": {
     "title": "DM Hero - Free D&D Campaign Manager for Dungeon Masters",
-    "description": "DM Hero is the free, open-source campaign management tool every Dungeon Master needs. Organize NPCs, locations, items, factions, and sessions - offline, private, no subscriptions."
+    "description": "DM Hero is the free, open-source campaign manager for Dungeon Masters. Organize NPCs, locations, items and sessions – and share them live with your players at the game table, end-to-end encrypted."
   },
   "highlights": {
+    "gameTable": {
+      "title": "Share with Your Players",
+      "subtitle": "NEW: the game table – your players join on their phones and see everything you share, live and end-to-end encrypted"
+    },
+    "fogMaps": {
+      "title": "Maps with Fog of War",
+      "subtitle": "Reveal the map with a brush while your players watch – everyone can ping, you can flash notes"
+    },
+    "handoutsMessages": {
+      "title": "Handouts & Private Messages",
+      "subtitle": "Letters and PDFs for chosen players, secret messages to one player – only they can read them"
+    },
+    "nocturneTheme": {
+      "title": "Theme \"Nocturne\"",
+      "subtitle": "Moonlit night with a living sky: crescent moon, aurora and shooting stars"
+    },
     "music": {
       "title": "All About Music",
       "subtitle": "Play your own music library at the table – scenes, crossfade and a mini player that follows you"
@@ -78,7 +94,8 @@
     "docs": "Docs",
     "github": "GitHub",
     "support": "Support",
-    "profile": "Profile"
+    "profile": "Profile",
+    "gameTable": "Game Table"
   },
   "docs": {
     "title": "Documentation",
@@ -110,6 +127,14 @@
     "title": "Everything You Need to Run Epic Campaigns",
     "subtitle": "DM Hero gives you all the tools to organize, search, and enhance your tabletop adventures",
     "items": {
+      "gameTable": {
+        "title": "Game Table",
+        "description": "Your players join at table.dm-hero.com with code + PIN – no account. Share NPCs, locations, items and lore live, with aliases and reveal moments. End-to-end encrypted."
+      },
+      "fogMaps": {
+        "title": "Fog of War & Pings",
+        "description": "Show a map, reveal it bit by bit with a brush, let everyone ping spots – plus handouts, private messages and today’s weather for your players."
+      },
       "entities": {
         "title": "Entity Management",
         "description": "Organize NPCs, Locations, Items, Factions, Lore, Players, and Sessions. Everything interconnected with bidirectional relationships."
@@ -693,5 +718,54 @@
     "readAndAccept": "Read & Accept",
     "acceptedSuccess": "Terms of Service accepted!",
     "acceptError": "Error accepting. Please try again."
+  },
+  "gameTable": {
+    "kicker": "Share with your players",
+    "title": "Your Players at the Table",
+    "subtitle": "Start a game, hand out PINs – your players join on their phones and see what you share, live. The mysterious stranger, the map behind the fog, the letter only one of them may read. Every reveal lands on every screen at once.",
+    "mock": {
+      "dm": "You (DM Hero)",
+      "realName": "Strahd von Zarovich",
+      "sharedAs": "shared as \"The mysterious stranger\"",
+      "shareHint": "Reveal the name with one click",
+      "connected": "Connected",
+      "alias": "The mysterious stranger",
+      "reveal": "The mysterious stranger is…",
+      "weather": "Rain · 9°"
+    },
+    "pillars": {
+      "share": {
+        "title": "Share with reveal moments",
+        "text": "NPCs, locations, items, lore and factions – live, with images. Share someone under an alias and reveal the true name later: it lights up for everyone."
+      },
+      "maps": {
+        "title": "Maps with fog of war",
+        "text": "Show a map and paint the fog away while your players watch. Everyone can ping a spot, you can flash short notes."
+      },
+      "handouts": {
+        "title": "Handouts & private messages",
+        "text": "Give letters, notes and PDFs to all or chosen players, and write to single players privately – nobody else ever sees it."
+      },
+      "secure": {
+        "title": "No account, fully encrypted",
+        "text": "Players join with code and PIN. Everything is end-to-end encrypted – our server only ever sees ciphertext. You approve every new device."
+      }
+    },
+    "steps": {
+      "start": {
+        "title": "Start a game",
+        "text": "In DM Hero, open the game table and add your players – each gets a PIN."
+      },
+      "invite": {
+        "title": "Invite your group",
+        "text": "Share the code, link or QR code. Players open table.dm-hero.com on any phone or laptop."
+      },
+      "play": {
+        "title": "Share and reveal",
+        "text": "Share whatever you like, show the map, hand out letters – live, during the session."
+      }
+    },
+    "docs": "How it works",
+    "footnote": "End-to-end encrypted · no account · free. Your campaign data stays in DM Hero."
   }
 }
