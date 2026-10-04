@@ -9,7 +9,12 @@
     :loading="busy"
     @click="toggle"
   >
-    {{ shown ? $t('gameTable.map.shown') : $t('gameTable.map.show') }}
+    <!-- Both labels share one grid cell: the button keeps the width of the longer
+         one, so switching doesn't reflow the header (and resize the map) -->
+    <span class="show-map-label">
+      <span :class="{ 'is-hidden': shown }">{{ $t('gameTable.map.show') }}</span>
+      <span :class="{ 'is-hidden': !shown }">{{ $t('gameTable.map.shown') }}</span>
+    </span>
     <v-tooltip activator="parent" location="bottom">
       {{ shown ? $t('gameTable.map.stopHint') : $t('gameTable.map.showHint') }}
     </v-tooltip>
@@ -40,3 +45,17 @@ async function toggle() {
   }
 }
 </script>
+
+<style scoped>
+.show-map-label {
+  display: inline-grid;
+}
+
+.show-map-label > span {
+  grid-area: 1 / 1;
+}
+
+.is-hidden {
+  visibility: hidden;
+}
+</style>
