@@ -1,6 +1,6 @@
 import {
   derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isHandoutContent, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
-  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type HandoutContent, type TableFogContent, type TableMapContent,
+  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type HandoutContent, type TableFogContent, type TableWeather, type TableMapContent,
 } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
@@ -45,6 +45,8 @@ export function usePlayerSession() {
     let playerId = ''
     /** The DM's campaign (sent encrypted like everything else) */
     const campaignName = ref('')
+    /** Today's in-game weather (null = no calendar / nothing for today) */
+    const weather = ref<TableWeather | null>(null)
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
     /** Pings on the map right now (each disappears after its pulse) */
     const pings = ref<TablePing[]>([])
@@ -108,7 +110,10 @@ export function usePlayerSession() {
         // Content must match its slot - the relay can't pass the fog off as the map
         if (slot === 'map' && isTableMapContent(content)) tableMap.value = content
         else if (slot === 'fog' && isTableFogContent(content)) tableFog.value = content
-        else if (slot === 'info' && isTableInfoContent(content)) campaignName.value = content.campaignName
+        else if (slot === 'info' && isTableInfoContent(content)) {
+          campaignName.value = content.campaignName
+          weather.value = content.weather ?? null
+        }
         else return
         stateVersions.set(slot, { epoch: header.epoch, seq: header.seq })
       }
@@ -260,7 +265,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, weather }
   }
 
   return { join, connect }

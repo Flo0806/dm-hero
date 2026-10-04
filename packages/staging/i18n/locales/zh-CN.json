@@ -71,6 +71,17 @@
       "openPdf": "打开 PDF",
       "opening": "正在打开……",
       "failed": "无法打开该文档。"
+    },
+    "weather": {
+      "sunny": "晴",
+      "partlyCloudy": "多云转晴",
+      "cloudy": "多云",
+      "rain": "雨",
+      "thunderstorm": "雷雨",
+      "snow": "雪",
+      "heavySnow": "大雪",
+      "fog": "雾",
+      "windy": "大风"
     }
   },
   "cookieNotice": {

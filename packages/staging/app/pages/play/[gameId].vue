@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-dvh flex flex-col font-sans">
+  <!-- Own stacking context: the weather (z -1) sits above the page background, below all content -->
+  <div class="relative z-1 min-h-dvh flex flex-col font-sans">
     <header class="w-full max-w-6xl mx-auto px-5 pt-8 pb-6 flex items-center gap-4">
       <img src="/logo.png" alt="DM Hero" width="56" height="56" class="size-14 rounded-xl shrink-0" />
       <div class="min-w-0">
@@ -16,6 +17,11 @@
           </span>
           <span v-if="encrypted" class="inline-flex items-center gap-1.5 text-success">
             <span aria-hidden="true">🔒</span> {{ $t('play.encrypted') }}
+          </span>
+          <!-- Today's in-game weather -->
+          <span v-if="weather && WEATHER_ICONS[weather.type]" class="inline-flex items-center gap-1.5">
+            <span aria-hidden="true">{{ WEATHER_ICONS[weather.type] }}</span>
+            {{ $t(`play.weather.${weather.type}`) }}<template v-if="weather.temperature !== null"> · {{ weather.temperature }}°</template>
           </span>
         </p>
       </div>
@@ -102,6 +108,8 @@
       </aside>
     </main>
 
+    <WeatherBackdrop :weather="weather" />
+
     <RevealBanner :reveal="currentReveal" @show="showRevealed" />
 
     <!-- Phones: one share at a time, full screen -->
@@ -115,7 +123,11 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts, weather } = connect(gameId)
+
+const WEATHER_ICONS: Record<string, string> = {
+  sunny: '☀️', partlyCloudy: '⛅', cloudy: '☁️', rain: '🌧️', thunderstorm: '⛈️', snow: '🌨️', heavySnow: '❄️', fog: '🌫️', windy: '💨',
+}
 
 // Tab title: the campaign, once known
 useHead(() => (campaignName.value ? { title: `${campaignName.value} – DM Hero` } : {}))

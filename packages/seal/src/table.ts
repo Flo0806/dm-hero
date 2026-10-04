@@ -44,17 +44,28 @@ export interface TableFogContent {
   fog: MapFog
 }
 
+/** Today's in-game weather (DM Hero's weather types, temperature without unit) */
+export interface TableWeather {
+  type: string
+  temperature: number | null
+}
+
 /** Slot "info": about the game itself - shown to joined players */
 export interface TableInfoContent {
   kind: 'info'
   campaignName: string
+  /** Missing = no calendar or no weather for today */
+  weather?: TableWeather
 }
 
 export const CAMPAIGN_NAME_MAX = 200
 
 export function isTableInfoContent(value: unknown): value is TableInfoContent {
   const i = value as TableInfoContent
-  return !!i && i.kind === 'info' && typeof i.campaignName === 'string' && i.campaignName.length <= CAMPAIGN_NAME_MAX
+  if (!i || i.kind !== 'info' || typeof i.campaignName !== 'string' || i.campaignName.length > CAMPAIGN_NAME_MAX) return false
+  const w = i.weather
+  return w === undefined || (typeof w?.type === 'string' && /^\w{1,32}$/.test(w.type)
+    && (w.temperature === null || (typeof w.temperature === 'number' && Number.isFinite(w.temperature))))
 }
 
 /**

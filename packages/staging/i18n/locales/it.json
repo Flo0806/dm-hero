@@ -71,6 +71,17 @@
       "openPdf": "Apri PDF",
       "opening": "Apertura …",
       "failed": "Impossibile aprire il documento."
+    },
+    "weather": {
+      "sunny": "Soleggiato",
+      "partlyCloudy": "Parzialmente nuvoloso",
+      "cloudy": "Nuvoloso",
+      "rain": "Pioggia",
+      "thunderstorm": "Temporale",
+      "snow": "Neve",
+      "heavySnow": "Nevicata intensa",
+      "fog": "Nebbia",
+      "windy": "Ventoso"
     }
   },
   "cookieNotice": {
