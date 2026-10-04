@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { GameTable, GameTablePlayer } from '~~/types/game-table'
-import type { GameTableShare, ShareType } from '~~/types/share'
+import type { GameTableHandout, GameTableShare, ShareType } from '~~/types/share'
 
 // Increases with every load - an older (slower) response must not overwrite a newer one
 let loadSeq = 0
@@ -10,6 +10,8 @@ interface GameTableState {
   loading: boolean
   loadedCampaignId: number | null
   shares: GameTableShare[]
+  /** Documents handed out to players */
+  handouts: GameTableHandout[]
   /** Fields each share type offers (from the server) */
   shareKinds: Partial<Record<ShareType, string[]>>
   /** The DM's remembered ticks per share type */
@@ -25,6 +27,7 @@ export const useGameTableStore = defineStore('gameTable', {
     loading: false,
     loadedCampaignId: null,
     shares: [],
+    handouts: [],
     shareKinds: {},
     shareDefaults: {},
     shareTarget: null,
@@ -45,8 +48,15 @@ export const useGameTableStore = defineStore('gameTable', {
         if (seq !== loadSeq) return
         this.table = table
         this.loadedCampaignId = campaignId
-        const shares = table ? await $fetch<GameTableShare[]>(`/api/game-table/${table.id}/shares`) : []
-        if (seq === loadSeq) this.shares = shares
+        const [shares, handouts] = table
+          ? await Promise.all([
+              $fetch<GameTableShare[]>(`/api/game-table/${table.id}/shares`),
+              $fetch<GameTableHandout[]>(`/api/game-table/${table.id}/handouts`),
+            ])
+          : [[], []]
+        if (seq !== loadSeq) return
+        this.shares = shares
+        this.handouts = handouts
       }
       finally {
         this.loading = false
@@ -80,6 +90,7 @@ export const useGameTableStore = defineStore('gameTable', {
     async start(campaignId: number) {
       this.table = await $fetch<GameTable>('/api/game-table', { method: 'POST', body: { campaignId } })
       this.shares = []
+      this.handouts = []
     },
 
     async close() {
@@ -87,6 +98,7 @@ export const useGameTableStore = defineStore('gameTable', {
       await $fetch(`/api/game-table/${this.table.id}`, { method: 'DELETE' })
       this.table = null
       this.shares = []
+      this.handouts = []
     },
 
     async addPlayer(name: string, playerEntityId: number | null) {
@@ -148,6 +160,27 @@ export const useGameTableStore = defineStore('gameTable', {
     async unshare(shareId: number) {
       await $fetch(`/api/game-table/shares/${shareId}`, { method: 'DELETE' })
       this.shares = this.shares.filter(s => s.id !== shareId)
+    },
+
+    handoutOf(documentId: number) {
+      return this.handouts.find(h => h.document_id === documentId) ?? null
+    },
+
+    async loadHandouts() {
+      this.handouts = this.table ? await $fetch<GameTableHandout[]>(`/api/game-table/${this.table.id}/handouts`) : []
+    },
+
+    /** Hand a document to all or chosen players (or change who gets it). pending: saved, players get it once the player server answers */
+    async handOut(documentId: number, recipients: 'all' | number[]) {
+      if (!this.table) return false
+      const { pending } = await $fetch<{ pending: boolean }>(`/api/game-table/${this.table.id}/handouts`, { method: 'PUT', body: { documentId, recipients } })
+      await this.loadHandouts()
+      return pending
+    },
+
+    async withdrawHandout(id: number) {
+      await $fetch(`/api/game-table/handouts/${id}`, { method: 'DELETE' })
+      this.handouts = this.handouts.filter(h => h.id !== id)
     },
 
     openShareDialog(type: ShareType, entityId: number, name: string) {

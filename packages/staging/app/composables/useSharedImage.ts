@@ -1,10 +1,11 @@
 import { decryptFile } from '@dm-hero/seal'
 
-// Encrypted image -> object URL. Each file is fetched + decrypted once per page
+// Encrypted image (or any shared file) -> object URL. Each file is fetched + decrypted once per page
 // session; reloads hit the browser cache (the relay marks files immutable).
 const cache = new Map<string, Promise<string>>()
 
-function load(gameId: string, file: SharedFileRef) {
+/** Encrypted file of this game -> object URL (fetched + decrypted once) */
+export function loadSharedFile(gameId: string, file: SharedFileRef) {
   let url = cache.get(file.fileId)
   if (!url) {
     url = fetch(`/api/v1/games/${gameId}/files/${file.fileId}`)
@@ -27,7 +28,7 @@ export function useSharedImage(file: () => SharedFileRef | undefined) {
     src.value = null
     if (!value) return
     try {
-      src.value = await load(gameId, value)
+      src.value = await loadSharedFile(gameId, value)
     }
     catch (error) {
       // Missing or tampered file - just no picture

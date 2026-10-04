@@ -1,6 +1,6 @@
 import {
-  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
-  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type TableFogContent, type TableMapContent,
+  derivePairKey, fingerprint, importExchangePublicKey, importVerifyKey, isHandoutContent, isPingContent, isTableFogContent, isTableInfoContent, isTableMapContent,
+  NOTE_MS, open, PING_MS, seal, unwrapGameKey, type Envelope, type HandoutContent, type TableFogContent, type TableMapContent,
 } from '@dm-hero/seal'
 
 // Player side of a game: join with code + PIN, then stay connected via SSE
@@ -37,6 +37,12 @@ export function usePlayerSession() {
     /** The map the DM shows (null = none) + its fog of war */
     const tableMap = ref<TableMapContent | null>(null)
     const tableFog = ref<TableFogContent | null>(null)
+    /** Documents the DM handed to this player - sealed for this device only */
+    const handouts = ref<HandoutContent[]>([])
+    const queuedHandouts: Array<{ id: string, envelope: Envelope }> = []
+    const handoutVersions = new Map<string, number>()
+    let pairKey: CryptoKey | null = null
+    let playerId = ''
     /** The DM's campaign (sent encrypted like everything else) */
     const campaignName = ref('')
     const queuedState: Array<{ slot: string, envelope: Envelope }> = []
@@ -139,13 +145,37 @@ export function usePlayerSession() {
         .catch(error => console.error('[Ping] Failed:', error))
     }
 
+    // Handouts: DM-signed, sealed with this device's pair key, addressed to this player
+    async function addHandout(id: string, envelope: Envelope) {
+      if (!pairKey || !dmVerifyKey || !playerId) {
+        queuedHandouts.push({ id, envelope })
+        return
+      }
+      const { header } = envelope
+      if (header.gameId !== gameId || header.from !== 'dm' || header.to !== playerId) return
+      if ((handoutVersions.get(id) ?? 0) >= header.seq) return
+      try {
+        const content = await open<unknown>(pairKey, envelope, dmVerifyKey)
+        if (!isHandoutContent(content) || content.handoutId !== id) return
+        if ((handoutVersions.get(id) ?? 0) >= header.seq) return
+        handoutVersions.set(id, header.seq)
+        handouts.value = [content, ...handouts.value.filter(h => h.handoutId !== id)]
+          .sort((a, b) => b.sharedAt.localeCompare(a.sharedAt))
+      }
+      catch (error) {
+        console.error('[E2E] Handout rejected:', error)
+      }
+    }
+
     let opened = false
     const source = new EventSource(`/api/v1/games/${gameId}/events`)
 
     source.addEventListener('ready', (event) => {
       opened = true
       status.value = 'live'
-      name.value = (JSON.parse((event as MessageEvent).data) as { name: string }).name
+      const ready = JSON.parse((event as MessageEvent).data) as { name: string, playerId?: string }
+      name.value = ready.name
+      playerId = ready.playerId ?? ''
     })
 
     // DM Hero wrapped the game key for a device - only ours can open it
@@ -154,7 +184,7 @@ export function usePlayerSession() {
       const [device, dm] = await Promise.all([getDeviceKey(), loadDmPublicKeys(gameId)])
       if (!dm || device.publicKey !== publicKey) return
       try {
-        const pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(dm.exchange), gameId)
+        pairKey = await derivePairKey(device.keyPair.privateKey, await importExchangePublicKey(dm.exchange), gameId)
         // Never go back to an older key (replayed key package)
         if (envelope.header.epoch < keyEpoch) return
         dmVerifyKey = await importVerifyKey(dm.signing)
@@ -163,6 +193,7 @@ export function usePlayerSession() {
         encrypted.value = true
         for (const share of queued.splice(0)) await addShare(share.id, share.envelope)
         for (const state of queuedState.splice(0)) await setState(state.slot, state.envelope)
+        for (const handout of queuedHandouts.splice(0)) await addHandout(handout.id, handout.envelope)
         // Everything up to here was the current state - from now on changes are live moments
         setTimeout(() => live = true, 1500)
       }
@@ -194,6 +225,16 @@ export function usePlayerSession() {
       else if (slot === 'fog') tableFog.value = null
     })
 
+    source.addEventListener('handout', (event) => {
+      const { id, envelope } = JSON.parse((event as MessageEvent).data) as { id: string, envelope: Envelope }
+      void addHandout(id, envelope)
+    })
+    // Taken back - versions stay, a replayed old envelope stays rejected
+    source.addEventListener('unhandout', (event) => {
+      const { id } = JSON.parse((event as MessageEvent).data) as { id: string }
+      handouts.value = handouts.value.filter(h => h.handoutId !== id)
+    })
+
     source.addEventListener('ping', (event) => {
       void receivePing(JSON.parse((event as MessageEvent).data) as { from: string, name?: string, envelope: Envelope })
     })
@@ -216,7 +257,7 @@ export function usePlayerSession() {
     }
 
     onBeforeUnmount(() => source.close())
-    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName }
+    return { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts }
   }
 
   return { join, connect }

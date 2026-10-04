@@ -89,6 +89,20 @@
                   {{ $t('common.edit') }}
                 </v-tooltip>
               </v-btn>
+              <!-- Hand out to players (only with a running game) -->
+              <v-btn
+                v-if="gameTableStore.table"
+                icon
+                variant="text"
+                size="small"
+                :color="gameTableStore.handoutOf(doc.id) ? 'primary' : undefined"
+                @click.stop="openHandout(doc)"
+              >
+                <v-icon>{{ gameTableStore.handoutOf(doc.id) ? 'mdi-hand-extended' : 'mdi-hand-extended-outline' }}</v-icon>
+                <v-tooltip activator="parent" location="bottom">
+                  {{ gameTableStore.handoutOf(doc.id) ? $t('gameTable.handout.handedOut') : $t('gameTable.handout.action') }}
+                </v-tooltip>
+              </v-btn>
               <!-- Delete (both types) -->
               <v-btn
                 icon="mdi-delete"
@@ -260,6 +274,7 @@
       @cancel="showDeleteDialog = false"
     />
 
+    <GameTableHandoutDialog v-if="handoutDoc" v-model:show="showHandout" :document-id="handoutDoc.id" :title="handoutDoc.title" />
   </div>
 </template>
 
@@ -288,6 +303,15 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// Hand a document to the players of the running game
+const gameTableStore = useGameTableStore()
+const showHandout = ref(false)
+const handoutDoc = ref<{ id: number, title: string } | null>(null)
+function openHandout(doc: { id: number, title: string }) {
+  handoutDoc.value = { id: doc.id, title: doc.title }
+  showHandout.value = true
+}
 
 // Emit events for parent to react to changes
 const emit = defineEmits<{

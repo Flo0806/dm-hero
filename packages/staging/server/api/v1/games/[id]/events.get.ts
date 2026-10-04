@@ -10,7 +10,7 @@ export default defineEventHandler((event) => {
   })
 
   const sending = stream.send()
-  void stream.push({ event: 'ready', data: JSON.stringify({ name: player.name }) })
+  void stream.push({ event: 'ready', data: JSON.stringify({ name: player.name, playerId: player.player_id }) })
 
   // Game key: deliver if DM Hero already wrapped it for this device, otherwise ask DM Hero
   if (player.wrapped_key) {
@@ -26,6 +26,14 @@ export default defineEventHandler((event) => {
   for (const share of shares) {
     void stream.push({ event: 'share', data: JSON.stringify({ id: share.id, envelope: JSON.parse(share.envelope) }) })
   }
+  // Handouts for this player - only the envelope of this device
+  const handouts = useRelayDb().prepare('SELECT id, envelopes FROM handouts WHERE game_id = ? AND player_id = ? ORDER BY updated_at')
+    .all(gameId, player.player_id) as Array<{ id: string, envelopes: string }>
+  for (const handout of handouts) {
+    const envelope = player.public_key ? (JSON.parse(handout.envelopes) as Record<string, unknown>)[player.public_key] : undefined
+    if (envelope) void stream.push({ event: 'handout', data: JSON.stringify({ id: handout.id, envelope }) })
+  }
+
   // The shown map + its fog
   const states = useRelayDb().prepare('SELECT slot, envelope FROM game_state WHERE game_id = ?')
     .all(gameId) as Array<{ slot: string, envelope: string }>

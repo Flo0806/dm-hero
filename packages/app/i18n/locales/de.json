@@ -2836,6 +2836,28 @@
     },
     "expired": "Spiel abgelaufen",
     "expiredHint": "Der Spieltisch-Server kennt dieses Spiel nicht mehr. Verbinde neu – Spieler, PINs und alles Geteilte bleiben. Es gibt einen neuen Spielcode, deine Spieler treten mit ihrer PIN neu bei.",
-    "expiredRestart": "Neu verbinden"
+    "expiredRestart": "Neu verbinden",
+    "tabs": {
+      "table": "Tisch",
+      "shared": "Geteilt"
+    },
+    "handout": {
+      "action": "An Spieler geben",
+      "handedOut": "An Spieler gegeben",
+      "title": "„{name}“ an Spieler geben",
+      "all": "Alle Spieler",
+      "some": "Ausgewählte Spieler",
+      "nobody": "Niemand",
+      "hint": "Nur diese Spieler können das Dokument öffnen – für alle anderen ist es unsichtbar. Text bis 100 KB, PDF bis 2 MB.",
+      "give": "Geben",
+      "withdraw": "Zurückziehen",
+      "given": "An die Spieler gegeben",
+      "withdrawn": "Zurückgezogen",
+      "tooLarge": "Zu groß für den Spieltisch (Text bis 100 KB, PDF bis 2 MB, höchstens 100 Handouts)",
+      "listTitle": "Handouts",
+      "recipients": "Empfänger ändern",
+      "empty": "Noch keine Dokumente an Spieler gegeben. Das geht direkt bei den Dokumenten einer Entität.",
+      "pending": "Gespeichert – deine Spieler bekommen es, sobald der Spieltisch erreichbar ist."
+    }
   }
 }

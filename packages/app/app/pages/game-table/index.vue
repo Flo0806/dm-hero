@@ -26,7 +26,20 @@
           <GameTablePendingDevices :pending="presence.pending" />
         </v-card>
 
-        <v-row>
+        <!-- Table (join + players) | Shared (everything that went out, with "take back") -->
+        <v-tabs v-model="tab" color="primary" class="mb-6">
+          <v-tab value="table" prepend-icon="mdi-table-furniture">
+            {{ $t('gameTable.tabs.table') }}
+          </v-tab>
+          <v-tab value="shared" prepend-icon="mdi-share-variant">
+            {{ $t('gameTable.tabs.shared') }}
+            <v-chip v-if="sharedCount" size="x-small" class="ms-2">
+              {{ sharedCount }}
+            </v-chip>
+          </v-tab>
+        </v-tabs>
+
+        <v-row v-if="tab === 'table'">
           <v-col cols="12" md="5">
             <GameTableJoinCard
               :code="store.table.code"
@@ -48,7 +61,10 @@
           </v-col>
         </v-row>
 
-        <GameTableSharing />
+        <template v-else>
+          <GameTableSharing class="mt-0" />
+          <GameTableHandouts />
+        </template>
       </template>
     </template>
 
@@ -69,6 +85,8 @@ const campaignId = computed(() => campaignStore.activeCampaignIdNumber)
 const loaded = ref(false)
 const busy = ref(false)
 const closeDialog = ref(false)
+const tab = ref<'table' | 'shared'>('table')
+const sharedCount = computed(() => store.shares.length + store.handouts.length)
 const restartMode = ref(false)
 
 // Live online status, only while the page runs in the browser

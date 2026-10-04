@@ -49,7 +49,8 @@
     "tabs": {
       "label": "View",
       "shares": "Shared",
-      "map": "Map"
+      "map": "Map",
+      "documents": "Documents"
     },
     "map": {
       "label": "Map: {name}",
@@ -63,6 +64,13 @@
       "dm": "Game master",
       "pinged": "{name} pointed at the map",
       "note": "{name}: {text}"
+    },
+    "handouts": {
+      "title": "Documents",
+      "read": "Read",
+      "openPdf": "Open PDF",
+      "opening": "Opening …",
+      "failed": "The document could not be opened."
     }
   }
 }

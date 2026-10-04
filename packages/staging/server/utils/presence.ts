@@ -71,6 +71,14 @@ export function sendToPlayer(gameId: string, playerId: string, event: string, da
   for (const stream of games.get(gameId)?.players.get(playerId) ?? []) void stream.push({ event, data: JSON.stringify(data) })
 }
 
+/** Send per device of one player: data(publicKey) decides what each device gets (null = nothing) */
+export function sendToPlayerDevices(gameId: string, playerId: string, event: string, data: (publicKey: string | null) => unknown) {
+  for (const stream of games.get(gameId)?.players.get(playerId) ?? []) {
+    const payload = data(streamDevice.get(stream) ?? null)
+    if (payload !== null) void stream.push({ event, data: JSON.stringify(payload) })
+  }
+}
+
 /** Kick players (removed or PIN changed): close their live connections */
 export async function disconnectPlayers(gameId: string, playerIds: string[]) {
   const players = games.get(gameId)?.players

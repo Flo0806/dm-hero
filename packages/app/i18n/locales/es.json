@@ -2836,6 +2836,28 @@
     },
     "expired": "Partida caducada",
     "expiredHint": "El servidor de la mesa de juego ya no conoce esta partida. Vuelve a conectar: los jugadores, los PIN y todo lo compartido se mantienen. Hay un código nuevo; tus jugadores vuelven a unirse con su PIN.",
-    "expiredRestart": "Volver a conectar"
+    "expiredRestart": "Volver a conectar",
+    "tabs": {
+      "table": "Mesa",
+      "shared": "Compartido"
+    },
+    "handout": {
+      "action": "Dar a los jugadores",
+      "handedOut": "Dado a los jugadores",
+      "title": "Dar «{name}» a los jugadores",
+      "all": "Todos los jugadores",
+      "some": "Jugadores elegidos",
+      "nobody": "Nadie",
+      "hint": "Solo estos jugadores pueden abrir el documento; para los demás es invisible. Texto hasta 100 KB, PDF hasta 2 MB.",
+      "give": "Dar",
+      "withdraw": "Retirar",
+      "given": "Entregado a los jugadores",
+      "withdrawn": "Retirado",
+      "tooLarge": "Demasiado grande para la mesa de juego (texto hasta 100 KB, PDF hasta 2 MB, como máximo 100 documentos)",
+      "listTitle": "Documentos entregados",
+      "recipients": "Cambiar destinatarios",
+      "empty": "Aún no has dado documentos a los jugadores. Puedes hacerlo en los documentos de una entidad.",
+      "pending": "Guardado: tus jugadores lo recibirán en cuanto la mesa de juego esté disponible."
+    }
   }
 }

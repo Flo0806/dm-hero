@@ -106,6 +106,28 @@ export async function deleteRelayState(auth: RelayAuth, slot: RelayStateSlot) {
   })
 }
 
+/** Handout for chosen players: { playerId: { devicePublicKey: envelope } } */
+export async function putRelayHandout(auth: RelayAuth, handoutKey: string, players: Record<string, Record<string, unknown>>) {
+  try {
+    await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/handouts/${handoutKey}`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+      body: { players },
+    })
+  }
+  catch (error) {
+    if ((error as { statusCode?: number }).statusCode === 413) throw createError({ statusCode: 413, message: 'Handout too large or too many handouts' })
+    throw error
+  }
+}
+
+export async function deleteRelayHandout(auth: RelayAuth, handoutKey: string) {
+  await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/handouts/${handoutKey}`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${auth.relay_dm_token}` },
+  })
+}
+
 /** DM pings a spot on the shown map (signed envelope) */
 export async function postRelayDmPing(auth: RelayAuth, envelope: unknown) {
   await $fetch(`${relayUrl()}/games/${auth.relay_game_id}/dm-ping`, {

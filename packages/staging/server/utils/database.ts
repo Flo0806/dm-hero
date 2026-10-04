@@ -36,6 +36,14 @@ const SCHEMA = `
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (game_id, slot)
   );
+  CREATE TABLE IF NOT EXISTS handouts (
+    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+    id TEXT NOT NULL,
+    player_id TEXT NOT NULL,
+    envelopes TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (game_id, id, player_id)
+  );
   CREATE TABLE IF NOT EXISTS files (
     game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
     id TEXT NOT NULL,

@@ -49,7 +49,8 @@
     "tabs": {
       "label": "视图",
       "shares": "已分享",
-      "map": "地图"
+      "map": "地图",
+      "documents": "文档"
     },
     "map": {
       "label": "地图：{name}",
@@ -63,6 +64,13 @@
       "dm": "主持人",
       "pinged": "{name} 在地图上做了标记",
       "note": "{name}：{text}"
+    },
+    "handouts": {
+      "title": "文档",
+      "read": "阅读",
+      "openPdf": "打开 PDF",
+      "opening": "正在打开……",
+      "failed": "无法打开该文档。"
     }
   }
 }

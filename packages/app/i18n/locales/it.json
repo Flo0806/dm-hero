@@ -2836,6 +2836,28 @@
     },
     "expired": "Partita scaduta",
     "expiredHint": "Il server del tavolo di gioco non conosce più questa partita. Riconnetti: giocatori, PIN e tutto ciò che è condiviso restano. C’è un nuovo codice; i tuoi giocatori rientrano con il loro PIN.",
-    "expiredRestart": "Riconnetti"
+    "expiredRestart": "Riconnetti",
+    "tabs": {
+      "table": "Tavolo",
+      "shared": "Condiviso"
+    },
+    "handout": {
+      "action": "Dai ai giocatori",
+      "handedOut": "Dato ai giocatori",
+      "title": "Dai «{name}» ai giocatori",
+      "all": "Tutti i giocatori",
+      "some": "Giocatori scelti",
+      "nobody": "Nessuno",
+      "hint": "Solo questi giocatori possono aprire il documento: per tutti gli altri è invisibile. Testo fino a 100 KB, PDF fino a 2 MB.",
+      "give": "Dai",
+      "withdraw": "Ritira",
+      "given": "Dato ai giocatori",
+      "withdrawn": "Ritirato",
+      "tooLarge": "Troppo grande per il tavolo di gioco (testo fino a 100 KB, PDF fino a 2 MB, al massimo 100 documenti)",
+      "listTitle": "Documenti consegnati",
+      "recipients": "Cambia destinatari",
+      "empty": "Nessun documento ancora dato ai giocatori. Puoi farlo dai documenti di un’entità.",
+      "pending": "Salvato – i tuoi giocatori lo riceveranno appena il tavolo di gioco sarà raggiungibile."
+    }
   }
 }

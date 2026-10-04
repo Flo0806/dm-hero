@@ -64,3 +64,16 @@ export interface GameTableShare {
   created_at: string
   updated_at: string
 }
+
+/** A document handed out to players (for the DM's overview) */
+export interface GameTableHandout {
+  id: number
+  document_id: number
+  title: string
+  format: 'markdown' | 'pdf'
+  entity_id: number
+  entity_name: string
+  /** 'all' or the chosen player ids */
+  recipients: 'all' | number[]
+  created_at: string
+}

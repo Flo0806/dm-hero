@@ -22,9 +22,9 @@
     </header>
 
     <!-- Tabs only while the DM shows a map -->
-    <div v-if="encrypted && tableMap" role="tablist" class="w-full max-w-6xl mx-auto px-5 pb-5 flex gap-2" :aria-label="$t('play.tabs.label')">
+    <div v-if="encrypted && tabs.length > 1" role="tablist" class="w-full max-w-6xl mx-auto px-5 pb-5 flex gap-2" :aria-label="$t('play.tabs.label')">
       <button
-        v-for="item in TABS"
+        v-for="item in tabs"
         :id="`tab-${item}`"
         :key="item"
         :ref="el => tabRefs[item] = el as HTMLElement"
@@ -40,7 +40,7 @@
         @keydown.right.prevent="switchTab(1)"
       >
         {{ $t(`play.tabs.${item}`) }}
-        <span v-if="item === 'map' && mapUnseen" class="px-1.5 py-0.5 rounded-md bg-primary text-bg text-xs">{{ $t('play.new') }}</span>
+        <span v-if="unseen[item]" class="px-1.5 py-0.5 rounded-md bg-primary text-bg text-xs">{{ $t('play.new') }}</span>
       </button>
     </div>
 
@@ -59,6 +59,10 @@
       </div>
     </main>
 
+    <main v-else-if="tab === 'documents' && handouts.length" id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12">
+      <HandoutList :handouts="handouts" />
+    </main>
+
     <main v-else-if="tab === 'map' && tableMap" id="panel-map" role="tabpanel" aria-labelledby="tab-map" class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12">
       <TableMap :map="tableMap" :fog="tableFog" :pings="pings" @ping="p => ping(tableMap!.mapId, p.x, p.y)" />
     </main>
@@ -67,8 +71,8 @@
     <main
       v-else
       id="panel-shares"
-      :role="tableMap ? 'tabpanel' : undefined"
-      :aria-labelledby="tableMap ? 'tab-shares' : undefined"
+      :role="tabs.length > 1 ? 'tabpanel' : undefined"
+      :aria-labelledby="tabs.length > 1 ? 'tab-shares' : undefined"
       class="flex-1 w-full max-w-6xl mx-auto px-5 pb-12"
       :class="{ 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-8': isDesktop && openShares.length }"
     >
@@ -111,7 +115,7 @@
 const route = useRoute()
 const gameId = String(route.params.gameId)
 const { connect } = usePlayerSession()
-const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName } = connect(gameId)
+const { status, name, encrypted, symbols, shares, reveals, tableMap, tableFog, pings, ping, campaignName, handouts } = connect(gameId)
 
 // Tab title: the campaign, once known
 useHead(() => (campaignName.value ? { title: `${campaignName.value} – DM Hero` } : {}))
@@ -170,24 +174,38 @@ function showRevealed(shareId: string) {
   if (share && !openIds.value.includes(shareId)) open(share)
 }
 
-// Shares | map - the map tab exists while the DM shows one
-const TABS = ['shares', 'map'] as const
-const tab = ref<typeof TABS[number]>('shares')
-const tabRefs: Partial<Record<typeof TABS[number], HTMLElement>> = {}
-const mapUnseen = ref(false)
+// Shared | documents | map - documents and map only exist while there is something
+type Tab = 'shares' | 'documents' | 'map'
+const tabs = computed<Tab[]>(() => [
+  'shares',
+  ...(handouts.value.length ? ['documents' as const] : []),
+  ...(tableMap.value ? ['map' as const] : []),
+])
+const tab = ref<Tab>('shares')
+const tabRefs: Partial<Record<Tab, HTMLElement>> = {}
+const unseen = reactive<Partial<Record<Tab, boolean>>>({})
 
 function switchTab(direction: number) {
-  const next = TABS[(TABS.indexOf(tab.value) + direction + TABS.length) % TABS.length]!
+  const list = tabs.value
+  const next = list[(list.indexOf(tab.value) + direction + list.length) % list.length]!
   tab.value = next
   tabRefs[next]?.focus()
 }
 
+// A tab that disappears sends the player back to the shares
+watch(tabs, (list) => {
+  if (!list.includes(tab.value)) tab.value = 'shares'
+})
+// Something new on a tab the player isn't looking at -> "New"
 watch(() => tableMap.value?.mapId, (mapId) => {
-  if (!mapId) tab.value = 'shares'
-  else if (tab.value !== 'map') mapUnseen.value = true
+  if (mapId && tab.value !== 'map') unseen.map = true
+})
+watch(() => handouts.value.map(h => h.handoutId).join(), (now, before) => {
+  const added = now.split(',').some(id => id && !(before ?? '').split(',').includes(id))
+  if (added && tab.value !== 'documents') unseen.documents = true
 })
 watch(tab, (value) => {
-  if (value === 'map') mapUnseen.value = false
+  unseen[value] = false
 })
 
 // Game over or kicked: back to the start page, which explains what happened

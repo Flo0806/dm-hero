@@ -2836,6 +2836,28 @@
     },
     "expired": "Partie expirée",
     "expiredHint": "Le serveur de la table de jeu ne connaît plus cette partie. Reconnectez-vous – joueurs, PIN et tout ce qui est partagé restent. Il y a un nouveau code ; vos joueurs rejoignent avec leur PIN.",
-    "expiredRestart": "Reconnecter"
+    "expiredRestart": "Reconnecter",
+    "tabs": {
+      "table": "Table",
+      "shared": "Partagé"
+    },
+    "handout": {
+      "action": "Donner aux joueurs",
+      "handedOut": "Donné aux joueurs",
+      "title": "Donner « {name} » aux joueurs",
+      "all": "Tous les joueurs",
+      "some": "Joueurs choisis",
+      "nobody": "Personne",
+      "hint": "Seuls ces joueurs peuvent ouvrir le document – pour les autres, il est invisible. Texte jusqu’à 100 Ko, PDF jusqu’à 2 Mo.",
+      "give": "Donner",
+      "withdraw": "Reprendre",
+      "given": "Donné aux joueurs",
+      "withdrawn": "Repris",
+      "tooLarge": "Trop volumineux pour la table de jeu (texte jusqu’à 100 Ko, PDF jusqu’à 2 Mo, 100 documents au maximum)",
+      "listTitle": "Documents donnés",
+      "recipients": "Modifier les destinataires",
+      "empty": "Aucun document donné aux joueurs pour l’instant. Vous pouvez le faire depuis les documents d’une entité.",
+      "pending": "Enregistré – vos joueurs le recevront dès que la table de jeu sera joignable."
+    }
   }
 }

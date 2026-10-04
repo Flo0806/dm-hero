@@ -2836,6 +2836,28 @@
     },
     "expired": "Game expired",
     "expiredHint": "The game table server no longer knows this game. Reconnect – players, PINs and everything shared stay. There is a new game code; your players join again with their PIN.",
-    "expiredRestart": "Reconnect"
+    "expiredRestart": "Reconnect",
+    "tabs": {
+      "table": "Table",
+      "shared": "Shared"
+    },
+    "handout": {
+      "action": "Give to players",
+      "handedOut": "Given to players",
+      "title": "Give “{name}” to players",
+      "all": "All players",
+      "some": "Chosen players",
+      "nobody": "Nobody",
+      "hint": "Only these players can open the document – for everyone else it is invisible. Text up to 100 KB, PDF up to 2 MB.",
+      "give": "Give",
+      "withdraw": "Take back",
+      "given": "Given to the players",
+      "withdrawn": "Taken back",
+      "tooLarge": "Too large for the game table (text up to 100 KB, PDF up to 2 MB, at most 100 handouts)",
+      "listTitle": "Handouts",
+      "recipients": "Change recipients",
+      "empty": "No documents given to players yet. You can do that right in an entity’s documents.",
+      "pending": "Saved – your players get it as soon as the game table is reachable."
+    }
   }
 }

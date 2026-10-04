@@ -2845,6 +2845,32 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 63: Added map sync columns to game_tables')
     },
   },
+  {
+    version: 64,
+    name: 'game_table_handouts',
+    up: (db) => {
+      // Documents handed out to players. recipients: 'all' or a JSON array of
+      // player ids. file_*: the uploaded, encrypted PDF (if it is one).
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS game_table_handouts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          game_table_id INTEGER NOT NULL,
+          handout_key TEXT NOT NULL UNIQUE,
+          document_id INTEGER NOT NULL,
+          recipients TEXT NOT NULL DEFAULT 'all',
+          content_hash TEXT,
+          file_source TEXT,
+          file_ref TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (game_table_id) REFERENCES game_tables(id) ON DELETE CASCADE,
+          FOREIGN KEY (document_id) REFERENCES entity_documents(id) ON DELETE CASCADE,
+          UNIQUE (game_table_id, document_id)
+        )
+      `)
+
+      console.log('✅ Migration 64: Created game_table_handouts')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

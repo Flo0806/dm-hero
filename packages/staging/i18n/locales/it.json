@@ -49,7 +49,8 @@
     "tabs": {
       "label": "Vista",
       "shares": "Condiviso",
-      "map": "Mappa"
+      "map": "Mappa",
+      "documents": "Documenti"
     },
     "map": {
       "label": "Mappa: {name}",
@@ -63,6 +64,13 @@
       "dm": "Master",
       "pinged": "{name} ha indicato la mappa",
       "note": "{name}: {text}"
+    },
+    "handouts": {
+      "title": "Documenti",
+      "read": "Leggi",
+      "openPdf": "Apri PDF",
+      "opening": "Apertura …",
+      "failed": "Impossibile aprire il documento."
     }
   }
 }

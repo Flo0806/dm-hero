@@ -57,6 +57,35 @@ export function isTableInfoContent(value: unknown): value is TableInfoContent {
   return !!i && i.kind === 'info' && typeof i.campaignName === 'string' && i.campaignName.length <= CAMPAIGN_NAME_MAX
 }
 
+/**
+ * A handout (letter, note, PDF) for chosen players. Sealed per device with the
+ * DM<->device pair key: only the recipients can open it, the relay can't.
+ */
+export interface HandoutContent {
+  kind: 'handout'
+  handoutId: string
+  title: string
+  format: 'markdown' | 'pdf'
+  /** markdown: the text */
+  text?: string
+  /** pdf: the encrypted file on the relay */
+  file?: TableFileRef & { size: number }
+  sharedAt: string
+}
+
+/** Keeps a relay from being flooded: text size, file size, handouts per game */
+export const HANDOUT_TEXT_MAX = 100_000
+export const HANDOUT_FILE_MAX = 2 * 1024 * 1024 - 1024
+export const HANDOUTS_PER_GAME = 100
+
+export function isHandoutContent(value: unknown): value is HandoutContent {
+  const h = value as HandoutContent
+  if (!h || h.kind !== 'handout' || typeof h.handoutId !== 'string' || typeof h.title !== 'string' || typeof h.sharedAt !== 'string') return false
+  if (h.format === 'markdown') return typeof h.text === 'string' && h.text.length <= HANDOUT_TEXT_MAX
+  return h.format === 'pdf' && typeof h.file?.fileId === 'string' && typeof h.file.key === 'string'
+    && typeof h.file.iv === 'string' && Number.isFinite(h.file.size) && h.file.size <= HANDOUT_FILE_MAX
+}
+
 /** A ping on the shown map. text: a short DM note, shown a few seconds. */
 export interface TablePingContent {
   mapId: number

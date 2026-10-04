@@ -2836,6 +2836,28 @@
     },
     "expired": "游戏已过期",
     "expiredHint": "游戏桌服务器已不再识别此游戏。请重新连接——玩家、PIN 和所有分享内容都会保留。游戏代码会更新，玩家使用原 PIN 重新加入。",
-    "expiredRestart": "重新连接"
+    "expiredRestart": "重新连接",
+    "tabs": {
+      "table": "游戏桌",
+      "shared": "已分享"
+    },
+    "handout": {
+      "action": "交给玩家",
+      "handedOut": "已交给玩家",
+      "title": "把“{name}”交给玩家",
+      "all": "所有玩家",
+      "some": "选定的玩家",
+      "nobody": "无人",
+      "hint": "只有这些玩家能打开该文档——其他人完全看不到。文本最大 100 KB，PDF 最大 2 MB。",
+      "give": "交出",
+      "withdraw": "收回",
+      "given": "已交给玩家",
+      "withdrawn": "已收回",
+      "tooLarge": "对游戏桌来说太大（文本最大 100 KB，PDF 最大 2 MB，最多 100 份文档）",
+      "listTitle": "已交出的文档",
+      "recipients": "更改接收者",
+      "empty": "尚未把任何文档交给玩家。可以直接在实体的文档中操作。",
+      "pending": "已保存——游戏桌可连接后，玩家就会收到。"
+    }
   }
 }

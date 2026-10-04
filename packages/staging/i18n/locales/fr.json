@@ -49,7 +49,8 @@
     "tabs": {
       "label": "Vue",
       "shares": "Partagé",
-      "map": "Carte"
+      "map": "Carte",
+      "documents": "Documents"
     },
     "map": {
       "label": "Carte : {name}",
@@ -63,6 +64,13 @@
       "dm": "Meneur de jeu",
       "pinged": "{name} a pointé la carte",
       "note": "{name} : {text}"
+    },
+    "handouts": {
+      "title": "Documents",
+      "read": "Lire",
+      "openPdf": "Ouvrir le PDF",
+      "opening": "Ouverture …",
+      "failed": "Impossible d’ouvrir le document."
     }
   }
 }
