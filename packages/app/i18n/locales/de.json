@@ -39,7 +39,20 @@
     "activeCampaign": "Aktive Kampagne",
     "chooseCampaign": "Kampagne wählen",
     "chooseCampaignHint": "Alles Weitere geht, sobald eine Kampagne aktiv ist",
-    "gameTable": "Spieltisch"
+    "gameTable": "Spieltisch",
+    "arrange": {
+      "button": "Navigation anpassen",
+      "title": "Navigation anpassen",
+      "hint": "Am Griff ziehen oder mit den Pfeilen sortieren.",
+      "divider": "Trenner",
+      "addDivider": "Trenner",
+      "removeDivider": "Trenner entfernen",
+      "up": "{name} nach oben",
+      "down": "{name} nach unten",
+      "reset": "Standard",
+      "done": "Fertig",
+      "saveFailed": "Navigation konnte nicht gespeichert werden"
+    }
   },
   "themes": {
     "dark": "Dunkel (Mitternachts-Taverne)",

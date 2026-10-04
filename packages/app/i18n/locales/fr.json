@@ -39,7 +39,20 @@
     "activeCampaign": "Campagne active",
     "chooseCampaign": "Choisir une campagne",
     "chooseCampaignHint": "Le reste se débloque dès qu'une campagne est active",
-    "gameTable": "Table de jeu"
+    "gameTable": "Table de jeu",
+    "arrange": {
+      "button": "Organiser la navigation",
+      "title": "Organiser la navigation",
+      "hint": "Fais glisser par la poignée ou trie avec les flèches.",
+      "divider": "Séparateur",
+      "addDivider": "Séparateur",
+      "removeDivider": "Retirer le séparateur",
+      "up": "Monter {name}",
+      "down": "Descendre {name}",
+      "reset": "Par défaut",
+      "done": "Terminé",
+      "saveFailed": "Impossible d’enregistrer la navigation"
+    }
   },
   "themes": {
     "dark": "Sombre (Taverne de minuit)",

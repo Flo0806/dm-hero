@@ -49,144 +49,53 @@
       <v-divider v-if="(activeCampaignName || !hasActiveCampaign) && !rail" />
     </template>
 
-    <!-- Scrollable middle: nav items -->
-    <v-list density="compact" nav>
+    <!-- Scrollable middle: nav items in the DM's own order (with dividers).
+         "Arrange navigation" switches to the editor (sidebar only). -->
+    <LayoutNavigationEditor v-if="editing" @done="editing = false" />
+    <v-list v-else density="compact" nav>
       <v-list-item
         prepend-icon="mdi-view-dashboard"
         :title="$t('nav.dashboard')"
         value="home"
         to="/"
       />
-      <v-list-item
-        prepend-icon="mdi-magnify"
-        :title="$t('nav.search')"
-        value="search"
-        :disabled="!hasActiveCampaign"
-        :active="isSearchActive"
-        @click="$emit('search-click')"
-      />
-      <v-list-item
-        prepend-icon="mdi-account-group"
-        :title="$t('nav.npcs')"
-        value="npcs"
-        :disabled="!hasActiveCampaign"
-        to="/npcs"
-      />
-      <v-list-item
-        prepend-icon="mdi-map-marker"
-        :title="$t('nav.locations')"
-        value="locations"
-        :disabled="!hasActiveCampaign"
-        to="/locations"
-      />
-      <v-list-item prepend-icon="mdi-sword" :title="$t('nav.items')" value="items" :disabled="!hasActiveCampaign" to="/items" />
-      <v-list-item
-        prepend-icon="mdi-shield"
-        :title="$t('nav.factions')"
-        value="factions"
-        :disabled="!hasActiveCampaign"
-        to="/factions"
-      />
-      <v-list-item
-        prepend-icon="mdi-book-open-variant"
-        :title="$t('nav.lore')"
-        value="lore"
-        :disabled="!hasActiveCampaign"
-        to="/lore"
-      />
-      <v-list-item
-        prepend-icon="mdi-account-star"
-        :title="$t('nav.players')"
-        value="players"
-        :disabled="!hasActiveCampaign"
-        to="/players"
-      />
-      <v-list-item
-        prepend-icon="mdi-book-open-page-variant"
-        :title="$t('nav.sessions')"
-        value="sessions"
-        :disabled="!hasActiveCampaign"
-        to="/sessions"
-      />
-      <v-list-item
-        prepend-icon="mdi-table-furniture"
-        :title="$t('nav.gameTable')"
-        value="game-table"
-        :disabled="!hasActiveCampaign"
-        to="/game-table"
-      >
-        <template v-if="isNew('gameTable')" #append>
-          <v-chip size="x-small" color="primary" variant="flat">
-            {{ $t('common.new') }}
-          </v-chip>
-        </template>
-      </v-list-item>
-      <v-list-item
-        prepend-icon="mdi-sword-cross"
-        :title="$t('nav.encounters')"
-        value="encounters"
-        :disabled="!hasActiveCampaign"
-        to="/encounters"
-        :class="{ 'encounter-active': hasCombatActive }"
-      />
-      <v-list-item
-        prepend-icon="mdi-calendar"
-        :title="$t('calendar.title')"
-        value="calendar"
-        :disabled="!hasActiveCampaign"
-        to="/calendar"
-      />
-      <v-list-item
-        prepend-icon="mdi-map"
-        :title="$t('nav.maps')"
-        value="maps"
-        :disabled="!hasActiveCampaign"
-        to="/maps"
-      />
-      <v-list-item
-        :prepend-icon="music.isPlaying.value ? 'mdi-music-note' : 'mdi-music'"
-        :title="$t('nav.music')"
-        value="music"
-        to="/music"
-        :class="{ 'music-active': music.isPlaying.value }"
-      >
-        <!-- Mini transport while a track is loaded (not in rail mode – no room) -->
-        <template v-if="music.currentTrack.value && !rail" #append>
-          <div class="d-flex align-center music-nav-controls">
-            <v-btn icon size="x-small" variant="text" :title="$t('music.previous')" @click.stop.prevent="music.prev()">
-              <v-icon icon="mdi-skip-previous" size="small" />
-            </v-btn>
-            <v-btn icon size="x-small" variant="text" :title="music.isPlaying.value ? $t('music.pause') : $t('music.play')" @click.stop.prevent="music.togglePlay()">
-              <v-icon :icon="music.isPlaying.value ? 'mdi-pause' : 'mdi-play'" size="small" />
-            </v-btn>
-            <v-btn icon size="x-small" variant="text" :title="$t('music.next')" @click.stop.prevent="music.next()">
-              <v-icon icon="mdi-skip-next" size="small" />
-            </v-btn>
-          </div>
-        </template>
-      </v-list-item>
-      <v-list-item
-        prepend-icon="mdi-folder-multiple"
-        :title="$t('nav.groups')"
-        value="groups"
-        :disabled="!hasActiveCampaign"
-        to="/groups"
-      />
-      <v-list-item
-        prepend-icon="mdi-notebook-outline"
-        :title="$t('nav.notes')"
-        value="notes"
-        :disabled="!hasActiveCampaign"
-        to="/notes"
-      >
-        <template v-if="notesStore.pendingCount > 0" #append>
-          <v-badge
-            :content="notesStore.pendingCount"
-            color="primary"
-            inline
-          />
-        </template>
-      </v-list-item>
+      <template v-for="entry in layout" :key="entry">
+        <v-divider v-if="isNavDivider(entry)" class="my-1" />
+        <v-list-item
+          v-else
+          :prepend-icon="NAV_ITEMS[entry].icon(music)"
+          :title="$t(NAV_ITEMS[entry].title)"
+          :value="entry"
+          :disabled="NAV_ITEMS[entry].needsCampaign && !hasActiveCampaign"
+          :to="NAV_ITEMS[entry].to"
+          :active="entry === 'search' ? isSearchActive : undefined"
+          :class="{ 'encounter-active': entry === 'encounters' && hasCombatActive, 'music-active': entry === 'music' && music.isPlaying.value }"
+          @click="entry === 'search' && $emit('search-click')"
+        >
+          <!-- Mini transport while a track is loaded (not in rail mode – no room) -->
+          <template v-if="entry === 'music' && music.currentTrack.value && !rail" #append>
+            <div class="d-flex align-center music-nav-controls">
+              <v-btn icon size="x-small" variant="text" :title="$t('music.previous')" @click.stop.prevent="music.prev()">
+                <v-icon icon="mdi-skip-previous" size="small" />
+              </v-btn>
+              <v-btn icon size="x-small" variant="text" :title="music.isPlaying.value ? $t('music.pause') : $t('music.play')" @click.stop.prevent="music.togglePlay()">
+                <v-icon :icon="music.isPlaying.value ? 'mdi-pause' : 'mdi-play'" size="small" />
+              </v-btn>
+              <v-btn icon size="x-small" variant="text" :title="$t('music.next')" @click.stop.prevent="music.next()">
+                <v-icon icon="mdi-skip-next" size="small" />
+              </v-btn>
+            </div>
+          </template>
+          <template v-else-if="entry === 'notes' && notesStore.pendingCount > 0" #append>
+            <v-badge :content="notesStore.pendingCount" color="primary" inline />
+          </template>
+          <template v-else-if="entry === 'gameTable' && isNew('gameTable')" #append>
+            <v-chip size="x-small" color="primary" variant="flat">
+              {{ $t('common.new') }}
+            </v-chip>
+          </template>
+        </v-list-item>
+      </template>
     </v-list>
 
     <template #append>
@@ -195,6 +104,12 @@
 
       <v-divider />
       <v-list density="compact" nav>
+        <v-list-item
+          v-if="!rail && !editing"
+          prepend-icon="mdi-format-list-bulleted-square"
+          :title="$t('nav.arrange.button')"
+          @click.stop="editing = true"
+        />
         <v-list-item
           prepend-icon="mdi-database"
           :title="rail ? '' : $t('nav.referenceData')"
@@ -212,8 +127,13 @@
 </template>
 
 <script setup lang="ts">
+import { isNavDivider } from '~~/types/navigation'
+
 const router = useRouter()
 const { isNew } = useNewBadges()
+const { layout, load: loadLayout } = useNavigationLayout()
+onMounted(loadLayout)
+const editing = ref(false)
 const notesStore = useNotesStore()
 const music = useMusicPlayer()
 const encounterStore = useEncounterStore()

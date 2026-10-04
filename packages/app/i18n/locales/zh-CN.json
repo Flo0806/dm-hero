@@ -39,7 +39,20 @@
     "activeCampaign": "当前战役",
     "chooseCampaign": "选择战役",
     "chooseCampaignHint": "激活战役后即可使用其他功能",
-    "gameTable": "游戏桌"
+    "gameTable": "游戏桌",
+    "arrange": {
+      "button": "调整导航",
+      "title": "调整导航",
+      "hint": "拖动手柄或用箭头排序。",
+      "divider": "分隔线",
+      "addDivider": "分隔线",
+      "removeDivider": "移除分隔线",
+      "up": "上移 {name}",
+      "down": "下移 {name}",
+      "reset": "恢复默认",
+      "done": "完成",
+      "saveFailed": "无法保存导航"
+    }
   },
   "themes": {
     "dark": "黑暗（午夜酒馆）",

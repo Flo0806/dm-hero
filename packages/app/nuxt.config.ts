@@ -2,7 +2,7 @@ import pkg from './package.json'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt', 'nuxt-spyglass'],
+  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@nuxtjs/i18n', '@pinia/nuxt', 'nuxt-spyglass', 'nuxt-freeform'],
 
   // Local development talks to the local player app (pnpm dev:staging)
   $development: {

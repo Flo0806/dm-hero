@@ -39,7 +39,20 @@
     "activeCampaign": "Active Campaign",
     "chooseCampaign": "Choose a campaign",
     "chooseCampaignHint": "Everything else unlocks once a campaign is active",
-    "gameTable": "Game table"
+    "gameTable": "Game table",
+    "arrange": {
+      "button": "Arrange navigation",
+      "title": "Arrange navigation",
+      "hint": "Drag by the handle or sort with the arrows.",
+      "divider": "Divider",
+      "addDivider": "Divider",
+      "removeDivider": "Remove divider",
+      "up": "Move {name} up",
+      "down": "Move {name} down",
+      "reset": "Default",
+      "done": "Done",
+      "saveFailed": "Could not save the navigation"
+    }
   },
   "themes": {
     "dark": "Dark (Midnight Tavern)",

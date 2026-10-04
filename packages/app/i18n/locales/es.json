@@ -39,7 +39,20 @@
     "activeCampaign": "Campaña activa",
     "chooseCampaign": "Elegir una campaña",
     "chooseCampaignHint": "Lo demás se desbloquea cuando hay una campaña activa",
-    "gameTable": "Mesa de juego"
+    "gameTable": "Mesa de juego",
+    "arrange": {
+      "button": "Organizar navegación",
+      "title": "Organizar navegación",
+      "hint": "Arrastra por el asa u ordena con las flechas.",
+      "divider": "Separador",
+      "addDivider": "Separador",
+      "removeDivider": "Quitar separador",
+      "up": "Subir {name}",
+      "down": "Bajar {name}",
+      "reset": "Predeterminado",
+      "done": "Listo",
+      "saveFailed": "No se pudo guardar la navegación"
+    }
   },
   "themes": {
     "dark": "Oscuro (Taberna de medianoche)",
