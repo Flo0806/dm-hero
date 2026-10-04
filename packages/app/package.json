@@ -43,6 +43,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
+    "typecheck": "nuxi typecheck",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

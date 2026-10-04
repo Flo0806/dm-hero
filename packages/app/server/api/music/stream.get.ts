@@ -47,11 +47,13 @@ export default defineEventHandler((event) => {
       end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
     }
     if (start >= size || start > end) {
-      setResponseStatus(event, 416)
+      // Status set directly: Nuxt 4.5 types the global setResponseStatus against
+      // h3 v2 (shared imports), while Nitro runs h3 v1 - the call doesn't typecheck
+      event.node.res.statusCode = 416
       setHeader(event, 'Content-Range', `bytes */${size}`)
       return ''
     }
-    setResponseStatus(event, 206)
+    event.node.res.statusCode = 206
     setHeader(event, 'Content-Range', `bytes ${start}-${end}/${size}`)
     setHeader(event, 'Content-Length', end - start + 1)
     return sendStream(event, createReadStream(abs, { start, end }))

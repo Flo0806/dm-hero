@@ -109,8 +109,9 @@ export default defineEventHandler((event) => {
     `).all(Number(campaignId), playerTypeId, npcTypeId, Number(campaignId), playerTypeId, npcTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of charactersCounts) {
-      if (result[row.player_id]) {
-        result[row.player_id].characters = row.count
+      const entry = result[row.player_id]
+      if (entry) {
+        entry.characters = row.count
       }
     }
   }
@@ -146,8 +147,9 @@ export default defineEventHandler((event) => {
     `).all(Number(campaignId), playerTypeId, itemTypeId, Number(campaignId), playerTypeId, itemTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of itemsCounts) {
-      if (result[row.player_id]) {
-        result[row.player_id].items = row.count
+      const entry = result[row.player_id]
+      if (entry) {
+        entry.items = row.count
       }
     }
   }
@@ -183,8 +185,9 @@ export default defineEventHandler((event) => {
     `).all(Number(campaignId), playerTypeId, locationTypeId, Number(campaignId), playerTypeId, locationTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of locationsCounts) {
-      if (result[row.player_id]) {
-        result[row.player_id].locations = row.count
+      const entry = result[row.player_id]
+      if (entry) {
+        entry.locations = row.count
       }
     }
   }
@@ -220,8 +223,9 @@ export default defineEventHandler((event) => {
     `).all(Number(campaignId), playerTypeId, factionTypeId, Number(campaignId), playerTypeId, factionTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of factionsCounts) {
-      if (result[row.player_id]) {
-        result[row.player_id].factions = row.count
+      const entry = result[row.player_id]
+      if (entry) {
+        entry.factions = row.count
       }
     }
   }
@@ -257,8 +261,9 @@ export default defineEventHandler((event) => {
     `).all(Number(campaignId), playerTypeId, loreTypeId, Number(campaignId), playerTypeId, loreTypeId) as Array<{ player_id: number, count: number }>
 
     for (const row of loreCounts) {
-      if (result[row.player_id]) {
-        result[row.player_id].lore = row.count
+      const entry = result[row.player_id]
+      if (entry) {
+        entry.lore = row.count
       }
     }
   }
@@ -277,8 +282,9 @@ export default defineEventHandler((event) => {
   `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of sessionsCounts) {
-    if (result[row.player_id]) {
-      result[row.player_id].sessions = row.count
+    const entry = result[row.player_id]
+    if (entry) {
+      entry.sessions = row.count
     }
   }
 
@@ -295,8 +301,9 @@ export default defineEventHandler((event) => {
   `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of documentsCounts) {
-    if (result[row.player_id]) {
-      result[row.player_id].documents = row.count
+    const entry = result[row.player_id]
+    if (entry) {
+      entry.documents = row.count
     }
   }
 
@@ -312,8 +319,9 @@ export default defineEventHandler((event) => {
   `).all(Number(campaignId), playerTypeId) as Array<{ player_id: number, count: number }>
 
   for (const row of imagesCounts) {
-    if (result[row.player_id]) {
-      result[row.player_id].images = row.count
+    const entry = result[row.player_id]
+    if (entry) {
+      entry.images = row.count
     }
   }
 
@@ -341,8 +349,9 @@ export default defineEventHandler((event) => {
   }>
 
   for (const row of groupMemberships) {
-    if (result[row.player_id]) {
-      result[row.player_id].groups.push({
+    const entry = result[row.player_id]
+    if (entry) {
+      entry.groups.push({
         id: row.group_id,
         name: row.group_name,
         color: row.color,

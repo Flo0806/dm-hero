@@ -1,0 +1,47 @@
+name: CI
+
+# Lint, typecheck and unit tests of DM Hero (+ the shared seal package)
+# on every PR and on main. Never builds or publishes anything.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter @dm-hero/app lint
+
+      - name: Typecheck
+        run: pnpm --filter @dm-hero/app typecheck
+
+      - name: Unit tests (app)
+        run: pnpm --filter @dm-hero/app exec vitest run --project unit
+
+      - name: Unit tests (seal)
+        run: pnpm --filter @dm-hero/seal test

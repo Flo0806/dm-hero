@@ -129,11 +129,12 @@ export default defineEventHandler(async (event): Promise<ValidationResult> => {
         let foundMonth = false
 
         for (let i = 0; i < newMonthCount; i++) {
-          if (remainingDays <= newMonthDays[i]) {
+          const monthDays = newMonthDays[i]!
+          if (remainingDays <= monthDays) {
             foundMonth = true
             break
           }
-          remainingDays -= newMonthDays[i]
+          remainingDays -= monthDays
         }
 
         // If day doesn't fit in any month, it's affected

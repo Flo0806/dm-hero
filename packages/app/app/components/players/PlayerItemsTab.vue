@@ -194,7 +194,8 @@ watch(isDirty, dirty => markDirty(dirty), { immediate: true })
 // Relation type suggestions using NPC_ITEM_RELATION_TYPES
 const relationTypeSuggestions = computed(() =>
   NPC_ITEM_RELATION_TYPES.map(type => ({
-    value: type,
+    // string: the combobox also takes free text, so its model is string-based
+    value: type as string,
     title: t(`players.itemRelationTypes.${type}`),
   })).sort((a, b) => a.title.localeCompare(b.title)),
 )

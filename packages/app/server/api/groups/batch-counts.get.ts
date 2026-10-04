@@ -46,11 +46,9 @@ export default defineEventHandler((event) => {
   }
 
   for (const row of counts) {
-    if (!result[row.group_id]) {
-      result[row.group_id] = { total: 0, byType: {} }
-    }
-    result[row.group_id].byType[row.entity_type] = row.count
-    result[row.group_id].total += row.count
+    const group = result[row.group_id] ??= { total: 0, byType: {} }
+    group.byType[row.entity_type] = row.count
+    group.total += row.count
   }
 
   return result

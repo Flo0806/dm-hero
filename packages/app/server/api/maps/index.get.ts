@@ -12,6 +12,8 @@ interface MapRow {
   default_zoom: number
   min_zoom: number
   max_zoom: number
+  scale_value: number | null
+  scale_unit: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null

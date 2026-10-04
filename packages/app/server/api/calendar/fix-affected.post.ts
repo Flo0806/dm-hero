@@ -81,11 +81,12 @@ export default defineEventHandler(async (event): Promise<FixResult> => {
       let validMonth = false
 
       for (let i = 0; i < newMonthCount; i++) {
-        if (remainingDays <= newMonthDays[i]) {
+        const monthDays = newMonthDays[i]!
+        if (remainingDays <= monthDays) {
           validMonth = true
           break
         }
-        remainingDays -= newMonthDays[i]
+        remainingDays -= monthDays
       }
 
       if (!validMonth) {

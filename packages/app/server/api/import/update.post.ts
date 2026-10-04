@@ -112,7 +112,7 @@ export default defineEventHandler(async (event) => {
       const existing = row.metadata ? JSON.parse(row.metadata) as Record<string, unknown> : {}
       const conv = META_CONVERT[row.type]
       const patch = conv ? await convertMetadataToKeys(u.metadata, conv, locale) : u.metadata
-      metadata = mergeMetadata(existing, patch)
+      metadata = mergeMetadata(existing, patch ?? {})
     }
     return { update: u, row, metadata }
   }))
