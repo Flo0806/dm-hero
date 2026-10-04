@@ -32,6 +32,21 @@
     <p class="text-body-medium mb-6">{{ $t('legal.privacy.dataCollection') }}</p>
 
     <h2 class="text-headline-small font-weight-bold mb-2">
+      {{ $t('legal.privacy.accountTitle') }}
+    </h2>
+    <p class="text-body-medium mb-6">{{ $t('legal.privacy.account') }}</p>
+
+    <h2 class="text-headline-small font-weight-bold mb-2">
+      {{ $t('legal.privacy.cookiesTitle') }}
+    </h2>
+    <p class="text-body-medium mb-6">{{ $t('legal.privacy.cookies') }}</p>
+
+    <h2 class="text-headline-small font-weight-bold mb-2">
+      {{ $t('legal.privacy.emailTitle') }}
+    </h2>
+    <p class="text-body-medium mb-6">{{ $t('legal.privacy.emailSending') }}</p>
+
+    <h2 class="text-headline-small font-weight-bold mb-2">
       {{ $t('legal.privacy.legalBasisTitle') }}
     </h2>
     <p class="text-body-medium mb-6">{{ $t('legal.privacy.legalBasis') }}</p>

@@ -319,7 +319,7 @@
   },
   "privacyBanner": {
     "title": "Deine Daten gehören dir.",
-    "message": "Diese Website verwendet keine Cookies und kein Tracking. Wir speichern nur das technisch Notwendige. Keine Zustimmung erforderlich.",
+    "message": "Kein Tracking, keine Werbe-Cookies. Wir speichern nur das technisch Notwendige – Cookies nur, wenn du dich im Hero Basar anmeldest.",
     "learnMore": "Mehr erfahren",
     "ok": "Alles klar"
   },
@@ -635,7 +635,7 @@
     },
     "privacy": {
       "title": "Datenschutzerklärung",
-      "intro": "Wir nehmen den Schutz Ihrer persönlichen Daten ernst. Nachfolgend informieren wir Sie über die Erhebung und Verwendung personenbezogener Daten auf dieser Website.",
+      "intro": "Wir nehmen den Schutz Ihrer persönlichen Daten ernst. Nachfolgend informieren wir Sie über die Erhebung und Verwendung personenbezogener Daten auf dieser Website und im Hero Basar.",
       "controllerTitle": "Verantwortlicher",
       "controller": "Verantwortlich im Sinne der DSGVO ist:",
       "name": "Florian Heuberger",
@@ -643,10 +643,10 @@
       "email": "E-Mail: info{'@'}fh-softdev.de",
       "hostingTitle": "Hosting",
       "hosting": "Diese Website wird auf einem eigenen Server gehostet, der über IONOS SE erreichbar ist. Der Server kann dabei technische Daten wie IP-Adressen in Server-Logfiles speichern. Diese Daten dienen ausschließlich der technischen Überwachung und Fehleranalyse.",
-      "dataCollectionTitle": "Welche Daten erfassen wir?",
-      "dataCollection": "Diese Website verwendet keine Cookies und kein Tracking. Es werden keine personenbezogenen Daten durch uns erhoben oder gespeichert. Es handelt sich um eine rein statische Informationsseite.",
+      "dataCollectionTitle": "Besuch der Website",
+      "dataCollection": "Beim reinen Besuch dieser Website setzen wir keine Cookies und kein Tracking ein und erstellen keine Nutzerprofile. Ob Sie unsere Hinweise (z. B. den Datenschutzhinweis) bereits gesehen haben, merkt sich Ihr Browser lokal (Local Storage) – diese Information verlässt Ihr Gerät nicht.",
       "legalBasisTitle": "Rechtsgrundlagen der Verarbeitung",
-      "legalBasis": "Soweit technische Daten durch den Hosting-Anbieter verarbeitet werden, erfolgt dies auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer funktionierenden Website).",
+      "legalBasis": "Die Verarbeitung Ihrer Kontodaten und Inhalte erfolgt zur Erfüllung der Nutzungsvereinbarung (Art. 6 Abs. 1 lit. b DSGVO). Server-Logfiles, die Speicherung von IP-Adressen bei Downloads sowie der Nachweis Ihrer Zustimmung zu den Nutzungsbedingungen beruhen auf unserem berechtigten Interesse an einem sicheren, missbrauchsfreien Betrieb (Art. 6 Abs. 1 lit. f DSGVO).",
       "externalTitle": "Externe Inhalte",
       "external": "Diese Website bindet externe Inhalte ein: Profilbilder von GitHub (github.com) für die Testimonials-Sektion sowie ein Bild von Buy Me a Coffee (cdn.buymeacoffee.com). Beim Laden dieser Inhalte kann Ihre IP-Adresse an die jeweiligen Anbieter übertragen werden.",
       "githubTitle": "GitHub API",
@@ -654,7 +654,13 @@
       "rightsTitle": "Ihre Rechte",
       "rights": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Widerspruch gegen die Verarbeitung Ihrer personenbezogenen Daten. Zudem besteht ein Beschwerderecht bei der zuständigen Aufsichtsbehörde.",
       "noteTitle": "Hinweis zur Datenübertragung",
-      "note": "Wir weisen darauf hin, dass die Datenübertragung im Internet Sicherheitslücken aufweisen kann. Ein vollständiger Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich."
+      "note": "Wir weisen darauf hin, dass die Datenübertragung im Internet Sicherheitslücken aufweisen kann. Ein vollständiger Schutz der Daten vor dem Zugriff durch Dritte ist nicht möglich.",
+      "accountTitle": "Benutzerkonto und Hero Basar",
+      "account": "Wenn Sie ein Konto anlegen, speichern wir Ihre E-Mail-Adresse, Ihr Passwort (ausschließlich als sicherer Hash, nie im Klartext), Ihren Anzeigenamen und optional ein Profilbild. Dazu kommen die Inhalte, die Sie im Hero Basar veröffentlichen (Abenteuer, Bewertungen). Beim Herunterladen eines Abenteuers speichern wir Zeitpunkt und IP-Adresse (Download-Statistik und Schutz vor Missbrauch). Wenn Sie den Nutzungsbedingungen zustimmen, speichern wir Version, Zeitpunkt, IP-Adresse und Browserkennung als Nachweis Ihrer Zustimmung. Sie können Ihr Konto jederzeit in Ihrem Profil löschen – dabei werden Ihr Konto und alle damit verbundenen Daten entfernt.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Nur wenn Sie sich anmelden, setzen wir zwei technisch notwendige Cookies, die Sie angemeldet halten: „access_token“ (gültig 15 Minuten) und „refresh_token“ (gültig 30 Tage). Sie dienen ausschließlich der Anmeldung, nicht der Analyse oder Werbung, und werden beim Abmelden gelöscht. Für technisch notwendige Cookies ist keine Einwilligung erforderlich (§ 25 Abs. 2 TDDDG).",
+      "emailTitle": "E-Mail-Versand",
+      "emailSending": "Für die Bestätigung Ihrer E-Mail-Adresse und das Zurücksetzen Ihres Passworts senden wir Ihnen E-Mails. Der Versand erfolgt über den Mailserver der IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Deutschland."
     },
     "terms": {
       "title": "AGB"

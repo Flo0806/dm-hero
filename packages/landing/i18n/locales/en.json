@@ -319,7 +319,7 @@
   },
   "privacyBanner": {
     "title": "Your data belongs to you.",
-    "message": "This website uses no cookies and no tracking. We only store what's technically necessary. No consent required.",
+    "message": "No tracking, no advertising cookies. We only store what is technically necessary – cookies only when you log in to the Hero Basar.",
     "learnMore": "Learn more",
     "ok": "Got it"
   },
@@ -635,7 +635,7 @@
     },
     "privacy": {
       "title": "Privacy Policy",
-      "intro": "We take the protection of your personal data seriously. Below you will find information about how we handle your personal data when you visit our website.",
+      "intro": "We take the protection of your personal data seriously. Below we inform you about the collection and use of personal data on this website and in the Hero Basar.",
       "controllerTitle": "Data Controller",
       "controller": "The responsible party within the meaning of the GDPR is:",
       "name": "Florian Heuberger",
@@ -643,10 +643,10 @@
       "email": "Email: info{'@'}fh-softdev.de",
       "hostingTitle": "Hosting",
       "hosting": "This website is hosted on a private server accessible via IONOS SE. The server may store technical data such as IP addresses in server log files. This data is used exclusively for technical monitoring and troubleshooting.",
-      "dataCollectionTitle": "What data do we collect?",
-      "dataCollection": "This website does not use cookies or tracking. No personal data is collected or stored by us. This is a purely static informational website.",
+      "dataCollectionTitle": "Visiting the website",
+      "dataCollection": "When you simply visit this website, we use no cookies and no tracking and create no user profiles. Whether you have already seen our notices (e.g. the privacy notice) is remembered locally by your browser (local storage) – this information never leaves your device.",
       "legalBasisTitle": "Legal Basis for Processing",
-      "legalBasis": "Insofar as technical data is processed by the hosting provider, this is done on the basis of Art. 6 (1) lit. f GDPR (legitimate interest in a functional website).",
+      "legalBasis": "Your account data and content are processed to fulfil the terms of use (Art. 6(1)(b) GDPR). Server log files, storing IP addresses for downloads and the proof of your consent to the terms of use are based on our legitimate interest in secure, abuse-free operation (Art. 6(1)(f) GDPR).",
       "externalTitle": "External Content",
       "external": "This website embeds external content: profile pictures from GitHub (github.com) for the testimonials section and an image from Buy Me a Coffee (cdn.buymeacoffee.com). When loading this content, your IP address may be transmitted to these providers.",
       "githubTitle": "GitHub API",
@@ -654,7 +654,13 @@
       "rightsTitle": "Your Rights",
       "rights": "You have the right to request access to, correction or deletion of your personal data, to restrict processing, and to object to the processing of your personal data. You also have the right to lodge a complaint with a supervisory authority.",
       "noteTitle": "Note on Data Transmission",
-      "note": "Please note that data transmission over the Internet may have security vulnerabilities. Complete protection of data from access by third parties is not possible."
+      "note": "Please note that data transmission over the Internet may have security vulnerabilities. Complete protection of data from access by third parties is not possible.",
+      "accountTitle": "User account and Hero Bazaar",
+      "account": "If you create an account, we store your email address, your password (only as a secure hash, never in plain text), your display name and optionally a profile picture, plus the content you publish in the Hero Basar (adventures, ratings). When you download an adventure, we store the time and your IP address (download statistics and abuse protection). When you accept the terms of use, we store the version, time, IP address and browser identification as proof of your consent. You can delete your account at any time in your profile – this removes your account and all associated data.",
+      "cookiesTitle": "Cookies",
+      "cookies": "Only when you log in do we set two technically necessary cookies that keep you logged in: \"access_token\" (valid for 15 minutes) and \"refresh_token\" (valid for 30 days). They serve login only, not analytics or advertising, and are deleted when you log out. Technically necessary cookies do not require consent (Section 25 (2) TDDDG).",
+      "emailTitle": "Sending emails",
+      "emailSending": "We send you emails to confirm your email address and to reset your password. They are sent via the mail server of IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Germany."
     },
     "terms": {
       "title": "Terms"
