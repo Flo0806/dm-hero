@@ -179,6 +179,7 @@ server.registerTool('what_can_i_do', {
     { area: 'Sessions', canDo: 'list sessions, create a session with number, date, in-game date, summary and notes; update summaries/notes afterwards', askLike: '"Summarize what happened tonight into session 4" / "Create session 1 for the one-shot with the intro text as notes"' },
     { area: 'Groups', canDo: 'list groups, create groups (the party, a cult, the villains of a chapter) and add members', askLike: '"Group the three cultists as \'Cult of the Eye\'"' },
     { area: 'Maps', canDo: 'create maps from an image, place NPCs/items as markers and locations as areas (circles) on them', askLike: '"Add the region map from page 3 and place Eichwald and the ruins on it"' },
+    { area: 'Scenario', canDo: 'build and maintain your prep tree (GM-only): arcs, chapters, scenes and notes with hook, read-aloud text, GM secrets and outcomes linked to your NPCs and places; reorder it, mark scenes ready/played/skipped, link them to the sessions where they were played and to encounters and maps', askLike: '"Turn this adventure into a scenario outline" / "Mark the ambush as played in session 4" / "Add a scene after the tavern brawl"' },
     { area: 'Encounters', canDo: 'prepare combat encounters with participants (NPCs as monsters) and HP, optionally attached to a session', askLike: '"Prepare the ambush encounter with 4 goblins and the boss"' },
     { area: 'Reading', canDo: 'look up what already exists: search entities, read one entity in full (relations, documents, tags), list sessions/groups/maps/encounters', askLike: '"What do we know about the mayor?" / "Which sessions exist?"' },
   ],
@@ -191,7 +192,7 @@ server.registerTool('what_can_i_do', {
   typicalWorkflow: [
     '1. You hand me a source (PDF/text) and name the campaign.',
     '2. I call get_contract, extract NPCs/locations/items/factions/lore, plan groups, maps and encounters, and show you the plan.',
-    '3. After your OK: import_entities (with cross-links), then images, documents, groups, map markers, encounters, and a session with the intro.',
+    '3. After your OK: import_entities (with cross-links), then images, documents, groups, map markers, encounters, the scenario outline (create_story_outline, its texts linking the new entities), and a session with the intro.',
     '4. I report what was created with ids, and you can ask me to adjust anything.',
   ],
 }))
@@ -681,6 +682,205 @@ server.registerTool('create_encounter', {
     added = p.body
   }
   return asText({ encounter: r.body, participants: added })
+})
+
+// ---------------------------------------------------------------------------
+// Scenario (campaign manager): the DM's prep tree of arcs, chapters, scenes and notes.
+// GM-only - never shared with players. Texts are markdown; link existing entities
+// with {{npc:<id>}}, {{location:<id>}}, {{item:<id>}}, {{faction:<id>}}, {{lore:<id>}}.
+// ---------------------------------------------------------------------------
+
+const STORY_KINDS = ['arc', 'chapter', 'scene', 'note'] as const
+const STORY_STATUSES = ['idea', 'planned', 'ready', 'played', 'skipped'] as const
+const MENTION_HINT = 'Markdown. Link entities that exist with {{npc:<id>}}, {{location:<id>}}, {{item:<id>}}, {{faction:<id>}}, {{lore:<id>}} (ids via search_entities) – they show as clickable badges and in the scene\'s cast.'
+
+const storyTextFields = {
+  description: z.string().optional().describe(`Main text: what happens. ${MENTION_HINT}`),
+  hook: z.string().optional().describe('Hook & goal: how the players get into it and what it is about.'),
+  readAloud: z.string().optional().describe('Boxed text the DM reads or paraphrases to the players.'),
+  secrets: z.string().optional().describe('What the players must not know (yet): twists, true motives, hidden facts.'),
+  outcomes: z.string().optional().describe('Possible results and where they lead (next scenes, consequences).'),
+}
+
+interface StoryOutlineNode {
+  name: string
+  kind?: typeof STORY_KINDS[number]
+  status?: typeof STORY_STATUSES[number]
+  description?: string
+  hook?: string
+  readAloud?: string
+  secrets?: string
+  outcomes?: string
+  children?: StoryOutlineNode[]
+}
+const storyOutlineNodeSchema: z.ZodType<StoryOutlineNode> = z.lazy(() => z.object({
+  name: z.string().min(1),
+  kind: z.enum(STORY_KINDS).optional().describe('Default from depth: arc at the top, then chapter, then scene. Use note for handouts/reference.'),
+  status: z.enum(STORY_STATUSES).optional().describe('Default idea.'),
+  ...storyTextFields,
+  children: z.array(storyOutlineNodeSchema).optional(),
+}))
+const storyOutlineInput = {
+  campaignId: z.number().int().positive(),
+  parentId: z.number().int().positive().optional().describe('Put the outline under this existing entry (from list_story). Omit for the top level.'),
+  nodes: z.array(storyOutlineNodeSchema).min(1).describe('The entries to create, nested via children (max 500 per call, 8 levels).'),
+}
+
+interface StoryListItem { id: number, name: string, parent_id: number | null, sort_order: number, kind: string, status: string, session_count: number, encounter_count: number, map_count: number }
+interface StoryTreeItem { id: number, name: string, kind: string, status: string, played_in_sessions?: number, children?: StoryTreeItem[] }
+
+/** Flat list -> nested outline, in display order. */
+function storyTree(list: StoryListItem[]): StoryTreeItem[] {
+  /** Children of parentId, each with its own children. */
+  const build = (parentId: number | null): StoryTreeItem[] => list
+    .filter(n => n.parent_id === parentId)
+    .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
+    .map((n) => {
+      const children = build(n.id)
+      return {
+        id: n.id,
+        name: n.name,
+        kind: n.kind,
+        status: n.status,
+        ...(n.session_count ? { played_in_sessions: n.session_count } : {}),
+        ...(children.length ? { children } : {}),
+      }
+    })
+  return build(null)
+}
+
+/**
+ * Return the campaign's story nodes, or the API result on failure or a non-array body.
+ * Connection failures are returned as API results with status 0.
+ */
+async function fetchStory(campaignId: number): Promise<StoryListItem[] | ApiResult> {
+  const r = await callApi(`/api/story?campaignId=${campaignId}`)
+  if (!r.ok || !Array.isArray(r.body)) return r
+  return r.body as StoryListItem[]
+}
+
+server.registerTool('list_story', {
+  description: 'Show the campaign\'s scenario (the DM\'s prep tree): arcs > chapters > scenes > notes, in order, with id, kind and status (idea/planned/ready/played/skipped). Use it to find a node id, to see what is prepared and what was played, and before adding to the outline so you don\'t duplicate entries.',
+  inputSchema: { campaignId: z.number().int().positive() },
+}, async ({ campaignId }) => {
+  const list = await fetchStory(campaignId)
+  if (!Array.isArray(list)) return asText(list.body)
+  const scenes = list.filter(n => n.kind === 'scene')
+  return asText({
+    entries: list.length,
+    scenes: { total: scenes.length, played: scenes.filter(n => n.status === 'played').length, ready: scenes.filter(n => n.status === 'ready').length },
+    tree: storyTree(list),
+  })
+})
+
+server.registerTool('get_story_node', {
+  description: 'Read one scenario entry in full: all texts (main text, hook, read-aloud, GM secrets, outcomes), the entities its texts mention (cast), and the linked sessions, encounters and maps. Get the id via list_story.',
+  inputSchema: { nodeId: z.number().int().positive() },
+}, async ({ nodeId }) => {
+  const r = await callApi(`/api/story/${nodeId}`)
+  if (!r.ok) return asText(r.body)
+  const n = r.body as {
+    id: number, name: string, description: string | null, parent_id: number | null
+    metadata: Record<string, unknown>
+    sessions: unknown[], encounters: unknown[], maps: unknown[], mentions: unknown[]
+  }
+  const m = n.metadata
+  return asText({
+    id: n.id,
+    name: n.name,
+    parentId: n.parent_id,
+    kind: m.kind,
+    status: m.status,
+    description: n.description ?? '',
+    hook: m.hook ?? '',
+    readAloud: m.readAloud ?? '',
+    secrets: m.secrets ?? '',
+    outcomes: m.outcomes ?? '',
+    musicLinks: m.musicLinks ?? [],
+    cast: n.mentions,
+    playedInSessions: n.sessions,
+    encounters: n.encounters,
+    maps: n.maps,
+  })
+})
+
+server.registerTool('preview_story_outline', {
+  description: 'Dry-run create_story_outline: validates a nested outline and returns it with the resolved kinds and statuses WITHOUT writing. Use it to show the user the planned structure (e.g. extracted from an adventure PDF) before creating it.',
+  inputSchema: storyOutlineInput,
+}, async (payload) => {
+  const r = await callApi('/api/story/outline?dryRun=true', { method: 'POST', body: JSON.stringify(payload) })
+  return asText(r.body)
+})
+
+server.registerTool('create_story_outline', {
+  description: `Create scenario entries in one go – a whole adventure as arcs > chapters > scenes, or a few scenes under an existing chapter (parentId). All or nothing. Fill the texts the source gives you (read-aloud boxes, secrets, outcomes). Create NPCs/locations first (import_entities) so the texts can link them. Preview with preview_story_outline and only commit after the user confirms. ${MENTION_HINT}`,
+  inputSchema: storyOutlineInput,
+}, async (payload) => {
+  const r = await callApi('/api/story/outline', { method: 'POST', body: JSON.stringify(payload) })
+  return asText(r.body)
+})
+
+server.registerTool('update_story_node', {
+  description: 'Edit a scenario entry: rename it, change kind or status (e.g. mark a scene played after a session), or set any of its texts. Only the fields you pass change; a text set to "" is cleared. Texts are REPLACED – to add to one, read it first with get_story_node. Preview first with confirm=false; only pass confirm=true after the user agrees.',
+  inputSchema: {
+    nodeId: z.number().int().positive(),
+    name: z.string().min(1).optional(),
+    kind: z.enum(STORY_KINDS).optional(),
+    status: z.enum(STORY_STATUSES).optional(),
+    ...storyTextFields,
+    confirm: z.boolean().default(false).describe('false = preview only (nothing is changed).'),
+  },
+}, async ({ nodeId, confirm, ...changes }) => {
+  const patch = Object.fromEntries(Object.entries(changes).filter(([, v]) => v !== undefined))
+  if (Object.keys(patch).length === 0) return asText({ ok: false, error: 'Nothing to change – pass at least one field.' })
+  if (!confirm) return asText({ nodeId, patch, note: 'Nothing changed. Call again with confirm=true after the user agreed.' })
+  const r = await callApi(`/api/story/${nodeId}`, { method: 'PATCH', body: JSON.stringify(patch) })
+  return asText(r.body)
+})
+
+server.registerTool('move_story_node', {
+  description: 'Move a scenario entry (with everything below it) under another entry, or to the top level, at a position among its new siblings. Also reorders within the same parent. An entry cannot be moved into its own subtree.',
+  inputSchema: {
+    nodeId: z.number().int().positive(),
+    parentId: z.number().int().positive().nullable().describe('New parent entry; null = top level.'),
+    index: z.number().int().nonnegative().default(0).describe('Position among the new siblings (0 = first; larger than the count = last).'),
+  },
+}, async ({ nodeId, parentId, index }) => {
+  const r = await callApi('/api/story/move', { method: 'POST', body: JSON.stringify({ id: nodeId, parentId, index }) })
+  if (!r.ok || !Array.isArray(r.body)) return asText(r.body)
+  return asText({ ok: true, tree: storyTree(r.body as StoryListItem[]) })
+})
+
+server.registerTool('link_story_node', {
+  description: 'Link a scenario entry to the sessions it was played in, and to encounters and maps it uses. The ids you pass are ADDED to the existing links (nothing is unlinked – removing a link is only possible in the app). Ids via list_sessions / list_encounters / list_maps. Tip: after a session, link the played scenes and set their status to played (update_story_node). Preview first with confirm=false; only pass confirm=true after the user agrees.',
+  inputSchema: {
+    nodeId: z.number().int().positive(),
+    sessionIds: z.array(z.number().int().positive()).optional(),
+    encounterIds: z.array(z.number().int().positive()).optional(),
+    mapIds: z.array(z.number().int().positive()).optional(),
+    confirm: z.boolean().default(false).describe('false = preview only (nothing is linked).'),
+  },
+}, async ({ nodeId, sessionIds, encounterIds, mapIds, confirm }) => {
+  type Linked = { id: number }
+  const current = await callApi(`/api/story/${nodeId}`)
+  if (!current.ok) return asText(current.body)
+  const node = current.body as { sessions: Linked[], encounters: Linked[], maps: Linked[] }
+  /** Existing ids plus the new ones (undefined when nothing new was passed for that kind). */
+  const merge = (existing: Linked[], added?: number[]) => (added ? [...new Set([...existing.map(l => l.id), ...added])] : undefined)
+
+  const links = {
+    sessionIds: merge(node.sessions, sessionIds),
+    encounterIds: merge(node.encounters, encounterIds),
+    mapIds: merge(node.maps, mapIds),
+  }
+  if (!confirm) return asText({ nodeId, links, note: 'Nothing linked. Call again with confirm=true after the user agreed.' })
+  const r = await callApi(`/api/story/${nodeId}/links`, {
+    method: 'PUT',
+    body: JSON.stringify(links),
+  })
+  if (!r.ok) return asText(r.body)
+  const n = r.body as { id: number, name: string, sessions: unknown[], encounters: unknown[], maps: unknown[] }
+  return asText({ id: n.id, name: n.name, playedInSessions: n.sessions, encounters: n.encounters, maps: n.maps })
 })
 
 const transport = new StdioServerTransport()

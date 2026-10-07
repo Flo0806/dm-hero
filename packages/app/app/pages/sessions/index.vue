@@ -110,6 +110,16 @@
                 {{ link.label }}
               </v-chip>
 
+              <!-- Prepared scenes played in this session -->
+              <v-chip
+                v-if="session.story_count"
+                size="small"
+                variant="tonal"
+                prepend-icon="mdi-script-text-outline"
+              >
+                {{ session.story_count }} {{ $t('story.sessionScenes.tab') }}
+              </v-chip>
+
               <!-- Mentions Count (from notes) -->
               <v-chip
                 v-if="countMentionsInNotes(session.notes)"
@@ -172,6 +182,10 @@
           <v-tab value="music">
             <v-icon start> mdi-music </v-icon>
             {{ $t('sessions.music.title') }}
+          </v-tab>
+          <v-tab value="scenes">
+            <v-icon start> mdi-script-text-outline </v-icon>
+            {{ $t('story.sessionScenes.tab') }} ({{ editingSession.story_count ?? 0 }})
           </v-tab>
           <v-tab value="attendance">
             <v-icon start> mdi-account-check </v-icon>
@@ -365,6 +379,16 @@
                 v-if="editingSession"
                 :session-id="editingSession.id"
                 @updated="reloadSessions"
+              />
+            </v-tabs-window-item>
+
+            <!-- Scenes Tab: prepared story nodes played in this session -->
+            <v-tabs-window-item value="scenes">
+              <StorySessionScenes
+                v-if="editingSession && activeCampaignId"
+                :session-id="editingSession.id"
+                :campaign-id="Number(activeCampaignId)"
+                @updated="count => { if (editingSession) editingSession.story_count = count; reloadSessions() }"
               />
             </v-tabs-window-item>
 
@@ -756,6 +780,7 @@ interface Session {
   created_at: string
   updated_at: string
   cover_image_url: string | null
+  story_count?: number
 }
 
 // Date value object for CalendarInGameDatePicker

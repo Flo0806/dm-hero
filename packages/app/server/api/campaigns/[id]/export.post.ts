@@ -42,12 +42,14 @@ import { EXPORT_FORMAT_VERSION } from '~~/types/export'
 // Get app version from package.json
 import pkg from '~~/package.json'
 import { parseMusicLinks } from '~~/server/utils/music-links'
+import { STORY_NODE_TEXT_FIELDS } from '~~/types/story'
 
 interface FileToInclude {
   sourcePath: string
   archivePath: string
 }
 
+/** Export a campaign (full or selected entities) as a ZIP with manifest.json and its files; ids become portable export ids. */
 export default defineEventHandler(async (event) => {
   const campaignId = Number(getRouterParam(event, 'id'))
 
@@ -133,7 +135,7 @@ export default defineEventHandler(async (event) => {
 
   // Entities
   let entitiesQuery = `
-    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, folder_id, created_at, updated_at, archived_at
+    SELECT id, type_id, name, description, metadata, image_url, location_id, parent_entity_id, folder_id, sort_order, created_at, updated_at, archived_at
     FROM entities
     WHERE campaign_id = ? AND deleted_at IS NULL
   `
@@ -155,6 +157,7 @@ export default defineEventHandler(async (event) => {
     location_id: number | null
     parent_entity_id: number | null
     folder_id: number | null
+    sort_order: number
     created_at: string
     updated_at: string
     archived_at: string | null
@@ -175,21 +178,42 @@ export default defineEventHandler(async (event) => {
     entityIdToTypeName.set(e.id, typeName)
   })
 
-  // Helper to transform entity links in text: {{npc:123}} -> {{npc:entity:1}}
-  // This ensures links are portable across export/import cycles
+  // Session export ids, known before any text is transformed: {{session:<id>}}
+  // links point at sessions, not entities (full export only - sessions aren't in a partial one)
+  const sessionExportIdMap = new Map<number, string>()
+  if (mode === 'full') {
+    const sessionIds = db
+      .prepare('SELECT id FROM sessions WHERE campaign_id = ? AND deleted_at IS NULL ORDER BY session_number ASC, id ASC')
+      .all(campaignId) as Array<{ id: number }>
+    sessionIds.forEach((s, i) => sessionExportIdMap.set(s.id, `session:${i + 1}`))
+  }
+
+  /** Make links portable: {{npc:123}} -> {{npc:entity:1}}, {{session:4}} -> {{session:session:2}}; unknown targets stay as they are. */
   const transformEntityLinks = (text: string | null | undefined): string | undefined => {
     if (!text) return undefined
 
     // Match patterns like {{npc:123}}, {{location:456}}, etc.
-    return text.replace(/\{\{(npc|location|item|faction|lore|player|quest|session):(\d+)\}\}/g, (match, type, idStr) => {
+    return text.replace(/\{\{(npc|location|item|faction|lore|player|quest|story|session):(\d+)\}\}/g, (match, type, idStr) => {
       const id = parseInt(idStr, 10)
-      const exportId = entityExportIdMap.get(id)
+      const exportId = type === 'session' ? sessionExportIdMap.get(id) : entityExportIdMap.get(id)
       if (exportId) {
         return `{{${type}:${exportId}}}`
       }
       // If entity not found in export, keep original (might be from different campaign)
       return match
     })
+  }
+
+  // Story nodes keep prep texts in metadata - their links need the same treatment
+  const storyTypeId = entityTypes.find(t => t.name === 'StoryNode')?.id
+  /** Story nodes keep prep texts in metadata: make their links portable too (other types unchanged). */
+  const transformStoryMetadata = (typeId: number, metadata: Record<string, unknown>) => {
+    if (typeId !== storyTypeId) return metadata
+    const result = { ...metadata }
+    for (const field of STORY_NODE_TEXT_FIELDS) {
+      if (typeof result[field] === 'string') result[field] = transformEntityLinks(result[field] as string) ?? ''
+    }
+    return result
   }
 
   // Folders — only those actually referenced by exported entities. Names are
@@ -265,7 +289,7 @@ export default defineEventHandler(async (event) => {
       type_name: typeIdToName.get(e.type_id) || 'Unknown',
       name: e.name,
       description: transformEntityLinks(e.description),
-      metadata: e.metadata ? JSON.parse(e.metadata) : undefined,
+      metadata: e.metadata ? transformStoryMetadata(e.type_id, JSON.parse(e.metadata)) : undefined,
       image_url: imageArchivePath,
       location_id: e.location_id && entityIdSet.has(e.location_id) ? entityExportIdMap.get(e.location_id) : undefined,
       parent_entity_id:
@@ -275,6 +299,7 @@ export default defineEventHandler(async (event) => {
       created_at: e.created_at,
       updated_at: e.updated_at,
       archived_at: e.archived_at || null,
+      sort_order: e.sort_order || undefined,
       tags: entityTags && entityTags.length > 0 ? entityTags : undefined,
       folder_name: folder ? folder.name : undefined,
     }
@@ -420,7 +445,6 @@ export default defineEventHandler(async (event) => {
   let exportNotes: ExportNote[] = []
   let exportPinboard: ExportPinboardItem[] = []
 
-  const sessionExportIdMap = new Map<number, string>()
   const eventExportIdMap = new Map<number, string>()
   const mapExportIdMap = new Map<number, string>()
   const audioExportIdMap = new Map<number, string>()
@@ -435,7 +459,7 @@ export default defineEventHandler(async (event) => {
              duration_minutes, music_links, calendar_event_id, created_at, updated_at
       FROM sessions
       WHERE campaign_id = ? AND deleted_at IS NULL
-      ORDER BY session_number ASC
+      ORDER BY session_number ASC, id ASC
     `,
       )
       .all(campaignId) as Array<{
@@ -456,9 +480,7 @@ export default defineEventHandler(async (event) => {
       updated_at: string
     }>
 
-    sessions.forEach((s, i) => {
-      sessionExportIdMap.set(s.id, `session:${i + 1}`)
-    })
+    // Export ids were assigned above (same query order), before the texts were transformed
 
     exportSessions = sessions.map(s => ({
       _exportId: sessionExportIdMap.get(s.id)!,
@@ -1135,6 +1157,17 @@ export default defineEventHandler(async (event) => {
   // BUILD MANIFEST
   // ==========================================================================
 
+  /** Story node links of one kind whose node and target are both exported, as export ids (sessions and maps: full export only). */
+  const storyLinks = (table: 'story_node_sessions' | 'story_node_maps', column: 'session_id' | 'map_id', targetIds: Map<number, string>) =>
+    (db.prepare(`SELECT l.node_id, l.${column} AS target_id FROM ${table} l JOIN entities e ON e.id = l.node_id WHERE e.campaign_id = ?`)
+      .all(campaignId) as Array<{ node_id: number, target_id: number }>)
+      .filter(l => entityIdSet.has(l.node_id) && targetIds.has(l.target_id))
+      .map(l => ({ node: entityExportIdMap.get(l.node_id)!, target: targetIds.get(l.target_id)! }))
+  const exportStoryNodeSessions = storyLinks('story_node_sessions', 'session_id', sessionExportIdMap)
+    .map(l => ({ node: l.node, session: l.target }))
+  const exportStoryNodeMaps = storyLinks('story_node_maps', 'map_id', mapExportIdMap)
+    .map(l => ({ node: l.node, map: l.target }))
+
   const manifest: CampaignExportManifest = {
     version: EXPORT_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
@@ -1153,6 +1186,8 @@ export default defineEventHandler(async (event) => {
     entityDocuments: exportEntityDocuments.length > 0 ? exportEntityDocuments : undefined,
     sessions: exportSessions.length > 0 ? exportSessions : undefined,
     sessionMentions: exportSessionMentions.length > 0 ? exportSessionMentions : undefined,
+    storyNodeSessions: exportStoryNodeSessions.length > 0 ? exportStoryNodeSessions : undefined,
+    storyNodeMaps: exportStoryNodeMaps.length > 0 ? exportStoryNodeMaps : undefined,
     sessionAttendance: exportSessionAttendance.length > 0 ? exportSessionAttendance : undefined,
     sessionImages: exportSessionImages.length > 0 ? exportSessionImages : undefined,
     sessionAudio: exportSessionAudio.length > 0 ? exportSessionAudio : undefined,

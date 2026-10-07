@@ -2,7 +2,7 @@
 // ("divider:<id>"). The dashboard always stays on top and isn't part of it.
 
 export const NAV_KEYS = [
-  'search', 'npcs', 'locations', 'items', 'factions', 'lore', 'players', 'sessions',
+  'search', 'npcs', 'locations', 'items', 'factions', 'lore', 'players', 'sessions', 'story',
   'gameTable', 'encounters', 'calendar', 'maps', 'music', 'groups', 'notes',
 ] as const
 export type NavKey = typeof NAV_KEYS[number]

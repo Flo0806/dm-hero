@@ -2907,6 +2907,94 @@ export const migrations: Migration[] = [
       console.log('✅ Migration 66: Added thread_dirty to game_table_players')
     },
   },
+  {
+    version: 67,
+    name: 'story_nodes',
+    /** Add the StoryNode type, entities.sort_order and the story node link tables. */
+    up: (db) => {
+      // The DM's scenario prep: a free tree of arcs/chapters/scenes/notes, stored as
+      // entities (images, documents, search, export come for free). Never shared.
+      db.prepare('INSERT OR IGNORE INTO entity_types (name, icon, color) VALUES (?, ?, ?)')
+        .run('StoryNode', 'mdi-script-text-outline', '#A0785A')
+
+      // Order among siblings (only story nodes use it for now)
+      db.exec('ALTER TABLE entities ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0')
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS story_node_sessions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          node_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(node_id, session_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_story_node_sessions_session ON story_node_sessions(session_id);
+
+        CREATE TABLE IF NOT EXISTS story_node_encounters (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          node_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          encounter_id INTEGER NOT NULL REFERENCES encounters(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(node_id, encounter_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_story_node_encounters_encounter ON story_node_encounters(encounter_id);
+
+        CREATE TABLE IF NOT EXISTS story_node_maps (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          node_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          map_id INTEGER NOT NULL REFERENCES campaign_maps(id) ON DELETE CASCADE,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(node_id, map_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_story_node_maps_map ON story_node_maps(map_id);
+
+        CREATE TABLE IF NOT EXISTS story_node_mentions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          node_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          entity_id INTEGER NOT NULL REFERENCES entities(id) ON DELETE CASCADE,
+          context TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(node_id, entity_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_story_node_mentions_entity ON story_node_mentions(entity_id);
+      `)
+
+      console.log('✅ Migration 67: Created story nodes (campaign manager)')
+    },
+  },
+  {
+    version: 68,
+    name: 'fix_entities_fts_triggers',
+    /** Replace the entities_fts update/delete triggers with FTS5 "delete" commands and rebuild the index. */
+    up: (db) => {
+      // entities_fts is an external-content FTS5 table (content='entities'). Its
+      // UPDATE/DELETE triggers used plain UPDATE/DELETE on it, which makes FTS5
+      // read the *current* row to find what to remove - after the update that's
+      // already the new text, so the index broke ("database disk image is
+      // malformed" on the next edit). FTS5 wants the old values via 'delete'.
+      db.exec('DROP TRIGGER IF EXISTS entities_ad')
+      db.exec('DROP TRIGGER IF EXISTS entities_au')
+      db.exec(`
+        CREATE TRIGGER entities_ad AFTER DELETE ON entities BEGIN
+          INSERT INTO entities_fts(entities_fts, rowid, name, description, metadata)
+          VALUES ('delete', old.id, old.name, old.description, old.metadata);
+        END;
+      `)
+      db.exec(`
+        CREATE TRIGGER entities_au AFTER UPDATE ON entities BEGIN
+          INSERT INTO entities_fts(entities_fts, rowid, name, description, metadata)
+          VALUES ('delete', old.id, old.name, old.description, old.metadata);
+          INSERT INTO entities_fts(rowid, name, description, metadata)
+          VALUES (new.id, new.name, new.description, new.metadata);
+        END;
+      `)
+
+      // Throw away whatever the old triggers left behind and index from scratch
+      db.exec('INSERT INTO entities_fts(entities_fts) VALUES (\'rebuild\')')
+
+      console.log('✅ Migration 68: Fixed full-text index triggers')
+    },
+  },
 ]
 
 export async function runMigrations(db: Database.Database) {

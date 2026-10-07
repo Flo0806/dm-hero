@@ -20,6 +20,7 @@ export const NAV_ITEMS: Record<NavKey, NavItem> = {
   lore: { icon: fixed('mdi-book-open-variant'), title: 'nav.lore', to: '/lore', needsCampaign: true },
   players: { icon: fixed('mdi-account-star'), title: 'nav.players', to: '/players', needsCampaign: true },
   sessions: { icon: fixed('mdi-book-open-page-variant'), title: 'nav.sessions', to: '/sessions', needsCampaign: true },
+  story: { icon: fixed('mdi-script-text-outline'), title: 'nav.story', to: '/story', needsCampaign: true },
   gameTable: { icon: fixed('mdi-table-furniture'), title: 'nav.gameTable', to: '/game-table', needsCampaign: true },
   encounters: { icon: fixed('mdi-sword-cross'), title: 'nav.encounters', to: '/encounters', needsCampaign: true },
   calendar: { icon: fixed('mdi-calendar'), title: 'calendar.title', to: '/calendar', needsCampaign: true },

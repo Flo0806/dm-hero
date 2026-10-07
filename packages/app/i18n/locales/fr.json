@@ -12,6 +12,7 @@
     "Quest": "Quête",
     "Lore": "Lore",
     "Player": "Joueur",
+    "StoryNode": "Élément de scénario",
     "Group": "Groupe",
     "Unknown": "Inconnu"
   },
@@ -26,6 +27,7 @@
     "players": "Joueurs",
     "quests": "Quêtes",
     "sessions": "Sessions",
+    "story": "Scénario",
     "encounters": "Rencontres",
     "maps": "Cartes",
     "music": "Musique",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "Épinglé avec succès",
       "unpinnedSuccess": "Épingle retirée"
     }
+  },
+  "story": {
+    "title": "Scénario",
+    "subtitle": "Ta préparation de campagne : arcs, chapitres et scènes",
+    "create": "Nouvel élément",
+    "addChild": "Ajouter en dessous",
+    "name": "Titre",
+    "status": "Statut",
+    "empty": "Rien de préparé pour l'instant. Commence par un arc ou une première scène.",
+    "selectNode": "Sélectionne un élément à gauche pour le modifier",
+    "noCampaign": "Sélectionne d'abord une campagne",
+    "expandAll": "Tout déplier",
+    "collapseAll": "Tout replier",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré",
+    "unsaved": "Non enregistré",
+    "deleteTitle": "Supprimer l'élément",
+    "deleteConfirm": "Supprimer « {name} » ?",
+    "deleteWithChildren": "Supprimer « {name} » et tout ce qu'il contient ?",
+    "moveFailed": "Impossible de déplacer l'élément",
+    "bodyPlaceholder": "Que se passe-t-il ici ? Utilise la barre d'outils pour lier PNJ, lieux, objets…",
+    "musicHint": "Playlists pour cette scène (YouTube, Spotify, Tabletop Audio, …). Les liens s'ouvrent dans le navigateur.",
+    "kinds": {
+      "arc": "Arc",
+      "chapter": "Chapitre",
+      "scene": "Scène",
+      "note": "Note"
+    },
+    "statuses": {
+      "idea": "Idée",
+      "planned": "Prévu",
+      "ready": "Prêt",
+      "played": "Joué",
+      "skipped": "Ignoré"
+    },
+    "tabs": {
+      "images": "Images",
+      "documents": "Documents",
+      "music": "Musique"
+    },
+    "fields": {
+      "hook": "Accroche & objectif",
+      "readAloud": "Texte à lire",
+      "secrets": "Secrets du MJ",
+      "outcomes": "Issues & suites"
+    },
+    "fieldHints": {
+      "hook": "Comment les joueurs y arrivent et de quoi parle la scène",
+      "readAloud": "Texte à lire ou paraphraser aux joueurs",
+      "secrets": "Ce que les joueurs ne doivent pas (encore) savoir",
+      "outcomes": "Résultats possibles et où ils mènent"
+    },
+    "links": {
+      "sessions": "Joué dans les sessions",
+      "encounters": "Rencontres",
+      "maps": "Cartes"
+    },
+    "sessionScenes": {
+      "tab": "Scènes",
+      "label": "Scènes jouées",
+      "hint": "Quelles scènes préparées du scénario ont été jouées pendant cette session ?"
+    },
+    "done": "Terminé",
+    "clickToEdit": "Cliquer pour modifier",
+    "attach": "Joindre",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "linkSession": "Lier une session",
+    "addPlaceholder": "Nouveau : {kind}…",
+    "addKeys": "Entrée : suivant · Tab : imbriquer · Maj+Tab : remonter · Échap : terminé",
+    "edit": "Modifier",
+    "addField": "Ajouter :"
   },
   "encounters": {
     "title": "Rencontres",

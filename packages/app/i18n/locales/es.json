@@ -12,6 +12,7 @@
     "Quest": "Misión",
     "Lore": "Lore",
     "Player": "Jugador",
+    "StoryNode": "Elemento del escenario",
     "Group": "Grupo",
     "Unknown": "Desconocido"
   },
@@ -26,6 +27,7 @@
     "players": "Jugadores",
     "quests": "Misiones",
     "sessions": "Sesiones",
+    "story": "Escenario",
     "encounters": "Encuentros",
     "maps": "Mapas",
     "music": "Música",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "Fijado correctamente",
       "unpinnedSuccess": "Fijación eliminada"
     }
+  },
+  "story": {
+    "title": "Escenario",
+    "subtitle": "Tu preparación de campaña: arcos, capítulos y escenas",
+    "create": "Nueva entrada",
+    "addChild": "Añadir debajo",
+    "name": "Título",
+    "status": "Estado",
+    "empty": "Aún no hay nada preparado. Empieza con un arco o una primera escena.",
+    "selectNode": "Selecciona una entrada a la izquierda para editarla",
+    "noCampaign": "Selecciona primero una campaña",
+    "expandAll": "Expandir todo",
+    "collapseAll": "Contraer todo",
+    "saving": "Guardando…",
+    "saved": "Guardado",
+    "unsaved": "Sin guardar",
+    "deleteTitle": "Eliminar entrada",
+    "deleteConfirm": "¿Eliminar «{name}»?",
+    "deleteWithChildren": "¿Eliminar «{name}» y todo lo que contiene?",
+    "moveFailed": "No se pudo mover la entrada",
+    "bodyPlaceholder": "¿Qué ocurre aquí? Usa la barra de herramientas para enlazar PNJ, lugares, objetos…",
+    "musicHint": "Listas de reproducción para esta escena (YouTube, Spotify, Tabletop Audio, …). Los enlaces se abren en el navegador.",
+    "kinds": {
+      "arc": "Arco",
+      "chapter": "Capítulo",
+      "scene": "Escena",
+      "note": "Nota"
+    },
+    "statuses": {
+      "idea": "Idea",
+      "planned": "Planificado",
+      "ready": "Listo",
+      "played": "Jugado",
+      "skipped": "Omitido"
+    },
+    "tabs": {
+      "images": "Imágenes",
+      "documents": "Documentos",
+      "music": "Música"
+    },
+    "fields": {
+      "hook": "Gancho y objetivo",
+      "readAloud": "Texto para leer",
+      "secrets": "Secretos del DM",
+      "outcomes": "Desenlaces y siguientes pasos"
+    },
+    "fieldHints": {
+      "hook": "Cómo llegan los jugadores y de qué trata la escena",
+      "readAloud": "Texto para leer o parafrasear a los jugadores",
+      "secrets": "Lo que los jugadores no deben saber (aún)",
+      "outcomes": "Resultados posibles y adónde llevan"
+    },
+    "links": {
+      "sessions": "Jugado en sesiones",
+      "encounters": "Encuentros",
+      "maps": "Mapas"
+    },
+    "sessionScenes": {
+      "tab": "Escenas",
+      "label": "Escenas jugadas",
+      "hint": "¿Qué escenas preparadas del escenario se jugaron en esta sesión?"
+    },
+    "done": "Listo",
+    "clickToEdit": "Haz clic para editar",
+    "attach": "Adjuntar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "linkSession": "Enlazar una sesión",
+    "addPlaceholder": "Nuevo: {kind}…",
+    "addKeys": "Intro: siguiente · Tab: anidar · Mayús+Tab: subir · Esc: listo",
+    "edit": "Editar",
+    "addField": "Añadir:"
   },
   "encounters": {
     "title": "Encuentros",

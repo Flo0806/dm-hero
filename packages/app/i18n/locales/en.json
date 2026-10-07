@@ -12,6 +12,7 @@
     "Quest": "Quest",
     "Lore": "Lore",
     "Player": "Player",
+    "StoryNode": "Story node",
     "Group": "Group",
     "Unknown": "Unknown"
   },
@@ -26,6 +27,7 @@
     "players": "Players",
     "quests": "Quests",
     "sessions": "Sessions",
+    "story": "Scenario",
     "encounters": "Encounters",
     "maps": "Maps",
     "music": "Music",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "Successfully pinned",
       "unpinnedSuccess": "Pin removed"
     }
+  },
+  "story": {
+    "title": "Scenario",
+    "subtitle": "Your campaign prep: arcs, chapters and scenes",
+    "create": "New entry",
+    "addChild": "Add below",
+    "name": "Title",
+    "status": "Status",
+    "empty": "Nothing prepared yet. Start with an arc or a first scene.",
+    "selectNode": "Select an entry on the left to edit it",
+    "noCampaign": "Select a campaign first",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "unsaved": "Unsaved",
+    "deleteTitle": "Delete entry",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "deleteWithChildren": "Delete \"{name}\" and everything below it?",
+    "moveFailed": "Could not move the entry",
+    "bodyPlaceholder": "What happens here? Use the toolbar to link NPCs, locations, items…",
+    "musicHint": "Playlists for this scene (YouTube, Spotify, Tabletop Audio, …). Links open in your browser.",
+    "kinds": {
+      "arc": "Arc",
+      "chapter": "Chapter",
+      "scene": "Scene",
+      "note": "Note"
+    },
+    "statuses": {
+      "idea": "Idea",
+      "planned": "Planned",
+      "ready": "Ready",
+      "played": "Played",
+      "skipped": "Skipped"
+    },
+    "tabs": {
+      "images": "Images",
+      "documents": "Documents",
+      "music": "Music"
+    },
+    "fields": {
+      "hook": "Hook & goal",
+      "readAloud": "Read-aloud text",
+      "secrets": "GM secrets",
+      "outcomes": "Outcomes & next steps"
+    },
+    "fieldHints": {
+      "hook": "How the players get into it and what the scene is about",
+      "readAloud": "Boxed text to read or paraphrase to the players",
+      "secrets": "What the players must not know (yet)",
+      "outcomes": "Possible results and where they lead"
+    },
+    "links": {
+      "sessions": "Played in sessions",
+      "encounters": "Encounters",
+      "maps": "Maps"
+    },
+    "sessionScenes": {
+      "tab": "Scenes",
+      "label": "Scenes played",
+      "hint": "Which prepared scenes from the scenario were played in this session?"
+    },
+    "done": "Done",
+    "clickToEdit": "Click to edit",
+    "attach": "Attach",
+    "previous": "Previous",
+    "next": "Next",
+    "linkSession": "Link a session",
+    "addPlaceholder": "New {kind}…",
+    "addKeys": "Enter: next · Tab: nest · Shift+Tab: up · Esc: done",
+    "edit": "Edit",
+    "addField": "Add:"
   },
   "encounters": {
     "title": "Encounters",

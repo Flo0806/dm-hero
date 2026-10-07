@@ -47,57 +47,99 @@ export function extractMentionsFromMarkdown(notes: string | null | undefined): E
   return mentions
 }
 
+/** Mention marker type -> entity_types.name (sessions aren't entities, so they're not here) */
+export const MENTION_ENTITY_TYPES: Record<string, string> = {
+  npc: 'NPC',
+  location: 'Location',
+  item: 'Item',
+  faction: 'Faction',
+  lore: 'Lore',
+  player: 'Player',
+  story: 'StoryNode',
+}
+
+/** Where a mention list is stored: the table and the column pointing at its owner */
+interface MentionTable {
+  table: 'session_mentions' | 'story_node_mentions'
+  ownerColumn: 'session_id' | 'node_id'
+}
+
 /**
- * Sync session_mentions table with extracted mentions from notes
- * Deletes removed mentions, adds new ones
+ * Remove ids absent from supported markers and add new ids only for live entities
+ * matching the marker's type. Existing ids are not revalidated or given new context.
+ * Empty text clears the owner's mentions. Database errors propagate; callers that
+ * need atomic changes must supply a transaction.
  */
-export function syncSessionMentions(
+function syncMentions(
   db: import('better-sqlite3').Database,
-  sessionId: number,
-  notes: string | null | undefined,
+  { table, ownerColumn }: MentionTable,
+  ownerId: number,
+  markdown: string | null | undefined,
 ): void {
-  const mentions = extractMentionsFromMarkdown(notes)
+  const mentions = extractMentionsFromMarkdown(markdown).filter(m => MENTION_ENTITY_TYPES[m.type])
 
   // Get current mentions from DB
   const currentMentions = db
-    .prepare('SELECT entity_id FROM session_mentions WHERE session_id = ?')
-    .all(sessionId) as Array<{ entity_id: number }>
+    .prepare(`SELECT entity_id FROM ${table} WHERE ${ownerColumn} = ?`)
+    .all(ownerId) as Array<{ entity_id: number }>
 
   const currentIds = new Set(currentMentions.map(m => m.entity_id))
   const newIds = new Set(mentions.map(m => m.entityId))
 
-  // Delete mentions that are no longer in notes
+  // Delete mentions that are no longer in the text
   const toDelete = [...currentIds].filter(id => !newIds.has(id))
   if (toDelete.length > 0) {
-    const deleteStmt = db.prepare(
-      'DELETE FROM session_mentions WHERE session_id = ? AND entity_id = ?',
-    )
+    const deleteStmt = db.prepare(`DELETE FROM ${table} WHERE ${ownerColumn} = ? AND entity_id = ?`)
     for (const entityId of toDelete) {
-      deleteStmt.run(sessionId, entityId)
+      deleteStmt.run(ownerId, entityId)
     }
   }
 
   // Add new mentions
   const toAdd = mentions.filter(m => !currentIds.has(m.entityId))
   if (toAdd.length > 0) {
-    // Validate that entity_ids actually exist in entities table
+    // Validate that the entities exist and match the marker's type
     const placeholders = toAdd.map(() => '?').join(',')
     const existingEntities = db
-      .prepare(`SELECT id FROM entities WHERE id IN (${placeholders}) AND deleted_at IS NULL`)
-      .all(...toAdd.map(m => m.entityId)) as Array<{ id: number }>
-    const validIds = new Set(existingEntities.map(e => e.id))
+      .prepare(`
+        SELECT e.id, et.name AS type_name FROM entities e
+        JOIN entity_types et ON et.id = e.type_id
+        WHERE e.id IN (${placeholders}) AND e.deleted_at IS NULL
+      `)
+      .all(...toAdd.map(m => m.entityId)) as Array<{ id: number, type_name: string }>
+    const typeById = new Map(existingEntities.map(e => [e.id, e.type_name]))
 
-    // Filter to only valid mentions
-    const validMentions = toAdd.filter(m => validIds.has(m.entityId))
+    const validMentions = toAdd.filter(m => typeById.get(m.entityId) === MENTION_ENTITY_TYPES[m.type])
 
     if (validMentions.length > 0) {
       const insertStmt = db.prepare(
-        'INSERT OR IGNORE INTO session_mentions (session_id, entity_id, context) VALUES (?, ?, ?)',
+        `INSERT OR IGNORE INTO ${table} (${ownerColumn}, entity_id, context) VALUES (?, ?, ?)`,
       )
       for (const mention of validMentions) {
         // Context: Just store the type - name is resolved dynamically
-        insertStmt.run(sessionId, mention.entityId, mention.type)
+        insertStmt.run(ownerId, mention.entityId, mention.type)
       }
     }
   }
+}
+
+/** Sync session_mentions with the mentions in a session's notes */
+export function syncSessionMentions(
+  db: import('better-sqlite3').Database,
+  sessionId: number,
+  notes: string | null | undefined,
+): void {
+  syncMentions(db, { table: 'session_mentions', ownerColumn: 'session_id' }, sessionId, notes)
+}
+
+/**
+ * Sync story_node_mentions from the supplied combined body and prep texts.
+ * Empty text clears mentions; database errors propagate.
+ */
+export function syncStoryNodeMentions(
+  db: import('better-sqlite3').Database,
+  nodeId: number,
+  markdown: string | null | undefined,
+): void {
+  syncMentions(db, { table: 'story_node_mentions', ownerColumn: 'node_id' }, nodeId, markdown)
 }

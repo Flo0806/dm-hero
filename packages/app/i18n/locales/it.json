@@ -12,6 +12,7 @@
     "Quest": "Missione",
     "Lore": "Lore",
     "Player": "Giocatore",
+    "StoryNode": "Voce dello scenario",
     "Group": "Gruppo",
     "Unknown": "Sconosciuto"
   },
@@ -26,6 +27,7 @@
     "players": "Giocatori",
     "quests": "Missioni",
     "sessions": "Sessioni",
+    "story": "Scenario",
     "encounters": "Incontri",
     "maps": "Mappe",
     "music": "Musica",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "Messo in evidenza",
       "unpinnedSuccess": "Rimosso dalla bacheca"
     }
+  },
+  "story": {
+    "title": "Scenario",
+    "subtitle": "La tua preparazione della campagna: archi, capitoli e scene",
+    "create": "Nuova voce",
+    "addChild": "Aggiungi sotto",
+    "name": "Titolo",
+    "status": "Stato",
+    "empty": "Ancora niente di preparato. Inizia con un arco o una prima scena.",
+    "selectNode": "Seleziona una voce a sinistra per modificarla",
+    "noCampaign": "Seleziona prima una campagna",
+    "expandAll": "Espandi tutto",
+    "collapseAll": "Comprimi tutto",
+    "saving": "Salvataggio…",
+    "saved": "Salvato",
+    "unsaved": "Non salvato",
+    "deleteTitle": "Elimina voce",
+    "deleteConfirm": "Eliminare «{name}»?",
+    "deleteWithChildren": "Eliminare «{name}» e tutto ciò che contiene?",
+    "moveFailed": "Impossibile spostare la voce",
+    "bodyPlaceholder": "Cosa succede qui? Usa la barra degli strumenti per collegare PNG, luoghi, oggetti…",
+    "musicHint": "Playlist per questa scena (YouTube, Spotify, Tabletop Audio, …). I link si aprono nel browser.",
+    "kinds": {
+      "arc": "Arco",
+      "chapter": "Capitolo",
+      "scene": "Scena",
+      "note": "Nota"
+    },
+    "statuses": {
+      "idea": "Idea",
+      "planned": "Pianificato",
+      "ready": "Pronto",
+      "played": "Giocato",
+      "skipped": "Saltato"
+    },
+    "tabs": {
+      "images": "Immagini",
+      "documents": "Documenti",
+      "music": "Musica"
+    },
+    "fields": {
+      "hook": "Aggancio e obiettivo",
+      "readAloud": "Testo da leggere",
+      "secrets": "Segreti del master",
+      "outcomes": "Esiti e passi successivi"
+    },
+    "fieldHints": {
+      "hook": "Come ci arrivano i giocatori e di cosa tratta la scena",
+      "readAloud": "Testo da leggere o parafrasare ai giocatori",
+      "secrets": "Ciò che i giocatori non devono (ancora) sapere",
+      "outcomes": "Possibili risultati e dove portano"
+    },
+    "links": {
+      "sessions": "Giocato nelle sessioni",
+      "encounters": "Incontri",
+      "maps": "Mappe"
+    },
+    "sessionScenes": {
+      "tab": "Scene",
+      "label": "Scene giocate",
+      "hint": "Quali scene preparate dello scenario sono state giocate in questa sessione?"
+    },
+    "done": "Fatto",
+    "clickToEdit": "Clicca per modificare",
+    "attach": "Allega",
+    "previous": "Precedente",
+    "next": "Successivo",
+    "linkSession": "Collega una sessione",
+    "addPlaceholder": "Nuovo: {kind}…",
+    "addKeys": "Invio: successivo · Tab: annida · Maiusc+Tab: su · Esc: fatto",
+    "edit": "Modifica",
+    "addField": "Aggiungi:"
   },
   "encounters": {
     "title": "Incontri",

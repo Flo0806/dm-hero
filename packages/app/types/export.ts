@@ -168,6 +168,9 @@ export interface CampaignExportManifest {
   // Sessions - only in full export
   sessions?: ExportSession[]
   sessionMentions?: ExportSessionMention[]
+  // Scenario: story nodes played in sessions / using maps (full export only)
+  storyNodeSessions?: ExportStoryNodeSession[]
+  storyNodeMaps?: ExportStoryNodeMap[]
   sessionAttendance?: ExportSessionAttendance[]
   sessionImages?: ExportSessionImage[]
   sessionAudio?: ExportSessionAudio[]
@@ -268,6 +271,7 @@ export interface ExportEntity {
   created_at?: string
   updated_at?: string
   archived_at?: string | null
+  sort_order?: number // Order among siblings (story nodes)
   // Tag names attached to this entity. Optional for backwards compatibility.
   // Colors / palette are stored once in `CampaignExportManifest.tags`.
   tags?: string[]
@@ -329,6 +333,16 @@ export interface ExportSessionMention {
   session: string // "session:1"
   entity: string // "entity:5"
   context?: string
+}
+
+export interface ExportStoryNodeSession {
+  node: string // "entity:5"
+  session: string // "session:1"
+}
+
+export interface ExportStoryNodeMap {
+  node: string // "entity:5"
+  map: string // "map:1"
 }
 
 export interface ExportSessionAttendance {

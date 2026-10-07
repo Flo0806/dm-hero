@@ -12,6 +12,7 @@
     "Quest": "任务",
     "Lore": "背景知识",
     "Player": "玩家",
+    "StoryNode": "剧本条目",
     "Group": "团体",
     "Unknown": "未知"
   },
@@ -26,6 +27,7 @@
     "players": "玩家",
     "quests": "任务",
     "sessions": "跑团记录",
+    "story": "剧本",
     "encounters": "遭遇战",
     "maps": "地图",
     "music": "音乐",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "已成功固定",
       "unpinnedSuccess": "销钉已移除"
     }
+  },
+  "story": {
+    "title": "剧本",
+    "subtitle": "你的战役准备：故事线、章节和场景",
+    "create": "新建条目",
+    "addChild": "在下方添加",
+    "name": "标题",
+    "status": "状态",
+    "empty": "还没有准备任何内容。从一条故事线或第一个场景开始吧。",
+    "selectNode": "在左侧选择一个条目进行编辑",
+    "noCampaign": "请先选择一个战役",
+    "expandAll": "全部展开",
+    "collapseAll": "全部折叠",
+    "saving": "保存中…",
+    "saved": "已保存",
+    "unsaved": "未保存",
+    "deleteTitle": "删除条目",
+    "deleteConfirm": "删除「{name}」？",
+    "deleteWithChildren": "删除「{name}」及其下所有内容？",
+    "moveFailed": "无法移动条目",
+    "bodyPlaceholder": "这里发生了什么？使用工具栏链接 NPC、地点、物品…",
+    "musicHint": "此场景的播放列表（YouTube、Spotify、Tabletop Audio 等）。链接会在浏览器中打开。",
+    "kinds": {
+      "arc": "故事线",
+      "chapter": "章节",
+      "scene": "场景",
+      "note": "笔记"
+    },
+    "statuses": {
+      "idea": "构想",
+      "planned": "已计划",
+      "ready": "就绪",
+      "played": "已进行",
+      "skipped": "已跳过"
+    },
+    "tabs": {
+      "images": "图片",
+      "documents": "文档",
+      "music": "音乐"
+    },
+    "fields": {
+      "hook": "引子与目标",
+      "readAloud": "朗读文本",
+      "secrets": "GM 秘密",
+      "outcomes": "结果与后续"
+    },
+    "fieldHints": {
+      "hook": "玩家如何进入以及场景的主题",
+      "readAloud": "向玩家朗读或转述的文本",
+      "secrets": "玩家（暂时）不能知道的内容",
+      "outcomes": "可能的结果及其走向"
+    },
+    "links": {
+      "sessions": "进行于场次",
+      "encounters": "遭遇",
+      "maps": "地图"
+    },
+    "sessionScenes": {
+      "tab": "场景",
+      "label": "已进行的场景",
+      "hint": "本场次进行了剧本中的哪些准备好的场景？"
+    },
+    "done": "完成",
+    "clickToEdit": "点击编辑",
+    "attach": "附加",
+    "previous": "上一个",
+    "next": "下一个",
+    "linkSession": "关联场次",
+    "addPlaceholder": "新建{kind}…",
+    "addKeys": "Enter：下一个 · Tab：缩进 · Shift+Tab：上移 · Esc：完成",
+    "edit": "编辑",
+    "addField": "添加："
   },
   "encounters": {
     "title": "遭遇",

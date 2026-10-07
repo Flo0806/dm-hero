@@ -12,6 +12,7 @@
     "Quest": "Quest",
     "Lore": "Wissen",
     "Player": "Spieler",
+    "StoryNode": "Szenario-Eintrag",
     "Group": "Gruppe",
     "Unknown": "Unbekannt"
   },
@@ -26,6 +27,7 @@
     "players": "Spieler",
     "quests": "Quests",
     "sessions": "Sessions",
+    "story": "Szenario",
     "encounters": "Encounter",
     "maps": "Karten",
     "music": "Musik",
@@ -1419,6 +1421,78 @@
       "pinnedSuccess": "Erfolgreich angepinnt",
       "unpinnedSuccess": "Pin entfernt"
     }
+  },
+  "story": {
+    "title": "Szenario",
+    "subtitle": "Deine Kampagnenvorbereitung: Handlungsbögen, Kapitel und Szenen",
+    "create": "Neuer Eintrag",
+    "addChild": "Darunter hinzufügen",
+    "name": "Titel",
+    "status": "Status",
+    "empty": "Noch nichts vorbereitet. Beginne mit einem Handlungsbogen oder einer ersten Szene.",
+    "selectNode": "Wähle links einen Eintrag zum Bearbeiten",
+    "noCampaign": "Wähle zuerst eine Kampagne",
+    "expandAll": "Alle aufklappen",
+    "collapseAll": "Alle zuklappen",
+    "saving": "Speichert…",
+    "saved": "Gespeichert",
+    "unsaved": "Ungespeichert",
+    "deleteTitle": "Eintrag löschen",
+    "deleteConfirm": "„{name}\" löschen?",
+    "deleteWithChildren": "„{name}\" und alles darunter löschen?",
+    "moveFailed": "Eintrag konnte nicht verschoben werden",
+    "bodyPlaceholder": "Was passiert hier? Über die Toolbar NSCs, Orte, Gegenstände verlinken…",
+    "musicHint": "Playlists für diese Szene (YouTube, Spotify, Tabletop Audio, …). Links öffnen sich im Browser.",
+    "kinds": {
+      "arc": "Handlungsbogen",
+      "chapter": "Kapitel",
+      "scene": "Szene",
+      "note": "Notiz"
+    },
+    "statuses": {
+      "idea": "Idee",
+      "planned": "Geplant",
+      "ready": "Bereit",
+      "played": "Gespielt",
+      "skipped": "Übersprungen"
+    },
+    "tabs": {
+      "images": "Bilder",
+      "documents": "Dokumente",
+      "music": "Musik"
+    },
+    "fields": {
+      "hook": "Aufhänger & Ziel",
+      "readAloud": "Vorlesetext",
+      "secrets": "SL-Geheimnisse",
+      "outcomes": "Ausgänge & nächste Schritte"
+    },
+    "fieldHints": {
+      "hook": "Wie die Spieler hineinkommen und worum es in der Szene geht",
+      "readAloud": "Text zum Vorlesen oder Nacherzählen",
+      "secrets": "Was die Spieler (noch) nicht wissen dürfen",
+      "outcomes": "Mögliche Ergebnisse und wohin sie führen"
+    },
+    "links": {
+      "sessions": "Gespielt in Sessions",
+      "encounters": "Begegnungen",
+      "maps": "Karten"
+    },
+    "sessionScenes": {
+      "tab": "Szenen",
+      "label": "Gespielte Szenen",
+      "hint": "Welche vorbereiteten Szenen aus dem Szenario wurden in dieser Session gespielt?"
+    },
+    "done": "Fertig",
+    "clickToEdit": "Zum Bearbeiten klicken",
+    "attach": "Anhängen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "linkSession": "Session verknüpfen",
+    "addPlaceholder": "Neu: {kind}…",
+    "addKeys": "Enter: nächster · Tab: einrücken · Shift+Tab: ausrücken · Esc: fertig",
+    "edit": "Bearbeiten",
+    "addField": "Hinzufügen:"
   },
   "encounters": {
     "title": "Encounter",

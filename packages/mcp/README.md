@@ -18,6 +18,9 @@ The AI never needs DM Hero's source. It talks only to the app's local HTTP API. 
 - `list_groups` / `create_group` / `add_group_members` — groups (the party, a cult, the villains of a chapter).
 - `list_maps` / `create_map` / `add_map_marker` / `add_map_area` — maps from an image file/URL, entities as markers, locations as circles (percent coordinates).
 - `list_encounters` / `create_encounter` — prepared combats with participants and HP, optionally attached to a session.
+- `list_story` / `get_story_node` — read the scenario (the DM's GM-only prep tree of arcs, chapters, scenes and notes) and one entry in full (texts, cast, linked sessions/encounters/maps).
+- `preview_story_outline` / `create_story_outline` — dry-run, then commit: create a whole nested outline in one go (all or nothing), with hook, read-aloud text, GM secrets and outcomes that link entities via `{{npc:<id>}}`.
+- `update_story_node` / `move_story_node` / `link_story_node` — edit texts, kind or status (mark played), reorder or reparent, add links to the sessions it was played in and to encounters and maps (add-only).
 - `what_can_i_do` — plain-language overview of all capabilities, how to ask, and the preview → confirm rules; the AI can read it back to the user.
 
 Descriptions may cross-link entities of the same payload with `{{ref:npc:1}}` (or `{{ref:existing:12}}`); the import resolves them to real `{{npc:123}}` links. Previews warn about entities that already exist with the same name.

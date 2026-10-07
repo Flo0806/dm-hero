@@ -43,6 +43,7 @@ interface InBody { campaignId?: number, updates?: InUpdate[] }
 
 interface EntityRow { id: number, type: string, name: string, description: string | null, metadata: string | null }
 
+/** Validate and apply (or with ?dryRun preview) edits to existing entities; scenario entries are refused. */
 export default defineEventHandler(async (event) => {
   const db = getDb()
   const dryRun = (() => {
@@ -91,6 +92,8 @@ export default defineEventHandler(async (event) => {
     if (seenIds.has(id)) errors.push(`${at}: duplicate id ${id} (each entity may appear once)`)
     seenIds.add(id)
     if (!rowById.has(id)) errors.push(`${at}: entity ${id} not found in this campaign`)
+    // Scenario entries have their own fields and mention sync - edit them via /api/story
+    else if (rowById.get(id)!.type === 'StoryNode') errors.push(`${at}: entity ${id} is a scenario entry - use update_story_node instead`)
     if (u.name !== undefined && !String(u.name).trim()) errors.push(`${at}: name cannot be empty`)
     if (u.tags) {
       for (const t of u.tags) {

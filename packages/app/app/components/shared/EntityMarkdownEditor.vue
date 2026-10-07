@@ -10,6 +10,7 @@
         :on-upload-img="handleImageUpload"
         :toolbars="toolbars"
         :sanitize="sanitizeHtml"
+        :preview="preview"
         :style="{ height: height }"
         @click="handleEditorClick"
         @cancel.stop.prevent
@@ -276,6 +277,8 @@ const props = withDefaults(
     entityId?: number
     showImageGalleryButton?: boolean
     sessions?: SessionItem[]
+    /** Side-by-side preview (off where the text is shown rendered anyway) */
+    preview?: boolean
   }>(),
   {
     placeholder: '',
@@ -283,6 +286,7 @@ const props = withDefaults(
     entityId: undefined,
     showImageGalleryButton: false,
     sessions: () => [],
+    preview: true,
   },
 )
 
